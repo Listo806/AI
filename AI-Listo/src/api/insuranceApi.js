@@ -63,6 +63,34 @@ const insuranceApi = {
   deleteClaim(id) {
     return apiClient.request(`/insurance/claims/${id}`, { method: "DELETE" });
   },
+  listQuotes(params = {}) {
+    return apiClient.request(`/insurance/quotes${toQuery(params)}`, {
+      method: "GET",
+    });
+  },
+  getQuote(id) {
+    return apiClient.request(`/insurance/quotes/${id}`, { method: "GET" });
+  },
+  createQuote(body) {
+    return apiClient.request(`/insurance/quotes`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+  updateQuote(id, body) {
+    return apiClient.request(`/insurance/quotes/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  },
+  convertQuote(id) {
+    return apiClient.request(`/insurance/quotes/${id}/convert`, {
+      method: "POST",
+    });
+  },
+  deleteQuote(id) {
+    return apiClient.request(`/insurance/quotes/${id}`, { method: "DELETE" });
+  },
 };
 
 export default insuranceApi;

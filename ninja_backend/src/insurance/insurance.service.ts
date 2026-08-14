@@ -147,6 +147,38 @@ export class InsuranceService {
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_insurance_claims_status ON insurance_claims(status)`,
     );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS insurance_quotes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        quote_number TEXT,
+        contact_id UUID,
+        holder_name TEXT,
+        carrier_id UUID,
+        policy_type TEXT,
+        quoted_premium NUMERIC(12,2),
+        coverage_start DATE,
+        coverage_end DATE,
+        billing_frequency TEXT,
+        valid_until DATE,
+        status TEXT NOT NULL DEFAULT 'Draft',
+        assigned_to UUID,
+        notes TEXT,
+        converted_policy_id UUID,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_quotes_team ON insurance_quotes(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_quotes_contact ON insurance_quotes(contact_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_quotes_status ON insurance_quotes(status)`,
+    );
     this.schemaReady = true;
   }
 
@@ -778,5 +810,378 @@ export class InsuranceService {
       [id, accessible],
     );
     return { success: true };
+  }
+
+  // ─── Quotes ────────────────────────────────────────────────────────────────
+
+  private readonly quoteSelect = `
+    q.id,
+    q.team_id AS "teamId",
+    q.created_by AS "createdBy",
+    q.quote_number AS "quoteNumber",
+    q.contact_id AS "contactId",
+    ct.name AS "contactName",
+    q.holder_name AS "holderName",
+    q.carrier_id AS "carrierId",
+    cr.name AS "carrierName",
+    q.policy_type AS "policyType",
+    q.quoted_premium AS "quotedPremium",
+    q.coverage_start AS "coverageStart",
+    q.coverage_end AS "coverageEnd",
+    q.billing_frequency AS "billingFrequency",
+    q.valid_until AS "validUntil",
+    q.status,
+    q.assigned_to AS "assignedTo",
+    au.name AS "agentName",
+    q.notes,
+    q.converted_policy_id AS "convertedPolicyId",
+    cp.policy_number AS "convertedPolicyNumber",
+    q.created_at AS "createdAt",
+    q.updated_at AS "updatedAt"
+  `;
+
+  private readonly quoteJoins = `
+    FROM insurance_quotes q
+    LEFT JOIN contacts ct ON ct.id = q.contact_id AND ct.team_id = q.team_id
+    LEFT JOIN insurance_carriers cr ON cr.id = q.carrier_id AND cr.team_id = q.team_id
+    LEFT JOIN users au ON au.id = q.assigned_to
+    LEFT JOIN insurance_policies cp ON cp.id = q.converted_policy_id AND cp.team_id = q.team_id
+  `;
+
+  private validateQuotePremium(dto: { quotedPremium?: number }): void {
+    if (
+      dto.quotedPremium != null &&
+      (isNaN(Number(dto.quotedPremium)) || Number(dto.quotedPremium) < 0)
+    ) {
+      throw new BadRequestException('Quoted premium must be zero or greater');
+    }
+  }
+
+  private async generateQuoteNumber(teamId: string): Promise<string> {
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM insurance_quotes WHERE team_id = $1`,
+      [teamId],
+    );
+    const year = new Date().getFullYear();
+    const seq = 1000 + (rows[0]?.n || 0) + 1;
+    return `QTE-${year}-${seq}`;
+  }
+
+  async findAllQuotes(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    query: any,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    const pageNum = Number(query.page);
+    const page = Number.isFinite(pageNum) ? Math.max(1, Math.trunc(pageNum)) : 1;
+    const limitNum = Number(query.limit);
+    const limit = Number.isFinite(limitNum)
+      ? Math.min(200, Math.max(1, Math.trunc(limitNum)))
+      : 20;
+
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['q.team_id = ANY($1)'];
+    const values: any[] = [accessible];
+    let param = 2;
+
+    if (query.search) {
+      where.push(`(
+        LOWER(COALESCE(q.quote_number, '')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(q.holder_name, '')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(ct.name, '')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(q.policy_type, '')) LIKE LOWER($${param})
+      )`);
+      values.push(`%${String(query.search).trim()}%`);
+      param++;
+    }
+    if (query.status) {
+      where.push(`q.status = $${param}`);
+      values.push(query.status);
+      param++;
+    }
+
+    const whereSql = where.join(' AND ');
+
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total ${this.quoteJoins} WHERE ${whereSql}`,
+      values,
+    );
+    const total = countRes.rows[0]?.total || 0;
+
+    const offset = (page - 1) * limit;
+    values.push(limit);
+    const limitParam = values.length;
+    values.push(offset);
+    const offsetParam = values.length;
+
+    const { rows } = await this.db.query(
+      `SELECT ${this.quoteSelect} ${this.quoteJoins}
+        WHERE ${whereSql}
+        ORDER BY q.created_at DESC
+        LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      values,
+    );
+
+    return { data: rows, total, page, limit };
+  }
+
+  async findOneQuote(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Quote not found');
+
+    const { rows } = await this.db.query(
+      `SELECT ${this.quoteSelect} ${this.quoteJoins}
+        WHERE q.id = $1 AND q.team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Quote not found');
+    return rows[0];
+  }
+
+  async createQuote(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You must belong to a team to create quotes');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+
+    if (dto.contactId) {
+      await this.assertContactInTeam(dto.contactId, teamId);
+    }
+    this.validateQuotePremium(dto);
+
+    const quoteNumber =
+      (dto.quoteNumber && String(dto.quoteNumber).trim()) ||
+      (await this.generateQuoteNumber(teamId));
+
+    const { rows } = await this.db.query(
+      `INSERT INTO insurance_quotes (
+         team_id, created_by, quote_number, contact_id, holder_name, carrier_id,
+         policy_type, quoted_premium, coverage_start, coverage_end,
+         billing_frequency, valid_until, status, assigned_to, notes, updated_at
+       ) VALUES (
+         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW()
+       ) RETURNING id`,
+      [
+        teamId,
+        userId,
+        quoteNumber,
+        dto.contactId || null,
+        dto.holderName || null,
+        dto.carrierId || null,
+        dto.policyType || null,
+        dto.quotedPremium ?? null,
+        dto.coverageStart || null,
+        dto.coverageEnd || null,
+        dto.billingFrequency || null,
+        dto.validUntil || null,
+        dto.status || 'Draft',
+        dto.assignedTo || null,
+        dto.notes || null,
+      ],
+    );
+
+    return this.findOneQuote(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateQuote(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const existing = await this.findOneQuote(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    if (dto.contactId) {
+      await this.assertContactInTeam(dto.contactId, existing.teamId);
+    }
+    this.validateQuotePremium(dto);
+
+    const columnByField: Array<[string, any]> = [
+      ['quote_number', dto.quoteNumber],
+      ['contact_id', dto.contactId],
+      ['holder_name', dto.holderName],
+      ['carrier_id', dto.carrierId],
+      ['policy_type', dto.policyType],
+      ['quoted_premium', dto.quotedPremium],
+      ['coverage_start', dto.coverageStart],
+      ['coverage_end', dto.coverageEnd],
+      ['billing_frequency', dto.billingFrequency],
+      ['valid_until', dto.validUntil],
+      ['status', dto.status],
+      ['assigned_to', dto.assignedTo],
+      ['notes', dto.notes],
+    ];
+
+    const sets: string[] = [];
+    const values: any[] = [];
+    let param = 1;
+    for (const [col, val] of columnByField) {
+      if (val !== undefined) {
+        sets.push(`${col} = $${param}`);
+        values.push(val === '' ? null : val);
+        param++;
+      }
+    }
+    if (!sets.length) return this.findOneQuote(id, userId, userTeamId, role);
+
+    sets.push('updated_at = NOW()');
+    values.push(id);
+    const idParam = param;
+    param++;
+    values.push(accessible);
+    const teamParam = param;
+
+    await this.db.query(
+      `UPDATE insurance_quotes SET ${sets.join(', ')}
+        WHERE id = $${idParam} AND team_id = ANY($${teamParam})`,
+      values,
+    );
+
+    return this.findOneQuote(id, userId, userTeamId, role);
+  }
+
+  async removeQuote(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    await this.findOneQuote(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    await this.db.query(
+      `DELETE FROM insurance_quotes WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    return { success: true };
+  }
+
+  // Normalize a DB DATE (pg returns a local-midnight JS Date) to a 'YYYY-MM-DD'
+  // string, so carrying a date forward is timezone-independent (never shifts a
+  // day like a raw Date re-serialized under a different session TZ would).
+  private toIsoDate(value: any): string | undefined {
+    if (!value) return undefined;
+    const d = value instanceof Date ? value : new Date(value);
+    if (isNaN(d.getTime())) return undefined;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  // Convert an accepted quote into a policy, carrying forward the customer,
+  // coverage, premium and notes so nothing is re-entered. Idempotent: if the
+  // quote is already converted (and that policy still exists), returns it
+  // instead of a duplicate. The attach is a guarded UPDATE (only when the link
+  // is still unset), so a concurrent/retried convert can't leave two policies:
+  // the loser deletes its just-created duplicate and returns the winner's.
+  async convertQuoteToPolicy(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const quote = await this.findOneQuote(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    // Already converted and the policy still exists -> return it. If the policy
+    // was deleted, allow re-conversion (overwriting the now-stale link).
+    let stalePolicyId: string | null = null;
+    if (quote.convertedPolicyId) {
+      try {
+        return await this.findOnePolicy(
+          quote.convertedPolicyId,
+          userId,
+          userTeamId,
+          role,
+        );
+      } catch {
+        stalePolicyId = quote.convertedPolicyId;
+      }
+    }
+
+    const policy = await this.createPolicy(
+      {
+        teamId: quote.teamId,
+        contactId: quote.contactId || undefined,
+        holderName: quote.holderName || undefined,
+        carrierId: quote.carrierId || undefined,
+        policyType: quote.policyType || undefined,
+        premium:
+          quote.quotedPremium != null ? Number(quote.quotedPremium) : undefined,
+        coverageStart: this.toIsoDate(quote.coverageStart),
+        coverageEnd: this.toIsoDate(quote.coverageEnd),
+        billingFrequency: quote.billingFrequency || undefined,
+        assignedTo: quote.assignedTo || undefined,
+        notes: quote.notes || undefined,
+        status: 'Pending',
+      } as any,
+      userId,
+      userTeamId,
+      role,
+    );
+
+    // Attach only if the link is still unset (or still the stale id we replace),
+    // so exactly one convert wins.
+    const guard = stalePolicyId
+      ? 'AND (converted_policy_id IS NULL OR converted_policy_id = $4)'
+      : 'AND converted_policy_id IS NULL';
+    const params = stalePolicyId
+      ? [policy.id, id, accessible, stalePolicyId]
+      : [policy.id, id, accessible];
+    const upd = await this.db.query(
+      `UPDATE insurance_quotes
+          SET status = 'Accepted', converted_policy_id = $1, updated_at = NOW()
+        WHERE id = $2 AND team_id = ANY($3) ${guard}`,
+      params,
+    );
+
+    if (upd.rowCount === 0) {
+      // Another convert won the race: drop our duplicate, return the winner.
+      await this.db.query(
+        `DELETE FROM insurance_policies WHERE id = $1 AND team_id = ANY($2)`,
+        [policy.id, accessible],
+      );
+      const fresh = await this.findOneQuote(id, userId, userTeamId, role);
+      if (fresh.convertedPolicyId) {
+        try {
+          return await this.findOnePolicy(
+            fresh.convertedPolicyId,
+            userId,
+            userTeamId,
+            role,
+          );
+        } catch {
+          /* fall through */
+        }
+      }
+      throw new BadRequestException(
+        'Could not convert the quote, please try again',
+      );
+    }
+
+    return policy;
   }
 }
