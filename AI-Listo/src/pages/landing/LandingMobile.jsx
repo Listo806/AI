@@ -738,6 +738,7 @@ export default function LandingMobile() {
       regionLatAm: "Latin America",
       regionUSA: "USA",
       regionEurope: "Europe",
+      regionEuropeUs: "Europe & United States",
 
       footerDesc:
         "The all-in-one AI platform that captures leads, automates follow-ups and closes more deals — 24/7.",
@@ -1143,6 +1144,7 @@ export default function LandingMobile() {
       regionLatAm: "América Latina",
       regionUSA: "EE. UU.",
       regionEurope: "Europa",
+      regionEuropeUs: "Europa y Estados Unidos",
 
       footerDesc:
         "La plataforma de IA todo en uno que captura leads, automatiza el seguimiento y cierra más tratos, 24/7.",
@@ -1557,6 +1559,7 @@ export default function LandingMobile() {
       regionLatAm: "América Latina",
       regionUSA: "EUA",
       regionEurope: "Europa",
+      regionEuropeUs: "Europa e Estados Unidos",
 
       footerDesc:
         "A plataforma de IA tudo-em-um que captura leads, automatiza acompanhamentos e fecha mais negócios — 24/7.",
@@ -3044,72 +3047,10 @@ export default function LandingMobile() {
               </div>
             </div>
 
-            {/* ================= UNITED STATES ================= */}
+            {/* ================= EUROPE & UNITED STATES ================= */}
             <div className="m-region-group-header">
               <Globe />
-              <span>{tr.regionUSA}</span>
-            </div>
-
-            <div
-              className={`m-market-row-block ${activeMarket === "us" ? "open" : ""}`}
-            >
-              <div
-                className="m-market-item"
-                onClick={() =>
-                  setActiveMarket(activeMarket === "us" ? null : "us")
-                }
-              >
-                <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/us.png`} alt="flag" />
-                  <span className="m-market-name">United States</span>
-                </div>
-                <span className="m-arrow-icon">▼</span>
-              </div>
-              <div className="m-cities-dropdown">
-                <div className="m-cities-grid m-us-split">
-                  <div className="m-us-col">
-                    {[
-                      "New York City",
-                      "Boston",
-                      "Miami",
-                      "Orlando",
-                      "Los Angeles",
-                    ].map((c) => (
-                      <a
-                        key={c}
-                        href={`/united-states/${c.toLowerCase().replace(/ /g, "-")}`}
-                        className="m-city-lnk"
-                      >
-                        <MapPin size={15} /> {c}
-                      </a>
-                    ))}
-                  </div>
-                  <div className="m-us-col">
-                    {[
-                      "San Francisco",
-                      "San Diego",
-                      "Chicago",
-                      "Dallas",
-                      "Houston",
-                      "Austin",
-                    ].map((c) => (
-                      <a
-                        key={c}
-                        href={`/united-states/${c.toLowerCase().replace(/ /g, "-")}`}
-                        className="m-city-lnk"
-                      >
-                        <MapPin size={15} /> {c}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ================= EUROPE ================= */}
-            <div className="m-region-group-header">
-              <Globe />
-              <span>{tr.regionEurope}</span>
+              <span>{tr.regionEuropeUs || `${tr.regionEurope} & ${tr.regionUSA}`}</span>
             </div>
 
             {/* UNITED KINGDOM */}
@@ -3123,7 +3064,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/gb.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/gb.png`} alt="United Kingdom flag" />
                   <span className="m-market-name">United Kingdom</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -3149,6 +3090,39 @@ export default function LandingMobile() {
               </div>
             </div>
 
+            {/* SPAIN */}
+            <div
+              className={`m-market-row-block ${activeMarket === "es" ? "open" : ""}`}
+            >
+              <div
+                className="m-market-item"
+                onClick={() =>
+                  setActiveMarket(activeMarket === "es" ? null : "es")
+                }
+              >
+                <div className="m-market-left">
+                  <img src={`https://flagcdn.com/w40/es.png`} alt="Spain flag" />
+                  <span className="m-market-name">Spain</span>
+                </div>
+                <span className="m-arrow-icon">▼</span>
+              </div>
+              <div className="m-cities-dropdown">
+                <div className="m-cities-grid">
+                  {["Madrid", "Barcelona", "Valencia", "Sevilla", "Málaga"].map(
+                    (c) => (
+                      <a
+                        key={c}
+                        href={`/spain/${c.toLowerCase().replace(/ /g, "-")}`}
+                        className="m-city-lnk"
+                      >
+                        <MapPin size={15} /> {c}
+                      </a>
+                    ),
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* PORTUGAL */}
             <div
               className={`m-market-row-block ${activeMarket === "pt" ? "open" : ""}`}
@@ -3160,7 +3134,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/pt.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/pt.png`} alt="Portugal flag" />
                   <span className="m-market-name">Portugal</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -3180,29 +3154,99 @@ export default function LandingMobile() {
               </div>
             </div>
 
-            {/* SPAIN */}
+            {/* UNITED STATES */}
             <div
-              className={`m-market-row-block ${activeMarket === "es" ? "open" : ""}`}
+              className={`m-market-row-block ${activeMarket === "us" ? "open" : ""}`}
             >
               <div
                 className="m-market-item"
                 onClick={() =>
-                  setActiveMarket(activeMarket === "es" ? null : "es")
+                  setActiveMarket(activeMarket === "us" ? null : "us")
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/es.png`} alt="flag" />
-                  <span className="m-market-name">Spain</span>
+                  <img src={`https://flagcdn.com/w40/us.png`} alt="United States flag" />
+                  <span className="m-market-name">United States</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
               </div>
               <div className="m-cities-dropdown">
                 <div className="m-cities-grid">
-                  {["Madrid", "Barcelona", "Valencia", "Sevilla", "Málaga"].map(
+                  {[
+                    "New York City",
+                    "Boston",
+                    "Miami",
+                    "Orlando",
+                    "Los Angeles",
+                  ].map((c) => (
+                    <a
+                      key={c}
+                      href={`/united-states/${c.toLowerCase().replace(/ /g, "-")}`}
+                      className="m-city-lnk"
+                    >
+                      <MapPin size={15} /> {c}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* CANADA */}
+            <div
+              className={`m-market-row-block ${activeMarket === "ca" ? "open" : ""}`}
+            >
+              <div
+                className="m-market-item"
+                onClick={() =>
+                  setActiveMarket(activeMarket === "ca" ? null : "ca")
+                }
+              >
+                <div className="m-market-left">
+                  <img src={`https://flagcdn.com/w40/ca.png`} alt="Canada flag" />
+                  <span className="m-market-name">Canada</span>
+                </div>
+                <span className="m-arrow-icon">▼</span>
+              </div>
+              <div className="m-cities-dropdown">
+                <div className="m-cities-grid">
+                  {["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"].map(
                     (c) => (
                       <a
                         key={c}
-                        href={`/spain/${c.toLowerCase().replace(/ /g, "-")}`}
+                        href={`/canada/${c.toLowerCase().replace(/ /g, "-")}`}
+                        className="m-city-lnk"
+                      >
+                        <MapPin size={15} /> {c}
+                      </a>
+                    ),
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* AUSTRALIA */}
+            <div
+              className={`m-market-row-block ${activeMarket === "au" ? "open" : ""}`}
+            >
+              <div
+                className="m-market-item"
+                onClick={() =>
+                  setActiveMarket(activeMarket === "au" ? null : "au")
+                }
+              >
+                <div className="m-market-left">
+                  <img src={`https://flagcdn.com/w40/au.png`} alt="Australia flag" />
+                  <span className="m-market-name">Australia</span>
+                </div>
+                <span className="m-arrow-icon">▼</span>
+              </div>
+              <div className="m-cities-dropdown">
+                <div className="m-cities-grid">
+                  {["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"].map(
+                    (c) => (
+                      <a
+                        key={c}
+                        href={`/australia/${c.toLowerCase().replace(/ /g, "-")}`}
                         className="m-city-lnk"
                       >
                         <MapPin size={15} /> {c}

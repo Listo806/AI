@@ -72,9 +72,17 @@ export default function ExploreOurMarkets() {
     {
       country: "United States",
       flagCode: "us",
-      isUS: true, 
-      col1: ["New York City", "Boston", "Miami", "Orlando", "Los Angeles"],
-      col2: ["San Francisco", "San Diego", "Chicago", "Dallas", "Houston", "Austin"],
+      cities: ["New York City", "Boston", "Miami", "Orlando", "Los Angeles"],
+    },
+    {
+      country: "Canada",
+      flagCode: "ca",
+      cities: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
+    },
+    {
+      country: "Australia",
+      flagCode: "au",
+      cities: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
     },
   ];
 
@@ -95,7 +103,10 @@ export default function ExploreOurMarkets() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.mainTitle}>Explore Our Markets</h1>
+      <div style={styles.titleWrap}>
+        <h1 style={styles.mainTitle}>Explore Our Markets</h1>
+        <div style={styles.titleUnderline} />
+      </div>
 
       {/* --- SECTION 1: LATIN AMERICA --- */}
       <div style={styles.regionSection}>
@@ -130,7 +141,7 @@ export default function ExploreOurMarkets() {
         <h2 style={styles.regionTitle}>Europe & United States</h2>
         <div style={{ 
           ...styles.gridContainer, 
-          gridTemplateColumns: isMobile ? "repeat(1, 1fr)" : isTablet ? "repeat(2, 1fr)" : "1fr 1fr 1fr 2fr"
+          gridTemplateColumns: isMobile ? "repeat(1, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(6, 1fr)"
         }}>
           {europeUsCountries.map((item, index) => {
             const isLast = index === europeUsCountries.length - 1;
@@ -148,13 +159,9 @@ export default function ExploreOurMarkets() {
                   <span style={styles.countryName}>{item.country}</span>
                 </div>
 
-                {item.isUS ? (
-                  <div style={styles.usColumnsWrapper}>
-                    {renderCityLinks(item.col1, "united-states")}
-                    {renderCityLinks(item.col2, "united-states")}
-                  </div>
-                ) : (
-                  renderCityLinks(item.cities, item.country.toLowerCase().replace(/ /g, "-"))
+                {renderCityLinks(
+                  item.cities,
+                  item.country.toLowerCase().replace(/ /g, "-")
                 )}
               </div>
             );
@@ -167,48 +174,65 @@ export default function ExploreOurMarkets() {
 
 const styles = {
   container: {
-    padding: "20px 40px",
-    maxWidth: "1360px",
+    padding: "26px 38px 34px",
+    maxWidth: "1600px",
     margin: "0 auto",
     fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     backgroundColor: "#ffffff",
+    borderRadius: "12px",
+  },
+
+  titleWrap: {
+    textAlign: "center",
+    marginBottom: "48px",
   },
 
   mainTitle: {
-    fontSize: "44px",
+    fontSize: "48px",
     fontWeight: "700",
     color: "#08142B",
     textAlign: "center",
-    marginBottom: "60px",
-    letterSpacing: "-1px",
+    margin: 0,
+    letterSpacing: "-1.5px",
+    lineHeight: 1.1,
+  },
+
+  titleUnderline: {
+    width: "84px",
+    height: "4px",
+    borderRadius: "999px",
+    backgroundColor: "#2563EB",
+    margin: "18px auto 0",
   },
 
   regionSection: {
-    marginBottom: "55px",
+    marginBottom: "58px",
   },
 
   regionTitle: {
     fontSize: "22px",
     fontWeight: "700",
     color: "#08142B",
-    marginBottom: "35px",
+    marginBottom: "34px",
+    textAlign: "center",
   },
 
   gridContainer: {
     display: "grid",
-    gap: "30px 0px", 
+    gap: "30px 0px",
     alignItems: "start",
   },
 
   countryColumn: {
-    padding: "0 15px 0 20px", 
+    padding: "0px 15px 0px 20px",
+    minWidth: 0,
   },
 
   countryHeader: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    marginBottom: "22px",
+    marginBottom: "24px",
   },
 
   flagImg: {
@@ -228,25 +252,20 @@ const styles = {
   cityList: {
     display: "flex",
     flexDirection: "column",
-    gap: "18px",
+    gap: "20px",
     flex: 1,
-  },
-
-  usColumnsWrapper: {
-    display: "flex",
-    gap: "30px", 
   },
 
   cityLink: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: "12px",
     textDecoration: "none",
     color: "#2D3748",
   },
 
   pinIcon: {
-    color: "#A0AEC0", 
+    color: "#8A96A8",
     flexShrink: 0,
   },
 
