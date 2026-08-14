@@ -35,6 +35,16 @@ import { UpdateInsuranceRenewalDto } from './dto/update-insurance-renewal.dto';
 export class InsuranceController {
   constructor(private readonly insurance: InsuranceService) {}
 
+  @Get('stats')
+  @ApiOperation({ summary: 'Dashboard KPIs, breakdowns, upcoming renewals, activity' })
+  async stats(@CurrentUser() user: any) {
+    return this.insurance.getStats(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
   @Get('contacts')
   @ApiOperation({
     summary: "Search the account's existing contacts to link to a policy",
