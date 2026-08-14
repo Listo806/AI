@@ -2962,7 +2962,73 @@ body.crm-dark .crm-workspace-flyout-intro,body.crm-dark .crm-workspace-detail-ca
 body.crm-dark .crm-workspace-flyout-kicker p,body.crm-dark .crm-workspace-flyout-points span,body.crm-dark .crm-workspace-capabilities span,body.crm-dark .crm-workspace-tags span,body.crm-dark .crm-workspace-benefits strong,body.crm-dark .crm-workspace-price-row strong{color:#e5e7eb}
 body.crm-dark .crm-workspace-tags span{background:rgba(109,93,252,.12)}
 @media (min-width:1025px){.crm-root.sidebar-collapsed .crm-workspace-flyout{display:none}}
-@media (max-width:1024px){.crm-workspaces-section,.crm-workspace-flyout{display:none!important}}
+@media (max-width:1024px){
+  .crm-workspace-flyout{
+    display:none!important;
+  }
+
+  .crm-workspaces-section{
+    display:block!important;
+    width:100%;
+    margin-top:12px;
+    padding:12px 6px 4px 2px!important;
+    border-top:1px solid var(--border);
+  }
+
+  .crm-workspaces-heading{
+    padding:0 4px 9px;
+    font-size:10px;
+  }
+
+  .crm-workspaces-list{
+    width:100%;
+    gap:3px;
+  }
+
+  .crm-workspace-item{
+    width:100%;
+    min-height:42px;
+    padding:5px 4px;
+    grid-template-columns:30px minmax(0,1fr) auto 12px;
+    gap:7px;
+    border-radius:8px;
+  }
+
+  .crm-workspace-icon{
+    width:30px;
+    height:30px;
+    border-radius:8px;
+  }
+
+  .crm-workspace-icon svg{
+    width:17px;
+    height:17px;
+  }
+
+  .crm-workspace-label{
+    font-size:12px;
+    white-space:normal;
+    line-height:1.2;
+  }
+
+  .crm-workspace-badge{
+    font-size:7px;
+    padding:3px 5px;
+  }
+
+  .crm-workspace-chevron{
+    width:13px!important;
+    height:13px!important;
+  }
+
+  .crm-workspace-lead-generator .crm-nav-addon{
+    margin-left:auto;
+  }
+
+  .crm-workspaces-expand-card{
+    margin:9px 2px 4px;
+  }
+}
 .crm-workspace-icon-emerald,
 .crm-workspace-detail-icon.crm-workspace-icon-emerald {
   background: linear-gradient(135deg,#059669,#10b981);
@@ -3543,6 +3609,22 @@ body.crm-dark .crm-workspace-flyout-close {
 
 @media (max-width: 1024px) {
   .crm-workspace-flyout {
+    display: none !important;
+  }
+}
+
+/* =========================================================
+   MOBILE SIDEBAR — CORTEXA WORKSPACES
+   The workspace list must remain visible inside the mobile drawer.
+   Only the desktop hover flyout stays hidden on touch/mobile.
+   ========================================================= */
+@media (max-width: 1024px) {
+  .crm-sidebar.open .crm-workspaces-section {
+    display: block !important;
+    padding-bottom: 60px !important;
+  }
+
+  .crm-sidebar.open .crm-workspace-flyout {
     display: none !important;
   }
 }
