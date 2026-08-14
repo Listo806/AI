@@ -48,6 +48,8 @@ import {
 export default function PropertiesPage() {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState("grid");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [headerActionsOpen, setHeaderActionsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [properties, setProperties] = useState([]);
   const [search, setSearch] = useState("");
@@ -666,718 +668,442 @@ export default function PropertiesPage() {
     return new Date(value).toLocaleString();
   };
 
+  const matchedLeadsMetric = Number(
+    dashboard?.matchedLeadsTotal?.value ??
+      dashboard?.matchedLeadsCount?.value ??
+      (Array.isArray(dashboard?.matchedLeads) ? dashboard.matchedLeads.length : 0),
+  );
+
+  const aiOpportunityValue = Number(
+    dashboard?.aiOpportunity?.value ??
+      properties.reduce(
+        (sum, item) =>
+          sum +
+          (Number(item?.aiScore || 0) < 80
+            ? Number(item?.revenuePotential || 0)
+            : 0),
+        0,
+      ),
+  );
+
+  const topAgents = useMemo(() => {
+    const grouped = new Map();
+    properties.forEach((item) => {
+      const name = item.agentName || item.createdByName;
+      if (!name) return;
+      const current = grouped.get(name) || { name, deals: 0, value: 0 };
+      current.deals += 1;
+      current.value += Number(item.price || 0);
+      grouped.set(name, current);
+    });
+    return [...grouped.values()]
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
+  }, [properties]);
+
+  const recentShowings = Array.isArray(dashboard?.recentShowings)
+    ? dashboard.recentShowings.slice(0, 3)
+    : [];
+
+  const aiInsightItems = [
+    {
+      label: `${weakProperties.filter((p) => Number(p.aiScore || 0) >= 65).length} properties have high ROI potential`,
+      action: "View details",
+    },
+    {
+      label: `${weakProperties.filter((p) => !p.price || Number(p.aiScore || 0) < 65).length} listings need price optimization`,
+      action: "Optimize now",
+    },
+    {
+      label: `${properties.filter((p) => !p.thumbnailUrl).length} properties need media updates`,
+      action: "Update media",
+    },
+  ];
+
   return (
-    <div className="properties-page">
-      <div className="heading_page">
-        <Home className="header-icon" size={20} />
-        <h1>{t("properties.pageTitle")}</h1>
-        <p className="next_head">{t("properties.commandCenter")}</p>
-        <Sparkles size={16} color="#2563eb" />
-      </div>
-      <p className="sub_head">{t("properties.subheading")}</p>
-      <div className="page-header">
-        <div className="header-actions">
-          <button
-            className="btn btn-secondary"
-            onClick={() => setAnalysisOpen(true)}
-          >
-            <Sparkles size={16} color="#2563eb" /> {t("properties.analyzeProperties")}
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setSelectedAnalysisProperty(null);
-              setAnalysisOpen(true);
-            }}
-          >
-            <Pipette size={16} />
-            {t("properties.autoOptimizeListings")}
-          </button>
-          <button className="btn btn-secondary" onClick={printPropertyReport}>
-            <Download size={16} className="blue" /> {t("properties.exportPropertyReport")}
-          </button>
-          <button className="btn btn-primary" onClick={openAddPropertyModal}>
-            <Plus size={16} />
-            {t("properties.addProperty")}
+    <div className="properties-page real-estate-workspace">
+      <section className="re-workspace-header">
+        <div className="re-title-wrap">
+          <div className="re-title-icon"><Home size={22} /></div>
+          <div>
+            <h1>Real Estate Workspace</h1>
+            <p>Manage properties, buyers, sellers and close more deals with AI intelligence.</p>
+          </div>
+        </div>
+        <div className="re-header-actions">
+          <div className="re-actions-menu-wrap">
+            <button
+              type="button"
+              className="re-actions-btn"
+              onClick={() => setHeaderActionsOpen((prev) => !prev)}
+            >
+              <MoreVertical size={15} /> Actions <ChevronDown size={14} />
+            </button>
+            {headerActionsOpen && (
+              <div className="re-header-actions-menu">
+                <button onClick={() => { setAnalysisOpen(true); setHeaderActionsOpen(false); }}>
+                  <Sparkles size={14} /> {t("properties.analyzeProperties")}
+                </button>
+                <button onClick={() => { setSelectedAnalysisProperty(null); setAnalysisOpen(true); setHeaderActionsOpen(false); }}>
+                  <Bot size={14} /> {t("properties.autoOptimizeListings")}
+                </button>
+                <button onClick={() => { printPropertyReport(); setHeaderActionsOpen(false); }}>
+                  <Download size={14} /> {t("properties.exportPropertyReport")}
+                </button>
+              </div>
+            )}
+          </div>
+          <button className="re-add-property" onClick={openAddPropertyModal}>
+            <Plus size={16} /> {t("properties.addProperty")}
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* METRICS ROW */}
-      <div className="metrics-grid">
-        {metrics.map((item, idx) => (
-          <div className="metric-card" key={idx}>
-            <div className={`metric-icon ${item.className}`}>{item.icon}</div>
-            <div className="metric-info">
-              <span>{item.title}</span>
-              <h2>{item.value}</h2>
-              <span className={`metric-trend ${item.trendType}`}>
-                {item.trend}
-              </span>
-            </div>
-          </div>
+      <nav className="re-tabs" aria-label="Real estate workspace sections">
+        {[
+          "Overview",
+          "Properties",
+          "Buyers",
+          "Sellers",
+          "Showings",
+          "Offers",
+          "Transactions",
+          "Documents",
+          "Commissions",
+        ].map((tab) => (
+          <button key={tab} className={tab === "Properties" ? "active" : ""} type="button">
+            {tab === "Properties" && <Home size={14} />}
+            {tab}
+          </button>
         ))}
-      </div>
+      </nav>
 
-      {/* FILTERS CONTROL ROW */}
-      <div className="filters-row">
-        <div className="search-box">
-          <Search size={16} color="#94a3b8" />
+      <section className="re-metrics-grid">
+        {[
+          {
+            title: t("properties.totalProperties"),
+            value: dashboard?.totalProperties?.value ?? total,
+            trend: dashboard?.totalProperties?.trend?.text || "All time",
+            icon: <Home size={18} />,
+            tone: "blue",
+          },
+          {
+            title: t("properties.activeListings"),
+            value: dashboard?.activeListings?.value ?? 0,
+            trend: dashboard?.activeListings?.trend?.text || "All time",
+            icon: <CheckCircle2 size={18} />,
+            tone: "green",
+          },
+          {
+            title: "Total Listing Value",
+            value: `$${Number(dashboard?.totalValue?.value || 0).toLocaleString()}`,
+            trend: dashboard?.totalValue?.trend?.text || "All time",
+            icon: <DollarSign size={18} />,
+            tone: "purple",
+          },
+          {
+            title: t("properties.hotProperties"),
+            value: dashboard?.hotProperties?.value ?? 0,
+            trend: dashboard?.hotProperties?.trend?.text || "All time",
+            icon: <Flame size={18} />,
+            tone: "orange",
+          },
+          {
+            title: t("properties.matchedLeads"),
+            value: matchedLeadsMetric,
+            trend: "Lead matches",
+            icon: <Users size={18} />,
+            tone: "violet",
+          },
+          {
+            title: "AI Opportunity",
+            value: `$${aiOpportunityValue.toLocaleString()}`,
+            trend: "High potential value",
+            icon: <Sparkles size={18} />,
+            tone: "indigo",
+          },
+        ].map((item) => (
+          <article className="re-metric-card" key={item.title}>
+            <div className={`re-metric-icon ${item.tone}`}>{item.icon}</div>
+            <div>
+              <span>{item.title}</span>
+              <strong>{item.value}</strong>
+              <small>{item.trend}</small>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="re-filter-toolbar">
+        <div className="re-search-field">
+          <Search size={15} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("properties.searchPlaceholder")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setPage(1);
+                loadProperties(null, 1);
+              }
+            }}
+            placeholder="Search properties by address, MLS ID, city..."
           />
         </div>
 
-        <div className="filter-select-wrapper search-date">
-          <select
-            className="filter-select"
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-          >
-            <option value="all">{t("properties.dateAll")}</option>
-            <option value="today">{t("properties.dateToday")}</option>
-            <option value="last_7_days">{t("properties.dateLast7Days")}</option>
-            <option value="last_30_days">{t("properties.dateLast30Days")}</option>
-            <option value="this_month">{t("properties.dateThisMonth")}</option>
+        <div className="re-compact-select">
+          <select value={city} onChange={(e) => setCity(e.target.value)}>
+            <option value="">All Cities</option>
+            {cityOptions.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
-          <Calendar size={14} className="select-icon" />
+          <ChevronDown size={13} />
         </div>
 
-        <div className="filter-select-wrapper">
-          <select
-            className="filter-select"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          >
-            <option value="">{t("properties.allCities")}</option>
-            {cityOptions.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
+        <div className="re-compact-select">
+          <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
+            <option value="">All Types</option>
+            <option value="house">House</option>
+            <option value="apartment">Apartment</option>
+            <option value="land">Land</option>
+            <option value="commercial">Commercial</option>
+            <option value="villa">Villa</option>
+            <option value="office">Office</option>
           </select>
-          <ChevronDown size={14} className="select-icon" />
+          <ChevronDown size={13} />
         </div>
 
-        <div className="filter-select-wrapper">
-          <select
-            className="filter-select"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-          >
-            <option value="">{t("properties.allListingTypes")}</option>
-            <option value="sale">{t("properties.forSale")}</option>
-            <option value="rent">{t("properties.forRent")}</option>
+        <div className="re-compact-select">
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="pending_review">Pending</option>
+            <option value="published">Active</option>
+            <option value="sold">Sold</option>
+            <option value="archived">Off Market</option>
           </select>
-          <ChevronDown size={14} className="select-icon" />
+          <ChevronDown size={13} />
         </div>
 
-        <div className="filter-select-wrapper">
-          <select
-            className="filter-select"
-            value={propertyType}
-            onChange={(e) => setPropertyType(e.target.value)}
-          >
-            <option value="">{t("properties.allPropertyTypes")}</option>
-            <option value="house">{t("properties.propertyType_house")}</option>
-            <option value="apartment">{t("properties.propertyType_apartment")}</option>
-            <option value="land">{t("properties.propertyType_land")}</option>
-            <option value="commercial">{t("properties.propertyType_commercial")}</option>
-            <option value="villa">{t("properties.propertyType_villa")}</option>
-            <option value="office">{t("properties.propertyType_office")}</option>
-          </select>
-          <ChevronDown size={14} className="select-icon" />
-        </div>
-
-        <div className="filter-select-wrapper">
-          <select
-            className="filter-select"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="">{t("properties.allStatus")}</option>
-            <option value="draft">{t("properties.draft")}</option>
-            <option value="pending_review">{t("properties.pendingReview")}</option>
-            <option value="approved">{t("properties.approved")}</option>
-            <option value="rejected">{t("properties.rejected")}</option>
-            <option value="published">{t("properties.published")}</option>
-            <option value="reserved">{t("properties.reserved")}</option>
-            <option value="sold">{t("properties.sold")}</option>
-            <option value="rented">{t("properties.rented")}</option>
-            <option value="archived">{t("properties.archived")}</option>
-          </select>
-          <ChevronDown size={14} className="select-icon" />
-        </div>
-
-        <div className="search-box price" style={{ maxWidth: "120px" }}>
+        <div className="re-price-range">
           <input
             type="number"
-            placeholder={t("properties.minPrice")}
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
+            placeholder="Min price"
           />
-        </div>
-
-        <div className="search-box price" style={{ maxWidth: "120px" }}>
+          <span>–</span>
           <input
             type="number"
-            placeholder={t("properties.maxPrice")}
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
+            placeholder="Max price"
           />
         </div>
-        <div className="filter-select-wrapper">
-          <select
-            className="filter-select"
-            value={aiScore}
-            onChange={(e) => setAiScore(e.target.value)}
-          >
-            <option value="">{t("properties.allAiScores")}</option>
-            <option value="high">{t("properties.aiScoreHigh")}</option>
-            <option value="medium">{t("properties.aiScoreMedium")}</option>
-            <option value="low">{t("properties.aiScoreLow")}</option>
-          </select>
-          <ChevronDown size={14} className="select-icon" />
-        </div>
-        <div className="filter-select-wrapper">
-          <select
-            className="filter-select"
-            value={agentId}
-            onChange={(e) => setAgentId(e.target.value)}
-          >
-            <option value="">{t("properties.allAgents")}</option>
-            {agentOptions.map((agent) => (
-              <option key={agent.id} value={agent.id}>
-                {agent.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={14} className="select-icon" />
-        </div>
 
-        <div className="filter-select-wrapper">
-          <select
-            className="filter-select"
-            value={teamId}
-            onChange={(e) => setTeamId(e.target.value)}
-          >
-            <option value="">{t("properties.allTeams")}</option>
-            {teamOptions.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={14} className="select-icon" />
-        </div>
-
-        <button
-          className="btn btn-secondary"
-          style={{ height: "38px" }}
-          onClick={() => {
-            const emptyFilters = {
-              search: "",
-              type: "",
-              status: "",
-              city: "",
-              propertyType: "",
-              minPrice: "",
-              maxPrice: "",
-              agentId: "",
-              teamId: "",
-              aiScore: "",
-            };
-
-            setSearch("");
-            setType("");
-            setStatus("");
-            setCity("");
-            setPropertyType("");
-            setMinPrice("");
-            setMaxPrice("");
-            setAgentId("");
-            setTeamId("");
-            setAiScore("");
-            setDateRange("all");
-            setPage(1);
-            loadProperties(emptyFilters, 1);
-            getPropertiesDashboard({ range: "all" }).then(setDashboard);
-            loadProperties(emptyFilters);
-            getPropertiesDashboard({ range: "all" }).then(setDashboard);
-          }}
-        >
-          <RotateCcw size={14} />
-          {t("properties.clearFilters")}
-        </button>
-        <button
-          className="btn btn-primary"
-          style={{ height: "38px", padding: "0 12px" }}
-          onClick={() => {
-            setPage(1);
-            loadProperties(null, 1);
-            loadDashboard();
-          }}
-        >
-          <Search size={14} />
-          {t("common.search")}
-        </button>
-        <button
-          className="btn btn-secondary export"
-          style={{ height: "38px" }}
-          onClick={exportPropertiesCsv}
-        >
-          <Download size={15} className="blue" /> {t("properties.export")}
-        </button>
-
-        <div className="view-toggle-group">
-          <button
-            className={`toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-            onClick={() => setViewMode("grid")}
-          >
-            <LayoutGrid size={16} />
+        <div className="re-more-filter-wrap">
+          <button className="re-more-filter-btn" type="button" onClick={() => setShowMoreFilters((prev) => !prev)}>
+            More Filters <ChevronDown size={13} />
           </button>
-          <button
-            className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
-            onClick={() => setViewMode("list")}
-          >
-            <List size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* MAIN CONTENT AREA */}
-      <div className="main-layout">
-        {/* LEFT COMPONENT: PROPERTIES LIST */}
-        <div
-          className={
-            viewMode === "grid"
-              ? "properties-grid"
-              : "properties-grid properties-list-view"
-          }
-        >
-          {loading ? (
-            <div className="property-card">
-              <div className="card-body">{t("properties.loadingProperties")}</div>
-            </div>
-          ) : properties.length === 0 ? (
-            <div className="property-card">
-              <div className="card-body">{t("properties.noPropertiesFound")}</div>
-            </div>
-          ) : (
-            properties.map((property, idx) => (
-              <div
-                className="property-card"
-                key={property.id || idx}
-                onClick={() => openPropertyDrawer(property)}
-              >
-                <div className="card-image-wrapper">
-                  {/* Fallback pattern representing images in mockup */}
-                  {property.thumbnailUrl ? (
-                    <img
-                      src={property.thumbnailUrl}
-                      alt={property.title}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        background: "#e2e8f0",
-                        width: "100%",
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#94a3b8",
-                      }}
-                    >
-                      {t("properties.propertyImagePlaceholder")}
-                    </div>
-                  )}
-                  <span
-                    className={`badge-status ${property.status === "published" ? "active" : "under-review"}`}
-                  >
-                    {(property.status || "draft")
-                      .replace("_", " ")
-                      .toUpperCase()}
-                  </span>
-                  <div className="property-card-actions">
-                    <button
-                      className="card-actions-trigger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenActionId(
-                          openActionId === property.id ? null : property.id,
-                        );
-                      }}
-                    >
-                      <MoreVertical size={16} />
-                    </button>
-
-                    {openActionId === property.id && (
-                      <div className="property-actions-menu">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedAnalysisProperty(property);
-                            setAnalysisOpen(true);
-                            setOpenActionId(null);
-                          }}
-                        >
-                          {t("properties.viewAnalysis")}
-                        </button>
-
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            await publishProperty(property.id);
-                            setOpenActionId(null);
-                            await loadProperties();
-                            await loadDashboard();
-                          }}
-                        >
-                          {t("properties.publish")}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditPropertyModal(property);
-                            setOpenActionId(null);
-                          }}
-                        >
-                          {t("properties.edit")}
-                        </button>
-                        <button
-                          className="danger"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            if (!window.confirm(t("properties.confirmDeleteProperty")))
-                              return;
-                            await deleteProperty(property.id);
-                            setOpenActionId(null);
-                            await loadProperties();
-                            await loadDashboard();
-                          }}
-                        >
-                          {t("common.delete")}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="card-body">
-                  <div className="price-row">
-                    <h3>
-                      {property.price
-                        ? `$${Number(property.price).toLocaleString()}`
-                        : t("properties.noPrice")}
-                    </h3>
-                    <div className="ai-score-badge">
-                      <strong
-                        className={`score-number ${
-                          Number(property.aiScore || 0) >= 80
-                            ? "high"
-                            : Number(property.aiScore || 0) >= 50
-                              ? "medium"
-                              : "low"
-                        }`}
-                      >
-                        {Number(property.aiScore || 0)}
-                      </strong>
-                      <span>{t("properties.aiScore")}</span>
-                    </div>
-                  </div>
-
-                  <p className="property-address">
-                    {[
-                      property.address,
-                      property.city,
-                      property.state,
-                      property.zipCode,
-                    ]
-                      .filter(Boolean)
-                      .join(", ") || t("properties.noAddress")}
-                  </p>
-
-                  <div className="property-specs">
-                    <div className="spec-item">
-                      <BedDouble size={14} /> {property.bedrooms || 0}
-                    </div>
-                    <div className="spec-item">
-                      <Bath size={14} /> {property.bathrooms || 0}
-                    </div>
-                    <div className="spec-item">
-                      <Maximize size={14} />{" "}
-                      {property.squareFeet
-                        ? t("properties.sqftValue", { value: property.squareFeet })
-                        : "—"}
-                    </div>
-                  </div>
-
-                  <div className="financials-row">
-                    <div className="financial-item">
-                      <span>{t("properties.revenuePotential")}</span>
-                      <strong className="green-text">
-                        $
-                        {Number(
-                          property.revenuePotential || 0,
-                        ).toLocaleString()}
-                      </strong>
-                    </div>
-                    <div
-                      className="financial-item"
-                      style={{ textAlign: "right" }}
-                    >
-                      <span>{t("properties.matchedLeads")}</span>
-                      <strong className="text-align-right">
-                        {Number(property.matchedLeads || 0)} ↗
-                      </strong>
-                    </div>
-                  </div>
-
-                  <div className="agent-footer">
-                    <div className="agent-info">
-                      <div className="agent-avatar fallback-avatar">
-                        {(property.agentName || property.createdByName || "U")
-                          .toString()
-                          .slice(0, 1)
-                          .toUpperCase()}
-                      </div>
-                      <div>
-                        <h5>
-                          {property.agentName ||
-                            property.createdByName ||
-                            t("properties.unassigned")}
-                        </h5>
-                        <p>{property.teamName || t("properties.noTeam")}</p>
-                      </div>
-                    </div>
-
-                    <span
-                      className={`listing-status-tag ${
-                        property.status === "published" ? "active" : "review"
-                      }`}
-                    >
-                      {property.status || "draft"}
-                    </span>
-                  </div>
-                </div>
+          {showMoreFilters && (
+            <div className="re-more-filter-popover">
+              <label>Listing type
+                <select value={type} onChange={(e) => setType(e.target.value)}>
+                  <option value="">All</option>
+                  <option value="sale">For Sale</option>
+                  <option value="rent">For Rent</option>
+                </select>
+              </label>
+              <label>Date range
+                <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
+                  <option value="all">All time</option>
+                  <option value="today">Today</option>
+                  <option value="last_7_days">Last 7 days</option>
+                  <option value="last_30_days">Last 30 days</option>
+                  <option value="this_month">This month</option>
+                </select>
+              </label>
+              <label>AI score
+                <select value={aiScore} onChange={(e) => setAiScore(e.target.value)}>
+                  <option value="">All</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </label>
+              <label>Agent
+                <select value={agentId} onChange={(e) => setAgentId(e.target.value)}>
+                  <option value="">All agents</option>
+                  {agentOptions.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
+                </select>
+              </label>
+              <label>Team
+                <select value={teamId} onChange={(e) => setTeamId(e.target.value)}>
+                  <option value="">All teams</option>
+                  {teamOptions.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
+                </select>
+              </label>
+              <div className="re-more-filter-actions">
+                <button type="button" onClick={() => {
+                  setSearch(""); setType(""); setStatus(""); setCity(""); setPropertyType("");
+                  setMinPrice(""); setMaxPrice(""); setAgentId(""); setTeamId(""); setAiScore("");
+                  setDateRange("all"); setPage(1); setShowMoreFilters(false);
+                  const emptyFilters = { search: "", type: "", status: "", city: "", propertyType: "", minPrice: "", maxPrice: "", agentId: "", teamId: "", aiScore: "" };
+                  loadProperties(emptyFilters, 1);
+                  getPropertiesDashboard({ range: "all" }).then(setDashboard);
+                }}>
+                  <RotateCcw size={13} /> Clear
+                </button>
+                <button type="button" className="primary" onClick={() => { setPage(1); loadProperties(null, 1); loadDashboard(); setShowMoreFilters(false); }}>
+                  Apply filters
+                </button>
               </div>
-            ))
+            </div>
           )}
         </div>
-        <div className="properties-pagination">
-          <div className="pagination-info">
-            {t("properties.showingCount", {
-              shown: properties.length,
-              total: total,
-            })}
-          </div>
 
-          <div className="pagination-controls">
-            <select
-              value={perPage}
-              onChange={(e) => {
-                setPerPage(Number(e.target.value));
-                setPage(1);
-              }}
-            >
-              <option value={8}>{t("properties.perPageOption", { count: 8 })}</option>
-              <option value={12}>{t("properties.perPageOption", { count: 12 })}</option>
-              <option value={24}>{t("properties.perPageOption", { count: 24 })}</option>
-            </select>
-
-            <button
-              className="btn btn-secondary"
-              disabled={page <= 1}
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-            >
-              {t("common.previous")}
-            </button>
-
-            <span>
-              {t("properties.pageOf", { page: page, total: totalPages })}
-            </span>
-
-            <button
-              className="btn btn-secondary"
-              disabled={page >= totalPages}
-              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-            >
-              {t("common.next")}
-            </button>
-          </div>
+        <div className="re-toolbar-spacer" />
+        <button className="re-icon-tool" type="button" onClick={exportPropertiesCsv} title="Export CSV"><Download size={15} /></button>
+        <div className="re-view-toggle">
+          <button className={viewMode === "grid" ? "active" : ""} onClick={() => setViewMode("grid")}><LayoutGrid size={15} /> Grid</button>
+          <button className={viewMode === "list" ? "active" : ""} onClick={() => setViewMode("list")}><List size={15} /> List</button>
         </div>
-        {/* RIGHT COMPONENT: SIDEBAR PLATFORM PANEL */}
-        <div className="sidebar-panel">
-          {/* SECTION 1: INVENTORY HEALTH */}
-          <div className="sidebar-section">
-            <div className="section-header">
-              <h3>
-                <ShieldCheck size={18} className="blue" />
-                {t("properties.inventoryHealth")}
-              </h3>
-            </div>
+      </section>
 
-            <div className="health-chart-wrapper">
-              <div className="chart-wrap">
-                <div
-                  className="donut-chart-mock"
-                  style={{
-                    background: `conic-gradient(
-      #16a34a 0 ${getPercent(healthActive, healthTotal)}%,
-      #ea580c ${getPercent(healthActive, healthTotal)}% ${
-        getPercent(healthActive, healthTotal) +
-        getPercent(healthUnderReview, healthTotal)
-      }%,
-      #64748b ${
-        getPercent(healthActive, healthTotal) +
-        getPercent(healthUnderReview, healthTotal)
-      }% ${
-        getPercent(healthActive, healthTotal) +
-        getPercent(healthUnderReview, healthTotal) +
-        getPercent(healthDraft, healthTotal)
-      }%,
-      #dc2626 ${
-        getPercent(healthActive, healthTotal) +
-        getPercent(healthUnderReview, healthTotal) +
-        getPercent(healthDraft, healthTotal)
-      }% 100%
-    )`,
-                  }}
-                >
-                  <div className="chart-center">
-                    <h4>{healthTotal}</h4>
-                    <span>{t("properties.total")}</span>
-                  </div>
-                </div>
-
-                <div className="chart-legend">
-                  <div className="legend-item">
-                    <div className="legend-label">
-                      <CheckCircle2 size={14} color="#16a34a" />
-                      <span>{t("common.active")}</span>
+      <section className={viewMode === "grid" ? "re-properties-grid" : "re-properties-grid re-properties-list"}>
+        {loading ? (
+          <div className="re-empty-card">{t("properties.loadingProperties")}</div>
+        ) : properties.length === 0 ? (
+          <div className="re-empty-card">{t("properties.noPropertiesFound")}</div>
+        ) : (
+          properties.map((property, idx) => (
+            <article
+              className="re-property-card"
+              key={property.id || idx}
+              onClick={() => openPropertyDrawer(property)}
+            >
+              <div className="re-property-media">
+                {property.thumbnailUrl ? (
+                  <img src={property.thumbnailUrl} alt={property.title || "Property"} />
+                ) : (
+                  <div className="re-property-placeholder">{t("properties.propertyImagePlaceholder")}</div>
+                )}
+                <span className={`re-status-badge status-${String(property.status || "draft").replaceAll("_", "-")}`}>
+                  {(property.status || "draft").replaceAll("_", " ").toUpperCase()}
+                </span>
+                <div className="re-card-action-wrap">
+                  <button
+                    className="re-card-action"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenActionId(openActionId === property.id ? null : property.id);
+                    }}
+                  ><MoreVertical size={15} /></button>
+                  {openActionId === property.id && (
+                    <div className="property-actions-menu">
+                      <button onClick={(e) => { e.stopPropagation(); setSelectedAnalysisProperty(property); setAnalysisOpen(true); setOpenActionId(null); }}>{t("properties.viewAnalysis")}</button>
+                      <button onClick={async (e) => { e.stopPropagation(); await publishProperty(property.id); setOpenActionId(null); await loadProperties(); await loadDashboard(); }}>{t("properties.publish")}</button>
+                      <button onClick={(e) => { e.stopPropagation(); openEditPropertyModal(property); setOpenActionId(null); }}>{t("properties.edit")}</button>
+                      <button className="danger" onClick={async (e) => { e.stopPropagation(); if (!window.confirm(t("properties.confirmDeleteProperty"))) return; await deleteProperty(property.id); setOpenActionId(null); await loadProperties(); await loadDashboard(); }}>{t("common.delete")}</button>
                     </div>
-                    <span className="legend-value">
-                      {healthActive} ({getPercent(healthActive, healthTotal)}%)
-                    </span>
-                  </div>
-                  <div className="legend-item">
-                    <div className="legend-label">
-                      <Clock3 size={14} color="#ea580c" />
-                      <span>{t("properties.underReview")}</span>
-                    </div>
-                    {healthUnderReview} (
-                    {getPercent(healthUnderReview, healthTotal)}%)
-                  </div>
-                  <div className="legend-item">
-                    <div className="legend-label">
-                      <FileText size={14} color="#64748b" />
-                      <span>{t("properties.draft")}</span>
-                    </div>
-                    {healthDraft} ({getPercent(healthDraft, healthTotal)}%)
-                  </div>
-                  <div className="legend-item">
-                    <div className="legend-label">
-                      <AlertCircle size={14} color="#dc2626" />
-                      <span>{t("common.inactive")}</span>
-                    </div>
-                    {healthInactive} ({getPercent(healthInactive, healthTotal)}
-                    %)
-                  </div>
+                  )}
                 </div>
               </div>
-              <div className="inventory-score-box">
-                <div className="score-info">
-                  <h5>{t("properties.inventoryScore")}</h5>
-                  <div className="score-display">
-                    {inventoryScore} <span className="score-max">/100</span>
-                  </div>
-                  <span className="score-status">
-                    {getInventoryStatus(inventoryScore)}
-                  </span>
+
+              <div className="re-property-body">
+                <div className="re-property-price-row">
+                  <strong>{property.price ? `$${Number(property.price).toLocaleString()}` : t("properties.noPrice")}</strong>
+                  
                 </div>
-                <div className="score-trend">
-                  <span className="trend-up-text">
-                    {dashboard?.activeListings?.trend?.text || "→ 0% all time"}
-                  </span>
-                  {/*<p>{dashboard?.rangeLabel || "All time"}</p>*/}
+                <p className="re-property-address">{property.address || property.title || t("properties.noAddress")}</p>
+                <p className="re-property-city">{[property.city, property.state, property.zipCode].filter(Boolean).join(", ")}</p>
+                <div className="re-property-specs">
+                  <span><BedDouble size={12} /> {property.bedrooms || 0}</span>
+                  <span><Bath size={12} /> {property.bathrooms || 0}</span>
+                  <span><Maximize size={12} /> {property.squareFeet ? `${Number(property.squareFeet).toLocaleString()} sqft` : "—"}</span>
+                  <div className={`re-ai-score ${Number(property.aiScore || 0) >= 80 ? "high" : Number(property.aiScore || 0) >= 50 ? "medium" : "low"}`}>
+                    <b>{Number(property.aiScore || 0)}</b><span>Score</span>
+                  </div>
+                </div>
+                <div className="re-property-footer">
+                  <div className="re-agent-mini">
+                    <div className="re-agent-avatar">{(property.agentName || property.createdByName || "U").slice(0, 1).toUpperCase()}</div>
+                    <span>{property.agentName || property.createdByName || t("properties.unassigned")}</span>
+                  </div>
+                  <div className="re-matched-mini"><b>{Number(property.matchedLeads || 0)}</b><span>Matched Leads</span></div>
                 </div>
               </div>
-            </div>
-            <div className="section-footer-link">
-              <a
-                href="#view-analysis"
-                className="section-link"
-                onClick={() => setAnalysisOpen(true)}
-              >
-                {t("properties.viewFullAnalysis")} <ArrowRight size={13} />
-              </a>
-            </div>
-          </div>
+            </article>
+          ))
+        )}
+      </section>
 
-          {/* SECTION 2: MATCHED LEADS */}
-          <div className="sidebar-section">
-            <div className="section-header">
-              <h3>
-                <Users size={18} className="blue" />
-                {t("properties.matchedLeads")}
-              </h3>
-              <a
-                href="#view-all-leads"
-                className="section-link"
-                onClick={() => navigate("/dashboard/leads")}
-              >
-                {t("properties.viewAllLeads")}
-                <ArrowRight size={13} />
-              </a>
-            </div>
-
-            <div className="matched-leads-list">
-              {matchedLeads.length === 0 ? (
-                <div className="matched-lead-item">
-                  <div className="lead-details">
-                    <h4>{t("properties.noMatchedLeads")}</h4>
-                    <p>{t("properties.matchingHint")}</p>
-                  </div>
-                </div>
-              ) : (
-                matchedLeads.map((lead) => (
-                  <div className="matched-lead-item" key={lead.id}>
-                    <div className="lead-left-content">
-                      <div className="lead-avatar-img fallback-avatar">
-                        {(lead.name || "L").slice(0, 1).toUpperCase()}
-                      </div>
-                      <div className="lead-details">
-                        <h4>{lead.name}</h4>
-                        <p>
-                          <MapPin size={12} color="#94a3b8" /> {lead.location}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="lead-right-meta">
-                      <span className="budget">
-                        {t("properties.budgetLabel", { budget: lead.budget })}
-                      </span>
-                      <span className="matches-count">
-                        {t("properties.matchedPropertiesLabel")}{" "}
-                        <strong>{lead.count}</strong>
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+      <section className="re-pagination-row">
+        <span>Showing {properties.length ? currentOffset + 1 : 0}–{Math.min(currentOffset + properties.length, total)} of {total} properties</span>
+        <div className="re-pagination-controls">
+          <select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}>
+            <option value={8}>8 per page</option>
+            <option value={12}>12 per page</option>
+            <option value={24}>24 per page</option>
+          </select>
+          <button disabled={page <= 1} onClick={() => setPage((prev) => Math.max(1, prev - 1))}>‹</button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((pageNumber) => (
+            <button key={pageNumber} className={page === pageNumber ? "active" : ""} onClick={() => setPage(pageNumber)}>{pageNumber}</button>
+          ))}
+          {totalPages > 5 && <span>… {totalPages}</span>}
+          <button disabled={page >= totalPages} onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}>›</button>
         </div>
-      </div>
+      </section>
+
+      <section className="re-bottom-grid">
+        <article className="re-bottom-card re-inventory-card">
+          <h3>Inventory Health</h3>
+          <div className="re-inventory-body">
+            <div className="re-donut" style={{ background: `conic-gradient(#22c55e 0 ${getPercent(healthActive, healthTotal)}%, #f59e0b ${getPercent(healthActive, healthTotal)}% ${getPercent(healthActive, healthTotal) + getPercent(healthUnderReview, healthTotal)}%, #3b82f6 ${getPercent(healthActive, healthTotal) + getPercent(healthUnderReview, healthTotal)}% ${getPercent(healthActive, healthTotal) + getPercent(healthUnderReview, healthTotal) + getPercent(healthDraft, healthTotal)}%, #ef4444 ${getPercent(healthActive, healthTotal) + getPercent(healthUnderReview, healthTotal) + getPercent(healthDraft, healthTotal)}% 100%)` }}>
+              <div><strong>{healthTotal}</strong><span>Total</span></div>
+            </div>
+            <div className="re-health-legend">
+              <span><i className="active" />Active <b>{healthActive} ({getPercent(healthActive, healthTotal)}%)</b></span>
+              <span><i className="pending" />Pending <b>{healthUnderReview} ({getPercent(healthUnderReview, healthTotal)}%)</b></span>
+              <span><i className="sold" />Draft <b>{healthDraft} ({getPercent(healthDraft, healthTotal)}%)</b></span>
+              <span><i className="off" />Inactive <b>{healthInactive} ({getPercent(healthInactive, healthTotal)}%)</b></span>
+            </div>
+            <div className="re-inventory-score">
+              <span>Inventory Score</span><strong>{inventoryScore}<small>/100</small></strong><b>{getInventoryStatus(inventoryScore)}</b>
+            </div>
+          </div>
+        </article>
+
+        <article className="re-bottom-card">
+          <h3>Top Performing Agents</h3>
+          <div className="re-ranking-list">
+            {topAgents.length ? topAgents.map((agent, index) => (
+              <div key={agent.name}><b>{index + 1}</b><span className="avatar">{agent.name.slice(0,1)}</span><strong>{agent.name}</strong><span>{agent.deals} Deals</span><em>${agent.value >= 1000000 ? `${(agent.value / 1000000).toFixed(1)}M` : Math.round(agent.value / 1000) + "K"}</em></div>
+            )) : <p className="re-panel-empty">No agent data yet.</p>}
+          </div>
+          <button className="re-panel-link" onClick={() => navigate("/dashboard/team/members")}>View all agents <ArrowRight size={12} /></button>
+        </article>
+
+        <article className="re-bottom-card">
+          <h3>Recent Showings</h3>
+          <div className="re-showings-list">
+            {recentShowings.length ? recentShowings.map((showing, index) => (
+              <div key={showing.id || index}><span>{showing.time || showing.date || "—"}</span><strong>{showing.address || showing.property || "Property showing"}</strong><em>{showing.agentName || showing.agent || "—"}</em></div>
+            )) : <p className="re-panel-empty">No recent showings.</p>}
+          </div>
+          <button className="re-panel-link">View all showings <ArrowRight size={12} /></button>
+        </article>
+
+        <article className="re-bottom-card re-insights-card">
+          <h3><Sparkles size={15} /> AI Insights</h3>
+          <div className="re-insights-list">
+            {aiInsightItems.map((insight, index) => (
+              <div key={index}><span className={`dot dot-${index}`} /> <p>{insight.label}</p><button onClick={() => setAnalysisOpen(true)}>{insight.action} <ArrowRight size={11} /></button></div>
+            ))}
+          </div>
+          <button className="re-panel-link" onClick={() => setAnalysisOpen(true)}>View full AI report <ArrowRight size={12} /></button>
+        </article>
+      </section>
+
       {drawerOpen && (
         <div className="property-drawer-backdrop" onClick={closePropertyDrawer}>
           <aside
