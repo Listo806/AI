@@ -3132,38 +3132,6 @@
   font-weight: 700;
 }
 
-.pricing-page .cx-pricing-v3-disclosure {
-  margin: 14px auto 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 10px;
-  color: #4b5563;
-  font-size: 13px;
-  line-height: 1.45;
-  text-align: left;
-}
-
-.pricing-page .cx-pricing-v3-disclosure p {
-  margin: 0;
-}
-
-.pricing-page .cx-pricing-v3-info-icon {
-  width: 19px;
-  height: 19px;
-  flex: 0 0 19px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 1px;
-  border: 1.5px solid #4b5563;
-  border-radius: 50%;
-  font-size: 12px;
-  line-height: 1;
-  font-weight: 800;
-  font-family: Georgia, serif;
-}
-
 @media (max-width: 1180px) and (min-width: 769px) {
   .pricing-page .cx-pricing-v3-recurring strong {
     font-size: 23px;

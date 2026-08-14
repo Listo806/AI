@@ -896,8 +896,6 @@ const pricingV3 = {
     perMonth: "/month",
     perYear: "/year",
     oneTimeActivation: "one-time activation",
-    activationNote: "Activation fee is a one-time charge to start your account.",
-    trialNote: "All plans include a 7-day free trial. Cancel anytime.",
     annualSavings: "20% savings vs.",
     atMonthlyPricing: "at monthly pricing",
     plans: {
@@ -926,7 +924,7 @@ const pricingV3 = {
           "Full CRM & Contact Management",
           "Lead & Pipeline Management",
           "Unlimited Basic Automations",
-          "Email & SMS Marketing",
+          "Email & SMS Communications",
           "Calendar & Appointments",
           "Basic Reports & Dashboards",
           "Integrations (Core)",
@@ -943,7 +941,7 @@ const pricingV3 = {
           "Advanced Automations",
           "Team Workspace",
           "Advanced Reports & Analytics",
-          "Workflows & Sequences",
+          "Advanced Workflows",
           "Custom Fields & Pipelines",
           "Integrations (Zapier, Make, etc.)",
           "Unlimited AI Usage",
@@ -986,8 +984,6 @@ const pricingV3 = {
     perMonth: "/mes",
     perYear: "/año",
     oneTimeActivation: "activación única",
-    activationNote: "La tarifa de activación es un cargo único para iniciar tu cuenta.",
-    trialNote: "Todos los planes incluyen una prueba gratuita de 7 días. Cancela cuando quieras.",
     annualSavings: "20% de ahorro vs.",
     atMonthlyPricing: "con precio mensual",
     plans: {
@@ -1000,7 +996,7 @@ const pricingV3 = {
           "Agente de IA (Limitado)",
           "Chat básico con IA",
           "Panel básico",
-          "Conversaciones de IA limitadas (50/mes)",
+          "Comunicaciones por correo electrónico y SMS",
           "Automatización básica (5 flujos)",
           "Gestión de contactos (Limitada)",
           "Integración (1 App)",
@@ -1033,7 +1029,7 @@ const pricingV3 = {
           "Automatizaciones avanzadas",
           "Espacio de equipo",
           "Informes y analítica avanzados",
-          "Flujos y secuencias",
+          "Flujos de trabajo avanzados",
           "Campos y pipelines personalizados",
           "Integraciones (Zapier, Make, etc.)",
           "Uso ilimitado de IA",
@@ -1076,8 +1072,6 @@ const pricingV3 = {
     perMonth: "/mês",
     perYear: "/ano",
     oneTimeActivation: "ativação única",
-    activationNote: "A taxa de ativação é uma cobrança única para iniciar sua conta.",
-    trialNote: "Todos os planos incluem 7 dias de teste grátis. Cancele a qualquer momento.",
     annualSavings: "20% de economia vs.",
     atMonthlyPricing: "com preço mensal",
     plans: {
@@ -1090,7 +1084,7 @@ const pricingV3 = {
           "Agente de IA (Limitado)",
           "Chat básico com IA",
           "Dashboard básico",
-          "Conversas de IA limitadas (50/mês)",
+          "Comunicaciones por correo electrónico y SMS",
           "Automação básica (5 fluxos)",
           "Gestão de contatos (Limitada)",
           "Integração (1 App)",
@@ -1123,7 +1117,7 @@ const pricingV3 = {
           "Automações avançadas",
           "Workspace de equipe",
           "Relatórios e análises avançadas",
-          "Fluxos e sequências",
+          "Fluxos de trabalho avançados",
           "Campos e pipelines personalizados",
           "Integrações (Zapier, Make, etc.)",
           "Uso ilimitado de IA",
@@ -1501,13 +1495,6 @@ export default function PricingPage() {
             </article>
           </div>
 
-          <div className="cx-pricing-v3-disclosure" role="note">
-            <span className="cx-pricing-v3-info-icon" aria-hidden="true">i</span>
-            <div>
-              <p>{pv3.activationNote}</p>
-              <p>{pv3.trialNote}</p>
-            </div>
-          </div>
         </section>
       </main>
     </div>
