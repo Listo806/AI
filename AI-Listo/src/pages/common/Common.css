@@ -2014,7 +2014,7 @@
 .pricing-page .cx-pricing-v3-popular {
   padding: 5px 9px;
   border-radius: 4px;
-  background: #ffffff;
+  background: #8BC34A;
   color: #111111;
   font-size: 12px;
   font-weight: 800;
@@ -2044,8 +2044,9 @@
   justify-content: center;
   gap: 13px;
 }
+
 .n-flex{
-  display: unset;
+  display: unset!important;
 }
 .pricing-page .cx-pricing-v3-price strong {
   color: inherit;

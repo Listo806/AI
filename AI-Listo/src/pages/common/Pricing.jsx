@@ -1394,7 +1394,7 @@ export default function PricingPage() {
               <div className="cx-pricing-v3-card-top">
                 <h2>{pv3.plans.free.name}</h2>
                 <p className="cx-pricing-v3-desc">{pv3.plans.free.desc}</p>
-                <div className="cx-pricing-v3-price n-flex cx-pricing-v3-free-price">
+                <div className="cx-pricing-v3-price n-flex cx-pricing-v3-free-price n-flex">
                   <strong>{pv3.plans.free.price}</strong>
                   <b>{pv3.forever}</b>
                 </div>
