@@ -75,3 +75,21 @@ export function getWorkspace(id: unknown): WorkspaceDef | null {
 export function isValidWorkspaceId(id: unknown): boolean {
   return !!BY_ID[normalizeWorkspaceId(id)];
 }
+
+// Which workspaces currently require the paid add-on to access. Driven by the
+// env var WORKSPACE_LOCKED_IDS (comma-separated workspace ids), so locks are
+// turned on ONE AT A TIME by config with no redeploy of logic — empty by default,
+// meaning every workspace stays open until the client explicitly enables a lock.
+// Only valid, known workspace ids are honored.
+export function getLockedWorkspaceIds(): string[] {
+  const raw = process.env.WORKSPACE_LOCKED_IDS || '';
+  return raw
+    .split(',')
+    .map((s) => normalizeWorkspaceId(s))
+    .filter((id) => !!BY_ID[id]);
+}
+
+export function isWorkspaceLocked(id: unknown): boolean {
+  const wid = normalizeWorkspaceId(id);
+  return getLockedWorkspaceIds().includes(wid);
+}
