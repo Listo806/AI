@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { PlatformMailerService } from './platform-mailer.service';
+import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 
 /**
  * Tenant-isolated data layer for the customer-facing E-Commerce Workspace.
