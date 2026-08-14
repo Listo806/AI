@@ -7,9 +7,10 @@ import { PaymentsService } from './payments.service';
 import { PayPalService } from './paypal.service';
 import { User } from '../users/entities/user.entity';
 import { PlatformMailModule } from '../platform-mail/platform-mail.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 
 @Module({
-  imports: [ConfigModule, PlatformMailModule],
+  imports: [ConfigModule, PlatformMailModule, WorkspacesModule],
   controllers: [PaddleController, PaymentsController],
   providers: [PaddleService, PaymentsService, PayPalService],
   exports: [PaddleService],

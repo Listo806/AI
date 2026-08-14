@@ -144,3 +144,20 @@ export function openPaddleCheckout({
     },
   });
 }
+
+// Open the Paddle checkout for a paid Workspace add-on. This is its OWN $97/month
+// recurring subscription, entirely separate from the base plan, so it opens with a
+// SINGLE recurring item and no starting charge. `priceId` and `customData` come
+// from the backend purchase endpoint, which stamps the authoritative account data
+// the webhook re-validates before granting the entitlement.
+export function openWorkspaceCheckout({ priceId, customData, email }) {
+  if (!priceId) {
+    throw new Error("Workspace Paddle price is not configured");
+  }
+
+  window.Paddle.Checkout.open({
+    items: [{ priceId, quantity: 1 }],
+    customer: email ? { email } : undefined,
+    customData: customData || {},
+  });
+}

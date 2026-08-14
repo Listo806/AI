@@ -31,6 +31,7 @@ import { CalendarModule } from "./calendar/calendar.module";
 import { PlatformMailModule } from "./platform-mail/platform-mail.module";
 import { PlansModule } from "./plans/plans.module";
 import { InsuranceModule } from "./insurance/insurance.module";
+import { WorkspacesModule } from "./workspaces/workspaces.module";
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { InsuranceModule } from "./insurance/insurance.module";
     CalendarModule,
     PlatformMailModule,
     InsuranceModule,
+    WorkspacesModule,
   ],
   controllers: [AppController],
 })
