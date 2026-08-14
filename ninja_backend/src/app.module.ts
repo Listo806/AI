@@ -32,6 +32,7 @@ import { PlatformMailModule } from "./platform-mail/platform-mail.module";
 import { PlansModule } from "./plans/plans.module";
 import { InsuranceModule } from "./insurance/insurance.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
+import { EcommerceWorkspaceModule } from './ecommerce/ecommerce-workspace.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
     PlatformMailModule,
     InsuranceModule,
     WorkspacesModule,
+    EcommerceWorkspaceModule,
   ],
   controllers: [AppController],
 })

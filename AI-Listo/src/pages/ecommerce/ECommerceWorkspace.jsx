@@ -36,6 +36,30 @@ import {
   FEATURE_TO_ADDON,
   openFeatureAddOns,
 } from "../../components/FeatureAddOns";
+import {
+  getEcommerceCustomers as getCustomersHub,
+  getEcommerceSummary as getCustomersSummary,
+  getEcommerceCustomerDetail as getCustomerDetail,
+  addEcommerceCustomerNote as addCustomerNote,
+  deleteEcommerceCustomerNote as deleteCustomerNote,
+  changeEcommerceCustomerPlan as changeCustomerPlan,
+  deactivateEcommerceCustomer as deactivateCustomer,
+  deleteEcommerceCustomer as deleteCustomerHub,
+  exportEcommerceCustomersCsv as exportCustomersHubCsv,
+  importEcommerceCustomers as importCustomers,
+  createEcommerceCustomer as createCustomer,
+  updateEcommerceCustomer as updateCustomerInfo,
+  sendEcommerceCustomerEmail as sendCustomerEmail,
+  getEcommerceCustomerTeam as getCustomerTeam,
+  addEcommerceCustomerTeamMember as addCustomerTeamMember,
+  changeEcommerceCustomerMemberRole as changeCustomerMemberRole,
+  setEcommerceCustomerMemberSeat as setCustomerMemberSeat,
+  removeEcommerceCustomerTeamMember as removeCustomerTeamMember,
+  transferEcommerceCustomerOwnership as transferCustomerOwnership,
+  getEcommercePlanConfig as getPlanConfig,
+  setEcommercePlanConfig as setPlanConfig,
+  resetEcommercePlanConfig as resetPlanConfig,
+} from "../../api/ecommerceApi";
 import "../platform/platform.css";
 
 
@@ -49,65 +73,6 @@ import "../platform/platform.css";
  * endpoints. The backend must derive tenant/account/workspace identity from the
  * authenticated JWT/session and filter every query by that identity.
  */
-
-const EMPTY_SUMMARY = {
-  kpis: {
-    totalRegistered: 0,
-    newThisWeek: 0,
-    activeCustomers: 0,
-    activePctOfTotal: 0,
-    mrr: 0,
-    arr: 0,
-    conversionRate: 0,
-    freeAccounts: 0,
-    freePctOfTotal: 0,
-  },
-  tabs: {
-    all: 0,
-    registered: 0,
-    free: 0,
-    trialing: 0,
-    active: 0,
-    past_due: 0,
-    canceled: 0,
-  },
-  breakdowns: {
-    source: [],
-    plan: [],
-    language: [],
-    country: [],
-  },
-};
-
-const tenantOnly = () =>
-  Promise.reject(
-    new Error(
-      "E-Commerce tenant API is not connected yet. No Admin/Super Admin customer data is used.",
-    ),
-  );
-
-const getCustomersHub = async () => ({ data: [], total: 0 });
-const getCustomersSummary = async () => EMPTY_SUMMARY;
-const getCustomerDetail = async () => null;
-const addCustomerNote = tenantOnly;
-const deleteCustomerNote = tenantOnly;
-const changeCustomerPlan = tenantOnly;
-const deactivateCustomer = tenantOnly;
-const deleteCustomerHub = tenantOnly;
-const exportCustomersHubCsv = tenantOnly;
-const importCustomers = tenantOnly;
-const createCustomer = tenantOnly;
-const updateCustomerInfo = tenantOnly;
-const sendCustomerEmail = tenantOnly;
-const getCustomerTeam = async () => ({ data: [] });
-const addCustomerTeamMember = tenantOnly;
-const changeCustomerMemberRole = tenantOnly;
-const setCustomerMemberSeat = tenantOnly;
-const removeCustomerTeamMember = tenantOnly;
-const transferCustomerOwnership = tenantOnly;
-const getPlanConfig = async () => ({ plans: [], enforcedPlanIds: [] });
-const setPlanConfig = tenantOnly;
-const resetPlanConfig = tenantOnly;
 
 const INTERNAL_WORKSPACE_ROLES = new Set([
   "super_admin",
