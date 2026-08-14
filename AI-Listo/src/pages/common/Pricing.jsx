@@ -892,11 +892,19 @@ const pricingV3 = {
     everythingBusiness: "EVERYTHING IN BUSINESS, PLUS:",
     ctaFree: "Get Started",
     ctaTrial: "Start Free Trial",
+    then: "Then",
+    perMonth: "/month",
+    perYear: "/year",
+    oneTimeActivation: "one-time activation",
+    activationNote: "Activation fee is a one-time charge to start your account.",
+    trialNote: "All plans include a 7-day free trial. Cancel anytime.",
+    annualSavings: "20% savings vs.",
+    atMonthlyPricing: "at monthly pricing",
     plans: {
       free: {
         name: "Free",
         desc: "Perfect to explore Cortexa and get started.",
-        price: "Free",
+        price: "$0",
         users: "",
         features: [
           "AI Agent (Limited)",
@@ -974,11 +982,19 @@ const pricingV3 = {
     everythingBusiness: "TODO LO DE BUSINESS, MÁS:",
     ctaFree: "Comenzar",
     ctaTrial: "Iniciar prueba gratis",
+    then: "Luego",
+    perMonth: "/mes",
+    perYear: "/año",
+    oneTimeActivation: "activación única",
+    activationNote: "La tarifa de activación es un cargo único para iniciar tu cuenta.",
+    trialNote: "Todos los planes incluyen una prueba gratuita de 7 días. Cancela cuando quieras.",
+    annualSavings: "20% de ahorro vs.",
+    atMonthlyPricing: "con precio mensual",
     plans: {
       free: {
         name: "Free",
         desc: "Perfecto para explorar Cortexa y comenzar.",
-        price: "Gratis",
+        price: "$0",
         users: "",
         features: [
           "Agente de IA (Limitado)",
@@ -1056,11 +1072,19 @@ const pricingV3 = {
     everythingBusiness: "TUDO DO BUSINESS, MAIS:",
     ctaFree: "Começar",
     ctaTrial: "Iniciar teste grátis",
+    then: "Depois",
+    perMonth: "/mês",
+    perYear: "/ano",
+    oneTimeActivation: "ativação única",
+    activationNote: "A taxa de ativação é uma cobrança única para iniciar sua conta.",
+    trialNote: "Todos os planos incluem 7 dias de teste grátis. Cancele a qualquer momento.",
+    annualSavings: "20% de economia vs.",
+    atMonthlyPricing: "com preço mensal",
     plans: {
       free: {
         name: "Free",
         desc: "Perfeito para explorar a Cortexa e começar.",
-        price: "Grátis",
+        price: "$0",
         users: "",
         features: [
           "Agente de IA (Limitado)",
@@ -1154,6 +1178,81 @@ export default function PricingPage() {
   const { user } = useAuth();
   const cycle = billingCycle === "annually" ? "annual" : "monthly";
 
+  const billingPrices = {
+    solo: {
+      activation: 7,
+      monthly: 197,
+      annual: 1891.2,
+      monthlyAnnualized: 2364,
+    },
+    team: {
+      activation: 14,
+      monthly: 347,
+      annual: 3331.2,
+      monthlyAnnualized: 4164,
+    },
+    growth: {
+      activation: 21,
+      monthly: 497,
+      annual: 4771.2,
+      monthlyAnnualized: 5964,
+    },
+  };
+
+  const formatUsd = (amount) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+
+  const getRecurringPrice = (planKey) => {
+    const plan = billingPrices[planKey];
+    if (!plan) return null;
+
+    return {
+      amount: cycle === "annual" ? plan.annual : plan.monthly,
+      period: cycle === "annual" ? pv3.perYear : pv3.perMonth,
+      savingsBase: plan.monthlyAnnualized,
+    };
+  };
+
+  const renderPaidPrice = (planKey) => {
+    const plan = billingPrices[planKey];
+    const recurring = getRecurringPrice(planKey);
+
+    return (
+      <div className="cx-pricing-v3-paid-pricing">
+        <div className="cx-pricing-v3-price">
+          <strong>{formatUsd(plan.activation)}</strong>
+          <span>{pv3.toStart}</span>
+        </div>
+
+        <div className="cx-pricing-v3-activation-label">
+          {formatUsd(plan.activation)} {pv3.oneTimeActivation}
+        </div>
+
+        <div className="cx-pricing-v3-then-row" aria-label={pv3.then}>
+          <span />
+          <b>{pv3.then}</b>
+          <span />
+        </div>
+
+        <div className="cx-pricing-v3-recurring">
+          <strong>{formatUsd(recurring.amount)}</strong>
+          <span>{recurring.period}</span>
+        </div>
+
+        {cycle === "annual" && (
+          <div className="cx-pricing-v3-saving-detail">
+            ({pv3.annualSavings} {formatUsd(recurring.savingsBase)}{pv3.perYear} {pv3.atMonthlyPricing})
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // New signup flow:
   // CTA -> Create Account -> Pricing -> Review / Checkout.
   //
@@ -1164,6 +1263,24 @@ export default function PricingPage() {
       plan: planKey,
       billing_cycle: planKey === "free" ? "free" : cycle,
     });
+
+    if (planKey !== "free") {
+      const selectedPricing = billingPrices[planKey];
+      localStorage.setItem(
+        "pendingPricingSelection",
+        JSON.stringify({
+          plan: planKey,
+          billingCycle: cycle,
+          activationAmount: selectedPricing.activation,
+          recurringAmount:
+            cycle === "annual"
+              ? selectedPricing.annual
+              : selectedPricing.monthly,
+          recurringFrequency: cycle === "annual" ? "year" : "month",
+          currency: "USD",
+        }),
+      );
+    }
 
     const hasRegisteredAccount = Boolean(
       user || localStorage.getItem("trialUserId"),
@@ -1277,8 +1394,8 @@ export default function PricingPage() {
               <div className="cx-pricing-v3-card-top">
                 <h2>{pv3.plans.free.name}</h2>
                 <p className="cx-pricing-v3-desc">{pv3.plans.free.desc}</p>
-                <div className="cx-pricing-v3-price n-flex">
-                  <strong>{pv3.plans.free.price}</strong><br />
+                <div className="cx-pricing-v3-price n-flex cx-pricing-v3-free-price">
+                  <strong>{pv3.plans.free.price}</strong>
                   <b>{pv3.forever}</b>
                 </div>
                 <Link
@@ -1306,10 +1423,7 @@ export default function PricingPage() {
               <div className="cx-pricing-v3-card-top">
                 <h2>{pv3.plans.solo.name}</h2>
                 <p className="cx-pricing-v3-desc">{pv3.plans.solo.desc}</p>
-                <div className="cx-pricing-v3-price">
-                  <strong>{pv3.plans.solo.price}</strong>
-                  <span>{pv3.toStart}</span>
-                </div>
+                {renderPaidPrice("solo")}
                 <Link
                   to="/trial?from=pricing"
                   className="cx-pricing-v3-cta"
@@ -1338,13 +1452,7 @@ export default function PricingPage() {
                   <span className="cx-pricing-v3-popular">{pv3.popular}</span>
                 </div>
                 <p className="cx-pricing-v3-desc">{pv3.plans.business.desc}</p>
-                <div className="cx-pricing-v3-price">
-                  <strong>{pv3.plans.business.price}</strong>
-                  <span>{pv3.toStart}</span>
-                </div>
-                <div className="cx-pricing-v3-users">
-                  {pv3.plans.business.users}
-                </div>
+                {renderPaidPrice("team")}
                 <Link
                   to="/trial?from=pricing"
                   className="cx-pricing-v3-cta cx-pricing-v3-cta-business"
@@ -1370,13 +1478,7 @@ export default function PricingPage() {
               <div className="cx-pricing-v3-card-top">
                 <h2>{pv3.plans.scale.name}</h2>
                 <p className="cx-pricing-v3-desc">{pv3.plans.scale.desc}</p>
-                <div className="cx-pricing-v3-price">
-                  <strong>{pv3.plans.scale.price}</strong>
-                  <span>{pv3.toStart}</span>
-                </div>
-                <div className="cx-pricing-v3-users">
-                  {pv3.plans.scale.users}
-                </div>
+                {renderPaidPrice("growth")}
                 <Link
                   to="/trial?from=pricing"
                   className="cx-pricing-v3-cta"
@@ -1397,6 +1499,14 @@ export default function PricingPage() {
                 </ul>
               </div>
             </article>
+          </div>
+
+          <div className="cx-pricing-v3-disclosure" role="note">
+            <span className="cx-pricing-v3-info-icon" aria-hidden="true">i</span>
+            <div>
+              <p>{pv3.activationNote}</p>
+              <p>{pv3.trialNote}</p>
+            </div>
           </div>
         </section>
       </main>
