@@ -12,6 +12,15 @@ export interface UploadFileDto {
   teamId?: string;
 }
 
+// Identity of whoever is asking to read a file. Required by getFile/getSignedUrl
+// so a file can only be reached by its uploader, a member of the team it was
+// uploaded under, or platform support.
+export interface FileRequester {
+  userId: string;
+  teamId?: string | null;
+  role?: string | null;
+}
+
 const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -161,23 +170,50 @@ export class StorageService {
     }
   }
 
+  // Enforce that `requester` is allowed to read a file owned by (ownerUserId,
+  // ownerTeamId). Access is granted to the uploader, to any member of the team the
+  // file was uploaded under, or to platform support (super_admin). A denial is
+  // reported as 404 (not 403) so file ids cannot be enumerated by an attacker.
+  private assertCanAccessFile(
+    ownerUserId: string | null | undefined,
+    ownerTeamId: string | null | undefined,
+    requester: FileRequester | undefined,
+  ): void {
+    const role = String(requester?.role || '').toLowerCase();
+    if (role === 'super_admin') return;
+    if (ownerUserId && requester?.userId && ownerUserId === requester.userId) {
+      return;
+    }
+    if (ownerTeamId && requester?.teamId && ownerTeamId === requester.teamId) {
+      return;
+    }
+    throw new NotFoundException('File not found');
+  }
+
   /**
-   * Get a signed URL for temporary file access
+   * Get a signed URL for temporary file access. The caller must own the file, be
+   * on the file's team, or be platform support (enforced via `requester`).
    */
-  async getSignedUrl(fileId: string, expiresIn: number = 3600): Promise<string> {
+  async getSignedUrl(
+    fileId: string,
+    expiresIn: number = 3600,
+    requester?: FileRequester,
+  ): Promise<string> {
     if (!this.isConfigured || !this.s3Client) {
       throw new BadRequestException('Storage service is not configured');
     }
 
     // Get file from database
     const { rows } = await this.db.query(
-      `SELECT s3_key FROM stored_files WHERE id = $1`,
+      `SELECT s3_key, user_id, team_id FROM stored_files WHERE id = $1`,
       [fileId],
     );
 
     if (rows.length === 0) {
       throw new NotFoundException('File not found');
     }
+
+    this.assertCanAccessFile(rows[0].user_id, rows[0].team_id, requester);
 
     const key = rows[0].s3_key;
 
@@ -337,12 +373,13 @@ export class StorageService {
   }
 
   /**
-   * Get file metadata
+   * Get file metadata. The caller must own the file, be on the file's team, or be
+   * platform support (enforced via `requester`).
    */
-  async getFile(fileId: string): Promise<StoredFile> {
+  async getFile(fileId: string, requester?: FileRequester): Promise<StoredFile> {
     const { rows } = await this.db.query(
       `SELECT id, original_name as "originalName", file_name as "fileName", url, s3_key as "key",
-              mime_type as "mimeType", size, folder, user_id as "userId", team_id as "teamId", 
+              mime_type as "mimeType", size, folder, user_id as "userId", team_id as "teamId",
               created_at as "createdAt"
        FROM stored_files WHERE id = $1`,
       [fileId],
@@ -351,6 +388,8 @@ export class StorageService {
     if (rows.length === 0) {
       throw new NotFoundException('File not found');
     }
+
+    this.assertCanAccessFile(rows[0].userId, rows[0].teamId, requester);
 
     return rows[0];
   }

@@ -76,8 +76,12 @@ export class StorageController {
   @ApiParam({ name: 'id', description: 'File ID' })
   @ApiResponse({ status: 200, description: 'File retrieved successfully' })
   @ApiResponse({ status: 404, description: 'File not found' })
-  async getFile(@Param('id') id: string) {
-    return this.storageService.getFile(id);
+  async getFile(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.storageService.getFile(id, {
+      userId: user.id,
+      teamId: user.teamId,
+      role: user.role,
+    });
   }
 
   @Get('files/:id/url')
@@ -87,10 +91,15 @@ export class StorageController {
   @ApiResponse({ status: 200, description: 'Signed URL generated successfully' })
   async getSignedUrl(
     @Param('id') id: string,
+    @CurrentUser() user: any,
     @Query('expiresIn') expiresIn?: string,
   ) {
     const expiresInSeconds = expiresIn ? parseInt(expiresIn, 10) : 3600;
-    const url = await this.storageService.getSignedUrl(id, expiresInSeconds);
+    const url = await this.storageService.getSignedUrl(id, expiresInSeconds, {
+      userId: user.id,
+      teamId: user.teamId,
+      role: user.role,
+    });
     return { url, expiresIn: expiresInSeconds };
   }
 
