@@ -567,7 +567,7 @@ export default function Landing() {
       smartV2Bottom: "Manage Leads. Appointments. Deals. In One Place.",
 
       topLine1: "The simple ",
-      topHighlight: "Agentic AI revenue operating system",
+      topHighlight: "AI revenue operating system",
       topLine3:
         "for bussinesses tired of complicated, overpriced CRM software.",
       pricing: "Pricing",
@@ -1073,7 +1073,7 @@ export default function Landing() {
       smartV2Bottom: "Gestiona leads. Citas. Negocios. Todo en un solo lugar.",
 
       topLine1: "El ",
-      topHighlight: "Sistema operativo de ingresos para IA agéntica",
+      topHighlight: "Sistema operativo de ingresos con IA",
       topLine3:
         "simple para empresas cansadas de software CRM complicado y demasiado costoso.",
       pricing: "Precios",
@@ -1550,7 +1550,7 @@ export default function Landing() {
       smartV2Bottom: "Gerencie leads. Agendamentos. Negócios. Tudo em um só lugar.",
 
       topLine1: "O ",
-      topHighlight: "Sistema operacional de receita para IA agêntica",
+      topHighlight: "Sistema operacional de receita com IA",
       topLine3:
         "simples para empresas cansadas de softwares de CRM complicados e caros.",
       pricing: "Preços",
@@ -1859,12 +1859,11 @@ export default function Landing() {
           <div className="hero-left">
             <div className="hero-left-in">
               <div className="hero-dead-wrap">
-                <span className="hero-head1 hero-head">AGENTIC AI</span>
+                <span className="hero-head1 hero-head">AI REVENUE OS</span>
                 <br />
                 <span className="hero-head">{tr.heroHead}</span>
               </div>
               <h1 className="hero-title">
-                {tr.heroTitleLine1}{" "}
                 <span className="text-os">{tr.heroTitleLine2}</span>{" "}
                 {tr.heroTitleLine3}
                 <br />
