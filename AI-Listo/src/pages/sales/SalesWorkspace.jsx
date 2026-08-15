@@ -31,6 +31,9 @@ import ContractsSection from "./ContractsSection";
 import ReturnsSection from "./ReturnsSection";
 import InvoicesSection from "./InvoicesSection";
 import CommissionsSection from "./CommissionsSection";
+import CustomersSection from "./CustomersSection";
+import SalesOverviewSection from "./SalesOverviewSection";
+import { relativeTime } from "./salesFormat";
 
 // KPI card config. Values come from the live /sales/stats endpoint. In this first
 // slice only Quotes exist, so Open Quotes is real and the rest report 0 until
@@ -253,7 +256,11 @@ export default function SalesWorkspace() {
         ))}
       </nav>
 
-      {activeTab === "Quotes" ? (
+      {activeTab === "Overview" ? (
+        <SalesOverviewSection stats={stats} onGoTo={setActiveTab} />
+      ) : activeTab === "Customers" ? (
+        <CustomersSection />
+      ) : activeTab === "Quotes" ? (
         <section className="sales-ws-quotes">
           <div className="sales-ws-section-head">
             <div>
@@ -554,7 +561,7 @@ export default function SalesWorkspace() {
                     <strong>{a.title}</strong>
                     {a.subtitle && <small>{a.subtitle}</small>}
                   </div>
-                  <time>{a.time || ""}</time>
+                  <time>{relativeTime(a.at)}</time>
                 </div>
               ))
             )}

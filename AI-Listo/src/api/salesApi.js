@@ -20,6 +20,9 @@ const salesApi = {
       method: "GET",
     });
   },
+  listCustomers(params = {}) {
+    return apiClient.request(`/sales/customers${toQuery(params)}`, { method: "GET" });
+  },
   listQuotes(params = {}) {
     return apiClient.request(`/sales/quotes${toQuery(params)}`, {
       method: "GET",

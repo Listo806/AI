@@ -69,6 +69,22 @@ export class SalesController {
     );
   }
 
+  @Get('customers')
+  @ApiOperation({ summary: 'Customers (existing contacts) with their sales rollups' })
+  async listCustomers(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.sales.findCustomers(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, page, limit },
+    );
+  }
+
   @Get('quotes')
   @ApiOperation({ summary: 'List quotes (paginated, filterable, team-scoped)' })
   async listQuotes(
