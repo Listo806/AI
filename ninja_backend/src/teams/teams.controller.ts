@@ -422,4 +422,89 @@ export class TeamsController {
   ) {
     return this.teamsService.cancelInvitation(teamId, invitationId, user.id);
   }
+
+  /* =====================================================
+     TEAM WORKSPACE — PROJECT / TASK / TIME DATA
+     ===================================================== */
+
+  @Get(":id/workspace")
+  async getWorkspaceOverview(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.getWorkspaceOverview(teamId, user.id);
+  }
+
+  @Get(":id/workspace/tasks")
+  async getWorkspaceTasks(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+    @Query() query: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.getWorkspaceTasks(teamId, user.id, query);
+  }
+
+  @Post(":id/workspace/tasks")
+  async createWorkspaceTask(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+    @Body() body: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.createWorkspaceTask(teamId, user.id, body);
+  }
+
+  @Patch(":id/workspace/tasks/:taskId")
+  async updateWorkspaceTask(
+    @Param("id") teamId: string,
+    @Param("taskId") taskId: string,
+    @CurrentUser() user: any,
+    @Body() body: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.updateWorkspaceTask(teamId, taskId, user.id, body);
+  }
+
+  @Delete(":id/workspace/tasks/:taskId")
+  async deleteWorkspaceTask(
+    @Param("id") teamId: string,
+    @Param("taskId") taskId: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.deleteWorkspaceTask(teamId, taskId, user.id);
+  }
+
+  @Post(":id/workspace/tasks/:taskId/time")
+  async logWorkspaceTaskTime(
+    @Param("id") teamId: string,
+    @Param("taskId") taskId: string,
+    @CurrentUser() user: any,
+    @Body() body: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.logWorkspaceTime(teamId, taskId, user.id, body);
+  }
+
+  @Get(":id/workspace/projects")
+  async getWorkspaceProjects(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.getWorkspaceProjects(teamId);
+  }
+
+  @Post(":id/workspace/projects")
+  async createWorkspaceProject(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+    @Body() body: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.createWorkspaceProject(teamId, user.id, body);
+  }
+
 }

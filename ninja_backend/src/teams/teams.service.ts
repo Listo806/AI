@@ -2808,4 +2808,771 @@ export class TeamsService {
 
     return { success: true, teamId };
   }
+
+  /* =====================================================
+     TEAM WORKSPACE — PROJECT / TASK / TIME DATA
+     ===================================================== */
+
+  private workspaceSchemaReady = false;
+
+  private async ensureWorkspaceSchema(): Promise<void> {
+    if (this.workspaceSchemaReady) return;
+
+    // Existing `projects` table is intentionally reused and extended rather than
+    // replaced, so any existing project records remain available.
+    await this.db.query(`
+      ALTER TABLE projects
+        ADD COLUMN IF NOT EXISTS description TEXT,
+        ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'active',
+        ADD COLUMN IF NOT EXISTS priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+        ADD COLUMN IF NOT EXISTS owner_id UUID,
+        ADD COLUMN IF NOT EXISTS start_date TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS progress INT NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    `);
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS team_tasks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        status VARCHAR(32) NOT NULL DEFAULT 'pending',
+        priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+        task_type VARCHAR(50) NOT NULL DEFAULT 'task',
+        assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
+        created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        due_date TIMESTAMPTZ,
+        progress INT NOT NULL DEFAULT 0,
+        estimated_minutes INT NOT NULL DEFAULT 0,
+        labels TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+        completed_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT team_tasks_status_check
+          CHECK (status IN ('pending','in_progress','review','on_hold','completed','cancelled')),
+        CONSTRAINT team_tasks_priority_check
+          CHECK (priority IN ('low','medium','high','urgent')),
+        CONSTRAINT team_tasks_progress_check
+          CHECK (progress >= 0 AND progress <= 100)
+      )
+    `);
+
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_tasks_team
+      ON team_tasks(team_id, updated_at DESC)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_tasks_assignee
+      ON team_tasks(team_id, assigned_to)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_tasks_project
+      ON team_tasks(team_id, project_id)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_tasks_due
+      ON team_tasks(team_id, due_date)
+      WHERE due_date IS NOT NULL
+    `);
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS team_time_entries (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        task_id UUID REFERENCES team_tasks(id) ON DELETE CASCADE,
+        project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        minutes INT NOT NULL CHECK (minutes > 0),
+        note TEXT,
+        started_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_time_entries_team
+      ON team_time_entries(team_id, created_at DESC)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_time_entries_task
+      ON team_time_entries(team_id, task_id)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_time_entries_user
+      ON team_time_entries(team_id, user_id)
+    `);
+
+    // Reuse the existing stored_files table, but allow files to be associated
+    // with the project/task that owns them.
+    await this.db.query(`
+      ALTER TABLE stored_files
+        ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+        ADD COLUMN IF NOT EXISTS task_id UUID REFERENCES team_tasks(id) ON DELETE SET NULL
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_stored_files_team_project
+      ON stored_files(team_id, project_id)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_stored_files_team_task
+      ON stored_files(team_id, task_id)
+    `);
+
+    this.workspaceSchemaReady = true;
+  }
+
+  private normalizeWorkspaceTaskStatus(raw: any): string {
+    const v = String(raw || 'pending').trim().toLowerCase().replace(/\s+/g, '_');
+    const map: Record<string, string> = {
+      pending: 'pending',
+      todo: 'pending',
+      to_do: 'pending',
+      in_progress: 'in_progress',
+      progress: 'in_progress',
+      review: 'review',
+      on_hold: 'on_hold',
+      hold: 'on_hold',
+      completed: 'completed',
+      complete: 'completed',
+      done: 'completed',
+      cancelled: 'cancelled',
+      canceled: 'cancelled',
+    };
+    return map[v] || 'pending';
+  }
+
+  private normalizeWorkspacePriority(raw: any): string {
+    const v = String(raw || 'medium').trim().toLowerCase();
+    return ['low', 'medium', 'high', 'urgent'].includes(v) ? v : 'medium';
+  }
+
+  private async logWorkspaceTaskEvent(
+    teamId: string,
+    userId: string,
+    taskId: string,
+    eventType: string,
+    metadata: Record<string, any>,
+  ) {
+    try {
+      await this.db.query(
+        `INSERT INTO events
+           (team_id, user_id, event_type, entity_type, entity_id, metadata, created_at)
+         VALUES ($1,$2,$3,'team_task',$4,$5::jsonb,NOW())`,
+        [teamId, userId, eventType, taskId, JSON.stringify(metadata || {})],
+      );
+    } catch (error) {
+      this.logger.warn(`Could not log ${eventType}: ${error?.message || error}`);
+    }
+  }
+
+  async getWorkspaceOverview(teamId: string, userId: string) {
+    await this.ensureWorkspaceSchema();
+
+    const [
+      metricsResult,
+      statusResult,
+      priorityResult,
+      workloadResult,
+      deadlinesResult,
+      projectsResult,
+    ] = await Promise.all([
+      this.db.query(
+        `
+        WITH task_totals AS (
+          SELECT
+            COUNT(*)::int AS assigned,
+            COUNT(*) FILTER (WHERE status = 'completed')::int AS completed,
+            COUNT(*) FILTER (
+              WHERE status = 'completed'
+                AND due_date IS NOT NULL
+                AND completed_at IS NOT NULL
+                AND completed_at <= due_date
+            )::int AS completed_on_time,
+            COUNT(*) FILTER (
+              WHERE status = 'completed'
+                AND due_date IS NOT NULL
+                AND completed_at IS NOT NULL
+            )::int AS completed_with_due
+          FROM team_tasks
+          WHERE team_id = $1
+        ),
+        project_totals AS (
+          SELECT COUNT(*) FILTER (
+            WHERE COALESCE(status,'active') NOT IN ('completed','cancelled')
+          )::int AS active_projects
+          FROM projects
+          WHERE team_id = $1
+        ),
+        time_totals AS (
+          SELECT COALESCE(SUM(minutes),0)::int AS minutes_logged
+          FROM team_time_entries
+          WHERE team_id = $1
+        ),
+        member_productivity AS (
+          SELECT
+            tm.user_id,
+            COUNT(tt.id)::int AS assigned,
+            COUNT(tt.id) FILTER (WHERE tt.status = 'completed')::int AS completed
+          FROM team_members tm
+          LEFT JOIN team_tasks tt
+            ON tt.team_id = tm.team_id
+           AND tt.assigned_to = tm.user_id
+          WHERE tm.team_id = $1
+            AND tm.status = 'active'
+          GROUP BY tm.user_id
+        )
+        SELECT
+          p.active_projects AS "activeProjects",
+          t.assigned AS "tasksAssigned",
+          t.completed AS "tasksCompleted",
+          CASE WHEN t.assigned = 0 THEN 0
+               ELSE ROUND((t.completed::numeric / t.assigned::numeric) * 100, 1)
+          END AS "completionRate",
+          CASE WHEN t.completed_with_due = 0 THEN 0
+               ELSE ROUND((t.completed_on_time::numeric / t.completed_with_due::numeric) * 100, 1)
+          END AS "onTimeRate",
+          COALESCE((
+            SELECT ROUND(AVG(
+              CASE WHEN assigned = 0 THEN 0
+                   ELSE (completed::numeric / assigned::numeric) * 100
+              END
+            ), 1)
+            FROM member_productivity
+          ),0) AS productivity,
+          ROUND(tm.minutes_logged::numeric / 60.0, 1) AS "hoursLogged"
+        FROM task_totals t
+        CROSS JOIN project_totals p
+        CROSS JOIN time_totals tm
+        `,
+        [teamId],
+      ),
+      this.db.query(
+        `SELECT status AS key, COUNT(*)::int AS count
+           FROM team_tasks
+          WHERE team_id = $1
+          GROUP BY status
+          ORDER BY count DESC`,
+        [teamId],
+      ),
+      this.db.query(
+        `SELECT priority AS key, COUNT(*)::int AS count
+           FROM team_tasks
+          WHERE team_id = $1
+          GROUP BY priority
+          ORDER BY count DESC`,
+        [teamId],
+      ),
+      this.db.query(
+        `
+        SELECT
+          tm.user_id AS id,
+          COALESCE(u.name, u.email) AS name,
+          u.email,
+          COUNT(tt.id) FILTER (WHERE tt.status <> 'completed' AND tt.status <> 'cancelled')::int AS "openTasks",
+          COALESCE(SUM(tt.estimated_minutes) FILTER (
+            WHERE tt.status <> 'completed' AND tt.status <> 'cancelled'
+          ),0)::int AS "estimatedMinutes",
+          COALESCE((
+            SELECT SUM(te.minutes)::int
+            FROM team_time_entries te
+            WHERE te.team_id = $1 AND te.user_id = tm.user_id
+          ),0)::int AS "loggedMinutes"
+        FROM team_members tm
+        JOIN users u ON u.id = tm.user_id
+        LEFT JOIN team_tasks tt
+          ON tt.team_id = tm.team_id
+         AND tt.assigned_to = tm.user_id
+        WHERE tm.team_id = $1
+          AND tm.status = 'active'
+        GROUP BY tm.user_id, u.name, u.email
+        ORDER BY "openTasks" DESC, name ASC
+        `,
+        [teamId],
+      ),
+      this.db.query(
+        `
+        SELECT
+          tt.id,
+          tt.title AS name,
+          p.name AS project,
+          tt.due_date AS "dueDate",
+          tt.status,
+          tt.priority
+        FROM team_tasks tt
+        LEFT JOIN projects p ON p.id = tt.project_id AND p.team_id = tt.team_id
+        WHERE tt.team_id = $1
+          AND tt.status NOT IN ('completed','cancelled')
+          AND tt.due_date IS NOT NULL
+          AND tt.due_date >= NOW() - INTERVAL '1 day'
+          AND tt.due_date < NOW() + INTERVAL '8 days'
+        ORDER BY tt.due_date ASC
+        LIMIT 8
+        `,
+        [teamId],
+      ),
+      this.db.query(
+        `
+        SELECT
+          p.id, p.name, p.description, p.status, p.priority,
+          p.start_date AS "startDate", p.due_date AS "dueDate",
+          p.progress, p.owner_id AS "ownerId",
+          COALESCE(u.name,u.email) AS "ownerName",
+          p.created_at AS "createdAt", p.updated_at AS "updatedAt",
+          COUNT(tt.id)::int AS "taskCount",
+          COUNT(tt.id) FILTER (WHERE tt.status = 'completed')::int AS "completedTasks"
+        FROM projects p
+        LEFT JOIN users u ON u.id = p.owner_id
+        LEFT JOIN team_tasks tt ON tt.project_id = p.id AND tt.team_id = p.team_id
+        WHERE p.team_id = $1
+        GROUP BY p.id,u.name,u.email
+        ORDER BY p.updated_at DESC NULLS LAST, p.created_at DESC
+        LIMIT 100
+        `,
+        [teamId],
+      ),
+    ]);
+
+    const workload = workloadResult.rows.map((r: any) => ({
+      ...r,
+      openTasks: Number(r.openTasks || 0),
+      estimatedMinutes: Number(r.estimatedMinutes || 0),
+      loggedMinutes: Number(r.loggedMinutes || 0),
+    }));
+    const maxOpen = Math.max(0, ...workload.map((r: any) => r.openTasks));
+    const workloadRows = workload.map((r: any) => ({
+      ...r,
+      workloadPercent: maxOpen > 0 ? Math.round((r.openTasks / maxOpen) * 100) : 0,
+    }));
+
+    const workloadValues = workloadRows.map((r: any) => r.openTasks);
+    const avg = workloadValues.length
+      ? workloadValues.reduce((a: number, b: number) => a + b, 0) / workloadValues.length
+      : 0;
+    const spread = workloadValues.length
+      ? Math.max(...workloadValues) - Math.min(...workloadValues)
+      : 0;
+    const workloadBalancePercent =
+      avg > 0 ? Math.max(0, Math.round(100 - (spread / Math.max(avg, 1)) * 35)) : 100;
+
+    const baseMetrics = metricsResult.rows[0] || {};
+    return {
+      metrics: {
+        ...baseMetrics,
+        activeProjects: Number(baseMetrics.activeProjects || 0),
+        tasksAssigned: Number(baseMetrics.tasksAssigned || 0),
+        tasksCompleted: Number(baseMetrics.tasksCompleted || 0),
+        completionRate: Number(baseMetrics.completionRate || 0),
+        onTimeRate: Number(baseMetrics.onTimeRate || 0),
+        productivity: Number(baseMetrics.productivity || 0),
+        hoursLogged: Number(baseMetrics.hoursLogged || 0),
+        workloadBalance: workloadBalancePercent,
+      },
+      taskBreakdowns: {
+        status: statusResult.rows,
+        priority: priorityResult.rows,
+      },
+      workload: workloadRows,
+      upcomingDeadlines: deadlinesResult.rows,
+      projects: projectsResult.rows,
+    };
+  }
+
+  async getWorkspaceTasks(
+    teamId: string,
+    currentUserId: string,
+    query: any = {},
+  ) {
+    await this.ensureWorkspaceSchema();
+
+    const page = Math.max(1, Number(query.page || 1));
+    const limit = Math.min(100, Math.max(1, Number(query.limit || 20)));
+    const offset = (page - 1) * limit;
+    const conditions: string[] = ['tt.team_id = $1'];
+    const values: any[] = [teamId];
+    let i = 2;
+
+    const add = (sql: string, value: any) => {
+      conditions.push(sql.replace('?', `$${i}`));
+      values.push(value);
+      i += 1;
+    };
+
+    if (query.my === 'true' || query.my === true) add('tt.assigned_to = ?', currentUserId);
+    if (query.q) {
+      conditions.push(`(
+        tt.title ILIKE $${i}
+        OR COALESCE(tt.description,'') ILIKE $${i}
+        OR COALESCE(p.name,'') ILIKE $${i}
+        OR COALESCE(u.name,u.email,'') ILIKE $${i}
+      )`);
+      values.push(`%${String(query.q).trim()}%`);
+      i += 1;
+    }
+    if (query.status && query.status !== 'all') add('tt.status = ?', this.normalizeWorkspaceTaskStatus(query.status));
+    if (query.priority && query.priority !== 'all') add('tt.priority = ?', this.normalizeWorkspacePriority(query.priority));
+    if (query.assignee && query.assignee !== 'all') add('tt.assigned_to = ?', query.assignee);
+    if (query.project && query.project !== 'all') add('tt.project_id = ?', query.project);
+    if (query.taskType && query.taskType !== 'all') add('tt.task_type = ?', query.taskType);
+    if (query.dateFrom) add('tt.due_date >= ?::timestamptz', query.dateFrom);
+    if (query.dateTo) add('tt.due_date <= ?::timestamptz', query.dateTo);
+
+    const where = conditions.join(' AND ');
+
+    const count = await this.db.query(
+      `SELECT COUNT(*)::int AS total
+         FROM team_tasks tt
+         LEFT JOIN projects p ON p.id = tt.project_id
+         LEFT JOIN users u ON u.id = tt.assigned_to
+        WHERE ${where}`,
+      values,
+    );
+
+    const rows = await this.db.query(
+      `
+      SELECT
+        tt.id,
+        tt.title AS name,
+        tt.description,
+        tt.project_id AS "projectId",
+        p.name AS project,
+        tt.status,
+        tt.priority,
+        tt.task_type AS "taskType",
+        tt.assigned_to AS "assigneeId",
+        COALESCE(u.name,u.email) AS assignee,
+        tt.due_date AS "dueDate",
+        tt.progress,
+        tt.estimated_minutes AS "estimatedMinutes",
+        tt.labels,
+        tt.created_by AS "createdBy",
+        tt.created_at AS "createdAt",
+        tt.updated_at AS "updatedAt",
+        tt.completed_at AS "completedAt",
+        COALESCE((
+          SELECT SUM(te.minutes)::int
+          FROM team_time_entries te
+          WHERE te.team_id = tt.team_id AND te.task_id = tt.id
+        ),0)::int AS "loggedMinutes"
+      FROM team_tasks tt
+      LEFT JOIN projects p ON p.id = tt.project_id AND p.team_id = tt.team_id
+      LEFT JOIN users u ON u.id = tt.assigned_to
+      WHERE ${where}
+      ORDER BY
+        CASE WHEN tt.due_date IS NULL THEN 1 ELSE 0 END,
+        tt.due_date ASC,
+        tt.updated_at DESC
+      LIMIT $${i} OFFSET $${i + 1}
+      `,
+      [...values, limit, offset],
+    );
+
+    const total = Number(count.rows[0]?.total || 0);
+    return {
+      data: rows.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    };
+  }
+
+  async createWorkspaceTask(teamId: string, userId: string, body: any) {
+    await this.ensureWorkspaceSchema();
+
+    const title = String(body?.name || body?.title || '').trim();
+    if (!title) throw new BadRequestException('Task name is required.');
+
+    const status = this.normalizeWorkspaceTaskStatus(body?.status);
+    const priority = this.normalizeWorkspacePriority(body?.priority);
+    const progress =
+      status === 'completed'
+        ? 100
+        : Math.max(0, Math.min(100, Number(body?.progress || 0)));
+
+    if (body?.projectId) {
+      const p = await this.db.query(
+        `SELECT id FROM projects WHERE id = $1 AND team_id = $2 LIMIT 1`,
+        [body.projectId, teamId],
+      );
+      if (!p.rows.length) throw new BadRequestException('Invalid project.');
+    }
+
+    if (body?.assigneeId) {
+      const m = await this.db.query(
+        `SELECT 1 FROM team_members
+          WHERE team_id = $1 AND user_id = $2 AND status = 'active'
+          LIMIT 1`,
+        [teamId, body.assigneeId],
+      );
+      if (!m.rows.length) throw new BadRequestException('Assignee is not an active team member.');
+    }
+
+    const result = await this.db.query(
+      `
+      INSERT INTO team_tasks (
+        team_id, project_id, title, description, status, priority, task_type,
+        assigned_to, created_by, due_date, progress, estimated_minutes, labels,
+        completed_at, created_at, updated_at
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+        CASE WHEN $5 = 'completed' THEN NOW() ELSE NULL END,
+        NOW(),NOW()
+      )
+      RETURNING *
+      `,
+      [
+        teamId,
+        body?.projectId || null,
+        title,
+        body?.description || null,
+        status,
+        priority,
+        String(body?.taskType || 'task').trim().toLowerCase(),
+        body?.assigneeId || null,
+        userId,
+        body?.dueDate || null,
+        progress,
+        Math.max(0, Number(body?.estimatedMinutes || 0)),
+        Array.isArray(body?.labels) ? body.labels.map(String) : [],
+      ],
+    );
+
+    const task = result.rows[0];
+    await this.logWorkspaceTaskEvent(teamId, userId, task.id, 'team.task_created', {
+      title,
+      projectId: task.project_id,
+      assignedTo: task.assigned_to,
+      status: task.status,
+      priority: task.priority,
+    });
+    return task;
+  }
+
+  async updateWorkspaceTask(teamId: string, taskId: string, userId: string, body: any) {
+    await this.ensureWorkspaceSchema();
+
+    const existingResult = await this.db.query(
+      `SELECT * FROM team_tasks WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [taskId, teamId],
+    );
+    const existing = existingResult.rows[0];
+    if (!existing) throw new NotFoundException('Task not found.');
+
+    const nextStatus =
+      body?.status !== undefined
+        ? this.normalizeWorkspaceTaskStatus(body.status)
+        : existing.status;
+    const nextPriority =
+      body?.priority !== undefined
+        ? this.normalizeWorkspacePriority(body.priority)
+        : existing.priority;
+    const nextProgress =
+      nextStatus === 'completed'
+        ? 100
+        : body?.progress !== undefined
+          ? Math.max(0, Math.min(100, Number(body.progress)))
+          : existing.progress;
+
+    const result = await this.db.query(
+      `
+      UPDATE team_tasks SET
+        project_id = CASE WHEN $3::boolean THEN $4::uuid ELSE project_id END,
+        title = CASE WHEN $5::boolean THEN $6 ELSE title END,
+        description = CASE WHEN $7::boolean THEN $8 ELSE description END,
+        status = $9,
+        priority = $10,
+        task_type = CASE WHEN $11::boolean THEN $12 ELSE task_type END,
+        assigned_to = CASE WHEN $13::boolean THEN $14::uuid ELSE assigned_to END,
+        due_date = CASE WHEN $15::boolean THEN $16::timestamptz ELSE due_date END,
+        progress = $17,
+        estimated_minutes = CASE WHEN $18::boolean THEN $19::int ELSE estimated_minutes END,
+        labels = CASE WHEN $20::boolean THEN $21::text[] ELSE labels END,
+        completed_at = CASE
+          WHEN $9 = 'completed' AND completed_at IS NULL THEN NOW()
+          WHEN $9 <> 'completed' THEN NULL
+          ELSE completed_at
+        END,
+        updated_at = NOW()
+      WHERE id = $1 AND team_id = $2
+      RETURNING *
+      `,
+      [
+        taskId,
+        teamId,
+        Object.prototype.hasOwnProperty.call(body || {}, 'projectId'),
+        body?.projectId || null,
+        Object.prototype.hasOwnProperty.call(body || {}, 'name') || Object.prototype.hasOwnProperty.call(body || {}, 'title'),
+        body?.name ?? body?.title ?? null,
+        Object.prototype.hasOwnProperty.call(body || {}, 'description'),
+        body?.description ?? null,
+        nextStatus,
+        nextPriority,
+        Object.prototype.hasOwnProperty.call(body || {}, 'taskType'),
+        body?.taskType || 'task',
+        Object.prototype.hasOwnProperty.call(body || {}, 'assigneeId'),
+        body?.assigneeId || null,
+        Object.prototype.hasOwnProperty.call(body || {}, 'dueDate'),
+        body?.dueDate || null,
+        nextProgress,
+        Object.prototype.hasOwnProperty.call(body || {}, 'estimatedMinutes'),
+        Math.max(0, Number(body?.estimatedMinutes || 0)),
+        Object.prototype.hasOwnProperty.call(body || {}, 'labels'),
+        Array.isArray(body?.labels) ? body.labels.map(String) : [],
+      ],
+    );
+
+    const changes: any = {};
+    for (const [key, oldValue, newValue] of [
+      ['status', existing.status, nextStatus],
+      ['priority', existing.priority, nextPriority],
+      ['progress', Number(existing.progress || 0), nextProgress],
+      ['assignee', existing.assigned_to, body?.assigneeId],
+      ['dueDate', existing.due_date, body?.dueDate],
+    ] as any[]) {
+      if (newValue !== undefined && String(oldValue ?? '') !== String(newValue ?? '')) {
+        changes[key] = { from: oldValue, to: newValue };
+      }
+    }
+
+    const eventType =
+      nextStatus === 'completed' && existing.status !== 'completed'
+        ? 'team.task_completed'
+        : body?.status !== undefined && existing.status !== nextStatus
+          ? 'team.task_status_changed'
+          : body?.priority !== undefined && existing.priority !== nextPriority
+            ? 'team.task_priority_changed'
+            : body?.assigneeId !== undefined && existing.assigned_to !== body?.assigneeId
+              ? 'team.task_assigned'
+              : body?.dueDate !== undefined && String(existing.due_date || '') !== String(body?.dueDate || '')
+                ? 'team.task_due_date_changed'
+                : body?.progress !== undefined && Number(existing.progress || 0) !== nextProgress
+                  ? 'team.task_progress_updated'
+                  : 'team.task_updated';
+
+    await this.logWorkspaceTaskEvent(teamId, userId, taskId, eventType, {
+      title: result.rows[0]?.title,
+      changes,
+    });
+
+    return result.rows[0];
+  }
+
+  async deleteWorkspaceTask(teamId: string, taskId: string, userId: string) {
+    await this.ensureWorkspaceSchema();
+    const result = await this.db.query(
+      `DELETE FROM team_tasks WHERE id = $1 AND team_id = $2 RETURNING id,title`,
+      [taskId, teamId],
+    );
+    if (!result.rows.length) throw new NotFoundException('Task not found.');
+    await this.logWorkspaceTaskEvent(teamId, userId, taskId, 'team.task_deleted', {
+      title: result.rows[0].title,
+    });
+    return { deleted: true };
+  }
+
+  async logWorkspaceTime(teamId: string, taskId: string, userId: string, body: any) {
+    await this.ensureWorkspaceSchema();
+    const minutes = Math.max(0, Number(body?.minutes || 0));
+    if (!minutes) throw new BadRequestException('Minutes must be greater than 0.');
+
+    const taskResult = await this.db.query(
+      `SELECT id,project_id,title FROM team_tasks WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [taskId, teamId],
+    );
+    const task = taskResult.rows[0];
+    if (!task) throw new NotFoundException('Task not found.');
+
+    const result = await this.db.query(
+      `
+      INSERT INTO team_time_entries
+        (team_id,task_id,project_id,user_id,minutes,note,started_at,created_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
+      RETURNING *
+      `,
+      [
+        teamId,
+        taskId,
+        task.project_id || null,
+        userId,
+        minutes,
+        body?.note || null,
+        body?.startedAt || null,
+      ],
+    );
+    await this.logWorkspaceTaskEvent(teamId, userId, taskId, 'team.time_logged', {
+      title: task.title,
+      minutes,
+      note: body?.note || null,
+    });
+    return result.rows[0];
+  }
+
+  async getWorkspaceProjects(teamId: string) {
+    await this.ensureWorkspaceSchema();
+    const result = await this.db.query(
+      `
+      SELECT
+        p.id,p.name,p.description,p.status,p.priority,p.progress,
+        p.owner_id AS "ownerId",COALESCE(u.name,u.email) AS "ownerName",
+        p.start_date AS "startDate",p.due_date AS "dueDate",
+        p.created_at AS "createdAt",p.updated_at AS "updatedAt",
+        COUNT(tt.id)::int AS "taskCount",
+        COUNT(tt.id) FILTER (WHERE tt.status = 'completed')::int AS "completedTasks"
+      FROM projects p
+      LEFT JOIN users u ON u.id = p.owner_id
+      LEFT JOIN team_tasks tt ON tt.project_id = p.id AND tt.team_id = p.team_id
+      WHERE p.team_id = $1
+      GROUP BY p.id,u.name,u.email
+      ORDER BY p.updated_at DESC NULLS LAST,p.created_at DESC
+      `,
+      [teamId],
+    );
+    return { data: result.rows };
+  }
+
+  async createWorkspaceProject(teamId: string, userId: string, body: any) {
+    await this.ensureWorkspaceSchema();
+    const name = String(body?.name || '').trim();
+    if (!name) throw new BadRequestException('Project name is required.');
+
+    const result = await this.db.query(
+      `
+      INSERT INTO projects
+        (team_id,name,description,status,priority,owner_id,start_date,due_date,progress,created_at,updated_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW())
+      RETURNING
+        id,team_id AS "teamId",name,description,status,priority,
+        owner_id AS "ownerId",start_date AS "startDate",due_date AS "dueDate",
+        progress,created_at AS "createdAt",updated_at AS "updatedAt"
+      `,
+      [
+        teamId,
+        name,
+        body?.description || null,
+        String(body?.status || 'active').toLowerCase(),
+        this.normalizeWorkspacePriority(body?.priority),
+        body?.ownerId || userId,
+        body?.startDate || null,
+        body?.dueDate || null,
+        Math.max(0, Math.min(100, Number(body?.progress || 0))),
+      ],
+    );
+
+    try {
+      await this.db.query(
+        `INSERT INTO events
+           (team_id,user_id,event_type,entity_type,entity_id,metadata,created_at)
+         VALUES ($1,$2,'team.project_created','project',$3,$4::jsonb,NOW())`,
+        [teamId,userId,result.rows[0].id,JSON.stringify({ title: name })],
+      );
+    } catch (_) {}
+
+    return result.rows[0];
+  }
+
 }
