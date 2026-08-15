@@ -33,6 +33,7 @@ import { PlansModule } from "./plans/plans.module";
 import { InsuranceModule } from "./insurance/insurance.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
 import { SalesModule } from "./sales/sales.module";
+import { FinancialModule } from "./financial/financial.module";
 import { EcommerceWorkspaceModule } from './ecommerce/ecommerce-workspace.module';
 
 @Module({
@@ -71,6 +72,7 @@ import { EcommerceWorkspaceModule } from './ecommerce/ecommerce-workspace.module
     WorkspacesModule,
     EcommerceWorkspaceModule,
     SalesModule,
+    FinancialModule,
   ],
   controllers: [AppController],
 })
