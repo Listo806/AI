@@ -3684,9 +3684,16 @@ export class TeamsService {
       AND ($3::date IS NULL OR created_at < ($3::date + INTERVAL '1 day'))
     `;
     const timeDateWhere = `
-      team_id = $1
-      AND ($2::timestamptz IS NULL OR COALESCE(started_at,created_at) >= $2::timestamptz)
-      AND ($3::date IS NULL OR COALESCE(started_at,created_at) < ($3::date + INTERVAL '1 day'))
+      te.team_id = $1
+      AND (
+        $2::timestamptz IS NULL
+        OR COALESCE(te.started_at, te.created_at) >= $2::timestamptz
+      )
+      AND (
+        $3::date IS NULL
+        OR COALESCE(te.started_at, te.created_at)
+          < ($3::date + INTERVAL '1 day')
+      )
     `;
 
     const [
