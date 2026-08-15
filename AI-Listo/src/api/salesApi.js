@@ -43,6 +43,60 @@ const salesApi = {
   deleteQuote(id) {
     return apiClient.request(`/sales/quotes/${id}`, { method: "DELETE" });
   },
+  convertQuoteToProposal(id) {
+    return apiClient.request(`/sales/quotes/${id}/convert-to-proposal`, {
+      method: "POST",
+    });
+  },
+
+  listProposals(params = {}) {
+    return apiClient.request(`/sales/proposals${toQuery(params)}`, { method: "GET" });
+  },
+  getProposal(id) {
+    return apiClient.request(`/sales/proposals/${id}`, { method: "GET" });
+  },
+  createProposal(body) {
+    return apiClient.request(`/sales/proposals`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+  updateProposal(id, body) {
+    return apiClient.request(`/sales/proposals/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  },
+  deleteProposal(id) {
+    return apiClient.request(`/sales/proposals/${id}`, { method: "DELETE" });
+  },
+  convertProposalToOrder(id) {
+    return apiClient.request(`/sales/proposals/${id}/convert-to-order`, {
+      method: "POST",
+    });
+  },
+
+  listOrders(params = {}) {
+    return apiClient.request(`/sales/orders${toQuery(params)}`, { method: "GET" });
+  },
+  getOrder(id) {
+    return apiClient.request(`/sales/orders/${id}`, { method: "GET" });
+  },
+  createOrder(body) {
+    return apiClient.request(`/sales/orders`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+  updateOrder(id, body) {
+    return apiClient.request(`/sales/orders/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  },
+  deleteOrder(id) {
+    return apiClient.request(`/sales/orders/${id}`, { method: "DELETE" });
+  },
 };
 
 export default salesApi;
