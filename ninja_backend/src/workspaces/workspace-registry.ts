@@ -30,7 +30,9 @@ export const WORKSPACE_CATALOG: WorkspaceDef[] = [
     route: '/dashboard/insurance-workspace',
   },
   {
-    id: 'financial-services',
+    // Client-required workspace id uses an underscore. The route keeps its
+    // existing hyphenated path.
+    id: 'financial_services',
     name: 'Financial Services Workspace',
     featureKey: 'financialWorkspace',
     route: '/dashboard/financial-services',

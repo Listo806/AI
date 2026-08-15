@@ -423,7 +423,7 @@ function AppRoutes() {
         <Route
           path="financial-services"
           element={
-            <WorkspaceGate workspaceId="financial-services">
+            <WorkspaceGate workspaceId="financial_services">
               <FinancialServicesWorkspace />
             </WorkspaceGate>
           }
