@@ -175,6 +175,72 @@ export class SalesService {
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_sales_returns_order ON sales_returns(order_id)`,
     );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS sales_invoices (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        invoice_number TEXT,
+        order_id UUID,
+        contact_id UUID,
+        customer_name TEXT,
+        segment TEXT,
+        contact_name TEXT,
+        contact_role TEXT,
+        deal_name TEXT,
+        amount NUMERIC(14,2),
+        status TEXT NOT NULL DEFAULT 'Open',
+        due_date DATE,
+        paid_date DATE,
+        payment_reference TEXT,
+        owner_name TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_invoices_team ON sales_invoices(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_invoices_status ON sales_invoices(status)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_invoices_order ON sales_invoices(order_id)`,
+    );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS sales_commissions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        commission_number TEXT,
+        order_id UUID,
+        invoice_id UUID,
+        contact_id UUID,
+        customer_name TEXT,
+        deal_name TEXT,
+        rep_id UUID,
+        rep_name TEXT,
+        source TEXT,
+        rate NUMERIC(6,3),
+        amount NUMERIC(14,2),
+        status TEXT NOT NULL DEFAULT 'Pending',
+        earned_date DATE,
+        paid_date DATE,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_commissions_team ON sales_commissions(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_commissions_status ON sales_commissions(status)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_commissions_order ON sales_commissions(order_id)`,
+    );
     this.schemaReady = true;
   }
 
@@ -1487,9 +1553,462 @@ export class SalesService {
     return { success: true };
   }
 
-  // Overview KPIs. In this first slice only Quotes exist, so quote-derived KPIs
-  // are real and the rest report a neutral zero until their tabs are wired (no
-  // invented numbers). Later slices expand this as each entity lands.
+  private async assertInvoiceInTeam(invoiceId: string, teamId: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM sales_invoices WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [invoiceId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected invoice is not in this account');
+    }
+  }
+
+  // ─── Invoices ────────────────────────────────────────────────────────────
+  //
+  // Sales/business tracking records. When an invoice reflects a real Cortexa
+  // Paddle payment, payment_reference holds the Paddle transaction id; Paddle
+  // remains the source of truth for whether that charge is Paid/Refunded.
+
+  private readonly invoiceSelect = `
+    inv.id,
+    inv.team_id AS "teamId",
+    inv.invoice_number AS "invoiceNumber",
+    inv.order_id AS "orderId",
+    o.order_number AS "orderNumber",
+    inv.contact_id AS "contactId",
+    COALESCE(NULLIF(TRIM(inv.customer_name), ''), ct.name) AS "customerName",
+    inv.segment,
+    COALESCE(NULLIF(TRIM(inv.contact_name), ''), ct.name) AS "contactName",
+    inv.contact_role AS "contactRole",
+    inv.deal_name AS "dealName",
+    inv.amount,
+    inv.status,
+    inv.due_date AS "dueDate",
+    inv.paid_date AS "paidDate",
+    inv.payment_reference AS "paymentReference",
+    inv.owner_name AS "ownerName",
+    inv.notes,
+    inv.created_at AS "createdAt",
+    inv.updated_at AS "updatedAt"
+  `;
+  private readonly invoiceJoins = `
+    LEFT JOIN contacts ct ON ct.id = inv.contact_id AND ct.team_id = inv.team_id
+    LEFT JOIN sales_orders o ON o.id = inv.order_id AND o.team_id = inv.team_id
+  `;
+
+  private async generateInvoiceNumber(teamId: string): Promise<string> {
+    const year = new Date().getFullYear();
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM sales_invoices
+        WHERE team_id = $1 AND invoice_number LIKE $2`,
+      [teamId, `INV-${year}-%`],
+    );
+    const seq = (Number(rows[0]?.n) || 0) + 1;
+    return `INV-${year}-${String(seq).padStart(4, '0')}`;
+  }
+
+  async findAllInvoices(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; status?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['inv.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) {
+      where.push(`inv.status = $${i++}`);
+      vals.push(params.status.trim());
+    }
+    if (params.search && params.search.trim()) {
+      where.push(
+        `(inv.invoice_number ILIKE $${i} OR inv.customer_name ILIKE $${i} OR inv.contact_name ILIKE $${i} OR inv.deal_name ILIKE $${i} OR inv.owner_name ILIKE $${i} OR ct.name ILIKE $${i} OR o.order_number ILIKE $${i})`,
+      );
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM sales_invoices inv ${this.invoiceJoins} WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.invoiceSelect} FROM sales_invoices inv ${this.invoiceJoins}
+        WHERE ${whereSql} ORDER BY inv.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneInvoice(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Invoice not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.invoiceSelect} FROM sales_invoices inv ${this.invoiceJoins}
+        WHERE inv.id = $1 AND inv.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Invoice not found');
+    return rows[0];
+  }
+
+  async createInvoice(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    if (dto.orderId) await this.assertOrderInTeam(dto.orderId, teamId);
+    const invoiceNumber =
+      (dto.invoiceNumber && dto.invoiceNumber.trim()) ||
+      (await this.generateInvoiceNumber(teamId));
+    const { rows } = await this.db.query(
+      `INSERT INTO sales_invoices
+         (team_id, created_by, invoice_number, order_id, contact_id, customer_name,
+          segment, contact_name, contact_role, deal_name, amount, status, due_date,
+          paid_date, payment_reference, owner_name, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+       RETURNING id`,
+      [
+        teamId,
+        userId,
+        invoiceNumber,
+        dto.orderId || null,
+        dto.contactId || null,
+        dto.customerName || null,
+        dto.segment || null,
+        dto.contactName || null,
+        dto.contactRole || null,
+        dto.dealName || null,
+        dto.amount ?? null,
+        (dto.status && dto.status.trim()) || 'Open',
+        dto.dueDate || null,
+        dto.paidDate || null,
+        dto.paymentReference || null,
+        dto.ownerName || null,
+        dto.notes || null,
+      ],
+    );
+    return this.findOneInvoice(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateInvoice(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Invoice not found');
+    const existing = await this.db.query(
+      `SELECT team_id FROM sales_invoices WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!existing.rows.length) throw new NotFoundException('Invoice not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    if (dto.orderId) await this.assertOrderInTeam(dto.orderId, teamId);
+    const colFor: Record<string, string> = {
+      invoiceNumber: 'invoice_number',
+      orderId: 'order_id',
+      contactId: 'contact_id',
+      customerName: 'customer_name',
+      segment: 'segment',
+      contactName: 'contact_name',
+      contactRole: 'contact_role',
+      dealName: 'deal_name',
+      amount: 'amount',
+      status: 'status',
+      dueDate: 'due_date',
+      paidDate: 'paid_date',
+      paymentReference: 'payment_reference',
+      ownerName: 'owner_name',
+      notes: 'notes',
+    };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push((dto as any)[key]);
+      }
+    }
+    if (!sets.length) return this.findOneInvoice(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(
+      `UPDATE sales_invoices SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
+      vals,
+    );
+    return this.findOneInvoice(id, userId, userTeamId, role);
+  }
+
+  async removeInvoice(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Invoice not found');
+    const res = await this.db.query(
+      `DELETE FROM sales_invoices WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Invoice not found');
+    return { success: true };
+  }
+
+  // ─── Commissions ─────────────────────────────────────────────────────────
+
+  private readonly commissionSelect = `
+    cm.id,
+    cm.team_id AS "teamId",
+    cm.commission_number AS "commissionNumber",
+    cm.order_id AS "orderId",
+    o.order_number AS "orderNumber",
+    cm.invoice_id AS "invoiceId",
+    inv.invoice_number AS "invoiceNumber",
+    cm.contact_id AS "contactId",
+    COALESCE(NULLIF(TRIM(cm.customer_name), ''), ct.name) AS "customerName",
+    cm.deal_name AS "dealName",
+    cm.rep_id AS "repId",
+    cm.rep_name AS "repName",
+    cm.source,
+    cm.rate,
+    cm.amount,
+    cm.status,
+    cm.earned_date AS "earnedDate",
+    cm.paid_date AS "paidDate",
+    cm.notes,
+    cm.created_at AS "createdAt",
+    cm.updated_at AS "updatedAt"
+  `;
+  private readonly commissionJoins = `
+    LEFT JOIN contacts ct ON ct.id = cm.contact_id AND ct.team_id = cm.team_id
+    LEFT JOIN sales_orders o ON o.id = cm.order_id AND o.team_id = cm.team_id
+    LEFT JOIN sales_invoices inv ON inv.id = cm.invoice_id AND inv.team_id = cm.team_id
+  `;
+
+  private async generateCommissionNumber(teamId: string): Promise<string> {
+    const year = new Date().getFullYear();
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM sales_commissions
+        WHERE team_id = $1 AND commission_number LIKE $2`,
+      [teamId, `COM-${year}-%`],
+    );
+    const seq = (Number(rows[0]?.n) || 0) + 1;
+    return `COM-${year}-${String(seq).padStart(4, '0')}`;
+  }
+
+  async findAllCommissions(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; status?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['cm.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) {
+      where.push(`cm.status = $${i++}`);
+      vals.push(params.status.trim());
+    }
+    if (params.search && params.search.trim()) {
+      where.push(
+        `(cm.commission_number ILIKE $${i} OR cm.customer_name ILIKE $${i} OR cm.rep_name ILIKE $${i} OR cm.deal_name ILIKE $${i} OR ct.name ILIKE $${i} OR o.order_number ILIKE $${i})`,
+      );
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM sales_commissions cm ${this.commissionJoins} WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.commissionSelect} FROM sales_commissions cm ${this.commissionJoins}
+        WHERE ${whereSql} ORDER BY cm.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneCommission(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Commission not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.commissionSelect} FROM sales_commissions cm ${this.commissionJoins}
+        WHERE cm.id = $1 AND cm.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Commission not found');
+    return rows[0];
+  }
+
+  async createCommission(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    if (dto.orderId) await this.assertOrderInTeam(dto.orderId, teamId);
+    if (dto.invoiceId) await this.assertInvoiceInTeam(dto.invoiceId, teamId);
+    const commissionNumber =
+      (dto.commissionNumber && dto.commissionNumber.trim()) ||
+      (await this.generateCommissionNumber(teamId));
+    const { rows } = await this.db.query(
+      `INSERT INTO sales_commissions
+         (team_id, created_by, commission_number, order_id, invoice_id, contact_id,
+          customer_name, deal_name, rep_name, source, rate, amount, status,
+          earned_date, paid_date, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+       RETURNING id`,
+      [
+        teamId,
+        userId,
+        commissionNumber,
+        dto.orderId || null,
+        dto.invoiceId || null,
+        dto.contactId || null,
+        dto.customerName || null,
+        dto.dealName || null,
+        dto.repName || null,
+        dto.source || null,
+        dto.rate ?? null,
+        dto.amount ?? null,
+        (dto.status && dto.status.trim()) || 'Pending',
+        dto.earnedDate || null,
+        dto.paidDate || null,
+        dto.notes || null,
+      ],
+    );
+    return this.findOneCommission(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateCommission(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Commission not found');
+    const existing = await this.db.query(
+      `SELECT team_id FROM sales_commissions WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!existing.rows.length) throw new NotFoundException('Commission not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    if (dto.orderId) await this.assertOrderInTeam(dto.orderId, teamId);
+    if (dto.invoiceId) await this.assertInvoiceInTeam(dto.invoiceId, teamId);
+    const colFor: Record<string, string> = {
+      commissionNumber: 'commission_number',
+      orderId: 'order_id',
+      invoiceId: 'invoice_id',
+      contactId: 'contact_id',
+      customerName: 'customer_name',
+      dealName: 'deal_name',
+      repName: 'rep_name',
+      source: 'source',
+      rate: 'rate',
+      amount: 'amount',
+      status: 'status',
+      earnedDate: 'earned_date',
+      paidDate: 'paid_date',
+      notes: 'notes',
+    };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push((dto as any)[key]);
+      }
+    }
+    if (!sets.length) return this.findOneCommission(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(
+      `UPDATE sales_commissions SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
+      vals,
+    );
+    return this.findOneCommission(id, userId, userTeamId, role);
+  }
+
+  async removeCommission(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Commission not found');
+    const res = await this.db.query(
+      `DELETE FROM sales_commissions WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Commission not found');
+    return { success: true };
+  }
+
+  // Overview KPIs. Each figure is computed from real account data; a KPI is 0
+  // until its tab has data (no invented numbers, no fake "vs last month").
   async getStats(
     userId: string,
     userTeamId: string | null,
@@ -1511,7 +2030,7 @@ export class SalesService {
     if (!accessible.length) return zero;
     const num = (v: any) => Number(v) || 0;
 
-    const [openQ, openP, ordersM] = await Promise.all([
+    const [openQ, openP, ordersM, invOut, commDue, conv] = await Promise.all([
       this.db.query(
         `SELECT COUNT(*)::int AS count, COALESCE(SUM(value),0) AS value
            FROM sales_quotes
@@ -1532,8 +2051,32 @@ export class SalesService {
             AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)`,
         [accessible],
       ),
+      // Outstanding invoices = unpaid (Open/Overdue) invoice amount.
+      this.db.query(
+        `SELECT COUNT(*)::int AS count, COALESCE(SUM(amount),0) AS value
+           FROM sales_invoices
+          WHERE team_id = ANY($1) AND status IN ('Open','Overdue')`,
+        [accessible],
+      ),
+      // Commissions due = pending/earned commissions not yet paid.
+      this.db.query(
+        `SELECT COUNT(*)::int AS count, COALESCE(SUM(amount),0) AS amount
+           FROM sales_commissions
+          WHERE team_id = ANY($1)
+            AND status IN ('Pending','Earned','Approved') AND paid_date IS NULL`,
+        [accessible],
+      ),
+      // Conversion rate = accepted quotes / all closed quotes (accepted + lost).
+      this.db.query(
+        `SELECT
+            COUNT(*) FILTER (WHERE status = 'Accepted')::int AS won,
+            COUNT(*) FILTER (WHERE status IN ('Accepted','Rejected','Expired'))::int AS closed
+           FROM sales_quotes WHERE team_id = ANY($1)`,
+        [accessible],
+      ),
     ]);
 
+    const closed = num(conv.rows[0].closed);
     return {
       ...zero,
       openQuotes: {
@@ -1547,6 +2090,17 @@ export class SalesService {
       ordersThisMonth: {
         count: ordersM.rows[0].count,
         value: num(ordersM.rows[0].value),
+      },
+      outstandingInvoices: {
+        count: invOut.rows[0].count,
+        value: num(invOut.rows[0].value),
+      },
+      commissionsDue: {
+        count: commDue.rows[0].count,
+        amount: num(commDue.rows[0].amount),
+      },
+      conversionRate: {
+        percent: closed ? Math.round((num(conv.rows[0].won) / closed) * 100) : 0,
       },
     };
   }

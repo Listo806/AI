@@ -28,6 +28,10 @@ import { CreateSalesContractDto } from './dto/create-sales-contract.dto';
 import { UpdateSalesContractDto } from './dto/update-sales-contract.dto';
 import { CreateSalesReturnDto } from './dto/create-sales-return.dto';
 import { UpdateSalesReturnDto } from './dto/update-sales-return.dto';
+import { CreateSalesInvoiceDto } from './dto/create-sales-invoice.dto';
+import { UpdateSalesInvoiceDto } from './dto/update-sales-invoice.dto';
+import { CreateSalesCommissionDto } from './dto/create-sales-commission.dto';
+import { UpdateSalesCommissionDto } from './dto/update-sales-commission.dto';
 
 // Sales Workspace API. JwtAuthGuard authenticates, PaymentGuard gates unpaid
 // accounts, and WorkspaceLockGuard enforces the $97 add-on ONLY when the 'sales'
@@ -427,6 +431,145 @@ export class SalesController {
   @ApiOperation({ summary: 'Delete a return (team-scoped)' })
   async removeReturn(@Param('id') id: string, @CurrentUser() user: any) {
     return this.sales.removeReturn(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ─── Invoices ────────────────────────────────────────────────────────────
+
+  @Get('invoices')
+  @ApiOperation({ summary: 'List invoices (paginated, filterable, team-scoped)' })
+  async listInvoices(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.sales.findAllInvoices(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, page, limit },
+    );
+  }
+
+  @Post('invoices')
+  @ApiOperation({ summary: 'Create an invoice (sales tracking record)' })
+  async createInvoice(@Body() dto: CreateSalesInvoiceDto, @CurrentUser() user: any) {
+    return this.sales.createInvoice(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('invoices/:id')
+  @ApiOperation({ summary: 'Get one invoice (team-scoped)' })
+  async getInvoice(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.sales.findOneInvoice(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('invoices/:id')
+  @ApiOperation({ summary: 'Update an invoice (team-scoped)' })
+  async updateInvoice(
+    @Param('id') id: string,
+    @Body() dto: UpdateSalesInvoiceDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.sales.updateInvoice(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('invoices/:id')
+  @ApiOperation({ summary: 'Delete an invoice (team-scoped)' })
+  async removeInvoice(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.sales.removeInvoice(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ─── Commissions ─────────────────────────────────────────────────────────
+
+  @Get('commissions')
+  @ApiOperation({ summary: 'List commissions (paginated, filterable, team-scoped)' })
+  async listCommissions(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.sales.findAllCommissions(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, page, limit },
+    );
+  }
+
+  @Post('commissions')
+  @ApiOperation({ summary: 'Create a commission' })
+  async createCommission(
+    @Body() dto: CreateSalesCommissionDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.sales.createCommission(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('commissions/:id')
+  @ApiOperation({ summary: 'Get one commission (team-scoped)' })
+  async getCommission(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.sales.findOneCommission(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('commissions/:id')
+  @ApiOperation({ summary: 'Update a commission (team-scoped)' })
+  async updateCommission(
+    @Param('id') id: string,
+    @Body() dto: UpdateSalesCommissionDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.sales.updateCommission(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('commissions/:id')
+  @ApiOperation({ summary: 'Delete a commission (team-scoped)' })
+  async removeCommission(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.sales.removeCommission(
       id,
       user.id,
       user.teamId ?? null,
