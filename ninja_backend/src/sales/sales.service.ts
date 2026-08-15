@@ -2030,7 +2030,8 @@ export class SalesService {
     if (!accessible.length) return zero;
     const num = (v: any) => Number(v) || 0;
 
-    const [openQ, openP, ordersM, invOut, commDue, conv] = await Promise.all([
+    const [openQ, openP, ordersM, invOut, commDue, conv, dealsRes, repsRes, activityRes] =
+      await Promise.all([
       this.db.query(
         `SELECT COUNT(*)::int AS count, COALESCE(SUM(value),0) AS value
            FROM sales_quotes
@@ -2074,7 +2075,75 @@ export class SalesService {
            FROM sales_quotes WHERE team_id = ANY($1)`,
         [accessible],
       ),
+      // Pipeline summary reuses the shared CRM deals (open stages only).
+      this.db.query(
+        `SELECT stage, COUNT(*)::int AS count, COALESCE(SUM(value),0) AS value
+           FROM deals
+          WHERE team_id = ANY($1) AND stage NOT IN ('won','lost')
+          GROUP BY stage`,
+        [accessible],
+      ).catch(() => ({ rows: [] })),
+      // Top reps from confirmed order value.
+      this.db.query(
+        `SELECT owner_name AS name, COUNT(*)::int AS orders,
+                COALESCE(SUM(value),0) AS amount
+           FROM sales_orders
+          WHERE team_id = ANY($1)
+            AND owner_name IS NOT NULL AND TRIM(owner_name) <> ''
+            AND status <> 'Cancelled'
+          GROUP BY owner_name ORDER BY amount DESC LIMIT 5`,
+        [accessible],
+      ),
+      // Recent activity across the sales entities.
+      this.db.query(
+        `SELECT kind, ref, name, status, updated_at FROM (
+            SELECT 'Quote' AS kind, quote_number AS ref, customer_name AS name, status, updated_at FROM sales_quotes WHERE team_id = ANY($1)
+            UNION ALL SELECT 'Proposal', proposal_number, customer_name, status, updated_at FROM sales_proposals WHERE team_id = ANY($1)
+            UNION ALL SELECT 'Order', order_number, customer_name, status, updated_at FROM sales_orders WHERE team_id = ANY($1)
+            UNION ALL SELECT 'Invoice', invoice_number, customer_name, status, updated_at FROM sales_invoices WHERE team_id = ANY($1)
+            UNION ALL SELECT 'Contract', contract_number, customer_name, status, updated_at FROM sales_contracts WHERE team_id = ANY($1)
+            UNION ALL SELECT 'Return', return_number, customer_name, status, updated_at FROM sales_returns WHERE team_id = ANY($1)
+            UNION ALL SELECT 'Commission', commission_number, customer_name, status, updated_at FROM sales_commissions WHERE team_id = ANY($1)
+         ) t ORDER BY updated_at DESC LIMIT 6`,
+        [accessible],
+      ),
     ]);
+
+    const STAGE_LABELS: Record<string, string> = {
+      new: 'New',
+      qualified: 'Qualified',
+      proposal: 'Proposal',
+      negotiation: 'Negotiation',
+    };
+    const STAGE_TONES: Record<string, string> = {
+      new: 'gray',
+      qualified: 'blue',
+      proposal: 'green',
+      negotiation: 'amber',
+    };
+    const STAGE_ORDER = ['new', 'qualified', 'proposal', 'negotiation'];
+    const dealByStage: Record<string, { count: number; value: number }> = {};
+    for (const row of dealsRes.rows) {
+      dealByStage[row.stage] = { count: num(row.count), value: num(row.value) };
+    }
+    const pipeline = STAGE_ORDER.filter((s) => dealByStage[s]).map((s) => ({
+      label: STAGE_LABELS[s],
+      value: dealByStage[s].value,
+      dealCount: dealByStage[s].count,
+      tone: STAGE_TONES[s],
+    }));
+
+    const topReps = repsRes.rows.map((r: any) => ({
+      name: r.name,
+      amount: num(r.amount),
+      orders: num(r.orders),
+    }));
+
+    const recentActivity = activityRes.rows.map((a: any) => ({
+      title: `${a.kind} ${a.ref || ''}`.trim(),
+      subtitle: [a.name, a.status].filter(Boolean).join(' · '),
+      at: a.updated_at,
+    }));
 
     const closed = num(conv.rows[0].closed);
     return {
@@ -2102,6 +2171,65 @@ export class SalesService {
       conversionRate: {
         percent: closed ? Math.round((num(conv.rows[0].won) / closed) * 100) : 0,
       },
+      pipeline,
+      topReps,
+      recentActivity,
+    };
+  }
+
+  // ─── Customers ─────────────────────────────────────────────────────────────
+  //
+  // The Customers tab reuses the shared Cortexa contacts (not a second customer
+  // database), enriched with each customer's sales rollups. Team-scoped.
+  async findCustomers(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['ct.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.search && params.search.trim()) {
+      where.push(`(ct.name ILIKE $${i} OR ct.email ILIKE $${i})`);
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM contacts ct WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+
+    // Per-customer rollups from the sales entities (all team-scoped by contact_id).
+    const dataRes = await this.db.query(
+      `SELECT ct.id, ct.name, ct.email, ct.phone, ct.status, ct.created_at AS "createdAt",
+              (SELECT COUNT(*)::int FROM sales_quotes q WHERE q.contact_id = ct.id AND q.team_id = ct.team_id) AS "quoteCount",
+              (SELECT COUNT(*)::int FROM sales_orders o WHERE o.contact_id = ct.id AND o.team_id = ct.team_id) AS "orderCount",
+              (SELECT COUNT(*)::int FROM sales_invoices inv WHERE inv.contact_id = ct.id AND inv.team_id = ct.team_id) AS "invoiceCount",
+              (SELECT COALESCE(SUM(o.value),0) FROM sales_orders o WHERE o.contact_id = ct.id AND o.team_id = ct.team_id AND o.status <> 'Cancelled') AS "orderRevenue"
+         FROM contacts ct
+        WHERE ${whereSql}
+        ORDER BY ct.name ASC NULLS LAST
+        LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return {
+      data: dataRes.rows.map((r: any) => ({ ...r, orderRevenue: Number(r.orderRevenue) || 0 })),
+      total,
+      page,
+      limit,
     };
   }
 }

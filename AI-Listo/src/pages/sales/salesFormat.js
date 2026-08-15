@@ -35,6 +35,20 @@ export function daysLeftNote(validUntil) {
   return { text: `${diff} day${diff === 1 ? "" : "s"} left`, danger: false };
 }
 
+export function relativeTime(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
+  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+}
+
 export function initials(name) {
   return String(name || "")
     .split(" ")
