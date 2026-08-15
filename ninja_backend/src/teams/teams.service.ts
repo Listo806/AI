@@ -2148,14 +2148,7 @@ export class TeamsService {
         accepted_at as "acceptedAt",
         created_at as "createdAt"
       `,
-        [
-          invitationId,
-          normalizedRole,
-          token,
-          requestingUserId,
-          expiresAt,
-          inviteeName,
-        ],
+        [invitationId, normalizedRole, token, requestingUserId, expiresAt, inviteeName],
       );
 
       invitation = result.rows[0];
@@ -2823,48 +2816,136 @@ export class TeamsService {
   private workspaceSchemaReady = false;
 
   private async ensureWorkspaceSchema(): Promise<void> {
-    if (this.workspaceSchemaReady) {
-      return;
-    }
+    if (this.workspaceSchemaReady) return;
 
-    /*
-     * Team Workspace schema is already installed in PostgreSQL.
-     *
-     * IMPORTANT:
-     * Do not CREATE / ALTER tables during normal API requests.
-     * Schema changes must be handled by migrations only.
-     */
+    // Existing `projects` table is intentionally reused and extended rather than
+    // replaced, so any existing project records remain available.
+    await this.db.query(`
+      ALTER TABLE projects
+        ADD COLUMN IF NOT EXISTS description TEXT,
+        ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'active',
+        ADD COLUMN IF NOT EXISTS priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+        ADD COLUMN IF NOT EXISTS owner_id UUID,
+        ADD COLUMN IF NOT EXISTS start_date TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS progress INT NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    `);
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS team_tasks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        status VARCHAR(32) NOT NULL DEFAULT 'pending',
+        priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+        task_type VARCHAR(50) NOT NULL DEFAULT 'task',
+        assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,
+        created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        due_date TIMESTAMPTZ,
+        progress INT NOT NULL DEFAULT 0,
+        estimated_minutes INT NOT NULL DEFAULT 0,
+        labels TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+        completed_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT team_tasks_status_check
+          CHECK (status IN ('pending','in_progress','review','on_hold','completed','cancelled')),
+        CONSTRAINT team_tasks_priority_check
+          CHECK (priority IN ('low','medium','high','urgent')),
+        CONSTRAINT team_tasks_progress_check
+          CHECK (progress >= 0 AND progress <= 100)
+      )
+    `);
+
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_tasks_team
+      ON team_tasks(team_id, updated_at DESC)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_tasks_assignee
+      ON team_tasks(team_id, assigned_to)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_tasks_project
+      ON team_tasks(team_id, project_id)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_tasks_due
+      ON team_tasks(team_id, due_date)
+      WHERE due_date IS NOT NULL
+    `);
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS team_time_entries (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        task_id UUID REFERENCES team_tasks(id) ON DELETE CASCADE,
+        project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        minutes INT NOT NULL CHECK (minutes > 0),
+        note TEXT,
+        started_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_time_entries_team
+      ON team_time_entries(team_id, created_at DESC)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_time_entries_task
+      ON team_time_entries(team_id, task_id)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_team_time_entries_user
+      ON team_time_entries(team_id, user_id)
+    `);
+
+    // Reuse the existing stored_files table, but allow files to be associated
+    // with the project/task that owns them.
+    await this.db.query(`
+      ALTER TABLE stored_files
+        ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+        ADD COLUMN IF NOT EXISTS task_id UUID REFERENCES team_tasks(id) ON DELETE SET NULL
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_stored_files_team_project
+      ON stored_files(team_id, project_id)
+    `);
+    await this.db.query(`
+      CREATE INDEX IF NOT EXISTS idx_stored_files_team_task
+      ON stored_files(team_id, task_id)
+    `);
+
     this.workspaceSchemaReady = true;
   }
 
   private normalizeWorkspaceTaskStatus(raw: any): string {
-    const v = String(raw || "pending")
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "_");
+    const v = String(raw || 'pending').trim().toLowerCase().replace(/\s+/g, '_');
     const map: Record<string, string> = {
-      pending: "pending",
-      todo: "pending",
-      to_do: "pending",
-      in_progress: "in_progress",
-      progress: "in_progress",
-      review: "review",
-      on_hold: "on_hold",
-      hold: "on_hold",
-      completed: "completed",
-      complete: "completed",
-      done: "completed",
-      cancelled: "cancelled",
-      canceled: "cancelled",
+      pending: 'pending',
+      todo: 'pending',
+      to_do: 'pending',
+      in_progress: 'in_progress',
+      progress: 'in_progress',
+      review: 'review',
+      on_hold: 'on_hold',
+      hold: 'on_hold',
+      completed: 'completed',
+      complete: 'completed',
+      done: 'completed',
+      cancelled: 'cancelled',
+      canceled: 'cancelled',
     };
-    return map[v] || "pending";
+    return map[v] || 'pending';
   }
 
   private normalizeWorkspacePriority(raw: any): string {
-    const v = String(raw || "medium")
-      .trim()
-      .toLowerCase();
-    return ["low", "medium", "high", "urgent"].includes(v) ? v : "medium";
+    const v = String(raw || 'medium').trim().toLowerCase();
+    return ['low', 'medium', 'high', 'urgent'].includes(v) ? v : 'medium';
   }
 
   private async logWorkspaceTaskEvent(
@@ -2882,9 +2963,7 @@ export class TeamsService {
         [teamId, userId, eventType, taskId, JSON.stringify(metadata || {})],
       );
     } catch (error) {
-      this.logger.warn(
-        `Could not log ${eventType}: ${error?.message || error}`,
-      );
+      this.logger.warn(`Could not log ${eventType}: ${error?.message || error}`);
     }
   }
 
@@ -3064,22 +3143,18 @@ export class TeamsService {
     const maxOpen = Math.max(0, ...workload.map((r: any) => r.openTasks));
     const workloadRows = workload.map((r: any) => ({
       ...r,
-      workloadPercent:
-        maxOpen > 0 ? Math.round((r.openTasks / maxOpen) * 100) : 0,
+      workloadPercent: maxOpen > 0 ? Math.round((r.openTasks / maxOpen) * 100) : 0,
     }));
 
     const workloadValues = workloadRows.map((r: any) => r.openTasks);
     const avg = workloadValues.length
-      ? workloadValues.reduce((a: number, b: number) => a + b, 0) /
-        workloadValues.length
+      ? workloadValues.reduce((a: number, b: number) => a + b, 0) / workloadValues.length
       : 0;
     const spread = workloadValues.length
       ? Math.max(...workloadValues) - Math.min(...workloadValues)
       : 0;
     const workloadBalancePercent =
-      avg > 0
-        ? Math.max(0, Math.round(100 - (spread / Math.max(avg, 1)) * 35))
-        : 100;
+      avg > 0 ? Math.max(0, Math.round(100 - (spread / Math.max(avg, 1)) * 35)) : 100;
 
     const baseMetrics = metricsResult.rows[0] || {};
     return {
@@ -3114,18 +3189,17 @@ export class TeamsService {
     const page = Math.max(1, Number(query.page || 1));
     const limit = Math.min(100, Math.max(1, Number(query.limit || 20)));
     const offset = (page - 1) * limit;
-    const conditions: string[] = ["tt.team_id = $1"];
+    const conditions: string[] = ['tt.team_id = $1'];
     const values: any[] = [teamId];
     let i = 2;
 
     const add = (sql: string, value: any) => {
-      conditions.push(sql.replace("?", `$${i}`));
+      conditions.push(sql.replace('?', `$${i}`));
       values.push(value);
       i += 1;
     };
 
-    if (query.my === "true" || query.my === true)
-      add("tt.assigned_to = ?", currentUserId);
+    if (query.my === 'true' || query.my === true) add('tt.assigned_to = ?', currentUserId);
     if (query.q) {
       conditions.push(`(
         tt.title ILIKE $${i}
@@ -3136,20 +3210,15 @@ export class TeamsService {
       values.push(`%${String(query.q).trim()}%`);
       i += 1;
     }
-    if (query.status && query.status !== "all")
-      add("tt.status = ?", this.normalizeWorkspaceTaskStatus(query.status));
-    if (query.priority && query.priority !== "all")
-      add("tt.priority = ?", this.normalizeWorkspacePriority(query.priority));
-    if (query.assignee && query.assignee !== "all")
-      add("tt.assigned_to = ?", query.assignee);
-    if (query.project && query.project !== "all")
-      add("tt.project_id = ?", query.project);
-    if (query.taskType && query.taskType !== "all")
-      add("tt.task_type = ?", query.taskType);
-    if (query.dateFrom) add("tt.due_date >= ?::timestamptz", query.dateFrom);
-    if (query.dateTo) add("tt.due_date <= ?::timestamptz", query.dateTo);
+    if (query.status && query.status !== 'all') add('tt.status = ?', this.normalizeWorkspaceTaskStatus(query.status));
+    if (query.priority && query.priority !== 'all') add('tt.priority = ?', this.normalizeWorkspacePriority(query.priority));
+    if (query.assignee && query.assignee !== 'all') add('tt.assigned_to = ?', query.assignee);
+    if (query.project && query.project !== 'all') add('tt.project_id = ?', query.project);
+    if (query.taskType && query.taskType !== 'all') add('tt.task_type = ?', query.taskType);
+    if (query.dateFrom) add('tt.due_date >= ?::timestamptz', query.dateFrom);
+    if (query.dateTo) add('tt.due_date <= ?::timestamptz', query.dateTo);
 
-    const where = conditions.join(" AND ");
+    const where = conditions.join(' AND ');
 
     const count = await this.db.query(
       `SELECT COUNT(*)::int AS total
@@ -3214,13 +3283,13 @@ export class TeamsService {
   async createWorkspaceTask(teamId: string, userId: string, body: any) {
     await this.ensureWorkspaceSchema();
 
-    const title = String(body?.name || body?.title || "").trim();
-    if (!title) throw new BadRequestException("Task name is required.");
+    const title = String(body?.name || body?.title || '').trim();
+    if (!title) throw new BadRequestException('Task name is required.');
 
     const status = this.normalizeWorkspaceTaskStatus(body?.status);
     const priority = this.normalizeWorkspacePriority(body?.priority);
     const progress =
-      status === "completed"
+      status === 'completed'
         ? 100
         : Math.max(0, Math.min(100, Number(body?.progress || 0)));
 
@@ -3229,7 +3298,7 @@ export class TeamsService {
         `SELECT id FROM projects WHERE id = $1 AND team_id = $2 LIMIT 1`,
         [body.projectId, teamId],
       );
-      if (!p.rows.length) throw new BadRequestException("Invalid project.");
+      if (!p.rows.length) throw new BadRequestException('Invalid project.');
     }
 
     if (body?.assigneeId) {
@@ -3239,8 +3308,7 @@ export class TeamsService {
           LIMIT 1`,
         [teamId, body.assigneeId],
       );
-      if (!m.rows.length)
-        throw new BadRequestException("Assignee is not an active team member.");
+      if (!m.rows.length) throw new BadRequestException('Assignee is not an active team member.');
     }
 
     const result = await this.db.query(
@@ -3264,9 +3332,7 @@ export class TeamsService {
         body?.description || null,
         status,
         priority,
-        String(body?.taskType || "task")
-          .trim()
-          .toLowerCase(),
+        String(body?.taskType || 'task').trim().toLowerCase(),
         body?.assigneeId || null,
         userId,
         body?.dueDate || null,
@@ -3277,28 +3343,17 @@ export class TeamsService {
     );
 
     const task = result.rows[0];
-    await this.logWorkspaceTaskEvent(
-      teamId,
-      userId,
-      task.id,
-      "team.task_created",
-      {
-        title,
-        projectId: task.project_id,
-        assignedTo: task.assigned_to,
-        status: task.status,
-        priority: task.priority,
-      },
-    );
+    await this.logWorkspaceTaskEvent(teamId, userId, task.id, 'team.task_created', {
+      title,
+      projectId: task.project_id,
+      assignedTo: task.assigned_to,
+      status: task.status,
+      priority: task.priority,
+    });
     return task;
   }
 
-  async updateWorkspaceTask(
-    teamId: string,
-    taskId: string,
-    userId: string,
-    body: any,
-  ) {
+  async updateWorkspaceTask(teamId: string, taskId: string, userId: string, body: any) {
     await this.ensureWorkspaceSchema();
 
     const existingResult = await this.db.query(
@@ -3306,7 +3361,7 @@ export class TeamsService {
       [taskId, teamId],
     );
     const existing = existingResult.rows[0];
-    if (!existing) throw new NotFoundException("Task not found.");
+    if (!existing) throw new NotFoundException('Task not found.');
 
     const nextStatus =
       body?.status !== undefined
@@ -3317,7 +3372,7 @@ export class TeamsService {
         ? this.normalizeWorkspacePriority(body.priority)
         : existing.priority;
     const nextProgress =
-      nextStatus === "completed"
+      nextStatus === 'completed'
         ? 100
         : body?.progress !== undefined
           ? Math.max(0, Math.min(100, Number(body.progress)))
@@ -3349,63 +3404,55 @@ export class TeamsService {
       [
         taskId,
         teamId,
-        Object.prototype.hasOwnProperty.call(body || {}, "projectId"),
+        Object.prototype.hasOwnProperty.call(body || {}, 'projectId'),
         body?.projectId || null,
-        Object.prototype.hasOwnProperty.call(body || {}, "name") ||
-          Object.prototype.hasOwnProperty.call(body || {}, "title"),
+        Object.prototype.hasOwnProperty.call(body || {}, 'name') || Object.prototype.hasOwnProperty.call(body || {}, 'title'),
         body?.name ?? body?.title ?? null,
-        Object.prototype.hasOwnProperty.call(body || {}, "description"),
+        Object.prototype.hasOwnProperty.call(body || {}, 'description'),
         body?.description ?? null,
         nextStatus,
         nextPriority,
-        Object.prototype.hasOwnProperty.call(body || {}, "taskType"),
-        body?.taskType || "task",
-        Object.prototype.hasOwnProperty.call(body || {}, "assigneeId"),
+        Object.prototype.hasOwnProperty.call(body || {}, 'taskType'),
+        body?.taskType || 'task',
+        Object.prototype.hasOwnProperty.call(body || {}, 'assigneeId'),
         body?.assigneeId || null,
-        Object.prototype.hasOwnProperty.call(body || {}, "dueDate"),
+        Object.prototype.hasOwnProperty.call(body || {}, 'dueDate'),
         body?.dueDate || null,
         nextProgress,
-        Object.prototype.hasOwnProperty.call(body || {}, "estimatedMinutes"),
+        Object.prototype.hasOwnProperty.call(body || {}, 'estimatedMinutes'),
         Math.max(0, Number(body?.estimatedMinutes || 0)),
-        Object.prototype.hasOwnProperty.call(body || {}, "labels"),
+        Object.prototype.hasOwnProperty.call(body || {}, 'labels'),
         Array.isArray(body?.labels) ? body.labels.map(String) : [],
       ],
     );
 
     const changes: any = {};
     for (const [key, oldValue, newValue] of [
-      ["status", existing.status, nextStatus],
-      ["priority", existing.priority, nextPriority],
-      ["progress", Number(existing.progress || 0), nextProgress],
-      ["assignee", existing.assigned_to, body?.assigneeId],
-      ["dueDate", existing.due_date, body?.dueDate],
+      ['status', existing.status, nextStatus],
+      ['priority', existing.priority, nextPriority],
+      ['progress', Number(existing.progress || 0), nextProgress],
+      ['assignee', existing.assigned_to, body?.assigneeId],
+      ['dueDate', existing.due_date, body?.dueDate],
     ] as any[]) {
-      if (
-        newValue !== undefined &&
-        String(oldValue ?? "") !== String(newValue ?? "")
-      ) {
+      if (newValue !== undefined && String(oldValue ?? '') !== String(newValue ?? '')) {
         changes[key] = { from: oldValue, to: newValue };
       }
     }
 
     const eventType =
-      nextStatus === "completed" && existing.status !== "completed"
-        ? "team.task_completed"
+      nextStatus === 'completed' && existing.status !== 'completed'
+        ? 'team.task_completed'
         : body?.status !== undefined && existing.status !== nextStatus
-          ? "team.task_status_changed"
+          ? 'team.task_status_changed'
           : body?.priority !== undefined && existing.priority !== nextPriority
-            ? "team.task_priority_changed"
-            : body?.assigneeId !== undefined &&
-                existing.assigned_to !== body?.assigneeId
-              ? "team.task_assigned"
-              : body?.dueDate !== undefined &&
-                  String(existing.due_date || "") !==
-                    String(body?.dueDate || "")
-                ? "team.task_due_date_changed"
-                : body?.progress !== undefined &&
-                    Number(existing.progress || 0) !== nextProgress
-                  ? "team.task_progress_updated"
-                  : "team.task_updated";
+            ? 'team.task_priority_changed'
+            : body?.assigneeId !== undefined && existing.assigned_to !== body?.assigneeId
+              ? 'team.task_assigned'
+              : body?.dueDate !== undefined && String(existing.due_date || '') !== String(body?.dueDate || '')
+                ? 'team.task_due_date_changed'
+                : body?.progress !== undefined && Number(existing.progress || 0) !== nextProgress
+                  ? 'team.task_progress_updated'
+                  : 'team.task_updated';
 
     await this.logWorkspaceTaskEvent(teamId, userId, taskId, eventType, {
       title: result.rows[0]?.title,
@@ -3421,36 +3468,24 @@ export class TeamsService {
       `DELETE FROM team_tasks WHERE id = $1 AND team_id = $2 RETURNING id,title`,
       [taskId, teamId],
     );
-    if (!result.rows.length) throw new NotFoundException("Task not found.");
-    await this.logWorkspaceTaskEvent(
-      teamId,
-      userId,
-      taskId,
-      "team.task_deleted",
-      {
-        title: result.rows[0].title,
-      },
-    );
+    if (!result.rows.length) throw new NotFoundException('Task not found.');
+    await this.logWorkspaceTaskEvent(teamId, userId, taskId, 'team.task_deleted', {
+      title: result.rows[0].title,
+    });
     return { deleted: true };
   }
 
-  async logWorkspaceTime(
-    teamId: string,
-    taskId: string,
-    userId: string,
-    body: any,
-  ) {
+  async logWorkspaceTime(teamId: string, taskId: string, userId: string, body: any) {
     await this.ensureWorkspaceSchema();
     const minutes = Math.max(0, Number(body?.minutes || 0));
-    if (!minutes)
-      throw new BadRequestException("Minutes must be greater than 0.");
+    if (!minutes) throw new BadRequestException('Minutes must be greater than 0.');
 
     const taskResult = await this.db.query(
       `SELECT id,project_id,title FROM team_tasks WHERE id = $1 AND team_id = $2 LIMIT 1`,
       [taskId, teamId],
     );
     const task = taskResult.rows[0];
-    if (!task) throw new NotFoundException("Task not found.");
+    if (!task) throw new NotFoundException('Task not found.');
 
     const result = await this.db.query(
       `
@@ -3469,18 +3504,417 @@ export class TeamsService {
         body?.startedAt || null,
       ],
     );
-    await this.logWorkspaceTaskEvent(
-      teamId,
-      userId,
-      taskId,
-      "team.time_logged",
-      {
-        title: task.title,
-        minutes,
-        note: body?.note || null,
-      },
-    );
+    await this.logWorkspaceTaskEvent(teamId, userId, taskId, 'team.time_logged', {
+      title: task.title,
+      minutes,
+      note: body?.note || null,
+    });
     return result.rows[0];
+  }
+
+
+  async getWorkspaceTimeTracking(
+    teamId: string,
+    query: any = {},
+  ) {
+    await this.ensureWorkspaceSchema();
+
+    const page = Math.max(1, Number(query.page || 1));
+    const limit = Math.min(100, Math.max(1, Number(query.limit || 20)));
+    const offset = (page - 1) * limit;
+
+    const conditions: string[] = ['te.team_id = $1'];
+    const values: any[] = [teamId];
+    let i = 2;
+
+    const add = (sql: string, value: any) => {
+      conditions.push(sql.replace('?', `$${i}`));
+      values.push(value);
+      i += 1;
+    };
+
+    if (query.member && query.member !== 'all') add('te.user_id = ?', query.member);
+    if (query.project && query.project !== 'all') add('te.project_id = ?', query.project);
+    if (query.task && query.task !== 'all') add('te.task_id = ?', query.task);
+    if (query.dateFrom) add('COALESCE(te.started_at, te.created_at) >= ?::timestamptz', query.dateFrom);
+    if (query.dateTo) add("COALESCE(te.started_at, te.created_at) < (?::date + INTERVAL '1 day')", query.dateTo);
+    if (query.q) {
+      conditions.push(`(
+        COALESCE(tt.title,'') ILIKE $${i}
+        OR COALESCE(p.name,'') ILIKE $${i}
+        OR COALESCE(u.name,u.email,'') ILIKE $${i}
+        OR COALESCE(te.note,'') ILIKE $${i}
+      )`);
+      values.push(`%${String(query.q).trim()}%`);
+      i += 1;
+    }
+
+    const where = conditions.join(' AND ');
+
+    const [countResult, rowsResult, summaryResult, memberResult, projectResult, taskResult] =
+      await Promise.all([
+        this.db.query(
+          `SELECT COUNT(*)::int AS total
+             FROM team_time_entries te
+             LEFT JOIN team_tasks tt ON tt.id = te.task_id AND tt.team_id = te.team_id
+             LEFT JOIN projects p ON p.id = te.project_id AND p.team_id = te.team_id
+             LEFT JOIN users u ON u.id = te.user_id
+            WHERE ${where}`,
+          values,
+        ),
+        this.db.query(
+          `SELECT
+             te.id,
+             te.team_id AS "teamId",
+             te.task_id AS "taskId",
+             tt.title AS "taskName",
+             te.project_id AS "projectId",
+             p.name AS "projectName",
+             te.user_id AS "userId",
+             COALESCE(u.name,u.email) AS "memberName",
+             te.minutes,
+             te.note,
+             te.started_at AS "startedAt",
+             te.created_at AS "createdAt"
+           FROM team_time_entries te
+           LEFT JOIN team_tasks tt ON tt.id = te.task_id AND tt.team_id = te.team_id
+           LEFT JOIN projects p ON p.id = te.project_id AND p.team_id = te.team_id
+           LEFT JOIN users u ON u.id = te.user_id
+           WHERE ${where}
+           ORDER BY COALESCE(te.started_at,te.created_at) DESC
+           LIMIT $${i} OFFSET $${i + 1}`,
+          [...values, limit, offset],
+        ),
+        this.db.query(
+          `SELECT
+             COALESCE(SUM(te.minutes),0)::int AS "totalMinutes",
+             COUNT(*)::int AS "entryCount",
+             COUNT(DISTINCT te.user_id)::int AS "activeMembers",
+             COUNT(DISTINCT te.project_id) FILTER (WHERE te.project_id IS NOT NULL)::int AS "projectsTracked",
+             COUNT(DISTINCT te.task_id) FILTER (WHERE te.task_id IS NOT NULL)::int AS "tasksTracked"
+           FROM team_time_entries te
+           LEFT JOIN team_tasks tt ON tt.id = te.task_id AND tt.team_id = te.team_id
+           LEFT JOIN projects p ON p.id = te.project_id AND p.team_id = te.team_id
+           LEFT JOIN users u ON u.id = te.user_id
+           WHERE ${where}`,
+          values,
+        ),
+        this.db.query(
+          `SELECT
+             te.user_id AS id,
+             COALESCE(u.name,u.email) AS name,
+             COALESCE(SUM(te.minutes),0)::int AS minutes,
+             COUNT(*)::int AS entries
+           FROM team_time_entries te
+           LEFT JOIN team_tasks tt ON tt.id = te.task_id AND tt.team_id = te.team_id
+           LEFT JOIN projects p ON p.id = te.project_id AND p.team_id = te.team_id
+           LEFT JOIN users u ON u.id = te.user_id
+           WHERE ${where}
+           GROUP BY te.user_id,u.name,u.email
+           ORDER BY minutes DESC`,
+          values,
+        ),
+        this.db.query(
+          `SELECT
+             te.project_id AS id,
+             COALESCE(p.name,'No project') AS name,
+             COALESCE(SUM(te.minutes),0)::int AS minutes,
+             COUNT(*)::int AS entries
+           FROM team_time_entries te
+           LEFT JOIN team_tasks tt ON tt.id = te.task_id AND tt.team_id = te.team_id
+           LEFT JOIN projects p ON p.id = te.project_id AND p.team_id = te.team_id
+           LEFT JOIN users u ON u.id = te.user_id
+           WHERE ${where}
+           GROUP BY te.project_id,p.name
+           ORDER BY minutes DESC`,
+          values,
+        ),
+        this.db.query(
+          `SELECT
+             te.task_id AS id,
+             COALESCE(tt.title,'No task') AS name,
+             COALESCE(SUM(te.minutes),0)::int AS minutes,
+             COUNT(*)::int AS entries
+           FROM team_time_entries te
+           LEFT JOIN team_tasks tt ON tt.id = te.task_id AND tt.team_id = te.team_id
+           LEFT JOIN projects p ON p.id = te.project_id AND p.team_id = te.team_id
+           LEFT JOIN users u ON u.id = te.user_id
+           WHERE ${where}
+           GROUP BY te.task_id,tt.title
+           ORDER BY minutes DESC
+           LIMIT 20`,
+          values,
+        ),
+      ]);
+
+    const total = Number(countResult.rows[0]?.total || 0);
+    const summary = summaryResult.rows[0] || {};
+
+    return {
+      summary: {
+        totalMinutes: Number(summary.totalMinutes || 0),
+        hoursLogged: Number((Number(summary.totalMinutes || 0) / 60).toFixed(1)),
+        entryCount: Number(summary.entryCount || 0),
+        activeMembers: Number(summary.activeMembers || 0),
+        projectsTracked: Number(summary.projectsTracked || 0),
+        tasksTracked: Number(summary.tasksTracked || 0),
+      },
+      byMember: memberResult.rows,
+      byProject: projectResult.rows,
+      byTask: taskResult.rows,
+      data: rowsResult.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    };
+  }
+
+  async getWorkspaceReports(teamId: string, query: any = {}) {
+    await this.ensureWorkspaceSchema();
+
+    const dateFrom = query.dateFrom || null;
+    const dateTo = query.dateTo || null;
+
+    const taskDateWhere = `
+      team_id = $1
+      AND ($2::timestamptz IS NULL OR created_at >= $2::timestamptz)
+      AND ($3::date IS NULL OR created_at < ($3::date + INTERVAL '1 day'))
+    `;
+    const timeDateWhere = `
+      team_id = $1
+      AND ($2::timestamptz IS NULL OR COALESCE(started_at,created_at) >= $2::timestamptz)
+      AND ($3::date IS NULL OR COALESCE(started_at,created_at) < ($3::date + INTERVAL '1 day'))
+    `;
+
+    const [
+      summaryResult,
+      statusResult,
+      priorityResult,
+      memberResult,
+      projectResult,
+      timeMemberResult,
+      timeProjectResult,
+      trendResult,
+      activityResult,
+      deadlineResult,
+    ] = await Promise.all([
+      this.db.query(
+        `SELECT
+           COUNT(*)::int AS "tasksCreated",
+           COUNT(*) FILTER (WHERE status = 'completed')::int AS "tasksCompleted",
+           COUNT(*) FILTER (
+             WHERE status = 'completed'
+               AND due_date IS NOT NULL
+               AND completed_at IS NOT NULL
+               AND completed_at <= due_date
+           )::int AS "completedOnTime",
+           COUNT(*) FILTER (
+             WHERE status = 'completed'
+               AND due_date IS NOT NULL
+               AND completed_at IS NOT NULL
+           )::int AS "completedWithDue",
+           COALESCE(AVG(progress),0)::numeric(10,1) AS "avgProgress"
+         FROM team_tasks
+         WHERE ${taskDateWhere}`,
+        [teamId, dateFrom, dateTo],
+      ),
+      this.db.query(
+        `SELECT status AS key,COUNT(*)::int AS count
+         FROM team_tasks
+         WHERE ${taskDateWhere}
+         GROUP BY status ORDER BY count DESC`,
+        [teamId, dateFrom, dateTo],
+      ),
+      this.db.query(
+        `SELECT priority AS key,COUNT(*)::int AS count
+         FROM team_tasks
+         WHERE ${taskDateWhere}
+         GROUP BY priority ORDER BY count DESC`,
+        [teamId, dateFrom, dateTo],
+      ),
+      this.db.query(
+        `SELECT
+           tm.user_id AS id,
+           COALESCE(u.name,u.email) AS name,
+           COUNT(tt.id)::int AS assigned,
+           COUNT(tt.id) FILTER (WHERE tt.status = 'completed')::int AS completed,
+           COUNT(tt.id) FILTER (
+             WHERE tt.status = 'completed'
+               AND tt.due_date IS NOT NULL
+               AND tt.completed_at <= tt.due_date
+           )::int AS "completedOnTime",
+           COALESCE(AVG(tt.progress),0)::numeric(10,1) AS "avgProgress"
+         FROM team_members tm
+         JOIN users u ON u.id = tm.user_id
+         LEFT JOIN team_tasks tt
+           ON tt.team_id = tm.team_id
+          AND tt.assigned_to = tm.user_id
+          AND ($2::timestamptz IS NULL OR tt.created_at >= $2::timestamptz)
+          AND ($3::date IS NULL OR tt.created_at < ($3::date + INTERVAL '1 day'))
+         WHERE tm.team_id = $1 AND tm.status = 'active'
+         GROUP BY tm.user_id,u.name,u.email
+         ORDER BY completed DESC,assigned DESC,name ASC`,
+        [teamId, dateFrom, dateTo],
+      ),
+      this.db.query(
+        `SELECT
+           p.id,p.name,
+           COUNT(tt.id)::int AS tasks,
+           COUNT(tt.id) FILTER (WHERE tt.status = 'completed')::int AS completed,
+           COALESCE(AVG(tt.progress),0)::numeric(10,1) AS "avgProgress"
+         FROM projects p
+         LEFT JOIN team_tasks tt
+           ON tt.project_id = p.id
+          AND tt.team_id = p.team_id
+          AND ($2::timestamptz IS NULL OR tt.created_at >= $2::timestamptz)
+          AND ($3::date IS NULL OR tt.created_at < ($3::date + INTERVAL '1 day'))
+         WHERE p.team_id = $1
+         GROUP BY p.id,p.name
+         ORDER BY completed DESC,tasks DESC,p.name ASC`,
+        [teamId, dateFrom, dateTo],
+      ),
+      this.db.query(
+        `SELECT te.user_id AS id,COALESCE(u.name,u.email) AS name,
+                COALESCE(SUM(te.minutes),0)::int AS minutes
+         FROM team_time_entries te
+         JOIN users u ON u.id = te.user_id
+         WHERE ${timeDateWhere}
+         GROUP BY te.user_id,u.name,u.email
+         ORDER BY minutes DESC`,
+        [teamId, dateFrom, dateTo],
+      ),
+      this.db.query(
+        `SELECT te.project_id AS id,COALESCE(p.name,'No project') AS name,
+                COALESCE(SUM(te.minutes),0)::int AS minutes
+         FROM team_time_entries te
+         LEFT JOIN projects p ON p.id = te.project_id AND p.team_id = te.team_id
+         WHERE ${timeDateWhere}
+         GROUP BY te.project_id,p.name
+         ORDER BY minutes DESC`,
+        [teamId, dateFrom, dateTo],
+      ),
+      this.db.query(
+        `SELECT
+           TO_CHAR(day,'YYYY-MM-DD') AS date,
+           COUNT(tt.id)::int AS created,
+           COUNT(tt.id) FILTER (WHERE tt.status = 'completed')::int AS completed
+         FROM generate_series(
+           CURRENT_DATE - INTERVAL '13 days',
+           CURRENT_DATE,
+           INTERVAL '1 day'
+         ) day
+         LEFT JOIN team_tasks tt
+           ON tt.team_id = $1
+          AND tt.created_at >= day
+          AND tt.created_at < day + INTERVAL '1 day'
+         GROUP BY day
+         ORDER BY day ASC`,
+        [teamId],
+      ),
+      this.db.query(
+        `SELECT
+           e.id,
+           e.event_type AS "eventType",
+           e.entity_id AS "entityId",
+           e.metadata,
+           e.created_at AS "createdAt",
+           COALESCE(u.name,u.email) AS "userName"
+         FROM events e
+         LEFT JOIN users u ON u.id = e.user_id
+         WHERE e.team_id = $1
+           AND (e.event_type LIKE 'team.task_%' OR e.event_type = 'team.time_logged')
+           AND ($2::timestamptz IS NULL OR e.created_at >= $2::timestamptz)
+           AND ($3::date IS NULL OR e.created_at < ($3::date + INTERVAL '1 day'))
+         ORDER BY e.created_at DESC
+         LIMIT 20`,
+        [teamId, dateFrom, dateTo],
+      ),
+      this.db.query(
+        `SELECT tt.id,tt.title AS name,p.name AS project,
+                tt.due_date AS "dueDate",tt.status,tt.priority,
+                COALESCE(u.name,u.email) AS assignee
+         FROM team_tasks tt
+         LEFT JOIN projects p ON p.id = tt.project_id AND p.team_id = tt.team_id
+         LEFT JOIN users u ON u.id = tt.assigned_to
+         WHERE tt.team_id = $1
+           AND tt.status NOT IN ('completed','cancelled')
+           AND tt.due_date IS NOT NULL
+           AND tt.due_date >= NOW() - INTERVAL '1 day'
+         ORDER BY tt.due_date ASC
+         LIMIT 20`,
+        [teamId],
+      ),
+    ]);
+
+    const s = summaryResult.rows[0] || {};
+    const totalTime = timeMemberResult.rows.reduce(
+      (sum: number, row: any) => sum + Number(row.minutes || 0),
+      0,
+    );
+
+    const memberTimeMap = new Map(
+      timeMemberResult.rows.map((row: any) => [String(row.id), Number(row.minutes || 0)]),
+    );
+
+    const members = memberResult.rows.map((row: any) => {
+      const assigned = Number(row.assigned || 0);
+      const completed = Number(row.completed || 0);
+      const completedOnTime = Number(row.completedOnTime || 0);
+      return {
+        ...row,
+        assigned,
+        completed,
+        completedOnTime,
+        avgProgress: Number(row.avgProgress || 0),
+        completionRate: assigned ? Number(((completed / assigned) * 100).toFixed(1)) : 0,
+        onTimeRate: completed ? Number(((completedOnTime / completed) * 100).toFixed(1)) : 0,
+        loggedMinutes: memberTimeMap.get(String(row.id)) || 0,
+      };
+    });
+
+    const projectTimeMap = new Map(
+      timeProjectResult.rows.map((row: any) => [String(row.id), Number(row.minutes || 0)]),
+    );
+    const projects = projectResult.rows.map((row: any) => ({
+      ...row,
+      tasks: Number(row.tasks || 0),
+      completed: Number(row.completed || 0),
+      avgProgress: Number(row.avgProgress || 0),
+      loggedMinutes: projectTimeMap.get(String(row.id)) || 0,
+    }));
+
+    const tasksCreated = Number(s.tasksCreated || 0);
+    const tasksCompleted = Number(s.tasksCompleted || 0);
+    const completedWithDue = Number(s.completedWithDue || 0);
+    const completedOnTime = Number(s.completedOnTime || 0);
+
+    return {
+      summary: {
+        tasksCreated,
+        tasksCompleted,
+        completionRate: tasksCreated
+          ? Number(((tasksCompleted / tasksCreated) * 100).toFixed(1))
+          : 0,
+        onTimeRate: completedWithDue
+          ? Number(((completedOnTime / completedWithDue) * 100).toFixed(1))
+          : 0,
+        avgProgress: Number(s.avgProgress || 0),
+        totalMinutes: totalTime,
+        hoursLogged: Number((totalTime / 60).toFixed(1)),
+      },
+      tasksByStatus: statusResult.rows,
+      tasksByPriority: priorityResult.rows,
+      members,
+      projects,
+      timeByMember: timeMemberResult.rows,
+      timeByProject: timeProjectResult.rows,
+      trend: trendResult.rows,
+      recentActivity: activityResult.rows,
+      upcomingDeadlines: deadlineResult.rows,
+    };
   }
 
   async getWorkspaceProjects(teamId: string) {
@@ -3508,8 +3942,8 @@ export class TeamsService {
 
   async createWorkspaceProject(teamId: string, userId: string, body: any) {
     await this.ensureWorkspaceSchema();
-    const name = String(body?.name || "").trim();
-    if (!name) throw new BadRequestException("Project name is required.");
+    const name = String(body?.name || '').trim();
+    if (!name) throw new BadRequestException('Project name is required.');
 
     const result = await this.db.query(
       `
@@ -3525,7 +3959,7 @@ export class TeamsService {
         teamId,
         name,
         body?.description || null,
-        String(body?.status || "active").toLowerCase(),
+        String(body?.status || 'active').toLowerCase(),
         this.normalizeWorkspacePriority(body?.priority),
         body?.ownerId || userId,
         body?.startDate || null,
@@ -3539,10 +3973,11 @@ export class TeamsService {
         `INSERT INTO events
            (team_id,user_id,event_type,entity_type,entity_id,metadata,created_at)
          VALUES ($1,$2,'team.project_created','project',$3,$4::jsonb,NOW())`,
-        [teamId, userId, result.rows[0].id, JSON.stringify({ title: name })],
+        [teamId,userId,result.rows[0].id,JSON.stringify({ title: name })],
       );
     } catch (_) {}
 
     return result.rows[0];
   }
+
 }

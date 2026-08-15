@@ -112,6 +112,143 @@ export class StorageController {
     return { message: 'File deleted successfully' };
   }
 
+
+  /* =========================================================
+     TEAM WORKSPACE FILES
+     ========================================================= */
+
+  @Post('team-files/upload')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a Team Workspace file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        teamId: { type: 'string' },
+        projectId: { type: 'string', nullable: true },
+        taskId: { type: 'string', nullable: true },
+      },
+      required: ['file', 'teamId'],
+    },
+  })
+  async uploadTeamWorkspaceFile(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: any,
+    @Body('teamId') teamId?: string,
+    @Body('projectId') projectId?: string,
+    @Body('taskId') taskId?: string,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    if (!teamId) {
+      throw new BadRequestException('Team ID is required');
+    }
+
+    return this.storageService.uploadTeamWorkspaceFile({
+      file,
+      userId: user.id,
+      teamId,
+      role: user.role,
+      projectId: projectId || null,
+      taskId: taskId || null,
+    });
+  }
+
+  @Get('team-files')
+  @ApiOperation({ summary: 'List Team Workspace files' })
+  @ApiQuery({ name: 'teamId', required: true })
+  @ApiQuery({ name: 'q', required: false })
+  @ApiQuery({ name: 'projectId', required: false })
+  @ApiQuery({ name: 'taskId', required: false })
+  async listTeamWorkspaceFiles(
+    @CurrentUser() user: any,
+    @Query('teamId') teamId?: string,
+    @Query('q') q?: string,
+    @Query('projectId') projectId?: string,
+    @Query('taskId') taskId?: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('Team ID is required');
+    }
+
+    return this.storageService.listTeamWorkspaceFiles(
+      teamId,
+      {
+        userId: user.id,
+        teamId,
+        role: user.role,
+      },
+      {
+        q,
+        projectId,
+        taskId,
+      },
+    );
+  }
+
+  @Get('team-files/:id/url')
+  @ApiOperation({ summary: 'Get signed URL for Team Workspace file' })
+  @ApiParam({ name: 'id', description: 'File ID' })
+  @ApiQuery({ name: 'teamId', required: true })
+  @ApiQuery({ name: 'expiresIn', required: false })
+  async getTeamWorkspaceFileUrl(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Query('teamId') teamId?: string,
+    @Query('expiresIn') expiresIn?: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('Team ID is required');
+    }
+
+    const seconds = expiresIn
+      ? parseInt(expiresIn, 10)
+      : 3600;
+
+    return this.storageService.getTeamWorkspaceFileUrl(
+      id,
+      teamId,
+      {
+        userId: user.id,
+        teamId,
+        role: user.role,
+      },
+      Number.isFinite(seconds) && seconds > 0
+        ? seconds
+        : 3600,
+    );
+  }
+
+  @Delete('team-files/:id')
+  @ApiOperation({ summary: 'Delete Team Workspace file' })
+  @ApiParam({ name: 'id', description: 'File ID' })
+  @ApiQuery({ name: 'teamId', required: true })
+  async deleteTeamWorkspaceFile(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Query('teamId') teamId?: string,
+  ) {
+    if (!teamId) {
+      throw new BadRequestException('Team ID is required');
+    }
+
+    await this.storageService.deleteTeamWorkspaceFile(
+      id,
+      teamId,
+      {
+        userId: user.id,
+        teamId,
+        role: user.role,
+      },
+    );
+
+    return { message: 'File deleted successfully' };
+  }
+
   @Get('config/status')
   @ApiOperation({ summary: 'Get storage configuration status' })
   @ApiResponse({ status: 200, description: 'Configuration status retrieved successfully' })
@@ -119,4 +256,3 @@ export class StorageController {
     return this.storageService.getConfigStatus();
   }
 }
-

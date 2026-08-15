@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   Plus,
@@ -65,6 +65,12 @@ import {
   moveTeamWorkspaceTask,
   logTeamWorkspaceTime,
   createTeamWorkspaceProject,
+  fetchTeamWorkspaceFiles,
+  uploadTeamWorkspaceFile,
+  getTeamWorkspaceFileUrl,
+  deleteTeamWorkspaceFile,
+  fetchTeamWorkspaceTimeTracking,
+  fetchTeamWorkspaceReports,
 } from "./services/team.service";
 
 /* Self-contained styles for the seat workflow modals (kept inline so they do
@@ -300,6 +306,22 @@ export default function TeamWorkspace() {
     labels: "",
   });
 
+  const [taskDetailOpen, setTaskDetailOpen] = useState(false);
+  const [selectedWorkspaceTask, setSelectedWorkspaceTask] = useState(null);
+  const [taskMoreOpenId, setTaskMoreOpenId] = useState(null);
+
+  const [timeModalOpen, setTimeModalOpen] = useState(false);
+  const [timeTask, setTimeTask] = useState(null);
+  const [timeSaving, setTimeSaving] = useState(false);
+  const [timeForm, setTimeForm] = useState({
+    minutes: 30,
+    note: "",
+  });
+
+  const [taskImporting, setTaskImporting] = useState(false);
+  const [taskExporting, setTaskExporting] = useState(false);
+  const taskImportInputRef = useRef(null);
+
   const [newMenuOpen, setNewMenuOpen] = useState(false);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [projectSaving, setProjectSaving] = useState(false);
@@ -309,6 +331,39 @@ export default function TeamWorkspace() {
     priority: "medium",
     dueDate: "",
   });
+
+
+  const [workspaceFiles, setWorkspaceFiles] = useState([]);
+  const [workspaceFilesLoading, setWorkspaceFilesLoading] = useState(false);
+  const [workspaceFileUploading, setWorkspaceFileUploading] = useState(false);
+  const [workspaceFileSearch, setWorkspaceFileSearch] = useState("");
+  const [workspaceFileProject, setWorkspaceFileProject] = useState("all");
+  const [workspaceFileTask, setWorkspaceFileTask] = useState("all");
+  const [workspaceFileTaskOptions, setWorkspaceFileTaskOptions] = useState([]);
+  const workspaceFileInputRef = useRef(null);
+
+
+  const [workspaceTimeData, setWorkspaceTimeData] = useState({
+    summary: {},
+    byMember: [],
+    byProject: [],
+    byTask: [],
+    data: [],
+    pagination: { page: 1, limit: 20, total: 0, totalPages: 1 },
+  });
+  const [workspaceTimeLoading, setWorkspaceTimeLoading] = useState(false);
+  const [workspaceTimePage, setWorkspaceTimePage] = useState(1);
+  const [workspaceTimeSearch, setWorkspaceTimeSearch] = useState("");
+  const [workspaceTimeMember, setWorkspaceTimeMember] = useState("all");
+  const [workspaceTimeProject, setWorkspaceTimeProject] = useState("all");
+  const [workspaceTimeTask, setWorkspaceTimeTask] = useState("all");
+  const [workspaceTimeDateFrom, setWorkspaceTimeDateFrom] = useState("");
+  const [workspaceTimeDateTo, setWorkspaceTimeDateTo] = useState("");
+
+  const [workspaceReports, setWorkspaceReports] = useState(null);
+  const [workspaceReportsLoading, setWorkspaceReportsLoading] = useState(false);
+  const [workspaceReportDateFrom, setWorkspaceReportDateFrom] = useState("");
+  const [workspaceReportDateTo, setWorkspaceReportDateTo] = useState("");
 
   const workspaceMembers = (filteredMembers || [])
     .map((member) => ({
@@ -408,6 +463,79 @@ export default function TeamWorkspace() {
     workspaceDateFrom,
     workspaceDateTo,
     workspaceTab,
+  ]);
+
+
+  const loadWorkspaceTimeTracking = async () => {
+    if (!selectedTeamId) return;
+    try {
+      setWorkspaceTimeLoading(true);
+      const response = await fetchTeamWorkspaceTimeTracking(selectedTeamId, {
+        page: workspaceTimePage,
+        limit: 20,
+        q: workspaceTimeSearch || undefined,
+        member: workspaceTimeMember,
+        project: workspaceTimeProject,
+        task: workspaceTimeTask,
+        dateFrom: workspaceTimeDateFrom || undefined,
+        dateTo: workspaceTimeDateTo || undefined,
+      });
+      setWorkspaceTimeData(response || {
+        summary: {},
+        byMember: [],
+        byProject: [],
+        byTask: [],
+        data: [],
+        pagination: { page: 1, limit: 20, total: 0, totalPages: 1 },
+      });
+    } catch (error) {
+      console.error("TEAM TIME TRACKING ERROR", error);
+    } finally {
+      setWorkspaceTimeLoading(false);
+    }
+  };
+
+  const loadWorkspaceReports = async () => {
+    if (!selectedTeamId) return;
+    try {
+      setWorkspaceReportsLoading(true);
+      const response = await fetchTeamWorkspaceReports(selectedTeamId, {
+        dateFrom: workspaceReportDateFrom || undefined,
+        dateTo: workspaceReportDateTo || undefined,
+      });
+      setWorkspaceReports(response || null);
+    } catch (error) {
+      console.error("TEAM REPORTS ERROR", error);
+    } finally {
+      setWorkspaceReportsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (workspaceTab !== "Time Tracking" || !selectedTeamId) return;
+    const timer = window.setTimeout(loadWorkspaceTimeTracking, 200);
+    return () => window.clearTimeout(timer);
+  }, [
+    workspaceTab,
+    selectedTeamId,
+    workspaceTimePage,
+    workspaceTimeSearch,
+    workspaceTimeMember,
+    workspaceTimeProject,
+    workspaceTimeTask,
+    workspaceTimeDateFrom,
+    workspaceTimeDateTo,
+  ]);
+
+  useEffect(() => {
+    if (workspaceTab !== "Reports" || !selectedTeamId) return;
+    const timer = window.setTimeout(loadWorkspaceReports, 200);
+    return () => window.clearTimeout(timer);
+  }, [
+    workspaceTab,
+    selectedTeamId,
+    workspaceReportDateFrom,
+    workspaceReportDateTo,
   ]);
 
   const workspaceTasks = workspaceTaskResponse?.data || [];
@@ -587,29 +715,459 @@ export default function TeamWorkspace() {
     }
   };
 
-  const addWorkspaceTaskTime = async (task) => {
-    if (!selectedTeamId || !task?.id) return;
+  const openWorkspaceTaskDetail = (task) => {
+    setSelectedWorkspaceTask(task);
+    setTaskDetailOpen(true);
+    setTaskMoreOpenId(null);
+  };
 
-    const raw = window.prompt(`Minutes to log for "${task.name}"`, "30");
+  const addWorkspaceTaskTime = (task) => {
+    if (!task?.id) return;
 
-    if (raw === null) return;
+    setTimeTask(task);
+    setTimeForm({
+      minutes: 30,
+      note: "",
+    });
+    setTimeModalOpen(true);
+    setTaskMoreOpenId(null);
+  };
 
-    const minutes = Number(raw);
+  const saveWorkspaceTaskTime = async (event) => {
+    event?.preventDefault?.();
+
+    if (!selectedTeamId || !timeTask?.id) return;
+
+    const minutes = Number(timeForm.minutes || 0);
 
     if (!Number.isFinite(minutes) || minutes <= 0) {
-      window.alert("Enter a valid number of minutes.");
+      window.alert("Minutes must be greater than 0.");
       return;
     }
 
     try {
-      await logTeamWorkspaceTime(selectedTeamId, task.id, { minutes });
+      setTimeSaving(true);
 
-      await Promise.all([loadWorkspaceOverview(), loadWorkspaceTasks()]);
+      await logTeamWorkspaceTime(
+        selectedTeamId,
+        timeTask.id,
+        {
+          minutes,
+          note: String(timeForm.note || "").trim() || null,
+        },
+      );
+
+      setTimeModalOpen(false);
+      setTimeTask(null);
+
+      await Promise.all([
+        loadWorkspaceOverview(),
+        loadWorkspaceTasks(),
+      ]);
     } catch (error) {
       console.error("LOG TEAM TIME ERROR", error);
       window.alert(error?.message || "Could not log time.");
+    } finally {
+      setTimeSaving(false);
     }
   };
+
+  const duplicateWorkspaceTask = async (task) => {
+    if (!selectedTeamId || !task?.id) return;
+
+    try {
+      await createTeamWorkspaceTask(selectedTeamId, {
+        name: `${task.name} Copy`,
+        projectId: task.projectId || null,
+        status: "pending",
+        priority: task.priority || "medium",
+        assigneeId: task.assigneeId || null,
+        dueDate: task.dueDate || null,
+        progress: 0,
+        estimatedMinutes: Number(task.estimatedMinutes || 0),
+        taskType: task.taskType || "task",
+        labels: Array.isArray(task.labels) ? task.labels : [],
+      });
+
+      setTaskMoreOpenId(null);
+
+      await Promise.all([
+        loadWorkspaceOverview(),
+        loadWorkspaceTasks(),
+      ]);
+    } catch (error) {
+      console.error("DUPLICATE TEAM TASK ERROR", error);
+      window.alert(error?.message || "Could not duplicate task.");
+    }
+  };
+
+  const csvEscape = (value) => {
+    const text = value == null ? "" : String(value);
+
+    return /[",\n]/.test(text)
+      ? `"${text.replace(/"/g, '""')}"`
+      : text;
+  };
+
+  const exportWorkspaceTasks = async () => {
+    if (!selectedTeamId || taskExporting) return;
+
+    try {
+      setTaskExporting(true);
+
+      const rows = [];
+      let page = 1;
+      let totalPages = 1;
+
+      do {
+        const response = await fetchTeamWorkspaceTasks(
+          selectedTeamId,
+          {
+            ...taskQuery,
+            page,
+            limit: 100,
+          },
+        );
+
+        rows.push(...(response?.data || []));
+
+        totalPages = Math.max(
+          1,
+          Number(response?.pagination?.totalPages || 1),
+        );
+
+        page += 1;
+      } while (page <= totalPages);
+
+      const headers = [
+        "Task Name",
+        "Project",
+        "Status",
+        "Priority",
+        "Assignee",
+        "Due Date",
+        "Progress %",
+        "Time Logged Minutes",
+        "Estimated Minutes",
+        "Task Type",
+        "Labels",
+        "Last Activity",
+      ];
+
+      const csvRows = rows.map((task) => [
+        task.name,
+        task.project || "",
+        task.status || "",
+        task.priority || "",
+        task.assignee || "",
+        task.dueDate || "",
+        Number(task.progress || 0),
+        Number(task.loggedMinutes || 0),
+        Number(task.estimatedMinutes || 0),
+        task.taskType || "task",
+        Array.isArray(task.labels) ? task.labels.join("|") : "",
+        task.updatedAt || "",
+      ]);
+
+      const csv = [
+        headers.map(csvEscape).join(","),
+        ...csvRows.map((row) => row.map(csvEscape).join(",")),
+      ].join("\n");
+
+      const blob = new Blob([`\uFEFF${csv}`], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `team-tasks-${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("EXPORT TEAM TASKS ERROR", error);
+      window.alert(error?.message || "Could not export tasks.");
+    } finally {
+      setTaskExporting(false);
+    }
+  };
+
+  const parseCsv = (text) => {
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let quoted = false;
+
+    for (let i = 0; i < text.length; i += 1) {
+      const char = text[i];
+      const next = text[i + 1];
+
+      if (char === '"' && quoted && next === '"') {
+        cell += '"';
+        i += 1;
+        continue;
+      }
+
+      if (char === '"') {
+        quoted = !quoted;
+        continue;
+      }
+
+      if (char === "," && !quoted) {
+        row.push(cell);
+        cell = "";
+        continue;
+      }
+
+      if ((char === "\n" || char === "\r") && !quoted) {
+        if (char === "\r" && next === "\n") i += 1;
+
+        row.push(cell);
+
+        if (row.some((value) => String(value).trim() !== "")) {
+          rows.push(row);
+        }
+
+        row = [];
+        cell = "";
+        continue;
+      }
+
+      cell += char;
+    }
+
+    row.push(cell);
+
+    if (row.some((value) => String(value).trim() !== "")) {
+      rows.push(row);
+    }
+
+    return rows;
+  };
+
+  const normalizeImportStatus = (value) => {
+    const normalized = String(value || "pending")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+
+    const map = {
+      todo: "pending",
+      to_do: "pending",
+      pending: "pending",
+      progress: "in_progress",
+      in_progress: "in_progress",
+      review: "review",
+      on_hold: "on_hold",
+      hold: "on_hold",
+      completed: "completed",
+      complete: "completed",
+      done: "completed",
+      cancelled: "cancelled",
+      canceled: "cancelled",
+    };
+
+    return map[normalized] || "pending";
+  };
+
+  const importWorkspaceTasks = async (event) => {
+    const file = event?.target?.files?.[0];
+
+    if (!file || !selectedTeamId) return;
+
+    try {
+      setTaskImporting(true);
+
+      const text = await file.text();
+      const rows = parseCsv(text);
+
+      if (rows.length < 2) {
+        throw new Error("CSV does not contain any task rows.");
+      }
+
+      const headers = rows[0].map((header) =>
+        String(header || "")
+          .replace(/^\uFEFF/, "")
+          .trim()
+          .toLowerCase(),
+      );
+
+      const indexOf = (...names) =>
+        headers.findIndex((header) => names.includes(header));
+
+      const nameIndex = indexOf("task name", "name", "title");
+      const projectIndex = indexOf("project", "project name");
+      const statusIndex = indexOf("status");
+      const priorityIndex = indexOf("priority");
+      const assigneeIndex = indexOf("assignee", "assigned to");
+      const dueDateIndex = indexOf("due date", "due");
+      const progressIndex = indexOf("progress %", "progress");
+      const estimateIndex = indexOf(
+        "estimated minutes",
+        "time est.",
+        "estimate",
+      );
+      const taskTypeIndex = indexOf("task type", "type");
+      const labelsIndex = indexOf("labels", "label");
+
+      if (nameIndex < 0) {
+        throw new Error(
+          'CSV must contain a "Task Name" column.',
+        );
+      }
+
+      const dataRows = rows
+        .slice(1)
+        .filter((row) => String(row[nameIndex] || "").trim());
+
+      if (!dataRows.length) {
+        throw new Error("CSV does not contain any valid tasks.");
+      }
+
+      let created = 0;
+      const failures = [];
+
+      for (let offset = 0; offset < dataRows.length; offset += 10) {
+        const batch = dataRows.slice(offset, offset + 10);
+
+        const results = await Promise.allSettled(
+          batch.map(async (row) => {
+            const projectName =
+              projectIndex >= 0
+                ? String(row[projectIndex] || "").trim()
+                : "";
+
+            const assigneeName =
+              assigneeIndex >= 0
+                ? String(row[assigneeIndex] || "").trim()
+                : "";
+
+            const project =
+              workspaceProjects.find(
+                (item) =>
+                  String(item.name || "").trim().toLowerCase() ===
+                  projectName.toLowerCase(),
+              ) || null;
+
+            const assignee =
+              workspaceMembers.find(
+                (item) =>
+                  String(item.name || "").trim().toLowerCase() ===
+                  assigneeName.toLowerCase(),
+              ) || null;
+
+            const rawPriority =
+              priorityIndex >= 0
+                ? String(row[priorityIndex] || "medium")
+                    .trim()
+                    .toLowerCase()
+                : "medium";
+
+            const priority = [
+              "low",
+              "medium",
+              "high",
+              "urgent",
+            ].includes(rawPriority)
+              ? rawPriority
+              : "medium";
+
+            const labels =
+              labelsIndex >= 0
+                ? String(row[labelsIndex] || "")
+                    .split(/[|;]/)
+                    .map((label) => label.trim())
+                    .filter(Boolean)
+                : [];
+
+            return createTeamWorkspaceTask(
+              selectedTeamId,
+              {
+                name: String(row[nameIndex] || "").trim(),
+                projectId: project?.id || null,
+                status:
+                  statusIndex >= 0
+                    ? normalizeImportStatus(row[statusIndex])
+                    : "pending",
+                priority,
+                assigneeId: assignee?.id || null,
+                dueDate:
+                  dueDateIndex >= 0 &&
+                  String(row[dueDateIndex] || "").trim()
+                    ? String(row[dueDateIndex]).trim()
+                    : null,
+                progress:
+                  progressIndex >= 0
+                    ? Math.max(
+                        0,
+                        Math.min(
+                          100,
+                          Number(row[progressIndex] || 0),
+                        ),
+                      )
+                    : 0,
+                estimatedMinutes:
+                  estimateIndex >= 0
+                    ? Math.max(
+                        0,
+                        Number(row[estimateIndex] || 0),
+                      )
+                    : 0,
+                taskType:
+                  taskTypeIndex >= 0
+                    ? String(row[taskTypeIndex] || "task")
+                        .trim()
+                        .toLowerCase()
+                        .replace(/\s+/g, "_")
+                    : "task",
+                labels,
+              },
+            );
+          }),
+        );
+
+        results.forEach((result, index) => {
+          if (result.status === "fulfilled") {
+            created += 1;
+          } else {
+            failures.push({
+              row: offset + index + 2,
+              error:
+                result.reason?.message ||
+                "Could not create task",
+            });
+          }
+        });
+      }
+
+      await Promise.all([
+        loadWorkspaceOverview(),
+        loadWorkspaceTasks(),
+      ]);
+
+      window.alert(
+        failures.length
+          ? `Imported ${created} task(s). ${failures.length} row(s) failed.`
+          : `Imported ${created} task(s) successfully.`,
+      );
+    } catch (error) {
+      console.error("IMPORT TEAM TASKS ERROR", error);
+      window.alert(error?.message || "Could not import tasks.");
+    } finally {
+      setTaskImporting(false);
+
+      if (taskImportInputRef.current) {
+        taskImportInputRef.current.value = "";
+      }
+    }
+  };
+
 
   const saveWorkspaceProject = async (event) => {
     event?.preventDefault?.();
@@ -640,6 +1198,113 @@ export default function TeamWorkspace() {
       window.alert(error?.message || "Could not create project.");
     } finally {
       setProjectSaving(false);
+    }
+  };
+
+
+  const loadWorkspaceFiles = async () => {
+    if (!selectedTeamId) {
+      setWorkspaceFiles([]);
+      return;
+    }
+
+    try {
+      setWorkspaceFilesLoading(true);
+
+      const [files, taskOptions] = await Promise.all([
+        fetchTeamWorkspaceFiles(selectedTeamId, {
+          q: workspaceFileSearch || undefined,
+          projectId:
+            workspaceFileProject !== "all" ? workspaceFileProject : undefined,
+          taskId:
+            workspaceFileTask !== "all" ? workspaceFileTask : undefined,
+        }),
+        fetchTeamWorkspaceTasks(selectedTeamId, {
+          page: 1,
+          limit: 100,
+        }),
+      ]);
+
+      setWorkspaceFiles(Array.isArray(files) ? files : files?.data || []);
+      setWorkspaceFileTaskOptions(taskOptions?.data || []);
+    } catch (error) {
+      console.error("LOAD TEAM FILES ERROR", error);
+      setWorkspaceFiles([]);
+    } finally {
+      setWorkspaceFilesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (workspaceTab !== "Files" || !selectedTeamId) return;
+
+    const timer = window.setTimeout(() => {
+      loadWorkspaceFiles();
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    workspaceTab,
+    selectedTeamId,
+    workspaceFileSearch,
+    workspaceFileProject,
+    workspaceFileTask,
+  ]);
+
+  const formatFileSize = (bytes) => {
+    const size = Number(bytes || 0);
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / 1024 / 1024).toFixed(1)} MB`;
+  };
+
+  const uploadWorkspaceFile = async (event) => {
+    const file = event?.target?.files?.[0];
+    if (!file || !selectedTeamId) return;
+
+    try {
+      setWorkspaceFileUploading(true);
+      await uploadTeamWorkspaceFile(selectedTeamId, file, {
+        projectId:
+          workspaceFileProject !== "all" ? workspaceFileProject : undefined,
+        taskId:
+          workspaceFileTask !== "all" ? workspaceFileTask : undefined,
+      });
+      await loadWorkspaceFiles();
+    } catch (error) {
+      console.error("UPLOAD TEAM FILE ERROR", error);
+      window.alert(error?.message || "Could not upload file.");
+    } finally {
+      setWorkspaceFileUploading(false);
+      if (workspaceFileInputRef.current) {
+        workspaceFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const openWorkspaceFile = async (file) => {
+    if (!selectedTeamId || !file?.id) return;
+
+    try {
+      const response = await getTeamWorkspaceFileUrl(selectedTeamId, file.id);
+      const url = response?.url || response;
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("OPEN TEAM FILE ERROR", error);
+      window.alert(error?.message || "Could not open file.");
+    }
+  };
+
+  const removeWorkspaceFile = async (file) => {
+    if (!selectedTeamId || !file?.id) return;
+    if (!window.confirm(`Delete file "${file.originalName}"?`)) return;
+
+    try {
+      await deleteTeamWorkspaceFile(selectedTeamId, file.id);
+      await loadWorkspaceFiles();
+    } catch (error) {
+      console.error("DELETE TEAM FILE ERROR", error);
+      window.alert(error?.message || "Could not delete file.");
     }
   };
 
@@ -1021,11 +1686,26 @@ export default function TeamWorkspace() {
               </p>
             </div>
             <div className="tw-section-actions">
-              <button>
-                <Upload size={14} /> Import
+              <input
+                ref={taskImportInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                hidden
+                onChange={importWorkspaceTasks}
+              />
+              <button
+                type="button"
+                onClick={() => taskImportInputRef.current?.click()}
+                disabled={taskImporting}
+              >
+                <Upload size={14} /> {taskImporting ? "Importing..." : "Import"}
               </button>
-              <button>
-                <Download size={14} /> Export
+              <button
+                type="button"
+                onClick={exportWorkspaceTasks}
+                disabled={taskExporting}
+              >
+                <Download size={14} /> {taskExporting ? "Exporting..." : "Export"}
               </button>
               <button>
                 <SlidersHorizontal size={14} />
@@ -1144,7 +1824,7 @@ export default function TeamWorkspace() {
               <RotateCcw size={13} /> Reset
             </button>
 
-            <span className="tw-view-label">View</span>
+            <span className="tw-view-label"></span>
 
             <button
               className={workspaceTaskView === "table" ? "active" : ""}
@@ -1155,7 +1835,7 @@ export default function TeamWorkspace() {
                 }
               }}
             >
-              <Table2 size={13} /> Table
+              <Table2 size={13} />
             </button>
 
             <button
@@ -1165,7 +1845,7 @@ export default function TeamWorkspace() {
                 setWorkspaceTab("Board");
               }}
             >
-              <LayoutGrid size={13} /> Board
+              <LayoutGrid size={13} />
             </button>
 
             <button
@@ -1175,7 +1855,7 @@ export default function TeamWorkspace() {
                 setWorkspaceTab("Calendar");
               }}
             >
-              <CalendarDays size={13} /> Calendar
+              <CalendarDays size={13} />
             </button>
           </div>
 
@@ -1315,22 +1995,122 @@ export default function TeamWorkspace() {
                             : "—"}
                         </td>
                         <td>
-                          <div className="tw-row-actions">
+                          <div
+                            className="tw-row-actions"
+                            style={{ position: "relative" }}
+                          >
                             <Eye
                               size={14}
-                              onClick={() => openEditWorkspaceTask(task)}
+                              onClick={() => openWorkspaceTaskDetail(task)}
                               style={{ cursor: "pointer" }}
+                              title="View task"
                             />
                             <Pencil
                               size={14}
                               onClick={() => openEditWorkspaceTask(task)}
                               style={{ cursor: "pointer" }}
+                              title="Edit task"
                             />
                             <MoreVertical
                               size={14}
-                              onClick={() => removeWorkspaceTask(task)}
+                              onClick={() =>
+                                setTaskMoreOpenId((current) =>
+                                  current === task.id ? null : task.id,
+                                )
+                              }
                               style={{ cursor: "pointer" }}
+                              title="More actions"
                             />
+
+                            {taskMoreOpenId === task.id && (
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  right: 0,
+                                  top: 22,
+                                  width: 175,
+                                  padding: 6,
+                                  background: "#fff",
+                                  border: "1px solid #e5e7eb",
+                                  borderRadius: 9,
+                                  boxShadow:
+                                    "0 12px 30px rgba(15,23,42,.14)",
+                                  zIndex: 50,
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => addWorkspaceTaskTime(task)}
+                                  style={{
+                                    display: "block",
+                                    width: "100%",
+                                    border: 0,
+                                    background: "transparent",
+                                    textAlign: "left",
+                                    padding: "8px 9px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Log Time
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => duplicateWorkspaceTask(task)}
+                                  style={{
+                                    display: "block",
+                                    width: "100%",
+                                    border: 0,
+                                    background: "transparent",
+                                    textAlign: "left",
+                                    padding: "8px 9px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Duplicate
+                                </button>
+
+                                {task.status !== "completed" && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      changeWorkspaceTaskStatus(
+                                        task,
+                                        "completed",
+                                      )
+                                    }
+                                    style={{
+                                      display: "block",
+                                      width: "100%",
+                                      border: 0,
+                                      background: "transparent",
+                                      textAlign: "left",
+                                      padding: "8px 9px",
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    Mark Completed
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => removeWorkspaceTask(task)}
+                                  style={{
+                                    display: "block",
+                                    width: "100%",
+                                    border: 0,
+                                    background: "transparent",
+                                    color: "#dc2626",
+                                    textAlign: "left",
+                                    padding: "8px 9px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1576,7 +2356,7 @@ export default function TeamWorkspace() {
 
       {workspaceTab === "Overview" && (
         <section className="tw-tasks-section" style={{ padding: 18 }}>
-          <h2 style={{ marginTop: 0 }}>Overview</h2>
+          <h2>Overview</h2>
           <p style={{ color: "#64748b" }}>
             Live project, task, workload, activity, and deadline data for this
             team.
@@ -1616,7 +2396,7 @@ export default function TeamWorkspace() {
               <p>Projects connected to the same task data.</p>
             </div>
             <button
-              className="primary"
+              className="primary tw-new-btn"
               onClick={() => setProjectModalOpen(true)}
             >
               <Plus size={14} /> New Project
@@ -1670,39 +2450,281 @@ export default function TeamWorkspace() {
       )}
 
       {workspaceTab === "Time Tracking" && (
-        <section className="tw-tasks-section" style={{ padding: 18 }}>
-          <h2 style={{ marginTop: 0 }}>Time Tracking</h2>
-          <p style={{ color: "#64748b" }}>
-            Logged time is connected to individual tasks, projects, team
-            members, dashboard metrics, and reports.
-          </p>
-          <div className="tw-stat-strip" style={{ marginTop: 16 }}>
-            <div className="tw-stat">
-              <span>Hours Logged</span>
-              <strong>
-                {Number(workspaceMetrics.hoursLogged || 0).toLocaleString()}h
-              </strong>
-              <small>All tracked task time</small>
+        <section className="tw-tasks-section">
+          <div className="tw-section-head">
+            <div>
+              <h2>Time Tracking</h2>
+              <p>Live tracked time by member, project, and task.</p>
+            </div>
+          </div>
+
+          <div className="tw-filters">
+            <label>
+              <Search size={14}/>
+              <input
+                value={workspaceTimeSearch}
+                onChange={(e) => { setWorkspaceTimeSearch(e.target.value); setWorkspaceTimePage(1); }}
+                placeholder="Search time entries..."
+              />
+            </label>
+            <select className="cxc-select" value={workspaceTimeMember}
+              onChange={(e) => { setWorkspaceTimeMember(e.target.value); setWorkspaceTimePage(1); }}>
+              <option value="all">All Members</option>
+              {workspaceMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+            <select className="cxc-select" value={workspaceTimeProject}
+              onChange={(e) => { setWorkspaceTimeProject(e.target.value); setWorkspaceTimePage(1); }}>
+              <option value="all">All Projects</option>
+              {workspaceProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <select className="cxc-select" value={workspaceTimeTask}
+              onChange={(e) => { setWorkspaceTimeTask(e.target.value); setWorkspaceTimePage(1); }}>
+              <option value="all">All Tasks</option>
+              {workspaceFileTaskOptions.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+            <input className="cxc-select" type="date" value={workspaceTimeDateFrom}
+              onChange={(e) => { setWorkspaceTimeDateFrom(e.target.value); setWorkspaceTimePage(1); }}/>
+            <input className="cxc-select" type="date" value={workspaceTimeDateTo}
+              onChange={(e) => { setWorkspaceTimeDateTo(e.target.value); setWorkspaceTimePage(1); }}/>
+            <button className="reset" onClick={() => {
+              setWorkspaceTimeSearch(""); setWorkspaceTimeMember("all");
+              setWorkspaceTimeProject("all"); setWorkspaceTimeTask("all");
+              setWorkspaceTimeDateFrom(""); setWorkspaceTimeDateTo(""); setWorkspaceTimePage(1);
+            }}><RotateCcw size={13}/> Reset</button>
+          </div>
+
+          <div className="tw-stat-strip">
+            {[
+              ["Hours Logged", `${Number(workspaceTimeData?.summary?.hoursLogged || 0).toLocaleString()}h`, "Tracked time"],
+              ["Entries", Number(workspaceTimeData?.summary?.entryCount || 0).toLocaleString(), "Time entries"],
+              ["Members", Number(workspaceTimeData?.summary?.activeMembers || 0).toLocaleString(), "With tracked time"],
+              ["Projects", Number(workspaceTimeData?.summary?.projectsTracked || 0).toLocaleString(), "With tracked time"],
+              ["Tasks", Number(workspaceTimeData?.summary?.tasksTracked || 0).toLocaleString(), "With tracked time"],
+            ].map(([label,value,sub]) => (
+              <div className="tw-stat" key={label}>
+                <span>{label}</span><strong>{value}</strong><small>{sub}</small>
+              </div>
+            ))}
+          </div>
+
+          <div className="tw-bottom-dashboard" style={{marginTop:16}}>
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head"><strong>Time by Member</strong><span>Live</span></div>
+              {(workspaceTimeData?.byMember || []).slice(0,8).map((row) => (
+                <div className="tw-work-row" key={row.id}>
+                  <span className="tw-avatar">{String(row.name || "TM").split(" ").map(x=>x[0]).join("").slice(0,2)}</span>
+                  <span>{row.name}</span><i><b style={{width:`${Math.min(100,(Number(row.minutes||0)/Math.max(1,...(workspaceTimeData?.byMember||[]).map(x=>Number(x.minutes||0))))*100)}%`}}/></i>
+                  <em>{minutesToText(row.minutes)}</em>
+                </div>
+              ))}
+            </div>
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head"><strong>Time by Project</strong><span>Live</span></div>
+              {(workspaceTimeData?.byProject || []).slice(0,8).map((row) => (
+                <div className="tw-work-row" key={row.id || row.name}>
+                  <span>{row.name}</span><i><b style={{width:`${Math.min(100,(Number(row.minutes||0)/Math.max(1,...(workspaceTimeData?.byProject||[]).map(x=>Number(x.minutes||0))))*100)}%`}}/></i>
+                  <em>{minutesToText(row.minutes)}</em>
+                </div>
+              ))}
+            </div>
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head"><strong>Top Tasks by Time</strong><span>Live</span></div>
+              {(workspaceTimeData?.byTask || []).slice(0,8).map((row) => (
+                <div className="tw-work-row" key={row.id || row.name}>
+                  <span>{row.name}</span><i><b style={{width:`${Math.min(100,(Number(row.minutes||0)/Math.max(1,...(workspaceTimeData?.byTask||[]).map(x=>Number(x.minutes||0))))*100)}%`}}/></i>
+                  <em>{minutesToText(row.minutes)}</em>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="tw-table-wrap" style={{marginTop:16}}>
+            <table className="tw-task-table">
+              <thead><tr><th>Member</th><th>Project</th><th>Task</th><th>Time</th><th>Note</th><th>Started</th><th>Logged</th></tr></thead>
+              <tbody>
+                {(workspaceTimeData?.data || []).map((entry) => (
+                  <tr key={entry.id}>
+                    <td>{entry.memberName || "—"}</td><td>{entry.projectName || "—"}</td>
+                    <td className="task-name">{entry.taskName || "—"}</td><td>{minutesToText(entry.minutes)}</td>
+                    <td>{entry.note || "—"}</td>
+                    <td>{entry.startedAt ? new Date(entry.startedAt).toLocaleString() : "—"}</td>
+                    <td>{entry.createdAt ? new Date(entry.createdAt).toLocaleString() : "—"}</td>
+                  </tr>
+                ))}
+                {!workspaceTimeLoading && !(workspaceTimeData?.data || []).length && (
+                  <tr><td colSpan="7" style={{textAlign:"center",padding:32,color:"#64748b"}}>No time entries yet.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="tw-pagination">
+            <span>{workspaceTimeData?.pagination?.total ? `${workspaceTimeData.pagination.total} time entries` : "No entries"}</span>
+            <div>
+              <button disabled={workspaceTimePage <= 1} onClick={() => setWorkspaceTimePage(p=>Math.max(1,p-1))}><ChevronLeft size={14}/></button>
+              <button className="active">{workspaceTimePage}</button>
+              <span>of {workspaceTimeData?.pagination?.totalPages || 1}</span>
+              <button disabled={workspaceTimePage >= (workspaceTimeData?.pagination?.totalPages || 1)}
+                onClick={() => setWorkspaceTimePage(p=>Math.min(workspaceTimeData?.pagination?.totalPages || 1,p+1))}><ChevronRight size={14}/></button>
             </div>
           </div>
         </section>
       )}
 
       {workspaceTab === "Files" && (
-        <section className="tw-tasks-section" style={{ padding: 18 }}>
-          <h2 style={{ marginTop: 0 }}>Files</h2>
-          <p style={{ color: "#64748b" }}>
-            File associations are available in the backend schema for
-            project/task-linked files. File upload UI will use the existing
-            storage service.
-          </p>
+        <section className="tw-tasks-section">
+          <div className="tw-section-head">
+            <div>
+              <h2>Files</h2>
+              <p>Store and share files connected to this team's projects and tasks.</p>
+            </div>
+            <div className="tw-section-actions">
+              <input
+                ref={workspaceFileInputRef}
+                type="file"
+                accept=".pdf,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.jpg,.jpeg,.png,.webp"
+                style={{ display: "none" }}
+                onChange={uploadWorkspaceFile}
+              />
+              <button
+                className="primary"
+                disabled={workspaceFileUploading}
+                onClick={() => workspaceFileInputRef.current?.click()}
+              >
+                <Upload size={14}/>
+                {workspaceFileUploading ? "Uploading..." : "Upload File"}
+              </button>
+            </div>
+          </div>
+
+          <div className="tw-filters">
+            <label>
+              <Search size={14}/>
+              <input
+                value={workspaceFileSearch}
+                onChange={(e) => setWorkspaceFileSearch(e.target.value)}
+                placeholder="Search files..."
+              />
+            </label>
+
+            <select
+              className="cxc-select"
+              value={workspaceFileProject}
+              onChange={(e) => {
+                setWorkspaceFileProject(e.target.value);
+                setWorkspaceFileTask("all");
+              }}
+            >
+              <option value="all">All Projects</option>
+              {workspaceProjects.map((project) => (
+                <option value={project.id} key={project.id}>{project.name}</option>
+              ))}
+            </select>
+
+            <select
+              className="cxc-select"
+              value={workspaceFileTask}
+              onChange={(e) => setWorkspaceFileTask(e.target.value)}
+            >
+              <option value="all">All Tasks</option>
+              {workspaceFileTaskOptions
+                .filter((task) =>
+                  workspaceFileProject === "all" ||
+                  String(task.projectId || "") === String(workspaceFileProject)
+                )
+                .map((task) => (
+                  <option value={task.id} key={task.id}>{task.name}</option>
+                ))}
+            </select>
+
+            <button
+              className="reset"
+              onClick={() => {
+                setWorkspaceFileSearch("");
+                setWorkspaceFileProject("all");
+                setWorkspaceFileTask("all");
+              }}
+            >
+              <RotateCcw size={13}/> Reset
+            </button>
+          </div>
+
+          <div className="tw-table-wrap">
+            <table className="tw-task-table">
+              <thead>
+                <tr>
+                  <th>File</th>
+                  <th>Project</th>
+                  <th>Task</th>
+                  <th>Uploaded By</th>
+                  <th>Size</th>
+                  <th>Uploaded</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {workspaceFiles.map((file) => (
+                  <tr key={file.id}>
+                    <td className="task-name">
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                        <FileText size={16}/>
+                        {file.originalName}
+                      </span>
+                    </td>
+                    <td>{file.projectName || "—"}</td>
+                    <td>{file.taskName || "—"}</td>
+                    <td>{file.uploadedBy || "—"}</td>
+                    <td>{formatFileSize(file.size)}</td>
+                    <td>{file.createdAt ? new Date(file.createdAt).toLocaleString() : "—"}</td>
+                    <td>
+                      <div className="tw-row-actions">
+                        <Eye
+                          size={14}
+                          title="Open file"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => openWorkspaceFile(file)}
+                        />
+                        <Download
+                          size={14}
+                          title="Open / download"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => openWorkspaceFile(file)}
+                        />
+                        <MoreVertical
+                          size={14}
+                          title="Delete file"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => removeWorkspaceFile(file)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+
+                {!workspaceFilesLoading && !workspaceFiles.length && (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center", padding: 36, color: "#64748b" }}>
+                      No files yet. Upload a file and optionally associate it with a project or task.
+                    </td>
+                  </tr>
+                )}
+
+                {workspaceFilesLoading && (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center", padding: 36, color: "#64748b" }}>
+                      Loading files...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
       {workspaceTab === "Team" && (
         <section className="tw-tasks-section" style={{ padding: 18 }}>
-          <h2 style={{ marginTop: 0 }}>Team</h2>
-          <p style={{ color: "#64748b" }}>
+          <h2>Team</h2>
+          <p >
             Team members below are the same members used for task assignments
             and workload calculations.
           </p>
@@ -1728,12 +2750,86 @@ export default function TeamWorkspace() {
       )}
 
       {workspaceTab === "Reports" && (
-        <section className="tw-tasks-section" style={{ padding: 18 }}>
-          <h2 style={{ marginTop: 0 }}>Reports</h2>
-          <p style={{ color: "#64748b" }}>
-            Reports use the same live task, project, workload, time tracking,
-            and deadline metrics shown below.
-          </p>
+        <section className="tw-tasks-section">
+          <div className="tw-section-head">
+            <div><h2>Reports & Analytics</h2><p>Live task, delivery, workload, and time analytics.</p></div>
+            <div className="tw-section-actions">
+              <input className="cxc-select" type="date" value={workspaceReportDateFrom}
+                onChange={(e)=>setWorkspaceReportDateFrom(e.target.value)}/>
+              <input className="cxc-select" type="date" value={workspaceReportDateTo}
+                onChange={(e)=>setWorkspaceReportDateTo(e.target.value)}/>
+              <button onClick={()=>{setWorkspaceReportDateFrom("");setWorkspaceReportDateTo("");}}>
+                <RotateCcw size={13}/> Reset
+              </button>
+            </div>
+          </div>
+
+          <div className="tw-stat-strip">
+            {[
+              ["Tasks Created", workspaceReports?.summary?.tasksCreated || 0],
+              ["Tasks Completed", workspaceReports?.summary?.tasksCompleted || 0],
+              ["Completion Rate", `${workspaceReports?.summary?.completionRate || 0}%`],
+              ["On Time", `${workspaceReports?.summary?.onTimeRate || 0}%`],
+              ["Avg. Progress", `${workspaceReports?.summary?.avgProgress || 0}%`],
+              ["Hours Logged", `${workspaceReports?.summary?.hoursLogged || 0}h`],
+            ].map(([label,value]) => <div className="tw-stat" key={label}><span>{label}</span><strong>{value}</strong><small>Live report</small></div>)}
+          </div>
+
+          <div className="tw-bottom-dashboard" style={{marginTop:16}}>
+            <div className="tw-mini-card">
+              <div className="tw-mini-head"><strong>Tasks by Status</strong><span>Live</span></div>
+              <div className="tw-legend">
+                {(workspaceReports?.tasksByStatus || []).map((x)=><p key={x.key}><i/>{formatTaskStatus(x.key)}<span>{x.count}</span></p>)}
+                {!(workspaceReports?.tasksByStatus || []).length && <p>No data</p>}
+              </div>
+            </div>
+            <div className="tw-mini-card">
+              <div className="tw-mini-head"><strong>Tasks by Priority</strong><span>Live</span></div>
+              <div className="tw-legend short">
+                {(workspaceReports?.tasksByPriority || []).map((x)=><p key={x.key}><i/>{formatTaskStatus(x.key)}<span>{x.count}</span></p>)}
+                {!(workspaceReports?.tasksByPriority || []).length && <p>No data</p>}
+              </div>
+            </div>
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head"><strong>Time by Member</strong><span>Live</span></div>
+              {(workspaceReports?.timeByMember || []).slice(0,8).map((x)=><div className="tw-work-row" key={x.id}><span>{x.name}</span><i><b style={{width:`${Math.min(100,(Number(x.minutes||0)/Math.max(1,...(workspaceReports?.timeByMember||[]).map(y=>Number(y.minutes||0))))*100)}%`}}/></i><em>{minutesToText(x.minutes)}</em></div>)}
+            </div>
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head"><strong>Project Delivery</strong><span>Live</span></div>
+              {(workspaceReports?.projects || []).slice(0,8).map((x)=><div className="tw-work-row" key={x.id}><span>{x.name}</span><i><b style={{width:`${Number(x.avgProgress||0)}%`}}/></i><em>{x.completed}/{x.tasks}</em></div>)}
+            </div>
+          </div>
+
+          <div className="tw-table-wrap" style={{marginTop:16}}>
+            <table className="tw-task-table">
+              <thead><tr><th>Team Member</th><th>Assigned</th><th>Completed</th><th>Completion</th><th>On Time</th><th>Avg. Progress</th><th>Time Logged</th></tr></thead>
+              <tbody>
+                {(workspaceReports?.members || []).map((m)=>(
+                  <tr key={m.id}><td className="task-name">{m.name}</td><td>{m.assigned}</td><td>{m.completed}</td>
+                    <td>{m.completionRate}%</td><td>{m.onTimeRate}%</td><td>{m.avgProgress}%</td><td>{minutesToText(m.loggedMinutes)}</td></tr>
+                ))}
+                {!workspaceReportsLoading && !(workspaceReports?.members || []).length && <tr><td colSpan="7" style={{textAlign:"center",padding:32,color:"#64748b"}}>No report data yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="tw-bottom-dashboard" style={{marginTop:16}}>
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head"><strong>Recent Task Activity</strong><span>Latest 20</span></div>
+              {(workspaceReports?.recentActivity || []).map((a)=>(
+                <div className="tw-deadline" key={a.id}>
+                  <div><b>{String(a.eventType || "").replaceAll("team.","").replaceAll("_"," ")}</b><span>{a.userName || "Team member"}</span></div>
+                  <span>{a.metadata?.title || ""}</span><em>{a.createdAt ? new Date(a.createdAt).toLocaleString() : ""}</em>
+                </div>
+              ))}
+            </div>
+            <div className="tw-mini-card deadlines">
+              <div className="tw-mini-head"><strong>Upcoming Deadlines</strong><span>Live</span></div>
+              {(workspaceReports?.upcomingDeadlines || []).map((t)=>(
+                <div className="tw-deadline" key={t.id}><div><b>{t.name}</b><span>{t.project || "No project"}</span></div><span>{formatDate(t.dueDate)}</span><em>{deadlineDistance(t.dueDate)}</em></div>
+              ))}
+            </div>
+          </div>
         </section>
       )}
 
@@ -1866,6 +2962,302 @@ export default function TeamWorkspace() {
       {/* =================================================
         MODALS
       ================================================= */}
+
+      {taskDetailOpen && selectedWorkspaceTask && (
+        <div
+          style={SEAT_OVERLAY}
+          onClick={() => setTaskDetailOpen(false)}
+        >
+          <div
+            style={{
+              ...SEAT_CARD,
+              width: "min(680px, 96vw)",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 16,
+                alignItems: "flex-start",
+              }}
+            >
+              <div>
+                <h3 style={SEAT_TITLE}>
+                  {selectedWorkspaceTask.name}
+                </h3>
+                <p style={{ ...SEAT_TEXT, marginBottom: 0 }}>
+                  {selectedWorkspaceTask.project || "No project"}
+                </p>
+              </div>
+
+              <span
+                className={`tw-pill status-${String(
+                  selectedWorkspaceTask.status || "pending",
+                ).replaceAll("_", "-")}`}
+              >
+                {formatTaskStatus(selectedWorkspaceTask.status)}
+              </span>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(2, minmax(0, 1fr))",
+                gap: 14,
+                marginTop: 22,
+              }}
+            >
+              {[
+                [
+                  "Priority",
+                  formatTaskStatus(
+                    selectedWorkspaceTask.priority,
+                  ),
+                ],
+                [
+                  "Assignee",
+                  selectedWorkspaceTask.assignee ||
+                    "Unassigned",
+                ],
+                [
+                  "Due Date",
+                  formatDate(selectedWorkspaceTask.dueDate),
+                ],
+                [
+                  "Progress",
+                  `${Number(
+                    selectedWorkspaceTask.progress || 0,
+                  )}%`,
+                ],
+                [
+                  "Time Logged",
+                  minutesToText(
+                    selectedWorkspaceTask.loggedMinutes,
+                  ),
+                ],
+                [
+                  "Estimated Time",
+                  minutesToText(
+                    selectedWorkspaceTask.estimatedMinutes,
+                  ),
+                ],
+                [
+                  "Task Type",
+                  formatTaskStatus(
+                    selectedWorkspaceTask.taskType || "task",
+                  ),
+                ],
+                [
+                  "Last Activity",
+                  selectedWorkspaceTask.updatedAt
+                    ? new Date(
+                        selectedWorkspaceTask.updatedAt,
+                      ).toLocaleString()
+                    : "—",
+                ],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  style={{
+                    padding: 12,
+                    background: "#f8fafc",
+                    border: "1px solid #eef2f7",
+                    borderRadius: 10,
+                  }}
+                >
+                  <small
+                    style={{
+                      display: "block",
+                      color: "#64748b",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {label}
+                  </small>
+                  <strong>{value}</strong>
+                </div>
+              ))}
+            </div>
+
+            {!!selectedWorkspaceTask.description && (
+              <div style={{ marginTop: 18 }}>
+                <strong>Description</strong>
+                <p style={SEAT_TEXT}>
+                  {selectedWorkspaceTask.description}
+                </p>
+              </div>
+            )}
+
+            {!!(selectedWorkspaceTask.labels || []).length && (
+              <div style={{ marginTop: 18 }}>
+                <strong>Labels</strong>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 6,
+                    marginTop: 8,
+                  }}
+                >
+                  {(selectedWorkspaceTask.labels || []).map(
+                    (label) => (
+                      <span className="tw-label" key={label}>
+                        {label}
+                      </span>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div
+              style={{
+                ...SEAT_ROW,
+                marginTop: 22,
+              }}
+            >
+              <button
+                type="button"
+                style={SEAT_BTN_SECONDARY}
+                onClick={() => {
+                  setTaskDetailOpen(false);
+                  addWorkspaceTaskTime(
+                    selectedWorkspaceTask,
+                  );
+                }}
+              >
+                Log Time
+              </button>
+
+              <button
+                type="button"
+                style={SEAT_BTN_PRIMARY}
+                onClick={() => {
+                  setTaskDetailOpen(false);
+                  openEditWorkspaceTask(
+                    selectedWorkspaceTask,
+                  );
+                }}
+              >
+                Edit Task
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {timeModalOpen && timeTask && (
+        <div
+          style={SEAT_OVERLAY}
+          onClick={() =>
+            !timeSaving && setTimeModalOpen(false)
+          }
+        >
+          <form
+            style={{
+              ...SEAT_CARD,
+              width: "min(500px, 94vw)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={saveWorkspaceTaskTime}
+          >
+            <h3 style={SEAT_TITLE}>Log Time</h3>
+            <p style={SEAT_TEXT}>
+              Add tracked time to <strong>{timeTask.name}</strong>.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gap: 14,
+              }}
+            >
+              <label>
+                <span>Minutes</span>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={timeForm.minutes}
+                  onChange={(e) =>
+                    setTimeForm((form) => ({
+                      ...form,
+                      minutes: e.target.value,
+                    }))
+                  }
+                  style={{
+                    width: "100%",
+                    marginTop: 5,
+                  }}
+                />
+              </label>
+
+              <label>
+                <span>Note</span>
+                <textarea
+                  rows="4"
+                  placeholder="What did you work on?"
+                  value={timeForm.note}
+                  onChange={(e) =>
+                    setTimeForm((form) => ({
+                      ...form,
+                      note: e.target.value,
+                    }))
+                  }
+                  style={{
+                    width: "100%",
+                    marginTop: 5,
+                  }}
+                />
+              </label>
+
+              <div
+                style={{
+                  padding: 11,
+                  borderRadius: 9,
+                  background: "#f8fafc",
+                  color: "#64748b",
+                  fontSize: 13,
+                }}
+              >
+                Already logged:{" "}
+                <strong style={{ color: "#111827" }}>
+                  {minutesToText(timeTask.loggedMinutes)}
+                </strong>
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...SEAT_ROW,
+                marginTop: 20,
+              }}
+            >
+              <button
+                type="button"
+                style={SEAT_BTN_SECONDARY}
+                disabled={timeSaving}
+                onClick={() => setTimeModalOpen(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                style={SEAT_BTN_PRIMARY}
+                disabled={timeSaving}
+              >
+                {timeSaving ? "Saving..." : "Log Time"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {taskModalOpen && (
         <div

@@ -488,6 +488,27 @@ export class TeamsController {
     return this.teamsService.logWorkspaceTime(teamId, taskId, user.id, body);
   }
 
+
+  @Get(":id/workspace/time-tracking")
+  async getWorkspaceTimeTracking(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+    @Query() query: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.getWorkspaceTimeTracking(teamId, query);
+  }
+
+  @Get(":id/workspace/reports")
+  async getWorkspaceReports(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+    @Query() query: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+    return this.teamsService.getWorkspaceReports(teamId, query);
+  }
+
   @Get(":id/workspace/projects")
   async getWorkspaceProjects(
     @Param("id") teamId: string,

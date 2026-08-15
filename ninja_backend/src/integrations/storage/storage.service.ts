@@ -53,6 +53,8 @@ export interface StoredFile {
   folder?: string;
   userId: string;
   teamId?: string | null;
+  projectId?: string | null;
+  taskId?: string | null;
   createdAt: Date;
 }
 
@@ -543,6 +545,325 @@ export class StorageService {
     }
   }
 
+
+  /* =========================================================
+     TEAM WORKSPACE FILES
+     ========================================================= */
+
+  private async ensureCanAccessTeamWorkspaceFiles(
+    teamId: string,
+    requester: FileRequester,
+  ): Promise<{ isOwner: boolean; isSuperAdmin: boolean }> {
+    if (!teamId) {
+      throw new BadRequestException('Team ID is required');
+    }
+
+    const role = String(requester?.role || '').trim().toLowerCase();
+    const isSuperAdmin = role === 'super_admin';
+
+    if (isSuperAdmin) {
+      return { isOwner: false, isSuperAdmin: true };
+    }
+
+    const { rows: teamRows } = await this.db.query(
+      `SELECT owner_id FROM teams WHERE id = $1 LIMIT 1`,
+      [teamId],
+    );
+
+    if (!teamRows.length) {
+      throw new NotFoundException('Team not found');
+    }
+
+    const isOwner = teamRows[0].owner_id === requester?.userId;
+
+    if (isOwner) {
+      return { isOwner: true, isSuperAdmin: false };
+    }
+
+    const { rows: memberRows } = await this.db.query(
+      `SELECT 1
+         FROM team_members
+        WHERE team_id = $1
+          AND user_id = $2
+          AND status = 'active'
+        LIMIT 1`,
+      [teamId, requester?.userId],
+    );
+
+    if (!memberRows.length) {
+      throw new NotFoundException('Team not found');
+    }
+
+    return { isOwner: false, isSuperAdmin: false };
+  }
+
+  private async validateTeamFileAssociation(
+    teamId: string,
+    projectId?: string | null,
+    taskId?: string | null,
+  ): Promise<void> {
+    if (projectId) {
+      const { rows } = await this.db.query(
+        `SELECT id
+           FROM projects
+          WHERE id = $1
+            AND team_id = $2
+          LIMIT 1`,
+        [projectId, teamId],
+      );
+
+      if (!rows.length) {
+        throw new BadRequestException('Invalid project for this team');
+      }
+    }
+
+    if (taskId) {
+      const { rows } = await this.db.query(
+        `SELECT id, project_id
+           FROM team_tasks
+          WHERE id = $1
+            AND team_id = $2
+          LIMIT 1`,
+        [taskId, teamId],
+      );
+
+      if (!rows.length) {
+        throw new BadRequestException('Invalid task for this team');
+      }
+
+      if (
+        projectId &&
+        rows[0].project_id &&
+        String(rows[0].project_id) !== String(projectId)
+      ) {
+        throw new BadRequestException(
+          'Selected task does not belong to the selected project',
+        );
+      }
+    }
+  }
+
+  async uploadTeamWorkspaceFile({
+    file,
+    userId,
+    teamId,
+    role,
+    projectId,
+    taskId,
+  }: {
+    file: Express.Multer.File;
+    userId: string;
+    teamId: string;
+    role?: string | null;
+    projectId?: string | null;
+    taskId?: string | null;
+  }): Promise<StoredFile> {
+    await this.ensureCanAccessTeamWorkspaceFiles(teamId, {
+      userId,
+      teamId,
+      role,
+    });
+
+    await this.validateTeamFileAssociation(
+      teamId,
+      projectId || null,
+      taskId || null,
+    );
+
+    const uploaded = await this.uploadDocument({
+      file,
+      folder: `team-workspace/${teamId}`,
+      userId,
+      teamId,
+    });
+
+    const { rows } = await this.db.query(
+      `UPDATE stored_files
+          SET project_id = $2,
+              task_id = $3
+        WHERE id = $1
+        RETURNING
+          id,
+          original_name AS "originalName",
+          file_name AS "fileName",
+          url,
+          s3_key AS "key",
+          mime_type AS "mimeType",
+          size,
+          folder,
+          user_id AS "userId",
+          team_id AS "teamId",
+          project_id AS "projectId",
+          task_id AS "taskId",
+          created_at AS "createdAt"`,
+      [
+        uploaded.id,
+        projectId || null,
+        taskId || null,
+      ],
+    );
+
+    return rows[0] || {
+      ...uploaded,
+      projectId: projectId || null,
+      taskId: taskId || null,
+    };
+  }
+
+  async listTeamWorkspaceFiles(
+    teamId: string,
+    requester: FileRequester,
+    filters: {
+      q?: string;
+      projectId?: string;
+      taskId?: string;
+    } = {},
+  ): Promise<any[]> {
+    await this.ensureCanAccessTeamWorkspaceFiles(teamId, {
+      ...requester,
+      teamId,
+    });
+
+    const conditions: string[] = ['sf.team_id = $1'];
+    const values: any[] = [teamId];
+    let i = 2;
+
+    if (filters.q?.trim()) {
+      conditions.push(`(
+        sf.original_name ILIKE $${i}
+        OR sf.file_name ILIKE $${i}
+        OR COALESCE(p.name, '') ILIKE $${i}
+        OR COALESCE(tt.title, '') ILIKE $${i}
+        OR COALESCE(u.name, u.email, '') ILIKE $${i}
+      )`);
+      values.push(`%${filters.q.trim()}%`);
+      i += 1;
+    }
+
+    if (filters.projectId) {
+      conditions.push(`sf.project_id = $${i}`);
+      values.push(filters.projectId);
+      i += 1;
+    }
+
+    if (filters.taskId) {
+      conditions.push(`sf.task_id = $${i}`);
+      values.push(filters.taskId);
+      i += 1;
+    }
+
+    const { rows } = await this.db.query(
+      `SELECT
+         sf.id,
+         sf.original_name AS "originalName",
+         sf.file_name AS "fileName",
+         sf.url,
+         sf.s3_key AS "key",
+         sf.mime_type AS "mimeType",
+         sf.size,
+         sf.folder,
+         sf.user_id AS "userId",
+         sf.team_id AS "teamId",
+         sf.project_id AS "projectId",
+         sf.task_id AS "taskId",
+         sf.created_at AS "createdAt",
+         p.name AS "projectName",
+         tt.title AS "taskName",
+         COALESCE(u.name, u.email) AS "uploadedBy"
+       FROM stored_files sf
+       LEFT JOIN projects p
+         ON p.id = sf.project_id
+        AND p.team_id = sf.team_id
+       LEFT JOIN team_tasks tt
+         ON tt.id = sf.task_id
+        AND tt.team_id = sf.team_id
+       LEFT JOIN users u
+         ON u.id = sf.user_id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY sf.created_at DESC`,
+      values,
+    );
+
+    return rows;
+  }
+
+  async getTeamWorkspaceFileUrl(
+    fileId: string,
+    teamId: string,
+    requester: FileRequester,
+    expiresIn: number = 3600,
+  ): Promise<{ url: string; expiresIn: number }> {
+    await this.ensureCanAccessTeamWorkspaceFiles(teamId, {
+      ...requester,
+      teamId,
+    });
+
+    const { rows } = await this.db.query(
+      `SELECT id
+         FROM stored_files
+        WHERE id = $1
+          AND team_id = $2
+        LIMIT 1`,
+      [fileId, teamId],
+    );
+
+    if (!rows.length) {
+      throw new NotFoundException('File not found');
+    }
+
+    const url = await this.getSignedUrl(
+      fileId,
+      expiresIn,
+      {
+        ...requester,
+        teamId,
+      },
+    );
+
+    return { url, expiresIn };
+  }
+
+  async deleteTeamWorkspaceFile(
+    fileId: string,
+    teamId: string,
+    requester: FileRequester,
+  ): Promise<void> {
+    const access = await this.ensureCanAccessTeamWorkspaceFiles(
+      teamId,
+      {
+        ...requester,
+        teamId,
+      },
+    );
+
+    const { rows } = await this.db.query(
+      `SELECT id, user_id
+         FROM stored_files
+        WHERE id = $1
+          AND team_id = $2
+        LIMIT 1`,
+      [fileId, teamId],
+    );
+
+    if (!rows.length) {
+      throw new NotFoundException('File not found');
+    }
+
+    const isUploader = rows[0].user_id === requester?.userId;
+
+    if (
+      !isUploader &&
+      !access.isOwner &&
+      !access.isSuperAdmin
+    ) {
+      throw new BadRequestException(
+        'You do not have permission to delete this file',
+      );
+    }
+
+    await this.deleteStoredFileById(fileId);
+  }
+
   /**
    * Get configuration status (for debugging)
    */
@@ -574,4 +895,3 @@ export class StorageService {
     };
   }
 }
-
