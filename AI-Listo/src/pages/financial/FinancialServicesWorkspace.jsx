@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import "./FinancialServicesWorkspace.css";
 import financialApi from "../../api/financialApi";
 import ClientModal from "./ClientModal";
+import ApplicationsSection from "./ApplicationsSection";
+import AccountsSection from "./AccountsSection";
 import { money, formatDate, relativeTime, initials } from "../sales/salesFormat";
 
 // KPI cards driven by the live /financial/stats endpoint. In this first slice only
@@ -40,9 +42,9 @@ function statValue(key, stats) {
     case "totalClients":
       return { value: (s?.count || 0).toLocaleString("en-US"), sub: `${(s?.active || 0).toLocaleString("en-US")} Active` };
     case "applicationsInProgress":
-      return { value: (s?.count || 0).toLocaleString("en-US"), sub: "Total Applications" };
+      return { value: (s?.count || 0).toLocaleString("en-US"), sub: "In progress" };
     case "accountsUnderManagement":
-      return { value: (s?.count || 0).toLocaleString("en-US"), sub: "Total Accounts" };
+      return { value: (s?.count || 0).toLocaleString("en-US"), sub: "Active accounts" };
     case "assetsUnderManagement":
       return { value: money(s?.amount || 0), sub: "Total AUM (recorded)" };
     case "revenueThisMonth":
@@ -54,7 +56,8 @@ function statValue(key, stats) {
   }
 }
 
-function Donut({ title, empty }) {
+function Donut({ title, rows, empty }) {
+  const list = rows || [];
   return (
     <div className="fsw-panel fsw-donut-panel">
       <div className="fsw-panel-head">
@@ -65,7 +68,17 @@ function Donut({ title, empty }) {
       </div>
       <div className="fsw-donut-body">
         <div className="fsw-legend">
-          <p style={{ color: "#94a3b8", fontSize: 13 }}>{empty}</p>
+          {list.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>{empty}</p>
+          ) : (
+            list.map((r, i) => (
+              <div key={r.label}>
+                <span className={`dot d${i}`}></span>
+                <span>{r.label}</span>
+                <b>{r.value}</b>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -342,7 +355,11 @@ export default function FinancialServicesWorkspace() {
           </div>
 
           <section className="fsw-bottom-grid">
-            <Donut title="Applications by Status" empty="No applications yet" />
+            <Donut
+              title="Applications by Status"
+              empty="No applications yet"
+              rows={(stats?.applicationsByStatus || []).map((a) => ({ label: a.status, value: a.count }))}
+            />
             <Donut title="Portfolio Allocation (AUM)" empty="No portfolio data yet" />
             <div className="fsw-panel">
               <div className="fsw-panel-head">
@@ -392,6 +409,10 @@ export default function FinancialServicesWorkspace() {
             </div>
           </section>
         </>
+      ) : tab === "Applications" ? (
+        <ApplicationsSection />
+      ) : tab === "Accounts" ? (
+        <AccountsSection />
       ) : (
         <div className="fsw-placeholder">
           <Icon name={TABS.find((x) => x[1] === tab)?.[0] || "landmark"} size={38} />

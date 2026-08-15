@@ -20,6 +20,10 @@ import { RequiresWorkspace } from '../workspaces/requires-workspace.decorator';
 import { FinancialService } from './financial.service';
 import { CreateFinancialClientDto } from './dto/create-financial-client.dto';
 import { UpdateFinancialClientDto } from './dto/update-financial-client.dto';
+import { CreateFinancialApplicationDto } from './dto/create-financial-application.dto';
+import { UpdateFinancialApplicationDto } from './dto/update-financial-application.dto';
+import { CreateFinancialAccountDto } from './dto/create-financial-account.dto';
+import { UpdateFinancialAccountDto } from './dto/update-financial-account.dto';
 
 // Financial Services Workspace API. JwtAuthGuard authenticates, PaymentGuard gates
 // unpaid accounts, and WorkspaceLockGuard enforces the $97 add-on ONLY when the
@@ -114,6 +118,159 @@ export class FinancialController {
   @ApiOperation({ summary: 'Delete a client (team-scoped)' })
   async removeClient(@Param('id') id: string, @CurrentUser() user: any) {
     return this.financial.removeClient(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('client-search')
+  @ApiOperation({ summary: 'Search financial clients (for linking a record)' })
+  async searchClients(@CurrentUser() user: any, @Query('search') search?: string) {
+    return this.financial.searchClients(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      search,
+    );
+  }
+
+  // ─── Applications ──────────────────────────────────────────────────────────
+
+  @Get('applications')
+  @ApiOperation({ summary: 'List applications (paginated, filterable, team-scoped)' })
+  async listApplications(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.financial.findAllApplications(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, page, limit },
+    );
+  }
+
+  @Post('applications')
+  @ApiOperation({ summary: 'Create an application' })
+  async createApplication(
+    @Body() dto: CreateFinancialApplicationDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.financial.createApplication(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('applications/:id')
+  @ApiOperation({ summary: 'Get one application (team-scoped)' })
+  async getApplication(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.financial.findOneApplication(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('applications/:id')
+  @ApiOperation({ summary: 'Update an application (team-scoped)' })
+  async updateApplication(
+    @Param('id') id: string,
+    @Body() dto: UpdateFinancialApplicationDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.financial.updateApplication(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('applications/:id')
+  @ApiOperation({ summary: 'Delete an application (team-scoped)' })
+  async removeApplication(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.financial.removeApplication(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ─── Accounts ──────────────────────────────────────────────────────────────
+
+  @Get('accounts')
+  @ApiOperation({ summary: 'List accounts (paginated, filterable, team-scoped)' })
+  async listAccounts(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.financial.findAllAccounts(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, page, limit },
+    );
+  }
+
+  @Post('accounts')
+  @ApiOperation({ summary: 'Create an account (CRM record, not a bank account)' })
+  async createAccount(
+    @Body() dto: CreateFinancialAccountDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.financial.createAccount(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('accounts/:id')
+  @ApiOperation({ summary: 'Get one account (team-scoped)' })
+  async getAccount(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.financial.findOneAccount(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('accounts/:id')
+  @ApiOperation({ summary: 'Update an account (team-scoped)' })
+  async updateAccount(
+    @Param('id') id: string,
+    @Body() dto: UpdateFinancialAccountDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.financial.updateAccount(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('accounts/:id')
+  @ApiOperation({ summary: 'Delete an account (team-scoped)' })
+  async removeAccount(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.financial.removeAccount(
       id,
       user.id,
       user.teamId ?? null,

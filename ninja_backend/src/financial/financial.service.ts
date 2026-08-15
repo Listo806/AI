@@ -56,7 +56,120 @@ export class FinancialService {
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_financial_clients_review ON financial_clients(next_review_date)`,
     );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS financial_applications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        application_number TEXT,
+        client_id UUID,
+        account_id UUID,
+        client_name TEXT,
+        application_type TEXT,
+        advisor_name TEXT,
+        status TEXT NOT NULL DEFAULT 'Draft',
+        submitted_date DATE,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_financial_applications_team ON financial_applications(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_financial_applications_status ON financial_applications(status)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_financial_applications_client ON financial_applications(client_id)`,
+    );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS financial_accounts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        account_number TEXT,
+        client_id UUID,
+        application_id UUID,
+        client_name TEXT,
+        account_type TEXT,
+        advisor_name TEXT,
+        status TEXT NOT NULL DEFAULT 'Active',
+        balance NUMERIC(16,2),
+        opened_date DATE,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_financial_accounts_team ON financial_accounts(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_financial_accounts_status ON financial_accounts(status)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_financial_accounts_client ON financial_accounts(client_id)`,
+    );
     this.schemaReady = true;
+  }
+
+  private async assertClientInTeam(clientId: string, teamId: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM financial_clients WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [clientId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected client is not in this account');
+    }
+  }
+
+  private async assertApplicationInTeam(applicationId: string, teamId: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM financial_applications WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [applicationId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected application is not in this account');
+    }
+  }
+
+  private async assertAccountInTeam(accountId: string, teamId: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM financial_accounts WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [accountId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected account is not in this account');
+    }
+  }
+
+  /** Search financial clients (for a client picker), team-scoped. */
+  async searchClients(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    search?: string,
+  ): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return [];
+    const term = (search || '').trim();
+    const params: any[] = [accessible];
+    let where = 'fc.team_id = ANY($1)';
+    if (term) {
+      params.push(`%${term}%`);
+      where += ` AND (fc.client_name ILIKE $2 OR fc.client_number ILIKE $2 OR ct.name ILIKE $2)`;
+    }
+    const { rows } = await this.db.query(
+      `SELECT fc.id,
+              COALESCE(NULLIF(TRIM(fc.client_name), ''), ct.name) AS name,
+              fc.client_number AS "clientNumber"
+         FROM financial_clients fc ${this.clientJoins}
+        WHERE ${where} ORDER BY fc.created_at DESC LIMIT 20`,
+      params,
+    );
+    return rows;
   }
 
   private async getAccessibleTeamIds(
@@ -356,10 +469,411 @@ export class FinancialService {
     return { success: true };
   }
 
+  // ─── Applications ──────────────────────────────────────────────────────────
+
+  private readonly appSelect = `
+    a.id,
+    a.team_id AS "teamId",
+    a.application_number AS "applicationNumber",
+    a.client_id AS "clientId",
+    a.account_id AS "accountId",
+    COALESCE(NULLIF(TRIM(a.client_name), ''), fc.client_name, ct.name) AS "clientName",
+    a.application_type AS "applicationType",
+    a.advisor_name AS "advisorName",
+    a.status,
+    a.submitted_date AS "submittedDate",
+    a.notes,
+    a.created_at AS "createdAt",
+    a.updated_at AS "updatedAt"
+  `;
+  private readonly appJoins = `
+    LEFT JOIN financial_clients fc ON fc.id = a.client_id AND fc.team_id = a.team_id
+    LEFT JOIN contacts ct ON ct.id = fc.contact_id AND ct.team_id = a.team_id
+  `;
+
+  private async generateApplicationNumber(teamId: string): Promise<string> {
+    const year = new Date().getFullYear();
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM financial_applications
+        WHERE team_id = $1 AND application_number LIKE $2`,
+      [teamId, `APP-${year}-%`],
+    );
+    const seq = (Number(rows[0]?.n) || 0) + 1;
+    return `APP-${year}-${String(seq).padStart(4, '0')}`;
+  }
+
+  async findAllApplications(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; status?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['a.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) {
+      where.push(`a.status = $${i++}`);
+      vals.push(params.status.trim());
+    }
+    if (params.search && params.search.trim()) {
+      where.push(
+        `(a.application_number ILIKE $${i} OR a.client_name ILIKE $${i} OR a.application_type ILIKE $${i} OR a.advisor_name ILIKE $${i} OR fc.client_name ILIKE $${i})`,
+      );
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM financial_applications a ${this.appJoins} WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.appSelect} FROM financial_applications a ${this.appJoins}
+        WHERE ${whereSql} ORDER BY a.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneApplication(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Application not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.appSelect} FROM financial_applications a ${this.appJoins}
+        WHERE a.id = $1 AND a.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Application not found');
+    return rows[0];
+  }
+
+  async createApplication(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    if (dto.clientId) await this.assertClientInTeam(dto.clientId, teamId);
+    if (dto.accountId) await this.assertAccountInTeam(dto.accountId, teamId);
+    const applicationNumber =
+      (dto.applicationNumber && dto.applicationNumber.trim()) ||
+      (await this.generateApplicationNumber(teamId));
+    const { rows } = await this.db.query(
+      `INSERT INTO financial_applications
+         (team_id, created_by, application_number, client_id, account_id,
+          client_name, application_type, advisor_name, status, submitted_date, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       RETURNING id`,
+      [
+        teamId,
+        userId,
+        applicationNumber,
+        dto.clientId || null,
+        dto.accountId || null,
+        dto.clientName || null,
+        dto.applicationType || null,
+        dto.advisorName || null,
+        (dto.status && dto.status.trim()) || 'Draft',
+        dto.submittedDate || null,
+        dto.notes || null,
+      ],
+    );
+    return this.findOneApplication(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateApplication(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Application not found');
+    const existing = await this.db.query(
+      `SELECT team_id FROM financial_applications WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!existing.rows.length) throw new NotFoundException('Application not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.clientId) await this.assertClientInTeam(dto.clientId, teamId);
+    if (dto.accountId) await this.assertAccountInTeam(dto.accountId, teamId);
+    const colFor: Record<string, string> = {
+      applicationNumber: 'application_number',
+      clientId: 'client_id',
+      accountId: 'account_id',
+      clientName: 'client_name',
+      applicationType: 'application_type',
+      advisorName: 'advisor_name',
+      status: 'status',
+      submittedDate: 'submitted_date',
+      notes: 'notes',
+    };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push((dto as any)[key]);
+      }
+    }
+    if (!sets.length) return this.findOneApplication(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(
+      `UPDATE financial_applications SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
+      vals,
+    );
+    return this.findOneApplication(id, userId, userTeamId, role);
+  }
+
+  async removeApplication(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Application not found');
+    const res = await this.db.query(
+      `DELETE FROM financial_applications WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Application not found');
+    return { success: true };
+  }
+
+  // ─── Accounts ──────────────────────────────────────────────────────────────
+
+  private readonly acctSelect = `
+    ac.id,
+    ac.team_id AS "teamId",
+    ac.account_number AS "accountNumber",
+    ac.client_id AS "clientId",
+    ac.application_id AS "applicationId",
+    COALESCE(NULLIF(TRIM(ac.client_name), ''), fc.client_name, ct.name) AS "clientName",
+    ac.account_type AS "accountType",
+    ac.advisor_name AS "advisorName",
+    ac.status,
+    ac.balance,
+    ac.opened_date AS "openedDate",
+    ac.notes,
+    ac.created_at AS "createdAt",
+    ac.updated_at AS "updatedAt"
+  `;
+  private readonly acctJoins = `
+    LEFT JOIN financial_clients fc ON fc.id = ac.client_id AND fc.team_id = ac.team_id
+    LEFT JOIN contacts ct ON ct.id = fc.contact_id AND ct.team_id = ac.team_id
+  `;
+
+  private async generateAccountNumber(teamId: string): Promise<string> {
+    const year = new Date().getFullYear();
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM financial_accounts
+        WHERE team_id = $1 AND account_number LIKE $2`,
+      [teamId, `ACC-${year}-%`],
+    );
+    const seq = (Number(rows[0]?.n) || 0) + 1;
+    return `ACC-${year}-${String(seq).padStart(4, '0')}`;
+  }
+
+  async findAllAccounts(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; status?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['ac.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) {
+      where.push(`ac.status = $${i++}`);
+      vals.push(params.status.trim());
+    }
+    if (params.search && params.search.trim()) {
+      where.push(
+        `(ac.account_number ILIKE $${i} OR ac.client_name ILIKE $${i} OR ac.account_type ILIKE $${i} OR ac.advisor_name ILIKE $${i} OR fc.client_name ILIKE $${i})`,
+      );
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM financial_accounts ac ${this.acctJoins} WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.acctSelect} FROM financial_accounts ac ${this.acctJoins}
+        WHERE ${whereSql} ORDER BY ac.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneAccount(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Account not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.acctSelect} FROM financial_accounts ac ${this.acctJoins}
+        WHERE ac.id = $1 AND ac.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Account not found');
+    return rows[0];
+  }
+
+  async createAccount(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    if (dto.clientId) await this.assertClientInTeam(dto.clientId, teamId);
+    if (dto.applicationId) await this.assertApplicationInTeam(dto.applicationId, teamId);
+    const accountNumber =
+      (dto.accountNumber && dto.accountNumber.trim()) ||
+      (await this.generateAccountNumber(teamId));
+    const { rows } = await this.db.query(
+      `INSERT INTO financial_accounts
+         (team_id, created_by, account_number, client_id, application_id,
+          client_name, account_type, advisor_name, status, balance, opened_date, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING id`,
+      [
+        teamId,
+        userId,
+        accountNumber,
+        dto.clientId || null,
+        dto.applicationId || null,
+        dto.clientName || null,
+        dto.accountType || null,
+        dto.advisorName || null,
+        (dto.status && dto.status.trim()) || 'Active',
+        dto.balance ?? null,
+        dto.openedDate || null,
+        dto.notes || null,
+      ],
+    );
+    return this.findOneAccount(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateAccount(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Account not found');
+    const existing = await this.db.query(
+      `SELECT team_id FROM financial_accounts WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!existing.rows.length) throw new NotFoundException('Account not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.clientId) await this.assertClientInTeam(dto.clientId, teamId);
+    if (dto.applicationId) await this.assertApplicationInTeam(dto.applicationId, teamId);
+    const colFor: Record<string, string> = {
+      accountNumber: 'account_number',
+      clientId: 'client_id',
+      applicationId: 'application_id',
+      clientName: 'client_name',
+      accountType: 'account_type',
+      advisorName: 'advisor_name',
+      status: 'status',
+      balance: 'balance',
+      openedDate: 'opened_date',
+      notes: 'notes',
+    };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push((dto as any)[key]);
+      }
+    }
+    if (!sets.length) return this.findOneAccount(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(
+      `UPDATE financial_accounts SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
+      vals,
+    );
+    return this.findOneAccount(id, userId, userTeamId, role);
+  }
+
+  async removeAccount(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Account not found');
+    const res = await this.db.query(
+      `DELETE FROM financial_accounts WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Account not found');
+    return { success: true };
+  }
+
   // Overview KPIs. Every figure is computed from real account data; a KPI is 0
-  // until its tab has data. AUM is the sum of RECORDED client balances (documented
-  // manual figures), not live custodial data. Applications/Accounts/Revenue land
-  // as their tabs are built.
+  // until its tab has data. AUM is the sum of RECORDED balances of active accounts
+  // (documented manual figures), not live custodial data. Revenue lands with the
+  // Commissions/Reports tabs.
   async getStats(
     userId: string,
     userTeamId: string | null,
@@ -382,40 +896,75 @@ export class FinancialService {
     if (!accessible.length) return zero;
     const num = (v: any) => Number(v) || 0;
 
-    const [clientsAgg, upcoming, activity] = await Promise.all([
-      this.db.query(
-        `SELECT COUNT(*)::int AS count,
-                COUNT(*) FILTER (WHERE status = 'Active')::int AS active,
-                COALESCE(SUM(aum) FILTER (WHERE status = 'Active'),0) AS aum
-           FROM financial_clients WHERE team_id = ANY($1)`,
-        [accessible],
-      ),
-      this.db.query(
-        `SELECT id, client_number AS "clientNumber",
-                COALESCE(NULLIF(TRIM(client_name), ''), '') AS "clientName",
-                next_review_date AS "nextReviewDate"
-           FROM financial_clients
-          WHERE team_id = ANY($1) AND next_review_date IS NOT NULL
-            AND next_review_date >= CURRENT_DATE
-            AND next_review_date <= CURRENT_DATE + INTERVAL '30 days'
-          ORDER BY next_review_date ASC LIMIT 6`,
-        [accessible],
-      ),
-      this.db.query(
-        `SELECT 'Client' AS kind, client_number AS ref, client_name AS name, status, updated_at
-           FROM financial_clients WHERE team_id = ANY($1)
-          ORDER BY updated_at DESC LIMIT 6`,
-        [accessible],
-      ),
-    ]);
+    const IN_PROGRESS = ['Draft', 'In Progress', 'Under Review', 'Pending Documents'];
+    const [clientsAgg, upcoming, activity, appsAgg, appsByStatus, acctAgg] =
+      await Promise.all([
+        this.db.query(
+          `SELECT COUNT(*)::int AS count,
+                  COUNT(*) FILTER (WHERE status = 'Active')::int AS active
+             FROM financial_clients WHERE team_id = ANY($1)`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT id, client_number AS "clientNumber",
+                  COALESCE(NULLIF(TRIM(client_name), ''), '') AS "clientName",
+                  next_review_date AS "nextReviewDate"
+             FROM financial_clients
+            WHERE team_id = ANY($1) AND next_review_date IS NOT NULL
+              AND next_review_date >= CURRENT_DATE
+              AND next_review_date <= CURRENT_DATE + INTERVAL '30 days'
+            ORDER BY next_review_date ASC LIMIT 6`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT 'Client' AS kind, client_number AS ref, client_name AS name, status, updated_at
+             FROM financial_clients WHERE team_id = ANY($1)
+            ORDER BY updated_at DESC LIMIT 6`,
+          [accessible],
+        ),
+        // Applications: in-progress count + approved/closed for conversion rate.
+        this.db.query(
+          `SELECT
+              COUNT(*) FILTER (WHERE status IN ('Draft','In Progress','Under Review','Pending Documents'))::int AS in_progress,
+              COUNT(*) FILTER (WHERE status = 'Approved')::int AS approved,
+              COUNT(*) FILTER (WHERE status IN ('Approved','Declined','Cancelled'))::int AS closed
+             FROM financial_applications WHERE team_id = ANY($1)`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(status), ''), 'Unknown') AS status, COUNT(*)::int AS count
+             FROM financial_applications WHERE team_id = ANY($1)
+            GROUP BY 1 ORDER BY count DESC`,
+          [accessible],
+        ),
+        // Accounts under management + AUM from active accounts' recorded balances.
+        this.db.query(
+          `SELECT COUNT(*) FILTER (WHERE status = 'Active')::int AS active,
+                  COALESCE(SUM(balance) FILTER (WHERE status = 'Active'),0) AS aum
+             FROM financial_accounts WHERE team_id = ANY($1)`,
+          [accessible],
+        ),
+      ]);
 
+    const appClosed = num(appsAgg.rows[0].closed);
     return {
       ...zero,
       totalClients: {
         count: num(clientsAgg.rows[0].count),
         active: num(clientsAgg.rows[0].active),
       },
-      assetsUnderManagement: { amount: num(clientsAgg.rows[0].aum) },
+      applicationsInProgress: { count: num(appsAgg.rows[0].in_progress) },
+      accountsUnderManagement: { count: num(acctAgg.rows[0].active) },
+      assetsUnderManagement: { amount: num(acctAgg.rows[0].aum) },
+      conversionRate: {
+        percent: appClosed
+          ? Math.round((num(appsAgg.rows[0].approved) / appClosed) * 100)
+          : 0,
+      },
+      applicationsByStatus: appsByStatus.rows.map((r: any) => ({
+        status: r.status,
+        count: num(r.count),
+      })),
       upcomingReviews: upcoming.rows.map((r: any) => ({
         clientName: r.clientName || r.clientNumber,
         nextReviewDate: r.nextReviewDate,
