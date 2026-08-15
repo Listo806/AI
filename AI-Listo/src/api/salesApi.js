@@ -97,6 +97,38 @@ const salesApi = {
   deleteOrder(id) {
     return apiClient.request(`/sales/orders/${id}`, { method: "DELETE" });
   },
+
+  listContracts(params = {}) {
+    return apiClient.request(`/sales/contracts${toQuery(params)}`, { method: "GET" });
+  },
+  getContract(id) {
+    return apiClient.request(`/sales/contracts/${id}`, { method: "GET" });
+  },
+  createContract(body) {
+    return apiClient.request(`/sales/contracts`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateContract(id, body) {
+    return apiClient.request(`/sales/contracts/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteContract(id) {
+    return apiClient.request(`/sales/contracts/${id}`, { method: "DELETE" });
+  },
+
+  listReturns(params = {}) {
+    return apiClient.request(`/sales/returns${toQuery(params)}`, { method: "GET" });
+  },
+  getReturn(id) {
+    return apiClient.request(`/sales/returns/${id}`, { method: "GET" });
+  },
+  createReturn(body) {
+    return apiClient.request(`/sales/returns`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateReturn(id, body) {
+    return apiClient.request(`/sales/returns/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteReturn(id) {
+    return apiClient.request(`/sales/returns/${id}`, { method: "DELETE" });
+  },
 };
 
 export default salesApi;

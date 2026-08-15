@@ -27,6 +27,8 @@ import salesApi from "../../api/salesApi";
 import QuoteModal from "./QuoteModal";
 import ProposalsSection from "./ProposalsSection";
 import OrdersSection from "./OrdersSection";
+import ContractsSection from "./ContractsSection";
+import ReturnsSection from "./ReturnsSection";
 
 // KPI card config. Values come from the live /sales/stats endpoint. In this first
 // slice only Quotes exist, so Open Quotes is real and the rest report 0 until
@@ -482,6 +484,10 @@ export default function SalesWorkspace() {
         <ProposalsSection />
       ) : activeTab === "Orders" ? (
         <OrdersSection />
+      ) : activeTab === "Contracts" ? (
+        <ContractsSection />
+      ) : activeTab === "Returns" ? (
+        <ReturnsSection />
       ) : (
         <section className="sales-ws-quotes">
           <div className="sales-ws-section-head">

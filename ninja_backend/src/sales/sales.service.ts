@@ -111,6 +111,70 @@ export class SalesService {
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_sales_orders_contact ON sales_orders(contact_id)`,
     );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS sales_contracts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        contract_number TEXT,
+        proposal_id UUID,
+        order_id UUID,
+        contact_id UUID,
+        customer_name TEXT,
+        segment TEXT,
+        contact_name TEXT,
+        contact_role TEXT,
+        deal_name TEXT,
+        value NUMERIC(14,2),
+        status TEXT NOT NULL DEFAULT 'Draft',
+        start_date DATE,
+        end_date DATE,
+        owner_name TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_contracts_team ON sales_contracts(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_contracts_status ON sales_contracts(status)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_contracts_contact ON sales_contracts(contact_id)`,
+    );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS sales_returns (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        return_number TEXT,
+        order_id UUID,
+        contact_id UUID,
+        customer_name TEXT,
+        segment TEXT,
+        contact_name TEXT,
+        contact_role TEXT,
+        reason TEXT,
+        value NUMERIC(14,2),
+        status TEXT NOT NULL DEFAULT 'Requested',
+        completed_date DATE,
+        owner_name TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_returns_team ON sales_returns(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_returns_status ON sales_returns(status)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_returns_order ON sales_returns(order_id)`,
+    );
     this.schemaReady = true;
   }
 
@@ -979,6 +1043,448 @@ export class SalesService {
       userTeamId,
       role,
     );
+  }
+
+  private async assertOrderInTeam(orderId: string, teamId: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM sales_orders WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [orderId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected order is not in this account');
+    }
+  }
+
+  // ─── Contracts ───────────────────────────────────────────────────────────
+
+  private readonly contractSelect = `
+    c.id,
+    c.team_id AS "teamId",
+    c.contract_number AS "contractNumber",
+    c.proposal_id AS "proposalId",
+    c.order_id AS "orderId",
+    c.contact_id AS "contactId",
+    COALESCE(NULLIF(TRIM(c.customer_name), ''), ct.name) AS "customerName",
+    c.segment,
+    COALESCE(NULLIF(TRIM(c.contact_name), ''), ct.name) AS "contactName",
+    c.contact_role AS "contactRole",
+    c.deal_name AS "dealName",
+    c.value,
+    c.status,
+    c.start_date AS "startDate",
+    c.end_date AS "endDate",
+    c.owner_name AS "ownerName",
+    c.notes,
+    c.created_at AS "createdAt",
+    c.updated_at AS "updatedAt"
+  `;
+  private readonly contractJoins = `
+    LEFT JOIN contacts ct ON ct.id = c.contact_id AND ct.team_id = c.team_id
+  `;
+
+  private async generateContractNumber(teamId: string): Promise<string> {
+    const year = new Date().getFullYear();
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM sales_contracts
+        WHERE team_id = $1 AND contract_number LIKE $2`,
+      [teamId, `CON-${year}-%`],
+    );
+    const seq = (Number(rows[0]?.n) || 0) + 1;
+    return `CON-${year}-${String(seq).padStart(4, '0')}`;
+  }
+
+  async findAllContracts(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; status?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['c.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) {
+      where.push(`c.status = $${i++}`);
+      vals.push(params.status.trim());
+    }
+    if (params.search && params.search.trim()) {
+      where.push(
+        `(c.contract_number ILIKE $${i} OR c.customer_name ILIKE $${i} OR c.contact_name ILIKE $${i} OR c.deal_name ILIKE $${i} OR c.owner_name ILIKE $${i} OR ct.name ILIKE $${i})`,
+      );
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM sales_contracts c ${this.contractJoins} WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.contractSelect} FROM sales_contracts c ${this.contractJoins}
+        WHERE ${whereSql} ORDER BY c.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneContract(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Contract not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.contractSelect} FROM sales_contracts c ${this.contractJoins}
+        WHERE c.id = $1 AND c.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Contract not found');
+    return rows[0];
+  }
+
+  async createContract(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    if (dto.proposalId) await this.assertProposalInTeam(dto.proposalId, teamId);
+    if (dto.orderId) await this.assertOrderInTeam(dto.orderId, teamId);
+    const contractNumber =
+      (dto.contractNumber && dto.contractNumber.trim()) ||
+      (await this.generateContractNumber(teamId));
+    const { rows } = await this.db.query(
+      `INSERT INTO sales_contracts
+         (team_id, created_by, contract_number, proposal_id, order_id, contact_id,
+          customer_name, segment, contact_name, contact_role, deal_name, value,
+          status, start_date, end_date, owner_name, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+       RETURNING id`,
+      [
+        teamId,
+        userId,
+        contractNumber,
+        dto.proposalId || null,
+        dto.orderId || null,
+        dto.contactId || null,
+        dto.customerName || null,
+        dto.segment || null,
+        dto.contactName || null,
+        dto.contactRole || null,
+        dto.dealName || null,
+        dto.value ?? null,
+        (dto.status && dto.status.trim()) || 'Draft',
+        dto.startDate || null,
+        dto.endDate || null,
+        dto.ownerName || null,
+        dto.notes || null,
+      ],
+    );
+    return this.findOneContract(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateContract(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Contract not found');
+    const existing = await this.db.query(
+      `SELECT team_id FROM sales_contracts WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!existing.rows.length) throw new NotFoundException('Contract not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    if (dto.proposalId) await this.assertProposalInTeam(dto.proposalId, teamId);
+    if (dto.orderId) await this.assertOrderInTeam(dto.orderId, teamId);
+    const colFor: Record<string, string> = {
+      contractNumber: 'contract_number',
+      proposalId: 'proposal_id',
+      orderId: 'order_id',
+      contactId: 'contact_id',
+      customerName: 'customer_name',
+      segment: 'segment',
+      contactName: 'contact_name',
+      contactRole: 'contact_role',
+      dealName: 'deal_name',
+      value: 'value',
+      status: 'status',
+      startDate: 'start_date',
+      endDate: 'end_date',
+      ownerName: 'owner_name',
+      notes: 'notes',
+    };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push((dto as any)[key]);
+      }
+    }
+    if (!sets.length) return this.findOneContract(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(
+      `UPDATE sales_contracts SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
+      vals,
+    );
+    return this.findOneContract(id, userId, userTeamId, role);
+  }
+
+  async removeContract(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Contract not found');
+    const res = await this.db.query(
+      `DELETE FROM sales_contracts WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Contract not found');
+    return { success: true };
+  }
+
+  // ─── Returns ─────────────────────────────────────────────────────────────
+
+  private readonly returnSelect = `
+    r.id,
+    r.team_id AS "teamId",
+    r.return_number AS "returnNumber",
+    r.order_id AS "orderId",
+    o.order_number AS "orderNumber",
+    r.contact_id AS "contactId",
+    COALESCE(NULLIF(TRIM(r.customer_name), ''), ct.name) AS "customerName",
+    r.segment,
+    COALESCE(NULLIF(TRIM(r.contact_name), ''), ct.name) AS "contactName",
+    r.contact_role AS "contactRole",
+    r.reason,
+    r.value,
+    r.status,
+    r.completed_date AS "completedDate",
+    r.owner_name AS "ownerName",
+    r.notes,
+    r.created_at AS "createdAt",
+    r.updated_at AS "updatedAt"
+  `;
+  private readonly returnJoins = `
+    LEFT JOIN contacts ct ON ct.id = r.contact_id AND ct.team_id = r.team_id
+    LEFT JOIN sales_orders o ON o.id = r.order_id AND o.team_id = r.team_id
+  `;
+
+  private async generateReturnNumber(teamId: string): Promise<string> {
+    const year = new Date().getFullYear();
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM sales_returns
+        WHERE team_id = $1 AND return_number LIKE $2`,
+      [teamId, `RET-${year}-%`],
+    );
+    const seq = (Number(rows[0]?.n) || 0) + 1;
+    return `RET-${year}-${String(seq).padStart(4, '0')}`;
+  }
+
+  async findAllReturns(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; status?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['r.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) {
+      where.push(`r.status = $${i++}`);
+      vals.push(params.status.trim());
+    }
+    if (params.search && params.search.trim()) {
+      where.push(
+        `(r.return_number ILIKE $${i} OR r.customer_name ILIKE $${i} OR r.contact_name ILIKE $${i} OR r.owner_name ILIKE $${i} OR ct.name ILIKE $${i} OR o.order_number ILIKE $${i})`,
+      );
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM sales_returns r ${this.returnJoins} WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.returnSelect} FROM sales_returns r ${this.returnJoins}
+        WHERE ${whereSql} ORDER BY r.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneReturn(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Return not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.returnSelect} FROM sales_returns r ${this.returnJoins}
+        WHERE r.id = $1 AND r.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Return not found');
+    return rows[0];
+  }
+
+  async createReturn(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    if (dto.orderId) await this.assertOrderInTeam(dto.orderId, teamId);
+    const returnNumber =
+      (dto.returnNumber && dto.returnNumber.trim()) ||
+      (await this.generateReturnNumber(teamId));
+    const { rows } = await this.db.query(
+      `INSERT INTO sales_returns
+         (team_id, created_by, return_number, order_id, contact_id, customer_name,
+          segment, contact_name, contact_role, reason, value, status, completed_date,
+          owner_name, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+       RETURNING id`,
+      [
+        teamId,
+        userId,
+        returnNumber,
+        dto.orderId || null,
+        dto.contactId || null,
+        dto.customerName || null,
+        dto.segment || null,
+        dto.contactName || null,
+        dto.contactRole || null,
+        dto.reason || null,
+        dto.value ?? null,
+        (dto.status && dto.status.trim()) || 'Requested',
+        dto.completedDate || null,
+        dto.ownerName || null,
+        dto.notes || null,
+      ],
+    );
+    return this.findOneReturn(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateReturn(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Return not found');
+    const existing = await this.db.query(
+      `SELECT team_id FROM sales_returns WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!existing.rows.length) throw new NotFoundException('Return not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    if (dto.orderId) await this.assertOrderInTeam(dto.orderId, teamId);
+    const colFor: Record<string, string> = {
+      returnNumber: 'return_number',
+      orderId: 'order_id',
+      contactId: 'contact_id',
+      customerName: 'customer_name',
+      segment: 'segment',
+      contactName: 'contact_name',
+      contactRole: 'contact_role',
+      reason: 'reason',
+      value: 'value',
+      status: 'status',
+      completedDate: 'completed_date',
+      ownerName: 'owner_name',
+      notes: 'notes',
+    };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push((dto as any)[key]);
+      }
+    }
+    if (!sets.length) return this.findOneReturn(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(
+      `UPDATE sales_returns SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
+      vals,
+    );
+    return this.findOneReturn(id, userId, userTeamId, role);
+  }
+
+  async removeReturn(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Return not found');
+    const res = await this.db.query(
+      `DELETE FROM sales_returns WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Return not found');
+    return { success: true };
   }
 
   // Overview KPIs. In this first slice only Quotes exist, so quote-derived KPIs

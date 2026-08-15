@@ -24,6 +24,10 @@ import { CreateSalesProposalDto } from './dto/create-sales-proposal.dto';
 import { UpdateSalesProposalDto } from './dto/update-sales-proposal.dto';
 import { CreateSalesOrderDto } from './dto/create-sales-order.dto';
 import { UpdateSalesOrderDto } from './dto/update-sales-order.dto';
+import { CreateSalesContractDto } from './dto/create-sales-contract.dto';
+import { UpdateSalesContractDto } from './dto/update-sales-contract.dto';
+import { CreateSalesReturnDto } from './dto/create-sales-return.dto';
+import { UpdateSalesReturnDto } from './dto/update-sales-return.dto';
 
 // Sales Workspace API. JwtAuthGuard authenticates, PaymentGuard gates unpaid
 // accounts, and WorkspaceLockGuard enforces the $97 add-on ONLY when the 'sales'
@@ -284,6 +288,145 @@ export class SalesController {
   @ApiOperation({ summary: 'Delete an order (team-scoped)' })
   async removeOrder(@Param('id') id: string, @CurrentUser() user: any) {
     return this.sales.removeOrder(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ─── Contracts ───────────────────────────────────────────────────────────
+
+  @Get('contracts')
+  @ApiOperation({ summary: 'List contracts (paginated, filterable, team-scoped)' })
+  async listContracts(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.sales.findAllContracts(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, page, limit },
+    );
+  }
+
+  @Post('contracts')
+  @ApiOperation({ summary: 'Create a contract' })
+  async createContract(
+    @Body() dto: CreateSalesContractDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.sales.createContract(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('contracts/:id')
+  @ApiOperation({ summary: 'Get one contract (team-scoped)' })
+  async getContract(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.sales.findOneContract(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('contracts/:id')
+  @ApiOperation({ summary: 'Update a contract (team-scoped)' })
+  async updateContract(
+    @Param('id') id: string,
+    @Body() dto: UpdateSalesContractDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.sales.updateContract(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('contracts/:id')
+  @ApiOperation({ summary: 'Delete a contract (team-scoped)' })
+  async removeContract(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.sales.removeContract(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ─── Returns ─────────────────────────────────────────────────────────────
+
+  @Get('returns')
+  @ApiOperation({ summary: 'List returns (paginated, filterable, team-scoped)' })
+  async listReturns(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.sales.findAllReturns(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, page, limit },
+    );
+  }
+
+  @Post('returns')
+  @ApiOperation({ summary: 'Create a return' })
+  async createReturn(@Body() dto: CreateSalesReturnDto, @CurrentUser() user: any) {
+    return this.sales.createReturn(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('returns/:id')
+  @ApiOperation({ summary: 'Get one return (team-scoped)' })
+  async getReturn(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.sales.findOneReturn(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('returns/:id')
+  @ApiOperation({ summary: 'Update a return (team-scoped)' })
+  async updateReturn(
+    @Param('id') id: string,
+    @Body() dto: UpdateSalesReturnDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.sales.updateReturn(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('returns/:id')
+  @ApiOperation({ summary: 'Delete a return (team-scoped)' })
+  async removeReturn(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.sales.removeReturn(
       id,
       user.id,
       user.teamId ?? null,
