@@ -25,6 +25,8 @@ import {
 import "./SalesWorkspace.css";
 import salesApi from "../../api/salesApi";
 import QuoteModal from "./QuoteModal";
+import ProposalsSection from "./ProposalsSection";
+import OrdersSection from "./OrdersSection";
 
 // KPI card config. Values come from the live /sales/stats endpoint. In this first
 // slice only Quotes exist, so Open Quotes is real and the rest report 0 until
@@ -176,6 +178,17 @@ export default function SalesWorkspace() {
   };
   const closeModal = () => setModalOpen(false);
   const handleSaved = () => setRefreshTick((t) => t + 1);
+  const convertToProposal = async (id) => {
+    try {
+      await salesApi.convertQuoteToProposal(id);
+      handleSaved();
+      // eslint-disable-next-line no-alert
+      window.alert("Proposal created. Open the Proposals tab to see it.");
+    } catch (e) {
+      // eslint-disable-next-line no-alert
+      window.alert(e?.message || "Could not create proposal");
+    }
+  };
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const pipeline = stats?.pipeline || [];
@@ -405,6 +418,14 @@ export default function SalesWorkspace() {
                           <div className="sales-ws-row-actions">
                             <button
                               type="button"
+                              onClick={() => convertToProposal(quote.id)}
+                              aria-label="Create proposal from quote"
+                              title="Create proposal"
+                            >
+                              <ClipboardList size={14} />
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => openModal("view", quote.id)}
                               aria-label="View quote"
                             >
@@ -457,6 +478,10 @@ export default function SalesWorkspace() {
             </select>
           </div>
         </section>
+      ) : activeTab === "Proposals" ? (
+        <ProposalsSection />
+      ) : activeTab === "Orders" ? (
+        <OrdersSection />
       ) : (
         <section className="sales-ws-quotes">
           <div className="sales-ws-section-head">
