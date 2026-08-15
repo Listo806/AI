@@ -3828,7 +3828,9 @@ TEAM QUICK ACTIONS
   width: 100%;
   margin-bottom: 8px;
 }
-
+.team-workspace .cxc-select{
+  font-size: 10px;
+}
 .tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-donut,
 .tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-donut {
   grid-column: 1;

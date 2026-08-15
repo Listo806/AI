@@ -1,19 +1,46 @@
 import React from "react";
+import { useAuth } from "../context/AuthContext";
 import { usePlan } from "../context/PlanContext";
-import { FeatureLockScreen } from "./FeatureLock";
+import FeatureLockScreen from "./FeatureLock";
 
-// Route-level plan gate. Renders the feature for anyone who is allowed, and the
-// upgrade lock screen for a Free account that lacks the feature. Fails OPEN: the
-// plan hook returns "allowed" while loading or on error, so a hiccup never locks
-// a real user out. Paid/legacy accounts are always allowed (grandfathered).
-export default function FeatureRoute({ feature, title, description, children }) {
-  const { loading, hasFeature } = usePlan();
+const FEATURE_BYPASS_ROLES = new Set([
+  "super_admin",
+  "super-admin",
+]);
 
-  // Avoid flashing the real feature before the plan resolves.
-  if (loading) return null;
+export default function FeatureRoute({
+  feature,
+  title,
+  description,
+  children,
+}) {
+  const { user, loading: authLoading } = useAuth();
+  const plan = usePlan();
 
-  if (!hasFeature(feature)) {
-    return <FeatureLockScreen feature={feature} title={title} description={description} />;
+  const role = String(user?.role || "")
+    .trim()
+    .toLowerCase();
+
+  // Super Admin must never be blocked by plan/feature locks.
+  const bypassFeatureLock = FEATURE_BYPASS_ROLES.has(role);
+
+  if (authLoading) {
+    return null;
   }
+
+  if (bypassFeatureLock) {
+    return children;
+  }
+
+  if (!plan?.hasFeature?.(feature)) {
+    return (
+      <FeatureLockScreen
+        feature={feature}
+        title={title}
+        description={description}
+      />
+    );
+  }
+
   return children;
 }

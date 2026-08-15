@@ -219,3 +219,375 @@ export async function cancelPendingTeamInvite(
     invitationId,
   );
 }
+
+/* ======================================================
+ TEAM WORKSPACE — PROJECTS / TASKS / TIME TRACKING
+====================================================== */
+
+const teamWorkspaceBase = (teamId) =>
+  `/teams/${teamId}/workspace`;
+
+const buildTeamWorkspaceQuery = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (
+      value !== undefined &&
+      value !== null &&
+      value !== "" &&
+      value !== "all"
+    ) {
+      searchParams.set(key, String(value));
+    }
+  });
+
+  const queryString = searchParams.toString();
+
+  return queryString
+    ? `?${queryString}`
+    : "";
+};
+
+
+/* ======================================================
+ WORKSPACE OVERVIEW
+====================================================== */
+
+export async function fetchTeamWorkspaceOverview(
+  teamId
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  return await apiClient.request(
+    teamWorkspaceBase(teamId)
+  );
+}
+
+
+/* ======================================================
+ TASKS
+====================================================== */
+
+export async function fetchTeamWorkspaceTasks(
+  teamId,
+  params = {}
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(teamId)}/tasks${buildTeamWorkspaceQuery(
+      params
+    )}`
+  );
+}
+
+
+export async function createTeamWorkspaceTask(
+  teamId,
+  payload
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(teamId)}/tasks`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+
+export async function updateTeamWorkspaceTask(
+  teamId,
+  taskId,
+  payload
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  if (!taskId) {
+    throw new Error("Task ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(teamId)}/tasks/${taskId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+
+export async function deleteTeamWorkspaceTask(
+  teamId,
+  taskId
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  if (!taskId) {
+    throw new Error("Task ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(teamId)}/tasks/${taskId}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
+
+/* ======================================================
+ MY TASKS
+====================================================== */
+
+export async function fetchMyTeamWorkspaceTasks(
+  teamId,
+  params = {}
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  return await fetchTeamWorkspaceTasks(
+    teamId,
+    {
+      ...params,
+
+      // Backend lấy current logged-in user từ JWT.
+      my: true,
+    }
+  );
+}
+
+
+/* ======================================================
+ BOARD
+
+ Board dùng CHÍNH task API ở trên.
+ Không tạo bảng / data Board riêng.
+
+ Khi kéo task sang column khác:
+ updateTeamWorkspaceTask(teamId, taskId, {
+   status: "in_progress"
+ })
+
+ Sau đó Tasks / Board / Calendar đều dùng chung data.
+====================================================== */
+
+export async function moveTeamWorkspaceTask(
+  teamId,
+  taskId,
+  status
+) {
+  return await updateTeamWorkspaceTask(
+    teamId,
+    taskId,
+    {
+      status,
+    }
+  );
+}
+
+
+/* ======================================================
+ PROGRESS
+====================================================== */
+
+export async function updateTeamWorkspaceTaskProgress(
+  teamId,
+  taskId,
+  progress
+) {
+  const value = Number(progress);
+
+  if (
+    !Number.isFinite(value) ||
+    value < 0 ||
+    value > 100
+  ) {
+    throw new Error(
+      "Progress must be between 0 and 100"
+    );
+  }
+
+  return await updateTeamWorkspaceTask(
+    teamId,
+    taskId,
+    {
+      progress: value,
+    }
+  );
+}
+
+
+/* ======================================================
+ ASSIGNEE
+====================================================== */
+
+export async function assignTeamWorkspaceTask(
+  teamId,
+  taskId,
+  assigneeId
+) {
+  return await updateTeamWorkspaceTask(
+    teamId,
+    taskId,
+    {
+      assigneeId:
+        assigneeId || null,
+    }
+  );
+}
+
+
+/* ======================================================
+ DUE DATE
+
+ Calendar sử dụng dueDate từ cùng task record.
+====================================================== */
+
+export async function updateTeamWorkspaceTaskDueDate(
+  teamId,
+  taskId,
+  dueDate
+) {
+  return await updateTeamWorkspaceTask(
+    teamId,
+    taskId,
+    {
+      dueDate:
+        dueDate || null,
+    }
+  );
+}
+
+
+/* ======================================================
+ PRIORITY
+====================================================== */
+
+export async function updateTeamWorkspaceTaskPriority(
+  teamId,
+  taskId,
+  priority
+) {
+  return await updateTeamWorkspaceTask(
+    teamId,
+    taskId,
+    {
+      priority,
+    }
+  );
+}
+
+
+/* ======================================================
+ TIME TRACKING
+====================================================== */
+
+export async function logTeamWorkspaceTime(
+  teamId,
+  taskId,
+  payload
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  if (!taskId) {
+    throw new Error("Task ID is required");
+  }
+
+  const minutes = Number(
+    payload?.minutes || 0
+  );
+
+  if (
+    !Number.isFinite(minutes) ||
+    minutes <= 0
+  ) {
+    throw new Error(
+      "Minutes must be greater than 0"
+    );
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(
+      teamId
+    )}/tasks/${taskId}/time`,
+    {
+      method: "POST",
+
+      body: JSON.stringify({
+        ...payload,
+        minutes,
+      }),
+    }
+  );
+}
+
+
+/* ======================================================
+ PROJECTS
+====================================================== */
+
+export async function fetchTeamWorkspaceProjects(
+  teamId
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(
+      teamId
+    )}/projects`
+  );
+}
+
+
+export async function createTeamWorkspaceProject(
+  teamId,
+  payload
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(
+      teamId
+    )}/projects`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+export async function searchTeamWorkspace(
+  teamId,
+  query,
+  params = {}
+) {
+  return await fetchTeamWorkspaceTasks(
+    teamId,
+    {
+      ...params,
+      q: query,
+    }
+  );
+}
+
