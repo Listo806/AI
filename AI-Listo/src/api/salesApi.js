@@ -129,6 +129,38 @@ const salesApi = {
   deleteReturn(id) {
     return apiClient.request(`/sales/returns/${id}`, { method: "DELETE" });
   },
+
+  listInvoices(params = {}) {
+    return apiClient.request(`/sales/invoices${toQuery(params)}`, { method: "GET" });
+  },
+  getInvoice(id) {
+    return apiClient.request(`/sales/invoices/${id}`, { method: "GET" });
+  },
+  createInvoice(body) {
+    return apiClient.request(`/sales/invoices`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateInvoice(id, body) {
+    return apiClient.request(`/sales/invoices/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteInvoice(id) {
+    return apiClient.request(`/sales/invoices/${id}`, { method: "DELETE" });
+  },
+
+  listCommissions(params = {}) {
+    return apiClient.request(`/sales/commissions${toQuery(params)}`, { method: "GET" });
+  },
+  getCommission(id) {
+    return apiClient.request(`/sales/commissions/${id}`, { method: "GET" });
+  },
+  createCommission(body) {
+    return apiClient.request(`/sales/commissions`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateCommission(id, body) {
+    return apiClient.request(`/sales/commissions/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteCommission(id) {
+    return apiClient.request(`/sales/commissions/${id}`, { method: "DELETE" });
+  },
 };
 
 export default salesApi;

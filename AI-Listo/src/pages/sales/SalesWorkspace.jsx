@@ -29,6 +29,8 @@ import ProposalsSection from "./ProposalsSection";
 import OrdersSection from "./OrdersSection";
 import ContractsSection from "./ContractsSection";
 import ReturnsSection from "./ReturnsSection";
+import InvoicesSection from "./InvoicesSection";
+import CommissionsSection from "./CommissionsSection";
 
 // KPI card config. Values come from the live /sales/stats endpoint. In this first
 // slice only Quotes exist, so Open Quotes is real and the rest report 0 until
@@ -87,7 +89,7 @@ function statCard(key, stats) {
     case "commissionsDue":
       return { value: money(s.amount), sub: `${s.count || 0} Pending` };
     case "conversionRate":
-      return { value: `${s.percent || 0}%`, sub: "This Month" };
+      return { value: `${s.percent || 0}%`, sub: "Accepted vs closed" };
     default:
       return { value: "—", sub: "" };
   }
@@ -488,6 +490,10 @@ export default function SalesWorkspace() {
         <ContractsSection />
       ) : activeTab === "Returns" ? (
         <ReturnsSection />
+      ) : activeTab === "Invoices" ? (
+        <InvoicesSection />
+      ) : activeTab === "Commissions" ? (
+        <CommissionsSection />
       ) : (
         <section className="sales-ws-quotes">
           <div className="sales-ws-section-head">
