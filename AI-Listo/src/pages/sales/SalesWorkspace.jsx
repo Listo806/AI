@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Search,
   Plus,
-  Bell,
   Settings2,
   Download,
   Upload,
@@ -17,217 +16,175 @@ import {
   BadgeDollarSign,
   ShoppingCart,
   Percent,
-  Users,
   RotateCcw,
   Table2,
   List,
   CalendarDays,
-  CircleCheck,
-  Clock3,
-  ReceiptText,
   ChevronDown,
 } from "lucide-react";
 import "./SalesWorkspace.css";
+import salesApi from "../../api/salesApi";
+import QuoteModal from "./QuoteModal";
 
-const QUOTES = [
-  {
-    id: "Q-2025-1042",
-    customer: "TechFlow Solutions",
-    segment: "Enterprise",
-    contact: "Olivia Bennett",
-    role: "CTO",
-    deal: "Website Redesign",
-    stage: "Proposal Sent",
-    value: 8750,
-    status: "Sent",
-    valid: "May 30, 2025",
-    validNote: "5 days left",
-    owner: "John Smith",
-    created: "May 20, 2025",
-    createdTime: "10:24 AM",
-  },
-  {
-    id: "Q-2025-1041",
-    customer: "Bright Marketing",
-    segment: "SMB",
-    contact: "Ethan Walker",
-    role: "Marketing Director",
-    deal: "Brand Campaign",
-    stage: "Negotiation",
-    value: 14200,
-    status: "Viewed",
-    valid: "May 28, 2025",
-    validNote: "3 days left",
-    owner: "Sophia Martinez",
-    created: "May 19, 2025",
-    createdTime: "03:15 PM",
-  },
-  {
-    id: "Q-2025-1040",
-    customer: "GreenLeaf Realty",
-    segment: "Enterprise",
-    contact: "Sophia Martinez",
-    role: "Operations Manager",
-    deal: "CRM Implementation",
-    stage: "Proposal Sent",
-    value: 12500,
-    status: "Sent",
-    valid: "May 25, 2025",
-    validNote: "0 days left",
-    owner: "Liam Johnson",
-    created: "May 19, 2025",
-    createdTime: "11:45 AM",
-  },
-  {
-    id: "Q-2025-1039",
-    customer: "Summit Enterprises",
-    segment: "Enterprise",
-    contact: "Liam Johnson",
-    role: "IT Director",
-    deal: "Software Licenses",
-    stage: "Qualification",
-    value: 6300,
-    status: "Draft",
-    valid: "May 31, 2025",
-    validNote: "6 days left",
-    owner: "John Smith",
-    created: "May 18, 2025",
-    createdTime: "09:20 AM",
-  },
-  {
-    id: "Q-2025-1038",
-    customer: "Innovate Labs",
-    segment: "SMB",
-    contact: "Noah Davis",
-    role: "Founder",
-    deal: "Mobile App",
-    stage: "Negotiation",
-    value: 20900,
-    status: "Viewed",
-    valid: "May 29, 2025",
-    validNote: "4 days left",
-    owner: "Olivia Bennett",
-    created: "May 18, 2025",
-    createdTime: "08:50 AM",
-  },
-  {
-    id: "Q-2025-1037",
-    customer: "NextGen Industries",
-    segment: "Enterprise",
-    contact: "Ava Thompson",
-    role: "COO",
-    deal: "System Integration",
-    stage: "Proposal Sent",
-    value: 18750,
-    status: "Sent",
-    valid: "Jun 02, 2025",
-    validNote: "8 days left",
-    owner: "Sophia Martinez",
-    created: "May 17, 2025",
-    createdTime: "02:30 PM",
-  },
-  {
-    id: "Q-2025-1036",
-    customer: "Pulse Technologies",
-    segment: "SMB",
-    contact: "Mason Clark",
-    role: "Sales Manager",
-    deal: "Annual Subscription",
-    stage: "Qualification",
-    value: 3450,
-    status: "Draft",
-    valid: "May 26, 2025",
-    validNote: "1 day left",
-    owner: "Liam Johnson",
-    created: "May 17, 2025",
-    createdTime: "10:15 AM",
-  },
-  {
-    id: "Q-2025-1035",
-    customer: "BlueStone Architects",
-    segment: "SMB",
-    contact: "Isabella White",
-    role: "Project Manager",
-    deal: "Design Software",
-    stage: "Proposal Sent",
-    value: 4900,
-    status: "Sent",
-    valid: "May 27, 2025",
-    validNote: "2 days left",
-    owner: "John Smith",
-    created: "May 16, 2025",
-    createdTime: "04:05 PM",
-  },
+// KPI card config. Values come from the live /sales/stats endpoint. In this first
+// slice only Quotes exist, so Open Quotes is real and the rest report 0 until
+// their tabs are wired — no invented numbers, and no fake "vs last month" trend
+// (comparisons appear only once real history exists).
+const STAT_CONFIG = [
+  { key: "openQuotes", label: "Open Quotes", noun: "Quotes", Icon: FileText, tone: "blue" },
+  { key: "openProposals", label: "Open Proposals", noun: "Proposals", Icon: ClipboardList, tone: "purple" },
+  { key: "ordersThisMonth", label: "Orders This Month", noun: "Orders", Icon: PackageCheck, tone: "green" },
+  { key: "outstandingInvoices", label: "Outstanding Invoices", noun: "Invoices", Icon: BadgeDollarSign, tone: "amber" },
+  { key: "commissionsDue", label: "Commissions Due", Icon: ShoppingCart, tone: "cyan" },
+  { key: "conversionRate", label: "Conversion Rate", Icon: Percent, tone: "pink" },
 ];
 
-const SALES_STATS = [
-  ["Open Quotes", "$124,750", "28 Quotes", "18%", FileText, "blue"],
-  ["Open Proposals", "$98,420", "19 Proposals", "14%", ClipboardList, "purple"],
-  ["Orders This Month", "$265,480", "32 Orders", "24%", PackageCheck, "green"],
-  [
-    "Outstanding Invoices",
-    "$87,430",
-    "16 Invoices",
-    "12%",
-    BadgeDollarSign,
-    "amber",
-  ],
-  ["Commissions Due", "$21,650", "8 Pending", "15%", ShoppingCart, "cyan"],
-  ["Conversion Rate", "24.6%", "This Month", "6%", Percent, "pink"],
-];
+function money(value) {
+  const n = Number(value) || 0;
+  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+}
 
-const PIPELINE = [
-  ["Qualification", "$45,250", "12 Deals", "blue"],
-  ["Proposal Sent", "$78,600", "18 Deals", "green"],
-  ["Negotiation", "$56,300", "9 Deals", "amber"],
-  ["Order", "$128,760", "16 Deals", "purple"],
-  ["Won", "$96,400", "14 Deals", "mint"],
-];
+function formatDate(value) {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+}
 
-const ACTIVITY = [
-  [
-    "New quote created",
-    "Q-2025-1042 for TechFlow Solutions",
-    "10:24 AM",
-    ShoppingCart,
-  ],
-  ["Quote viewed", "Q-2025-1041 by Ethan Walker", "09:15 AM", Eye],
-  [
-    "Order confirmed",
-    "SO-2025-1540 for GreenLeaf Realty",
-    "Yesterday",
-    PackageCheck,
-  ],
-  [
-    "Invoice paid",
-    "INV-2025-2156 from Bright Marketing",
-    "Yesterday",
-    ReceiptText,
-  ],
-];
+function daysLeftNote(validUntil) {
+  if (!validUntil) return { text: "", danger: false };
+  const d = new Date(validUntil);
+  if (isNaN(d.getTime())) return { text: "", danger: false };
+  const diff = Math.ceil((d.getTime() - Date.now()) / 86400000);
+  if (diff < 0) return { text: "expired", danger: true };
+  if (diff === 0) return { text: "0 days left", danger: true };
+  return { text: `${diff} day${diff === 1 ? "" : "s"} left`, danger: false };
+}
 
-const REPS = [
-  ["John Smith", "$42,850", "14 Orders"],
-  ["Sophia Martinez", "$31,200", "11 Orders"],
-  ["Liam Johnson", "$26,540", "9 Orders"],
-  ["Olivia Bennett", "$18,910", "6 Orders"],
-  ["Ethan Walker", "$9,260", "4 Orders"],
+function initials(name) {
+  return String(name || "")
+    .split(" ")
+    .map((x) => x[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+// Build a KPI card's value + sub-line from the live stats payload.
+function statCard(key, stats) {
+  const s = stats?.[key];
+  if (!s) return { value: "—", sub: "" };
+  switch (key) {
+    case "openQuotes":
+    case "openProposals":
+    case "ordersThisMonth":
+    case "outstandingInvoices":
+      return { value: money(s.value), sub: `${(s.count || 0).toLocaleString("en-US")} ${STAT_CONFIG.find((c) => c.key === key).noun}` };
+    case "commissionsDue":
+      return { value: money(s.amount), sub: `${s.count || 0} Pending` };
+    case "conversionRate":
+      return { value: `${s.percent || 0}%`, sub: "This Month" };
+    default:
+      return { value: "—", sub: "" };
+  }
+}
+
+const TABS = [
+  "Overview",
+  "Customers",
+  "Quotes",
+  "Proposals",
+  "Orders",
+  "Contracts",
+  "Invoices",
+  "Commissions",
+  "Returns",
 ];
 
 export default function SalesWorkspace() {
   const [activeTab, setActiveTab] = useState("Quotes");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
-  const rows = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return QUOTES;
-    return QUOTES.filter((item) =>
-      [item.id, item.customer, item.contact, item.deal, item.owner]
-        .join(" ")
-        .toLowerCase()
-        .includes(q),
-    );
+  const [quotes, setQuotes] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [stats, setStats] = useState(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [modalQuoteId, setModalQuoteId] = useState(null);
+  const [modalNonce, setModalNonce] = useState(0);
+
+  // Debounce the section search into server-side queries.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
   }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, limit]);
+
+  // Overview KPIs + summary cards (keep last-good on transient error).
+  useEffect(() => {
+    let alive = true;
+    salesApi
+      .getStats()
+      .then((s) => {
+        if (alive) setStats(s);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [refreshTick]);
+
+  // Live quotes for the Quotes tab.
+  useEffect(() => {
+    if (activeTab !== "Quotes") return undefined;
+    let alive = true;
+    setLoading(true);
+    salesApi
+      .listQuotes({ search: debouncedSearch || undefined, page, limit })
+      .then((res) => {
+        if (!alive) return;
+        setQuotes(res?.data || []);
+        setTotal(res?.total || 0);
+        setError("");
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setError("Could not load quotes.");
+        setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [activeTab, debouncedSearch, page, limit, refreshTick]);
+
+  const openModal = (mode, id = null) => {
+    setModalMode(mode);
+    setModalQuoteId(id);
+    setModalNonce((n) => n + 1);
+    setModalOpen(true);
+  };
+  const closeModal = () => setModalOpen(false);
+  const handleSaved = () => setRefreshTick((t) => t + 1);
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const pipeline = stats?.pipeline || [];
+  const activity = stats?.recentActivity || [];
+  const reps = stats?.topReps || [];
+  const pipelineTotal = pipeline.reduce((sum, p) => sum + (Number(p.value) || 0), 0);
+
+  const from = total === 0 ? 0 : (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
 
   return (
     <div className="sales-ws">
@@ -243,7 +200,7 @@ export default function SalesWorkspace() {
             <input placeholder="Search anything..." />
             <kbd>⌘ K</kbd>
           </label>
-          <button className="sales-ws-quick-create">
+          <button className="sales-ws-quick-create" onClick={() => openModal("create")}>
             <Plus size={15} />
             Quick Create
           </button>
@@ -251,33 +208,23 @@ export default function SalesWorkspace() {
       </div>
 
       <div className="sales-ws-stat-grid">
-        {SALES_STATS.map(([label, value, sub, change, Icon, tone]) => (
-          <div className="sales-ws-stat-card" key={label}>
-            <div className={`sales-ws-stat-icon ${tone}`}>
-              <Icon size={18} />
+        {STAT_CONFIG.map(({ key, label, Icon, tone }) => {
+          const { value, sub } = statCard(key, stats);
+          return (
+            <div className="sales-ws-stat-card" key={key}>
+              <div className={`sales-ws-stat-icon ${tone}`}>
+                <Icon size={18} />
+              </div>
+              <span>{label}</span>
+              <strong>{value}</strong>
+              <small>{sub}</small>
             </div>
-            <span>{label}</span>
-            <strong>{value}</strong>
-            <small>{sub}</small>
-            <em>
-              ↑ {change} <b>vs last month</b>
-            </em>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <nav className="sales-ws-tabs">
-        {[
-          "Overview",
-          "Customers",
-          "Quotes",
-          "Proposals",
-          "Orders",
-          "Contracts",
-          "Invoices",
-          "Commissions",
-          "Returns",
-        ].map((tab) => (
+        {TABS.map((tab) => (
           <button
             key={tab}
             type="button"
@@ -289,194 +236,237 @@ export default function SalesWorkspace() {
         ))}
       </nav>
 
-      <section className="sales-ws-quotes">
-        <div className="sales-ws-section-head">
-          <div>
-            <h2>{activeTab}</h2>
-            <p>
-              {activeTab === "Quotes"
-                ? "Create, manage and track all your quotes"
-                : `${activeTab} workspace is ready for the next implementation step.`}
-            </p>
+      {activeTab === "Quotes" ? (
+        <section className="sales-ws-quotes">
+          <div className="sales-ws-section-head">
+            <div>
+              <h2>Quotes</h2>
+              <p>Create, manage and track all your quotes</p>
+            </div>
+
+            <div className="sales-ws-section-actions">
+              <button>
+                <Upload size={14} /> Import
+              </button>
+              <button>
+                <Download size={14} /> Export
+              </button>
+              <button>
+                <Settings2 size={14} />
+              </button>
+              <button className="primary" onClick={() => openModal("create")}>
+                <Plus size={14} /> New Quote
+              </button>
+            </div>
           </div>
 
-          <div className="sales-ws-section-actions">
+          <div className="sales-ws-filters">
+            <label>
+              <Search size={14} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search quotes..."
+              />
+            </label>
+
+            {["Status", "Owner", "Date Range", "Pipeline", "More Filters"].map((item) => (
+              <button key={item}>
+                {item}
+                <ChevronDown size={14} />
+              </button>
+            ))}
+
+            <button className="reset" onClick={() => setSearch("")}>
+              <RotateCcw size={13} /> Reset
+            </button>
+
+            <span>View</span>
             <button>
-              <Upload size={14} /> Import
+              <Table2 size={13} /> Table
             </button>
             <button>
-              <Download size={14} /> Export
+              <List size={13} />
             </button>
             <button>
-              <Settings2 size={14} />
-            </button>
-            <button className="primary">
-              <Plus size={14} /> New Quote
+              <CalendarDays size={13} />
             </button>
           </div>
-        </div>
 
-        <div className="sales-ws-filters">
-          <label>
-            <Search size={14} />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search quotes..."
-            />
-          </label>
-
-          {["Status", "Owner", "Date Range", "Pipeline", "More Filters"].map(
-            (item) => (
-              <button key={item}>{item}<ChevronDown size={14}/></button>
-            ),
-          )}
-
-          <button className="reset">
-            <RotateCcw size={13} /> Reset
-          </button>
-
-          <span>View</span>
-          <button>
-            <Table2 size={13} /> Table
-          </button>
-          <button>
-            <List size={13} />
-          </button>
-          <button>
-            <CalendarDays size={13} />
-          </button>
-        </div>
-
-        <div className="sales-ws-table-wrap">
-          <table className="sales-ws-table">
-            <thead>
-              <tr>
-                <th>
-                  <input type="checkbox" />
-                </th>
-                <th>Quote #</th>
-                <th>Customer</th>
-                <th>Contact</th>
-                <th>Pipeline / Deal</th>
-                <th>Value</th>
-                <th>Status</th>
-                <th>Valid Until</th>
-                <th>Owner</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rows.map((quote) => (
-                <tr key={quote.id}>
-                  <td>
+          <div className="sales-ws-table-wrap">
+            <table className="sales-ws-table">
+              <thead>
+                <tr>
+                  <th>
                     <input type="checkbox" />
-                  </td>
-                  <td className="quote-id">{quote.id}</td>
-
-                  <td>
-                    <div className="sales-ws-customer">
-                      <strong>{quote.customer}</strong>
-                      <span>{quote.segment}</span>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="sales-ws-two-line">
-                      <strong>{quote.contact}</strong>
-                      <span>{quote.role}</span>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="sales-ws-two-line deal">
-                      <strong>{quote.deal}</strong>
-                      <span>{quote.stage}</span>
-                    </div>
-                  </td>
-
-                  <td className="sales-ws-money">
-                    $
-                    {quote.value.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </td>
-
-                  <td>
-                    <span
-                      className={`sales-ws-status ${quote.status.toLowerCase()}`}
-                    >
-                      {quote.status}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div className="sales-ws-valid">
-                      <strong>{quote.valid}</strong>
-                      <span
-                        className={
-                          quote.validNote.startsWith("0") ? "danger" : ""
-                        }
-                      >
-                        {quote.validNote}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="sales-ws-owner">
-                      <span>
-                        {quote.owner
-                          .split(" ")
-                          .map((x) => x[0])
-                          .join("")
-                          .slice(0, 2)}
-                      </span>
-                      {quote.owner}
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="sales-ws-two-line">
-                      <strong>{quote.created}</strong>
-                      <span>{quote.createdTime}</span>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="sales-ws-row-actions">
-                      <Eye size={14} />
-                      <Pencil size={14} />
-                      <MoreVertical size={14} />
-                    </div>
-                  </td>
+                  </th>
+                  <th>Quote #</th>
+                  <th>Customer</th>
+                  <th>Contact</th>
+                  <th>Pipeline / Deal</th>
+                  <th>Value</th>
+                  <th>Status</th>
+                  <th>Valid Until</th>
+                  <th>Owner</th>
+                  <th>Created</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
 
-        <div className="sales-ws-pagination">
-          <span>Showing 1 to 8 of 28 quotes</span>
-          <div>
-            <button>
-              <ChevronLeft size={14} />
-            </button>
-            <button className="active">1</button>
-            <button>2</button>
-            <button>3</button>
-            <button>4</button>
-            <button>
-              <ChevronRight size={14} />
-            </button>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={11} className="sales-ws-empty-row">
+                      Loading…
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={11} className="sales-ws-empty-row">
+                      {error}
+                    </td>
+                  </tr>
+                ) : quotes.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="sales-ws-empty-row">
+                      No quotes yet. Create your first quote to get started.
+                    </td>
+                  </tr>
+                ) : (
+                  quotes.map((quote) => {
+                    const valid = daysLeftNote(quote.validUntil);
+                    return (
+                      <tr key={quote.id}>
+                        <td>
+                          <input type="checkbox" />
+                        </td>
+                        <td className="quote-id">{quote.quoteNumber || "-"}</td>
+
+                        <td>
+                          <div className="sales-ws-customer">
+                            <strong>{quote.customerName || "-"}</strong>
+                            {quote.segment && <span>{quote.segment}</span>}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="sales-ws-two-line">
+                            <strong>{quote.contactName || "-"}</strong>
+                            {quote.contactRole && <span>{quote.contactRole}</span>}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="sales-ws-two-line deal">
+                            <strong>{quote.dealName || "-"}</strong>
+                            {quote.stage && <span>{quote.stage}</span>}
+                          </div>
+                        </td>
+
+                        <td className="sales-ws-money">
+                          {quote.value != null ? money(quote.value) : "-"}
+                        </td>
+
+                        <td>
+                          <span
+                            className={`sales-ws-status ${String(quote.status || "").toLowerCase()}`}
+                          >
+                            {quote.status || "-"}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div className="sales-ws-valid">
+                            <strong>{formatDate(quote.validUntil)}</strong>
+                            {valid.text && (
+                              <span className={valid.danger ? "danger" : ""}>{valid.text}</span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td>
+                          {quote.ownerName ? (
+                            <div className="sales-ws-owner">
+                              <span>{initials(quote.ownerName)}</span>
+                              {quote.ownerName}
+                            </div>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+
+                        <td>
+                          <div className="sales-ws-two-line">
+                            <strong>{formatDate(quote.createdAt)}</strong>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="sales-ws-row-actions">
+                            <button
+                              type="button"
+                              onClick={() => openModal("view", quote.id)}
+                              aria-label="View quote"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openModal("edit", quote.id)}
+                              aria-label="Edit quote"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openModal("view", quote.id)}
+                              aria-label="More"
+                            >
+                              <MoreVertical size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-          <select defaultValue="20">
-            <option value="20">20 / page</option>
-          </select>
-        </div>
-      </section>
+
+          <div className="sales-ws-pagination">
+            <span>
+              Showing {from} to {to} of {total.toLocaleString("en-US")} quotes
+            </span>
+            <div>
+              <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <ChevronLeft size={14} />
+              </button>
+              <button className="active">{page}</button>
+              <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+            <select
+              value={limit}
+              onChange={(e) => setLimit(Number(e.target.value))}
+            >
+              <option value="20">20 / page</option>
+              <option value="50">50 / page</option>
+              <option value="100">100 / page</option>
+            </select>
+          </div>
+        </section>
+      ) : (
+        <section className="sales-ws-quotes">
+          <div className="sales-ws-section-head">
+            <div>
+              <h2>{activeTab}</h2>
+              <p>{activeTab} workspace is ready for the next implementation step.</p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="sales-ws-bottom">
         <div className="sales-ws-bottom-card pipeline">
@@ -486,18 +476,24 @@ export default function SalesWorkspace() {
           </div>
 
           <div className="sales-ws-pipeline">
-            {PIPELINE.map(([label, value, count, tone]) => (
-              <div key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-                <small>{count}</small>
-                <i className={tone} />
+            {pipeline.length === 0 ? (
+              <div>
+                <span>No pipeline data yet</span>
               </div>
-            ))}
+            ) : (
+              pipeline.map((p) => (
+                <div key={p.label}>
+                  <span>{p.label}</span>
+                  <strong>{money(p.value)}</strong>
+                  <small>{p.dealCount || 0} Deals</small>
+                  <i className={p.tone || "blue"} />
+                </div>
+              ))
+            )}
           </div>
 
           <div className="sales-ws-pipeline-total">
-            Total Pipeline Value: <strong>$405,310</strong>
+            Total Pipeline Value: <strong>{money(pipelineTotal)}</strong>
           </div>
         </div>
 
@@ -508,18 +504,23 @@ export default function SalesWorkspace() {
           </div>
 
           <div className="sales-ws-activity-list">
-            {ACTIVITY.map(([title, sub, time, Icon]) => (
-              <div className="sales-ws-activity-row" key={title}>
-                <span>
-                  <Icon size={13} />
-                </span>
+            {activity.length === 0 ? (
+              <div className="sales-ws-activity-row">
                 <div>
-                  <strong>{title}</strong>
-                  <small>{sub}</small>
+                  <small>No recent activity</small>
                 </div>
-                <time>{time}</time>
               </div>
-            ))}
+            ) : (
+              activity.map((a, i) => (
+                <div className="sales-ws-activity-row" key={`${a.title}-${i}`}>
+                  <div>
+                    <strong>{a.title}</strong>
+                    {a.subtitle && <small>{a.subtitle}</small>}
+                  </div>
+                  <time>{a.time || ""}</time>
+                </div>
+              ))
+            )}
           </div>
 
           <button className="sales-ws-link-btn">View all activity →</button>
@@ -532,26 +533,35 @@ export default function SalesWorkspace() {
           </div>
 
           <div className="sales-ws-reps">
-            {REPS.map(([name, amount, orders], index) => (
-              <div key={name}>
-                <b>{index + 1}</b>
-                <span className="avatar">
-                  {name
-                    .split(" ")
-                    .map((x) => x[0])
-                    .join("")
-                    .slice(0, 2)}
-                </span>
-                <strong>{name}</strong>
-                <span>{amount}</span>
-                <small>{orders}</small>
+            {reps.length === 0 ? (
+              <div>
+                <span>No data yet</span>
               </div>
-            ))}
+            ) : (
+              reps.map((r, index) => (
+                <div key={r.name || index}>
+                  <b>{index + 1}</b>
+                  <span className="avatar">{initials(r.name)}</span>
+                  <strong>{r.name}</strong>
+                  <span>{money(r.amount)}</span>
+                  <small>{r.orders || 0} Orders</small>
+                </div>
+              ))
+            )}
           </div>
 
           <button className="sales-ws-link-btn">View full leaderboard →</button>
         </div>
       </div>
+
+      <QuoteModal
+        key={modalNonce}
+        open={modalOpen}
+        mode={modalMode}
+        quoteId={modalQuoteId}
+        onClose={closeModal}
+        onSaved={handleSaved}
+      />
     </div>
   );
 }
