@@ -67,6 +67,73 @@ const financialApi = {
   deleteAccount(id) {
     return apiClient.request(`/financial/accounts/${id}`, { method: "DELETE" });
   },
+
+  listTransactions(params = {}) {
+    return apiClient.request(`/financial/transactions${toQuery(params)}`, { method: "GET" });
+  },
+  getTransaction(id) {
+    return apiClient.request(`/financial/transactions/${id}`, { method: "GET" });
+  },
+  createTransaction(body) {
+    return apiClient.request(`/financial/transactions`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateTransaction(id, body) {
+    return apiClient.request(`/financial/transactions/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteTransaction(id) {
+    return apiClient.request(`/financial/transactions/${id}`, { method: "DELETE" });
+  },
+
+  listInvestments(params = {}) {
+    return apiClient.request(`/financial/investments${toQuery(params)}`, { method: "GET" });
+  },
+  getInvestment(id) {
+    return apiClient.request(`/financial/investments/${id}`, { method: "GET" });
+  },
+  createInvestment(body) {
+    return apiClient.request(`/financial/investments`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateInvestment(id, body) {
+    return apiClient.request(`/financial/investments/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteInvestment(id) {
+    return apiClient.request(`/financial/investments/${id}`, { method: "DELETE" });
+  },
+
+  listCommissions(params = {}) {
+    return apiClient.request(`/financial/commissions${toQuery(params)}`, { method: "GET" });
+  },
+  getCommission(id) {
+    return apiClient.request(`/financial/commissions/${id}`, { method: "GET" });
+  },
+  createCommission(body) {
+    return apiClient.request(`/financial/commissions`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateCommission(id, body) {
+    return apiClient.request(`/financial/commissions/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteCommission(id) {
+    return apiClient.request(`/financial/commissions/${id}`, { method: "DELETE" });
+  },
+
+  listDocuments(params = {}) {
+    return apiClient.request(`/financial/documents${toQuery(params)}`, { method: "GET" });
+  },
+  // Multipart upload; apiClient strips Content-Type for FormData so the browser
+  // sets the multipart boundary.
+  uploadDocument(formData) {
+    return apiClient.request(`/financial/documents`, { method: "POST", body: formData });
+  },
+  getDocumentLink(id) {
+    return apiClient.request(`/financial/documents/${id}/link`, { method: "GET" });
+  },
+  deleteDocument(id) {
+    return apiClient.request(`/financial/documents/${id}`, { method: "DELETE" });
+  },
+
+  getReports() {
+    return apiClient.request(`/financial/reports`, { method: "GET" });
+  },
 };
 
 export default financialApi;

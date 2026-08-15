@@ -4,7 +4,13 @@ import financialApi from "../../api/financialApi";
 import ClientModal from "./ClientModal";
 import ApplicationsSection from "./ApplicationsSection";
 import AccountsSection from "./AccountsSection";
-import { money, formatDate, relativeTime, initials } from "../sales/salesFormat";
+import TransactionsSection from "./TransactionsSection";
+import InvestmentsSection from "./InvestmentsSection";
+import CommissionsSection from "./CommissionsSection";
+import FinancialDocumentsSection from "./FinancialDocumentsSection";
+import FinancialReportsSection from "./FinancialReportsSection";
+import FinancialOverviewSection from "./FinancialOverviewSection";
+import { money, formatDate, initials } from "../sales/salesFormat";
 
 // KPI cards driven by the live /financial/stats endpoint. In this first slice only
 // Clients exist, so Total Clients and (recorded) AUM are real and the rest report 0
@@ -48,7 +54,7 @@ function statValue(key, stats) {
     case "assetsUnderManagement":
       return { value: money(s?.amount || 0), sub: "Total AUM (recorded)" };
     case "revenueThisMonth":
-      return { value: money(s?.amount || 0), sub: "Total Revenue" };
+      return { value: money(s?.amount || 0), sub: "Approved + paid this month" };
     case "conversionRate":
       return { value: `${s?.percent || 0}%`, sub: "Applications approved" };
     default:
@@ -56,37 +62,8 @@ function statValue(key, stats) {
   }
 }
 
-function Donut({ title, rows, empty }) {
-  const list = rows || [];
-  return (
-    <div className="fsw-panel fsw-donut-panel">
-      <div className="fsw-panel-head">
-        <b>{title}</b>
-        <select>
-          <option>This Month</option>
-        </select>
-      </div>
-      <div className="fsw-donut-body">
-        <div className="fsw-legend">
-          {list.length === 0 ? (
-            <p style={{ color: "#94a3b8", fontSize: 13 }}>{empty}</p>
-          ) : (
-            list.map((r, i) => (
-              <div key={r.label}>
-                <span className={`dot d${i}`}></span>
-                <span>{r.label}</span>
-                <b>{r.value}</b>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function FinancialServicesWorkspace() {
-  const [tab, setTab] = useState("Clients");
+  const [tab, setTab] = useState("Overview");
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [clientType, setClientType] = useState("Client Type");
@@ -172,8 +149,6 @@ export default function FinancialServicesWorkspace() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const from = total === 0 ? 0 : (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
-  const reviews = stats?.upcomingReviews || [];
-  const activity = stats?.recentActivity || [];
 
   return (
     <div className="fsw-page">
@@ -221,7 +196,9 @@ export default function FinancialServicesWorkspace() {
         ))}
       </nav>
 
-      {tab === "Clients" ? (
+      {tab === "Overview" ? (
+        <FinancialOverviewSection stats={stats} />
+      ) : tab === "Clients" ? (
         <>
           <section className="fsw-section-title">
             <div>
@@ -353,66 +330,21 @@ export default function FinancialServicesWorkspace() {
               </select>
             </div>
           </div>
-
-          <section className="fsw-bottom-grid">
-            <Donut
-              title="Applications by Status"
-              empty="No applications yet"
-              rows={(stats?.applicationsByStatus || []).map((a) => ({ label: a.status, value: a.count }))}
-            />
-            <Donut title="Portfolio Allocation (AUM)" empty="No portfolio data yet" />
-            <div className="fsw-panel">
-              <div className="fsw-panel-head">
-                <b>Recent Activity</b>
-                <select><option>All Activity</option></select>
-              </div>
-              <div className="fsw-activity">
-                {activity.length === 0 ? (
-                  <div><p><small>No recent activity</small></p></div>
-                ) : (
-                  activity.map((a, i) => (
-                    <div key={`${a.title}-${i}`}>
-                      <span><Icon name="activity" /></span>
-                      <p>
-                        <b>{a.title}</b>
-                        {a.subtitle && <small>{a.subtitle}</small>}
-                      </p>
-                      <time>{relativeTime(a.at)}</time>
-                    </div>
-                  ))
-                )}
-              </div>
-              <button className="fsw-link">View all activity <Icon name="arrow-right" /></button>
-            </div>
-            <div className="fsw-panel">
-              <div className="fsw-panel-head">
-                <b>Upcoming Reviews</b>
-                <select><option>Next 30 Days</option></select>
-              </div>
-              <div className="fsw-reviews">
-                {reviews.length === 0 ? (
-                  <div><p><small>No reviews in the next 30 days</small></p></div>
-                ) : (
-                  reviews.map((r, i) => (
-                    <div key={i}>
-                      <span className={`avatar a${i % 4}`}>{initials(r.clientName)}</span>
-                      <p>
-                        <b>{r.clientName || "-"}</b>
-                        <small>Review</small>
-                      </p>
-                      <time>{formatDate(r.nextReviewDate)}</time>
-                    </div>
-                  ))
-                )}
-              </div>
-              <button className="fsw-link">View all reviews <Icon name="arrow-right" /></button>
-            </div>
-          </section>
         </>
       ) : tab === "Applications" ? (
         <ApplicationsSection />
       ) : tab === "Accounts" ? (
         <AccountsSection />
+      ) : tab === "Transactions" ? (
+        <TransactionsSection />
+      ) : tab === "Investments" ? (
+        <InvestmentsSection />
+      ) : tab === "Documents" ? (
+        <FinancialDocumentsSection />
+      ) : tab === "Commissions" ? (
+        <CommissionsSection />
+      ) : tab === "Reports" ? (
+        <FinancialReportsSection />
       ) : (
         <div className="fsw-placeholder">
           <Icon name={TABS.find((x) => x[1] === tab)?.[0] || "landmark"} size={38} />
