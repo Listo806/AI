@@ -22,6 +22,13 @@ import {
   Table2,
   ChevronLeft,
   ChevronRight,
+  X,
+  Trash2,
+  FolderOpen,
+  LayoutDashboard,
+  Columns3,
+  CircleUserRound,
+  BarChart3,
 } from "lucide-react";
 
 import "./team.css";
@@ -65,6 +72,9 @@ import {
   moveTeamWorkspaceTask,
   logTeamWorkspaceTime,
   createTeamWorkspaceProject,
+  fetchTeamWorkspaceProjectDetail,
+  updateTeamWorkspaceProject,
+  deleteTeamWorkspaceProject,
   fetchTeamWorkspaceFiles,
   uploadTeamWorkspaceFile,
   getTeamWorkspaceFileUrl,
@@ -255,16 +265,16 @@ export default function TeamWorkspace() {
      ===================================================== */
 
   const WORKSPACE_TABS = [
-    "Overview",
-    "Projects",
-    "Board",
-    "Tasks",
-    "My Tasks",
-    "Calendar",
-    "Time Tracking",
-    "Files",
-    "Team",
-    "Reports",
+     { label: "Overview", icon: LayoutDashboard },
+      { label: "Projects", icon: FolderKanban },
+      { label: "Board", icon: Columns3 },
+      { label: "Tasks", icon: ListTodo },
+      { label: "My Tasks", icon: CircleUserRound },
+      { label: "Calendar", icon: CalendarDays },
+      { label: "Time Tracking", icon: Clock3 },
+      { label: "Files", icon: FileText },
+      { label: "Team", icon: Users },
+      { label: "Reports", icon: BarChart3 },
   ];
 
   const [workspaceTab, setWorkspaceTab] = useState("Tasks");
@@ -276,6 +286,11 @@ export default function TeamWorkspace() {
     data: [],
     pagination: { page: 1, limit: 20, total: 0, totalPages: 1 },
   });
+
+  const [workspaceBoardTasks, setWorkspaceBoardTasks] = useState([]);
+  const [workspaceBoardLoading, setWorkspaceBoardLoading] = useState(false);
+  const [workspaceBoardDraggingId, setWorkspaceBoardDraggingId] = useState(null);
+  const [workspaceBoardOverStatus, setWorkspaceBoardOverStatus] = useState(null);
 
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [workspaceTaskPage, setWorkspaceTaskPage] = useState(1);
@@ -323,14 +338,47 @@ export default function TeamWorkspace() {
   const taskImportInputRef = useRef(null);
 
   const [newMenuOpen, setNewMenuOpen] = useState(false);
+
+  const [workspaceGlobalSearch, setWorkspaceGlobalSearch] = useState("");
+  const [workspaceGlobalSearchOpen, setWorkspaceGlobalSearchOpen] = useState(false);
+  const [workspaceGlobalSearchLoading, setWorkspaceGlobalSearchLoading] = useState(false);
+  const [workspaceGlobalTaskResults, setWorkspaceGlobalTaskResults] = useState([]);
+
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [projectSaving, setProjectSaving] = useState(false);
-  const [projectForm, setProjectForm] = useState({
+  const [editingWorkspaceProject, setEditingWorkspaceProject] = useState(null);
+  const [projectDetailOpen, setProjectDetailOpen] = useState(false);
+  const [projectDetailLoading, setProjectDetailLoading] = useState(false);
+  const [selectedWorkspaceProject, setSelectedWorkspaceProject] = useState(null);
+  const [projectDeletingId, setProjectDeletingId] = useState(null);
+  const [projectSearch, setProjectSearch] = useState("");
+  const [projectStatusFilter, setProjectStatusFilter] = useState("all");
+  const [projectPriorityFilter, setProjectPriorityFilter] = useState("all");
+
+  const emptyProjectForm = {
     name: "",
     description: "",
+    status: "active",
     priority: "medium",
+    ownerId: "",
+    startDate: "",
     dueDate: "",
+    progress: 0,
+  };
+
+  const [projectForm, setProjectForm] = useState(emptyProjectForm);
+
+  /* =====================================================
+     TEAM WORKSPACE CALENDAR
+     Uses the same tasks/projects as the rest of Team Workspace.
+     ===================================================== */
+  const [calendarDate, setCalendarDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const [calendarTasks, setCalendarTasks] = useState([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarSelectedDay, setCalendarSelectedDay] = useState(null);
 
 
   const [workspaceFiles, setWorkspaceFiles] = useState([]);
@@ -362,6 +410,7 @@ export default function TeamWorkspace() {
 
   const [workspaceReports, setWorkspaceReports] = useState(null);
   const [workspaceReportsLoading, setWorkspaceReportsLoading] = useState(false);
+  const [workspaceReportsExporting, setWorkspaceReportsExporting] = useState(false);
   const [workspaceReportDateFrom, setWorkspaceReportDateFrom] = useState("");
   const [workspaceReportDateTo, setWorkspaceReportDateTo] = useState("");
 
@@ -369,6 +418,9 @@ export default function TeamWorkspace() {
     .map((member) => ({
       id: member?.userId || member?.user_id || member?.id,
       name: member?.name || member?.fullName || member?.email || "Team member",
+      email: member?.email || member?.userEmail || "",
+      role: member?.role || member?.teamRole || "member",
+      status: member?.status || "active",
     }))
     .filter((member) => member.id);
 
@@ -431,10 +483,78 @@ export default function TeamWorkspace() {
     );
   };
 
+
+  const loadWorkspaceBoardTasks = async () => {
+    if (!selectedTeamId) {
+      setWorkspaceBoardTasks([]);
+      return;
+    }
+
+    try {
+      setWorkspaceBoardLoading(true);
+
+      const rows = [];
+      let page = 1;
+      let totalPages = 1;
+
+      do {
+        const response = await fetchTeamWorkspaceTasks(selectedTeamId, {
+          q: workspaceTaskSearch || undefined,
+          priority: workspacePriority,
+          assignee: workspaceAssignee,
+          project: workspaceProject,
+          taskType: workspaceTaskType,
+          dateFrom: workspaceDateFrom || undefined,
+          dateTo: workspaceDateTo || undefined,
+          page,
+          limit: 100,
+        });
+
+        rows.push(...(response?.data || []));
+        totalPages = Math.max(
+          1,
+          Number(response?.pagination?.totalPages || 1),
+        );
+        page += 1;
+      } while (page <= totalPages);
+
+      setWorkspaceBoardTasks(rows);
+    } catch (error) {
+      console.error("TEAM BOARD DATA ERROR", error);
+      setWorkspaceBoardTasks([]);
+    } finally {
+      setWorkspaceBoardLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (workspaceTab !== "Board" || !selectedTeamId) return;
+
+    const timer = window.setTimeout(() => {
+      loadWorkspaceBoardTasks();
+    }, 180);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    workspaceTab,
+    selectedTeamId,
+    workspaceTaskSearch,
+    workspacePriority,
+    workspaceAssignee,
+    workspaceProject,
+    workspaceTaskType,
+    workspaceDateFrom,
+    workspaceDateTo,
+  ]);
+
   const loadWorkspaceData = async () => {
     try {
       setWorkspaceLoading(true);
-      await Promise.all([loadWorkspaceOverview(), loadWorkspaceTasks()]);
+      await Promise.all([
+        loadWorkspaceOverview(),
+        loadWorkspaceTasks(),
+        workspaceTab === "Calendar" ? loadWorkspaceCalendar() : Promise.resolve(),
+      ]);
     } catch (error) {
       console.error("TEAM WORKSPACE DATA ERROR", error);
     } finally {
@@ -528,7 +648,13 @@ export default function TeamWorkspace() {
   ]);
 
   useEffect(() => {
-    if (workspaceTab !== "Reports" || !selectedTeamId) return;
+    if (
+      !["Reports", "Team"].includes(workspaceTab) ||
+      !selectedTeamId
+    ) {
+      return;
+    }
+
     const timer = window.setTimeout(loadWorkspaceReports, 200);
     return () => window.clearTimeout(timer);
   }, [
@@ -593,6 +719,439 @@ export default function TeamWorkspace() {
     if (diff === 1) return "Tomorrow";
     return `${diff} days`;
   };
+
+  const reportActivityPresentation = (activity) => {
+    const type = String(activity?.eventType || "").toLowerCase();
+    const metadata = activity?.metadata || {};
+
+    if (type.includes("time_logged")) {
+      return {
+        label: "Time logged",
+        detail: `${metadata.title || "Task"}${metadata.minutes ? ` · ${minutesToText(metadata.minutes)}` : ""}`,
+        Icon: Timer,
+        tone: "blue",
+      };
+    }
+
+    if (type.includes("completed")) {
+      return {
+        label: "Task completed",
+        detail: metadata.title || "Task completed",
+        Icon: CheckCircle2,
+        tone: "green",
+      };
+    }
+
+    if (type.includes("assigned")) {
+      return {
+        label: "Task assigned",
+        detail: metadata.title || "Task assignment updated",
+        Icon: Users,
+        tone: "violet",
+      };
+    }
+
+    if (type.includes("priority")) {
+      return {
+        label: "Priority changed",
+        detail: metadata.title || "Task priority updated",
+        Icon: Flag,
+        tone: "orange",
+      };
+    }
+
+    if (type.includes("due_date")) {
+      return {
+        label: "Due date changed",
+        detail: metadata.title || "Task due date updated",
+        Icon: CalendarDays,
+        tone: "amber",
+      };
+    }
+
+    if (type.includes("progress")) {
+      return {
+        label: "Progress updated",
+        detail: metadata.title || "Task progress updated",
+        Icon: ListTodo,
+        tone: "cyan",
+      };
+    }
+
+    if (type.includes("status")) {
+      return {
+        label: "Status changed",
+        detail: metadata.title || "Task status updated",
+        Icon: RotateCcw,
+        tone: "indigo",
+      };
+    }
+
+    if (type.includes("created")) {
+      return {
+        label: "Task created",
+        detail: metadata.title || "New task created",
+        Icon: Plus,
+        tone: "blue",
+      };
+    }
+
+    return {
+      label: formatTaskStatus(
+        String(activity?.eventType || "Activity")
+          .replace("team.", "")
+      ),
+      detail: metadata.title || "Team workspace activity",
+      Icon: ListTodo,
+      tone: "slate",
+    };
+  };
+
+  const workspaceReportTrend = Array.isArray(workspaceReports?.trend)
+    ? workspaceReports.trend
+    : [];
+
+  const workspaceReportTrendMax = Math.max(
+    1,
+    ...workspaceReportTrend.flatMap((item) => [
+      Number(item?.created || 0),
+      Number(item?.completed || 0),
+    ])
+  );
+
+  const reportTrendPoints = (key) => {
+    if (!workspaceReportTrend.length) return "";
+
+    const width = 680;
+    const height = 190;
+    const left = 18;
+    const right = 18;
+    const top = 16;
+    const bottom = 18;
+    const usableWidth = width - left - right;
+    const usableHeight = height - top - bottom;
+
+    return workspaceReportTrend
+      .map((item, index) => {
+        const x =
+          left +
+          (workspaceReportTrend.length === 1
+            ? usableWidth / 2
+            : (index / (workspaceReportTrend.length - 1)) * usableWidth);
+
+        const value = Number(item?.[key] || 0);
+        const y =
+          top +
+          usableHeight -
+          (value / workspaceReportTrendMax) * usableHeight;
+
+        return `${x},${y}`;
+      })
+      .join(" ");
+  };
+
+  const exportWorkspaceReports = async () => {
+    if (!selectedTeamId || workspaceReportsExporting) return;
+
+    try {
+      setWorkspaceReportsExporting(true);
+
+      let report = workspaceReports;
+
+      // Fetch once more so the CSV always matches the active date filters.
+      if (!report) {
+        report = await fetchTeamWorkspaceReports(selectedTeamId, {
+          dateFrom: workspaceReportDateFrom || undefined,
+          dateTo: workspaceReportDateTo || undefined,
+        });
+      }
+
+      if (!report) {
+        throw new Error("No report data available");
+      }
+
+      const rows = [];
+
+      rows.push(["TEAM WORKSPACE REPORT"]);
+      rows.push([
+        "Date From",
+        workspaceReportDateFrom || "All time",
+        "Date To",
+        workspaceReportDateTo || "All time",
+      ]);
+      rows.push([]);
+
+      rows.push(["SUMMARY"]);
+      rows.push(["Metric", "Value"]);
+      rows.push(["Tasks Created", report?.summary?.tasksCreated || 0]);
+      rows.push(["Tasks Completed", report?.summary?.tasksCompleted || 0]);
+      rows.push(["Completion Rate", `${report?.summary?.completionRate || 0}%`]);
+      rows.push(["On Time", `${report?.summary?.onTimeRate || 0}%`]);
+      rows.push(["Average Progress", `${report?.summary?.avgProgress || 0}%`]);
+      rows.push(["Hours Logged", report?.summary?.hoursLogged || 0]);
+      rows.push([]);
+
+      rows.push(["TASKS BY STATUS"]);
+      rows.push(["Status", "Count"]);
+      (report?.tasksByStatus || []).forEach((item) => {
+        rows.push([formatTaskStatus(item.key), item.count || 0]);
+      });
+      rows.push([]);
+
+      rows.push(["TASKS BY PRIORITY"]);
+      rows.push(["Priority", "Count"]);
+      (report?.tasksByPriority || []).forEach((item) => {
+        rows.push([formatTaskStatus(item.key), item.count || 0]);
+      });
+      rows.push([]);
+
+      rows.push(["MEMBER PERFORMANCE"]);
+      rows.push([
+        "Member",
+        "Assigned",
+        "Completed",
+        "Completion Rate",
+        "On Time Rate",
+        "Average Progress",
+        "Time Logged Minutes",
+      ]);
+      (report?.members || []).forEach((member) => {
+        rows.push([
+          member.name || "",
+          member.assigned || 0,
+          member.completed || 0,
+          `${member.completionRate || 0}%`,
+          `${member.onTimeRate || 0}%`,
+          `${member.avgProgress || 0}%`,
+          Number(member.loggedMinutes || 0),
+        ]);
+      });
+      rows.push([]);
+
+      rows.push(["PROJECT PERFORMANCE"]);
+      rows.push([
+        "Project",
+        "Tasks",
+        "Completed",
+        "Average Progress",
+        "Time Logged Minutes",
+      ]);
+      (report?.projects || []).forEach((project) => {
+        rows.push([
+          project.name || "",
+          project.tasks || 0,
+          project.completed || 0,
+          `${project.avgProgress || 0}%`,
+          Number(project.loggedMinutes || 0),
+        ]);
+      });
+      rows.push([]);
+
+      rows.push(["14 DAY TASK TREND"]);
+      rows.push(["Date", "Created", "Completed"]);
+      (report?.trend || []).forEach((item) => {
+        rows.push([
+          item.date || "",
+          Number(item.created || 0),
+          Number(item.completed || 0),
+        ]);
+      });
+      rows.push([]);
+
+      rows.push(["RECENT ACTIVITY"]);
+      rows.push(["Activity", "Member", "Task", "Date"]);
+      (report?.recentActivity || []).forEach((activity) => {
+        const presentation = reportActivityPresentation(activity);
+        rows.push([
+          presentation.label,
+          activity.userName || "",
+          activity?.metadata?.title || "",
+          activity.createdAt || "",
+        ]);
+      });
+      rows.push([]);
+
+      rows.push(["UPCOMING DEADLINES"]);
+      rows.push(["Task", "Project", "Assignee", "Priority", "Due Date"]);
+      (report?.upcomingDeadlines || []).forEach((task) => {
+        rows.push([
+          task.name || "",
+          task.project || "",
+          task.assignee || "",
+          task.priority || "",
+          task.dueDate || "",
+        ]);
+      });
+
+      const csv = rows
+        .map((row) => row.map(csvEscape).join(","))
+        .join("\n");
+
+      const blob = new Blob([`\uFEFF${csv}`], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `team-workspace-report-${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("EXPORT TEAM REPORT ERROR", error);
+      window.alert(error?.message || "Could not export report.");
+    } finally {
+      setWorkspaceReportsExporting(false);
+    }
+  };
+
+
+  const workspaceGlobalProjectResults = useMemo(() => {
+    const query = workspaceGlobalSearch.trim().toLowerCase();
+
+    if (!query) return [];
+
+    return workspaceProjects
+      .filter((project) =>
+        [
+          project?.name,
+          project?.description,
+          project?.ownerName,
+          project?.status,
+          project?.priority,
+        ]
+          .filter(Boolean)
+          .some((value) =>
+            String(value).toLowerCase().includes(query),
+          ),
+      )
+      .slice(0, 6);
+  }, [workspaceGlobalSearch, workspaceProjects]);
+
+  const workspaceGlobalMemberResults = useMemo(() => {
+    const query = workspaceGlobalSearch.trim().toLowerCase();
+
+    if (!query) return [];
+
+    return workspaceMembers
+      .filter((member) =>
+        [member?.name, member?.email]
+          .filter(Boolean)
+          .some((value) =>
+            String(value).toLowerCase().includes(query),
+          ),
+      )
+      .slice(0, 6);
+  }, [workspaceGlobalSearch, workspaceMembers]);
+
+  useEffect(() => {
+    const query = workspaceGlobalSearch.trim();
+
+    if (!query || !selectedTeamId) {
+      setWorkspaceGlobalTaskResults([]);
+      setWorkspaceGlobalSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = window.setTimeout(async () => {
+      try {
+        setWorkspaceGlobalSearchLoading(true);
+
+        const response = await fetchTeamWorkspaceTasks(
+          selectedTeamId,
+          {
+            q: query,
+            page: 1,
+            limit: 8,
+          },
+        );
+
+        if (!cancelled) {
+          setWorkspaceGlobalTaskResults(
+            Array.isArray(response?.data)
+              ? response.data
+              : [],
+          );
+        }
+      } catch (error) {
+        console.error("TEAM GLOBAL SEARCH ERROR", error);
+
+        if (!cancelled) {
+          setWorkspaceGlobalTaskResults([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setWorkspaceGlobalSearchLoading(false);
+        }
+      }
+    }, 220);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [workspaceGlobalSearch, selectedTeamId]);
+
+  const closeWorkspaceGlobalSearch = () => {
+    setWorkspaceGlobalSearchOpen(false);
+  };
+
+  const openGlobalTaskResult = (task) => {
+    closeWorkspaceGlobalSearch();
+    setWorkspaceGlobalSearch("");
+
+    setWorkspaceTaskSearch("");
+    setWorkspaceStatus("all");
+    setWorkspacePriority("all");
+    setWorkspaceAssignee("all");
+    setWorkspaceProject("all");
+    setWorkspaceTaskType("all");
+    setWorkspaceDateFrom("");
+    setWorkspaceDateTo("");
+
+    setWorkspaceTab("Tasks");
+    setWorkspaceTaskView("table");
+
+    openWorkspaceTaskDetail(task);
+  };
+
+  const openGlobalProjectResult = (project) => {
+    closeWorkspaceGlobalSearch();
+    setWorkspaceGlobalSearch("");
+    setWorkspaceTab("Projects");
+    setWorkspaceTaskView("table");
+    openWorkspaceProjectDetail(project);
+  };
+
+  const openGlobalMemberResult = (member) => {
+    closeWorkspaceGlobalSearch();
+    setWorkspaceGlobalSearch("");
+
+    setWorkspaceTaskSearch("");
+    setWorkspaceStatus("all");
+    setWorkspacePriority("all");
+    setWorkspaceAssignee(member.id);
+    setWorkspaceProject("all");
+    setWorkspaceTaskType("all");
+    setWorkspaceDateFrom("");
+    setWorkspaceDateTo("");
+    setWorkspaceTaskPage(1);
+    setWorkspaceTaskView("table");
+    setWorkspaceTab("Tasks");
+  };
+
+  const workspaceGlobalSearchHasResults =
+    workspaceGlobalTaskResults.length > 0 ||
+    workspaceGlobalProjectResults.length > 0 ||
+    workspaceGlobalMemberResults.length > 0;
 
   const resetWorkspaceFilters = () => {
     setWorkspaceTaskSearch("");
@@ -708,12 +1267,92 @@ export default function TeamWorkspace() {
     try {
       await moveTeamWorkspaceTask(selectedTeamId, task.id, status);
 
-      await Promise.all([loadWorkspaceOverview(), loadWorkspaceTasks()]);
+      await Promise.all([
+        loadWorkspaceOverview(),
+        loadWorkspaceTasks(),
+        workspaceTab === "Board"
+          ? loadWorkspaceBoardTasks()
+          : Promise.resolve(),
+        workspaceTab === "Reports"
+          ? loadWorkspaceReports()
+          : Promise.resolve(),
+      ]);
     } catch (error) {
       console.error("MOVE TEAM TASK ERROR", error);
       window.alert(error?.message || "Could not update task status.");
     }
   };
+
+  const moveWorkspaceBoardTask = async (task, nextStatus) => {
+    if (
+      !selectedTeamId ||
+      !task?.id ||
+      !nextStatus ||
+      task.status === nextStatus
+    ) {
+      setWorkspaceBoardDraggingId(null);
+      setWorkspaceBoardOverStatus(null);
+      return;
+    }
+
+    const previousTasks = workspaceBoardTasks;
+
+    setWorkspaceBoardTasks((current) =>
+      current.map((item) =>
+        item.id === task.id
+          ? {
+              ...item,
+              status: nextStatus,
+              updatedAt: new Date().toISOString(),
+            }
+          : item,
+      ),
+    );
+
+    setWorkspaceBoardDraggingId(null);
+    setWorkspaceBoardOverStatus(null);
+
+    try {
+      await moveTeamWorkspaceTask(
+        selectedTeamId,
+        task.id,
+        nextStatus,
+      );
+
+      await Promise.all([
+        loadWorkspaceOverview(),
+        loadWorkspaceTasks(),
+        loadWorkspaceBoardTasks(),
+        workspaceTab === "Reports"
+          ? loadWorkspaceReports()
+          : Promise.resolve(),
+      ]);
+    } catch (error) {
+      console.error("BOARD MOVE TASK ERROR", error);
+      setWorkspaceBoardTasks(previousTasks);
+      window.alert(error?.message || "Could not move task.");
+    }
+  };
+
+  const handleWorkspaceBoardDrop = (event, nextStatus) => {
+    event.preventDefault();
+
+    const taskId =
+      event.dataTransfer.getData("text/team-board-task-id") ||
+      workspaceBoardDraggingId;
+
+    const task = workspaceBoardTasks.find(
+      (item) => String(item.id) === String(taskId),
+    );
+
+    if (task) {
+      moveWorkspaceBoardTask(task, nextStatus);
+    } else {
+      setWorkspaceBoardDraggingId(null);
+      setWorkspaceBoardOverStatus(null);
+    }
+  };
+
 
   const openWorkspaceTaskDetail = (task) => {
     setSelectedWorkspaceTask(task);
@@ -1169,37 +1808,215 @@ export default function TeamWorkspace() {
   };
 
 
+  const resetWorkspaceProjectForm = () => {
+    setProjectForm(emptyProjectForm);
+    setEditingWorkspaceProject(null);
+  };
+
+  const openNewWorkspaceProject = () => {
+    resetWorkspaceProjectForm();
+    setProjectModalOpen(true);
+    setNewMenuOpen(false);
+  };
+
+  const openEditWorkspaceProject = (project) => {
+    setEditingWorkspaceProject(project);
+    setProjectForm({
+      name: project?.name || "",
+      description: project?.description || "",
+      status: project?.status || "active",
+      priority: project?.priority || "medium",
+      ownerId: project?.ownerId || "",
+      startDate: inputDateValue(project?.startDate),
+      dueDate: inputDateValue(project?.dueDate),
+      progress: Number(project?.progress || 0),
+    });
+    setProjectModalOpen(true);
+    setProjectDetailOpen(false);
+  };
+
+  const openWorkspaceProjectDetail = async (project) => {
+    if (!selectedTeamId || !project?.id) return;
+
+    try {
+      setProjectDetailLoading(true);
+      setSelectedWorkspaceProject({
+        ...project,
+        tasks: [],
+        timeEntries: [],
+      });
+      setProjectDetailOpen(true);
+
+      const detail = await fetchTeamWorkspaceProjectDetail(
+        selectedTeamId,
+        project.id,
+      );
+
+      setSelectedWorkspaceProject(detail || project);
+    } catch (error) {
+      console.error("LOAD PROJECT DETAIL ERROR", error);
+      window.alert(error?.message || "Could not load project details.");
+      setProjectDetailOpen(false);
+    } finally {
+      setProjectDetailLoading(false);
+    }
+  };
+
   const saveWorkspaceProject = async (event) => {
     event?.preventDefault?.();
+
     if (!selectedTeamId || !projectForm.name.trim()) return;
+
+    const payload = {
+      name: projectForm.name.trim(),
+      description: projectForm.description.trim() || null,
+      status: projectForm.status || "active",
+      priority: projectForm.priority || "medium",
+      ownerId: projectForm.ownerId || null,
+      startDate: projectForm.startDate || null,
+      dueDate: projectForm.dueDate || null,
+      progress: Math.max(
+        0,
+        Math.min(100, Number(projectForm.progress || 0)),
+      ),
+    };
 
     try {
       setProjectSaving(true);
 
-      await createTeamWorkspaceProject(selectedTeamId, {
-        name: projectForm.name.trim(),
-        description: projectForm.description.trim() || null,
-        priority: projectForm.priority,
-        dueDate: projectForm.dueDate || null,
-      });
+      let savedProject;
+
+      if (editingWorkspaceProject?.id) {
+        savedProject = await updateTeamWorkspaceProject(
+          selectedTeamId,
+          editingWorkspaceProject.id,
+          payload,
+        );
+      } else {
+        savedProject = await createTeamWorkspaceProject(
+          selectedTeamId,
+          payload,
+        );
+      }
 
       setProjectModalOpen(false);
-      setProjectForm({
-        name: "",
-        description: "",
-        priority: "medium",
-        dueDate: "",
-      });
+      resetWorkspaceProjectForm();
       setNewMenuOpen(false);
 
-      await loadWorkspaceOverview();
+      await Promise.all([
+        loadWorkspaceOverview(),
+        workspaceTab === "Reports"
+          ? loadWorkspaceReports()
+          : Promise.resolve(),
+      ]);
+
+      if (
+        projectDetailOpen &&
+        savedProject?.id &&
+        selectedWorkspaceProject?.id === savedProject.id
+      ) {
+        await openWorkspaceProjectDetail(savedProject);
+      }
     } catch (error) {
-      console.error("CREATE TEAM PROJECT ERROR", error);
-      window.alert(error?.message || "Could not create project.");
+      console.error("SAVE TEAM PROJECT ERROR", error);
+      window.alert(error?.message || "Could not save project.");
     } finally {
       setProjectSaving(false);
     }
   };
+
+  const removeWorkspaceProject = async (project) => {
+    if (!selectedTeamId || !project?.id || projectDeletingId) return;
+
+    const confirmed = window.confirm(
+      `Delete project "${project.name}"?\n\nTasks and time history will be kept and unassigned from the project.`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setProjectDeletingId(project.id);
+
+      await deleteTeamWorkspaceProject(
+        selectedTeamId,
+        project.id,
+      );
+
+      if (selectedWorkspaceProject?.id === project.id) {
+        setProjectDetailOpen(false);
+        setSelectedWorkspaceProject(null);
+      }
+
+      await Promise.all([
+        loadWorkspaceOverview(),
+        loadWorkspaceTasks(),
+        workspaceTab === "Reports"
+          ? loadWorkspaceReports()
+          : Promise.resolve(),
+      ]);
+    } catch (error) {
+      console.error("DELETE TEAM PROJECT ERROR", error);
+      window.alert(error?.message || "Could not delete project.");
+    } finally {
+      setProjectDeletingId(null);
+    }
+  };
+
+  const goToProjectTasks = (project) => {
+    setWorkspaceProject(project.id);
+    setWorkspaceTaskPage(1);
+    setWorkspaceTab("Tasks");
+    setWorkspaceTaskView("table");
+    setProjectDetailOpen(false);
+  };
+
+  const goToProjectFiles = (project) => {
+    setWorkspaceFileProject(project.id);
+    setWorkspaceFileTask("all");
+    setWorkspaceTab("Files");
+    setProjectDetailOpen(false);
+  };
+
+  const goToProjectTime = (project) => {
+    setWorkspaceTimeProject(project.id);
+    setWorkspaceTimeTask("all");
+    setWorkspaceTimePage(1);
+    setWorkspaceTab("Time Tracking");
+    setProjectDetailOpen(false);
+  };
+
+  const filteredWorkspaceProjects = workspaceProjects.filter((project) => {
+    const q = projectSearch.trim().toLowerCase();
+
+    if (
+      q &&
+      ![
+        project?.name,
+        project?.description,
+        project?.ownerName,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(q))
+    ) {
+      return false;
+    }
+
+    if (
+      projectStatusFilter !== "all" &&
+      String(project?.status || "active").toLowerCase() !== projectStatusFilter
+    ) {
+      return false;
+    }
+
+    if (
+      projectPriorityFilter !== "all" &&
+      String(project?.priority || "medium").toLowerCase() !== projectPriorityFilter
+    ) {
+      return false;
+    }
+
+    return true;
+  });
 
 
   const loadWorkspaceFiles = async () => {
@@ -1308,16 +2125,230 @@ export default function TeamWorkspace() {
     }
   };
 
-  const calendarGroups = workspaceTasks.reduce((groups, task) => {
-    const key = task?.dueDate
-      ? new Date(task.dueDate).toISOString().slice(0, 10)
-      : "No due date";
+  const calendarDateKey = (value) => {
+    if (!value) return null;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(task);
+  const loadWorkspaceCalendar = async () => {
+    if (!selectedTeamId) {
+      setCalendarTasks([]);
+      return;
+    }
 
-    return groups;
-  }, {});
+    try {
+      setCalendarLoading(true);
+      const rows = [];
+      let page = 1;
+      let totalPages = 1;
+
+      do {
+        const response = await fetchTeamWorkspaceTasks(selectedTeamId, {
+          page,
+          limit: 100,
+        });
+        rows.push(...(response?.data || []));
+        totalPages = Math.max(1, Number(response?.pagination?.totalPages || 1));
+        page += 1;
+      } while (page <= totalPages);
+
+      setCalendarTasks(rows);
+    } catch (error) {
+      console.error("TEAM CALENDAR ERROR", error);
+      setCalendarTasks([]);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (workspaceTab !== "Calendar" || !selectedTeamId) return;
+    loadWorkspaceCalendar();
+  }, [workspaceTab, selectedTeamId]);
+
+  const calendarEvents = useMemo(() => {
+    const events = [];
+
+    calendarTasks.forEach((task) => {
+      const dateKey = calendarDateKey(task?.dueDate);
+      if (!dateKey) return;
+      events.push({
+        id: `task-${task.id}`,
+        type: "task",
+        dateKey,
+        title: task.name || "Untitled task",
+        status: task.status || "pending",
+        priority: task.priority || "medium",
+        project: task.project || "No project",
+        source: task,
+      });
+    });
+
+    workspaceProjects.forEach((project) => {
+      const startKey = calendarDateKey(project?.startDate);
+      const dueKey = calendarDateKey(project?.dueDate);
+
+      if (startKey) {
+        events.push({
+          id: `project-start-${project.id}`,
+          type: "project-start",
+          dateKey: startKey,
+          title: project.name || "Untitled project",
+          status: project.status || "active",
+          priority: project.priority || "medium",
+          project: "Project start",
+          source: project,
+        });
+      }
+
+      if (dueKey) {
+        events.push({
+          id: `project-due-${project.id}`,
+          type: "project-due",
+          dateKey: dueKey,
+          title: project.name || "Untitled project",
+          status: project.status || "active",
+          priority: project.priority || "medium",
+          project: "Project deadline",
+          source: project,
+        });
+      }
+    });
+
+    return events;
+  }, [calendarTasks, workspaceProjects]);
+
+  const calendarMonthLabel = calendarDate.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+
+  const calendarDays = useMemo(() => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const first = new Date(year, month, 1);
+    const gridStart = new Date(year, month, 1 - first.getDay());
+
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(gridStart);
+      date.setDate(gridStart.getDate() + index);
+      const dateKey = calendarDateKey(date);
+      return {
+        date,
+        dateKey,
+        currentMonth: date.getMonth() === month,
+        events: calendarEvents.filter((event) => event.dateKey === dateKey),
+      };
+    });
+  }, [calendarDate, calendarEvents]);
+
+  const changeCalendarMonth = (offset) => {
+    setCalendarDate((current) =>
+      new Date(current.getFullYear(), current.getMonth() + offset, 1),
+    );
+    setCalendarSelectedDay(null);
+  };
+
+  const goCalendarToday = () => {
+    const now = new Date();
+    setCalendarDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    setCalendarSelectedDay(calendarDateKey(now));
+  };
+
+  const openCalendarEvent = (event) => {
+    if (event.type === "task") {
+      openWorkspaceTaskDetail(event.source);
+      return;
+    }
+    openWorkspaceProjectDetail(event.source);
+  };
+
+  const moveTaskToCalendarDate = async (task, dateKey) => {
+    if (!selectedTeamId || !task?.id || !dateKey) return;
+    try {
+      await updateTeamWorkspaceTask(selectedTeamId, task.id, {
+        dueDate: dateKey,
+      });
+      await Promise.all([
+        loadWorkspaceCalendar(),
+        loadWorkspaceOverview(),
+        loadWorkspaceTasks(),
+      ]);
+    } catch (error) {
+      console.error("MOVE CALENDAR TASK ERROR", error);
+      window.alert(error?.message || "Could not change the task due date.");
+    }
+  };
+
+
+  const workspaceTeamPerformanceRows = useMemo(() => {
+    const reportRows = Array.isArray(workspaceReports?.members)
+      ? workspaceReports.members
+      : [];
+
+    const workloadMap = new Map(
+      workloadRows.map((row) => [
+        String(row.id || row.userId || row.user_id || ""),
+        row,
+      ]),
+    );
+
+    return workspaceMembers.map((member) => {
+      const report =
+        reportRows.find(
+          (row) => String(row.id) === String(member.id),
+        ) || {};
+
+      const workload =
+        workloadMap.get(String(member.id)) || {};
+
+      const ownedProjects = workspaceProjects.filter(
+        (project) =>
+          String(project.ownerId || "") === String(member.id),
+      ).length;
+
+      return {
+        ...member,
+        assigned: Number(report.assigned || workload.totalTasks || 0),
+        completed: Number(report.completed || workload.completedTasks || 0),
+        completionRate: Number(report.completionRate || 0),
+        onTimeRate: Number(report.onTimeRate || 0),
+        avgProgress: Number(report.avgProgress || 0),
+        loggedMinutes: Number(report.loggedMinutes || 0),
+        workloadPercent: Number(workload.workloadPercent || 0),
+        openTasks: Number(workload.openTasks || 0),
+        ownedProjects,
+      };
+    });
+  }, [
+    workspaceMembers,
+    workspaceReports,
+    workloadRows,
+    workspaceProjects,
+  ]);
+
+  const workspaceTeamTotals = useMemo(() => {
+    return workspaceTeamPerformanceRows.reduce(
+      (summary, member) => {
+        summary.assigned += member.assigned;
+        summary.completed += member.completed;
+        summary.loggedMinutes += member.loggedMinutes;
+        summary.openTasks += member.openTasks;
+        return summary;
+      },
+      {
+        assigned: 0,
+        completed: 0,
+        loggedMinutes: 0,
+        openTasks: 0,
+      },
+    );
+  }, [workspaceTeamPerformanceRows]);
 
   /* =====================================================
     LOADING
@@ -1553,69 +2584,613 @@ export default function TeamWorkspace() {
           <p>Plan, organize, and execute internal projects with your team.</p>
         </div>
         <div className="tw-header-actions">
-          <label className="tw-global-search">
-            <Search size={15} />
-            <input
-              value={workspaceTaskSearch}
-              onChange={(e) => setWorkspaceTaskSearch(e.target.value)}
-              placeholder="Search tasks, projects, people..."
-            />
-          </label>
+          <div
+            className="tw-global-search-wrap"
+            style={{
+              position: "relative",
+              flex: "1 1 360px",
+              maxWidth: 520,
+            }}
+          >
+            <label className="tw-global-search">
+              <Search size={15} />
+              <input
+                value={workspaceGlobalSearch}
+                onFocus={() => setWorkspaceGlobalSearchOpen(true)}
+                onChange={(e) => {
+                  setWorkspaceGlobalSearch(e.target.value);
+                  setWorkspaceGlobalSearchOpen(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    closeWorkspaceGlobalSearch();
+                    e.currentTarget.blur();
+                  }
+                }}
+                placeholder="Search tasks, projects, team members..."
+              />
+
+              {workspaceGlobalSearch && (
+                <button
+                  type="button"
+                  title="Clear search"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setWorkspaceGlobalSearch("");
+                    setWorkspaceGlobalTaskResults([]);
+                    setWorkspaceGlobalSearchOpen(false);
+                  }}
+                  style={{
+                    border: 0,
+                    background: "transparent",
+                    color: "#94a3b8",
+                    padding: 2,
+                    display: "inline-flex",
+                    cursor: "pointer",
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </label>
+
+            {workspaceGlobalSearchOpen &&
+              workspaceGlobalSearch.trim() && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Close search results"
+                    onClick={closeWorkspaceGlobalSearch}
+                    style={{
+                      position: "fixed",
+                      inset: 0,
+                      zIndex: 58,
+                      border: 0,
+                      background: "transparent",
+                      cursor: "default",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 7px)",
+                      left: 0,
+                      right: 0,
+                      zIndex: 60,
+                      maxHeight: "min(560px, 70vh)",
+                      overflowY: "auto",
+                      background: "#fff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 13,
+                      boxShadow:
+                        "0 18px 48px rgba(15,23,42,.16)",
+                      padding: 7,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "8px 9px 6px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 10.5,
+                          fontWeight: 800,
+                          color: "#94a3b8",
+                          textTransform: "uppercase",
+                          letterSpacing: ".05em",
+                        }}
+                      >
+                        Search Team Workspace
+                      </span>
+
+                      {workspaceGlobalSearchLoading && (
+                        <span
+                          style={{
+                            color: "#64748b",
+                            fontSize: 10.5,
+                          }}
+                        >
+                          Searching...
+                        </span>
+                      )}
+                    </div>
+
+                    {workspaceGlobalTaskResults.length > 0 && (
+                      <div style={{ padding: "3px 0 7px" }}>
+                        <div
+                          style={{
+                            padding: "5px 9px",
+                            color: "#64748b",
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                          }}
+                        >
+                          Tasks
+                        </div>
+
+                        {workspaceGlobalTaskResults.map((task) => (
+                          <button
+                            type="button"
+                            key={`global-task-${task.id}`}
+                            onClick={() => openGlobalTaskResult(task)}
+                            style={{
+                              width: "100%",
+                              border: 0,
+                              borderRadius: 9,
+                              background: "transparent",
+                              padding: "9px",
+                              display: "grid",
+                              gridTemplateColumns: "32px minmax(0,1fr) auto",
+                              alignItems: "center",
+                              gap: 9,
+                              textAlign: "left",
+                              cursor: "pointer",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#f8fafc";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "transparent";
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 31,
+                                height: 31,
+                                borderRadius: 9,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                background: "#eff6ff",
+                                color: "#2563eb",
+                              }}
+                            >
+                              <ListTodo size={14} />
+                            </span>
+
+                            <span style={{ minWidth: 0 }}>
+                              <strong
+                                style={{
+                                  display: "block",
+                                  color: "#0f172a",
+                                  fontSize: 12,
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {task.name}
+                              </strong>
+                              <small
+                                style={{
+                                  display: "block",
+                                  marginTop: 2,
+                                  color: "#94a3b8",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {task.project || "No project"}
+                                {task.assignee
+                                  ? ` · ${task.assignee}`
+                                  : ""}
+                              </small>
+                            </span>
+
+                            <span
+                              className={`tw-project-status ${String(
+                                task.status || "pending",
+                              ).replaceAll("_", "-")}`}
+                            >
+                              {formatTaskStatus(task.status)}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {workspaceGlobalProjectResults.length > 0 && (
+                      <div
+                        style={{
+                          padding: "5px 0 7px",
+                          borderTop: workspaceGlobalTaskResults.length
+                            ? "1px solid #f1f5f9"
+                            : 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: "6px 9px",
+                            color: "#64748b",
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                          }}
+                        >
+                          Projects
+                        </div>
+
+                        {workspaceGlobalProjectResults.map((project) => (
+                          <button
+                            type="button"
+                            key={`global-project-${project.id}`}
+                            onClick={() =>
+                              openGlobalProjectResult(project)
+                            }
+                            style={{
+                              width: "100%",
+                              border: 0,
+                              borderRadius: 9,
+                              background: "transparent",
+                              padding: "9px",
+                              display: "grid",
+                              gridTemplateColumns: "32px minmax(0,1fr) auto",
+                              alignItems: "center",
+                              gap: 9,
+                              textAlign: "left",
+                              cursor: "pointer",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#f8fafc";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "transparent";
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 31,
+                                height: 31,
+                                borderRadius: 9,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                background: "#f5f3ff",
+                                color: "#7c3aed",
+                              }}
+                            >
+                              <FolderKanban size={14} />
+                            </span>
+
+                            <span style={{ minWidth: 0 }}>
+                              <strong
+                                style={{
+                                  display: "block",
+                                  color: "#0f172a",
+                                  fontSize: 12,
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {project.name}
+                              </strong>
+                              <small
+                                style={{
+                                  display: "block",
+                                  marginTop: 2,
+                                  color: "#94a3b8",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {project.ownerName || "Unassigned"}
+                                {project.dueDate
+                                  ? ` · ${formatDate(project.dueDate)}`
+                                  : ""}
+                              </small>
+                            </span>
+
+                            <span
+                              className={`tw-project-status ${String(
+                                project.status || "active",
+                              ).replaceAll("_", "-")}`}
+                            >
+                              {formatTaskStatus(project.status || "active")}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {workspaceGlobalMemberResults.length > 0 && (
+                      <div
+                        style={{
+                          padding: "5px 0 7px",
+                          borderTop:
+                            workspaceGlobalTaskResults.length ||
+                            workspaceGlobalProjectResults.length
+                              ? "1px solid #f1f5f9"
+                              : 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: "6px 9px",
+                            color: "#64748b",
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                          }}
+                        >
+                          Team Members
+                        </div>
+
+                        {workspaceGlobalMemberResults.map((member) => (
+                          <button
+                            type="button"
+                            key={`global-member-${member.id}`}
+                            onClick={() =>
+                              openGlobalMemberResult(member)
+                            }
+                            style={{
+                              width: "100%",
+                              border: 0,
+                              borderRadius: 9,
+                              background: "transparent",
+                              padding: "9px",
+                              display: "grid",
+                              gridTemplateColumns: "32px minmax(0,1fr) auto",
+                              alignItems: "center",
+                              gap: 9,
+                              textAlign: "left",
+                              cursor: "pointer",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#f8fafc";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "transparent";
+                            }}
+                          >
+                            <span className="tw-avatar">
+                              {String(member.name || "TM")
+                                .split(" ")
+                                .map((part) => part[0])
+                                .join("")
+                                .slice(0, 2)}
+                            </span>
+
+                            <span style={{ minWidth: 0 }}>
+                              <strong
+                                style={{
+                                  display: "block",
+                                  color: "#0f172a",
+                                  fontSize: 12,
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {member.name}
+                              </strong>
+                              <small
+                                style={{
+                                  display: "block",
+                                  marginTop: 2,
+                                  color: "#94a3b8",
+                                }}
+                              >
+                                Team member
+                              </small>
+                            </span>
+
+                            <span
+                              style={{
+                                color: "#2563eb",
+                                fontSize: 10.5,
+                                fontWeight: 700,
+                              }}
+                            >
+                              View tasks
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {!workspaceGlobalSearchLoading &&
+                      !workspaceGlobalSearchHasResults && (
+                        <div
+                          style={{
+                            padding: "30px 16px",
+                            textAlign: "center",
+                            color: "#94a3b8",
+                          }}
+                        >
+                          <Search
+                            size={22}
+                            style={{ marginBottom: 7 }}
+                          />
+                          <div
+                            style={{
+                              color: "#475569",
+                              fontWeight: 700,
+                              fontSize: 12,
+                            }}
+                          >
+                            No results found
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 3,
+                              fontSize: 11,
+                            }}
+                          >
+                            Try another task, project, or member name.
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </>
+              )}
+          </div>
+
           <div style={{ position: "relative" }}>
             <button
               className="tw-new-btn"
-              onClick={() => setNewMenuOpen((v) => !v)}
+              onClick={() => {
+                setNewMenuOpen((value) => !value);
+                closeWorkspaceGlobalSearch();
+              }}
             >
               <Plus size={16} /> New
             </button>
 
             {newMenuOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: "calc(100% + 6px)",
-                  minWidth: 170,
-                  padding: 6,
-                  background: "#fff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 10,
-                  boxShadow: "0 14px 35px rgba(15,23,42,.14)",
-                  zIndex: 40,
-                }}
-              >
+              <>
                 <button
                   type="button"
-                  onClick={openNewWorkspaceTask}
+                  aria-label="Close new menu"
+                  onClick={() => setNewMenuOpen(false)}
                   style={{
-                    width: "100%",
-                    padding: "9px 10px",
-                    textAlign: "left",
+                    position: "fixed",
+                    inset: 0,
+                    zIndex: 38,
                     border: 0,
                     background: "transparent",
-                    cursor: "pointer",
+                    cursor: "default",
                   }}
-                >
-                  New Task
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setProjectModalOpen(true);
-                    setNewMenuOpen(false);
-                  }}
+                />
+
+                <div
                   style={{
-                    width: "100%",
-                    padding: "9px 10px",
-                    textAlign: "left",
-                    border: 0,
-                    background: "transparent",
-                    cursor: "pointer",
+                    position: "absolute",
+                    right: 0,
+                    top: "calc(100% + 7px)",
+                    minWidth: 215,
+                    padding: 7,
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 12,
+                    boxShadow:
+                      "0 16px 40px rgba(15,23,42,.15)",
+                    zIndex: 40,
                   }}
                 >
-                  New Project
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={openNewWorkspaceTask}
+                    style={{
+                      width: "100%",
+                      padding: "9px",
+                      textAlign: "left",
+                      border: 0,
+                      borderRadius: 9,
+                      background: "transparent",
+                      display: "grid",
+                      gridTemplateColumns: "32px minmax(0,1fr)",
+                      alignItems: "center",
+                      gap: 9,
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#f8fafc";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 31,
+                        height: 31,
+                        borderRadius: 9,
+                        background: "#eff6ff",
+                        color: "#2563eb",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <ListTodo size={14} />
+                    </span>
+                    <span>
+                      <strong
+                        style={{
+                          display: "block",
+                          color: "#0f172a",
+                          fontSize: 12,
+                        }}
+                      >
+                        New Task
+                      </strong>
+                      <small
+                        style={{
+                          color: "#94a3b8",
+                          fontSize: 10.5,
+                        }}
+                      >
+                        Create and assign team work
+                      </small>
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={openNewWorkspaceProject}
+                    style={{
+                      width: "100%",
+                      padding: "9px",
+                      textAlign: "left",
+                      border: 0,
+                      borderRadius: 9,
+                      background: "transparent",
+                      display: "grid",
+                      gridTemplateColumns: "32px minmax(0,1fr)",
+                      alignItems: "center",
+                      gap: 9,
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#f8fafc";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 31,
+                        height: 31,
+                        borderRadius: 9,
+                        background: "#f5f3ff",
+                        color: "#7c3aed",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <FolderKanban size={14} />
+                    </span>
+                    <span>
+                      <strong
+                        style={{
+                          display: "block",
+                          color: "#0f172a",
+                          fontSize: 12,
+                        }}
+                      >
+                        New Project
+                      </strong>
+                      <small
+                        style={{
+                          color: "#94a3b8",
+                          fontSize: 10.5,
+                        }}
+                      >
+                        Organize tasks and deadlines
+                      </small>
+                    </span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -1640,24 +3215,29 @@ export default function TeamWorkspace() {
       </div>
 
       <div className="tw-tabs">
-        {WORKSPACE_TABS.map((tab) => (
+        {WORKSPACE_TABS.map(({ label, icon: TabIcon }) => (
           <button
-            key={tab}
-            className={workspaceTab === tab ? "active" : ""}
+            key={label}
+            type="button"
+            className={workspaceTab === label ? "active" : ""}
             onClick={() => {
-              setWorkspaceTab(tab);
-              setWorkspaceTaskPage(1);
+              setWorkspaceTab(label);
 
-              if (tab === "Board") {
+              if (label === "Board") {
                 setWorkspaceTaskView("board");
-              } else if (tab === "Calendar") {
-                setWorkspaceTaskView("calendar");
-              } else if (tab === "Tasks" || tab === "My Tasks") {
+              }
+
+              if (label === "Tasks" || label === "My Tasks") {
                 setWorkspaceTaskView("table");
+              }
+
+              if (label === "Calendar") {
+                setWorkspaceTaskView("calendar");
               }
             }}
           >
-            {tab}
+            <TabIcon className="tw-tab-icon" size={15} strokeWidth={1.8} />
+            <span>{label}</span>
           </button>
         ))}
       </div>
@@ -2166,188 +3746,583 @@ export default function TeamWorkspace() {
 
           {workspaceTaskView === "board" && workspaceTab !== "My Tasks" && (
             <div
+              className="tw-board-shell"
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(230px, 1fr))",
-                gap: 12,
-                overflowX: "auto",
                 padding: 14,
+                overflowX: "auto",
               }}
             >
-              {[
-                ["pending", "Pending"],
-                ["in_progress", "In Progress"],
-                ["review", "Review"],
-                ["completed", "Completed"],
-              ].map(([status, label]) => {
-                const items = workspaceTasks.filter(
-                  (task) => task.status === status,
-                );
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  marginBottom: 14,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <strong style={{ display: "block", fontSize: 15 }}>
+                    Task Board
+                  </strong>
+                  <span style={{ color: "#64748b", fontSize: 12 }}>
+                    Drag tasks between columns to update their status everywhere.
+                  </span>
+                </div>
 
-                return (
-                  <div
-                    key={status}
-                    style={{
-                      minWidth: 230,
+                <span
+                  style={{
+                    color: "#64748b",
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {workspaceBoardTasks.length} task
+                  {workspaceBoardTasks.length === 1 ? "" : "s"}
+                </span>
+              </div>
+
+              {workspaceBoardLoading ? (
+                <div
+                  style={{
+                    padding: 42,
+                    textAlign: "center",
+                    color: "#64748b",
+                  }}
+                >
+                  Loading board...
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(6, minmax(250px, 1fr))",
+                    gap: 12,
+                    minWidth: 1570,
+                    alignItems: "start",
+                  }}
+                >
+                  {[
+                    {
+                      status: "pending",
+                      label: "Pending",
+                      accent: "#64748b",
                       background: "#f8fafc",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 12,
-                      padding: 10,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        marginBottom: 10,
-                      }}
-                    >
-                      <strong>{label}</strong>
-                      <span>{items.length}</span>
-                    </div>
+                    },
+                    {
+                      status: "in_progress",
+                      label: "In Progress",
+                      accent: "#2563eb",
+                      background: "#eff6ff",
+                    },
+                    {
+                      status: "review",
+                      label: "Review",
+                      accent: "#7c3aed",
+                      background: "#f5f3ff",
+                    },
+                    {
+                      status: "on_hold",
+                      label: "On Hold",
+                      accent: "#d97706",
+                      background: "#fffbeb",
+                    },
+                    {
+                      status: "completed",
+                      label: "Completed",
+                      accent: "#16a34a",
+                      background: "#ecfdf5",
+                    },
+                    {
+                      status: "cancelled",
+                      label: "Cancelled",
+                      accent: "#dc2626",
+                      background: "#fef2f2",
+                    },
+                  ].map((column) => {
+                    const items = workspaceBoardTasks.filter(
+                      (task) => task.status === column.status,
+                    );
 
-                    <div style={{ display: "grid", gap: 8 }}>
-                      {items.map((task) => (
+                    const isOver =
+                      workspaceBoardOverStatus === column.status &&
+                      workspaceBoardDraggingId;
+
+                    return (
+                      <section
+                        key={column.status}
+                        onDragEnter={(event) => {
+                          event.preventDefault();
+                          if (workspaceBoardDraggingId) {
+                            setWorkspaceBoardOverStatus(column.status);
+                          }
+                        }}
+                        onDragOver={(event) => {
+                          event.preventDefault();
+                          event.dataTransfer.dropEffect = "move";
+                          if (workspaceBoardDraggingId) {
+                            setWorkspaceBoardOverStatus(column.status);
+                          }
+                        }}
+                        onDragLeave={(event) => {
+                          if (
+                            !event.currentTarget.contains(
+                              event.relatedTarget,
+                            )
+                          ) {
+                            setWorkspaceBoardOverStatus((current) =>
+                              current === column.status ? null : current,
+                            );
+                          }
+                        }}
+                        onDrop={(event) =>
+                          handleWorkspaceBoardDrop(
+                            event,
+                            column.status,
+                          )
+                        }
+                        style={{
+                          minWidth: 250,
+                          minHeight: 300,
+                          background: isOver
+                            ? column.background
+                            : "#f8fafc",
+                          border: isOver
+                            ? `2px dashed ${column.accent}`
+                            : "1px solid #e5e7eb",
+                          borderRadius: 13,
+                          padding: 10,
+                          transition:
+                            "border-color .15s ease, background .15s ease",
+                        }}
+                      >
                         <div
-                          key={task.id}
                           style={{
-                            background: "#fff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 10,
-                            padding: 10,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 8,
+                            marginBottom: 10,
+                            padding: "2px 2px 7px",
                           }}
                         >
-                          <strong style={{ display: "block", marginBottom: 5 }}>
-                            {task.name}
-                          </strong>
-                          <small style={{ color: "#64748b" }}>
-                            {task.project || "No project"}
-                          </small>
-
-                          <div
+                          <span
                             style={{
-                              display: "flex",
-                              gap: 6,
-                              flexWrap: "wrap",
-                              marginTop: 9,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 7,
                             }}
                           >
-                            <span
-                              className={`tw-pill priority-${String(task.priority || "medium").toLowerCase()}`}
-                            >
-                              {formatTaskStatus(task.priority)}
-                            </span>
-                            <span>{formatDate(task.dueDate)}</span>
-                          </div>
+                            <i
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: column.accent,
+                              }}
+                            />
+                            <strong style={{ fontSize: 12.5 }}>
+                              {column.label}
+                            </strong>
+                          </span>
 
-                          <select
-                            value={task.status}
-                            onChange={(e) =>
-                              changeWorkspaceTaskStatus(task, e.target.value)
-                            }
-                            style={{ width: "100%", marginTop: 10 }}
+                          <span
+                            style={{
+                              minWidth: 24,
+                              height: 24,
+                              padding: "0 7px",
+                              borderRadius: 999,
+                              background: "#fff",
+                              border: "1px solid #e2e8f0",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#64748b",
+                              fontSize: 11,
+                              fontWeight: 700,
+                            }}
                           >
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="review">Review</option>
-                            <option value="on_hold">On Hold</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
+                            {items.length}
+                          </span>
                         </div>
-                      ))}
 
-                      {!items.length && (
                         <div
                           style={{
-                            color: "#94a3b8",
-                            padding: 10,
-                            textAlign: "center",
+                            display: "grid",
+                            gap: 8,
+                            minHeight: 225,
                           }}
                         >
-                          No tasks
+                          {items.map((task) => {
+                            const dragging =
+                              workspaceBoardDraggingId === task.id;
+
+                            return (
+                              <article
+                                key={task.id}
+                                draggable
+                                onDragStart={(event) => {
+                                  setWorkspaceBoardDraggingId(task.id);
+                                  setWorkspaceBoardOverStatus(
+                                    task.status,
+                                  );
+
+                                  event.dataTransfer.effectAllowed =
+                                    "move";
+                                  event.dataTransfer.setData(
+                                    "text/team-board-task-id",
+                                    String(task.id),
+                                  );
+                                }}
+                                onDragEnd={() => {
+                                  setWorkspaceBoardDraggingId(null);
+                                  setWorkspaceBoardOverStatus(null);
+                                }}
+                                onClick={() =>
+                                  openWorkspaceTaskDetail(task)
+                                }
+                                style={{
+                                  background: "#fff",
+                                  border: "1px solid #e5e7eb",
+                                  borderRadius: 11,
+                                  padding: 11,
+                                  cursor: dragging
+                                    ? "grabbing"
+                                    : "grab",
+                                  opacity: dragging ? 0.55 : 1,
+                                  boxShadow:
+                                    "0 1px 2px rgba(15,23,42,.03)",
+                                  transition:
+                                    "opacity .15s ease, box-shadow .15s ease, transform .15s ease",
+                                }}
+                                title="Drag to change status, or click to view task"
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    justifyContent: "space-between",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <strong
+                                    style={{
+                                      color: "#0f172a",
+                                      fontSize: 12.5,
+                                      lineHeight: 1.4,
+                                    }}
+                                  >
+                                    {task.name}
+                                  </strong>
+
+                                  <button
+                                    type="button"
+                                    title="Edit task"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      openEditWorkspaceTask(task);
+                                    }}
+                                    style={{
+                                      flex: "0 0 auto",
+                                      width: 28,
+                                      height: 28,
+                                      border: "1px solid #e2e8f0",
+                                      borderRadius: 8,
+                                      background: "#fff",
+                                      color: "#64748b",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    <Pencil size={13} />
+                                  </button>
+                                </div>
+
+                                <small
+                                  style={{
+                                    display: "block",
+                                    marginTop: 5,
+                                    color: "#64748b",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                  }}
+                                >
+                                  {task.project || "No project"}
+                                </small>
+
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    flexWrap: "wrap",
+                                    marginTop: 9,
+                                  }}
+                                >
+                                  <span
+                                    className={`tw-pill priority-${String(
+                                      task.priority || "medium",
+                                    ).toLowerCase()}`}
+                                  >
+                                    {formatTaskStatus(task.priority)}
+                                  </span>
+
+                                  {task.dueDate && (
+                                    <span
+                                      style={{
+                                        color: "#64748b",
+                                        fontSize: 10.5,
+                                      }}
+                                    >
+                                      {formatDate(task.dueDate)}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: 8,
+                                    marginTop: 11,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 6,
+                                      color: "#64748b",
+                                      fontSize: 10.5,
+                                      minWidth: 0,
+                                    }}
+                                  >
+                                    {task.assignee ? (
+                                      <>
+                                        <span className="tw-avatar">
+                                          {String(task.assignee)
+                                            .split(" ")
+                                            .map((part) => part[0])
+                                            .join("")
+                                            .slice(0, 2)}
+                                        </span>
+                                        <span
+                                          style={{
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            maxWidth: 105,
+                                          }}
+                                        >
+                                          {task.assignee}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      "Unassigned"
+                                    )}
+                                  </span>
+
+                                  <span
+                                    style={{
+                                      color: "#64748b",
+                                      fontSize: 10.5,
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {Number(task.progress || 0)}%
+                                  </span>
+                                </div>
+
+                                <div
+                                  className="tw-progress"
+                                  style={{ marginTop: 7 }}
+                                >
+                                  <i style={{ width: "100%" }}>
+                                    <b
+                                      style={{
+                                        width: `${Math.min(
+                                          100,
+                                          Number(task.progress || 0),
+                                        )}%`,
+                                      }}
+                                    />
+                                  </i>
+                                </div>
+
+                                <select
+                                  value={task.status || "pending"}
+                                  onClick={(event) =>
+                                    event.stopPropagation()
+                                  }
+                                  onChange={(event) => {
+                                    event.stopPropagation();
+                                    moveWorkspaceBoardTask(
+                                      task,
+                                      event.target.value,
+                                    );
+                                  }}
+                                  style={{
+                                    width: "100%",
+                                    marginTop: 10,
+                                    minHeight: 34,
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 8,
+                                    padding: "0 8px",
+                                    background: "#fff",
+                                    color: "#334155",
+                                    fontSize: 11.5,
+                                  }}
+                                >
+                                  <option value="pending">
+                                    Pending
+                                  </option>
+                                  <option value="in_progress">
+                                    In Progress
+                                  </option>
+                                  <option value="review">
+                                    Review
+                                  </option>
+                                  <option value="on_hold">
+                                    On Hold
+                                  </option>
+                                  <option value="completed">
+                                    Completed
+                                  </option>
+                                  <option value="cancelled">
+                                    Cancelled
+                                  </option>
+                                </select>
+                              </article>
+                            );
+                          })}
+
+                          {!items.length && (
+                            <div
+                              style={{
+                                minHeight: 110,
+                                display: "grid",
+                                placeItems: "center",
+                                border: isOver
+                                  ? `1px dashed ${column.accent}`
+                                  : "1px dashed #dbe3ed",
+                                borderRadius: 10,
+                                color: isOver
+                                  ? column.accent
+                                  : "#94a3b8",
+                                background: isOver
+                                  ? "#fff"
+                                  : "rgba(255,255,255,.45)",
+                                padding: 12,
+                                textAlign: "center",
+                                fontSize: 11.5,
+                              }}
+                            >
+                              {isOver
+                                ? `Drop in ${column.label}`
+                                : "No tasks"}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                      </section>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
           {workspaceTaskView === "calendar" && workspaceTab !== "My Tasks" && (
-            <div style={{ padding: 14, display: "grid", gap: 12 }}>
-              {Object.entries(calendarGroups)
-                .sort(([a], [b]) => {
-                  if (a === "No due date") return 1;
-                  if (b === "No due date") return -1;
-                  return a.localeCompare(b);
-                })
-                .map(([date, items]) => (
-                  <div
-                    key={date}
-                    style={{
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 12,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        padding: "10px 12px",
-                        background: "#f8fafc",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {date === "No due date" ? date : formatDate(date)}
-                    </div>
+            <div className="tw-calendar-shell" style={{ padding: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button className="cxc-select" type="button" onClick={() => changeCalendarMonth(-1)} aria-label="Previous month"><ChevronLeft size={16} /></button>
+                  <button className="cxc-select" type="button" onClick={goCalendarToday}>Today</button>
+                  <button className="cxc-select" type="button" onClick={() => changeCalendarMonth(1)} aria-label="Next month"><ChevronRight size={16} /></button>
+                </div>
+                <strong style={{ fontSize: 18 }}>{calendarMonthLabel}</strong>
+                <div style={{ display: "flex", gap: 12, fontSize: 12, color: "#64748b" }}>
+                  <span>● Task due</span>
+                  <span>◆ Project date</span>
+                </div>
+              </div>
 
-                    {items.map((task) => (
-                      <div
-                        key={task.id}
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns:
-                            "minmax(220px, 1fr) 160px 120px 100px",
-                          gap: 12,
-                          alignItems: "center",
-                          padding: "10px 12px",
-                          borderTop: "1px solid #eef2f7",
-                        }}
-                      >
-                        <div>
-                          <strong>{task.name}</strong>
-                          <div style={{ color: "#64748b", fontSize: 12 }}>
-                            {task.project || "No project"}
-                          </div>
-                        </div>
-                        <div>{task.assignee || "Unassigned"}</div>
-                        <span
-                          className={`tw-pill status-${String(task.status || "pending").replaceAll("_", "-")}`}
-                        >
-                          {formatTaskStatus(task.status)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => openEditWorkspaceTask(task)}
-                        >
-                          Edit
-                        </button>
-                      </div>
+              {calendarLoading ? (
+                <div style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Loading calendar...</div>
+              ) : (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", border: "1px solid #e5e7eb", borderBottom: 0, borderRadius: "12px 12px 0 0", overflow: "hidden" }}>
+                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                      <div key={day} style={{ padding: "9px 8px", background: "#f8fafc", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#64748b", borderRight: "1px solid #e5e7eb" }}>{day}</div>
                     ))}
                   </div>
-                ))}
 
-              {!workspaceTasks.length && (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: 32,
-                    color: "#64748b",
-                  }}
-                >
-                  No tasks to show on the calendar.
-                </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", borderLeft: "1px solid #e5e7eb", borderTop: "1px solid #e5e7eb" }}>
+                    {calendarDays.map((day) => {
+                      const isToday = day.dateKey === calendarDateKey(new Date());
+                      const visibleEvents = day.events.slice(0, 3);
+                      return (
+                        <div
+                          key={day.dateKey}
+                          onClick={() => setCalendarSelectedDay(day.dateKey)}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            const taskId = event.dataTransfer.getData("text/team-task-id");
+                            const task = calendarTasks.find((item) => String(item.id) === String(taskId));
+                            if (task) moveTaskToCalendarDate(task, day.dateKey);
+                          }}
+                          style={{ minHeight: 126, padding: 7, borderRight: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb", background: day.currentMonth ? "#fff" : "#f8fafc", cursor: "pointer", overflow: "hidden" }}
+                        >
+                          <div style={{ width: 26, height: 26, display: "grid", placeItems: "center", borderRadius: "50%", fontSize: 12, fontWeight: 700, marginBottom: 5, background: isToday ? "#2563eb" : "transparent", color: isToday ? "#fff" : day.currentMonth ? "#334155" : "#94a3b8" }}>{day.date.getDate()}</div>
+
+                          {visibleEvents.map((event) => (
+                            <button
+                              key={event.id}
+                              type="button"
+                              draggable={event.type === "task"}
+                              onDragStart={(e) => { if (event.type === "task") e.dataTransfer.setData("text/team-task-id", String(event.source.id)); }}
+                              onClick={(e) => { e.stopPropagation(); openCalendarEvent(event); }}
+                              title={`${event.title} · ${event.project}`}
+                              style={{ width: "100%", display: "block", textAlign: "left", border: 0, borderLeft: event.type === "task" ? "3px solid #2563eb" : "3px solid #7c3aed", background: event.type === "task" ? "#eff6ff" : "#f5f3ff", borderRadius: 5, padding: "5px 6px", marginBottom: 4, cursor: event.type === "task" ? "grab" : "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 11, color: "#334155" }}
+                            >
+                              {event.type !== "task" ? "◆ " : ""}{event.title}
+                            </button>
+                          ))}
+
+                          {day.events.length > 3 && (
+                            <small style={{ color: "#2563eb", fontWeight: 700 }}>+{day.events.length - 3} more</small>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {calendarSelectedDay && (
+                    <div style={{ marginTop: 14, border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
+                      <div style={{ padding: "11px 13px", background: "#f8fafc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <strong>{formatDate(calendarSelectedDay)}</strong>
+                        <button type="button" onClick={() => setCalendarSelectedDay(null)}><X size={14} /></button>
+                      </div>
+                      {(calendarEvents.filter((event) => event.dateKey === calendarSelectedDay)).map((event) => (
+                        <div key={`selected-${event.id}`} style={{ display: "grid", gridTemplateColumns: "minmax(180px, 1fr) 160px 120px auto", gap: 10, alignItems: "center", padding: "10px 13px", borderTop: "1px solid #eef2f7" }}>
+                          <div><strong>{event.title}</strong><div style={{ fontSize: 12, color: "#64748b" }}>{event.project}</div></div>
+                          <span>{event.type === "task" ? (event.source.assignee || "Unassigned") : "Project"}</span>
+                          <span className={`tw-pill ${event.type === "task" ? `status-${String(event.status).replaceAll("_", "-")}` : ""}`}>{formatTaskStatus(event.status)}</span>
+                          <button type="button" onClick={() => openCalendarEvent(event)}>{event.type === "task" ? "View Task" : "View Project"}</button>
+                        </div>
+                      ))}
+                      {!calendarEvents.some((event) => event.dateKey === calendarSelectedDay) && (
+                        <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>No tasks or project deadlines on this date.</div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -2389,57 +4364,264 @@ export default function TeamWorkspace() {
       )}
 
       {workspaceTab === "Projects" && (
-        <section className="tw-tasks-section">
+        <section className="tw-tasks-section tw-projects-section">
           <div className="tw-section-head">
             <div>
               <h2>Projects</h2>
-              <p>Projects connected to the same task data.</p>
+              <p>
+                Manage project delivery, ownership, tasks, files, deadlines,
+                and tracked time.
+              </p>
             </div>
+
             <button
               className="primary tw-new-btn"
-              onClick={() => setProjectModalOpen(true)}
+              onClick={openNewWorkspaceProject}
             >
               <Plus size={14} /> New Project
             </button>
           </div>
+
+          <div className="tw-project-toolbar">
+            <label className="tw-project-search">
+              <Search size={15} />
+              <input
+                value={projectSearch}
+                onChange={(e) => setProjectSearch(e.target.value)}
+                placeholder="Search projects..."
+              />
+            </label>
+
+            <select
+              className="cxc-select"
+              value={projectStatusFilter}
+              onChange={(e) => setProjectStatusFilter(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="on_hold">On Hold</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <select
+              className="cxc-select"
+              value={projectPriorityFilter}
+              onChange={(e) => setProjectPriorityFilter(e.target.value)}
+            >
+              <option value="all">All Priorities</option>
+              <option value="urgent">Urgent</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+
+            <button
+              className="reset cxc-select"
+              onClick={() => {
+                setProjectSearch("");
+                setProjectStatusFilter("all");
+                setProjectPriorityFilter("all");
+              }}
+            >
+              <RotateCcw size={13} /> Reset
+            </button>
+          </div>
+
+          <div className="tw-project-summary-grid">
+            <div>
+              <span>Total Projects</span>
+              <strong>{workspaceProjects.length}</strong>
+            </div>
+            <div>
+              <span>Active</span>
+              <strong>
+                {
+                  workspaceProjects.filter(
+                    (project) =>
+                      String(project.status || "active").toLowerCase() ===
+                      "active",
+                  ).length
+                }
+              </strong>
+            </div>
+            <div>
+              <span>Completed</span>
+              <strong>
+                {
+                  workspaceProjects.filter(
+                    (project) =>
+                      String(project.status || "").toLowerCase() ===
+                      "completed",
+                  ).length
+                }
+              </strong>
+            </div>
+            <div>
+              <span>Open Tasks</span>
+              <strong>
+                {workspaceProjects.reduce(
+                  (total, project) =>
+                    total +
+                    Math.max(
+                      0,
+                      Number(project.taskCount || 0) -
+                        Number(project.completedTasks || 0),
+                    ),
+                  0,
+                )}
+              </strong>
+            </div>
+          </div>
+
           <div className="tw-table-wrap">
-            <table className="tw-task-table">
+            <table className="tw-task-table tw-project-table">
               <thead>
                 <tr>
                   <th>Project</th>
                   <th>Status</th>
                   <th>Priority</th>
                   <th>Owner</th>
+                  <th>Start Date</th>
                   <th>Due Date</th>
                   <th>Progress</th>
                   <th>Tasks</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody>
-                {workspaceProjects.map((project) => (
-                  <tr key={project.id}>
-                    <td className="task-name">{project.name}</td>
-                    <td>{formatTaskStatus(project.status || "active")}</td>
-                    <td>{formatTaskStatus(project.priority || "medium")}</td>
-                    <td>{project.ownerName || "—"}</td>
-                    <td>{formatDate(project.dueDate)}</td>
-                    <td>{Number(project.progress || 0)}%</td>
-                    <td>
-                      {project.completedTasks || 0}/{project.taskCount || 0}
-                    </td>
-                  </tr>
-                ))}
-                {!workspaceProjects.length && (
+                {filteredWorkspaceProjects.map((project) => {
+                  const taskCount = Number(project.taskCount || 0);
+                  const completedTasks = Number(project.completedTasks || 0);
+
+                  return (
+                    <tr key={project.id}>
+                      <td>
+                        <button
+                          type="button"
+                          className="tw-project-name-btn"
+                          onClick={() => openWorkspaceProjectDetail(project)}
+                        >
+                          <span className="tw-project-folder-icon">
+                            <FolderKanban size={15} />
+                          </span>
+                          <span>
+                            <strong>{project.name}</strong>
+                            <small>{project.description || "No description"}</small>
+                          </span>
+                        </button>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`tw-project-status ${String(
+                            project.status || "active",
+                          )
+                            .toLowerCase()
+                            .replaceAll("_", "-")}`}
+                        >
+                          {formatTaskStatus(project.status || "active")}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`tw-pill priority-${String(
+                            project.priority || "medium",
+                          ).toLowerCase()}`}
+                        >
+                          {formatTaskStatus(project.priority || "medium")}
+                        </span>
+                      </td>
+
+                      <td>{project.ownerName || "Unassigned"}</td>
+
+                      <td>{formatDate(project.startDate)}</td>
+
+                      <td>
+                        <div className="tw-project-due-cell">
+                          <span>{formatDate(project.dueDate)}</span>
+                          {project.dueDate &&
+                            String(project.status || "").toLowerCase() !==
+                              "completed" && (
+                              <small>{deadlineDistance(project.dueDate)}</small>
+                            )}
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="tw-project-progress">
+                          <i>
+                            <b
+                              style={{
+                                width: `${Math.min(
+                                  100,
+                                  Number(project.progress || 0),
+                                )}%`,
+                              }}
+                            />
+                          </i>
+                          <span>{Number(project.progress || 0)}%</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <button
+                          type="button"
+                          className="tw-project-task-count"
+                          onClick={() => goToProjectTasks(project)}
+                        >
+                          {completedTasks}/{taskCount}
+                        </button>
+                      </td>
+
+                      <td>
+                        <div className="tw-project-row-actions">
+                          <button
+                            type="button"
+                            title="View project"
+                            onClick={() => openWorkspaceProjectDetail(project)}
+                          >
+                            <Eye size={15} />
+                          </button>
+
+                          <button
+                            type="button"
+                            title="Edit project"
+                            onClick={() => openEditWorkspaceProject(project)}
+                          >
+                            <Pencil size={15} />
+                          </button>
+
+                          <button
+                            type="button"
+                            className="danger"
+                            title="Delete project"
+                            disabled={projectDeletingId === project.id}
+                            onClick={() => removeWorkspaceProject(project)}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {!filteredWorkspaceProjects.length && (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="9"
                       style={{
                         textAlign: "center",
-                        padding: 32,
+                        padding: 38,
                         color: "#64748b",
                       }}
                     >
-                      No projects yet.
+                      {workspaceProjects.length
+                        ? "No projects match the current filters."
+                        : "No projects yet. Create your first project to organize team work."}
                     </td>
                   </tr>
                 )}
@@ -2722,112 +4904,842 @@ export default function TeamWorkspace() {
       )}
 
       {workspaceTab === "Team" && (
-        <section className="tw-tasks-section" style={{ padding: 18 }}>
-          <h2>Team</h2>
-          <p >
-            Team members below are the same members used for task assignments
-            and workload calculations.
-          </p>
-          <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-            {workloadRows.map((member) => (
-              <div key={member.id} className="tw-work-row">
-                <span className="tw-avatar">
-                  {String(member.name || member.email || "TM")
-                    .split(" ")
-                    .map((x) => x[0])
-                    .join("")
-                    .slice(0, 2)}
-                </span>
-                <span>{member.name || member.email}</span>
-                <i>
-                  <b style={{ width: `${member.workloadPercent || 0}%` }} />
-                </i>
-                <em>{member.openTasks || 0} open</em>
+        <section className="tw-tasks-section">
+          <div className="tw-section-head">
+            <div>
+              <h2>Team</h2>
+              <p>
+                Live assignments, project ownership, workload, delivery,
+                productivity, and tracked time for active team members.
+              </p>
+            </div>
+
+            <div className="tw-section-actions">
+              <button
+                type="button"
+                onClick={() => setWorkspaceTab("Reports")}
+              >
+                <Flag size={14} /> View Reports
+              </button>
+
+              <button
+                type="button"
+                className="primary"
+                onClick={handleOpenInvite}
+              >
+                <Plus size={14} /> Invite Member
+              </button>
+            </div>
+          </div>
+
+          <div className="tw-stat-strip" style={{ marginBottom: 16 }}>
+            {[
+              [
+                "Active Members",
+                workspaceMembers.length,
+                "Current team",
+              ],
+              [
+                "Tasks Assigned",
+                workspaceTeamTotals.assigned,
+                "Across members",
+              ],
+              [
+                "Tasks Completed",
+                workspaceTeamTotals.completed,
+                "Delivered work",
+              ],
+              [
+                "Hours Logged",
+                `${(
+                  workspaceTeamTotals.loggedMinutes / 60
+                ).toFixed(1)}h`,
+                "Tracked time",
+              ],
+            ].map(([label, value, sub]) => (
+              <div className="tw-stat" key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+                <small>{sub}</small>
               </div>
             ))}
+          </div>
+
+          <div className="tw-table-wrap">
+            <table
+              className="tw-task-table"
+              style={{ minWidth: 1040 }}
+            >
+              <thead>
+                <tr>
+                  <th>Team Member</th>
+                  <th>Role</th>
+                  <th>Projects</th>
+                  <th>Assigned</th>
+                  <th>Open</th>
+                  <th>Completed</th>
+                  <th>Completion</th>
+                  <th>On Time</th>
+                  <th>Avg. Progress</th>
+                  <th>Time Logged</th>
+                  <th>Workload</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {workspaceTeamPerformanceRows.map((member) => (
+                  <tr key={member.id}>
+                    <td>
+                      <span className="tw-assignee">
+                        <span className="tw-avatar">
+                          {String(member.name || "TM")
+                            .split(" ")
+                            .map((part) => part[0])
+                            .join("")
+                            .slice(0, 2)}
+                        </span>
+
+                        <span
+                          style={{
+                            minWidth: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                          }}
+                        >
+                          <strong
+                            style={{
+                              color: "#0f172a",
+                              fontSize: 12,
+                            }}
+                          >
+                            {member.name}
+                          </strong>
+
+                          {member.email && (
+                            <small
+                              style={{
+                                color: "#94a3b8",
+                                fontSize: 10.5,
+                              }}
+                            >
+                              {member.email}
+                            </small>
+                          )}
+                        </span>
+                      </span>
+                    </td>
+
+                    <td>{formatTaskStatus(member.role || "member")}</td>
+
+                    <td>{member.ownedProjects}</td>
+
+                    <td>{member.assigned}</td>
+
+                    <td>{member.openTasks}</td>
+
+                    <td>{member.completed}</td>
+
+                    <td>
+                      <span className="tw-report-rate">
+                        {member.completionRate.toFixed(1)}%
+                      </span>
+                    </td>
+
+                    <td>{member.onTimeRate.toFixed(1)}%</td>
+
+                    <td>
+                      <div className="tw-report-progress-cell">
+                        <i>
+                          <b
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                member.avgProgress,
+                              )}%`,
+                            }}
+                          />
+                        </i>
+                        <span>{member.avgProgress.toFixed(1)}%</span>
+                      </div>
+                    </td>
+
+                    <td>{minutesToText(member.loggedMinutes)}</td>
+
+                    <td>
+                      <div
+                        className="tw-project-progress"
+                        style={{ minWidth: 110 }}
+                      >
+                        <i style={{ width: 68 }}>
+                          <b
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                member.workloadPercent,
+                              )}%`,
+                            }}
+                          />
+                        </i>
+                        <span>{member.workloadPercent}%</span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <button
+                        type="button"
+                        style={{
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 8,
+                          background: "#fff",
+                          padding: "6px 9px",
+                          color: "#2563eb",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                        onClick={() => openGlobalMemberResult(member)}
+                      >
+                        View Tasks
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+
+                {workspaceReportsLoading &&
+                  !workspaceTeamPerformanceRows.length && (
+                    <tr>
+                      <td
+                        colSpan="12"
+                        style={{
+                          textAlign: "center",
+                          padding: 34,
+                          color: "#64748b",
+                        }}
+                      >
+                        Loading team performance...
+                      </td>
+                    </tr>
+                  )}
+
+                {!workspaceReportsLoading &&
+                  !workspaceTeamPerformanceRows.length && (
+                    <tr>
+                      <td
+                        colSpan="12"
+                        style={{
+                          textAlign: "center",
+                          padding: 34,
+                          color: "#64748b",
+                        }}
+                      >
+                        No active team members yet.
+                      </td>
+                    </tr>
+                  )}
+              </tbody>
+            </table>
+          </div>
+
+          <div
+            className="tw-bottom-dashboard"
+            style={{ marginTop: 16 }}
+          >
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head">
+                <strong>Team Workload</strong>
+                <span>Live</span>
+              </div>
+
+              {workspaceTeamPerformanceRows
+                .slice(0, 8)
+                .map((member) => (
+                  <div className="tw-work-row" key={member.id}>
+                    <span className="tw-avatar">
+                      {String(member.name || "TM")
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </span>
+                    <span>{member.name}</span>
+                    <i>
+                      <b
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            member.workloadPercent,
+                          )}%`,
+                        }}
+                      />
+                    </i>
+                    <em>{member.openTasks} open</em>
+                  </div>
+                ))}
+
+              {!workspaceTeamPerformanceRows.length && (
+                <div
+                  style={{
+                    padding: 18,
+                    color: "#64748b",
+                    textAlign: "center",
+                  }}
+                >
+                  No workload data yet.
+                </div>
+              )}
+            </div>
+
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head">
+                <strong>Productivity</strong>
+                <span>Live</span>
+              </div>
+
+              {workspaceTeamPerformanceRows
+                .slice()
+                .sort(
+                  (a, b) =>
+                    b.completionRate - a.completionRate,
+                )
+                .slice(0, 8)
+                .map((member) => (
+                  <div className="tw-work-row" key={member.id}>
+                    <span className="tw-avatar">
+                      {String(member.name || "TM")
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </span>
+                    <span>{member.name}</span>
+                    <i>
+                      <b
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            member.completionRate,
+                          )}%`,
+                        }}
+                      />
+                    </i>
+                    <em>
+                      {member.completionRate.toFixed(1)}%
+                    </em>
+                  </div>
+                ))}
+            </div>
+
+            <div className="tw-mini-card workload">
+              <div className="tw-mini-head">
+                <strong>Tracked Time</strong>
+                <span>Live</span>
+              </div>
+
+              {workspaceTeamPerformanceRows
+                .slice()
+                .sort(
+                  (a, b) =>
+                    b.loggedMinutes - a.loggedMinutes,
+                )
+                .slice(0, 8)
+                .map((member) => (
+                  <div className="tw-work-row" key={member.id}>
+                    <span className="tw-avatar">
+                      {String(member.name || "TM")
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </span>
+                    <span>{member.name}</span>
+                    <i>
+                      <b
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            (member.loggedMinutes /
+                              Math.max(
+                                1,
+                                ...workspaceTeamPerformanceRows.map(
+                                  (row) => row.loggedMinutes,
+                                ),
+                              )) *
+                              100,
+                          )}%`,
+                        }}
+                      />
+                    </i>
+                    <em>{minutesToText(member.loggedMinutes)}</em>
+                  </div>
+                ))}
+            </div>
           </div>
         </section>
       )}
 
       {workspaceTab === "Reports" && (
-        <section className="tw-tasks-section">
-          <div className="tw-section-head">
-            <div><h2>Reports & Analytics</h2><p>Live task, delivery, workload, and time analytics.</p></div>
-            <div className="tw-section-actions">
-              <input className="cxc-select" type="date" value={workspaceReportDateFrom}
-                onChange={(e)=>setWorkspaceReportDateFrom(e.target.value)}/>
-              <input className="cxc-select" type="date" value={workspaceReportDateTo}
-                onChange={(e)=>setWorkspaceReportDateTo(e.target.value)}/>
-              <button onClick={()=>{setWorkspaceReportDateFrom("");setWorkspaceReportDateTo("");}}>
-                <RotateCcw size={13}/> Reset
+        <section className="tw-tasks-section tw-reports-section">
+          <div className="tw-section-head tw-report-head">
+            <div>
+              <h2>Reports & Analytics</h2>
+              <p>Live task, delivery, workload, activity, and time analytics.</p>
+            </div>
+
+            <div className="tw-section-actions tw-report-actions">
+              <label className="tw-report-date">
+                <span>From</span>
+                <input
+                  className="cxc-select"
+                  type="date"
+                  value={workspaceReportDateFrom}
+                  onChange={(e) => setWorkspaceReportDateFrom(e.target.value)}
+                />
+              </label>
+
+              <label className="tw-report-date">
+                <span>To</span>
+                <input
+                  className="cxc-select"
+                  type="date"
+                  value={workspaceReportDateTo}
+                  onChange={(e) => setWorkspaceReportDateTo(e.target.value)}
+                />
+              </label>
+
+              <button
+                className="tw-report-reset-btn"
+                onClick={() => {
+                  setWorkspaceReportDateFrom("");
+                  setWorkspaceReportDateTo("");
+                }}
+              >
+                <RotateCcw size={14} />
+                Reset
+              </button>
+
+              <button
+                className="tw-report-export-btn"
+                onClick={exportWorkspaceReports}
+                disabled={workspaceReportsExporting || workspaceReportsLoading}
+              >
+                <Download size={15} />
+                {workspaceReportsExporting ? "Exporting..." : "Export CSV"}
               </button>
             </div>
           </div>
 
-          <div className="tw-stat-strip">
+          <div className="tw-stat-strip tw-report-stat-strip">
             {[
-              ["Tasks Created", workspaceReports?.summary?.tasksCreated || 0],
-              ["Tasks Completed", workspaceReports?.summary?.tasksCompleted || 0],
-              ["Completion Rate", `${workspaceReports?.summary?.completionRate || 0}%`],
-              ["On Time", `${workspaceReports?.summary?.onTimeRate || 0}%`],
-              ["Avg. Progress", `${workspaceReports?.summary?.avgProgress || 0}%`],
-              ["Hours Logged", `${workspaceReports?.summary?.hoursLogged || 0}h`],
-            ].map(([label,value]) => <div className="tw-stat" key={label}><span>{label}</span><strong>{value}</strong><small>Live report</small></div>)}
+              ["Tasks Created", workspaceReports?.summary?.tasksCreated || 0, "Total created"],
+              ["Tasks Completed", workspaceReports?.summary?.tasksCompleted || 0, "Completed work"],
+              ["Completion Rate", `${workspaceReports?.summary?.completionRate || 0}%`, "Delivery rate"],
+              ["On Time", `${workspaceReports?.summary?.onTimeRate || 0}%`, "Completed on time"],
+              ["Avg. Progress", `${workspaceReports?.summary?.avgProgress || 0}%`, "Across tasks"],
+              ["Hours Logged", `${workspaceReports?.summary?.hoursLogged || 0}h`, "Tracked work"],
+            ].map(([label, value, sub]) => (
+              <div className="tw-stat" key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+                <small>{sub}</small>
+              </div>
+            ))}
           </div>
 
-          <div className="tw-bottom-dashboard" style={{marginTop:16}}>
-            <div className="tw-mini-card">
-              <div className="tw-mini-head"><strong>Tasks by Status</strong><span>Live</span></div>
-              <div className="tw-legend">
-                {(workspaceReports?.tasksByStatus || []).map((x)=><p key={x.key}><i/>{formatTaskStatus(x.key)}<span>{x.count}</span></p>)}
-                {!(workspaceReports?.tasksByStatus || []).length && <p>No data</p>}
+          <div className="tw-report-trend-card">
+            <div className="tw-report-card-head">
+              <div>
+                <strong>14-Day Task Trend</strong>
+                <span>Created vs. completed tasks</span>
+              </div>
+
+              <div className="tw-report-trend-legend">
+                <span className="created"><i /> Created</span>
+                <span className="completed"><i /> Completed</span>
               </div>
             </div>
-            <div className="tw-mini-card">
-              <div className="tw-mini-head"><strong>Tasks by Priority</strong><span>Live</span></div>
-              <div className="tw-legend short">
-                {(workspaceReports?.tasksByPriority || []).map((x)=><p key={x.key}><i/>{formatTaskStatus(x.key)}<span>{x.count}</span></p>)}
-                {!(workspaceReports?.tasksByPriority || []).length && <p>No data</p>}
+
+            {workspaceReportTrend.length ? (
+              <>
+                <div className="tw-report-chart">
+                  <svg
+                    viewBox="0 0 680 190"
+                    preserveAspectRatio="none"
+                    role="img"
+                    aria-label="Fourteen day task trend"
+                  >
+                    {[0, 1, 2, 3, 4].map((line) => {
+                      const y = 16 + line * 39;
+                      return (
+                        <line
+                          key={line}
+                          x1="18"
+                          x2="662"
+                          y1={y}
+                          y2={y}
+                          className="tw-report-grid-line"
+                        />
+                      );
+                    })}
+
+                    <polyline
+                      points={reportTrendPoints("created")}
+                      className="tw-report-line created"
+                    />
+
+                    <polyline
+                      points={reportTrendPoints("completed")}
+                      className="tw-report-line completed"
+                    />
+
+                    {workspaceReportTrend.map((item, index) => {
+                      const x =
+                        18 +
+                        (workspaceReportTrend.length === 1
+                          ? 322
+                          : (index / (workspaceReportTrend.length - 1)) * 644);
+
+                      const createdY =
+                        16 +
+                        156 -
+                        (Number(item.created || 0) / workspaceReportTrendMax) * 156;
+
+                      const completedY =
+                        16 +
+                        156 -
+                        (Number(item.completed || 0) / workspaceReportTrendMax) * 156;
+
+                      return (
+                        <g key={`${item.date}-${index}`}>
+                          <circle
+                            cx={x}
+                            cy={createdY}
+                            r="3.8"
+                            className="tw-report-dot created"
+                          />
+                          <circle
+                            cx={x}
+                            cy={completedY}
+                            r="3.8"
+                            className="tw-report-dot completed"
+                          />
+                        </g>
+                      );
+                    })}
+                  </svg>
+                </div>
+
+                <div className="tw-report-chart-labels">
+                  {workspaceReportTrend.map((item, index) => {
+                    const showLabel =
+                      index === 0 ||
+                      index === workspaceReportTrend.length - 1 ||
+                      index % 2 === 0;
+
+                    return (
+                      <span key={`${item.date}-label`}>
+                        {showLabel
+                          ? new Date(`${item.date}T00:00:00`).toLocaleDateString(
+                              undefined,
+                              { month: "short", day: "numeric" }
+                            )
+                          : ""}
+                      </span>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="tw-report-empty">
+                No task trend data for this period.
+              </div>
+            )}
+          </div>
+
+          <div className="tw-report-grid">
+            <div className="tw-mini-card tw-report-breakdown">
+              <div className="tw-mini-head">
+                <strong>Tasks by Status</strong>
+                <span>Live</span>
+              </div>
+
+              <div className="tw-report-breakdown-list">
+                {(workspaceReports?.tasksByStatus || []).map((item) => {
+                  const total = Math.max(
+                    1,
+                    (workspaceReports?.tasksByStatus || []).reduce(
+                      (sum, row) => sum + Number(row.count || 0),
+                      0
+                    )
+                  );
+
+                  const percent = Math.round(
+                    (Number(item.count || 0) / total) * 100
+                  );
+
+                  return (
+                    <div className="tw-report-breakdown-row" key={item.key}>
+                      <div>
+                        <span>{formatTaskStatus(item.key)}</span>
+                        <strong>{item.count}</strong>
+                      </div>
+                      <i>
+                        <b style={{ width: `${percent}%` }} />
+                      </i>
+                    </div>
+                  );
+                })}
+
+                {!(workspaceReports?.tasksByStatus || []).length && (
+                  <div className="tw-report-empty compact">No status data.</div>
+                )}
               </div>
             </div>
-            <div className="tw-mini-card workload">
-              <div className="tw-mini-head"><strong>Time by Member</strong><span>Live</span></div>
-              {(workspaceReports?.timeByMember || []).slice(0,8).map((x)=><div className="tw-work-row" key={x.id}><span>{x.name}</span><i><b style={{width:`${Math.min(100,(Number(x.minutes||0)/Math.max(1,...(workspaceReports?.timeByMember||[]).map(y=>Number(y.minutes||0))))*100)}%`}}/></i><em>{minutesToText(x.minutes)}</em></div>)}
-            </div>
-            <div className="tw-mini-card workload">
-              <div className="tw-mini-head"><strong>Project Delivery</strong><span>Live</span></div>
-              {(workspaceReports?.projects || []).slice(0,8).map((x)=><div className="tw-work-row" key={x.id}><span>{x.name}</span><i><b style={{width:`${Number(x.avgProgress||0)}%`}}/></i><em>{x.completed}/{x.tasks}</em></div>)}
-            </div>
-          </div>
 
-          <div className="tw-table-wrap" style={{marginTop:16}}>
-            <table className="tw-task-table">
-              <thead><tr><th>Team Member</th><th>Assigned</th><th>Completed</th><th>Completion</th><th>On Time</th><th>Avg. Progress</th><th>Time Logged</th></tr></thead>
-              <tbody>
-                {(workspaceReports?.members || []).map((m)=>(
-                  <tr key={m.id}><td className="task-name">{m.name}</td><td>{m.assigned}</td><td>{m.completed}</td>
-                    <td>{m.completionRate}%</td><td>{m.onTimeRate}%</td><td>{m.avgProgress}%</td><td>{minutesToText(m.loggedMinutes)}</td></tr>
-                ))}
-                {!workspaceReportsLoading && !(workspaceReports?.members || []).length && <tr><td colSpan="7" style={{textAlign:"center",padding:32,color:"#64748b"}}>No report data yet.</td></tr>}
-              </tbody>
-            </table>
-          </div>
+            <div className="tw-mini-card tw-report-breakdown">
+              <div className="tw-mini-head">
+                <strong>Tasks by Priority</strong>
+                <span>Live</span>
+              </div>
 
-          <div className="tw-bottom-dashboard" style={{marginTop:16}}>
-            <div className="tw-mini-card workload">
-              <div className="tw-mini-head"><strong>Recent Task Activity</strong><span>Latest 20</span></div>
-              {(workspaceReports?.recentActivity || []).map((a)=>(
-                <div className="tw-deadline" key={a.id}>
-                  <div><b>{String(a.eventType || "").replaceAll("team.","").replaceAll("_"," ")}</b><span>{a.userName || "Team member"}</span></div>
-                  <span>{a.metadata?.title || ""}</span><em>{a.createdAt ? new Date(a.createdAt).toLocaleString() : ""}</em>
+              <div className="tw-report-breakdown-list priority">
+                {(workspaceReports?.tasksByPriority || []).map((item) => {
+                  const total = Math.max(
+                    1,
+                    (workspaceReports?.tasksByPriority || []).reduce(
+                      (sum, row) => sum + Number(row.count || 0),
+                      0
+                    )
+                  );
+
+                  const percent = Math.round(
+                    (Number(item.count || 0) / total) * 100
+                  );
+
+                  return (
+                    <div className="tw-report-breakdown-row" key={item.key}>
+                      <div>
+                        <span>{formatTaskStatus(item.key)}</span>
+                        <strong>{item.count}</strong>
+                      </div>
+                      <i>
+                        <b style={{ width: `${percent}%` }} />
+                      </i>
+                    </div>
+                  );
+                })}
+
+                {!(workspaceReports?.tasksByPriority || []).length && (
+                  <div className="tw-report-empty compact">No priority data.</div>
+                )}
+              </div>
+            </div>
+
+            <div className="tw-mini-card workload tw-report-time-card">
+              <div className="tw-mini-head">
+                <strong>Time by Member</strong>
+                <span>Live</span>
+              </div>
+
+              {(workspaceReports?.timeByMember || []).slice(0, 8).map((item) => (
+                <div className="tw-work-row" key={item.id}>
+                  <span>{item.name}</span>
+                  <i>
+                    <b
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          (Number(item.minutes || 0) /
+                            Math.max(
+                              1,
+                              ...(workspaceReports?.timeByMember || []).map(
+                                (row) => Number(row.minutes || 0)
+                              )
+                            )) *
+                            100
+                        )}%`,
+                      }}
+                    />
+                  </i>
+                  <em>{minutesToText(item.minutes)}</em>
                 </div>
               ))}
+
+              {!(workspaceReports?.timeByMember || []).length && (
+                <div className="tw-report-empty compact">No tracked time.</div>
+              )}
             </div>
-            <div className="tw-mini-card deadlines">
-              <div className="tw-mini-head"><strong>Upcoming Deadlines</strong><span>Live</span></div>
-              {(workspaceReports?.upcomingDeadlines || []).map((t)=>(
-                <div className="tw-deadline" key={t.id}><div><b>{t.name}</b><span>{t.project || "No project"}</span></div><span>{formatDate(t.dueDate)}</span><em>{deadlineDistance(t.dueDate)}</em></div>
+
+            <div className="tw-mini-card workload tw-report-project-card">
+              <div className="tw-mini-head">
+                <strong>Project Delivery</strong>
+                <span>Live</span>
+              </div>
+
+              {(workspaceReports?.projects || []).slice(0, 8).map((project) => (
+                <div className="tw-work-row" key={project.id}>
+                  <span>{project.name}</span>
+                  <i>
+                    <b style={{ width: `${Number(project.avgProgress || 0)}%` }} />
+                  </i>
+                  <em>
+                    {project.completed}/{project.tasks}
+                  </em>
+                </div>
               ))}
+
+              {!(workspaceReports?.projects || []).length && (
+                <div className="tw-report-empty compact">No project data.</div>
+              )}
+            </div>
+          </div>
+
+          <div className="tw-report-table-card">
+            <div className="tw-report-card-head">
+              <div>
+                <strong>Team Performance</strong>
+                <span>Assignments, delivery, progress, and tracked time</span>
+              </div>
+            </div>
+
+            <div className="tw-table-wrap">
+              <table className="tw-task-table tw-report-table">
+                <thead>
+                  <tr>
+                    <th>Team Member</th>
+                    <th>Assigned</th>
+                    <th>Completed</th>
+                    <th>Completion</th>
+                    <th>On Time</th>
+                    <th>Avg. Progress</th>
+                    <th>Time Logged</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(workspaceReports?.members || []).map((member) => (
+                    <tr key={member.id}>
+                      <td className="task-name">{member.name}</td>
+                      <td>{member.assigned}</td>
+                      <td>{member.completed}</td>
+                      <td>
+                        <span className="tw-report-rate">
+                          {member.completionRate}%
+                        </span>
+                      </td>
+                      <td>{member.onTimeRate}%</td>
+                      <td>
+                        <div className="tw-report-progress-cell">
+                          <i>
+                            <b
+                              style={{
+                                width: `${Math.min(
+                                  100,
+                                  Number(member.avgProgress || 0)
+                                )}%`,
+                              }}
+                            />
+                          </i>
+                          <span>{member.avgProgress}%</span>
+                        </div>
+                      </td>
+                      <td>{minutesToText(member.loggedMinutes)}</td>
+                    </tr>
+                  ))}
+
+                  {!workspaceReportsLoading &&
+                    !(workspaceReports?.members || []).length && (
+                      <tr>
+                        <td
+                          colSpan="7"
+                          style={{
+                            textAlign: "center",
+                            padding: 32,
+                            color: "#64748b",
+                          }}
+                        >
+                          No report data yet.
+                        </td>
+                      </tr>
+                    )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="tw-report-lower-grid">
+            <div className="tw-mini-card tw-report-activity-card">
+              <div className="tw-mini-head">
+                <strong>Recent Activity</strong>
+                <span>Latest 20</span>
+              </div>
+
+              <div className="tw-report-activity-list">
+                {(workspaceReports?.recentActivity || []).map((activity) => {
+                  const presentation = reportActivityPresentation(activity);
+                  const ActivityIcon = presentation.Icon;
+
+                  return (
+                    <div className="tw-report-activity-row" key={activity.id}>
+                      <span
+                        className={`tw-report-activity-icon ${presentation.tone}`}
+                      >
+                        <ActivityIcon size={15} />
+                      </span>
+
+                      <div className="tw-report-activity-main">
+                        <div>
+                          <strong>{presentation.label}</strong>
+                          <span>{activity.userName || "Team member"}</span>
+                        </div>
+                        <p>{presentation.detail}</p>
+                      </div>
+
+                      <time>
+                        {activity.createdAt
+                          ? new Date(activity.createdAt).toLocaleString()
+                          : "—"}
+                      </time>
+                    </div>
+                  );
+                })}
+
+                {!(workspaceReports?.recentActivity || []).length && (
+                  <div className="tw-report-empty">No recent task activity.</div>
+                )}
+              </div>
+            </div>
+
+            <div className="tw-mini-card tw-report-deadline-card">
+              <div className="tw-mini-head">
+                <strong>Upcoming Deadlines</strong>
+                <span>Live</span>
+              </div>
+
+              <div className="tw-report-deadline-list">
+                {(workspaceReports?.upcomingDeadlines || []).map((task) => (
+                  <div className="tw-report-deadline-row" key={task.id}>
+                    <span className={`tw-report-priority-dot ${task.priority || "medium"}`} />
+
+                    <div>
+                      <strong>{task.name}</strong>
+                      <span>
+                        {task.project || "No project"}
+                        {task.assignee ? ` · ${task.assignee}` : ""}
+                      </span>
+                    </div>
+
+                    <div className="tw-report-deadline-date">
+                      <b>{formatDate(task.dueDate)}</b>
+                      <em>{deadlineDistance(task.dueDate)}</em>
+                    </div>
+                  </div>
+                ))}
+
+                {!(workspaceReports?.upcomingDeadlines || []).length && (
+                  <div className="tw-report-empty">No upcoming deadlines.</div>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -2835,7 +5747,6 @@ export default function TeamWorkspace() {
 
       {[
         "Overview",
-        "Reports",
         "Tasks",
         "My Tasks",
         "Board",
@@ -2954,7 +5865,15 @@ export default function TeamWorkspace() {
                 No upcoming deadlines.
               </div>
             )}
-            <button>View full calendar →</button>
+            <button
+              type="button"
+              onClick={() => {
+                setWorkspaceTab("Calendar");
+                setWorkspaceTaskView("calendar");
+              }}
+            >
+              View full calendar →
+            </button>
           </div>
         </div>
       )}
@@ -3264,7 +6183,7 @@ export default function TeamWorkspace() {
           style={SEAT_OVERLAY}
           onClick={() => !taskSaving && setTaskModalOpen(false)}
         >
-          <form
+          <form className="form-cxc-select"
             style={{
               ...SEAT_CARD,
               width: "min(760px, 96vw)",
@@ -3287,7 +6206,7 @@ export default function TeamWorkspace() {
             >
               <label style={{ gridColumn: "1 / -1" }}>
                 <span>Task name</span>
-                <input
+                <input className="cxc-select"
                   required
                   value={taskForm.name}
                   onChange={(e) =>
@@ -3299,7 +6218,7 @@ export default function TeamWorkspace() {
 
               <label>
                 <span>Project</span>
-                <select
+                <select className="cxc-select"
                   value={taskForm.projectId}
                   onChange={(e) =>
                     setTaskForm((f) => ({ ...f, projectId: e.target.value }))
@@ -3317,7 +6236,7 @@ export default function TeamWorkspace() {
 
               <label>
                 <span>Assignee</span>
-                <select
+                <select className="cxc-select"
                   value={taskForm.assigneeId}
                   onChange={(e) =>
                     setTaskForm((f) => ({ ...f, assigneeId: e.target.value }))
@@ -3335,7 +6254,7 @@ export default function TeamWorkspace() {
 
               <label>
                 <span>Status</span>
-                <select
+                <select className="cxc-select"
                   value={taskForm.status}
                   onChange={(e) =>
                     setTaskForm((f) => ({ ...f, status: e.target.value }))
@@ -3353,7 +6272,7 @@ export default function TeamWorkspace() {
 
               <label>
                 <span>Priority</span>
-                <select
+                <select className="cxc-select"
                   value={taskForm.priority}
                   onChange={(e) =>
                     setTaskForm((f) => ({ ...f, priority: e.target.value }))
@@ -3369,7 +6288,7 @@ export default function TeamWorkspace() {
 
               <label>
                 <span>Due date</span>
-                <input
+                <input className="cxc-select"
                   type="date"
                   value={taskForm.dueDate}
                   onChange={(e) =>
@@ -3381,7 +6300,7 @@ export default function TeamWorkspace() {
 
               <label>
                 <span>Task type</span>
-                <select
+                <select className="cxc-select"
                   value={taskForm.taskType}
                   onChange={(e) =>
                     setTaskForm((f) => ({ ...f, taskType: e.target.value }))
@@ -3398,7 +6317,7 @@ export default function TeamWorkspace() {
 
               <label>
                 <span>Progress %</span>
-                <input
+                <input className="cxc-select"
                   type="number"
                   min="0"
                   max="100"
@@ -3412,7 +6331,7 @@ export default function TeamWorkspace() {
 
               <label>
                 <span>Estimated time (minutes)</span>
-                <input
+                <input className="cxc-select"
                   type="number"
                   min="0"
                   value={taskForm.estimatedMinutes}
@@ -3428,7 +6347,7 @@ export default function TeamWorkspace() {
 
               <label style={{ gridColumn: "1 / -1" }}>
                 <span>Labels (comma separated)</span>
-                <input
+                <input className="cxc-select"
                   value={taskForm.labels}
                   onChange={(e) =>
                     setTaskForm((f) => ({ ...f, labels: e.target.value }))
@@ -3466,41 +6385,89 @@ export default function TeamWorkspace() {
       {projectModalOpen && (
         <div
           style={SEAT_OVERLAY}
-          onClick={() => !projectSaving && setProjectModalOpen(false)}
+          onClick={() => {
+            if (projectSaving) return;
+            setProjectModalOpen(false);
+            resetWorkspaceProjectForm();
+          }}
         >
           <form
-            style={{ ...SEAT_CARD, width: "min(560px, 96vw)" }}
+            className="tw-project-modal"
+            style={{ ...SEAT_CARD, width: "min(720px, 96vw)" }}
             onClick={(e) => e.stopPropagation()}
             onSubmit={saveWorkspaceProject}
           >
-            <h3 style={SEAT_TITLE}>New Project</h3>
+            <div className="tw-project-modal-head">
+              <div>
+                <h3 style={SEAT_TITLE}>
+                  {editingWorkspaceProject ? "Edit Project" : "New Project"}
+                </h3>
+                <p>
+                  {editingWorkspaceProject
+                    ? "Update project delivery, ownership, dates, and progress."
+                    : "Create a project and connect tasks, files, and tracked time."}
+                </p>
+              </div>
 
-            <div style={{ display: "grid", gap: 12 }}>
-              <label>
+              <button
+                type="button"
+                className="tw-project-modal-close"
+                disabled={projectSaving}
+                onClick={() => {
+                  setProjectModalOpen(false);
+                  resetWorkspaceProjectForm();
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="tw-project-form-grid">
+              <label className="full">
                 <span>Project name</span>
                 <input
                   required
                   value={projectForm.name}
                   onChange={(e) =>
-                    setProjectForm((f) => ({ ...f, name: e.target.value }))
+                    setProjectForm((form) => ({
+                      ...form,
+                      name: e.target.value,
+                    }))
                   }
-                  style={{ width: "100%", marginTop: 5 }}
                 />
               </label>
 
-              <label>
+              <label className="full">
                 <span>Description</span>
                 <textarea
                   value={projectForm.description}
                   onChange={(e) =>
-                    setProjectForm((f) => ({
-                      ...f,
+                    setProjectForm((form) => ({
+                      ...form,
                       description: e.target.value,
                     }))
                   }
                   rows="4"
-                  style={{ width: "100%", marginTop: 5 }}
+                  placeholder="Describe the project scope or objective..."
                 />
+              </label>
+
+              <label>
+                <span>Status</span>
+                <select
+                  value={projectForm.status}
+                  onChange={(e) =>
+                    setProjectForm((form) => ({
+                      ...form,
+                      status: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="active">Active</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
               </label>
 
               <label>
@@ -3508,14 +6475,67 @@ export default function TeamWorkspace() {
                 <select
                   value={projectForm.priority}
                   onChange={(e) =>
-                    setProjectForm((f) => ({ ...f, priority: e.target.value }))
+                    setProjectForm((form) => ({
+                      ...form,
+                      priority: e.target.value,
+                    }))
                   }
-                  style={{ width: "100%", marginTop: 5 }}
                 >
+                  <option value="urgent">Urgent</option>
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
                   <option value="low">Low</option>
                 </select>
+              </label>
+
+              <label>
+                <span>Owner</span>
+                <select
+                  value={projectForm.ownerId}
+                  onChange={(e) =>
+                    setProjectForm((form) => ({
+                      ...form,
+                      ownerId: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Unassigned</option>
+                  {workspaceMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>Progress %</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={projectForm.progress}
+                  onChange={(e) =>
+                    setProjectForm((form) => ({
+                      ...form,
+                      progress: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Start date</span>
+                <input
+                  type="date"
+                  value={projectForm.startDate}
+                  onChange={(e) =>
+                    setProjectForm((form) => ({
+                      ...form,
+                      startDate: e.target.value,
+                    }))
+                  }
+                />
               </label>
 
               <label>
@@ -3524,9 +6544,11 @@ export default function TeamWorkspace() {
                   type="date"
                   value={projectForm.dueDate}
                   onChange={(e) =>
-                    setProjectForm((f) => ({ ...f, dueDate: e.target.value }))
+                    setProjectForm((form) => ({
+                      ...form,
+                      dueDate: e.target.value,
+                    }))
                   }
-                  style={{ width: "100%", marginTop: 5 }}
                 />
               </label>
             </div>
@@ -3536,21 +6558,336 @@ export default function TeamWorkspace() {
                 type="button"
                 style={SEAT_BTN_SECONDARY}
                 disabled={projectSaving}
-                onClick={() => setProjectModalOpen(false)}
+                onClick={() => {
+                  setProjectModalOpen(false);
+                  resetWorkspaceProjectForm();
+                }}
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
                 style={SEAT_BTN_PRIMARY}
                 disabled={projectSaving}
               >
-                {projectSaving ? "Creating..." : "Create Project"}
+                {projectSaving
+                  ? "Saving..."
+                  : editingWorkspaceProject
+                    ? "Save Changes"
+                    : "Create Project"}
               </button>
             </div>
           </form>
         </div>
       )}
+
+      {projectDetailOpen && selectedWorkspaceProject && (
+        <div
+          className="tw-project-drawer-overlay"
+          onClick={() => setProjectDetailOpen(false)}
+        >
+          <aside
+            className="tw-project-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="tw-project-drawer-head">
+              <div className="tw-project-drawer-title">
+                <span className="tw-project-drawer-icon">
+                  <FolderKanban size={18} />
+                </span>
+
+                <div>
+                  <h3>{selectedWorkspaceProject.name}</h3>
+                  <p>
+                    {selectedWorkspaceProject.description ||
+                      "No project description"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setProjectDetailOpen(false)}
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            {projectDetailLoading ? (
+              <div className="tw-project-drawer-loading">
+                Loading project details...
+              </div>
+            ) : (
+              <>
+                <div className="tw-project-drawer-actions">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openEditWorkspaceProject(selectedWorkspaceProject)
+                    }
+                  >
+                    <Pencil size={14} /> Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      goToProjectTasks(selectedWorkspaceProject)
+                    }
+                  >
+                    <ListTodo size={14} /> Tasks
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      goToProjectFiles(selectedWorkspaceProject)
+                    }
+                  >
+                    <FileText size={14} /> Files
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      goToProjectTime(selectedWorkspaceProject)
+                    }
+                  >
+                    <Timer size={14} /> Time
+                  </button>
+                </div>
+
+                <div className="tw-project-detail-stats">
+                  <div>
+                    <span>Total Tasks</span>
+                    <strong>
+                      {Number(selectedWorkspaceProject.taskCount || 0)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Completed</span>
+                    <strong>
+                      {Number(selectedWorkspaceProject.completedTasks || 0)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Open</span>
+                    <strong>
+                      {Number(selectedWorkspaceProject.openTasks || 0)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Overdue</span>
+                    <strong>
+                      {Number(selectedWorkspaceProject.overdueTasks || 0)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Hours Logged</span>
+                    <strong>
+                      {Number(
+                        selectedWorkspaceProject.loggedHours ||
+                          Number(
+                            selectedWorkspaceProject.loggedMinutes || 0,
+                          ) / 60,
+                      ).toFixed(1)}
+                      h
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Progress</span>
+                    <strong>
+                      {Number(selectedWorkspaceProject.progress || 0)}%
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="tw-project-info-grid">
+                  <div>
+                    <span>Status</span>
+                    <strong>
+                      {formatTaskStatus(
+                        selectedWorkspaceProject.status || "active",
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Priority</span>
+                    <strong>
+                      {formatTaskStatus(
+                        selectedWorkspaceProject.priority || "medium",
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Owner</span>
+                    <strong>
+                      {selectedWorkspaceProject.ownerName || "Unassigned"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Start Date</span>
+                    <strong>
+                      {formatDate(selectedWorkspaceProject.startDate)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Due Date</span>
+                    <strong>
+                      {formatDate(selectedWorkspaceProject.dueDate)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Updated</span>
+                    <strong>
+                      {selectedWorkspaceProject.updatedAt
+                        ? new Date(
+                            selectedWorkspaceProject.updatedAt,
+                          ).toLocaleString()
+                        : "—"}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="tw-project-detail-section">
+                  <div className="tw-project-detail-section-head">
+                    <div>
+                      <strong>Project Tasks</strong>
+                      <span>
+                        {(selectedWorkspaceProject.tasks || []).length} task(s)
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        goToProjectTasks(selectedWorkspaceProject)
+                      }
+                    >
+                      View all
+                    </button>
+                  </div>
+
+                  <div className="tw-project-detail-task-list">
+                    {(selectedWorkspaceProject.tasks || [])
+                      .slice(0, 8)
+                      .map((task) => (
+                        <div
+                          className="tw-project-detail-task"
+                          key={task.id}
+                        >
+                          <div>
+                            <strong>{task.name || task.title}</strong>
+                            <span>
+                              {task.assignee || "Unassigned"} ·{" "}
+                              {formatDate(task.dueDate)}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span
+                              className={`tw-project-status ${String(
+                                task.status || "pending",
+                              ).replaceAll("_", "-")}`}
+                            >
+                              {formatTaskStatus(task.status)}
+                            </span>
+                            <em>{minutesToText(task.loggedMinutes)}</em>
+                          </div>
+                        </div>
+                      ))}
+
+                    {!(selectedWorkspaceProject.tasks || []).length && (
+                      <div className="tw-project-detail-empty">
+                        No tasks are connected to this project yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="tw-project-detail-section">
+                  <div className="tw-project-detail-section-head">
+                    <div>
+                      <strong>Recent Time Entries</strong>
+                      <span>Work logged against this project</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        goToProjectTime(selectedWorkspaceProject)
+                      }
+                    >
+                      View all
+                    </button>
+                  </div>
+
+                  <div className="tw-project-time-list">
+                    {(selectedWorkspaceProject.timeEntries || [])
+                      .slice(0, 8)
+                      .map((entry) => (
+                        <div
+                          className="tw-project-time-row"
+                          key={entry.id}
+                        >
+                          <div>
+                            <strong>{entry.userName || "Team member"}</strong>
+                            <span>
+                              {entry.taskName || "Project time"}
+                              {entry.note ? ` · ${entry.note}` : ""}
+                            </span>
+                          </div>
+
+                          <div>
+                            <strong>{minutesToText(entry.minutes)}</strong>
+                            <span>
+                              {entry.createdAt
+                                ? new Date(entry.createdAt).toLocaleString()
+                                : "—"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+
+                    {!(selectedWorkspaceProject.timeEntries || []).length && (
+                      <div className="tw-project-detail-empty">
+                        No time has been logged to this project yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="tw-project-drawer-danger">
+                  <button
+                    type="button"
+                    disabled={
+                      projectDeletingId === selectedWorkspaceProject.id
+                    }
+                    onClick={() =>
+                      removeWorkspaceProject(selectedWorkspaceProject)
+                    }
+                  >
+                    <Trash2 size={15} />
+                    Delete Project
+                  </button>
+                </div>
+              </>
+            )}
+          </aside>
+        </div>
+      )}
+
 
       <InviteMemberModal
         open={inviteModalOpen}

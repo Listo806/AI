@@ -3980,4 +3980,675 @@ export class TeamsService {
     return result.rows[0];
   }
 
+    async getWorkspaceProjectDetail(
+    teamId: string,
+    projectId: string,
+  ) {
+    await this.ensureWorkspaceSchema();
+
+    const projectResult = await this.db.query(
+      `
+      SELECT
+        p.id,
+        p.team_id AS "teamId",
+        p.name,
+        p.description,
+        p.status,
+        p.priority,
+        p.progress,
+
+        p.owner_id AS "ownerId",
+        COALESCE(owner.name, owner.email) AS "ownerName",
+
+        p.start_date AS "startDate",
+        p.due_date AS "dueDate",
+
+        p.created_at AS "createdAt",
+        p.updated_at AS "updatedAt",
+
+        COUNT(DISTINCT tt.id)::int AS "taskCount",
+
+        COUNT(DISTINCT tt.id)
+          FILTER (
+            WHERE tt.status = 'completed'
+          )::int AS "completedTasks",
+
+        COUNT(DISTINCT tt.id)
+          FILTER (
+            WHERE tt.status NOT IN ('completed', 'cancelled')
+          )::int AS "openTasks",
+
+        COUNT(DISTINCT tt.id)
+          FILTER (
+            WHERE
+              tt.status NOT IN ('completed', 'cancelled')
+              AND tt.due_date IS NOT NULL
+              AND tt.due_date < NOW()
+          )::int AS "overdueTasks",
+
+        COALESCE(
+          (
+            SELECT SUM(te.minutes)
+            FROM team_time_entries te
+            WHERE
+              te.team_id = p.team_id
+              AND te.project_id = p.id
+          ),
+          0
+        )::int AS "loggedMinutes"
+
+      FROM projects p
+
+      LEFT JOIN users owner
+        ON owner.id = p.owner_id
+
+      LEFT JOIN team_tasks tt
+        ON tt.project_id = p.id
+        AND tt.team_id = p.team_id
+
+      WHERE
+        p.id = $1
+        AND p.team_id = $2
+
+      GROUP BY
+        p.id,
+        owner.name,
+        owner.email
+
+      LIMIT 1
+      `,
+      [projectId, teamId],
+    );
+
+    const project = projectResult.rows[0];
+
+    if (!project) {
+      throw new NotFoundException("Project not found.");
+    }
+
+    /*
+     * Tasks belonging to this project.
+     *
+     * We intentionally use team_id + project_id so a project
+     * can never expose another team's tasks.
+     */
+    const tasksResult = await this.db.query(
+      `
+      SELECT
+        tt.id,
+
+        tt.project_id AS "projectId",
+
+        tt.title AS name,
+        tt.title,
+
+        tt.description,
+
+        tt.status,
+        tt.priority,
+
+        tt.task_type AS "taskType",
+
+        tt.assigned_to AS "assigneeId",
+
+        COALESCE(
+          assignee.name,
+          assignee.email
+        ) AS assignee,
+
+        tt.due_date AS "dueDate",
+
+        tt.progress,
+
+        tt.estimated_minutes AS "estimatedMinutes",
+
+        tt.labels,
+
+        tt.created_by AS "createdBy",
+
+        tt.completed_at AS "completedAt",
+
+        tt.created_at AS "createdAt",
+
+        tt.updated_at AS "updatedAt",
+
+        COALESCE(
+          (
+            SELECT SUM(te.minutes)
+            FROM team_time_entries te
+            WHERE
+              te.team_id = tt.team_id
+              AND te.task_id = tt.id
+          ),
+          0
+        )::int AS "loggedMinutes"
+
+      FROM team_tasks tt
+
+      LEFT JOIN users assignee
+        ON assignee.id = tt.assigned_to
+
+      WHERE
+        tt.team_id = $1
+        AND tt.project_id = $2
+
+      ORDER BY
+        CASE
+          WHEN tt.status = 'completed' THEN 1
+          ELSE 0
+        END,
+
+        CASE
+          WHEN tt.due_date IS NULL THEN 1
+          ELSE 0
+        END,
+
+        tt.due_date ASC,
+
+        tt.updated_at DESC
+      `,
+      [teamId, projectId],
+    );
+
+    /*
+     * Time tracking entries for this project.
+     */
+    const timeResult = await this.db.query(
+      `
+      SELECT
+        te.id,
+
+        te.task_id AS "taskId",
+
+        tt.title AS "taskName",
+
+        te.user_id AS "userId",
+
+        COALESCE(
+          u.name,
+          u.email
+        ) AS "userName",
+
+        te.minutes,
+
+        te.note,
+
+        te.started_at AS "startedAt",
+
+        te.created_at AS "createdAt"
+
+      FROM team_time_entries te
+
+      LEFT JOIN team_tasks tt
+        ON tt.id = te.task_id
+        AND tt.team_id = te.team_id
+
+      LEFT JOIN users u
+        ON u.id = te.user_id
+
+      WHERE
+        te.team_id = $1
+        AND te.project_id = $2
+
+      ORDER BY
+        COALESCE(
+          te.started_at,
+          te.created_at
+        ) DESC
+
+      LIMIT 100
+      `,
+      [teamId, projectId],
+    );
+
+    return {
+      ...project,
+
+      taskCount: Number(project.taskCount || 0),
+
+      completedTasks: Number(
+        project.completedTasks || 0,
+      ),
+
+      openTasks: Number(
+        project.openTasks || 0,
+      ),
+
+      overdueTasks: Number(
+        project.overdueTasks || 0,
+      ),
+
+      loggedMinutes: Number(
+        project.loggedMinutes || 0,
+      ),
+
+      loggedHours: Number(
+        (
+          Number(project.loggedMinutes || 0) / 60
+        ).toFixed(1),
+      ),
+
+      tasks: tasksResult.rows,
+
+      timeEntries: timeResult.rows,
+    };
+  }
+
+
+  async updateWorkspaceProject(
+    teamId: string,
+    projectId: string,
+    userId: string,
+    body: any,
+  ) {
+    await this.ensureWorkspaceSchema();
+
+    const existingResult = await this.db.query(
+      `
+      SELECT *
+      FROM projects
+      WHERE
+        id = $1
+        AND team_id = $2
+      LIMIT 1
+      `,
+      [projectId, teamId],
+    );
+
+    const existing = existingResult.rows[0];
+
+    if (!existing) {
+      throw new NotFoundException("Project not found.");
+    }
+
+    /*
+     * Validate owner.
+     *
+     * ownerId must belong to this team.
+     */
+    if (body?.ownerId) {
+      const memberResult = await this.db.query(
+        `
+        SELECT 1
+        FROM team_members
+        WHERE
+          team_id = $1
+          AND user_id = $2
+          AND status = 'active'
+        LIMIT 1
+        `,
+        [teamId, body.ownerId],
+      );
+
+      if (!memberResult.rows.length) {
+        throw new BadRequestException(
+          "Project owner must be an active team member.",
+        );
+      }
+    }
+
+    const name =
+      body?.name !== undefined
+        ? String(body.name || "").trim()
+        : existing.name;
+
+    if (!name) {
+      throw new BadRequestException(
+        "Project name is required.",
+      );
+    }
+
+    const status =
+      body?.status !== undefined
+        ? String(body.status || "active")
+            .trim()
+            .toLowerCase()
+        : existing.status;
+
+    const priority =
+      body?.priority !== undefined
+        ? this.normalizeWorkspacePriority(
+            body.priority,
+          )
+        : existing.priority;
+
+    const progress =
+      body?.progress !== undefined
+        ? Math.max(
+            0,
+            Math.min(
+              100,
+              Number(body.progress || 0),
+            ),
+          )
+        : Number(existing.progress || 0);
+
+    const result = await this.db.query(
+      `
+      UPDATE projects
+
+      SET
+        name = $3,
+
+        description = $4,
+
+        status = $5,
+
+        priority = $6,
+
+        owner_id = $7,
+
+        start_date = $8,
+
+        due_date = $9,
+
+        progress = $10,
+
+        updated_at = NOW()
+
+      WHERE
+        id = $1
+        AND team_id = $2
+
+      RETURNING
+        id,
+
+        team_id AS "teamId",
+
+        name,
+
+        description,
+
+        status,
+
+        priority,
+
+        owner_id AS "ownerId",
+
+        start_date AS "startDate",
+
+        due_date AS "dueDate",
+
+        progress,
+
+        created_at AS "createdAt",
+
+        updated_at AS "updatedAt"
+      `,
+      [
+        projectId,
+        teamId,
+
+        name,
+
+        body?.description !== undefined
+          ? body.description || null
+          : existing.description,
+
+        status,
+
+        priority,
+
+        body?.ownerId !== undefined
+          ? body.ownerId || null
+          : existing.owner_id,
+
+        body?.startDate !== undefined
+          ? body.startDate || null
+          : existing.start_date,
+
+        body?.dueDate !== undefined
+          ? body.dueDate || null
+          : existing.due_date,
+
+        progress,
+      ],
+    );
+
+    const updated = result.rows[0];
+
+    /*
+     * Determine which fields changed for Recent Activity.
+     */
+    const changes: Record<string, any> = {};
+
+    if (existing.name !== updated.name) {
+      changes.name = {
+        from: existing.name,
+        to: updated.name,
+      };
+    }
+
+    if (existing.status !== updated.status) {
+      changes.status = {
+        from: existing.status,
+        to: updated.status,
+      };
+    }
+
+    if (existing.priority !== updated.priority) {
+      changes.priority = {
+        from: existing.priority,
+        to: updated.priority,
+      };
+    }
+
+    if (
+      Number(existing.progress || 0) !==
+      Number(updated.progress || 0)
+    ) {
+      changes.progress = {
+        from: Number(existing.progress || 0),
+        to: Number(updated.progress || 0),
+      };
+    }
+
+    if (
+      String(existing.owner_id || "") !==
+      String(updated.ownerId || "")
+    ) {
+      changes.ownerId = {
+        from: existing.owner_id,
+        to: updated.ownerId,
+      };
+    }
+
+    if (
+      String(existing.due_date || "") !==
+      String(updated.dueDate || "")
+    ) {
+      changes.dueDate = {
+        from: existing.due_date,
+        to: updated.dueDate,
+      };
+    }
+
+    /*
+     * Record project activity.
+     */
+    try {
+      await this.db.query(
+        `
+        INSERT INTO events (
+          team_id,
+          user_id,
+          event_type,
+          entity_type,
+          entity_id,
+          metadata,
+          created_at
+        )
+
+        VALUES (
+          $1,
+          $2,
+          'team.project_updated',
+          'project',
+          $3,
+          $4::jsonb,
+          NOW()
+        )
+        `,
+        [
+          teamId,
+          userId,
+          projectId,
+          JSON.stringify({
+            title: updated.name,
+            changes,
+          }),
+        ],
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Unable to log project update activity: ${
+          error instanceof Error
+            ? error.message
+            : String(error)
+        }`,
+      );
+    }
+
+    return updated;
+  }
+
+
+  async deleteWorkspaceProject(
+    teamId: string,
+    projectId: string,
+    userId: string,
+  ) {
+    await this.ensureWorkspaceSchema();
+
+    const projectResult = await this.db.query(
+      `
+      SELECT
+        id,
+        name
+      FROM projects
+      WHERE
+        id = $1
+        AND team_id = $2
+      LIMIT 1
+      `,
+      [projectId, teamId],
+    );
+
+    const project = projectResult.rows[0];
+
+    if (!project) {
+      throw new NotFoundException(
+        "Project not found.",
+      );
+    }
+
+    /*
+     * IMPORTANT:
+     *
+     * We do NOT delete project tasks.
+     *
+     * Tasks remain in Team Workspace and simply become
+     * unassigned from this project.
+     *
+     * This prevents accidental task/history loss.
+     */
+
+    const client = await this.db.getClient();
+
+    try {
+      await client.query("BEGIN");
+
+      /*
+       * Preserve time history but remove project relationship.
+       */
+      await client.query(
+        `
+        UPDATE team_time_entries
+        SET project_id = NULL
+        WHERE
+          team_id = $1
+          AND project_id = $2
+        `,
+        [teamId, projectId],
+      );
+
+      /*
+       * Preserve tasks.
+       */
+      await client.query(
+        `
+        UPDATE team_tasks
+
+        SET
+          project_id = NULL,
+          updated_at = NOW()
+
+        WHERE
+          team_id = $1
+          AND project_id = $2
+        `,
+        [teamId, projectId],
+      );
+
+      await client.query(
+        `
+        DELETE FROM projects
+        WHERE
+          id = $1
+          AND team_id = $2
+        `,
+        [projectId, teamId],
+      );
+
+      /*
+       * Project deletion activity.
+       */
+      await client.query(
+        `
+        INSERT INTO events (
+          team_id,
+          user_id,
+          event_type,
+          entity_type,
+          entity_id,
+          metadata,
+          created_at
+        )
+
+        VALUES (
+          $1,
+          $2,
+          'team.project_deleted',
+          'project',
+          $3,
+          $4::jsonb,
+          NOW()
+        )
+        `,
+        [
+          teamId,
+          userId,
+          projectId,
+          JSON.stringify({
+            title: project.name,
+          }),
+        ],
+      );
+
+      await client.query("COMMIT");
+
+      return {
+        deleted: true,
+        projectId,
+      };
+    } catch (error) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (_) {}
+
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 }

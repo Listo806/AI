@@ -815,3 +815,66 @@ export async function deleteTeamWorkspaceFile(
     }
   );
 }
+
+/* ======================================================
+ TEAM WORKSPACE — PROJECT DETAIL / UPDATE / DELETE
+====================================================== */
+
+export async function fetchTeamWorkspaceProjectDetail(
+  teamId,
+  projectId
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(teamId)}/projects/${projectId}`
+  );
+}
+
+export async function updateTeamWorkspaceProject(
+  teamId,
+  projectId,
+  payload
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(teamId)}/projects/${projectId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+export async function deleteTeamWorkspaceProject(
+  teamId,
+  projectId
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
+
+  return await apiClient.request(
+    `${teamWorkspaceBase(teamId)}/projects/${projectId}`,
+    {
+      method: "DELETE",
+    }
+  );
+}

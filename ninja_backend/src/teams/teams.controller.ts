@@ -528,4 +528,49 @@ export class TeamsController {
     return this.teamsService.createWorkspaceProject(teamId, user.id, body);
   }
 
+    @Get(":id/workspace/projects/:projectId")
+  async getWorkspaceProjectDetail(
+    @Param("id") teamId: string,
+    @Param("projectId") projectId: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    return this.teamsService.getWorkspaceProjectDetail(
+      teamId,
+      projectId,
+    );
+  }
+
+  @Patch(":id/workspace/projects/:projectId")
+  async updateWorkspaceProject(
+    @Param("id") teamId: string,
+    @Param("projectId") projectId: string,
+    @CurrentUser() user: any,
+    @Body() body: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    return this.teamsService.updateWorkspaceProject(
+      teamId,
+      projectId,
+      user.id,
+      body,
+    );
+  }
+
+  @Delete(":id/workspace/projects/:projectId")
+  async deleteWorkspaceProject(
+    @Param("id") teamId: string,
+    @Param("projectId") projectId: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    return this.teamsService.deleteWorkspaceProject(
+      teamId,
+      projectId,
+      user.id,
+    );
+  }
 }
