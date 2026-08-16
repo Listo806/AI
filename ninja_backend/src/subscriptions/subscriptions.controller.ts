@@ -143,7 +143,11 @@ export class SubscriptionsController {
   @ApiOperation({ summary: "Active add-ons for the current user's team" })
   @ApiResponse({ status: 200, description: 'e.g. { addons: [], leadGenerator: false }' })
   async getMyAddons(@CurrentUser() user: any) {
-    return this.subscriptionsService.getTeamAddons(user?.teamId);
+    const base = await this.subscriptionsService.getTeamAddons(user?.teamId);
+    // Platform support (super_admin) can review Lead Generator without owning the
+    // add-on. Regular customers still require a real add-on entitlement.
+    const isSupport = String(user?.role || '').toLowerCase() === 'super_admin';
+    return { ...base, leadGenerator: base.leadGenerator || isSupport };
   }
 
   @Post('addons/lead-generator/purchase')
