@@ -1816,7 +1816,7 @@ body.crm-dark .crm-error {
 .crm-dark .generator-page .channel-chip.active-blue, .crm-dark #root .team-stat-card,
 .crm-dark .team-workspace .m-user-card, .crm-dark .team-workspace .team-card,
 .crm-dark .leads-page .lead-control-field select, .crm-dark .cx-setup-step, .crm-dark .cx-wa-connect-card,
-.crm-dark .cx-wa-qr-frame, .crm-dark .cx-side-card{
+.crm-dark .cx-wa-qr-frame, .crm-dark .cx-side-card, .crm-dark .box-plan{
   background: #101827f2;
   border: 1px solid #202733;
 }
@@ -1881,6 +1881,13 @@ body.crm-dark .crm-error {
 .crm-dark .team-workspace .team-performance-icon{
   box-shadow: none;
 }
+.crm-dark .box-plan{
+  background: #101827f2!important;
+  border: 1px solid #202733!important;
+}
+.crm-dark .box-plan-head strong, .crm-dark .box-plan-head div{
+  color: #fff!important;
+}
 .crm-dark .security-check-line svg{
   fill: #101827f2;
 }
@@ -1889,10 +1896,7 @@ body.crm-dark .crm-error {
   background: #101827f2;
   border: 0;
 }
-.crm-dark #root .dashboard-page .banner-btn.text-dark{
-  background: #293140f0;
-  border: 0;
-}
+
 .crm-dark #root .ai-page {
   background: #07081b;
   border: 0;

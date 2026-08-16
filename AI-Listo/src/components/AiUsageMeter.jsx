@@ -36,7 +36,7 @@ export default function AiUsageMeter() {
   const atLimit = aiLimit != null && aiUsed >= aiLimit;
 
   return (
-    <div
+    <div className="box-plan" 
       style={{
         margin: "0 0 20px",
         padding: "14px 18px",
@@ -45,7 +45,7 @@ export default function AiUsageMeter() {
         background: atLimit ? "#fef2f2" : "#f9fafb",
       }}
     >
-      <div
+      <div className="box-plan-head" 
         style={{
           display: "flex",
           alignItems: "center",

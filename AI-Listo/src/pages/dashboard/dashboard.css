@@ -1259,3 +1259,587 @@ body .next-action-card svg {
     white-space: break-spaces;
   }
 }
+
+
+/* =========================================================
+   CORTEXA DASHBOARD — DARK NEON THEME
+   Visual-only overrides for .crm-dark.
+   Background/layout/data remain unchanged.
+   ========================================================= */
+
+.crm-dark .dashboard-container {
+  --cx-dark-card: rgba(5, 11, 21, 0.94);
+  --cx-dark-card-2: rgba(7, 13, 24, 0.96);
+  --cx-dark-line: rgba(101, 116, 139, 0.34);
+  --cx-blue: #4ea1ff;
+  --cx-cyan: #35d9ff;
+  --cx-purple: #bd5cff;
+  --cx-orange: #ff7a2f;
+  --cx-red: #ff5364;
+  --cx-green: #4ade80;
+  --cx-muted: #9aa7bd;
+  color: #f8fafc;
+}
+
+.crm-dark .dashboard-container .header-title h1,
+.crm-dark .dashboard-container .card-top-header h3,
+.crm-dark .dashboard-container .card-top-header h5,
+.crm-dark .dashboard-container .kpi-lbl,
+.crm-dark .dashboard-container .kpi-main-val,
+.crm-dark .dashboard-container .kpi-sub-val,
+.crm-dark .dashboard-container .stage-head-lbl,
+.crm-dark .dashboard-container .stage-column-item h4,
+.crm-dark .dashboard-container .risk-title-lbl,
+.crm-dark .dashboard-container .timeline-log-txt,
+.crm-dark .dashboard-container .health-lbl,
+.crm-dark .dashboard-container .todo-txt,
+.crm-dark .dashboard-container .layer-name,
+.crm-dark .dashboard-container .layer-metrics {
+  color: #f8fafc;
+}
+
+.crm-dark .dashboard-container .header-title p,
+.crm-dark .dashboard-container .kpi-helper-txt,
+.crm-dark .dashboard-container .kpi-indicator-badge,
+.crm-dark .dashboard-container .timeline-time-stamp,
+.crm-dark .dashboard-container .todo-time,
+.crm-dark .dashboard-container .text-gray,
+.crm-dark .dashboard-container .stage-column-item span {
+  color: var(--cx-muted);
+}
+
+/* Header controls */
+.crm-dark .dashboard-container .control-btn {
+  color: #f8fafc;
+  background: linear-gradient(180deg, rgba(14, 21, 34, 0.96), rgba(7, 12, 21, 0.96));
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.025), 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.crm-dark .dashboard-container .control-btn svg {
+  color: #dbeafe;
+}
+
+/* AI Command Center */
+.crm-dark .dashboard-container .ai-command-banner {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.16), transparent 28%),
+    radial-gradient(circle at 88% 78%, rgba(249, 115, 22, 0.10), transparent 34%),
+    linear-gradient(145deg, rgba(5, 13, 25, 0.98), rgba(3, 8, 17, 0.98));
+  border: 1px solid rgba(123, 151, 185, 0.58);
+  box-shadow:
+    0 0 30px rgba(37, 99, 235, 0.09),
+    inset 0 0 36px rgba(59, 130, 246, 0.035);
+}
+
+.crm-dark .dashboard-container .ai-avatar-glow {
+  border-color: #315efb;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.22), rgba(17, 24, 39, 0.92));
+  box-shadow: 0 0 25px rgba(42, 91, 255, 0.42);
+}
+
+.crm-dark .dashboard-container .mini-insight-card {
+  background: rgba(7, 13, 23, 0.82);
+  border: 1px solid rgba(71, 85, 105, 0.62);
+  box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.025);
+}
+
+.crm-dark .dashboard-container .banner-right-top .mini-insight-card:first-child {
+  border-color: rgba(74, 222, 128, 0.46);
+  box-shadow: inset 0 -18px 30px rgba(34, 197, 94, 0.05);
+}
+
+.crm-dark .dashboard-container .banner-right-top .mini-insight-card:nth-child(2) {
+  border-color: rgba(249, 115, 22, 0.5);
+  box-shadow: inset 0 -18px 30px rgba(249, 115, 22, 0.055);
+}
+
+.crm-dark .dashboard-container .banner-btn {
+  background: rgba(9, 15, 25, 0.92);
+  border-width: 1px;
+  border-style: solid;
+  color: #fff;
+}
+
+.crm-dark .dashboard-container .banner-btn.text-dark {
+  color: #fff;
+  border-color: #ff6a38;
+  background: linear-gradient(90deg, rgba(111, 37, 20, 0.56), rgba(77, 30, 18, 0.35));
+  box-shadow: 0 0 20px rgba(255, 90, 45, 0.22), inset 0 0 22px rgba(255, 90, 45, 0.10);
+}
+
+.crm-dark .dashboard-container .banner-btn.btn-whatsapp-color {
+  color: #fff;
+  border: 1px solid #36d66f;
+  background: linear-gradient(90deg, rgba(22, 101, 52, 0.64), rgba(22, 72, 45, 0.38));
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.20), inset 0 0 22px rgba(34, 197, 94, 0.10);
+}
+
+.crm-dark .dashboard-container .banner-btn.btn-assign-color {
+  color: #fff;
+  border: 1px solid #c45cff;
+  background: linear-gradient(90deg, rgba(95, 37, 120, 0.62), rgba(69, 27, 91, 0.35));
+  box-shadow: 0 0 20px rgba(192, 74, 255, 0.19), inset 0 0 22px rgba(192, 74, 255, 0.10);
+}
+
+.crm-dark .dashboard-container .banner-btn.btn-followup-color {
+  color: #fff;
+  border: 1px solid #48a3ff;
+  background: linear-gradient(90deg, rgba(29, 78, 216, 0.52), rgba(14, 83, 144, 0.42));
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.22), inset 0 0 22px rgba(56, 189, 248, 0.08);
+}
+
+/* Generic dashboard cards */
+.crm-dark .dashboard-container .content-card,
+.crm-dark .dashboard-container .kpi-mini-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(42, 83, 160, 0.045), transparent 38%),
+    var(--cx-dark-card);
+  border-color: rgba(71, 85, 105, 0.56);
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.20),
+    inset 0 0 28px rgba(59, 130, 246, 0.018);
+}
+
+/* Primary KPI accents */
+.crm-dark .dashboard-container .kpi-row-grid:first-of-type .kpi-mini-card:nth-child(1),
+.crm-dark .dashboard-container .kpi-row-grid:first-of-type .kpi-mini-card:nth-child(5) {
+  border-color: rgba(62, 139, 255, 0.48);
+  box-shadow: 0 0 22px rgba(37, 99, 235, 0.08), inset 0 0 26px rgba(37, 99, 235, 0.035);
+}
+
+.crm-dark .dashboard-container .kpi-row-grid:first-of-type .kpi-mini-card:nth-child(2) {
+  border-color: rgba(182, 82, 255, 0.48);
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.08), inset 0 0 26px rgba(168, 85, 247, 0.035);
+}
+
+.crm-dark .dashboard-container .kpi-row-grid:first-of-type .kpi-mini-card:nth-child(3),
+.crm-dark .dashboard-container .kpi-row-grid:first-of-type .kpi-mini-card:nth-child(6) {
+  border-color: rgba(72, 213, 128, 0.46);
+  box-shadow: 0 0 22px rgba(34, 197, 94, 0.07), inset 0 0 26px rgba(34, 197, 94, 0.03);
+}
+
+.crm-dark .dashboard-container .kpi-row-grid:first-of-type .kpi-mini-card:nth-child(4) {
+  border-color: rgba(255, 125, 48, 0.50);
+  box-shadow: 0 0 22px rgba(249, 115, 22, 0.08), inset 0 0 26px rgba(249, 115, 22, 0.035);
+}
+
+/* Icon circles */
+.crm-dark .dashboard-container .bg-light-blue {
+  background: rgba(37, 99, 235, 0.13);
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.11);
+}
+
+.crm-dark .dashboard-container .bg-light-purple {
+  background: rgba(147, 51, 234, 0.13);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.10);
+}
+
+.crm-dark .dashboard-container .bg-light-green {
+  background: rgba(34, 197, 94, 0.12);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.09);
+}
+
+.crm-dark .dashboard-container .bg-light-orange {
+  background: rgba(249, 115, 22, 0.12);
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.10);
+}
+
+.crm-dark .dashboard-container .text-royal-blue {
+  color: #4c9cff !important;
+}
+
+.crm-dark .dashboard-container .text-purple {
+  color: #bd5cff !important;
+}
+
+.crm-dark .dashboard-container .text-green {
+  color: #4ade80 !important;
+}
+
+.crm-dark .dashboard-container .text-orange {
+  color: #ff7a2f !important;
+}
+
+.crm-dark .dashboard-container .text-red {
+  color: #ff5364 !important;
+}
+
+.crm-dark .dashboard-container .text-muted {
+  color: #9aa7bd !important;
+}
+
+/* CHART / QUEUE row: 1 trend, 2 source, 3 queue, 4 risk, 5 tracking, 6 stage */
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(1) {
+  border-color: #4298ff;
+  box-shadow: 0 0 28px rgba(45, 137, 255, 0.10), inset 0 0 28px rgba(45, 137, 255, 0.025);
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(2) {
+  border-color: #b95cff;
+  box-shadow: 0 0 28px rgba(185, 92, 255, 0.10), inset 0 0 28px rgba(185, 92, 255, 0.025);
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(3) {
+  border-color: #ff8a2a;
+  box-shadow: 0 0 28px rgba(255, 122, 47, 0.10), inset 0 0 28px rgba(255, 122, 47, 0.025);
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(4) {
+  border-color: #ff5364;
+  box-shadow: 0 0 28px rgba(255, 83, 100, 0.10), inset 0 0 28px rgba(255, 83, 100, 0.025);
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(5) {
+  border-color: #45a6ff;
+  box-shadow: 0 0 28px rgba(69, 166, 255, 0.10), inset 0 0 28px rgba(69, 166, 255, 0.025);
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(6) {
+  border-color: #bd5cff;
+  box-shadow: 0 0 28px rgba(189, 92, 255, 0.10), inset 0 0 28px rgba(189, 92, 255, 0.025);
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(1) .card-top-header svg {
+  color: #4c9cff !important;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(2) .card-top-header svg {
+  color: #bd5cff !important;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(3) .card-top-header svg {
+  color: #ff7a2f !important;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(4) .card-top-header svg {
+  color: #ff5364 !important;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(5) .card-top-header svg {
+  color: #49a8ff !important;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(6) .card-top-header svg {
+  color: #bd5cff !important;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(2) .card-text-link,
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(6) .card-text-link {
+  color: #c45cff;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(3) .card-text-link {
+  color: #ff8a2a;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(4) .card-text-link {
+  color: #ff5364;
+}
+
+.crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(5) .card-text-link {
+  color: #49a8ff;
+}
+
+/* Chart neon treatment */
+.crm-dark .dashboard-container .recharts-cartesian-grid line {
+  stroke: rgba(148, 163, 184, 0.30);
+}
+
+.crm-dark .dashboard-container .recharts-area-curve {
+  stroke: #4b96ff;
+  filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.75));
+}
+
+.crm-dark .dashboard-container .recharts-area-area {
+  opacity: 0.45;
+}
+
+.crm-dark .dashboard-container .recharts-text {
+  fill: #9aa7bd;
+}
+
+.crm-dark .dashboard-container .recharts-tooltip-wrapper {
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.38));
+}
+
+/* Tables / queue */
+.crm-dark .dashboard-container .list-tbl-header {
+  color: #e5e7eb;
+}
+
+.crm-dark .dashboard-container .list-tbl-row,
+.crm-dark .dashboard-container .queue-item-row {
+  border-color: rgba(71, 85, 105, 0.40);
+}
+
+.crm-dark .dashboard-container .meta-name h4,
+.crm-dark .dashboard-container .meta-intent {
+  color: #f8fafc;
+}
+
+.crm-dark .dashboard-container .prob-badge {
+  color: #ff6675;
+  background: rgba(127, 29, 29, 0.20);
+  border: 1px solid rgba(255, 83, 100, 0.35);
+}
+
+.crm-dark .dashboard-container .shortcut-btn {
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  background: #0a111d;
+  color: #cbd5e1;
+}
+
+.crm-dark .dashboard-container .shortcut-btn.green-btn {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(20, 83, 45, 0.18);
+  color: #4ade80;
+}
+
+.crm-dark .dashboard-container .shortcut-btn.black-btn {
+  border-color: rgba(255, 122, 47, 0.40);
+  background: rgba(77, 32, 14, 0.16);
+  color: #ff7a2f;
+}
+
+.crm-dark .dashboard-container .shortcut-btn.white-btn {
+  border-color: rgba(189, 92, 255, 0.40);
+  background: rgba(88, 28, 135, 0.15);
+  color: #bd5cff;
+}
+
+/* Risk badges */
+.crm-dark .dashboard-container .risk-count-badge {
+  color: #ff6070;
+  background: rgba(127, 29, 29, 0.16);
+  border: 1px solid rgba(255, 83, 100, 0.38);
+  box-shadow: inset 0 0 14px rgba(255, 83, 100, 0.04);
+}
+
+.crm-dark .dashboard-container .timeline-marker-dot {
+  background: #55adff;
+  box-shadow: 0 0 10px rgba(85, 173, 255, 0.60);
+}
+
+/* Active deals by stage */
+.crm-dark .dashboard-container .stage-column-item {
+  border-color: rgba(71, 85, 105, 0.40);
+}
+
+.crm-dark .dashboard-container .stage-stats-columns .stage-column-item:nth-child(1) h4 {
+  color: #4c9cff;
+}
+
+.crm-dark .dashboard-container .stage-stats-columns .stage-column-item:nth-child(2) h4 {
+  color: #35d9ff;
+}
+
+.crm-dark .dashboard-container .stage-stats-columns .stage-column-item:nth-child(3) h4 {
+  color: #bd5cff;
+}
+
+.crm-dark .dashboard-container .stage-stats-columns .stage-column-item:nth-child(4) h4 {
+  color: #ff7a2f;
+}
+
+.crm-dark .dashboard-container .stage-stats-columns .stage-column-item:nth-child(5) h4 {
+  color: #4ade80;
+}
+
+/* FOOTER cards: funnel, automation, next, upcoming, AI action */
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(1) {
+  border-color: #ff7a2f;
+  box-shadow: 0 0 28px rgba(255, 122, 47, 0.10), inset 0 0 30px rgba(255, 122, 47, 0.022);
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(2) {
+  border-image: linear-gradient(135deg, #bd5cff, #35d9ff) 1;
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(80, 145, 255, 0.08), inset 0 0 30px rgba(189, 92, 255, 0.022);
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(3) {
+  border-color: #3f8cff;
+  box-shadow: 0 0 28px rgba(63, 140, 255, 0.10), inset 0 0 30px rgba(63, 140, 255, 0.022);
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(4) {
+  border-color: #4ade80;
+  box-shadow: 0 0 28px rgba(74, 222, 128, 0.09), inset 0 0 30px rgba(74, 222, 128, 0.022);
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(5) {
+  border-color: #3f8cff;
+  box-shadow: 0 0 28px rgba(63, 140, 255, 0.10), inset 0 0 30px rgba(63, 140, 255, 0.022);
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(1) .card-top-header svg {
+  color: #ff7a2f;
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(2) .card-top-header svg {
+  color: #a970ff;
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(3) .card-top-header svg {
+  color: #4c9cff;
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(4) .card-top-header svg {
+  color: #4ade80;
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(5) .card-head-title svg {
+  color: #ff4f72 !important;
+}
+
+/* Funnel */
+.crm-dark .dashboard-container .layer-graphic-track {
+  background: rgba(51, 65, 85, 0.42);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.45);
+}
+
+.crm-dark .dashboard-container .funnel-layer-bar:nth-child(1) .layer-fill {
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59,130,246,.45);
+}
+
+.crm-dark .dashboard-container .funnel-layer-bar:nth-child(2) .layer-fill {
+  background: #35d9ff;
+  box-shadow: 0 0 8px rgba(53,217,255,.40);
+}
+
+.crm-dark .dashboard-container .funnel-layer-bar:nth-child(3) .layer-fill {
+  background: #bd5cff;
+  box-shadow: 0 0 8px rgba(189,92,255,.40);
+}
+
+.crm-dark .dashboard-container .funnel-layer-bar:nth-child(4) .layer-fill {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74,222,128,.40);
+}
+
+.crm-dark .dashboard-container .funnel-layer-bar:nth-child(5) .layer-fill {
+  background: #ff5364;
+  box-shadow: 0 0 8px rgba(255,83,100,.40);
+}
+
+/* Automation Health */
+.crm-dark .dashboard-container .health-row-item {
+  border-color: rgba(71, 85, 105, 0.30);
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(1) svg {
+  color: #ff7a2f !important;
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(2) svg {
+  color: #48a8ff !important;
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(3) svg {
+  color: #ff4f72 !important;
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(4) svg {
+  color: #c45cff !important;
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(5) svg {
+  color: #4ade80 !important;
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(1) .status-pill {
+  color: #ff8a34;
+  border: 1px solid rgba(255, 122, 47, .42);
+  background: rgba(124, 45, 18, .14);
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(2) .status-pill {
+  color: #58afff;
+  border: 1px solid rgba(72, 168, 255, .42);
+  background: rgba(30, 64, 175, .14);
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(3) .status-pill {
+  color: #ff5572;
+  border: 1px solid rgba(255, 79, 114, .42);
+  background: rgba(127, 29, 29, .14);
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(4) .status-pill {
+  color: #cf70ff;
+  border: 1px solid rgba(196, 92, 255, .42);
+  background: rgba(88, 28, 135, .14);
+}
+
+.crm-dark .dashboard-container .health-row-item:nth-child(5) .status-pill {
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, .42);
+  background: rgba(20, 83, 45, .14);
+}
+
+/* Empty-state circles in Next Actions / Upcoming Closings */
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(3) .action-todo-list::before {
+  border-color: rgba(76, 156, 255, 0.75);
+  color: #4c9cff;
+  box-shadow: 0 0 22px rgba(76, 156, 255, 0.10);
+}
+
+.crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(4) .closing-list-wrapper::before {
+  border-color: rgba(74, 222, 128, 0.75);
+  color: #4ade80;
+  box-shadow: 0 0 22px rgba(74, 222, 128, 0.10);
+}
+
+/* AI Action Center */
+.crm-dark .dashboard-container .action-center-dark-card {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 79, 114, 0.055), transparent 28%),
+    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.055), transparent 34%),
+    #050b15;
+}
+
+.crm-dark .dashboard-container .action-center-dark-card .dark-card-body,
+.crm-dark .dashboard-container .action-center-dark-card .dark-card-desc,
+.crm-dark .dashboard-container .action-center-dark-card .card-head-title h4 {
+  color: #f8fafc;
+}
+
+.crm-dark .dashboard-container .action-center-dark-card .counter-box {
+  border: 1px solid #3f8cff;
+  background: rgba(5, 13, 27, 0.82);
+  box-shadow: inset 0 0 24px rgba(59,130,246,.035);
+}
+
+.crm-dark .dashboard-container .action-center-dark-card .counter-box.urgent-border {
+  border-color: #ff3150;
+  box-shadow: inset 0 0 24px rgba(255,49,80,.035);
+}
+
+.crm-dark .dashboard-container .action-center-dark-card .btn-run-analysis {
+  color: #fff;
+  border: 1px solid rgba(75, 141, 255, 0.72);
+  background: linear-gradient(90deg, #1557d8 0%, #2142e7 55%, #2810ea 100%);
+  box-shadow: 0 0 26px rgba(33, 87, 255, 0.30), inset 0 1px 0 rgba(255,255,255,.15);
+}
+
+/* Mobile/tablet: stronger neon borders like supplied reference */
+@media (max-width: 1024px) {
+  .crm-dark .dashboard-container .content-card {
+    border-width: 1px;
+    border-radius: 15px;
+  }
+
+  .crm-dark .dashboard-container .dashboard-chart-row > .content-card,
+  .crm-dark .dashboard-container .dashboard-footer-grid > .content-card {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(31, 69, 125, .055), transparent 38%),
+      rgba(3, 9, 18, .96);
+  }
+
+  .crm-dark .dashboard-container .card-top-header h3,
+  .crm-dark .dashboard-container .card-top-header h5 {
+    color: #f8fafc;
+  }
+}
