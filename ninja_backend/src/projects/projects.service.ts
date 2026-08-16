@@ -683,6 +683,16 @@ export class ProjectsService {
     if (query.priority && query.priority !== 'all') add('p.priority = ?', this.normPriority(query.priority));
     if (query.clientId && this.isUuid(query.clientId)) add('p.contact_id = ?', query.clientId);
     if (query.managerId && this.isUuid(query.managerId)) add('p.manager_id = ?', query.managerId);
+    if (this.parseDateOnly(query.dateFrom)) add('p.due_date >= ?', this.parseDateOnly(query.dateFrom));
+    if (this.parseDateOnly(query.dateTo)) {
+      add("p.due_date < (?::date + INTERVAL '1 day')", this.parseDateOnly(query.dateTo));
+    }
+    if (query.overdue === 'true' || query.overdue === true) {
+      conditions.push("p.due_date < NOW() AND p.status NOT IN ('completed','cancelled')");
+    }
+    if (query.hasBudget === 'true' || query.hasBudget === true) {
+      conditions.push('p.budget IS NOT NULL');
+    }
 
     const where = conditions.join(' AND ');
     const page = Math.max(1, parseInt(query.page, 10) || 1);
@@ -874,6 +884,41 @@ export class ProjectsService {
       ...(newStatus ? { status: newStatus } : {}),
     });
     return this.getProject(user, id);
+  }
+
+  async duplicateProject(user: any, id: string): Promise<any> {
+    await this.ensureSchema();
+    const teamId = await this.resolveWriteTeam(user);
+    const existing = await this.assertProjectInTeam(teamId, id);
+    const code = await this.nextProjectCode(teamId);
+    const { rows } = await this.db.query(
+      `INSERT INTO projects
+        (team_id, code, name, description, status, priority, owner_id, manager_id, contact_id,
+         budget, currency, start_date, due_date, progress, completed_at, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,'planning',$5,$6,$7,$8,$9,$10,$11,$12,0,NULL, NOW(), NOW())
+       RETURNING id`,
+      [
+        teamId,
+        code,
+        this.sanitizeText(`${existing.name} (Copy)`, 255),
+        existing.description || null,
+        existing.priority || 'medium',
+        user?.id || null,
+        existing.manager_id || null,
+        existing.contact_id || null,
+        existing.budget ?? null,
+        existing.currency || 'USD',
+        existing.start_date || null,
+        existing.due_date || null,
+      ],
+    );
+    const newId = rows[0].id;
+    await this.logActivity(teamId, user?.id, 'project.created', 'project', newId, {
+      name: `${existing.name} (Copy)`,
+      code,
+      duplicatedFrom: id,
+    });
+    return this.getProject(user, newId);
   }
 
   async deleteProject(user: any, id: string): Promise<any> {

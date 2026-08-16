@@ -130,7 +130,7 @@ function BarRows({ items, labelKey, valueKey, format }) {
   );
 }
 
-export default function PjwTimeExpenses({ ctx, onChanged }) {
+export default function PjwTimeExpenses({ ctx, onChanged, autoCreate, onAutoCreateDone }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -146,6 +146,14 @@ export default function PjwTimeExpenses({ ctx, onChanged }) {
     setTick((t) => t + 1);
     onChanged?.();
   };
+
+  useEffect(() => {
+    if (autoCreate) {
+      open(null);
+      onAutoCreateDone?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCreate]);
 
   useEffect(() => {
     projectsApi.listProjects({ limit: 100 }).then((res) => setProjectOptions(res?.data || [])).catch(() => {});

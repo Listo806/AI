@@ -129,7 +129,7 @@ function DeliverableModal({ open, record, projectOptions, milestones, defaultPro
   );
 }
 
-export default function PjwDeliverables({ ctx, onChanged }) {
+export default function PjwDeliverables({ ctx, onChanged, autoCreate, onAutoCreateDone }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -146,6 +146,14 @@ export default function PjwDeliverables({ ctx, onChanged }) {
     setTick((t) => t + 1);
     onChanged?.();
   };
+
+  useEffect(() => {
+    if (autoCreate) {
+      open(null);
+      onAutoCreateDone?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCreate]);
 
   useEffect(() => {
     projectsApi.listProjects({ limit: 100 }).then((res) => setProjectOptions(res?.data || [])).catch(() => {});

@@ -181,6 +181,11 @@ export class ProjectsController {
     return this.projects.getProject(user, id);
   }
 
+  @Post(':id/duplicate')
+  duplicateProject(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.projects.duplicateProject(user, id);
+  }
+
   @Patch(':id')
   updateProject(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any, @Body() body: any) {
     return this.projects.updateProject(user, id, body);

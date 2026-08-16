@@ -43,6 +43,9 @@ const projectsApi = {
   deleteProject(id) {
     return apiClient.request(`/projects/${id}`, { method: "DELETE" });
   },
+  duplicateProject(id) {
+    return apiClient.request(`/projects/${id}/duplicate`, { method: "POST", body: JSON.stringify({}) });
+  },
 
   // tasks (shared team_tasks records)
   listTasks(params = {}) {

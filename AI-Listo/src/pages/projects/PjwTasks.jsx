@@ -4,7 +4,7 @@ import projectsApi from "../../api/projectsApi";
 import PjwTaskModal from "./PjwTaskModal";
 import { fmtDate, minutesToText, statusClass, priorityClass } from "./projectFormat";
 
-export default function PjwTasks({ ctx, onChanged }) {
+export default function PjwTasks({ ctx, onChanged, autoCreate, onAutoCreateDone }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -38,6 +38,14 @@ export default function PjwTasks({ ctx, onChanged }) {
     setTick((t) => t + 1);
     onChanged?.();
   };
+
+  useEffect(() => {
+    if (autoCreate) {
+      openTask("create");
+      onAutoCreateDone?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCreate]);
 
   useEffect(() => {
     let alive = true;
