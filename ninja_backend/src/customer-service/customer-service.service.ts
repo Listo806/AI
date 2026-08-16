@@ -198,6 +198,28 @@ export class CustomerServiceService {
     `);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_automations_team ON cs_automations(team_id)`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_automations_active ON cs_automations(active)`);
+    // Satisfaction surveys (drive the Customer Satisfaction KPI from real responses).
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS cs_surveys (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        ticket_id UUID,
+        contact_id UUID,
+        customer_name TEXT,
+        rating INTEGER,
+        comment TEXT,
+        status TEXT NOT NULL DEFAULT 'Sent',
+        sent_at TIMESTAMP DEFAULT NOW(),
+        responded_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_surveys_team ON cs_surveys(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_surveys_status ON cs_surveys(status)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_surveys_ticket ON cs_surveys(ticket_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_surveys_contact ON cs_surveys(contact_id)`);
     this.schemaReady = true;
   }
 
@@ -735,6 +757,7 @@ export class CustomerServiceService {
       slaAgg,
       activity,
       agents,
+      csat,
     ] = await Promise.all([
       this.db.query(
         `SELECT
@@ -793,6 +816,13 @@ export class CustomerServiceService {
           LIMIT 5`,
         [accessible],
       ),
+      // Customer satisfaction from REAL responded surveys only (null until any exist).
+      this.db.query(
+        `SELECT AVG(rating)::numeric(10,2) AS avg_rating, COUNT(*)::int AS count
+           FROM cs_surveys
+          WHERE team_id = ANY($1) AND status = 'Responded' AND rating IS NOT NULL`,
+        [accessible],
+      ),
     ]);
 
     const c = counts.rows[0];
@@ -800,6 +830,8 @@ export class CustomerServiceService {
     const avgResolution = c.avg_resolution != null ? Number(c.avg_resolution) : null;
     const slaSubject = num(c.sla_subject);
     const slaMet = num(c.sla_met);
+    const csatRow = csat.rows[0];
+    const csatCount = num(csatRow.count);
 
     return {
       totalTickets: num(c.total),
@@ -807,7 +839,11 @@ export class CustomerServiceService {
       resolvedThisMonth: { count: num(c.resolved_month) },
       avgResponseTime: { seconds: avgResponse, label: this.fmtDuration(avgResponse) },
       avgResolutionTime: { seconds: avgResolution, label: this.fmtDuration(avgResolution) },
-      customerSatisfaction: { average: null, max: 5, count: 0 },
+      customerSatisfaction: {
+        average: csatCount > 0 && csatRow.avg_rating != null ? Number(csatRow.avg_rating) : null,
+        max: 5,
+        count: csatCount,
+      },
       slaCompliance: {
         percent: slaSubject > 0 ? Math.round((slaMet / slaSubject) * 1000) / 10 : null,
         subject: slaSubject,
@@ -1188,6 +1224,14 @@ export class CustomerServiceService {
          FROM cs_tickets WHERE contact_id = $1 AND team_id = $2`,
       [id, contact.team_id],
     );
+    // Real satisfaction from this customer's responded surveys (empty until any).
+    const csatAgg = await this.db.query(
+      `SELECT AVG(rating)::numeric(10,2) AS avg_rating, COUNT(*)::int AS count
+         FROM cs_surveys
+        WHERE contact_id = $1 AND team_id = $2 AND status = 'Responded' AND rating IS NOT NULL`,
+      [id, contact.team_id],
+    );
+    const csatCount = Number(csatAgg.rows[0].count) || 0;
     return {
       id: contact.id,
       name: contact.name,
@@ -1197,8 +1241,10 @@ export class CustomerServiceService {
       totalTickets: Number(agg.rows[0].total) || 0,
       openTickets: Number(agg.rows[0].open) || 0,
       resolvedTickets: Number(agg.rows[0].resolved) || 0,
-      // Satisfaction history joins in with the Surveys slice; empty until then.
-      satisfaction: { average: null, count: 0 },
+      satisfaction: {
+        average: csatCount > 0 && csatAgg.rows[0].avg_rating != null ? Number(csatAgg.rows[0].avg_rating) : null,
+        count: csatCount,
+      },
       tickets: tickets.rows,
     };
   }
@@ -1743,5 +1789,339 @@ export class CustomerServiceService {
     );
     if (!res.rowCount) throw new NotFoundException('Record not found');
     return { success: true };
+  }
+
+  // ─── Surveys + Customer Satisfaction ─────────────────────────────────────────
+  //
+  // One survey per send; rating/responded_at stay NULL until the customer responds.
+  // The Customer Satisfaction KPI (getStats) and reports derive only from RESPONDED
+  // surveys, so satisfaction is empty (never a fabricated rating) until real
+  // responses exist. Team-scoped; ticket/contact links validated in-team.
+
+  private readonly surveySelect = `
+    s.id, s.team_id AS "teamId", s.ticket_id AS "ticketId", s.contact_id AS "contactId",
+    COALESCE(NULLIF(TRIM(s.customer_name), ''), ct.name) AS "customerName",
+    t.ticket_number AS "ticketNumber",
+    s.rating, s.comment, s.status,
+    s.sent_at AS "sentAt", s.responded_at AS "respondedAt",
+    s.created_at AS "createdAt", s.updated_at AS "updatedAt"
+  `;
+  private readonly surveyJoins = `
+    LEFT JOIN contacts ct ON ct.id = s.contact_id AND ct.team_id = s.team_id
+    LEFT JOIN cs_tickets t ON t.id = s.ticket_id AND t.team_id = s.team_id
+  `;
+
+  async findAllSurveys(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { status?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (page > 1_000_000) page = 1_000_000;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['s.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) {
+      where.push(`s.status = $${i++}`);
+      vals.push(params.status.trim());
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM cs_surveys s WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.surveySelect} FROM cs_surveys s ${this.surveyJoins}
+        WHERE ${whereSql} ORDER BY s.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneSurvey(id: string, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Survey not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.surveySelect} FROM cs_surveys s ${this.surveyJoins}
+        WHERE s.id = $1 AND s.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Survey not found');
+    return rows[0];
+  }
+
+  async createSurvey(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    if (dto.ticketId) {
+      this.assertUuidOrBlank(dto.ticketId, 'ticket');
+      await this.assertTicketInTeam(dto.ticketId, [teamId]);
+    }
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+    // If a rating is supplied at creation the survey is already a response.
+    const responded = dto.rating != null && dto.rating !== '';
+    const status = responded ? 'Responded' : (dto.status && dto.status.trim()) || 'Sent';
+    const { rows } = await this.db.query(
+      `INSERT INTO cs_surveys
+         (team_id, created_by, ticket_id, contact_id, customer_name, rating, comment, status, responded_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, ${responded ? 'NOW()' : 'NULL'})
+       RETURNING id`,
+      [
+        teamId, userId, dto.ticketId || null, dto.contactId || null, dto.customerName || null,
+        responded ? Number(dto.rating) : null, dto.comment || null, status,
+      ],
+    );
+    return this.findOneSurvey(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateSurvey(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Survey not found');
+    const existing = await this.db.query(
+      `SELECT team_id, status, responded_at FROM cs_surveys WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!existing.rows.length) throw new NotFoundException('Survey not found');
+    const teamId = existing.rows[0].team_id;
+    const colFor: Record<string, string> = {
+      rating: 'rating', comment: 'comment', status: 'status', customerName: 'customer_name',
+    };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push(col === 'rating' && (dto as any)[key] !== null ? Number((dto as any)[key]) : (dto as any)[key]);
+      }
+    }
+    // Recording a rating marks the survey Responded and stamps responded_at once.
+    if (dto.rating != null && dto.rating !== '' && !existing.rows[0].responded_at) {
+      if (dto.status === undefined) sets.push(`status = 'Responded'`);
+      sets.push(`responded_at = NOW()`);
+    }
+    if (!sets.length) return this.findOneSurvey(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(
+      `UPDATE cs_surveys SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
+      vals,
+    );
+    return this.findOneSurvey(id, userId, userTeamId, role);
+  }
+
+  async removeSurvey(id: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Survey not found');
+    const res = await this.db.query(
+      `DELETE FROM cs_surveys WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Survey not found');
+    return { success: true };
+  }
+
+  // ─── Reports (real calculations, optional date range) ────────────────────────
+  //
+  // Every figure is computed server-side and team-scoped. An optional [from, to)
+  // window filters ticket creation-based metrics; invalid dates are ignored rather
+  // than crashing. Nothing is fabricated.
+
+  // Accept ONLY a strict full calendar date (YYYY-MM-DD) that round-trips, so loose
+  // JS parsing (year-only, year-month, Feb-30 rollover, +2026) can never reach
+  // Postgres and raise a 22007/22008 -> 500. Invalid input is ignored (returns null).
+  private validDate(s: any): string | null {
+    if (!s || typeof s !== 'string') return null;
+    const t = s.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return null;
+    const d = new Date(`${t}T00:00:00Z`);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().slice(0, 10) === t ? t : null;
+  }
+
+  async getReports(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { from?: string; to?: string },
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    const empty = {
+      range: { from: null, to: null },
+      ticketsCreated: 0,
+      ticketsResolved: 0,
+      openVolume: 0,
+      avgResponseSeconds: null,
+      avgResolutionSeconds: null,
+      slaCompliance: null,
+      csat: { average: null, max: 5, count: 0 },
+      byStatus: [], byChannel: [], byPriority: [], byCategory: [],
+      agentPerformance: [], trend: [],
+    };
+    if (!accessible.length) return empty;
+    const num = (v: any) => Number(v) || 0;
+    const from = this.validDate(params.from);
+    const to = this.validDate(params.to);
+
+    // Range predicate for creation-based metrics (parameterized).
+    const rangeParams: any[] = [accessible];
+    let rc = 2;
+    let rangeSql = '';
+    if (from) { rangeSql += ` AND created_at >= $${rc++}`; rangeParams.push(from); }
+    if (to) { rangeSql += ` AND created_at < $${rc++}`; rangeParams.push(to); }
+
+    const [created, resolvedAgg, openAgg, byStatus, byChannel, byPriority, byCategory, agents, trend, csat] =
+      await Promise.all([
+        this.db.query(
+          `SELECT COUNT(*)::int AS n,
+                  AVG(EXTRACT(EPOCH FROM (first_response_at - created_at))) FILTER (WHERE first_response_at IS NOT NULL) AS avg_response,
+                  AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))) FILTER (WHERE resolved_at IS NOT NULL) AS avg_resolution,
+                  COUNT(*) FILTER (WHERE sla_status IS NOT NULL AND sla_status <> '')::int AS sla_subject,
+                  COUNT(*) FILTER (WHERE sla_status IS NOT NULL AND sla_status <> '' AND sla_status <> 'Breached')::int AS sla_met
+             FROM cs_tickets WHERE team_id = ANY($1)${rangeSql}`,
+          rangeParams,
+        ),
+        this.db.query(
+          `SELECT COUNT(*)::int AS n FROM cs_tickets
+            WHERE team_id = ANY($1) AND resolved_at IS NOT NULL${from ? ` AND resolved_at >= $2` : ''}${to ? ` AND resolved_at < $${from ? 3 : 2}` : ''}`,
+          [accessible, ...(from ? [from] : []), ...(to ? [to] : [])],
+        ),
+        this.db.query(
+          `SELECT COUNT(*)::int AS n FROM cs_tickets WHERE team_id = ANY($1) AND status NOT IN ('Resolved','Closed')`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(status),''),'Unknown') AS label, COUNT(*)::int AS count
+             FROM cs_tickets WHERE team_id = ANY($1)${rangeSql} GROUP BY 1 ORDER BY count DESC`,
+          rangeParams,
+        ),
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(channel),''),'Unspecified') AS label, COUNT(*)::int AS count
+             FROM cs_tickets WHERE team_id = ANY($1)${rangeSql} GROUP BY 1 ORDER BY count DESC`,
+          rangeParams,
+        ),
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(priority),''),'Unspecified') AS label, COUNT(*)::int AS count
+             FROM cs_tickets WHERE team_id = ANY($1)${rangeSql} GROUP BY 1 ORDER BY count DESC`,
+          rangeParams,
+        ),
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(category),''),'Uncategorized') AS label, COUNT(*)::int AS count
+             FROM cs_tickets WHERE team_id = ANY($1)${rangeSql} GROUP BY 1 ORDER BY count DESC`,
+          rangeParams,
+        ),
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(assigned_agent_name),''),'Unassigned') AS name,
+                  COUNT(*) FILTER (WHERE status IN ('Resolved','Closed'))::int AS resolved,
+                  COUNT(*)::int AS assigned,
+                  AVG(EXTRACT(EPOCH FROM (first_response_at - created_at))) FILTER (WHERE first_response_at IS NOT NULL) AS avg_response
+             FROM cs_tickets WHERE team_id = ANY($1) AND assigned_to IS NOT NULL${rangeSql}
+            GROUP BY 1 ORDER BY resolved DESC, name ASC LIMIT 20`,
+          rangeParams,
+        ),
+        this.db.query(
+          `SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+                  COUNT(*)::int AS created,
+                  COUNT(*) FILTER (WHERE status IN ('Resolved','Closed'))::int AS resolved
+             FROM cs_tickets
+            WHERE team_id = ANY($1) AND created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'
+            GROUP BY 1 ORDER BY 1 ASC`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT AVG(rating)::numeric(10,2) AS avg_rating, COUNT(*)::int AS count
+             FROM cs_surveys WHERE team_id = ANY($1) AND status = 'Responded' AND rating IS NOT NULL`,
+          [accessible],
+        ),
+      ]);
+
+    const cr = created.rows[0];
+    const slaSubject = num(cr.sla_subject);
+    const csatRow = csat.rows[0];
+    const csatCount = num(csatRow.count);
+    return {
+      range: { from: from || null, to: to || null },
+      ticketsCreated: num(cr.n),
+      ticketsResolved: num(resolvedAgg.rows[0].n),
+      openVolume: num(openAgg.rows[0].n),
+      avgResponseSeconds: cr.avg_response != null ? Number(cr.avg_response) : null,
+      avgResolutionSeconds: cr.avg_resolution != null ? Number(cr.avg_resolution) : null,
+      avgResponseLabel: this.fmtDuration(cr.avg_response != null ? Number(cr.avg_response) : null),
+      avgResolutionLabel: this.fmtDuration(cr.avg_resolution != null ? Number(cr.avg_resolution) : null),
+      slaCompliance: slaSubject > 0 ? Math.round((num(cr.sla_met) / slaSubject) * 1000) / 10 : null,
+      csat: {
+        average: csatCount > 0 && csatRow.avg_rating != null ? Number(csatRow.avg_rating) : null,
+        max: 5,
+        count: csatCount,
+      },
+      byStatus: byStatus.rows.map((r: any) => ({ label: r.label, count: num(r.count) })),
+      byChannel: byChannel.rows.map((r: any) => ({ label: r.label, count: num(r.count) })),
+      byPriority: byPriority.rows.map((r: any) => ({ label: r.label, count: num(r.count) })),
+      byCategory: byCategory.rows.map((r: any) => ({ label: r.label, count: num(r.count) })),
+      agentPerformance: agents.rows.map((a: any) => ({
+        name: a.name,
+        resolved: num(a.resolved),
+        assigned: num(a.assigned),
+        avgResponseLabel: this.fmtDuration(a.avg_response != null ? Number(a.avg_response) : null),
+      })),
+      trend: trend.rows.map((r: any) => ({ month: r.month, created: num(r.created), resolved: num(r.resolved) })),
+    };
+  }
+
+  // ─── AI assist (tenant-isolated retrieval) ───────────────────────────────────
+  //
+  // Retrieval that AI answering can safely draw on: it returns ONLY the caller
+  // account's PUBLISHED Knowledge Base articles matching the query. It reuses the
+  // same team-scoped read path as the rest of the module, so AI can never surface
+  // another account's articles, tickets, contacts, notes or documents. Generative
+  // features layer on top of this with strictly team-scoped context; this endpoint is
+  // the isolation boundary for AI knowledge retrieval.
+
+  async aiSearchKnowledge(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    query: string | undefined,
+    limit = 5,
+  ): Promise<{ results: any[]; scope: string }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { results: [], scope: 'account' };
+    const lim = Math.min(20, Math.max(1, Number(limit) || 5));
+    const term = (query || '').trim();
+    const params: any[] = [accessible];
+    let where = `a.team_id = ANY($1) AND a.status = 'Published'`;
+    if (term) {
+      params.push(`%${term}%`);
+      where += ` AND (a.title ILIKE $2 OR a.body ILIKE $2 OR a.category ILIKE $2)`;
+    }
+    params.push(lim);
+    const { rows } = await this.db.query(
+      `SELECT a.id, a.title, a.category,
+              LEFT(COALESCE(a.body, ''), 500) AS excerpt
+         FROM cs_kb_articles a
+        WHERE ${where}
+        ORDER BY a.updated_at DESC
+        LIMIT $${params.length}`,
+      params,
+    );
+    // Scope marker makes it explicit to any AI caller that results are account-only.
+    return { results: rows, scope: 'account' };
   }
 }

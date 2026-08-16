@@ -134,6 +134,33 @@ const customerServiceApi = {
   deleteAutomation(id) {
     return apiClient.request(`/customer-service/automations/${id}`, { method: "DELETE" });
   },
+
+  // Surveys
+  listSurveys(params = {}) {
+    return apiClient.request(`/customer-service/surveys${toQuery(params)}`, { method: "GET" });
+  },
+  getSurvey(id) {
+    return apiClient.request(`/customer-service/surveys/${id}`, { method: "GET" });
+  },
+  createSurvey(body) {
+    return apiClient.request(`/customer-service/surveys`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateSurvey(id, body) {
+    return apiClient.request(`/customer-service/surveys/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteSurvey(id) {
+    return apiClient.request(`/customer-service/surveys/${id}`, { method: "DELETE" });
+  },
+
+  // Reports
+  getReports(params = {}) {
+    return apiClient.request(`/customer-service/reports${toQuery(params)}`, { method: "GET" });
+  },
+
+  // AI assist (tenant-isolated KB retrieval)
+  aiKnowledgeSearch(query, limit) {
+    return apiClient.request(`/customer-service/ai/knowledge-search${toQuery({ query, limit })}`, { method: "GET" });
+  },
 };
 
 export default customerServiceApi;

@@ -31,6 +31,7 @@ import { UpdateCsArticleDto } from './dto/update-cs-article.dto';
 import { CreateCsSlaPolicyDto, UpdateCsSlaPolicyDto } from './dto/cs-sla-policy.dto';
 import { CreateCsEscalationDto, UpdateCsEscalationDto } from './dto/cs-escalation.dto';
 import { CreateCsAutomationDto, UpdateCsAutomationDto } from './dto/cs-automation.dto';
+import { CreateCsSurveyDto, UpdateCsSurveyDto } from './dto/cs-survey.dto';
 
 // Customer Service Workspace API. JwtAuthGuard authenticates, PaymentGuard gates
 // unpaid accounts, and WorkspaceLockGuard enforces the $97 add-on ONLY when the
@@ -359,5 +360,76 @@ export class CustomerServiceController {
   @ApiOperation({ summary: 'Delete an automation rule (team-scoped)' })
   async removeAutomation(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.cs.removeAutomation(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Surveys + Customer Satisfaction ──────────────────────────────────────────
+
+  @Get('surveys')
+  @ApiOperation({ summary: 'List satisfaction surveys (paginated, filterable, team-scoped)' })
+  async listSurveys(
+    @CurrentUser() user: any,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.cs.findAllSurveys(user.id, user.teamId ?? null, user.role ?? 'owner', { status, page, limit });
+  }
+
+  @Post('surveys')
+  @ApiOperation({ summary: 'Send / record a satisfaction survey (ticket + customer scoped)' })
+  async createSurvey(@Body() dto: CreateCsSurveyDto, @CurrentUser() user: any) {
+    return this.cs.createSurvey(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Get('surveys/:id')
+  @ApiOperation({ summary: 'Get one survey (team-scoped)' })
+  async getSurvey(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.cs.findOneSurvey(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('surveys/:id')
+  @ApiOperation({ summary: 'Record a survey response (rating + comment) or update (team-scoped)' })
+  async updateSurvey(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCsSurveyDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.cs.updateSurvey(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('surveys/:id')
+  @ApiOperation({ summary: 'Delete a survey (team-scoped)' })
+  async removeSurvey(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.cs.removeSurvey(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Reports ──────────────────────────────────────────────────────────────────
+
+  @Get('reports')
+  @ApiOperation({ summary: 'Customer Service analytics (real data, optional date range, team-scoped)' })
+  async reports(
+    @CurrentUser() user: any,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.cs.getReports(user.id, user.teamId ?? null, user.role ?? 'owner', { from, to });
+  }
+
+  // ─── AI assist (tenant-isolated retrieval) ────────────────────────────────────
+
+  @Get('ai/knowledge-search')
+  @ApiOperation({ summary: "Tenant-isolated KB retrieval for AI answering (this account's published articles only)" })
+  async aiKnowledgeSearch(
+    @CurrentUser() user: any,
+    @Query('query') query?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.cs.aiSearchKnowledge(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      query,
+      limit ? Number(limit) : 5,
+    );
   }
 }

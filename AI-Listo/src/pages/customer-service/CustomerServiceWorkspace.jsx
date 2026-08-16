@@ -7,6 +7,8 @@ import CsCustomersSection from "./CsCustomersSection";
 import CsKnowledgeBaseSection from "./CsKnowledgeBaseSection";
 import CsSlaEscalationsSection from "./CsSlaEscalationsSection";
 import CsAutomationSection from "./CsAutomationSection";
+import CsSurveysSection from "./CsSurveysSection";
+import CsReportsSection from "./CsReportsSection";
 import { relativeTime } from "../sales/salesFormat";
 
 // Customer Service Workspace, wired to real /customer-service data. Only Tickets and
@@ -323,6 +325,60 @@ export default function CustomerServiceWorkspace() {
     setDetailOpen(true);
   };
   const handleSaved = () => setRefreshTick((t) => t + 1);
+
+  // Export the currently-filtered tickets to CSV. Data comes only from the
+  // account-scoped list endpoint and respects the active filters. Paged up to a
+  // safety cap; the user is told if the export was capped (no silent truncation).
+  const [exporting, setExporting] = useState(false);
+  const exportTickets = async () => {
+    setExporting(true);
+    try {
+      const CAP_PAGES = 20; // up to 2000 rows
+      const params = {
+        search: debounced || undefined,
+        status: status || undefined,
+        priority: priority || undefined,
+        channel: channel || undefined,
+        category: category || undefined,
+        slaStatus: slaStatus || undefined,
+        limit: 100,
+      };
+      let all = [];
+      let p = 1;
+      let grandTotal = 0;
+      for (; p <= CAP_PAGES; p++) {
+        // eslint-disable-next-line no-await-in-loop
+        const res = await customerServiceApi.listTickets({ ...params, page: p });
+        grandTotal = res?.total || 0;
+        const data = res?.data || [];
+        all = all.concat(data);
+        if (all.length >= grandTotal || data.length === 0) break;
+      }
+      const esc = (c) => {
+        const s = c == null ? "" : String(c);
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const header = ["Ticket ID", "Subject", "Customer", "Email", "Channel", "Category", "Priority", "Status", "SLA Status", "Assigned To", "Created"];
+      const lines = [header.join(",")].concat(
+        all.map((t) => [t.ticketNumber, t.subject, t.customerName, t.customerEmail, t.channel, t.category, t.priority, t.status, t.slaStatus, t.assignedAgentName, t.createdAt].map(esc).join(",")),
+      );
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "customer-service-tickets.csv"; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (all.length < grandTotal) {
+        // eslint-disable-next-line no-alert
+        alert(`Exported ${all.length} of ${grandTotal} tickets (capped). Narrow the filters to export the rest.`);
+      }
+    } catch {
+      // eslint-disable-next-line no-alert
+      alert("Export failed.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const reset = () => {
     setSearch("");
     setStatus("");
@@ -400,7 +456,7 @@ export default function CustomerServiceWorkspace() {
             </div>
             <div>
               <button><I name="upload" />Import</button>
-              <button><I name="download" />Export</button>
+              <button onClick={exportTickets} disabled={exporting}><I name="download" />{exporting ? "Exporting…" : "Export"}</button>
               <button><I name="settings-2" /></button>
               <button className="primary" onClick={() => openModal("create")}>
                 <I name="plus" />New Ticket
@@ -530,6 +586,10 @@ export default function CustomerServiceWorkspace() {
         <CsSlaEscalationsSection />
       ) : tab === "Automation" ? (
         <CsAutomationSection />
+      ) : tab === "Surveys" ? (
+        <CsSurveysSection />
+      ) : tab === "Reports" ? (
+        <CsReportsSection />
       ) : (
         <div className="placeholder">
           <I name={tabs.find((x) => x[1] === tab)?.[0] || "headphones"} size={40} />
