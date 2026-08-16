@@ -1,155 +1,25 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./CustomerServiceWorkspace.css";
+import customerServiceApi from "../../api/customerServiceApi";
+import CsTicketModal from "./CsTicketModal";
+import CsTicketDetail from "./CsTicketDetail";
+import CsCustomersSection from "./CsCustomersSection";
+import CsKnowledgeBaseSection from "./CsKnowledgeBaseSection";
+import CsSlaEscalationsSection from "./CsSlaEscalationsSection";
+import CsAutomationSection from "./CsAutomationSection";
+import CsSurveysSection from "./CsSurveysSection";
+import CsReportsSection from "./CsReportsSection";
+import CsImportModal from "./CsImportModal";
+import { relativeTime } from "../sales/salesFormat";
 
-const tickets = [
-  [
-    "TKT-2025-2458",
-    "Login issue on customer portal",
-    "TechFlow Solutions",
-    "Olivia Bennett",
-    "Web",
-    "Account Access",
-    "High",
-    "Open",
-    "In Progress",
-    "John Smith",
-    "May 20, 2025",
-    "09:24 AM",
-    "12 min ago",
-  ],
-  [
-    "TKT-2025-2457",
-    "Payment not processing",
-    "Bright Marketing",
-    "Ethan Walker",
-    "Email",
-    "Billing & Payments",
-    "High",
-    "In Progress",
-    "In Progress",
-    "Sophia Martinez",
-    "May 20, 2025",
-    "08:15 AM",
-    "21 min ago",
-  ],
-  [
-    "TKT-2025-2456",
-    "Feature request: New report",
-    "GreenLeaf Realty",
-    "Sophia Martinez",
-    "Portal",
-    "Feature Request",
-    "Medium",
-    "Open",
-    "On Track",
-    "Liam Johnson",
-    "May 20, 2025",
-    "07:45 AM",
-    "45 min ago",
-  ],
-  [
-    "TKT-2025-2455",
-    "Data export not working",
-    "Summit Enterprises",
-    "Liam Johnson",
-    "Chat",
-    "Technical Issue",
-    "High",
-    "In Progress",
-    "At Risk",
-    "John Smith",
-    "May 19, 2025",
-    "04:32 PM",
-    "1h ago",
-  ],
-  [
-    "TKT-2025-2454",
-    "Integrate with QuickBooks",
-    "Innovate Labs",
-    "Noah Davis",
-    "Email",
-    "Integration",
-    "Medium",
-    "Pending",
-    "On Track",
-    "Olivia Bennett",
-    "May 19, 2025",
-    "03:11 PM",
-    "2h ago",
-  ],
-  [
-    "TKT-2025-2453",
-    "How to set up automations?",
-    "NextGen Industries",
-    "Ava Thompson",
-    "Portal",
-    "How-To / Support",
-    "Low",
-    "Open",
-    "On Track",
-    "Sophia Martinez",
-    "May 19, 2025",
-    "02:05 PM",
-    "2h ago",
-  ],
-  [
-    "TKT-2025-2452",
-    "Unable to upload documents",
-    "Pulse Technologies",
-    "Mason Clark",
-    "Web",
-    "Technical Issue",
-    "High",
-    "In Progress",
-    "At Risk",
-    "Liam Johnson",
-    "May 18, 2025",
-    "11:48 AM",
-    "3h ago",
-  ],
-  [
-    "TKT-2025-2451",
-    "Subscription downgrade help",
-    "BlueStone Architects",
-    "Isabella White",
-    "Chat",
-    "Billing & Payments",
-    "Low",
-    "Resolved",
-    "Completed",
-    "John Smith",
-    "May 18, 2025",
-    "10:22 AM",
-    "Yesterday",
-  ],
-];
+// Customer Service Workspace, wired to real /customer-service data. Only Tickets and
+// the Overview dashboard are live in this slice; the other tabs are placeholders for
+// the next slices. No hard-coded tickets, KPIs, charts or activity — every figure is
+// computed server-side from the authenticated account's records.
 
-const stats = [
-  ["users-round", "Open Tickets", "248", "+18 from yesterday", "14%"],
-  [
-    "circle-check-big",
-    "Tickets Resolved (This Month)",
-    "732",
-    "+94 from last month",
-    "16%",
-  ],
-  ["clock-3", "Avg. Response Time", "1h 25m", "Goal: < 2h", "22% faster"],
-  [
-    "timer-reset",
-    "Avg. Resolution Time",
-    "8h 42m",
-    "Goal: < 24h",
-    "18% faster",
-  ],
-  [
-    "star",
-    "Customer Satisfaction",
-    "4.7 / 5",
-    "Based on 412 ratings",
-    "0.3 pts",
-  ],
-  ["shield-check", "SLA Compliance", "95.2%", "Goal: > 90%", "3.7%"],
-];
+const I = ({ name, size = 16 }) => (
+  <i data-lucide={name} style={{ width: size, height: size }} />
+);
 
 const statTones = ["blue", "green", "purple", "amber", "gold", "indigo"];
 const channelIconMap = {
@@ -158,51 +28,8 @@ const channelIconMap = {
   Portal: "monitor",
   Chat: "message-circle",
   Phone: "phone",
+  WhatsApp: "message-circle",
 };
-const recentActivityItems = [
-  {
-    icon: "ticket-check",
-    tone: "blue",
-    title: "Ticket TKT-2025-2457 updated",
-    subtitle: "Status changed to In Progress",
-    time: "12 min ago",
-  },
-  {
-    icon: "circle-check-big",
-    tone: "green",
-    title: "Ticket TKT-2025-2451 resolved",
-    subtitle: "Resolution time: 2h 15m",
-    time: "1h ago",
-  },
-  {
-    icon: "ticket-plus",
-    tone: "cyan",
-    title: "New ticket TKT-2025-2458 created",
-    subtitle: "by Olivia Bennett",
-    time: "2h ago",
-  },
-  {
-    icon: "alarm-clock",
-    tone: "red",
-    title: "SLA breached on TKT-2025-2449",
-    subtitle: "Response time exceeded",
-    time: "3h ago",
-  },
-  {
-    icon: "star",
-    tone: "green",
-    title: "Customer satisfaction received",
-    subtitle: "Rating: 5 Stars",
-    time: "4h ago",
-  },
-];
-const topAgents = [
-  { name: "John Smith", resolved: 156, csat: "4.9★", response: "58m" },
-  { name: "Sophia Martinez", resolved: 148, csat: "4.8★", response: "1h 04m" },
-  { name: "Liam Johnson", resolved: 132, csat: "4.7★", response: "1h 12m" },
-  { name: "Olivia Bennett", resolved: 121, csat: "4.7★", response: "1h 18m" },
-  { name: "Ethan Walker", resolved: 98, csat: "4.6★", response: "1h 25m" },
-];
 
 const tabs = [
   ["settings", "Overview"],
@@ -214,67 +41,365 @@ const tabs = [
   ["file-chart-column", "Reports"],
   ["clipboard-check", "Surveys"],
 ];
-const I = ({ name, size = 16 }) => (
-  <i data-lucide={name} style={{ width: size, height: size }} />
-);
 
-function Donut({ title, rows }) {
+const STATUS_OPTS = ["Open", "In Progress", "Pending", "On Hold", "Resolved", "Closed"];
+const PRIORITY_OPTS = ["Low", "Medium", "High", "Urgent"];
+const CHANNEL_OPTS = ["Web", "Email", "Portal", "Chat", "Phone", "WhatsApp"];
+const CATEGORY_OPTS = [
+  "Account Access",
+  "Billing & Payments",
+  "Technical Issue",
+  "Feature Request",
+  "Integration",
+  "How-To / Support",
+  "Other",
+];
+const SLA_OPTS = ["On Track", "At Risk", "Breached", "Completed"];
+
+function pct(count, total) {
+  if (!total) return "0%";
+  return `${((Number(count) / Number(total)) * 100).toFixed(1)}%`;
+}
+
+// Colors match the legend dots (.csw-legend .d0..d4) so ring segments line up with
+// the labels. Extra tones cover >5 groups.
+const DONUT_COLORS = ["#2563eb", "#7c3aed", "#f59e0b", "#22c55e", "#ef4444", "#0891b2", "#64748b"];
+
+// Build the ring fill from REAL data. A flat neutral track when there is no data,
+// so the ring never depicts fabricated proportions.
+function ringGradient(rows, total) {
+  if (!total || !rows || rows.length === 0) return "#e5e7eb";
+  let acc = 0;
+  const segs = [];
+  rows.forEach((r, i) => {
+    const start = (acc / total) * 100;
+    acc += Number(r.count) || 0;
+    const end = (acc / total) * 100;
+    segs.push(`${DONUT_COLORS[i % DONUT_COLORS.length]} ${start}% ${end}%`);
+  });
+  return `conic-gradient(${segs.join(", ")})`;
+}
+function initials(name) {
+  return String(name || "")
+    .split(" ")
+    .map((x) => x[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function statValue(key, stats) {
+  switch (key) {
+    case "open":
+      return { value: (stats?.openTickets?.count ?? 0).toLocaleString("en-US"), sub: "Currently open" };
+    case "resolved":
+      return { value: (stats?.resolvedThisMonth?.count ?? 0).toLocaleString("en-US"), sub: "This month" };
+    case "response":
+      return { value: stats?.avgResponseTime?.label || "—", sub: "Goal: < 2h" };
+    case "resolution":
+      return { value: stats?.avgResolutionTime?.label || "—", sub: "Goal: < 24h" };
+    case "csat": {
+      const cs = stats?.customerSatisfaction;
+      return {
+        value: cs?.average != null ? `${cs.average} / ${cs.max ?? 5}` : "—",
+        sub: cs?.count ? `Based on ${cs.count} ratings` : "No ratings yet",
+      };
+    }
+    case "sla":
+      return {
+        value: stats?.slaCompliance?.percent != null ? `${stats.slaCompliance.percent}%` : "—",
+        sub: "Goal: > 90%",
+      };
+    default:
+      return { value: "—", sub: "" };
+  }
+}
+
+const STAT_CONFIG = [
+  ["users-round", "Open Tickets", "open"],
+  ["circle-check-big", "Tickets Resolved (This Month)", "resolved"],
+  ["clock-3", "Avg. Response Time", "response"],
+  ["timer-reset", "Avg. Resolution Time", "resolution"],
+  ["star", "Customer Satisfaction", "csat"],
+  ["shield-check", "SLA Compliance", "sla"],
+];
+
+function Donut({ title, rows, total }) {
+  const list = rows || [];
   return (
     <div className="csw-panel">
       <div className="csw-panel-head">
         <b>{title}</b>
-        <select>
-          <option>This Month</option>
-        </select>
+        <select><option>This Month</option></select>
       </div>
       <div className="csw-donut-body">
-        <div className="csw-donut">
+        <div className="csw-donut" style={{ background: ringGradient(list, total) }}>
           <div>
-            <strong>248</strong>
+            <strong>{(total ?? 0).toLocaleString("en-US")}</strong>
             <span>Total Tickets</span>
           </div>
         </div>
         <div className="csw-legend">
-          {rows.map((r, i) => (
-            <p key={r[0]}>
-              <i className={`d${i}`} />
-              <span>{r[0]}</span>
-              <b>{r[1]}</b>
-            </p>
-          ))}
+          {list.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>No data yet</p>
+          ) : (
+            list.map((r, i) => (
+              <p key={r.label}>
+                <i className={`d${i}`} />
+                <span>{r.label}</span>
+                <b>{r.count} ({pct(r.count, total)})</b>
+              </p>
+            ))
+          )}
         </div>
       </div>
     </div>
   );
 }
-function Icon({ name, size = 16 }) {
-  return <i data-lucide={name} style={{ width: size, height: size }} />;
+
+function CsDashboard({ stats }) {
+  const total = stats?.totalTickets ?? 0;
+  const sla = stats?.slaPerformance || { onTrack: 0, atRisk: 0, breached: 0, completed: 0 };
+  const slaTotal = sla.onTrack + sla.atRisk + sla.breached + sla.completed;
+  const compliance = stats?.slaCompliance?.percent;
+  const activity = stats?.recentActivity || [];
+  const agents = stats?.topAgents || [];
+
+  return (
+    <div className="csw-bottom">
+      <Donut title="Tickets by Status" rows={stats?.ticketsByStatus} total={total} />
+      <Donut title="Tickets by Channel" rows={stats?.ticketsByChannel} total={total} />
+      <div className="csw-panel csw-sla-panel">
+        <div className="csw-panel-head">
+          <b>SLA Performance</b>
+          <select><option>This Month</option></select>
+        </div>
+        <div className="csw-sla-content">
+          <div className="csw-sla-ring-wrap">
+            <div className="csw-sla-ring">
+              <div className="csw-sla-ring-center">
+                <strong>{compliance != null ? `${compliance}%` : "—"}</strong>
+                <span>SLA Compliance</span>
+              </div>
+            </div>
+            <p className="goal">Goal: &gt; 90%</p>
+          </div>
+          <div className="csw-sla-legend">
+            <p><i className="sla-dot on-track" /><span>On Track</span><b>{sla.onTrack} ({pct(sla.onTrack, slaTotal)})</b></p>
+            <p><i className="sla-dot at-risk" /><span>At Risk</span><b>{sla.atRisk} ({pct(sla.atRisk, slaTotal)})</b></p>
+            <p><i className="sla-dot breached" /><span>Breached</span><b>{sla.breached} ({pct(sla.breached, slaTotal)})</b></p>
+          </div>
+        </div>
+      </div>
+      <div className="csw-panel">
+        <div className="csw-panel-head">
+          <b>Recent Activity</b>
+          <select><option>All Activity</option></select>
+        </div>
+        <div className="mini-list csw-activity-list">
+          {activity.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>No recent activity</p>
+          ) : (
+            activity.map((item, i) => (
+              <p key={`${item.title}-${i}`}>
+                <span className="csw-activity-icon blue">
+                  <I name="ticket-check" size={14} />
+                </span>
+                <span className="csw-activity-copy">
+                  <b>{item.title}</b>
+                  <small>{item.subtitle}</small>
+                </span>
+                <time>{relativeTime(item.at)}</time>
+              </p>
+            ))
+          )}
+        </div>
+      </div>
+      <div className="csw-panel">
+        <div className="csw-panel-head">
+          <b>Top Performing Agents</b>
+          <select><option>This Month</option></select>
+        </div>
+        <div className="agent-list">
+          {agents.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>No agent activity yet</p>
+          ) : (
+            agents.map((agent, i) => (
+              <p key={agent.name}>
+                <b>{i + 1}</b>
+                <span className={`avatar a${i % 4}`}>{initials(agent.name)}</span>
+                <span className="agent-name">{agent.name}</span>
+                <small><b>{agent.resolved}</b></small>
+                <small><b>{agent.avgResponseLabel || "—"}</b></small>
+              </p>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
+
 export default function CustomerServiceWorkspace() {
-  const [tab, setTab] = useState("Tickets");
+  const [tab, setTab] = useState("Overview");
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("Status");
-  const [priority, setPriority] = useState("Priority");
-  const [channel, setChannel] = useState("Channel");
-  const [showNew, setShowNew] = useState(false);
-  useEffect(() => window.lucide?.createIcons(), [tab, showNew]);
-  const [selected, setSelected] = useState([]);
+  const [debounced, setDebounced] = useState("");
+  const [status, setStatus] = useState("");
+  const [priority, setPriority] = useState("");
+  const [channel, setChannel] = useState("");
+  const [category, setCategory] = useState("");
+  const [slaStatus, setSlaStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+
+  const [tickets, setTickets] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [stats, setStats] = useState(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [modalId, setModalId] = useState(null);
+  const [nonce, setNonce] = useState(0);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailId, setDetailId] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debounced, status, priority, channel, category, slaStatus, limit]);
+
+  useEffect(() => {
+    let alive = true;
+    customerServiceApi.getStats().then((s) => { if (alive) setStats(s); }).catch(() => {});
+    return () => { alive = false; };
+  }, [refreshTick]);
+
+  useEffect(() => {
+    if (tab !== "Tickets") return undefined;
+    let alive = true;
+    setLoading(true);
+    customerServiceApi
+      .listTickets({
+        search: debounced || undefined,
+        status: status || undefined,
+        priority: priority || undefined,
+        channel: channel || undefined,
+        category: category || undefined,
+        slaStatus: slaStatus || undefined,
+        page,
+        limit,
+      })
+      .then((res) => {
+        if (!alive) return;
+        setTickets(res?.data || []);
+        setTotal(res?.total || 0);
+        setError("");
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setError("Could not load tickets.");
+        setLoading(false);
+      });
+    return () => { alive = false; };
+  }, [tab, debounced, status, priority, channel, category, slaStatus, page, limit, refreshTick]);
+
   useEffect(() => {
     window.lucide?.createIcons();
-  }, [tab, showNew, selected]);
-  const filtered = useMemo(
-    () =>
-      tickets.filter((t) => {
-        const q = search.toLowerCase();
-        return (
-          (!q || t.join(" ").toLowerCase().includes(q)) &&
-          (status === "Status" || t[7] === status) &&
-          (priority === "Priority" || t[6] === priority) &&
-          (channel === "Channel" || t[4] === channel)
-        );
-      }),
-    [search, status, priority, channel],
-  );
+  }, [tab, tickets, stats, loading, modalOpen]);
+
+  const openModal = (mode, id = null) => {
+    setModalMode(mode);
+    setModalId(id);
+    setNonce((n) => n + 1);
+    setModalOpen(true);
+  };
+  const openDetail = (id) => {
+    setDetailId(id);
+    setDetailOpen(true);
+  };
+  const handleSaved = () => setRefreshTick((t) => t + 1);
+
+  // Export the currently-filtered tickets to CSV. Data comes only from the
+  // account-scoped list endpoint and respects the active filters. Paged up to a
+  // safety cap; the user is told if the export was capped (no silent truncation).
+  const [exporting, setExporting] = useState(false);
+  const exportTickets = async () => {
+    setExporting(true);
+    try {
+      const CAP_PAGES = 20; // up to 2000 rows
+      const params = {
+        search: debounced || undefined,
+        status: status || undefined,
+        priority: priority || undefined,
+        channel: channel || undefined,
+        category: category || undefined,
+        slaStatus: slaStatus || undefined,
+        limit: 100,
+      };
+      let all = [];
+      let p = 1;
+      let grandTotal = 0;
+      for (; p <= CAP_PAGES; p++) {
+        // eslint-disable-next-line no-await-in-loop
+        const res = await customerServiceApi.listTickets({ ...params, page: p });
+        grandTotal = res?.total || 0;
+        const data = res?.data || [];
+        all = all.concat(data);
+        if (all.length >= grandTotal || data.length === 0) break;
+      }
+      const esc = (c) => {
+        const s = c == null ? "" : String(c);
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const header = ["Ticket ID", "Subject", "Customer", "Email", "Channel", "Category", "Priority", "Status", "SLA Status", "Assigned To", "Created"];
+      const lines = [header.join(",")].concat(
+        all.map((t) => [t.ticketNumber, t.subject, t.customerName, t.customerEmail, t.channel, t.category, t.priority, t.status, t.slaStatus, t.assignedAgentName, t.createdAt].map(esc).join(",")),
+      );
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "customer-service-tickets.csv"; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (all.length < grandTotal) {
+        // eslint-disable-next-line no-alert
+        alert(`Exported ${all.length} of ${grandTotal} tickets (capped). Narrow the filters to export the rest.`);
+      }
+    } catch {
+      // eslint-disable-next-line no-alert
+      alert("Export failed.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const reset = () => {
+    setSearch("");
+    setStatus("");
+    setPriority("");
+    setChannel("");
+    setCategory("");
+    setSlaStatus("");
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const from = total === 0 ? 0 : (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
+
+  const fmtCreated = (v) => {
+    if (!v) return "-";
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+  };
 
   return (
     <div className="csw-page">
@@ -289,7 +414,7 @@ export default function CustomerServiceWorkspace() {
             <input placeholder="Search tickets, customers, agents, or KB..." />
             <kbd>⌘ K</kbd>
           </div>
-          <button className="primary">
+          <button className="primary" onClick={() => openModal("create")}>
             <I name="plus" />
             New Ticket
             <I name="chevron-down" size={13} />
@@ -298,37 +423,33 @@ export default function CustomerServiceWorkspace() {
       </div>
 
       <div className="csw-stats">
-        {stats.map((s, i) => (
-          <div className={`csw-stat csw-stat-${statTones[i]}`} key={s[1]}>
-            <div>
-              <span>{s[1]}</span>
-              <em>
-                <I name={s[0]} size={19} />
-              </em>
+        {STAT_CONFIG.map(([icon, label, key], i) => {
+          const { value, sub } = statValue(key, stats);
+          return (
+            <div className={`csw-stat csw-stat-${statTones[i]}`} key={key}>
+              <div>
+                <span>{label}</span>
+                <em><I name={icon} size={19} /></em>
+              </div>
+              <strong>{value}</strong>
+              <small>{sub}</small>
             </div>
-            <strong>{s[2]}</strong>
-            <small>{s[3]}</small>
-            <p>
-              ↑ {s[4]} <span>vs last 7 days</span>
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="csw-tabs">
         {tabs.map((t) => (
-          <button
-            key={t[1]}
-            className={tab === t[1] ? "active" : ""}
-            onClick={() => setTab(t[1])}
-          >
+          <button key={t[1]} className={tab === t[1] ? "active" : ""} onClick={() => setTab(t[1])}>
             <I name={t[0]} />
             {t[1]}
           </button>
         ))}
       </div>
 
-      {tab === "Tickets" ? (
+      {tab === "Overview" ? (
+        <CsDashboard stats={stats} />
+      ) : tab === "Tickets" ? (
         <>
           <div className="csw-section-head">
             <div>
@@ -336,97 +457,46 @@ export default function CustomerServiceWorkspace() {
               <p>View, manage and resolve customer tickets</p>
             </div>
             <div>
-              <button>
-                <I name="upload" />
-                Import
-              </button>
-              <button>
-                <I name="download" />
-                Export
-              </button>
-              <button>
-                <I name="settings-2" />
-              </button>
-              <button className="primary" onClick={() => setShowNew(true)}>
-                <I name="plus" />
-                New Ticket
+              <button onClick={() => setImportOpen(true)}><I name="upload" />Import</button>
+              <button onClick={exportTickets} disabled={exporting}><I name="download" />{exporting ? "Exporting…" : "Export"}</button>
+              <button><I name="settings-2" /></button>
+              <button className="primary" onClick={() => openModal("create")}>
+                <I name="plus" />New Ticket
               </button>
             </div>
           </div>
           <div className="csw-filters">
             <label>
               <I name="search" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search tickets..."
-              />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tickets..." />
             </label>
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option>Status</option>
-              <option>Open</option>
-              <option>In Progress</option>
-              <option>Pending</option>
-              <option>Resolved</option>
+              <option value="">Status</option>
+              {STATUS_OPTS.map((s) => (<option key={s} value={s}>{s}</option>))}
             </select>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-            >
-              <option>Priority</option>
-              <option>High</option>
-              <option>Medium</option>
-              <option>Low</option>
+            <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+              <option value="">Priority</option>
+              {PRIORITY_OPTS.map((s) => (<option key={s} value={s}>{s}</option>))}
             </select>
-            <select
-              value={channel}
-              onChange={(e) => setChannel(e.target.value)}
-            >
-              <option>Channel</option>
-              <option>Web</option>
-              <option>Email</option>
-              <option>Portal</option>
-              <option>Chat</option>
+            <select value={channel} onChange={(e) => setChannel(e.target.value)}>
+              <option value="">Channel</option>
+              {CHANNEL_OPTS.map((s) => (<option key={s} value={s}>{s}</option>))}
             </select>
-            <select>
-              <option>Category</option>
+            <select value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="">Category</option>
+              {CATEGORY_OPTS.map((s) => (<option key={s} value={s}>{s}</option>))}
             </select>
-            <select>
-              <option>Assigned To</option>
+            <select value={slaStatus} onChange={(e) => setSlaStatus(e.target.value)}>
+              <option value="">SLA Status</option>
+              {SLA_OPTS.map((s) => (<option key={s} value={s}>{s}</option>))}
             </select>
-            <select>
-              <option>SLA Status</option>
-            </select>
-            <select>
-              <option>Date Range</option>
-            </select>
-            <select>
-              <option>More Filters</option>
-            </select>
-            <button className="reset">↻ Reset</button>
-            <span></span>
-            <button className="fsw-view">
-              <Icon name="table-2" />
-              Table
-              <Icon name="chevron-down" size={13} />
-            </button>
-            <button className="fsw-square">
-              <Icon name="list" />
-            </button>
-            <button className="fsw-square">
-              <Icon name="calendar-days" />
-            </button>
-            <button className="fsw-square">
-              <Icon name="calendar" />
-            </button>
+            <button className="reset" onClick={reset}>↻ Reset</button>
           </div>
           <div className="csw-table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>
-                    <input type="checkbox" />
-                  </th>
+                  <th><input type="checkbox" /></th>
                   <th>Ticket ID</th>
                   <th>Subject</th>
                   <th>Customer</th>
@@ -442,254 +512,116 @@ export default function CustomerServiceWorkspace() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((t, i) => (
-                  <tr key={t[0]}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(t[0])}
-                        onChange={() =>
-                          setSelected((s) =>
-                            s.includes(t[0])
-                              ? s.filter((x) => x !== t[0])
-                              : [...s, t[0]],
-                          )
-                        }
-                      />
-                    </td>
-                    <td>
-                      <a>{t[0]}</a>
-                    </td>
-                    <td>{t[1]}</td>
-                    <td>
-                      <b>{t[2]}</b>
-                      <small>{t[3]}</small>
-                    </td>
-                    <td>
-                      <span
-                        className={`csw-channel csw-channel-${t[4].toLowerCase()}`}
-                      >
-                        <I name={channelIconMap[t[4]] || "circle"} size={14} />
-                        {t[4]}
-                      </span>
-                    </td>
-                    <td>{t[5]}</td>
-                    <td>
-                      <span className={`pill ${t[6].toLowerCase()}`}>
-                        {t[6]}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`pill blue`}>{t[7]}</span>
-                    </td>
-                    <td>
-                      <span
-                        className={`pill ${t[8] === "At Risk" ? "red" : "green"}`}
-                      >
-                        {t[8]}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`avatar a${i % 4}`}>
-                        {t[9]
-                          .split(" ")
-                          .map((x) => x[0])
-                          .join("")}
-                      </span>
-                      {t[9]}
-                    </td>
-                    <td>
-                      {t[10]}
-                      <small>{t[11]}</small>
-                    </td>
-                    <td className="recent">{t[12]}</td>
-                    <td>
-                      <div className="row-actions">
-                        <button>
-                          <I name="eye" size={14} />
-                        </button>
-                        <button>
-                          <I name="pencil" size={14} />
-                        </button>
-                        <button>
-                          <I name="ellipsis-vertical" size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {loading ? (
+                  <tr><td colSpan={13} style={{ textAlign: "center", padding: 24, color: "#64748b" }}>Loading…</td></tr>
+                ) : error ? (
+                  <tr><td colSpan={13} style={{ textAlign: "center", padding: 24, color: "#b91c1c" }}>{error}</td></tr>
+                ) : tickets.length === 0 ? (
+                  <tr><td colSpan={13} style={{ textAlign: "center", padding: 24, color: "#64748b" }}>No tickets yet. Create your first ticket to get started.</td></tr>
+                ) : (
+                  tickets.map((t, i) => (
+                    <tr key={t.id}>
+                      <td><input type="checkbox" /></td>
+                      <td><a onClick={() => openDetail(t.id)} style={{ cursor: "pointer" }}>{t.ticketNumber || "-"}</a></td>
+                      <td>{t.subject || "-"}</td>
+                      <td>
+                        <b>{t.customerName || "-"}</b>
+                        {t.customerEmail && <small>{t.customerEmail}</small>}
+                      </td>
+                      <td>
+                        <span className={`csw-channel csw-channel-${String(t.channel || "").toLowerCase()}`}>
+                          <I name={channelIconMap[t.channel] || "circle"} size={14} />
+                          {t.channel || "-"}
+                        </span>
+                      </td>
+                      <td>{t.category || "-"}</td>
+                      <td><span className={`pill ${String(t.priority || "").toLowerCase()}`}>{t.priority || "-"}</span></td>
+                      <td><span className="pill blue">{t.status || "-"}</span></td>
+                      <td>
+                        {t.slaStatus ? (
+                          <span className={`pill ${t.slaStatus === "At Risk" || t.slaStatus === "Breached" ? "red" : "green"}`}>{t.slaStatus}</span>
+                        ) : "-"}
+                      </td>
+                      <td>
+                        {t.assignedAgentName ? (
+                          <>
+                            <span className={`avatar a${i % 4}`}>{initials(t.assignedAgentName)}</span>
+                            {t.assignedAgentName}
+                          </>
+                        ) : "Unassigned"}
+                      </td>
+                      <td>{fmtCreated(t.createdAt)}</td>
+                      <td className="recent">{relativeTime(t.lastActivityAt) || "-"}</td>
+                      <td>
+                        <div className="row-actions">
+                          <button onClick={() => openDetail(t.id)}><I name="eye" size={14} /></button>
+                          <button onClick={() => openModal("edit", t.id)}><I name="pencil" size={14} /></button>
+                          <button onClick={() => openDetail(t.id)}><I name="ellipsis-vertical" size={14} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
             <div className="csw-pagination">
-              <span>Showing 1 to {filtered.length} of 248 tickets</span>
+              <span>Showing {from} to {to} of {total.toLocaleString("en-US")} tickets</span>
               <div>
-                <button className="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>4</button>
-                <button>5</button>
-                <span>...</span>
-                <button>31</button>
+                <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>‹</button>
+                <button className="active">{page}</button>
+                <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>›</button>
               </div>
-              <select>
-                <option>20 / page</option>
+              <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
+                <option value="20">20 / page</option>
+                <option value="50">50 / page</option>
+                <option value="100">100 / page</option>
               </select>
             </div>
           </div>
-          <div className="csw-bottom">
-            <Donut
-              title="Tickets by Status"
-              rows={[
-                ["Open", "68 (27.4%)"],
-                ["In Progress", "74 (29.8%)"],
-                ["Pending", "42 (16.9%)"],
-                ["Resolved", "48 (19.4%)"],
-                ["Closed", "16 (6.5%)"],
-              ]}
-            />
-            <Donut
-              title="Tickets by Channel"
-              rows={[
-                ["Portal", "102 (41.1%)"],
-                ["Email", "68 (27.4%)"],
-                ["Web", "45 (18.1%)"],
-                ["Chat", "28 (11.3%)"],
-                ["Phone", "5 (2.0%)"],
-              ]}
-            />
-            <div className="csw-panel csw-sla-panel">
-              <div className="csw-panel-head">
-                <b>SLA Performance</b>
-                <select>
-                  <option>This Month</option>
-                </select>
-              </div>
-              <div className="csw-sla-content">
-                <div className="csw-sla-ring-wrap">
-                  <div className="csw-sla-ring">
-                    <div className="csw-sla-ring-center">
-                      <strong>95.2%</strong>
-                      <span>SLA Compliance</span>
-                    </div>
-                  </div>
-                  <p className="goal">Goal: &gt; 90%</p>
-                </div>
-                <div className="csw-sla-legend">
-                  <p>
-                    <i className="sla-dot on-track" />
-                    <span>On Track</span>
-                    <b>186 (75.0%)</b>
-                  </p>
-                  <p>
-                    <i className="sla-dot at-risk" />
-                    <span>At Risk</span>
-                    <b>35 (14.1%)</b>
-                  </p>
-                  <p>
-                    <i className="sla-dot breached" />
-                    <span>Breached</span>
-                    <b>27 (10.9%)</b>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="csw-panel">
-              <div className="csw-panel-head">
-                <b>Recent Activity</b>
-                <select>
-                  <option>All Activity</option>
-                </select>
-              </div>
-              <div className="mini-list csw-activity-list">
-                {recentActivityItems.map((item) => (
-                  <p key={item.title}>
-                    <span className={`csw-activity-icon ${item.tone}`}>
-                      <I name={item.icon} size={14} />
-                    </span>
-                    <span className="csw-activity-copy">
-                      <b>{item.title}</b>
-                      <small>{item.subtitle}</small>
-                    </span>
-                    <time>{item.time}</time>
-                  </p>
-                ))}
-              </div>
-              <button className="link">View all activity →</button>
-            </div>
-            <div className="csw-panel">
-              <div className="csw-panel-head">
-                <b>Top Performing Agents</b>
-                <select>
-                  <option>This Month</option>
-                </select>
-              </div>
-              <div className="agent-list">
-                {topAgents.map((agent, i) => (
-                  <p key={agent.name}>
-                    <b>{i + 1}</b>
-                    <span className={`avatar a${i % 4}`}>
-                      {agent.name
-                        .split(" ")
-                        .map((x) => x[0])
-                        .join("")}
-                    </span>
-                    <span className="agent-name">{agent.name}</span>
-                    <small>
-                      <b>{agent.resolved}</b>
-                    </small>
-                    <small>
-                      <b>{agent.csat}</b>
-                    </small>
-                  </p>
-                ))}
-              </div>
-              <button className="link">View full leaderboard →</button>
-            </div>
-          </div>
+          <CsDashboard stats={stats} />
         </>
+      ) : tab === "Customers" ? (
+        <CsCustomersSection />
+      ) : tab === "Knowledge Base" ? (
+        <CsKnowledgeBaseSection />
+      ) : tab === "SLA & Escalations" ? (
+        <CsSlaEscalationsSection />
+      ) : tab === "Automation" ? (
+        <CsAutomationSection />
+      ) : tab === "Surveys" ? (
+        <CsSurveysSection />
+      ) : tab === "Reports" ? (
+        <CsReportsSection />
       ) : (
         <div className="placeholder">
-          <I
-            name={tabs.find((x) => x[1] === tab)?.[0] || "headphones"}
-            size={40}
-          />
+          <I name={tabs.find((x) => x[1] === tab)?.[0] || "headphones"} size={40} />
           <h2>{tab}</h2>
-          <p>UI placeholder for the next implementation step.</p>
+          <p>{tab} workspace is ready for the next implementation step.</p>
         </div>
       )}
 
-      {showNew && (
-        <div className="modal-bg" onMouseDown={() => setShowNew(false)}>
-          <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
-            <div>
-              <h3>New Ticket</h3>
-              <button onClick={() => setShowNew(false)}>×</button>
-            </div>
-            <label>
-              Subject
-              <input placeholder="Enter ticket subject" />
-            </label>
-            <label>
-              Customer
-              <input placeholder="Customer name" />
-            </label>
-            <label>
-              Priority
-              <select>
-                <option>Medium</option>
-                <option>High</option>
-                <option>Low</option>
-              </select>
-            </label>
-            <footer>
-              <button onClick={() => setShowNew(false)}>Cancel</button>
-              <button className="primary" onClick={() => setShowNew(false)}>
-                Create Ticket
-              </button>
-            </footer>
-          </div>
-        </div>
-      )}
+      <CsTicketModal
+        key={nonce}
+        open={modalOpen}
+        mode={modalMode}
+        recordId={modalId}
+        onClose={() => setModalOpen(false)}
+        onSaved={handleSaved}
+      />
+
+      <CsTicketDetail
+        open={detailOpen}
+        ticketId={detailId}
+        onClose={() => setDetailOpen(false)}
+        onEdit={(id) => { setDetailOpen(false); openModal("edit", id); }}
+        onChanged={handleSaved}
+      />
+
+      <CsImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onDone={handleSaved}
+      />
     </div>
   );
 }
