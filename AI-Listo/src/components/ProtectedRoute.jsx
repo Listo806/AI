@@ -6,8 +6,9 @@ export default function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <div>Loading...</div>
+      <div className="app-splash">
+        <div className="app-splash-word">CORTEXA</div>
+        <div className="app-spinner" />
       </div>
     );
   }

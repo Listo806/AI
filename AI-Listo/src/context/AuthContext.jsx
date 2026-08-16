@@ -159,7 +159,12 @@ export function AuthProvider({ children }) {
     refreshUser,
   };
     if (loading) {
-       return <div>Loading...</div>;
+      return (
+        <div className="app-splash">
+          <div className="app-splash-word">CORTEXA</div>
+          <div className="app-spinner" />
+        </div>
+      );
     }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
