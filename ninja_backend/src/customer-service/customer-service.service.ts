@@ -2084,6 +2084,74 @@ export class CustomerServiceService {
     };
   }
 
+  // ─── Ticket import (account-scoped, validated, deduped) ──────────────────────
+  //
+  // Bulk-create tickets from imported rows. The team is ALWAYS the caller's resolved
+  // team — any team/account id in a row is ignored, so an import can never plant a
+  // record in another account. Rows carry customer_name as free text only (no
+  // contactId/assignedTo id is trusted from import, avoiding cross-account id
+  // injection). Malformed rows are rejected with a per-row error; rows whose
+  // ticket_number already exists are skipped (no duplicate creation).
+  async importTickets(
+    rows: any[],
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ created: number; skipped: number; errors: Array<{ row: number; error: string }> }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(undefined, userTeamId, accessible);
+    const list = Array.isArray(rows) ? rows.slice(0, 1000) : [];
+    let created = 0;
+    let skipped = 0;
+    const errors: Array<{ row: number; error: string }> = [];
+    for (let idx = 0; idx < list.length; idx++) {
+      const r = list[idx] || {};
+      try {
+        const subject = String(r.subject || '').trim();
+        if (!subject) {
+          errors.push({ row: idx + 1, error: 'Missing subject' });
+          continue;
+        }
+        const ticketNumber = String(r.ticketNumber || '').trim();
+        if (ticketNumber) {
+          const ex = await this.db.query(
+            `SELECT id FROM cs_tickets WHERE team_id = $1 AND ticket_number = $2 LIMIT 1`,
+            [teamId, ticketNumber],
+          );
+          if (ex.rows.length) {
+            skipped++;
+            continue;
+          }
+        }
+        // Reuse createTicket for team-scoping, numbering and activity. Only free-text
+        // fields are forwarded — never a contactId/assignedTo/teamId from the import.
+        await this.createTicket(
+          {
+            subject,
+            description: r.description ? String(r.description) : undefined,
+            customerName: r.customerName ? String(r.customerName) : undefined,
+            channel: r.channel ? String(r.channel) : undefined,
+            category: r.category ? String(r.category) : undefined,
+            priority: r.priority ? String(r.priority) : undefined,
+            status: r.status ? String(r.status) : undefined,
+            ticketNumber: ticketNumber || undefined,
+          },
+          userId,
+          userTeamId,
+          role,
+        );
+        created++;
+      } catch (e: any) {
+        errors.push({ row: idx + 1, error: e?.message || 'Invalid row' });
+      }
+    }
+    return { created, skipped, errors };
+  }
+
   // ─── AI assist (tenant-isolated retrieval) ───────────────────────────────────
   //
   // Retrieval that AI answering can safely draw on: it returns ONLY the caller

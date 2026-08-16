@@ -30,6 +30,9 @@ const customerServiceApi = {
   createTicket(body) {
     return apiClient.request(`/customer-service/tickets`, { method: "POST", body: JSON.stringify(body) });
   },
+  importTickets(tickets) {
+    return apiClient.request(`/customer-service/tickets/import`, { method: "POST", body: JSON.stringify({ tickets }) });
+  },
   updateTicket(id, body) {
     return apiClient.request(`/customer-service/tickets/${id}`, { method: "PUT", body: JSON.stringify(body) });
   },

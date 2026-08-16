@@ -9,6 +9,7 @@ import CsSlaEscalationsSection from "./CsSlaEscalationsSection";
 import CsAutomationSection from "./CsAutomationSection";
 import CsSurveysSection from "./CsSurveysSection";
 import CsReportsSection from "./CsReportsSection";
+import CsImportModal from "./CsImportModal";
 import { relativeTime } from "../sales/salesFormat";
 
 // Customer Service Workspace, wired to real /customer-service data. Only Tickets and
@@ -264,6 +265,7 @@ export default function CustomerServiceWorkspace() {
   const [nonce, setNonce] = useState(0);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailId, setDetailId] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -455,7 +457,7 @@ export default function CustomerServiceWorkspace() {
               <p>View, manage and resolve customer tickets</p>
             </div>
             <div>
-              <button><I name="upload" />Import</button>
+              <button onClick={() => setImportOpen(true)}><I name="upload" />Import</button>
               <button onClick={exportTickets} disabled={exporting}><I name="download" />{exporting ? "Exporting…" : "Export"}</button>
               <button><I name="settings-2" /></button>
               <button className="primary" onClick={() => openModal("create")}>
@@ -613,6 +615,12 @@ export default function CustomerServiceWorkspace() {
         onClose={() => setDetailOpen(false)}
         onEdit={(id) => { setDetailOpen(false); openModal("edit", id); }}
         onChanged={handleSaved}
+      />
+
+      <CsImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onDone={handleSaved}
       />
     </div>
   );

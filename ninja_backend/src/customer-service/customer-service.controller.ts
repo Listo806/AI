@@ -32,6 +32,7 @@ import { CreateCsSlaPolicyDto, UpdateCsSlaPolicyDto } from './dto/cs-sla-policy.
 import { CreateCsEscalationDto, UpdateCsEscalationDto } from './dto/cs-escalation.dto';
 import { CreateCsAutomationDto, UpdateCsAutomationDto } from './dto/cs-automation.dto';
 import { CreateCsSurveyDto, UpdateCsSurveyDto } from './dto/cs-survey.dto';
+import { ImportCsTicketsDto } from './dto/import-cs-tickets.dto';
 
 // Customer Service Workspace API. JwtAuthGuard authenticates, PaymentGuard gates
 // unpaid accounts, and WorkspaceLockGuard enforces the $97 add-on ONLY when the
@@ -94,6 +95,12 @@ export class CustomerServiceController {
   @ApiOperation({ summary: 'Create a ticket' })
   async createTicket(@Body() dto: CreateCsTicketDto, @CurrentUser() user: any) {
     return this.cs.createTicket(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('tickets/import')
+  @ApiOperation({ summary: 'Bulk-import tickets into this account (validated, deduped, account-scoped)' })
+  async importTickets(@Body() dto: ImportCsTicketsDto, @CurrentUser() user: any) {
+    return this.cs.importTickets(dto.tickets, user.id, user.teamId ?? null, user.role ?? 'owner');
   }
 
   @Get('tickets/:id')
