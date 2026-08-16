@@ -1,243 +1,34 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { icons as lucideIcons } from "lucide-react";
 import "./MarketingWorkspace.css";
+import marketingApi from "../../api/marketingApi";
+import MktCampaignModal from "./MktCampaignModal";
+import { money, formatDate, relativeTime } from "../sales/salesFormat";
 
-const campaigns = [
-  [
-    "Q2 Product Launch",
-    "Product Launch",
-    "mail linkedin facebook search",
-    "Product Interest",
-    "2,890 contacts",
-    "Active",
-    "$12,000",
-    "$7,432",
-    "342",
-    "8.4%",
-    "285%",
-    "May 01, 2025",
-    "John Smith",
-  ],
-  [
-    "Webinar: AI for Business",
-    "Webinar",
-    "mail linkedin calendar-days",
-    "Business Leaders",
-    "1,450 contacts",
-    "Active",
-    "$5,000",
-    "$2,359",
-    "189",
-    "12.2%",
-    "412%",
-    "May 05, 2025",
-    "Sophia Martinez",
-  ],
-  [
-    "Customer Retention May",
-    "Nurture",
-    "mail",
-    "Existing Customers",
-    "4,230 contacts",
-    "Active",
-    "$3,000",
-    "$1,127",
-    "156",
-    "6.3%",
-    "198%",
-    "May 02, 2025",
-    "Liam Johnson",
-  ],
-  [
-    "Google Ads - Brand",
-    "Paid Search",
-    "search",
-    "Lookalike 1%",
-    "3,200 contacts",
-    "Active",
-    "$8,000",
-    "$5,186",
-    "278",
-    "9.1%",
-    "336%",
-    "Apr 28, 2025",
-    "John Smith",
-  ],
-  [
-    "LinkedIn Awareness",
-    "Brand Awareness",
-    "linkedin",
-    "Lookalike 2%",
-    "5,600 contacts",
-    "Scheduled",
-    "$6,000",
-    "$0",
-    "0",
-    "0%",
-    "0%",
-    "May 15, 2025",
-    "Olivia Bennett",
-  ],
-  [
-    "Free Trial Promotion",
-    "Promotion",
-    "mail search linkedin",
-    "Trial Users",
-    "1,920 contacts",
-    "Completed",
-    "$4,000",
-    "$3,824",
-    "276",
-    "14.7%",
-    "521%",
-    "Apr 10, 2025",
-    "Ethan Walker",
-  ],
-  [
-    "Website Traffic Boost",
-    "Traffic",
-    "search",
-    "All Visitors",
-    "",
-    "Paused",
-    "$2,500",
-    "$1,203",
-    "56",
-    "2.9%",
-    "78%",
-    "Apr 20, 2025",
-    "Sophia Martinez",
-  ],
-  [
-    "Industry Report Download",
-    "Content Offer",
-    "mail linkedin",
-    "Industry Pros",
-    "2,100 contacts",
-    "Completed",
-    "$1,800",
-    "$1,341",
-    "98",
-    "11.5%",
-    "287%",
-    "Apr 01, 2025",
-    "Liam Johnson",
-  ],
-];
+// Marketing Workspace, wired to real /marketing data. Campaigns and the Overview
+// dashboard are live in this slice; the other tabs are placeholders for the next
+// slices. No hard-coded campaigns, KPIs, charts or activity — every figure is
+// computed server-side from the account's records, and no external ad-platform
+// metric is ever fabricated.
 
-const stats = [
-  ["send", "Active Campaigns", "28", "12 launching soon", "20%"],
-  ["users-round", "Total Leads (This Month)", "2,453", "+342 new leads", "16%"],
-  ["mail", "Email Open Rate", "34.6%", "+2.1% vs last month", "6%"],
-  [
-    "mouse-pointer-2",
-    "Click Through Rate",
-    "7.8%",
-    "+0.6% vs last month",
-    "9%",
-  ],
-  ["flag", "Conversions (This Month)", "156", "Leads to Customers", "18%"],
-  [
-    "circle-dollar-sign",
-    "Cost Per Lead",
-    "$14.32",
-    "-$2.18 vs last month",
-    "13%",
-  ],
-  [
-    "chart-no-axes-combined",
-    "ROI (This Month)",
-    "312%",
-    "+24% vs last month",
-    "9%",
-  ],
-];
-const statTones = [
-  "blue",
-  "green",
-  "amber",
-  "purple",
-  "teal",
-  "rose",
-  "indigo",
-];
+const iconAliases = { linkedin: "BriefcaseBusiness", facebook: "Users", google: "Search", search: "Search", "pause-circle": "CirclePause" };
+const toPascal = (name = "") => name.split("-").filter(Boolean).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
+function I({ name, size = 16 }) {
+  const iconName = iconAliases[name] || toPascal(name);
+  const LucideIcon = lucideIcons[iconName] || lucideIcons.Circle;
+  return <LucideIcon size={size} strokeWidth={1.8} aria-hidden="true" />;
+}
 
-const recentActivityItems = [
-  {
-    icon: "badge-plus",
-    tone: "blue",
-    title: "Campaign created",
-    subtitle: "Q2 Product Launch",
-    time: "10:24 AM",
-  },
-  {
-    icon: "mail",
-    tone: "indigo",
-    title: "Email sent",
-    subtitle: "Customer Retention May",
-    time: "09:15 AM",
-  },
-  {
-    icon: "user-plus",
-    tone: "cyan",
-    title: "New lead added",
-    subtitle: "From Webinar: AI for Business",
-    time: "08:47 AM",
-  },
-  {
-    icon: "file-input",
-    tone: "amber",
-    title: "Form submitted",
-    subtitle: "Contact Us Form",
-    time: "Yesterday",
-  },
-  {
-    icon: "circle-pause",
-    tone: "rose",
-    title: "Campaign paused",
-    subtitle: "Website Traffic Boost",
-    time: "Yesterday",
-  },
+const statTones = ["blue", "green", "amber", "purple", "teal", "rose", "indigo"];
+const STAT_CONFIG = [
+  ["send", "Active Campaigns", "active"],
+  ["users-round", "Total Leads (This Month)", "leads"],
+  ["mail", "Email Open Rate", "open"],
+  ["mouse-pointer-2", "Click Through Rate", "ctr"],
+  ["flag", "Conversions (This Month)", "conv"],
+  ["circle-dollar-sign", "Cost Per Lead", "cpl"],
+  ["chart-no-axes-combined", "ROI (This Month)", "roi"],
 ];
-
-const upcomingCampaignItems = [
-  {
-    icon: "briefcase-business",
-    tone: "linkedin",
-    title: "LinkedIn Awareness",
-    subtitle: "Brand Awareness",
-    date: "May 15, 2025",
-  },
-  {
-    icon: "mail",
-    tone: "email",
-    title: "Product Demo Email",
-    subtitle: "Nurture",
-    date: "May 16, 2025",
-  },
-  {
-    icon: "video",
-    tone: "webinar",
-    title: "Customer Webinar",
-    subtitle: "Webinar",
-    date: "May 17, 2025",
-  },
-  {
-    icon: "file-text",
-    tone: "content",
-    title: "Case Study Launch",
-    subtitle: "Content Offer",
-    date: "May 18, 2025",
-  },
-  {
-    icon: "megaphone",
-    tone: "social",
-    title: "Paid Social Campaign",
-    subtitle: "Traffic",
-    date: "May 19, 2025",
-  },
-];
-
 const tabs = [
   ["settings", "Overview"],
   ["badge-dollar-sign", "Campaigns"],
@@ -249,55 +40,161 @@ const tabs = [
   ["file-chart-column", "Reports"],
   ["target", "Attribution"],
 ];
-const iconAliases = {
-  linkedin: "BriefcaseBusiness",
-  facebook: "Users",
-  google: "Search",
-  search: "Search",
-  "pause-circle": "CirclePause",
-};
+const STATUS_OPTS = ["Draft", "Scheduled", "Active", "Paused", "Completed", "Canceled", "Archived"];
+const TYPE_OPTS = ["Product Launch", "Webinar", "Nurture", "Paid Search", "Brand Awareness", "Promotion", "Traffic", "Content Offer", "Event", "Other"];
 
-const toPascalIconName = (name = "") =>
-  name
-    .split("-")
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("");
-
-function I({ name, size = 16 }) {
-  const iconName = iconAliases[name] || toPascalIconName(name);
-  const LucideIcon = lucideIcons[iconName] || lucideIcons.Circle;
-
-  return <LucideIcon size={size} strokeWidth={1.8} aria-hidden="true" />;
+function statValue(key, s) {
+  switch (key) {
+    case "active": return { value: (s?.activeCampaigns?.count ?? 0).toLocaleString("en-US"), sub: "Currently active" };
+    case "leads": return { value: (s?.totalLeads?.count ?? 0).toLocaleString("en-US"), sub: s?.totalLeads?.count ? "Unique leads this month" : "No leads yet" };
+    case "open": return { value: s?.emailOpenRate?.percent != null ? `${s.emailOpenRate.percent}%` : "—", sub: s?.emailOpenRate?.delivered ? "Unique opens / delivered" : "No email data yet" };
+    case "ctr": return { value: s?.clickThroughRate?.percent != null ? `${s.clickThroughRate.percent}%` : "—", sub: s?.clickThroughRate?.delivered ? "Unique clicks / delivered" : "No email data yet" };
+    case "conv": return { value: (s?.conversions?.count ?? 0).toLocaleString("en-US"), sub: "This month" };
+    case "cpl": return { value: s?.costPerLead?.amount != null ? money(s.costPerLead.amount) : "—", sub: s?.costPerLead?.leads ? "Spend / leads" : "No leads to attribute" };
+    case "roi": return { value: s?.roi?.percent != null ? `${s.roi.percent}%` : "—", sub: s?.roi?.revenue ? "Revenue vs spend" : "No attributed revenue yet" };
+    default: return { value: "—", sub: "" };
+  }
 }
 
-function Icon({ name, size = 16 }) {
-  return <I name={name} size={size} />;
+function Donut({ title, rows, total, empty }) {
+  const list = rows || [];
+  return (
+    <div className="mkw-panel">
+      <div className="mkw-panel-head"><b>{title}</b><select><option>This Month</option></select></div>
+      <div className="mkw-donut-body">
+        <div className="mkw-donut"><div><strong>{(total ?? 0).toLocaleString("en-US")}</strong><span>Total Leads</span></div></div>
+        <div className="mkw-legend">
+          {list.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>{empty}</p>
+          ) : list.map((r, i) => (
+            <p key={r.label}><i className={`d${i}`} /><span>{r.label}</span><b>{r.count}</b></p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MktDashboard({ stats }) {
+  const top = stats?.topCampaigns || [];
+  const activity = stats?.recentActivity || [];
+  const upcoming = stats?.upcomingCampaigns || [];
+  const leadsByChannel = stats?.leadsByChannel || [];
+  const totalLeads = stats?.totalLeads?.count ?? 0;
+  const leadsOverTime = stats?.leadsOverTime || [];
+
+  return (
+    <div className="mkw-bottom">
+      <div className="mkw-panel">
+        <div className="mkw-panel-head"><b>Leads Over Time</b><select><option>This Month</option></select></div>
+        {leadsOverTime.length === 0 ? (
+          <p style={{ color: "#94a3b8", fontSize: 13, padding: "24px 4px" }}>No lead data yet. This chart fills in as leads and conversions are recorded.</p>
+        ) : (
+          <div className="line-legend">
+            <span><i className="blue" />Total Leads <b>{totalLeads}</b></span>
+            <span><i className="green" />Converted Leads <b>{stats?.conversions?.count ?? 0}</b></span>
+          </div>
+        )}
+      </div>
+      <Donut title="Leads by Channel" rows={leadsByChannel} total={totalLeads} empty="No lead data yet" />
+      <div className="mkw-panel">
+        <div className="mkw-panel-head"><b>Top Performing Campaigns</b><select><option>By spend</option></select></div>
+        <div className="rank-list">
+          {top.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>No campaigns yet</p>
+          ) : top.map((c, i) => (
+            <p key={`${c.name}-${i}`}>
+              <b>{i + 1}</b>
+              <span><strong>{c.name || "Untitled"}</strong><small>{money(c.spend)} spend</small></span>
+              <em>{c.leads} leads<i style={{ width: `${Math.max(10, 90 - i * 12)}%` }} /></em>
+            </p>
+          ))}
+        </div>
+      </div>
+      <div className="mkw-panel">
+        <div className="mkw-panel-head"><b>Recent Activity</b><select><option>All Activity</option></select></div>
+        <div className="mini-list mkw-activity-list">
+          {activity.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>No recent activity</p>
+          ) : activity.map((item, i) => (
+            <p key={`${item.action}-${i}`}>
+              <span className="mkw-mini-icon blue"><I name="activity" size={14} /></span>
+              <span><b>{item.action}</b><small>{item.subject || ""}</small></span>
+              <time>{relativeTime(item.at)}</time>
+            </p>
+          ))}
+        </div>
+      </div>
+      <div className="mkw-panel">
+        <div className="mkw-panel-head"><b>Upcoming Campaigns</b><select><option>Scheduled</option></select></div>
+        <div className="mini-list mkw-upcoming-list">
+          {upcoming.length === 0 ? (
+            <p style={{ color: "#94a3b8", fontSize: 13 }}>No scheduled campaigns</p>
+          ) : upcoming.map((item, i) => (
+            <p key={`${item.name}-${i}`}>
+              <span className="mkw-mini-icon email"><I name="calendar-days" size={14} /></span>
+              <span><b>{item.name}</b><small>{item.campaignType || ""}</small></span>
+              <time>{formatDate(item.startDate)}</time>
+            </p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function MarketingWorkspace() {
-  const [tab, setTab] = useState("Campaigns");
+  const [tab, setTab] = useState("Overview");
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All Statuses");
-  const [type, setType] = useState("All Types");
-  const [showNew, setShowNew] = useState(false);
-  const [selected, setSelected] = useState([]);
+  const [debounced, setDebounced] = useState("");
+  const [status, setStatus] = useState("");
+  const [type, setType] = useState("");
+  const [channel, setChannel] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [stats, setStats] = useState(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [modalId, setModalId] = useState(null);
+  const [nonce, setNonce] = useState(0);
+
+  useEffect(() => { const t = setTimeout(() => setDebounced(search.trim()), 300); return () => clearTimeout(t); }, [search]);
+  useEffect(() => { setPage(1); }, [debounced, status, type, channel, limit]);
 
   useEffect(() => {
-    window.lucide?.createIcons();
-  }, [tab, showNew, selected]);
-  const filtered = useMemo(
-    () =>
-      campaigns.filter((c) => {
-        const q = search.toLowerCase();
-        return (
-          (!q || c.join(" ").toLowerCase().includes(q)) &&
-          (status === "All Statuses" || c[5] === status) &&
-          (type === "All Types" || c[1] === type)
-        );
-      }),
-    [search, status, type],
-  );
+    let alive = true;
+    marketingApi.getStats().then((s) => { if (alive) setStats(s); }).catch(() => {});
+    return () => { alive = false; };
+  }, [refreshTick]);
+
+  useEffect(() => {
+    if (tab !== "Campaigns") return undefined;
+    let alive = true;
+    setLoading(true);
+    marketingApi.listCampaigns({
+      search: debounced || undefined, status: status || undefined,
+      campaignType: type || undefined, channel: channel || undefined, page, limit,
+    })
+      .then((res) => { if (!alive) return; setRows(res?.data || []); setTotal(res?.total || 0); setError(""); setLoading(false); })
+      .catch(() => { if (!alive) return; setError("Could not load campaigns."); setLoading(false); });
+    return () => { alive = false; };
+  }, [tab, debounced, status, type, channel, page, limit, refreshTick]);
+
+  const openModal = (mode, id = null) => { setModalMode(mode); setModalId(id); setNonce((n) => n + 1); setModalOpen(true); };
+  const handleSaved = () => setRefreshTick((t) => t + 1);
+  const reset = () => { setSearch(""); setStatus(""); setType(""); setChannel(""); };
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const from = total === 0 ? 0 : (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
+  const initials = (n) => String(n || "").split(" ").map((x) => x[0]).join("").slice(0, 2).toUpperCase();
 
   return (
     <div className="mkw-page">
@@ -308,208 +205,89 @@ export default function MarketingWorkspace() {
         </div>
         <div className="mkw-header-actions">
           <div className="mkw-global-search">
-            <I name="search" />
-            <input placeholder="Search campaigns, audiences, contacts..." />
-            <kbd>⌘ K</kbd>
+            <I name="search" /><input placeholder="Search campaigns, audiences, contacts..." /><kbd>⌘ K</kbd>
           </div>
-          <button className="primary">
-            <I name="plus" />
-            Create
-            <I name="chevron-down" size={13} />
+          <button className="primary" onClick={() => openModal("create")}>
+            <I name="plus" />Create<I name="chevron-down" size={13} />
           </button>
         </div>
       </div>
+
       <div className="mkw-stats">
-        {stats.map((s, i) => (
-          <div className={`mkw-stat mkw-stat-${statTones[i]}`} key={s[1]}>
-            <div>
-              <span>{s[1]}</span>
-              <em>
-                <I name={s[0]} size={19} />
-              </em>
+        {STAT_CONFIG.map(([icon, label, key], i) => {
+          const { value, sub } = statValue(key, stats);
+          return (
+            <div className={`mkw-stat mkw-stat-${statTones[i]}`} key={key}>
+              <div><span>{label}</span><em><I name={icon} size={19} /></em></div>
+              <strong>{value}</strong>
+              <small>{sub}</small>
             </div>
-            <strong>{s[2]}</strong>
-            <small>{s[3]}</small>
-            <p>
-              ↑ {s[4]} <span>vs last month</span>
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
       <div className="mkw-tabs">
         {tabs.map((t) => (
-          <button
-            key={t[1]}
-            className={tab === t[1] ? "active" : ""}
-            onClick={() => setTab(t[1])}
-          >
-            <I name={t[0]} />
-            {t[1]}
-          </button>
+          <button key={t[1]} className={tab === t[1] ? "active" : ""} onClick={() => setTab(t[1])}><I name={t[0]} />{t[1]}</button>
         ))}
       </div>
 
-      {tab === "Campaigns" ? (
+      {tab === "Overview" ? (
+        <MktDashboard stats={stats} />
+      ) : tab === "Campaigns" ? (
         <>
           <div className="mkw-section-head">
+            <div><h2>Campaigns</h2><p>Manage and track all your marketing campaigns</p></div>
             <div>
-              <h2>Campaigns</h2>
-              <p>Manage and track all your marketing campaigns</p>
-            </div>
-            <div>
-              <button>
-                <I name="upload" />
-                Import
-              </button>
-              <button>
-                <I name="download" />
-                Export
-              </button>
-              <button>
-                <I name="settings-2" />
-              </button>
-              <button className="primary" onClick={() => setShowNew(true)}>
-                <I name="plus" />
-                New Campaign
-              </button>
+              <button><I name="upload" />Import</button>
+              <button><I name="download" />Export</button>
+              <button><I name="settings-2" /></button>
+              <button className="primary" onClick={() => openModal("create")}><I name="plus" />New Campaign</button>
             </div>
           </div>
           <div className="mkw-filters">
-            <label>
-              <I name="search" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search campaigns..."
-              />
-            </label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option>All Statuses</option>
-              <option>Active</option>
-              <option>Scheduled</option>
-              <option>Completed</option>
-              <option>Paused</option>
-            </select>
-            <select value={type} onChange={(e) => setType(e.target.value)}>
-              <option>All Types</option>
-              {[...new Set(campaigns.map((x) => x[1]))].map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </select>
-            <select>
-              <option>All Channels</option>
-            </select>
-            <select>
-              <option>Date Range</option>
-            </select>
-            <select>
-              <option>This Month</option>
-            </select>
-            <select>
-              <option>More Filters</option>
-            </select>
-            <button className="reset">↻ Reset</button>
-            <span></span>
-            <button className="fsw-view">
-              <Icon name="table-2" />
-              Table
-              <Icon name="chevron-down" size={13} />
-            </button>
-            <button className="fsw-square">
-              <Icon name="list" />
-            </button>
-            <button className="fsw-square">
-              <Icon name="calendar-days" />
-            </button>
-            <button className="fsw-square">
-              <Icon name="calendar" />
-            </button>
+            <label><I name="search" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search campaigns..." /></label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">All Statuses</option>{STATUS_OPTS.map((s) => (<option key={s} value={s}>{s}</option>))}</select>
+            <select value={type} onChange={(e) => setType(e.target.value)}><option value="">All Types</option>{TYPE_OPTS.map((s) => (<option key={s} value={s}>{s}</option>))}</select>
+            <input className="mkw-channel-filter" value={channel} onChange={(e) => setChannel(e.target.value)} placeholder="Channel" style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: "8px 10px", fontSize: 13 }} />
+            <button className="reset" onClick={reset}>↻ Reset</button>
           </div>
           <div className="mkw-table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>
-                    <input type="checkbox" />
-                  </th>
-                  <th>Campaign Name</th>
-                  <th>Type</th>
-                  <th>Channel</th>
-                  <th>Audience</th>
-                  <th>Status</th>
-                  <th>Budget</th>
-                  <th>Spent</th>
-                  <th>Leads</th>
-                  <th>Conv. Rate</th>
-                  <th>ROI</th>
-                  <th>Start Date</th>
-                  <th>Owner</th>
-                  <th>Actions</th>
+                  <th><input type="checkbox" /></th>
+                  <th>Campaign Name</th><th>Type</th><th>Channel</th><th>Audience</th><th>Status</th>
+                  <th>Budget</th><th>Spent</th><th>Leads</th><th>Conv. Rate</th><th>ROI</th><th>Start Date</th><th>Owner</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((c, i) => (
-                  <tr key={c[0]}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(c.id)}
-                        onChange={() =>
-                          setSelected((s) =>
-                            s.includes(c.id)
-                              ? s.filter((x) => x !== c.id)
-                              : [...s, c.id],
-                          )
-                        }
-                      />
-                    </td>
-                    <td>
-                      <b>{c[0]}</b>
-                    </td>
-                    <td>{c[1]}</td>
-                    <td>
-                      <div className="channels">
-                        {c[2].split(" ").map((x, j) => (
-                          <span key={j}>
-                            <I name={x} size={14} />
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td>
-                      <b>{c[3]}</b>
-                      <small>{c[4]}</small>
-                    </td>
-                    <td>
-                      <span className={`pill ${c[5].toLowerCase()}`}>
-                        {c[5]}
-                      </span>
-                    </td>
-                    <td>{c[6]}</td>
-                    <td>{c[7]}</td>
-                    <td>{c[8]}</td>
-                    <td>{c[9]}</td>
-                    <td>{c[10]}</td>
-                    <td>{c[11]}</td>
-                    <td>
-                      <span className={`avatar a${i % 4}`}>
-                        {c[12]
-                          .split(" ")
-                          .map((x) => x[0])
-                          .join("")}
-                      </span>
-                    </td>
+                {loading ? (
+                  <tr><td colSpan={14} style={ST.cell}>Loading…</td></tr>
+                ) : error ? (
+                  <tr><td colSpan={14} style={{ ...ST.cell, color: "#b91c1c" }}>{error}</td></tr>
+                ) : rows.length === 0 ? (
+                  <tr><td colSpan={14} style={ST.cell}>No campaigns yet. Create your first campaign to get started.</td></tr>
+                ) : rows.map((c, i) => (
+                  <tr key={c.id}>
+                    <td><input type="checkbox" /></td>
+                    <td><b>{c.name || "-"}</b></td>
+                    <td>{c.campaignType || "-"}</td>
+                    <td><div className="channels">{String(c.channel || "").split(/[\s,]+/).filter(Boolean).map((x, j) => (<span key={j}><I name={x} size={14} /></span>))}</div></td>
+                    <td><b>{c.audienceName || "-"}</b></td>
+                    <td><span className={`pill ${String(c.status || "").toLowerCase()}`}>{c.status || "-"}</span></td>
+                    <td>{c.budget != null ? money(c.budget) : "-"}</td>
+                    <td>{money(c.spend)}</td>
+                    <td>{c.leads ?? 0}</td>
+                    <td>{c.leads ? `${((c.conversions / c.leads) * 100).toFixed(1)}%` : "-"}</td>
+                    <td>-</td>
+                    <td>{formatDate(c.startDate)}</td>
+                    <td>{c.ownerName ? <span className={`avatar a${i % 4}`}>{initials(c.ownerName)}</span> : "-"}</td>
                     <td>
                       <div className="row-actions">
-                        <button>
-                          <I name="chart-no-axes-column-increasing" size={14} />
-                        </button>
-                        <button>
-                          <I name="pencil" size={14} />
-                        </button>
-                        <button>
-                          <I name="ellipsis-vertical" size={14} />
-                        </button>
+                        <button onClick={() => openModal("view", c.id)}><I name="eye" size={14} /></button>
+                        <button onClick={() => openModal("edit", c.id)}><I name="pencil" size={14} /></button>
+                        <button onClick={() => openModal("view", c.id)}><I name="ellipsis-vertical" size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -517,199 +295,37 @@ export default function MarketingWorkspace() {
               </tbody>
             </table>
             <div className="mkw-pagination">
-              <span>Showing 1 to {filtered.length} of 28 campaigns</span>
+              <span>Showing {from} to {to} of {total.toLocaleString("en-US")} campaigns</span>
               <div>
-                <button className="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>4</button>
+                <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>‹</button>
+                <button className="active">{page}</button>
+                <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>›</button>
               </div>
-              <select>
-                <option>20 / page</option>
+              <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
+                <option value="20">20 / page</option><option value="50">50 / page</option><option value="100">100 / page</option>
               </select>
             </div>
           </div>
-          <div className="mkw-bottom">
-            <div className="mkw-panel">
-              <div className="mkw-panel-head">
-                <b>Leads Over Time</b>
-                <select>
-                  <option>This Month</option>
-                </select>
-              </div>
-              <div className="line-legend">
-                <span>
-                  <i className="blue" />
-                  Total Leads <b>2,453</b>
-                </span>
-                <span>
-                  <i className="green" />
-                  Converted Leads <b>156</b>
-                </span>
-              </div>
-              <svg className="line-chart" viewBox="0 0 400 170">
-                <polyline
-                  points="20,135 60,115 100,100 140,84 180,88 220,72 260,76 300,64 340,58 380,42"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                />
-                <polyline
-                  className="converted"
-                  points="20,150 60,140 100,132 140,125 180,116 220,111 260,114 300,108 340,105 380,98"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                />
-              </svg>
-            </div>
-            <div className="mkw-panel">
-              <div className="mkw-panel-head">
-                <b>Leads by Channel</b>
-                <select>
-                  <option>This Month</option>
-                </select>
-              </div>
-              <div className="mkw-donut-body">
-                <div className="mkw-donut">
-                  <div>
-                    <strong>2,453</strong>
-                    <span>Total Leads</span>
-                  </div>
-                </div>
-                <div className="mkw-legend">
-                  {[
-                    ["Email", "42% (1,030)"],
-                    ["Paid Search", "26% (638)"],
-                    ["Social Media", "18% (442)"],
-                    ["Direct", "8% (196)"],
-                    ["Referrals", "4% (98)"],
-                    ["Other", "2% (49)"],
-                  ].map((r, i) => (
-                    <p key={r[0]}>
-                      <i className={`d${i}`} />
-                      <span>{r[0]}</span>
-                      <b>{r[1]}</b>
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="mkw-panel">
-              <div className="mkw-panel-head">
-                <b>Top Performing Campaigns</b>
-                <select>
-                  <option>This Month</option>
-                </select>
-              </div>
-              <div className="rank-list">
-                {campaigns.slice(0, 5).map((c, i) => (
-                  <p key={c[0]}>
-                    <b>{i + 1}</b>
-                    <span>
-                      <strong>{c[0]}</strong>
-                      <small>{c[8]} leads</small>
-                    </span>
-                    <em>
-                      {c[9]}
-                      <i style={{ width: `${90 - i * 10}%` }} />
-                    </em>
-                  </p>
-                ))}
-              </div>
-              <button className="link">View full report →</button>
-            </div>
-            <div className="mkw-panel">
-              <div className="mkw-panel-head">
-                <b>Recent Activity</b>
-                <select>
-                  <option>All Activity</option>
-                </select>
-              </div>
-              <div className="mini-list mkw-activity-list">
-                {recentActivityItems.map((item) => (
-                  <p key={item.title}>
-                    <span className={`mkw-mini-icon ${item.tone}`}>
-                      <I name={item.icon} size={14} />
-                    </span>
-                    <span>
-                      <b>{item.title}</b>
-                      <small>{item.subtitle}</small>
-                    </span>
-                    <time>{item.time}</time>
-                  </p>
-                ))}
-              </div>
-              <button className="link">View all activity →</button>
-            </div>
-            <div className="mkw-panel">
-              <div className="mkw-panel-head">
-                <b>Upcoming Campaigns</b>
-                <select>
-                  <option>Next 7 Days</option>
-                </select>
-              </div>
-              <div className="mini-list mkw-upcoming-list">
-                {upcomingCampaignItems.map((item) => (
-                  <p key={item.title}>
-                    <span className={`mkw-mini-icon ${item.tone}`}>
-                      <I name={item.icon} size={14} />
-                    </span>
-                    <span>
-                      <b>{item.title}</b>
-                      <small>{item.subtitle}</small>
-                    </span>
-                    <time>{item.date}</time>
-                  </p>
-                ))}
-              </div>
-              <button className="link">View calendar →</button>
-            </div>
-          </div>
+          <MktDashboard stats={stats} />
         </>
       ) : (
         <div className="placeholder">
-          <I
-            name={tabs.find((x) => x[1] === tab)?.[0] || "megaphone"}
-            size={40}
-          />
+          <I name={tabs.find((x) => x[1] === tab)?.[0] || "megaphone"} size={40} />
           <h2>{tab}</h2>
-          <p>UI placeholder for the next implementation step.</p>
+          <p>{tab} workspace is ready for the next implementation step.</p>
         </div>
       )}
 
-      {showNew && (
-        <div className="modal-bg" onMouseDown={() => setShowNew(false)}>
-          <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
-            <div>
-              <h3>New Campaign</h3>
-              <button onClick={() => setShowNew(false)}>×</button>
-            </div>
-            <label>
-              Campaign name
-              <input placeholder="Enter campaign name" />
-            </label>
-            <label>
-              Type
-              <select>
-                <option>Product Launch</option>
-                <option>Webinar</option>
-                <option>Promotion</option>
-              </select>
-            </label>
-            <label>
-              Budget
-              <input placeholder="$0" />
-            </label>
-            <footer>
-              <button onClick={() => setShowNew(false)}>Cancel</button>
-              <button className="primary" onClick={() => setShowNew(false)}>
-                Create Campaign
-              </button>
-            </footer>
-          </div>
-        </div>
-      )}
+      <MktCampaignModal
+        key={nonce}
+        open={modalOpen}
+        mode={modalMode}
+        recordId={modalId}
+        onClose={() => setModalOpen(false)}
+        onSaved={handleSaved}
+      />
     </div>
   );
 }
+
+const ST = { cell: { textAlign: "center", padding: 24, color: "#64748b" } };
