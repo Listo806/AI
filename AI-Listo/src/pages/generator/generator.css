@@ -1294,3 +1294,12 @@
     margin-right: 0;
   }
 }
+/* Spinner used for loading / in-progress states in the Lead Generator */
+.generator-page .spin {
+  animation: leadgen-spin 0.9s linear infinite;
+}
+@keyframes leadgen-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
