@@ -3,6 +3,8 @@ import { icons as lucideIcons } from "lucide-react";
 import "./MarketingWorkspace.css";
 import marketingApi from "../../api/marketingApi";
 import MktCampaignModal from "./MktCampaignModal";
+import MktAttribution from "./MktAttribution";
+import MktMessaging from "./MktMessaging";
 import { money, formatDate, relativeTime } from "../sales/salesFormat";
 
 // Marketing Workspace, wired to real /marketing data. Campaigns and the Overview
@@ -75,6 +77,26 @@ function Donut({ title, rows, total, empty }) {
   );
 }
 
+// Real daily leads/conversions drawn as two lines. Data-driven only — an empty or
+// all-zero series never reaches here (the caller shows an empty state instead).
+function TrendChart({ series }) {
+  const w = 520, h = 120, pad = 6;
+  const n = series.length;
+  if (!n) return null;
+  const max = Math.max(1, ...series.map((d) => Math.max(d.leads || 0, d.conversions || 0)));
+  const x = (i) => pad + (i * (w - pad * 2)) / Math.max(1, n - 1);
+  const y = (v) => h - pad - ((v || 0) / max) * (h - pad * 2);
+  const path = (key) => series.map((d, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(" ");
+  return (
+    <div className="mkw-trend">
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label="Leads and conversions over time">
+        <path d={path("leads")} fill="none" stroke="#2563eb" strokeWidth="2" />
+        <path d={path("conversions")} fill="none" stroke="#16a34a" strokeWidth="2" />
+      </svg>
+    </div>
+  );
+}
+
 function MktDashboard({ stats }) {
   const top = stats?.topCampaigns || [];
   const activity = stats?.recentActivity || [];
@@ -87,13 +109,16 @@ function MktDashboard({ stats }) {
     <div className="mkw-bottom">
       <div className="mkw-panel">
         <div className="mkw-panel-head"><b>Leads Over Time</b><select><option>This Month</option></select></div>
-        {leadsOverTime.length === 0 ? (
+        {leadsOverTime.reduce((a, d) => a + (d.leads || 0) + (d.conversions || 0), 0) === 0 ? (
           <p style={{ color: "#94a3b8", fontSize: 13, padding: "24px 4px" }}>No lead data yet. This chart fills in as leads and conversions are recorded.</p>
         ) : (
-          <div className="line-legend">
-            <span><i className="blue" />Total Leads <b>{totalLeads}</b></span>
-            <span><i className="green" />Converted Leads <b>{stats?.conversions?.count ?? 0}</b></span>
-          </div>
+          <>
+            <TrendChart series={leadsOverTime} />
+            <div className="line-legend">
+              <span><i className="blue" />Total Leads <b>{totalLeads}</b></span>
+              <span><i className="green" />Conversions <b>{stats?.conversions?.count ?? 0}</b></span>
+            </div>
+          </>
         )}
       </div>
       <Donut title="Leads by Channel" rows={leadsByChannel} total={totalLeads} empty="No lead data yet" />
@@ -308,6 +333,10 @@ export default function MarketingWorkspace() {
           </div>
           <MktDashboard stats={stats} />
         </>
+      ) : tab === "Attribution" ? (
+        <MktAttribution />
+      ) : tab === "Email & SMS" ? (
+        <MktMessaging />
       ) : (
         <div className="placeholder">
           <I name={tabs.find((x) => x[1] === tab)?.[0] || "megaphone"} size={40} />
