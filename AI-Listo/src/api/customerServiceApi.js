@@ -36,6 +36,34 @@ const customerServiceApi = {
   deleteTicket(id) {
     return apiClient.request(`/customer-service/tickets/${id}`, { method: "DELETE" });
   },
+
+  // Conversation
+  listMessages(ticketId) {
+    return apiClient.request(`/customer-service/tickets/${ticketId}/messages`, { method: "GET" });
+  },
+  createMessage(ticketId, body) {
+    return apiClient.request(`/customer-service/tickets/${ticketId}/messages`, { method: "POST", body: JSON.stringify(body) });
+  },
+  deleteMessage(ticketId, messageId) {
+    return apiClient.request(`/customer-service/tickets/${ticketId}/messages/${messageId}`, { method: "DELETE" });
+  },
+  listActivity(ticketId) {
+    return apiClient.request(`/customer-service/tickets/${ticketId}/activity`, { method: "GET" });
+  },
+
+  // Attachments (private S3)
+  listAttachments(ticketId) {
+    return apiClient.request(`/customer-service/tickets/${ticketId}/attachments`, { method: "GET" });
+  },
+  uploadAttachment(ticketId, formData) {
+    return apiClient.request(`/customer-service/tickets/${ticketId}/attachments`, { method: "POST", body: formData });
+  },
+  getAttachmentLink(ticketId, attachmentId) {
+    return apiClient.request(`/customer-service/tickets/${ticketId}/attachments/${attachmentId}/link`, { method: "GET" });
+  },
+  deleteAttachment(ticketId, attachmentId) {
+    return apiClient.request(`/customer-service/tickets/${ticketId}/attachments/${attachmentId}`, { method: "DELETE" });
+  },
 };
 
 export default customerServiceApi;

@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { StorageService } from '../integrations/storage/storage.service';
 
 const OWNER_ROLE = 'owner';
 
@@ -15,7 +16,10 @@ const OWNER_ROLE = 'owner';
 // vertical-specific fields, terminology or assumptions.
 @Injectable()
 export class CustomerServiceService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly storage: StorageService,
+  ) {}
 
   private static readonly UUID_RE =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -72,7 +76,87 @@ export class CustomerServiceService {
     ]) {
       await this.db.query(idx);
     }
+    // Ticket messages + internal notes.
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS cs_ticket_messages (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        ticket_id UUID NOT NULL,
+        message_type TEXT NOT NULL DEFAULT 'agent',
+        body TEXT,
+        author_id UUID,
+        author_name TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_messages_team ON cs_ticket_messages(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_messages_ticket ON cs_ticket_messages(ticket_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_messages_type ON cs_ticket_messages(message_type)`);
+    // Ticket activity / audit trail.
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS cs_ticket_activity (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        ticket_id UUID NOT NULL,
+        action TEXT NOT NULL,
+        detail TEXT,
+        actor_id UUID,
+        actor_name TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_activity_team ON cs_ticket_activity(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_activity_ticket ON cs_ticket_activity(ticket_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_activity_created ON cs_ticket_activity(created_at)`);
+    // Ticket attachments (private S3 objects; metadata only here).
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS cs_ticket_documents (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        ticket_id UUID NOT NULL,
+        created_by UUID,
+        stored_file_id UUID NOT NULL,
+        title TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_documents_team ON cs_ticket_documents(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_documents_ticket ON cs_ticket_documents(ticket_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_documents_file ON cs_ticket_documents(stored_file_id)`);
     this.schemaReady = true;
+  }
+
+  // Confirm a ticket belongs to the given team before touching its children
+  // (messages/activity/attachments). Returns the ticket row (id + a few fields) or
+  // throws NotFound so callers never operate across the tenant boundary.
+  private async assertTicketInTeam(
+    ticketId: string,
+    accessible: string[],
+  ): Promise<{ id: string; team_id: string; first_response_at: any }> {
+    const { rows } = await this.db.query(
+      `SELECT id, team_id, first_response_at FROM cs_tickets
+        WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [ticketId, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Ticket not found');
+    return rows[0];
+  }
+
+  // Append an audit-trail row. Best-effort: a logging failure must never break the
+  // primary write, so callers wrap this in a catch.
+  private async logActivity(
+    teamId: string,
+    ticketId: string,
+    action: string,
+    detail: string | null,
+    actorId: string | null,
+    actorName: string | null,
+  ): Promise<void> {
+    await this.db.query(
+      `INSERT INTO cs_ticket_activity (team_id, ticket_id, action, detail, actor_id, actor_name)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [teamId, ticketId, action, detail, actorId, actorName],
+    );
   }
 
   private async getAccessibleTeamIds(
@@ -377,6 +461,8 @@ export class CustomerServiceService {
         dto.firstResponseAt || null,
       ],
     );
+    await this.logActivity(teamId, rows[0].id, 'Created', dto.subject || null, userId, agentName)
+      .catch(() => undefined);
     return this.findOneTicket(rows[0].id, userId, userTeamId, role);
   }
 
@@ -391,12 +477,14 @@ export class CustomerServiceService {
     const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
     if (!accessible.length) throw new NotFoundException('Ticket not found');
     const existing = await this.db.query(
-      `SELECT team_id, status, resolved_at, closed_at FROM cs_tickets
-        WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      `SELECT team_id, status, priority, sla_status, assigned_to, assigned_agent_name,
+              resolved_at, closed_at
+         FROM cs_tickets WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
       [id, accessible],
     );
     if (!existing.rows.length) throw new NotFoundException('Ticket not found');
-    const teamId = existing.rows[0].team_id;
+    const prev = existing.rows[0];
+    const teamId = prev.team_id;
     if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
     if (dto.assignedTo) {
       const resolvedName = await this.assertAgentInTeam(dto.assignedTo, teamId);
@@ -435,16 +523,16 @@ export class CustomerServiceService {
     // that state and the caller did not set the timestamp explicitly.
     if (dto.status !== undefined && dto.resolvedAt === undefined) {
       const nowResolvedOrClosed = dto.status === 'Resolved' || dto.status === 'Closed';
-      if (nowResolvedOrClosed && !existing.rows[0].resolved_at) {
+      if (nowResolvedOrClosed && !prev.resolved_at) {
         sets.push(`resolved_at = NOW()`);
       }
     }
     if (dto.status !== undefined && dto.closedAt === undefined) {
-      if (dto.status === 'Closed' && !existing.rows[0].closed_at) {
+      if (dto.status === 'Closed' && !prev.closed_at) {
         sets.push(`closed_at = NOW()`);
       }
       // Reopening clears the closed stamp so lifecycle stays truthful.
-      if (dto.status !== 'Closed' && existing.rows[0].closed_at) {
+      if (dto.status !== 'Closed' && prev.closed_at) {
         sets.push(`closed_at = NULL`);
       }
     }
@@ -456,6 +544,32 @@ export class CustomerServiceService {
       `UPDATE cs_tickets SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
       vals,
     );
+
+    // Audit trail: log meaningful field changes (best-effort, never blocks).
+    try {
+      const acts: Array<[string, string | null]> = [];
+      if (dto.status !== undefined && dto.status !== prev.status) {
+        if (dto.status === 'Resolved') acts.push(['Resolved', `${prev.status} -> Resolved`]);
+        else if (dto.status === 'Closed') acts.push(['Closed', `${prev.status} -> Closed`]);
+        else if ((prev.status === 'Resolved' || prev.status === 'Closed')) acts.push(['Reopened', `${prev.status} -> ${dto.status}`]);
+        else acts.push(['Status changed', `${prev.status} -> ${dto.status}`]);
+      }
+      if (dto.priority !== undefined && dto.priority !== prev.priority) {
+        acts.push(['Priority changed', `${prev.priority || '-'} -> ${dto.priority}`]);
+      }
+      if (dto.slaStatus !== undefined && (dto.slaStatus || null) !== (prev.sla_status || null)) {
+        acts.push(['SLA changed', `${prev.sla_status || '-'} -> ${dto.slaStatus || '-'}`]);
+      }
+      if (dto.assignedTo !== undefined && (dto.assignedTo || null) !== (prev.assigned_to || null)) {
+        const label = dto.assignedTo ? (dto.assignedAgentName || 'agent') : 'Unassigned';
+        acts.push([prev.assigned_to ? 'Reassigned' : 'Assigned', label]);
+      }
+      for (const [action, detail] of acts) {
+        await this.logActivity(teamId, id, action, detail, userId, null);
+      }
+    } catch {
+      /* activity logging is best-effort */
+    }
     return this.findOneTicket(id, userId, userTeamId, role);
   }
 
@@ -632,5 +746,266 @@ export class CustomerServiceService {
         avgResponseLabel: this.fmtDuration(a.avg_response != null ? Number(a.avg_response) : null),
       })),
     };
+  }
+
+  // ─── Ticket conversation (messages + internal notes) ─────────────────────────
+  //
+  // Every message is scoped to BOTH the team and the ticket (the ticket itself is
+  // first confirmed in-team via assertTicketInTeam), so no message can be read or
+  // written across the tenant boundary. message_type is normalized to one of
+  // customer / agent / internal_note / system. Internal notes are agent-only; a
+  // customer-facing channel must filter them out (this internal workspace shows them
+  // to agents, flagged with isInternal).
+
+  private static readonly MESSAGE_TYPES = ['customer', 'agent', 'internal_note', 'system'];
+
+  async listMessages(
+    ticketId: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Ticket not found');
+    await this.assertTicketInTeam(ticketId, accessible);
+    const { rows } = await this.db.query(
+      `SELECT id, message_type AS "messageType", body,
+              author_id AS "authorId", author_name AS "authorName",
+              (message_type = 'internal_note') AS "isInternal",
+              created_at AS "createdAt"
+         FROM cs_ticket_messages
+        WHERE ticket_id = $1 AND team_id = ANY($2)
+        ORDER BY created_at ASC`,
+      [ticketId, accessible],
+    );
+    return rows;
+  }
+
+  async createMessage(
+    ticketId: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Ticket not found');
+    const ticket = await this.assertTicketInTeam(ticketId, accessible);
+    const teamId = ticket.team_id;
+    const body = (dto.body || '').trim();
+    if (!body) throw new BadRequestException('Message body is required');
+    const type = CustomerServiceService.MESSAGE_TYPES.includes(dto.messageType)
+      ? dto.messageType
+      : 'agent';
+    const authorName = dto.authorName || null;
+
+    const { rows } = await this.db.query(
+      `INSERT INTO cs_ticket_messages (team_id, ticket_id, message_type, body, author_id, author_name)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING id, message_type AS "messageType", body, author_id AS "authorId",
+                 author_name AS "authorName",
+                 (message_type = 'internal_note') AS "isInternal",
+                 created_at AS "createdAt"`,
+      [teamId, ticketId, type, body, type === 'agent' || type === 'internal_note' ? userId : null, authorName],
+    );
+
+    // Keep the ticket lively and, for the first agent reply, stamp first_response_at
+    // (this is what makes the Average Response Time KPI real). Never overwrite it.
+    const setFirstResponse = type === 'agent' && !ticket.first_response_at;
+    await this.db.query(
+      `UPDATE cs_tickets
+          SET last_activity_at = NOW(),
+              updated_at = NOW()
+              ${setFirstResponse ? ', first_response_at = NOW()' : ''}
+        WHERE id = $1 AND team_id = $2`,
+      [ticketId, teamId],
+    );
+
+    const action =
+      type === 'agent'
+        ? 'Agent responded'
+        : type === 'customer'
+          ? 'Customer responded'
+          : type === 'internal_note'
+            ? 'Internal note added'
+            : 'System message';
+    await this.logActivity(teamId, ticketId, action, null, userId, authorName).catch(() => undefined);
+
+    return rows[0];
+  }
+
+  async removeMessage(
+    ticketId: string,
+    messageId: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Message not found');
+    await this.assertTicketInTeam(ticketId, accessible);
+    const res = await this.db.query(
+      `DELETE FROM cs_ticket_messages
+        WHERE id = $1 AND ticket_id = $2 AND team_id = ANY($3)`,
+      [messageId, ticketId, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Message not found');
+    return { success: true };
+  }
+
+  async listActivity(
+    ticketId: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Ticket not found');
+    await this.assertTicketInTeam(ticketId, accessible);
+    const { rows } = await this.db.query(
+      `SELECT id, action, detail, actor_id AS "actorId", actor_name AS "actorName",
+              created_at AS "createdAt"
+         FROM cs_ticket_activity
+        WHERE ticket_id = $1 AND team_id = ANY($2)
+        ORDER BY created_at DESC LIMIT 100`,
+      [ticketId, accessible],
+    );
+    return rows;
+  }
+
+  // ─── Ticket attachments (private S3) ─────────────────────────────────────────
+  //
+  // Bytes live in a private S3 bucket; only short-lived signed URLs are ever handed
+  // to the client, and the raw S3 url is never returned. Scoped to team + ticket.
+  // Reuses the shared StorageService (no duplicate storage system).
+
+  async listAttachments(
+    ticketId: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Ticket not found');
+    await this.assertTicketInTeam(ticketId, accessible);
+    const { rows } = await this.db.query(
+      `SELECT d.id, d.title, d.stored_file_id AS "storedFileId",
+              f.original_name AS "fileName", f.mime_type AS "mimeType", f.size,
+              d.created_at AS "createdAt"
+         FROM cs_ticket_documents d
+         LEFT JOIN stored_files f ON f.id = d.stored_file_id
+        WHERE d.ticket_id = $1 AND d.team_id = ANY($2)
+        ORDER BY d.created_at DESC`,
+      [ticketId, accessible],
+    );
+    return rows;
+  }
+
+  async createAttachment(
+    ticketId: string,
+    file: Express.Multer.File,
+    title: string | undefined,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    if (!file) throw new BadRequestException('No file provided');
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const ticket = await this.assertTicketInTeam(ticketId, accessible);
+    const teamId = ticket.team_id;
+
+    const stored = await this.storage.uploadDocument({
+      file,
+      folder: `customer-service/${teamId}`,
+      userId,
+      teamId,
+    });
+    const docTitle = (title && title.trim()) || file.originalname;
+    let rows: any[];
+    try {
+      const res = await this.db.query(
+        `INSERT INTO cs_ticket_documents (team_id, ticket_id, created_by, stored_file_id, title)
+         VALUES ($1,$2,$3,$4,$5)
+         RETURNING id, title, stored_file_id AS "storedFileId", created_at AS "createdAt"`,
+        [teamId, ticketId, userId, stored.id, docTitle],
+      );
+      rows = res.rows;
+    } catch (err) {
+      // Orphan cleanup: bytes landed but the index row did not.
+      await this.storage.deleteStoredFileById(stored.id).catch(() => undefined);
+      throw err;
+    }
+    await this.db.query(
+      `UPDATE cs_tickets SET last_activity_at = NOW() WHERE id = $1 AND team_id = $2`,
+      [ticketId, teamId],
+    );
+    await this.logActivity(teamId, ticketId, 'Attachment added', docTitle, userId, null)
+      .catch(() => undefined);
+    return {
+      ...rows[0],
+      fileName: stored.originalName,
+      mimeType: stored.mimeType,
+      size: stored.size,
+    };
+  }
+
+  async getAttachmentDownloadUrl(
+    ticketId: string,
+    attachmentId: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ url: string; expiresIn: number }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Attachment not found');
+    await this.assertTicketInTeam(ticketId, accessible);
+    const { rows } = await this.db.query(
+      `SELECT stored_file_id, team_id FROM cs_ticket_documents
+        WHERE id = $1 AND ticket_id = $2 AND team_id = ANY($3) LIMIT 1`,
+      [attachmentId, ticketId, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Attachment not found');
+    const expiresIn = 3600;
+    const url = await this.storage.getSignedUrl(rows[0].stored_file_id, expiresIn, {
+      userId,
+      teamId: rows[0].team_id,
+      role,
+    });
+    return { url, expiresIn };
+  }
+
+  async removeAttachment(
+    ticketId: string,
+    attachmentId: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Attachment not found');
+    await this.assertTicketInTeam(ticketId, accessible);
+    const { rows } = await this.db.query(
+      `SELECT stored_file_id FROM cs_ticket_documents
+        WHERE id = $1 AND ticket_id = $2 AND team_id = ANY($3) LIMIT 1`,
+      [attachmentId, ticketId, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Attachment not found');
+    await this.db.query(
+      `DELETE FROM cs_ticket_documents WHERE id = $1 AND ticket_id = $2 AND team_id = ANY($3)`,
+      [attachmentId, ticketId, accessible],
+    );
+    await this.storage.deleteStoredFileById(rows[0].stored_file_id);
+    return { success: true };
   }
 }

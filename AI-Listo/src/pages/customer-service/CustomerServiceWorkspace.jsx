@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "./CustomerServiceWorkspace.css";
 import customerServiceApi from "../../api/customerServiceApi";
 import CsTicketModal from "./CsTicketModal";
+import CsTicketDetail from "./CsTicketDetail";
 import { relativeTime } from "../sales/salesFormat";
 
 // Customer Service Workspace, wired to real /customer-service data. Only Tickets and
@@ -255,6 +256,8 @@ export default function CustomerServiceWorkspace() {
   const [modalMode, setModalMode] = useState("create");
   const [modalId, setModalId] = useState(null);
   const [nonce, setNonce] = useState(0);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailId, setDetailId] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -310,6 +313,10 @@ export default function CustomerServiceWorkspace() {
     setModalId(id);
     setNonce((n) => n + 1);
     setModalOpen(true);
+  };
+  const openDetail = (id) => {
+    setDetailId(id);
+    setDetailOpen(true);
   };
   const handleSaved = () => setRefreshTick((t) => t + 1);
   const reset = () => {
@@ -453,7 +460,7 @@ export default function CustomerServiceWorkspace() {
                   tickets.map((t, i) => (
                     <tr key={t.id}>
                       <td><input type="checkbox" /></td>
-                      <td><a onClick={() => openModal("view", t.id)} style={{ cursor: "pointer" }}>{t.ticketNumber || "-"}</a></td>
+                      <td><a onClick={() => openDetail(t.id)} style={{ cursor: "pointer" }}>{t.ticketNumber || "-"}</a></td>
                       <td>{t.subject || "-"}</td>
                       <td>
                         <b>{t.customerName || "-"}</b>
@@ -485,9 +492,9 @@ export default function CustomerServiceWorkspace() {
                       <td className="recent">{relativeTime(t.lastActivityAt) || "-"}</td>
                       <td>
                         <div className="row-actions">
-                          <button onClick={() => openModal("view", t.id)}><I name="eye" size={14} /></button>
+                          <button onClick={() => openDetail(t.id)}><I name="eye" size={14} /></button>
                           <button onClick={() => openModal("edit", t.id)}><I name="pencil" size={14} /></button>
-                          <button onClick={() => openModal("view", t.id)}><I name="ellipsis-vertical" size={14} /></button>
+                          <button onClick={() => openDetail(t.id)}><I name="ellipsis-vertical" size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -526,6 +533,14 @@ export default function CustomerServiceWorkspace() {
         recordId={modalId}
         onClose={() => setModalOpen(false)}
         onSaved={handleSaved}
+      />
+
+      <CsTicketDetail
+        open={detailOpen}
+        ticketId={detailId}
+        onClose={() => setDetailOpen(false)}
+        onEdit={(id) => { setDetailOpen(false); openModal("edit", id); }}
+        onChanged={handleSaved}
       />
     </div>
   );
