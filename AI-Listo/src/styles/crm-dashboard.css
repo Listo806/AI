@@ -1815,7 +1815,8 @@ body.crm-dark .crm-error {
 .crm-dark .pipeline-page .revenue-forecast-metric-quad-card, .crm-dark #root .properties-page .metrics-grid .metric-card,
 .crm-dark .generator-page .channel-chip.active-blue, .crm-dark #root .team-stat-card,
 .crm-dark .team-workspace .m-user-card, .crm-dark .team-workspace .team-card,
-.crm-dark .leads-page .lead-control-field select{
+.crm-dark .leads-page .lead-control-field select, .crm-dark .cx-setup-step, .crm-dark .cx-wa-connect-card,
+.crm-dark .cx-wa-qr-frame, .crm-dark .cx-side-card{
   background: #101827f2;
   border: 1px solid #202733;
 }
@@ -1827,8 +1828,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .full-width-center-btn, .crm-dark #root .circle-btn,
 .crm-dark .contacts-page .form-group textarea,
 .crm-dark .whatsapp-page .full-timeline-btn, .crm-dark .generator-page .channels-chips-group,
-.crm-dark .team-workspace .team-card, .crm-dark .properties-page .sidebar-section{
-  border: 1px solid #202733; 
+.crm-dark .team-workspace .team-card, .crm-dark .properties-page .sidebar-section {
+  border: 1px solid #202733;  
 }
 .crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after,
 .crm-dark #root textarea, .crm-dark #root .circle-btn,
@@ -1836,7 +1837,10 @@ body.crm-dark .crm-error {
 .crm-dark .properties-page .donut-chart-mock::after, .crm-dark .leads-page .secondary-btn select{
   background: #101827f2;
 }
-.crm-dark .team-workspace .team-stat-icon{
+.crm-dark .cx-ai-setup-page, .crm-dark .cx-ai-setup-topbar{
+  background: var(--bg);
+}
+.crm-dark .team-workspace .team-stat-icon, .crm-dark .cx-wa-connect-security{
   box-shadow: inset 0 0 0 rgba(255, 255, 255, 0.9), 0 16px 32px rgba(37, 99, 235, 0.16);
   background: rgba(37, 99, 235, 0.16);
 }
@@ -1990,7 +1994,9 @@ body.crm-dark .leads-page,
 .crm-dark .generator-page .city-name-left-group, .crm-dark .generator-page .legend-label-left-side,
 .crm-dark .generator-page .pipeline-step-caption-text, .crm-dark .generator-page .btn-table-util-filter,
 .crm-dark .team-workspace .team-billing-stat-row,
-.crm-dark .team-workspace .team-insight-title{
+.crm-dark .team-workspace .team-insight-title, .crm-dark .cx-setup-step-left h3, .crm-dark .cx-wa-connect-security strong,
+.crm-dark .cx-wa-qr-placeholder strong, .crm-dark .cx-side-card h3, .crm-dark .cx-progress-row strong, .crm-dark .cx-progress-row p,
+.crm-dark .cx-status-name{
   color: #bebcbc;
 }
 .crm-dark #root .btn-view-all{

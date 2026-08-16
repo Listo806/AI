@@ -9,9 +9,11 @@ import {
   Unplug,
   Wifi,
   WifiOff,
+  ChevronDown,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "./WhatsAppConnectCard.css";
+import whatsappPhoneMobileImg from "../../../assets/cortexa/cortexa-whatsapp-phone-mobile.png";
 
 export default function WhatsAppConnectCard({
   qr,
@@ -35,6 +37,27 @@ export default function WhatsAppConnectCard({
   const [isMobile, setIsMobile] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
   const [changeNumber, setChangeNumber] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState("US");
+
+  const phoneCountries = [
+    { key: "US", code: "+1", flagCode: "us", label: "United States" },
+    { key: "CA", code: "+1", flagCode: "ca", label: "Canada" },
+    { key: "MX", code: "+52", flagCode: "mx", label: "Mexico" },
+    { key: "BR", code: "+55", flagCode: "br", label: "Brazil" },
+    { key: "AR", code: "+54", flagCode: "ar", label: "Argentina" },
+    { key: "CL", code: "+56", flagCode: "cl", label: "Chile" },
+    { key: "CO", code: "+57", flagCode: "co", label: "Colombia" },
+    { key: "PE", code: "+51", flagCode: "pe", label: "Peru" },
+    { key: "EC", code: "+593", flagCode: "ec", label: "Ecuador" },
+    { key: "GB", code: "+44", flagCode: "gb", label: "United Kingdom" },
+    { key: "ES", code: "+34", flagCode: "es", label: "Spain" },
+    { key: "PT", code: "+351", flagCode: "pt", label: "Portugal" },
+    { key: "AU", code: "+61", flagCode: "au", label: "Australia" },
+  ];
+
+  const selectedCountryData =
+    phoneCountries.find((item) => item.key === selectedCountry) ||
+    phoneCountries[0];
 
   useEffect(() => {
     const coarse =
@@ -129,6 +152,11 @@ export default function WhatsAppConnectCard({
               "Link the WhatsApp account your AI Agent will use, right from this phone. No QR to scan.",
             )}
           </p>
+
+          <div className="cx-whatsapp-mobile-phone-art" aria-hidden="true">
+            <img src={whatsappPhoneMobileImg} alt="" />
+          </div>
+
           <ol className="cx-wa-connect-steps">
             <li>
               {t(
@@ -210,37 +238,55 @@ export default function WhatsAppConnectCard({
           </div>
         ) : (
           <form
+            className="cx-wa-mobile-phone-form"
             onSubmit={(event) => {
               event.preventDefault();
-              if (onConnectWithCode) onConnectWithCode(phoneInput);
-            }}
-            style={{
-              marginTop: 6,
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
+              const cleaned = phoneInput.replace(/[^0-9+]/g, "");
+              const fullNumber = cleaned.startsWith("+")
+                ? cleaned
+                : `${selectedCountryData.code}${cleaned.replace(/^0+/, "")}`;
+
+              if (onConnectWithCode) onConnectWithCode(fullNumber);
             }}
           >
-            <input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              value={phoneInput}
-              onChange={(event) => setPhoneInput(event.target.value)}
-              placeholder={t(
-                "aiCenter.whatsappConnect.phonePlaceholder",
-                "Phone number with country code, e.g. +593987654321",
-              )}
-              style={{
-                padding: "12px 14px",
-                border: "1px solid #d8dde5",
-                borderRadius: 10,
-                fontSize: 15,
-                width: "100%",
-              }}
-            />
+            <div className="cx-wa-phone-input-wrap">
+              <label className="cx-wa-country-picker">
+                <select
+                  value={selectedCountry}
+                  onChange={(event) => setSelectedCountry(event.target.value)}
+                  aria-label="Country code"
+                >
+                  {phoneCountries.map((country) => (
+                    <option key={country.key} value={country.key}>
+                      {country.label} {country.code}
+                    </option>
+                  ))}
+                </select>
+
+                <span className="cx-wa-country-picker-display">
+                  <img
+                    className="cx-wa-country-flag-img"
+                    src={`https://flagcdn.com/w40/${selectedCountryData.flagCode}.png`}
+                    alt=""
+                  />
+                  <strong>{selectedCountryData.code}</strong>
+                  <ChevronDown size={16} />
+                </span>
+              </label>
+
+              <input
+                className="cx-wa-phone-number-input"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={phoneInput}
+                onChange={(event) => setPhoneInput(event.target.value)}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+
             <button
-              className="cx-wa-primary-btn"
+              className="cx-wa-primary-btn cx-wa-mobile-code-btn"
               type="submit"
               disabled={connecting}
             >

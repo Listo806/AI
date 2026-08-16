@@ -297,3 +297,281 @@
         width: 100%;
     }
 }
+
+/* =========================================================
+   MOBILE / TABLET WHATSAPP PHONE PAIRING
+   Keeps desktop QR layout unchanged.
+   ========================================================= */
+@media (max-width: 1024px) {
+    .cx-wa-connect-card {
+        margin: 8px 14px 14px;
+        padding: 16px 14px;
+        border: 1px solid rgba(111, 91, 255, 0.28);
+        border-radius: 14px;
+        box-shadow:
+            inset 0 0 0 1px rgba(255,255,255,0.015),
+            0 12px 30px rgba(0,0,0,0.18);
+    }
+    .crm-dark .cx-wa-connect-card {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(91, 48, 255, 0.08), transparent 36%),
+            #0b1019;
+    }
+    .cx-wa-connect-guide {
+        padding: 0;
+        border: 0;
+    }
+
+    .cx-wa-connect-guide h4 {
+        font-size: 20px;
+        line-height: 1.15;
+        font-weight: 700;
+    }
+    .crm-dark .cx-wa-connect-guide h4{
+        color: #f8fafc;
+    }
+    .cx-wa-connect-guide > p {
+        margin: 8px 0 17px;
+        color: #c8cfdb;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    .cx-wa-connect-steps {
+        gap: 10px;
+    }
+
+    .cx-wa-connect-steps li {
+        font-size: 13px;
+        line-height: 1.28;
+        font-weight: 500;
+    }
+    .crm-dark .cx-wa-connect-steps li{
+        color: #f1f5f9;
+    }
+    .cx-wa-connect-steps li::before {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        border: 0;
+        background: linear-gradient(145deg, #6f55ff, #3c1ef0);
+        color: #fff;
+        font-size: 13px;
+        box-shadow: 0 0 18px rgba(92, 64, 255, 0.34);
+    }
+
+    .cx-wa-mobile-phone-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .cx-wa-phone-input-wrap {
+        width: 100%;
+        min-height: 42px;
+        display: flex;
+        align-items: stretch;
+        overflow: hidden;
+        border: 1px solid #3b435340;
+        border-radius: 11px;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.01);
+    }
+    .crm-dark .cx-wa-phone-input-wrap{
+      background: #0b1018;
+      border: 1px solid #3b4353;
+    }
+    .cx-wa-phone-input-wrap:focus-within {
+        border-color: #6652ff;
+        box-shadow: 0 0 0 2px rgba(95, 69, 255, 0.13);
+    }
+
+    .cx-wa-country-picker {
+        position: relative;
+        width: 114px;
+        min-width: 114px;
+        border-right: 1px solid #394151;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    .cx-wa-country-picker select {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .cx-wa-country-picker-display {
+        width: 100%;
+        height: 100%;
+        min-height: 40px;
+        padding: 0 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        color: #f8fafc;
+        pointer-events: none;
+    }
+
+    .cx-wa-country-flag {
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    .cx-wa-country-picker-display strong {
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .cx-wa-country-chevron {
+        color: #b7c0cf;
+        font-size: 15px;
+        transform: translateY(-1px);
+    }
+
+    .cx-wa-phone-number-input {
+        flex: 1;
+        min-width: 0;
+        height: 40px;
+        padding: 0 14px;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #f8fafc;
+        font-size: 16px;
+        letter-spacing: 0.01em;
+    }
+
+    .cx-wa-phone-number-input::placeholder {
+        color: #747e8e;
+        opacity: 1;
+    }
+
+    .cx-wa-mobile-code-btn {
+        width: 100%;
+        min-height: 42px;
+        border-radius: 11px;
+        font-size: 15px;
+        font-weight: 700;
+        background: linear-gradient(90deg, #4e25ff 0%, #6536ff 52%, #4f23eb 100%);
+        box-shadow: 0 10px 28px rgba(82, 45, 255, 0.28);
+    }
+
+    .cx-wa-mobile-code-btn:hover:not(:disabled) {
+        filter: brightness(1.07);
+    }
+
+    .cx-wa-connect-error {
+        border-color: rgba(248, 113, 113, 0.26);
+        background: rgba(127, 29, 29, 0.24);
+        color: #fecaca;
+    }
+
+    .cx-wa-connect-state {
+        background: #0b1019;
+        border-color: #293141;
+        color: #cbd5e1;
+    }
+}
+
+
+/* ===== FIX: real flag image + phone artwork in actual mobile WhatsApp component ===== */
+@media (max-width: 1024px) {
+    .cx-setup-step.is-open .cx-status-pill{
+        display: block;
+    }
+    .cx-setup-step .cx-status-pill{
+        display: none;
+    }
+    .cx-wa-connect-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cx-wa-connect-guide {
+        position: relative;
+    }
+
+    .cx-wa-connect-guide > h4,
+    .cx-wa-connect-guide > p {
+        position: relative;
+        z-index: 2;
+    }
+
+    .cx-wa-connect-steps {
+        position: relative;
+        z-index: 2;
+        padding-right: 116px;
+    }
+    .crm-dark .cx-whatsapp-mobile-phone-art{
+        display: block!important;
+    }
+    .cx-whatsapp-mobile-phone-art {
+        display: none !important;
+        position: absolute;
+        z-index: 1;
+        top: 54px;
+        right: -2px;
+        width: 122px;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .cx-whatsapp-mobile-phone-art img {
+        display: block !important;
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 14px 24px rgba(0, 0, 0, .42));
+    }
+
+    .cx-wa-country-flag-img {
+        display: block;
+        width: 27px;
+        height: 18px;
+        object-fit: cover;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(255,255,255,.08);
+        flex-shrink: 0;
+    }
+
+    .cx-wa-country-picker-display {
+        gap: 7px;
+    }
+
+    .cx-wa-country-picker {
+        width: 116px;
+        min-width: 116px;
+    }
+}
+
+@media (max-width: 430px) {
+    .cx-setup-step .cx-step-action {
+        min-width: 78px;
+        padding: 0 6px !important;
+    }
+    .cx-wa-connect-card .cx-whatsapp-mobile-phone-art {
+        top: 66px;
+        right: -8px;
+        width: 108px;
+    }
+
+    .cx-wa-connect-steps {
+        padding-right: 94px;
+    }
+
+    .cx-wa-country-picker {
+        width: 108px;
+        min-width: 108px;
+    }
+
+    .cx-wa-country-flag-img {
+        width: 24px;
+        height: 16px;
+    }
+}

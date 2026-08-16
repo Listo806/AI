@@ -15,6 +15,7 @@ import {
   Settings2,
   TestTube2,
   Zap,
+  ShieldCheck,
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
@@ -242,7 +243,7 @@ export default function CortexaAISetup({
                   <div className="cx-setup-step-head">
                     <div className="cx-setup-step-left">
                       <div
-                        className={`cx-step-number ${
+                        className={`cx-step-number cx-step-number-${step.accent} ${
                           isOpen ? "active" : ""
                         }`}
                       >
@@ -269,7 +270,7 @@ export default function CortexaAISetup({
                       {step.id !== 1 && (
                         <button
                           type="button"
-                          className={`cx-step-action ${
+                          className={`cx-step-action cx-step-action-${step.accent} ${
                             step.locked ? "disabled" : ""
                           }`}
                           disabled={
@@ -326,6 +327,26 @@ export default function CortexaAISetup({
                 {launchError}
               </div>
             )}
+            <div className="cx-setup-progress-save">
+              <div className="cx-setup-progress-save-left">
+                <div className="cx-setup-progress-save-icon">
+                  <ShieldCheck size={30}/>
+                </div>
+
+                <div className="cx-setup-progress-save-copy">
+                  <strong>Your progress is saved automatically.</strong>
+                  <span>You can exit and continue anytime.</span>
+                </div>
+              </div>
+
+              <div className="cx-setup-progress-save-help">
+                <span>Need help?</span>
+
+                <a href="/support">
+                  Contact support ↗
+                </a>
+              </div>
+            </div>
           </div>
         </section>
 

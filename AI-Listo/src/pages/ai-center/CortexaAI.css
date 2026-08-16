@@ -92,7 +92,9 @@
   box-shadow: 0 12px 34px rgba(71, 45, 255, 0.08);
   margin-bottom: 10px;
 }
-
+.crm-dark .cx-setup-step.is-open{
+  border: 1px solid #202733;  
+}
 .cx-setup-step-head {
   min-height: 64px;
   padding: 12px;
@@ -139,7 +141,9 @@
   flex-shrink: 0;
   border: 1px solid #e6e9f5;
 }
-
+.crm-dark .cx-step-icon{
+  border: 1px solid #202733;  
+}
 .cx-step-icon.green {
   color: #05b94f;
   background: #eafbf1;
@@ -195,7 +199,6 @@
 
 .cx-status-pill {
   min-width: 86px;
-  min-height: 30px;
   padding: 6px 11px;
   border-radius: 7px;
   font-size: 12px;
@@ -213,7 +216,9 @@
   color: #05bb24;
   border: 1px solid #d0e9d0;
 }
-
+.crm-dark .cx-status-pill.success{
+  border: 1px solid #202733;  
+}
 .cx-status-pill.danger {
   background: #fff1f1;
   color: #ff1313;
@@ -3936,5 +3941,584 @@
 
   .cx-panel-actions {
     flex-direction: column;
+  }
+}
+
+/* =========================================================
+   AI AGENT SETUP — MOBILE / TABLET DARK LAYOUT
+   Matches the approved compact mobile setup direction.
+   Desktop stays on the existing light layout.
+   ========================================================= */
+.cx-whatsapp-mobile-phone-art {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .cx-ai-setup-page {
+    --cx-mobile-bg: #050911;
+    --cx-mobile-card: #0b111b;
+    --cx-mobile-card-2: #0d1420;
+    --cx-mobile-border: #202a3a;
+    --cx-mobile-text: #f7f8fc;
+    --cx-mobile-muted: #b4bdcc;
+    --cx-mobile-purple: #6c42ff;
+    min-height: 100vh;
+    
+    color: var(--cx-mobile-text);
+    padding: 0 12px 86px;
+  }
+  .crm-dark .cx-ai-setup-page{
+    background: var(--cx-mobile-bg);
+  }
+
+  .cx-ai-setup-topbar,
+  .cx-ai-setup-topbar.heading_page {
+    background: transparent;
+    padding: 18px 10px 12px;
+    min-height: 0;
+    border: 0;
+  }
+
+  .cx-ai-setup-topbar h1 {
+    color: #fff;
+    font-size: clamp(24px, 5vw, 34px);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .cx-ai-setup-topbar h1 svg {
+    width: 48px;
+    height: 48px;
+    padding: 10px;
+    flex: 0 0 48px;
+    color: #8b67ff;
+    background: linear-gradient(145deg, rgba(108, 66, 255, .22), rgba(108, 66, 255, .06));
+    border: 1px solid rgba(128, 82, 255, .48);
+    border-radius: 14px;
+    filter: drop-shadow(0 0 12px rgba(114, 74, 255, .24));
+  }
+
+  .cx-ai-setup-topbar .sub_head,
+  .cx-ai-setup-topbar p {
+    color: var(--cx-mobile-muted);
+    font-size: 13px;
+    line-height: 1.45;
+    margin: 8px 0 0 62px;
+  }
+
+  .cx-ai-setup-layout {
+    display: block;
+    padding: 0;
+  }
+
+  .cx-ai-setup-main > h2 {
+    display: none;
+  }
+
+  .cx-ai-setup-sidebar {
+    display: none !important;
+  }
+
+  .cx-setup-list {
+    gap: 8px;
+  }
+
+  .cx-setup-step,
+  .cx-setup-step.is-open {
+    margin: 0 !important;
+    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: none;
+  }
+  .crm-dark .cx-setup-step,
+  .crm-dark .cx-setup-step.is-open {
+    background: linear-gradient(180deg, rgba(13, 20, 32, .98), rgba(8, 14, 23, .98));
+    border: 1px solid var(--cx-mobile-border);
+  }
+
+  .cx-setup-step.is-open {
+    border-color: rgba(113, 76, 255, .72);
+    box-shadow: 0 0 0 1px rgba(93, 57, 255, .12), 0 10px 26px rgba(0, 0, 0, .26);
+  }
+
+  .cx-setup-step-head {
+    min-height: 74px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cx-setup-step-left {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .cx-step-number {
+    width: 42px;
+    height: 42px;
+    color: #fff;
+    border-color: rgba(90, 108, 145, .45);
+    background: #16213a;
+    font-size: 18px;
+  }
+
+  .cx-step-number.active {
+    background: linear-gradient(145deg, #7a52ff, #4c25f5);
+    box-shadow: 0 0 20px rgba(97, 62, 255, .34);
+  }
+
+  .cx-step-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+  }
+  .crm-dark .cx-step-icon{
+    background: #0a1421 !important;
+  }
+
+  .cx-step-icon.green { color: #27e57d; border-color: rgba(39, 229, 125, .34); }
+  .cx-step-icon.blue,
+  .cx-step-icon.indigo { color: #3385ff; border-color: rgba(51, 133, 255, .32); }
+  .cx-step-icon.orange { color: #ff8b27; border-color: rgba(255, 139, 39, .34); }
+  .cx-step-icon.purple { color: #a252ff; border-color: rgba(162, 82, 255, .36); }
+  .cx-step-icon.pink,
+  .cx-step-icon.rose { color: #ff4e9b; border-color: rgba(255, 78, 155, .34); }
+
+  .cx-setup-step-left > div:last-child {
+    min-width: 0;
+  }
+
+  .cx-setup-step-left h3 {
+    font-size: 15px;
+    line-height: 1.2;
+  }
+  .crm-dark .cx-setup-step-left h3 {
+    color: #fff;
+  }
+  .cx-setup-step-left p {
+    color: var(--cx-mobile-muted);
+    font-size: 11px;
+    line-height: 1.25;
+    margin-top: 3px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .cx-setup-step-right {
+    width: auto;
+    gap: 5px;
+    justify-content: flex-end;
+  }
+
+  .cx-status-pill {
+    min-width: 0;
+    padding: 7px 11px;
+    border-radius: 11px;
+    background: rgba(15, 23, 36, .82);
+  }
+
+  .cx-status-pill.success {
+    color: #34e887;
+    background: rgba(10, 82, 50, .18);
+    border-color: rgba(39, 229, 125, .34);
+  }
+
+  .cx-status-pill.warning {
+    color: #ff9b42;
+    background: rgba(125, 66, 10, .14);
+    border-color: rgba(255, 139, 39, .34);
+  }
+
+  .cx-status-pill.muted,
+  .cx-status-pill.locked,
+  .cx-status-pill.danger {
+    color: #8c9ab0;
+    background: rgba(11, 18, 29, .86);
+    border-color: rgba(65, 78, 101, .48);
+  }
+
+  .cx-step-action.disabled {
+    color: #687285;
+    border-color: #2a3446;
+  }
+  .crm-dark .cx-step-action.disabled{
+    background: #101620;
+  }
+  .cx-step-toggle {
+    width: 30px;
+    height: 30px;
+  }
+  .crm-dark .cx-step-toggle {
+    color: #d9deea;
+  }
+  .cx-whatsapp-mobile-connect-wrap {
+    position: relative;
+    margin: 0 10px 12px;
+    padding-top: 2px;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap > *:not(.cx-whatsapp-mobile-phone-art) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cx-whatsapp-mobile-phone-art {
+    display: block;
+    position: absolute;
+    z-index: 3;
+    top: 22px;
+    right: 14px;
+    width: min(29vw, 142px);
+    pointer-events: none;
+    opacity: .98;
+  }
+
+  .cx-whatsapp-mobile-phone-art img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 18px;
+    mix-blend-mode: screen;
+  }
+
+  /* Existing WhatsApp card: keep functionality, restyle it for the mobile panel. */
+  .cx-whatsapp-mobile-connect-wrap .cx-whatsapp-panel {
+    margin: 0;
+    padding: 16px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    background: linear-gradient(180deg, #0e151f 0%, #0a1018 100%);
+    border: 1px solid #2a3444;
+    border-radius: 14px;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-whatsapp-panel::before {
+    display: none;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-col {
+    grid-column: 1;
+    padding-right: clamp(94px, 29vw, 150px);
+    min-height: 220px;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-col h4,
+  .cx-whatsapp-mobile-connect-wrap .cx-qr-col h4 {
+    color: #fff;
+    font-size: 19px;
+    line-height: 1.2;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-col p,
+  .cx-whatsapp-mobile-connect-wrap .cx-qr-col p,
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-steps li,
+  .cx-whatsapp-mobile-connect-wrap .cx-expire-box {
+    color: #c1c8d4;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-steps li::before {
+    color: #fff;
+    border: 0;
+    background: linear-gradient(145deg, #7350ff, #4c28ef);
+    width: 26px;
+    height: 26px;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-code,
+  .cx-whatsapp-mobile-connect-wrap input,
+  .cx-whatsapp-mobile-connect-wrap select {
+    background: #090f18 !important;
+    border-color: #39465a !important;
+    color: #fff !important;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-code strong,
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-code button {
+    color: #9c7bff;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-primary-btn,
+  .cx-whatsapp-mobile-connect-wrap button[type="submit"] {
+    min-height: 48px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #4b26f7, #6e3cff);
+    box-shadow: 0 8px 22px rgba(76, 38, 247, .28);
+  }
+
+  /* On a phone, pairing by phone number/code is the primary UX. QR stays out of the way. */
+  .cx-whatsapp-mobile-connect-wrap .cx-qr-col {
+    display: none !important;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-panel-actions {
+    grid-column: 1;
+    padding-top: 8px;
+    gap: 8px;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-secondary-btn {
+    color: #d9deea;
+    background: #111925;
+    border-color: #2a3547;
+  }
+
+  .cx-ai-error-banner {
+    background: rgba(115, 22, 38, .2);
+    color: #ff9bac;
+    border-color: rgba(255, 80, 110, .32);
+  }
+}
+
+@media (max-width: 640px) {
+  .cx-ai-setup-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .cx-ai-setup-topbar,
+  .cx-ai-setup-topbar.heading_page {
+    padding: 16px 8px 10px;
+  }
+
+  .cx-ai-setup-topbar h1 {
+    font-size: 25px;
+  }
+
+  .cx-ai-setup-topbar .sub_head,
+  .cx-ai-setup-topbar p {
+    margin-left: 0;
+    padding-left: 62px;
+  }
+
+  .cx-setup-step-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .cx-setup-step-right {
+    width: auto;
+  }
+
+  .cx-step-action {
+    flex: 0 0 auto;
+  }
+
+  .cx-status-pill {
+    font-size: 11px;
+    padding-inline: 8px;
+  }
+
+  .cx-whatsapp-mobile-connect-wrap .cx-pairing-col {
+    padding-right: clamp(84px, 29vw, 132px);
+  }
+}
+
+
+/* =========================================================
+   AI SETUP MOBILE/TABLET STEP ACCENTS
+   Matches the numbered/action color treatment in the mobile mockup.
+   ========================================================= */
+@media (max-width: 1024px) {
+  .cx-step-number {
+    border: 0 !important;
+    color: #fff !important;
+    background: #202735 !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+  }
+
+  .cx-step-number-green {
+    background: linear-gradient(145deg, #4338ca, #6d28d9) !important;
+    box-shadow: 0 0 20px rgba(111, 70, 255, .28) !important;
+  }
+
+  .cx-step-number-blue,
+  .cx-step-number-indigo {
+    background: linear-gradient(145deg, #1d4ed8, #2746a8) !important;
+    box-shadow: 0 0 18px rgba(37, 99, 235, .24) !important;
+  }
+
+  .cx-step-number-orange {
+    background: linear-gradient(145deg, #0f8b4c, #116936) !important;
+    box-shadow: 0 0 18px rgba(22, 163, 74, .23) !important;
+  }
+
+  .cx-step-number-purple {
+    background: linear-gradient(145deg, #a14c13, #7c3a0b) !important;
+    box-shadow: 0 0 18px rgba(249, 115, 22, .2) !important;
+  }
+
+  .cx-step-number-pink {
+    background: linear-gradient(145deg, #9f2f68, #701e4a) !important;
+    box-shadow: 0 0 18px rgba(236, 72, 153, .2) !important;
+  }
+
+  .cx-step-number-rose {
+    background: linear-gradient(145deg, #4b5563, #2f3743) !important;
+    box-shadow: none !important;
+  }
+
+  .cx-step-action {
+    height: 34px;
+    min-width: 94px;
+    padding: 0 14px !important;
+    border-radius: 9px !important; 
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.018);
+  }
+  .crm-dark .cx-step-action{
+    background: rgba(10, 15, 24, .84) !important;
+  }
+  .cx-step-action-blue,
+  .cx-step-action-indigo {
+    color: #3b82f6 !important;
+    border-color: rgba(59, 130, 246, .46) !important;
+  }
+
+  .cx-step-action-orange {
+    color: #20d66b !important;
+    border-color: rgba(32, 214, 107, .42) !important;
+  }
+
+  .cx-step-action-green {
+    color: #a855f7 !important;
+    border-color: rgba(168, 85, 247, .46) !important;
+  }
+
+  .cx-step-action-purple {
+    color: #fb923c !important;
+    border-color: rgba(251, 146, 60, .46) !important;
+  }
+
+  .cx-step-action-pink {
+    color: #f04f91 !important;
+    border-color: rgba(240, 79, 145, .46) !important;
+  }
+
+  .cx-step-action.disabled {
+    opacity: .72 !important;
+  }
+  
+}
+.cx-setup-progress-save {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .cx-setup-progress-save {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 12px 14px;
+    border: 1px solid #2931425e;
+    border-radius: 10px;
+    
+    text-align: left;
+  }
+  .crm-dark .cx-setup-progress-save{
+    background:
+      linear-gradient(
+        90deg,
+        rgba(91, 54, 255, 0.08),
+        rgba(12, 17, 27, 0.96)
+      );
+    color: #fff;
+  }
+  .crm-dark .cx-setup-progress-save-copy strong, .crm-dark .cx-setup-progress-save-copy span{
+    color: #e8ebf2;
+  }
+  .cx-setup-progress-save-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .cx-setup-progress-save-icon {
+    width: 34px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background:
+      linear-gradient(
+        145deg,
+        rgba(99, 60, 255, 0.32),
+        rgba(42, 23, 112, 0.25)
+      );
+
+    font-size: 21px;
+  }
+  .cx-setup-progress-save-icon svg{
+    color: #521db0;
+  }
+
+  .cx-setup-progress-save-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .cx-setup-progress-save-copy strong,
+  .cx-setup-progress-save-copy span {
+    color: #2d3b72;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+
+  .cx-setup-progress-save-help {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .cx-setup-progress-save-help span {
+    color: #2d3b72;
+  }
+  .crm-dark .cx-setup-progress-save-help span {
+    color: #c7ced9;
+  }
+  .cx-setup-progress-save-help a {
+    color: #8b5cff;
+    font-weight: 600;
+    text-decoration: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .cx-setup-progress-save {
+    align-items: flex-start;
+    padding: 10px 11px;
+    gap: 6px;
+  }
+
+  .cx-setup-progress-save-help {
+    align-self: center;
+    font-size: 10px;
+  }
+
+  .cx-setup-progress-save-copy strong,
+  .cx-setup-progress-save-copy span {
+    font-size: 10px;
+  }
+
+  .cx-setup-progress-save-icon {
+    width: 30px;
+    height: 34px;
+    font-size: 18px;
   }
 }

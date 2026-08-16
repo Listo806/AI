@@ -17,11 +17,6 @@ body {
 .heading_page {
     margin-top: -32px;
     z-index: 99999999999999;
-    position: absolute;
-}
-.apps-page {
-    position: relative;
-    isolation: isolate;
 }
 .sidebar {
   width: 165px;
@@ -301,6 +296,11 @@ body {
 @media (min-width: 1200px) {
     .main-content {
         margin-top: 13px;
+    }
+}
+@media (min-width: 1025px) {
+    .heading_page {
+        position: absolute;
     }
 }
 @media (max-width: 1200px) {
