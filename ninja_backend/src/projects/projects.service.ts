@@ -29,6 +29,7 @@ export class ProjectsService {
   constructor(private readonly db: DatabaseService) {}
 
   private schemaReady = false;
+  private schemaInit: Promise<void> | null = null;
 
   private static readonly UUID_RE =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -65,6 +66,28 @@ export class ProjectsService {
 
   private async ensureSchema(): Promise<void> {
     if (this.schemaReady) return;
+    // Serialize within this instance so concurrent requests share one init.
+    if (!this.schemaInit) {
+      this.schemaInit = this.initSchema().then(
+        () => {
+          this.schemaReady = true;
+        },
+        (e) => {
+          this.schemaInit = null; // let a later call retry if init failed
+          throw e;
+        },
+      );
+    }
+    await this.schemaInit;
+  }
+
+  // One-time DDL, serialized cluster-wide by a Postgres advisory lock so the
+  // first requests on a fresh account/deploy cannot race on concurrent
+  // "CREATE TABLE IF NOT EXISTS" (which Postgres can reject) and 500.
+  private async initSchema(): Promise<void> {
+    const lock = await this.db.getClient();
+    try {
+      await lock.query('SELECT pg_advisory_lock($1)', [792113]);
 
     // Base project workspace tables. These are the SAME tables the Team
     // Workspace uses. CREATE ... IF NOT EXISTS keeps this safe even if the Team
@@ -218,8 +241,14 @@ export class ProjectsService {
     `);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_expenses_team ON project_expenses(team_id)`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_expenses_project ON project_expenses(team_id, project_id)`);
-
-    this.schemaReady = true;
+    } finally {
+      try {
+        await lock.query('SELECT pg_advisory_unlock($1)', [792113]);
+      } catch {
+        // ignore unlock errors
+      }
+      lock.release();
+    }
   }
 
   /* ============================================================= *
