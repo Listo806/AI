@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import projectsApi from "../../api/projectsApi";
+import { DetailSkeleton } from "./PjwSkeleton";
 import PjwModal from "./PjwModal";
 import { money, fmtDate, cap, pct } from "./projectFormat";
 
@@ -158,7 +159,7 @@ export default function PjwProjectModal({ open, mode: initialMode, projectId, ct
   return (
     <PjwModal open={open} title={title} subtitle={!projectId ? "Create a new client delivery project." : detail?.code || ""} onClose={onClose} footer={footer} wide>
       {loading ? (
-        <div className="pjw-loading">Loading…</div>
+        <DetailSkeleton />
       ) : isView && detail ? (
         <div className="pjw-detail-grid">
           <div className="pjw-kv"><span>Client</span><strong>{detail.clientName || "—"}</strong></div>

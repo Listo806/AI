@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Upload, Download, Trash2, FileText, Files as FilesIcon } from "lucide-react";
 import projectsApi from "../../api/projectsApi";
+import { FilesSkeleton } from "./PjwSkeleton";
 import { fmtRelative } from "./projectFormat";
 
 function fmtSize(bytes) {
@@ -86,7 +87,7 @@ export default function PjwFiles({ ctx }) {
     }
   };
 
-  if (!ctx) return <div className="pjw-loading">Loading…</div>;
+  if (!ctx) return <FilesSkeleton />;
 
   return (
     <div className="pjw-tab-panel">
@@ -112,7 +113,7 @@ export default function PjwFiles({ ctx }) {
       </section>
 
       {loading ? (
-        <div className="pjw-loading">Loading…</div>
+        <FilesSkeleton />
       ) : error ? (
         <div className="pjw-error">{error}</div>
       ) : rows.length === 0 ? (

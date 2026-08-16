@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Lock, ShieldCheck, RefreshCw } from "lucide-react";
 import workspaceApi from "../api/workspaceApi";
+import WorkspaceSkeleton from "./WorkspaceSkeleton";
 import { fetchPaddleConfig } from "../api/paddleApi";
 import { initPaddle, openWorkspaceCheckout } from "../pages/checkout/paddleCheckout";
 
@@ -56,12 +57,7 @@ export default function WorkspaceGate({ workspaceId, children }) {
   }, [workspaceId]);
 
   if (loading) {
-    return (
-      <div style={ST.loader}>
-        <RefreshCw size={18} className="spin" />
-        <span>Loading…</span>
-      </div>
-    );
+    return <WorkspaceSkeleton />;
   }
 
   // Fail open: unknown workspace, no access info, or accessible -> render it.

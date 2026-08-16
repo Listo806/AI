@@ -39,6 +39,7 @@ import { money, fmtRelative, fmtDate, initials, statusClass, priorityClass, pct 
 import PjwDashboardPanels from "./PjwDashboardPanels";
 import PjwProjectModal from "./PjwProjectModal";
 import PjwProjectCalendar from "./PjwProjectCalendar";
+import { TableSkeletonRows, CardsSkeleton } from "./PjwSkeleton";
 import PjwOverview from "./PjwOverview";
 import PjwTasks from "./PjwTasks";
 import PjwMilestones from "./PjwMilestones";
@@ -653,7 +654,7 @@ export default function ProjectWorkspace() {
           ) : view === "list" ? (
             <div className="pjw-tab-panel">
               {loading ? (
-                <div className="pjw-loading">Loading…</div>
+                <CardsSkeleton />
               ) : listError ? (
                 <div className="pjw-error">{listError}</div>
               ) : rows.length === 0 ? (
@@ -718,11 +719,7 @@ export default function ProjectWorkspace() {
                   </thead>
                   <tbody>
                     {loading ? (
-                      <tr>
-                        <td colSpan={colCount} className="pjw-cell-muted" style={{ textAlign: "center", padding: 30 }}>
-                          Loading…
-                        </td>
-                      </tr>
+                      <TableSkeletonRows cols={colCount} rows={6} />
                     ) : listError ? (
                       <tr>
                         <td colSpan={colCount} style={{ textAlign: "center", padding: 30, color: "#b91c1c" }}>
