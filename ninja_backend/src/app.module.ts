@@ -38,6 +38,7 @@ import { CustomerServiceModule } from "./customer-service/customer-service.modul
 import { MarketingModule } from "./marketing/marketing.module";
 import { EcommerceWorkspaceModule } from './ecommerce/ecommerce-workspace.module';
 import { ProjectsModule } from './projects/projects.module';
+import { LeadgenModule } from './leadgen/leadgen.module';
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { ProjectsModule } from './projects/projects.module';
     CustomerServiceModule,
     MarketingModule,
     ProjectsModule,
+    LeadgenModule,
   ],
   controllers: [AppController],
 })
