@@ -1222,7 +1222,9 @@ body .next-action-card svg {
   .dashboard-footer-grid.grid-5-col {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+  .dashboard-page .banner-action-row {
+    grid-template-columns: repeat(1, 1fr);
+  }
 }
 @media (max-width: 430px) {
   .dashboard-footer-grid.grid-5-col > :last-child {
@@ -1842,4 +1844,452 @@ body .next-action-card svg {
   .crm-dark .dashboard-container .card-top-header h5 {
     color: #f8fafc;
   }
+}
+
+/* =========================================================
+   KPI ROW GRID — MOBILE STRUCTURE ONLY
+   No theme colors in this block.
+   ========================================================= */
+
+.kpi-mobile-chevron {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .dashboard-page .kpi-row-grid.grid-6-col,
+  .dashboard-page .kpi-row-grid.kpi-row-primary,
+  .dashboard-page .kpi-row-grid.kpi-row-secondary {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-mini-card {
+    min-height: 95px;
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr) 28px;
+    grid-template-rows: 1fr;
+    align-items: center;
+    position: relative;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-main-row {
+    display: contents;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-icon-wrapper,
+  .dashboard-page .kpi-row-grid .kpi-icon-wrapper.clean-icon {
+    grid-column: 1;
+    grid-row: 1;
+    width: 58px;
+    height: 58px;
+    justify-self: center;
+    border-radius: 50%;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-icon-wrapper svg,
+  .dashboard-page .kpi-row-grid .kpi-icon-wrapper.clean-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-main-right,
+  .dashboard-page .kpi-row-grid .kpi-flex-body {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-lbl {
+    font-size: 17px;
+    line-height: 1.2;
+    font-weight: 650;
+    text-align: center;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-main-val,
+  .dashboard-page .kpi-row-grid .kpi-sub-val {
+    font-size: 32px;
+    line-height: 1.05;
+    margin: 7px 0 5px;
+    text-align: center;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-indicator-badge {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-meta-content {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    display: flex;
+    justify-content: center;
+    padding-top: 72px;
+    pointer-events: none;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-helper-txt {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-mobile-chevron {
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  /* Secondary rows do not have helper text, so center naturally. */
+  .dashboard-page .kpi-row-secondary .kpi-flex-body > div {
+    text-align: center;
+  }
+}
+
+@media (max-width: 430px) {
+  .dashboard-page .kpi-row-grid.grid-6-col,
+  .dashboard-page .kpi-row-grid.kpi-row-primary,
+  .dashboard-page .kpi-row-grid.kpi-row-secondary {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-mini-card {
+    min-height: 110px;
+    padding: 12px 14px;
+    grid-template-columns: 68px minmax(0, 1fr) 24px;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-icon-wrapper,
+  .dashboard-page .kpi-row-grid .kpi-icon-wrapper.clean-icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-lbl {
+    font-size: 15px;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-main-val,
+  .dashboard-page .kpi-row-grid .kpi-sub-val {
+    font-size: 29px;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-helper-txt,
+  .dashboard-page .kpi-row-grid .kpi-indicator-badge {
+    font-size: 11px;
+  }
+
+  .dashboard-page .kpi-row-grid .kpi-meta-content {
+    padding-top: 66px;
+  }
+}
+
+
+/* =========================================================
+   KPI ROW GRID — DARK THEME COLORS ONLY
+   Every visual/color rule is scoped by .crm-dark.
+   ========================================================= */
+
+.crm-dark .dashboard-page .kpi-row-grid .kpi-mini-card {
+  background:
+    radial-gradient(circle at 12% 50%, rgba(46, 107, 255, 0.055), transparent 25%),
+    rgba(3, 8, 17, 0.96);
+  border-color: rgba(70, 86, 112, 0.52);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.22),
+    inset 0 0 26px rgba(72, 124, 255, 0.018);
+}
+
+.crm-dark .dashboard-page .kpi-row-grid .kpi-lbl,
+.crm-dark .dashboard-page .kpi-row-grid .kpi-main-val,
+.crm-dark .dashboard-page .kpi-row-grid .kpi-sub-val {
+  color: #f8fafc;
+}
+
+.crm-dark .dashboard-page .kpi-row-grid .kpi-helper-txt,
+.crm-dark .dashboard-page .kpi-row-grid .kpi-indicator-badge {
+  color: #a6b0c1;
+}
+
+.crm-dark .dashboard-page .kpi-row-grid .kpi-mobile-chevron {
+  color: #aab4c4;
+}
+
+/* ---------- PRIMARY KPI CARD ACCENTS ---------- */
+
+/* 1 New Leads — blue */
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(1) {
+  border-color: #347cff;
+  box-shadow:
+    0 0 20px rgba(52, 124, 255, 0.12),
+    inset 0 0 28px rgba(52, 124, 255, 0.025);
+}
+
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(1) .kpi-icon-wrapper {
+  color: #4d9cff;
+  background: rgba(14, 49, 120, 0.24);
+  border: 1px solid rgba(52, 124, 255, 0.56);
+  box-shadow:
+    0 0 18px rgba(52, 124, 255, 0.13),
+    inset 0 0 16px rgba(52, 124, 255, 0.05);
+}
+
+/* 2 Active Deals — purple */
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(2) {
+  border-color: #a845e8;
+  box-shadow:
+    0 0 20px rgba(168, 69, 232, 0.12),
+    inset 0 0 28px rgba(168, 69, 232, 0.025);
+}
+
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(2) .kpi-icon-wrapper {
+  color: #bd59ff;
+  background: rgba(80, 23, 111, 0.24);
+  border: 1px solid rgba(168, 69, 232, 0.56);
+  box-shadow:
+    0 0 18px rgba(168, 69, 232, 0.13),
+    inset 0 0 16px rgba(168, 69, 232, 0.05);
+}
+
+/* 3 Revenue — green */
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(3) {
+  border-color: #2bbf63;
+  box-shadow:
+    0 0 20px rgba(43, 191, 99, 0.11),
+    inset 0 0 28px rgba(43, 191, 99, 0.025);
+}
+
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(3) .kpi-icon-wrapper {
+  color: #44df78;
+  background: rgba(9, 82, 39, 0.24);
+  border: 1px solid rgba(43, 191, 99, 0.56);
+  box-shadow:
+    0 0 18px rgba(43, 191, 99, 0.12),
+    inset 0 0 16px rgba(43, 191, 99, 0.05);
+}
+
+/* 4 Conversion — orange */
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(4) {
+  border-color: #f36f27;
+  box-shadow:
+    0 0 20px rgba(243, 111, 39, 0.12),
+    inset 0 0 28px rgba(243, 111, 39, 0.025);
+}
+
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(4) .kpi-icon-wrapper {
+  color: #ff7d35;
+  background: rgba(113, 43, 7, 0.24);
+  border: 1px solid rgba(243, 111, 39, 0.58);
+  box-shadow:
+    0 0 18px rgba(243, 111, 39, 0.13),
+    inset 0 0 16px rgba(243, 111, 39, 0.05);
+}
+
+/* 5 AI Conversations — blue */
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(5) {
+  border-color: #347cff;
+  box-shadow:
+    0 0 20px rgba(52, 124, 255, 0.12),
+    inset 0 0 28px rgba(52, 124, 255, 0.025);
+}
+
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(5) .kpi-icon-wrapper {
+  color: #4d9cff;
+  background: rgba(14, 49, 120, 0.24);
+  border: 1px solid rgba(52, 124, 255, 0.56);
+  box-shadow:
+    0 0 18px rgba(52, 124, 255, 0.13),
+    inset 0 0 16px rgba(52, 124, 255, 0.05);
+}
+
+/* 6 Appointments — green */
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(6) {
+  border-color: #2bbf63;
+  box-shadow:
+    0 0 20px rgba(43, 191, 99, 0.11),
+    inset 0 0 28px rgba(43, 191, 99, 0.025);
+}
+
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(6) .kpi-icon-wrapper {
+  color: #44df78;
+  background: rgba(9, 82, 39, 0.24);
+  border: 1px solid rgba(43, 191, 99, 0.56);
+  box-shadow:
+    0 0 18px rgba(43, 191, 99, 0.12),
+    inset 0 0 16px rgba(43, 191, 99, 0.05);
+}
+
+
+/* ---------- SECONDARY KPI CARD ACCENTS ---------- */
+
+/* 1 First Response Time — cyan/blue */
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(1) {
+  border-color: #319fe2;
+  box-shadow: 0 0 20px rgba(49, 159, 226, 0.11);
+}
+
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(1) .kpi-icon-wrapper {
+  color: #43b5ff;
+  background: rgba(10, 66, 103, 0.22);
+  border: 1px solid rgba(49, 159, 226, 0.54);
+  box-shadow: 0 0 17px rgba(49, 159, 226, 0.12);
+}
+
+/* 2 Follow-up Completion — green */
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(2) {
+  border-color: #2bbf63;
+  box-shadow: 0 0 20px rgba(43, 191, 99, 0.10);
+}
+
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(2) .kpi-icon-wrapper {
+  color: #44df78;
+  background: rgba(9, 82, 39, 0.22);
+  border: 1px solid rgba(43, 191, 99, 0.54);
+  box-shadow: 0 0 17px rgba(43, 191, 99, 0.11);
+}
+
+/* 3 Lead Quality Score — purple */
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(3) {
+  border-color: #a845e8;
+  box-shadow: 0 0 20px rgba(168, 69, 232, 0.11);
+}
+
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(3) .kpi-icon-wrapper {
+  color: #bd59ff;
+  background: rgba(80, 23, 111, 0.22);
+  border: 1px solid rgba(168, 69, 232, 0.54);
+  box-shadow: 0 0 17px rgba(168, 69, 232, 0.11);
+}
+
+/* 4 Pipeline Velocity — blue */
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(4) {
+  border-color: #347cff;
+  box-shadow: 0 0 20px rgba(52, 124, 255, 0.11);
+}
+
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(4) .kpi-icon-wrapper {
+  color: #4d9cff;
+  background: rgba(14, 49, 120, 0.22);
+  border: 1px solid rgba(52, 124, 255, 0.54);
+  box-shadow: 0 0 17px rgba(52, 124, 255, 0.11);
+}
+
+/* 5 Revenue at Risk — orange */
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(5) {
+  border-color: #f36f27;
+  box-shadow: 0 0 20px rgba(243, 111, 39, 0.11);
+}
+
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(5) .kpi-icon-wrapper {
+  color: #ff7d35;
+  background: rgba(113, 43, 7, 0.22);
+  border: 1px solid rgba(243, 111, 39, 0.54);
+  box-shadow: 0 0 17px rgba(243, 111, 39, 0.11);
+}
+
+/* 6 WhatsApp Response — green */
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(6) {
+  border-color: #2bbf63;
+  box-shadow: 0 0 20px rgba(43, 191, 99, 0.10);
+}
+
+.crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(6) .kpi-icon-wrapper {
+  color: #44df78;
+  background: rgba(9, 82, 39, 0.22);
+  border: 1px solid rgba(43, 191, 99, 0.54);
+  box-shadow: 0 0 17px rgba(43, 191, 99, 0.11);
+}
+
+
+/* Mobile dark treatment: slightly stronger glow, exactly like the reference. */
+@media (max-width: 768px) {
+  .crm-dark .dashboard-page .kpi-row-grid .kpi-mini-card {
+    background:
+      radial-gradient(circle at 10% 50%, rgba(47, 111, 255, 0.045), transparent 24%),
+      rgba(2, 7, 15, 0.985);
+  }
+
+  .crm-dark .dashboard-page .kpi-row-grid .kpi-lbl,
+  .crm-dark .dashboard-page .kpi-row-grid .kpi-main-val,
+  .crm-dark .dashboard-page .kpi-row-grid .kpi-sub-val {
+    color: #f7f8fb;
+  }
+
+  .crm-dark .dashboard-page .kpi-row-grid .kpi-helper-txt,
+  .crm-dark .dashboard-page .kpi-row-grid .kpi-indicator-badge {
+    color: #a9b3c5;
+  }
+
+  .crm-dark .dashboard-page .kpi-row-grid .kpi-mobile-chevron {
+    color: #b6bfcd;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.08));
+  }
+}
+
+
+/* =========================================================
+   PRIMARY KPI — MOBILE COMBINED META LINE
+   Structural rules only. Theme colors are below under .crm-dark.
+   ========================================================= */
+
+.kpi-mobile-meta-line {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .dashboard-page .kpi-row-primary .kpi-window-label,
+  .dashboard-page .kpi-row-primary .kpi-meta-content {
+    display: none;
+  }
+
+  .dashboard-page .kpi-row-primary .kpi-mobile-meta-line {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    max-width: 100%;
+    padding-top: 70px;
+    font-size: 12px;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .dashboard-page .kpi-row-primary .kpi-mobile-meta-dot {
+    font-size: 13px;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 430px) {
+  .dashboard-page .kpi-row-primary .kpi-mobile-meta-line {
+    gap: 6px;
+    padding-top: 64px;
+    font-size: 11px;
+  }
+}
+
+/* Dark theme color only */
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mobile-meta-line {
+  color: #a9b3c5;
+}
+
+.crm-dark .dashboard-page .kpi-row-primary .kpi-mobile-meta-dot {
+  color: #76839a;
 }

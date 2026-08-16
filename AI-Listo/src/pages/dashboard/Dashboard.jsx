@@ -38,6 +38,7 @@ import {
   ShieldCheck,
   Menu,
   ChevronDown,
+  ChevronRight,
   Briefcase,
   Layers,
   Settings,
@@ -778,7 +779,7 @@ export default function CortexaDashboard() {
       </section>
 
       {/* PRIMARY KPI CARDS */}
-      <section className="kpi-row-grid grid-6-col">
+      <section className="kpi-row-grid kpi-row-primary grid-6-col">
         {miniKpis.map((kpi, idx) => (
           <div key={idx} className="kpi-mini-card version-primary">
             <div className="kpi-main-row">
@@ -795,18 +796,27 @@ export default function CortexaDashboard() {
                     </span>{" "}
                   </>
                 )}
-                <span className="kpi-indicator-badge">{kpi.intime}</span>
+                <span className="kpi-indicator-badge kpi-window-label">{kpi.intime}</span>
               </div>
             </div>
+
             <div className="kpi-meta-content">
               <p className="kpi-helper-txt">{kpi.subtext}</p>
             </div>
+
+            <div className="kpi-mobile-meta-line">
+              <span>{kpi.intime}</span>
+              <span className="kpi-mobile-meta-dot" aria-hidden="true">•</span>
+              <span>{kpi.subtext}</span>
+            </div>
+
+            <ChevronRight className="kpi-mobile-chevron" size={22} aria-hidden="true" />
           </div>
         ))}
       </section>
 
       {/* SECONDARY KPI CARDS */}
-      <section className="kpi-row-grid grid-6-col">
+      <section className="kpi-row-grid kpi-row-secondary grid-6-col">
         {secondaryKpis.map((kpi, idx) => (
           <div
             key={idx}
@@ -829,6 +839,7 @@ export default function CortexaDashboard() {
                 </div>
               </div>
             </div>
+            <ChevronRight className="kpi-mobile-chevron" size={22} aria-hidden="true" />
           </div>
         ))}
       </section>
