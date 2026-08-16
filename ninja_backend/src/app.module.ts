@@ -35,6 +35,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
 import { SalesModule } from "./sales/sales.module";
 import { FinancialModule } from "./financial/financial.module";
 import { CustomerServiceModule } from "./customer-service/customer-service.module";
+import { MarketingModule } from "./marketing/marketing.module";
 import { EcommerceWorkspaceModule } from './ecommerce/ecommerce-workspace.module';
 
 @Module({
@@ -75,6 +76,7 @@ import { EcommerceWorkspaceModule } from './ecommerce/ecommerce-workspace.module
     SalesModule,
     FinancialModule,
     CustomerServiceModule,
+    MarketingModule,
   ],
   controllers: [AppController],
 })
