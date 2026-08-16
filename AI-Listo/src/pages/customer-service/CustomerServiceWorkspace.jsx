@@ -52,6 +52,25 @@ function pct(count, total) {
   if (!total) return "0%";
   return `${((Number(count) / Number(total)) * 100).toFixed(1)}%`;
 }
+
+// Colors match the legend dots (.csw-legend .d0..d4) so ring segments line up with
+// the labels. Extra tones cover >5 groups.
+const DONUT_COLORS = ["#2563eb", "#7c3aed", "#f59e0b", "#22c55e", "#ef4444", "#0891b2", "#64748b"];
+
+// Build the ring fill from REAL data. A flat neutral track when there is no data,
+// so the ring never depicts fabricated proportions.
+function ringGradient(rows, total) {
+  if (!total || !rows || rows.length === 0) return "#e5e7eb";
+  let acc = 0;
+  const segs = [];
+  rows.forEach((r, i) => {
+    const start = (acc / total) * 100;
+    acc += Number(r.count) || 0;
+    const end = (acc / total) * 100;
+    segs.push(`${DONUT_COLORS[i % DONUT_COLORS.length]} ${start}% ${end}%`);
+  });
+  return `conic-gradient(${segs.join(", ")})`;
+}
 function initials(name) {
   return String(name || "")
     .split(" ")
@@ -106,7 +125,7 @@ function Donut({ title, rows, total }) {
         <select><option>This Month</option></select>
       </div>
       <div className="csw-donut-body">
-        <div className="csw-donut">
+        <div className="csw-donut" style={{ background: ringGradient(list, total) }}>
           <div>
             <strong>{(total ?? 0).toLocaleString("en-US")}</strong>
             <span>Total Tickets</span>

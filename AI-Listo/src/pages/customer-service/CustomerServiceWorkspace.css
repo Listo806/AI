@@ -445,7 +445,8 @@
     width: 105px;
     height: 105px;
     border-radius: 50%;
-    background: conic-gradient(#2563eb 0 28%, #7c3aed 28% 58%, #f59e0b 58% 75%, #22c55e 75% 94%, #ef4444 94%);
+    /* Neutral default; the real fill is set inline per-donut from live data. */
+    background: #e5e7eb;
     display: grid;
     place-items: center
 }

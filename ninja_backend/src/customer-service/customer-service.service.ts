@@ -246,6 +246,9 @@ export class CustomerServiceService {
     let page = parseInt(String(params.page ?? '1'), 10);
     let limit = parseInt(String(params.limit ?? '20'), 10);
     if (!Number.isFinite(page) || page < 1) page = 1;
+    // Upper-bound page too, so a huge value can't overflow the SQL OFFSET (bigint)
+    // into a 22003 -> 500; it just returns an empty page.
+    if (page > 1_000_000) page = 1_000_000;
     if (!Number.isFinite(limit) || limit < 1) limit = 20;
     if (limit > 100) limit = 100;
     const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
