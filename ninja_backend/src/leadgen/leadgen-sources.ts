@@ -24,6 +24,8 @@ export interface LeadgenSource {
   countries: string[] | 'all';
   /** Every env var that must be present (non-empty) for the source to be connected. */
   envVars: string[];
+  /** True once the live connector for this source is implemented in the engine. */
+  implemented: boolean;
 }
 
 /**
@@ -42,6 +44,7 @@ export const LEADGEN_SOURCES: LeadgenSource[] = [
     role: 'Business discovery — Google-Maps-grade business listings (name, address, phone, website). Terms permit storage into a customer CRM.',
     countries: 'all',
     envVars: ['LEADGEN_DATAFORSEO_LOGIN', 'LEADGEN_DATAFORSEO_PASSWORD'],
+    implemented: true,
   },
   {
     key: 'fullenrich',
@@ -50,6 +53,7 @@ export const LEADGEN_SOURCES: LeadgenSource[] = [
     role: 'Contact enrichment — waterfall across 20+ providers for verified email and phone. Best international/LATAM coverage.',
     countries: 'all',
     envVars: ['LEADGEN_FULLENRICH_API_KEY'],
+    implemented: false,
   },
   {
     key: 'hunter',
@@ -58,6 +62,7 @@ export const LEADGEN_SOURCES: LeadgenSource[] = [
     role: 'Email finding + verification from a company domain. Works across Spanish and Portuguese markets.',
     countries: 'all',
     envVars: ['LEADGEN_HUNTER_API_KEY'],
+    implemented: true,
   },
   {
     key: 'zerobounce',
@@ -66,6 +71,7 @@ export const LEADGEN_SOURCES: LeadgenSource[] = [
     role: 'Email verification gate — country-agnostic validity check before a lead can enter the CRM.',
     countries: 'all',
     envVars: ['LEADGEN_ZEROBOUNCE_API_KEY'],
+    implemented: true,
   },
   {
     key: 'infobelpro',
@@ -74,6 +80,7 @@ export const LEADGEN_SOURCES: LeadgenSource[] = [
     role: 'LATAM firmographic depth — the only structured source covering Ecuador, Chile and Argentina by registry.',
     countries: ['US', 'CA', 'AU', 'GB', 'ES', 'MX', 'CO', 'BR', 'CL', 'AR', 'EC'],
     envVars: ['LEADGEN_INFOBELPRO_API_KEY'],
+    implemented: false,
   },
   {
     key: 'opencorporates',
@@ -82,11 +89,22 @@ export const LEADGEN_SOURCES: LeadgenSource[] = [
     role: 'Cross-border legal-entity verification and de-duplication.',
     countries: 'all',
     envVars: ['LEADGEN_OPENCORPORATES_API_KEY'],
+    implemented: false,
   },
 ];
 
-/** True only if every required env var for the source is present and non-empty. */
+/** True only if the connector is implemented AND every required key is present. */
 export function sourceConnected(src: LeadgenSource): boolean {
+  if (!src.implemented) return false;
+  return src.envVars.every((v) => {
+    const val = process.env[v];
+    return typeof val === 'string' && val.trim().length > 0;
+  });
+}
+
+/** True when the keys are configured but the live connector is not built yet. */
+export function sourceConfiguredButPending(src: LeadgenSource): boolean {
+  if (src.implemented) return false;
   return src.envVars.every((v) => {
     const val = process.env[v];
     return typeof val === 'string' && val.trim().length > 0;
@@ -101,7 +119,9 @@ export function sourcesStatus() {
     kind: s.kind,
     role: s.role,
     countries: s.countries,
+    implemented: s.implemented,
     connected: sourceConnected(s),
+    integrationPending: sourceConfiguredButPending(s),
   }));
 }
 

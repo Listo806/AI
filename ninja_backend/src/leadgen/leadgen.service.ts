@@ -12,6 +12,15 @@ import {
   connectedByKind,
   anyConnected,
 } from './leadgen-sources';
+import {
+  discoverBusinesses,
+  findEmailForDomain,
+  verifyEmail,
+  scoreLead,
+  dedupeKey,
+  MAX_LEADS,
+  NormalizedLead,
+} from './leadgen-connectors';
 
 const OWNER_ROLE = 'owner';
 const NUL = String.fromCharCode(0);
@@ -19,6 +28,22 @@ const NUL = String.fromCharCode(0);
 /** Job lifecycle states. Terminal states: completed | ready | failed | cancelled. */
 const TERMINAL = ['completed', 'ready', 'failed', 'cancelled'];
 const TERMINAL_SQL = `('completed','ready','failed','cancelled')`;
+
+/**
+ * Provider dispatch tables. The pipeline iterates the CONNECTED sources of each
+ * kind (in registry order) and stops at the first that returns data, so adding
+ * a provider is just a new entry here — no source becomes a single point of
+ * failure. Discovery providers are merged; enrichment providers fall back.
+ */
+const DISCOVERY_FNS: Record<string, (criteria: any) => Promise<NormalizedLead[]>> = {
+  dataforseo: discoverBusinesses,
+};
+const ENRICH_FNS: Record<
+  string,
+  (lead: NormalizedLead) => Promise<{ email: string; confidence: number | null; sourceUrl: string | null } | null>
+> = {
+  hunter: (lead) => (lead.domain ? findEmailForDomain(lead.domain) : Promise.resolve(null)),
+};
 
 @Injectable()
 export class LeadgenService implements OnModuleInit {
@@ -311,6 +336,7 @@ export class LeadgenService implements OnModuleInit {
       leadsTotal: 0,
       leadsQualified: 0,
       leadsImported: 0,
+      leadsEnriched: 0,
       hot: 0,
       warm: 0,
       cold: 0,
@@ -333,6 +359,7 @@ export class LeadgenService implements OnModuleInit {
          COUNT(*)::int AS total,
          COUNT(*) FILTER (WHERE status = 'qualified')::int AS qualified,
          COUNT(*) FILTER (WHERE status = 'imported')::int AS imported,
+         COUNT(*) FILTER (WHERE email IS NOT NULL)::int AS enriched,
          COUNT(*) FILTER (WHERE ai_band = 'hot')::int AS hot,
          COUNT(*) FILTER (WHERE ai_band = 'warm')::int AS warm,
          COUNT(*) FILTER (WHERE ai_band = 'cold')::int AS cold,
@@ -350,6 +377,7 @@ export class LeadgenService implements OnModuleInit {
         leadsTotal: l.total || 0,
         leadsQualified: l.qualified || 0,
         leadsImported: l.imported || 0,
+        leadsEnriched: l.enriched || 0,
         hot: l.hot || 0,
         warm: l.warm || 0,
         cold: l.cold || 0,
@@ -441,20 +469,201 @@ export class LeadgenService implements OnModuleInit {
   private async runSearch(searchId: string, teamId: string): Promise<void> {
     try {
       const discovery = connectedByKind('discovery');
-      const detail = discovery.length
-        ? 'A data provider is connected. Live lead fetching is being enabled in the next update; no leads were generated and none were fabricated.'
-        : 'No data provider is connected. Configure a discovery provider (DataForSEO) to generate real leads. No placeholder leads were created.';
-      // Until the real connectors ship (next slice), the job finishes honestly
-      // with zero results — it never simulates pipeline work or invents leads.
+      if (!discovery.length) {
+        // Honest terminal state: nothing is fabricated when no provider is live.
+        await this.setStatus(searchId, teamId, 'completed', 100, {
+          detail:
+            'No data provider is connected. Configure a discovery provider (DataForSEO) to generate real leads. No placeholder leads were created.',
+          counts: { found: 0, deduped: 0, enriched: 0, scored: 0, qualified: 0 },
+          sourcesUsed: [],
+        });
+        return;
+      }
+
+      const { rows } = await this.db.query(
+        `SELECT criteria FROM leadgen_searches WHERE id = $1 AND team_id = $2`,
+        [searchId, teamId],
+      );
+      const criteria = rows[0]?.criteria || {};
+      const used = new Set<string>();
+
+      // 1. DISCOVERY — iterate every connected discovery provider and merge
+      // results (fallback: if one errors or is unconfigured, the next runs).
+      await this.setStatus(searchId, teamId, 'searching', 15);
+      let leads: NormalizedLead[] = [];
+      for (const src of connectedByKind('discovery')) {
+        if (leads.length >= MAX_LEADS) break;
+        const fn = DISCOVERY_FNS[src.key];
+        if (!fn) continue;
+        try {
+          const found = await fn(criteria);
+          used.add(src.key);
+          leads.push(...found);
+        } catch {
+          /* provider failed — fall through to the next discovery source */
+        }
+      }
+      const foundCount = leads.length;
+      if (await this.isCancelled(searchId, teamId)) return;
+
+      // 2. DEDUP (within batch + against this team's prior generated leads).
+      await this.setStatus(searchId, teamId, 'dedup', 40, { counts: { found: foundCount } });
+      leads = leads.slice(0, MAX_LEADS);
+      leads = await this.dedupeBusinesses(teamId, leads);
+      const dedupedRemoved = foundCount - leads.length;
+      if (await this.isCancelled(searchId, teamId)) return;
+
+      // 3 & 4. ENRICH (email finding, provider fallback) + VERIFY (ZeroBounce).
+      const enrichSources = connectedByKind('enrichment');
+      const verifyOn = anyConnected('verification');
+      if ((enrichSources.length || verifyOn) && leads.length) {
+        await this.setStatus(searchId, teamId, 'enriching', 65);
+        for (const b of leads) {
+          if (!b.email && b.domain) {
+            // Try each connected enrichment provider in turn; stop at first hit.
+            for (const src of enrichSources) {
+              const fn = ENRICH_FNS[src.key];
+              if (!fn) continue;
+              try {
+                const found = await fn(b);
+                if (found && found.email) {
+                  b.email = found.email;
+                  b.sourceUrl = b.sourceUrl || found.sourceUrl;
+                  b.enrichment = {
+                    ...b.enrichment,
+                    emailConfidence: found.confidence ?? null,
+                    emailProvider: src.key,
+                  };
+                  used.add(src.key);
+                  break;
+                }
+              } catch {
+                /* provider failed — fall through to the next enrichment source */
+              }
+            }
+          }
+          if (b.email && verifyOn) {
+            const v = await verifyEmail(b.email);
+            if (v) {
+              b.emailVerified = v.valid;
+              b.enrichment = { ...b.enrichment, verification: v.status };
+              used.add('zerobounce');
+            }
+          }
+        }
+      }
+      if (await this.isCancelled(searchId, teamId)) return;
+
+      // 5 & 6. SCORE / BAND + QUALIFY (documented, computed from real signals).
+      await this.setStatus(searchId, teamId, 'scoring', 85);
+      let qualified = 0;
+      let enrichedCount = 0;
+      for (const b of leads) {
+        const { score, band } = scoreLead(b);
+        b.aiScore = score;
+        b.aiBand = band;
+        b.status = score >= 40 ? 'qualified' : 'new';
+        if (b.status === 'qualified') qualified += 1;
+        if (b.email) enrichedCount += 1;
+      }
+      if (await this.isCancelled(searchId, teamId)) return;
+
+      // 7. PERSIST real leads.
+      await this.persistLeads(searchId, teamId, leads);
+
+      // 8. Terminal.
       await this.setStatus(searchId, teamId, 'completed', 100, {
-        detail,
-        counts: { found: 0, deduped: 0, enriched: 0, scored: 0, qualified: 0 },
-        sourcesUsed: [],
+        counts: {
+          found: foundCount,
+          deduped: dedupedRemoved,
+          enriched: enrichedCount,
+          scored: leads.length,
+          qualified,
+        },
+        sourcesUsed: [...used],
+        detail: leads.length ? null : 'No matching businesses were found for these criteria.',
       });
     } catch (e: any) {
       await this.setStatus(searchId, teamId, 'failed', null, {
         error: String(e?.message || e).slice(0, 2000),
       });
+    }
+  }
+
+  private async isCancelled(searchId: string, teamId: string): Promise<boolean> {
+    const { rows } = await this.db.query(
+      `SELECT status FROM leadgen_searches WHERE id = $1 AND team_id = $2`,
+      [searchId, teamId],
+    );
+    return rows.length ? rows[0].status === 'cancelled' : true;
+  }
+
+  /** Drop duplicates within the batch and against this team's prior leads. */
+  private async dedupeBusinesses(teamId: string, list: NormalizedLead[]): Promise<NormalizedLead[]> {
+    const seen = new Set<string>();
+    const unique: NormalizedLead[] = [];
+    for (const b of list) {
+      const k = dedupeKey(b);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      b.dedupeKey = k;
+      unique.push(b);
+    }
+    if (!unique.length) return unique;
+    const keys = unique.map((b) => b.dedupeKey as string);
+    const { rows } = await this.db.query(
+      `SELECT dedupe_key FROM leadgen_leads WHERE team_id = $1 AND dedupe_key = ANY($2)`,
+      [teamId, keys],
+    );
+    const existing = new Set(rows.map((r: any) => r.dedupe_key));
+    return unique.filter((b) => !existing.has(b.dedupeKey));
+  }
+
+  /** Insert generated leads (real data only) in a single transaction. */
+  private async persistLeads(searchId: string, teamId: string, list: NormalizedLead[]): Promise<void> {
+    if (!list.length) return;
+    const client = await this.db.getClient();
+    try {
+      await client.query('BEGIN');
+      for (const b of list) {
+        await client.query(
+          `INSERT INTO leadgen_leads
+             (team_id, search_id, business_name, contact_name, title, email, phone, website,
+              address, city, region, country, social, source, source_url, source_provider,
+              ai_score, ai_band, enrichment, provenance, dedupe_key, status)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,$15,$16,$17,$18,$19::jsonb,$20::jsonb,$21,$22)`,
+          [
+            teamId,
+            searchId,
+            this.sanitizeText(b.businessName, 255),
+            this.sanitizeText(b.contactName, 255),
+            this.sanitizeText(b.title, 160),
+            this.sanitizeText(b.email, 255),
+            this.sanitizeText(b.phone, 64),
+            this.sanitizeText(b.website, 500),
+            this.sanitizeText(b.address, 500),
+            this.sanitizeText(b.city, 160),
+            this.sanitizeText(b.region, 160),
+            b.country ? String(b.country).slice(0, 4) : null,
+            JSON.stringify(this.sanitizeJson(b.social || {})),
+            this.sanitizeText(b.source, 64),
+            this.sanitizeText(b.sourceUrl, 1000),
+            this.sanitizeText(b.sourceProvider, 64),
+            b.aiScore == null ? null : this.clampInt(b.aiScore, 100),
+            b.aiBand ? String(b.aiBand).slice(0, 8) : null,
+            JSON.stringify(this.sanitizeJson(b.enrichment || {})),
+            JSON.stringify({ emailVerified: !!b.emailVerified }),
+            this.sanitizeText(b.dedupeKey, 255),
+            b.status || 'new',
+          ],
+        );
+      }
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
     }
   }
 
