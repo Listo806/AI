@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe,
+  Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe, Header,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -22,6 +22,19 @@ import { UpdateMktMessageDto } from './dto/update-mkt-message.dto';
 import { AddMktRecipientsDto } from './dto/add-mkt-recipients.dto';
 import { RecordMktEventDto } from './dto/record-mkt-event.dto';
 import { CreateMktSuppressionDto } from './dto/create-mkt-suppression.dto';
+import { CreateMktAudienceDto } from './dto/create-mkt-audience.dto';
+import { UpdateMktAudienceDto } from './dto/update-mkt-audience.dto';
+import { AddMktAudienceMembersDto } from './dto/add-mkt-audience-members.dto';
+import { CreateMktFormDto } from './dto/create-mkt-form.dto';
+import { UpdateMktFormDto } from './dto/update-mkt-form.dto';
+import { CreateMktAutomationDto } from './dto/create-mkt-automation.dto';
+import { UpdateMktAutomationDto } from './dto/update-mkt-automation.dto';
+import { RunMktAutomationDto } from './dto/run-mkt-automation.dto';
+import { CreateMktContentDto } from './dto/create-mkt-content.dto';
+import { UpdateMktContentDto } from './dto/update-mkt-content.dto';
+import { ConnectMktIntegrationDto } from './dto/connect-mkt-integration.dto';
+import { ImportMktLeadsDto } from './dto/import-mkt-leads.dto';
+import { MktAiQueryDto } from './dto/mkt-ai-query.dto';
 
 // Marketing Workspace API. JwtAuthGuard authenticates, PaymentGuard gates unpaid
 // accounts, and WorkspaceLockGuard enforces the $97 add-on ONLY when the 'marketing'
@@ -305,5 +318,227 @@ export class MarketingController {
   @ApiOperation({ summary: 'Remove a suppressed address (team-scoped)' })
   async removeSuppression(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.marketing.removeSuppression(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Audiences ───────────────────────────────────────────────────────────────
+
+  @Get('audiences')
+  @ApiOperation({ summary: 'List audiences (team-scoped)' })
+  async listAudiences(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.marketing.findAllAudiences(user.id, user.teamId ?? null, user.role ?? 'owner', { search, status, page, limit });
+  }
+
+  @Post('audiences')
+  @ApiOperation({ summary: 'Create an audience (team-scoped)' })
+  async createAudience(@Body() dto: CreateMktAudienceDto, @CurrentUser() user: any) {
+    return this.marketing.createAudience(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Get('audiences/:id')
+  @ApiOperation({ summary: 'Get one audience (team-scoped)' })
+  async getAudience(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.findOneAudience(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('audiences/:id')
+  @ApiOperation({ summary: 'Update an audience (team-scoped)' })
+  async updateAudience(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateMktAudienceDto, @CurrentUser() user: any) {
+    return this.marketing.updateAudience(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('audiences/:id')
+  @ApiOperation({ summary: 'Delete an audience and its members (team-scoped)' })
+  async removeAudience(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.removeAudience(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Get('audiences/:id/members')
+  @ApiOperation({ summary: 'List audience members (team-scoped)' })
+  async listAudienceMembers(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.listAudienceMembers(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('audiences/:id/members')
+  @ApiOperation({ summary: 'Add audience members (deduped, team-scoped)' })
+  async addAudienceMembers(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AddMktAudienceMembersDto, @CurrentUser() user: any) {
+    return this.marketing.addAudienceMembers(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('audiences/:id/members/:memberId')
+  @ApiOperation({ summary: 'Remove an audience member (team-scoped)' })
+  async removeAudienceMember(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('memberId', ParseUUIDPipe) memberId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.marketing.removeAudienceMember(id, memberId, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Forms & Landing Pages ───────────────────────────────────────────────────
+
+  @Get('forms')
+  @ApiOperation({ summary: 'List forms & landing pages (team-scoped)' })
+  async listForms(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('type') type?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.marketing.findAllForms(user.id, user.teamId ?? null, user.role ?? 'owner', { search, status, type, page, limit });
+  }
+
+  @Post('forms')
+  @ApiOperation({ summary: 'Create a form / landing page (team-scoped)' })
+  async createForm(@Body() dto: CreateMktFormDto, @CurrentUser() user: any) {
+    return this.marketing.createForm(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Get('forms/:id')
+  @ApiOperation({ summary: 'Get one form (team-scoped)' })
+  async getForm(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.findOneForm(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('forms/:id')
+  @ApiOperation({ summary: 'Update / publish a form (team-scoped)' })
+  async updateForm(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateMktFormDto, @CurrentUser() user: any) {
+    return this.marketing.updateForm(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('forms/:id')
+  @ApiOperation({ summary: 'Delete a form and its submissions (team-scoped)' })
+  async removeForm(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.removeForm(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Get('forms/:id/submissions')
+  @ApiOperation({ summary: 'List a form submissions (team-scoped)' })
+  async listSubmissions(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.listSubmissions(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Automations ─────────────────────────────────────────────────────────────
+
+  @Get('automations')
+  @ApiOperation({ summary: 'List automations (team-scoped)' })
+  async listAutomations(@CurrentUser() user: any, @Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.marketing.findAllAutomations(user.id, user.teamId ?? null, user.role ?? 'owner', { status, page, limit });
+  }
+
+  @Post('automations')
+  @ApiOperation({ summary: 'Create an automation (team-scoped)' })
+  async createAutomation(@Body() dto: CreateMktAutomationDto, @CurrentUser() user: any) {
+    return this.marketing.createAutomation(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Get('automations/:id')
+  @ApiOperation({ summary: 'Get one automation (team-scoped)' })
+  async getAutomation(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.findOneAutomation(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('automations/:id')
+  @ApiOperation({ summary: 'Update / pause / activate an automation (team-scoped)' })
+  async updateAutomation(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateMktAutomationDto, @CurrentUser() user: any) {
+    return this.marketing.updateAutomation(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('automations/:id')
+  @ApiOperation({ summary: 'Delete an automation and its runs (team-scoped)' })
+  async removeAutomation(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.removeAutomation(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Get('automations/:id/runs')
+  @ApiOperation({ summary: 'List automation runs (team-scoped)' })
+  async listAutomationRuns(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.listAutomationRuns(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('automations/:id/run')
+  @ApiOperation({ summary: 'Apply an automation to an entity (idempotent, team-scoped)' })
+  async runAutomation(@Param('id', ParseUUIDPipe) id: string, @Body() dto: RunMktAutomationDto, @CurrentUser() user: any) {
+    return this.marketing.runAutomation(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Content ─────────────────────────────────────────────────────────────────
+
+  @Get('content')
+  @ApiOperation({ summary: 'List content library (team-scoped)' })
+  async listContent(@CurrentUser() user: any, @Query('search') search?: string, @Query('type') type?: string, @Query('status') status?: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.marketing.findAllContent(user.id, user.teamId ?? null, user.role ?? 'owner', { search, type, status, page, limit });
+  }
+
+  @Post('content')
+  @ApiOperation({ summary: 'Create content (team-scoped)' })
+  async createContent(@Body() dto: CreateMktContentDto, @CurrentUser() user: any) {
+    return this.marketing.createContent(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('content/:id')
+  @ApiOperation({ summary: 'Update content (team-scoped)' })
+  async updateContent(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateMktContentDto, @CurrentUser() user: any) {
+    return this.marketing.updateContent(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('content/:id')
+  @ApiOperation({ summary: 'Delete content (team-scoped)' })
+  async removeContent(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.marketing.removeContent(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Integrations ────────────────────────────────────────────────────────────
+
+  @Get('integrations')
+  @ApiOperation({ summary: 'List integrations with honest connection status (team-scoped)' })
+  async listIntegrations(@CurrentUser() user: any) {
+    return this.marketing.listIntegrations(user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('integrations/connect')
+  @ApiOperation({ summary: 'Connect an integration (records status only; no fabricated data)' })
+  async connectIntegration(@Body() dto: ConnectMktIntegrationDto, @CurrentUser() user: any) {
+    return this.marketing.connectIntegration(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('integrations/disconnect')
+  @ApiOperation({ summary: 'Disconnect an integration (team-scoped)' })
+  async disconnectIntegration(@Body() dto: ConnectMktIntegrationDto, @CurrentUser() user: any) {
+    return this.marketing.disconnectIntegration(dto.provider, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Reports + export + import + AI ──────────────────────────────────────────
+
+  @Get('reports')
+  @ApiOperation({ summary: 'Marketing reports over a window (real aggregates, team-scoped)' })
+  async reports(@CurrentUser() user: any, @Query('range') range?: string) {
+    return this.marketing.getReports(user.id, user.teamId ?? null, user.role ?? 'owner', range);
+  }
+
+  @Get('export/:type')
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @ApiOperation({ summary: 'Export leads/campaigns/conversions as CSV (team-scoped)' })
+  async exportCsv(@Param('type') type: string, @CurrentUser() user: any, @Query('range') range?: string) {
+    return this.marketing.exportCsv(type, range, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('leads/import')
+  @ApiOperation({ summary: 'Import leads in bulk (validated, team-scoped)' })
+  async importLeads(@Body() dto: ImportMktLeadsDto, @CurrentUser() user: any) {
+    return this.marketing.importLeads(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('ai/query')
+  @ApiOperation({ summary: 'Ask about your marketing (answered only from your account data)' })
+  async aiQuery(@Body() dto: MktAiQueryDto, @CurrentUser() user: any) {
+    return this.marketing.aiQuery(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
   }
 }

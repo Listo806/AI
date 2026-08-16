@@ -278,6 +278,157 @@ export class MarketingService {
     );
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_suppression_team ON mkt_suppression(team_id)`);
 
+    // ── Audiences + members, Forms + submissions ─────────────────────────────
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS mkt_audiences (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        name TEXT,
+        description TEXT,
+        type TEXT NOT NULL DEFAULT 'static',
+        status TEXT NOT NULL DEFAULT 'Active',
+        filter_json JSONB,
+        tags TEXT[],
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_audiences_team ON mkt_audiences(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_audiences_status ON mkt_audiences(status)`);
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS mkt_audience_members (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        audience_id UUID NOT NULL,
+        contact_id UUID,
+        lead_id UUID,
+        email TEXT,
+        name TEXT,
+        added_by UUID,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_mkt_audience_member_addr
+         ON mkt_audience_members(audience_id, lower(email)) WHERE email IS NOT NULL`,
+    );
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_audience_members_team ON mkt_audience_members(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_audience_members_aud ON mkt_audience_members(audience_id)`);
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS mkt_forms (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        name TEXT,
+        type TEXT NOT NULL DEFAULT 'form',
+        status TEXT NOT NULL DEFAULT 'Draft',
+        fields_json JSONB,
+        campaign_id UUID,
+        campaign_name TEXT,
+        audience_id UUID,
+        source TEXT,
+        redirect_url TEXT,
+        submit_message TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_forms_team ON mkt_forms(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_forms_status ON mkt_forms(status)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_forms_campaign ON mkt_forms(campaign_id)`);
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS mkt_form_submissions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        form_id UUID NOT NULL,
+        data_json JSONB,
+        email TEXT,
+        name TEXT,
+        lead_id UUID,
+        source_ip TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_form_subs_team ON mkt_form_submissions(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_form_subs_form ON mkt_form_submissions(form_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_form_subs_created ON mkt_form_submissions(created_at)`);
+
+    // ── Automations + runs, Content, Integrations ────────────────────────────
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS mkt_automations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        name TEXT,
+        description TEXT,
+        trigger_type TEXT NOT NULL DEFAULT 'manual',
+        trigger_config JSONB,
+        action_type TEXT NOT NULL DEFAULT 'add_tag',
+        action_config JSONB,
+        status TEXT NOT NULL DEFAULT 'Active',
+        last_run_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_automations_team ON mkt_automations(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_automations_status ON mkt_automations(status)`);
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS mkt_automation_runs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        automation_id UUID NOT NULL,
+        entity_type TEXT,
+        entity_id UUID,
+        dedup_key TEXT,
+        status TEXT NOT NULL DEFAULT 'applied',
+        detail TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_mkt_automation_runs_dedup
+         ON mkt_automation_runs(team_id, automation_id, dedup_key) WHERE dedup_key IS NOT NULL`,
+    );
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_automation_runs_team ON mkt_automation_runs(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_automation_runs_auto ON mkt_automation_runs(automation_id)`);
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS mkt_content (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        title TEXT,
+        type TEXT NOT NULL DEFAULT 'asset',
+        body TEXT,
+        url TEXT,
+        status TEXT NOT NULL DEFAULT 'Draft',
+        tags TEXT[],
+        campaign_id UUID,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_content_team ON mkt_content(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_content_status ON mkt_content(status)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_content_type ON mkt_content(type)`);
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS mkt_integrations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        provider TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'not_connected',
+        external_account TEXT,
+        config JSONB,
+        connected_by UUID,
+        connected_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_mkt_integrations_provider ON mkt_integrations(team_id, provider)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_mkt_integrations_team ON mkt_integrations(team_id)`);
+
     this.schemaReady = true;
   }
 
@@ -359,6 +510,11 @@ export class MarketingService {
                WHERE ml.campaign_id = c.id AND ml.team_id = c.team_id), 0)::int AS leads,
     COALESCE((SELECT COUNT(*) FROM mkt_conversions mcv
                WHERE mcv.attributed_campaign_id = c.id AND mcv.team_id = c.team_id), 0)::int AS conversions,
+    -- Distinct ORIGINATING leads of this campaign that converted — bounded by leads,
+    -- so a conversion rate (convertedLeads / leads) can never exceed 100%.
+    COALESCE((SELECT COUNT(DISTINCT ml.id) FROM mkt_leads ml
+               WHERE ml.campaign_id = c.id AND ml.team_id = c.team_id
+                 AND EXISTS (SELECT 1 FROM mkt_conversions mcv WHERE mcv.lead_id = ml.id AND mcv.team_id = c.team_id)), 0)::int AS "convertedLeads",
     COALESCE((SELECT SUM(mcv.value) FROM mkt_conversions mcv
                WHERE mcv.attributed_campaign_id = c.id AND mcv.team_id = c.team_id), 0) AS revenue,
     c.created_at AS "createdAt", c.updated_at AS "updatedAt"
@@ -453,7 +609,7 @@ export class MarketingService {
         dto.channel || null, dto.audienceId || null, dto.audienceName || null,
         (dto.status && dto.status.trim()) || 'Draft', dto.budget ?? null,
         dto.ownerName || null, dto.goals || null,
-        Array.isArray(dto.tags) ? dto.tags : null, dto.notes || null,
+        this.cleanTags(dto.tags), dto.notes || null,
         dto.tracking || null, this.parseDateOnly(dto.startDate), this.parseDateOnly(dto.endDate),
       ],
     );
@@ -1362,6 +1518,892 @@ export class MarketingService {
     return { success: true };
   }
 
+  // ─── Audiences + members ─────────────────────────────────────────────────────
+
+  private readonly audienceSelect = `
+    a.id, a.team_id AS "teamId", a.name, a.description, a.type, a.status,
+    a.filter_json AS "filter", a.tags,
+    COALESCE((SELECT COUNT(*) FROM mkt_audience_members am WHERE am.audience_id = a.id AND am.team_id = a.team_id),0)::int AS "memberCount",
+    a.created_at AS "createdAt", a.updated_at AS "updatedAt"
+  `;
+
+  async findAllAudiences(userId: string, userTeamId: string | null, role: string, params: { search?: string; status?: string; page?: string; limit?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '50'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (page > 1_000_000) page = 1_000_000;
+    if (!Number.isFinite(limit) || limit < 1) limit = 50;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+    const where: string[] = ['a.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) { where.push(`a.status = $${i++}`); vals.push(params.status.trim()); }
+    if (params.search && params.search.trim()) { where.push(`(a.name ILIKE $${i} OR a.description ILIKE $${i})`); vals.push(`%${params.search.trim()}%`); i++; }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(`SELECT COUNT(*)::int AS total FROM mkt_audiences a WHERE ${whereSql}`, vals);
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.audienceSelect} FROM mkt_audiences a WHERE ${whereSql} ORDER BY a.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneAudience(id: string, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Audience not found');
+    const { rows } = await this.db.query(`SELECT ${this.audienceSelect} FROM mkt_audiences a WHERE a.id = $1 AND a.team_id = ANY($2) LIMIT 1`, [id, accessible]);
+    if (!rows.length) throw new NotFoundException('Audience not found');
+    return rows[0];
+  }
+
+  async createAudience(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    const { rows } = await this.db.query(
+      `INSERT INTO mkt_audiences (team_id, created_by, name, description, type, status, filter_json, tags)
+       VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8) RETURNING id`,
+      [
+        teamId, userId, dto.name || null, dto.description || null,
+        dto.type === 'dynamic' ? 'dynamic' : 'static', (dto.status && dto.status.trim()) || 'Active',
+        this.jsonb(dto.filter), this.cleanTags(dto.tags),
+      ],
+    );
+    await this.logActivity(teamId, 'Audience created', dto.name || null, 'audience', rows[0].id, userId, null).catch(() => undefined);
+    return this.findOneAudience(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateAudience(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Audience not found');
+    const existing = await this.db.query(`SELECT team_id FROM mkt_audiences WHERE id = $1 AND team_id = ANY($2) LIMIT 1`, [id, accessible]);
+    if (!existing.rows.length) throw new NotFoundException('Audience not found');
+    const teamId = existing.rows[0].team_id;
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    if (dto.name !== undefined) { sets.push(`name = $${i++}`); vals.push(dto.name); }
+    if (dto.description !== undefined) { sets.push(`description = $${i++}`); vals.push(dto.description); }
+    if (dto.status !== undefined) { sets.push(`status = $${i++}`); vals.push(dto.status); }
+    if (dto.tags !== undefined) { sets.push(`tags = $${i++}`); vals.push(this.cleanTags(dto.tags)); }
+    if (dto.filter !== undefined) { sets.push(`filter_json = $${i++}::jsonb`); vals.push(this.jsonb(dto.filter)); }
+    if (!sets.length) return this.findOneAudience(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(`UPDATE mkt_audiences SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`, vals);
+    return this.findOneAudience(id, userId, userTeamId, role);
+  }
+
+  async removeAudience(id: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Audience not found');
+    const res = await this.db.query(`DELETE FROM mkt_audiences WHERE id = $1 AND team_id = ANY($2)`, [id, accessible]);
+    if (!res.rowCount) throw new NotFoundException('Audience not found');
+    await this.db.query(`DELETE FROM mkt_audience_members WHERE audience_id = $1 AND team_id = ANY($2)`, [id, accessible]).catch(() => undefined);
+    return { success: true };
+  }
+
+  private async assertAudienceInTeam(audienceId: string, accessible: string[]): Promise<string> {
+    const { rows } = await this.db.query(`SELECT team_id FROM mkt_audiences WHERE id = $1 AND team_id = ANY($2) LIMIT 1`, [audienceId, accessible]);
+    if (!rows.length) throw new NotFoundException('Audience not found');
+    return rows[0].team_id;
+  }
+
+  async listAudienceMembers(audienceId: string, userId: string, userTeamId: string | null, role: string): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Audience not found');
+    await this.assertAudienceInTeam(audienceId, accessible);
+    const { rows } = await this.db.query(
+      `SELECT id, email, name, contact_id AS "contactId", lead_id AS "leadId", created_at AS "createdAt"
+         FROM mkt_audience_members WHERE audience_id = $1 AND team_id = ANY($2) ORDER BY created_at DESC LIMIT 1000`,
+      [audienceId, accessible],
+    );
+    return rows;
+  }
+
+  async addAudienceMembers(audienceId: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<{ added: number }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = await this.assertAudienceInTeam(audienceId, accessible);
+    const list: any[] = Array.isArray(dto.members) ? dto.members : [];
+    if (!list.length) throw new BadRequestException('No members provided');
+    if (list.length > 5000) throw new BadRequestException('Too many members in one request (max 5000)');
+    let added = 0;
+    for (const m of list) {
+      const email = (m && typeof m.email === 'string') ? m.email.trim() : '';
+      if (m.contactId) this.assertUuidOrBlank(m.contactId, 'contact');
+      if (m.leadId) this.assertUuidOrBlank(m.leadId, 'lead');
+      if (!email && !m.contactId && !m.leadId) continue;
+      const res = await this.db.query(
+        `INSERT INTO mkt_audience_members (team_id, audience_id, contact_id, lead_id, email, name, added_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
+         ON CONFLICT (audience_id, lower(email)) WHERE email IS NOT NULL DO NOTHING RETURNING id`,
+        [teamId, audienceId, m.contactId || null, m.leadId || null, email || null, m.name || null, userId],
+      );
+      if (res.rows.length) added++;
+    }
+    return { added };
+  }
+
+  async removeAudienceMember(audienceId: string, memberId: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Member not found');
+    await this.assertAudienceInTeam(audienceId, accessible);
+    const res = await this.db.query(`DELETE FROM mkt_audience_members WHERE id = $1 AND audience_id = $2 AND team_id = ANY($3)`, [memberId, audienceId, accessible]);
+    if (!res.rowCount) throw new NotFoundException('Member not found');
+    return { success: true };
+  }
+
+  // ─── Forms & Landing Pages ───────────────────────────────────────────────────
+
+  private readonly formSelect = `
+    f.id, f.team_id AS "teamId", f.name, f.type, f.status, f.fields_json AS "fields",
+    f.campaign_id AS "campaignId", f.campaign_name AS "campaignName", f.audience_id AS "audienceId",
+    f.source, f.redirect_url AS "redirectUrl", f.submit_message AS "submitMessage",
+    COALESCE((SELECT COUNT(*) FROM mkt_form_submissions s WHERE s.form_id = f.id AND s.team_id = f.team_id),0)::int AS submissions,
+    COALESCE((SELECT COUNT(*) FROM mkt_form_submissions s WHERE s.form_id = f.id AND s.team_id = f.team_id AND s.lead_id IS NOT NULL),0)::int AS leads,
+    f.created_at AS "createdAt", f.updated_at AS "updatedAt"
+  `;
+
+  async findAllForms(userId: string, userTeamId: string | null, role: string, params: { search?: string; status?: string; type?: string; page?: string; limit?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '50'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (page > 1_000_000) page = 1_000_000;
+    if (!Number.isFinite(limit) || limit < 1) limit = 50;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+    const where: string[] = ['f.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) { where.push(`f.status = $${i++}`); vals.push(params.status.trim()); }
+    if (params.type && params.type.trim()) { where.push(`f.type = $${i++}`); vals.push(params.type.trim()); }
+    if (params.search && params.search.trim()) { where.push(`f.name ILIKE $${i++}`); vals.push(`%${params.search.trim()}%`); }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(`SELECT COUNT(*)::int AS total FROM mkt_forms f WHERE ${whereSql}`, vals);
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.formSelect} FROM mkt_forms f WHERE ${whereSql} ORDER BY f.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneForm(id: string, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Form not found');
+    const { rows } = await this.db.query(`SELECT ${this.formSelect} FROM mkt_forms f WHERE f.id = $1 AND f.team_id = ANY($2) LIMIT 1`, [id, accessible]);
+    if (!rows.length) throw new NotFoundException('Form not found');
+    return rows[0];
+  }
+
+  async createForm(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    this.assertUuidOrBlank(dto.campaignId, 'campaign');
+    this.assertUuidOrBlank(dto.audienceId, 'audience');
+    let campaignName = dto.campaignName || null;
+    if (dto.campaignId) {
+      const { rows } = await this.db.query(`SELECT name FROM mkt_campaigns WHERE id = $1 AND team_id = $2 LIMIT 1`, [dto.campaignId, teamId]);
+      if (!rows.length) throw new BadRequestException('Invalid campaign reference');
+      campaignName = rows[0].name;
+    }
+    if (dto.audienceId) await this.assertAudienceInTeam(dto.audienceId, [teamId]);
+    const { rows } = await this.db.query(
+      `INSERT INTO mkt_forms (team_id, created_by, name, type, status, fields_json, campaign_id, campaign_name, audience_id, source, redirect_url, submit_message)
+       VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$9,$10,$11,$12) RETURNING id`,
+      [
+        teamId, userId, dto.name || null, dto.type === 'landing_page' ? 'landing_page' : 'form',
+        (dto.status && dto.status.trim()) || 'Draft', this.jsonb(dto.fields),
+        dto.campaignId || null, campaignName, dto.audienceId || null, dto.source || null,
+        dto.redirectUrl || null, dto.submitMessage || null,
+      ],
+    );
+    await this.logActivity(teamId, 'Form created', dto.name || null, 'form', rows[0].id, userId, null).catch(() => undefined);
+    return this.findOneForm(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateForm(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Form not found');
+    const existing = await this.db.query(`SELECT team_id FROM mkt_forms WHERE id = $1 AND team_id = ANY($2) LIMIT 1`, [id, accessible]);
+    if (!existing.rows.length) throw new NotFoundException('Form not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.campaignId !== undefined && dto.campaignId !== null) this.assertUuidOrBlank(dto.campaignId, 'campaign');
+    if (dto.audienceId !== undefined && dto.audienceId !== null) { this.assertUuidOrBlank(dto.audienceId, 'audience'); if (dto.audienceId) await this.assertAudienceInTeam(dto.audienceId, [teamId]); }
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    if (dto.name !== undefined) { sets.push(`name = $${i++}`); vals.push(dto.name); }
+    if (dto.status !== undefined) { sets.push(`status = $${i++}`); vals.push(dto.status); }
+    if (dto.source !== undefined) { sets.push(`source = $${i++}`); vals.push(dto.source); }
+    if (dto.redirectUrl !== undefined) { sets.push(`redirect_url = $${i++}`); vals.push(dto.redirectUrl); }
+    if (dto.submitMessage !== undefined) { sets.push(`submit_message = $${i++}`); vals.push(dto.submitMessage); }
+    // Validate campaignId in-team (parity with createForm) and re-sync campaign_name,
+    // so a form can never point at a foreign/nonexistent campaign or show a stale name.
+    if (dto.campaignId !== undefined) {
+      let cname: string | null = null;
+      if (dto.campaignId) {
+        const c = await this.db.query(`SELECT name FROM mkt_campaigns WHERE id = $1 AND team_id = $2 LIMIT 1`, [dto.campaignId, teamId]);
+        if (!c.rows.length) throw new BadRequestException('Invalid campaign reference');
+        cname = c.rows[0].name;
+      }
+      sets.push(`campaign_id = $${i++}`); vals.push(dto.campaignId || null);
+      sets.push(`campaign_name = $${i++}`); vals.push(cname);
+    }
+    if (dto.audienceId !== undefined) { sets.push(`audience_id = $${i++}`); vals.push(dto.audienceId || null); }
+    if (dto.fields !== undefined) { sets.push(`fields_json = $${i++}::jsonb`); vals.push(this.jsonb(dto.fields)); }
+    if (!sets.length) return this.findOneForm(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(`UPDATE mkt_forms SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`, vals);
+    return this.findOneForm(id, userId, userTeamId, role);
+  }
+
+  async removeForm(id: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Form not found');
+    const res = await this.db.query(`DELETE FROM mkt_forms WHERE id = $1 AND team_id = ANY($2)`, [id, accessible]);
+    if (!res.rowCount) throw new NotFoundException('Form not found');
+    await this.db.query(`DELETE FROM mkt_form_submissions WHERE form_id = $1 AND team_id = ANY($2)`, [id, accessible]).catch(() => undefined);
+    return { success: true };
+  }
+
+  async listSubmissions(formId: string, userId: string, userTeamId: string | null, role: string): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Form not found');
+    const { rows: formRows } = await this.db.query(`SELECT id FROM mkt_forms WHERE id = $1 AND team_id = ANY($2) LIMIT 1`, [formId, accessible]);
+    if (!formRows.length) throw new NotFoundException('Form not found');
+    const { rows } = await this.db.query(
+      `SELECT id, email, name, lead_id AS "leadId", data_json AS "data", created_at AS "createdAt"
+         FROM mkt_form_submissions WHERE form_id = $1 AND team_id = ANY($2) ORDER BY created_at DESC LIMIT 500`,
+      [formId, accessible],
+    );
+    return rows;
+  }
+
+  // Public form intake. The owning account is taken ENTIRELY from the form row — no
+  // team id is accepted from the caller — so a public submitter can never target or
+  // read another account. Only Published forms accept submissions; a submission with
+  // an email creates a lead (+ first-touch touchpoint) so capture feeds attribution.
+  async createPublicSubmission(formId: string, dto: any, sourceIp: string | null): Promise<any> {
+    await this.ensureSchema();
+    if (!MarketingService.UUID_RE.test(String(formId || ''))) throw new NotFoundException('Form not found');
+    const { rows } = await this.db.query(
+      `SELECT id, team_id, status, source, campaign_id, campaign_name, audience_id, submit_message, redirect_url
+         FROM mkt_forms WHERE id = $1 LIMIT 1`,
+      [formId],
+    );
+    if (!rows.length || rows[0].status !== 'Published') throw new NotFoundException('Form not found');
+    const form = rows[0];
+    const teamId = form.team_id;
+    // Submitter input is hostile by definition on this anonymous endpoint. Strip NUL
+    // bytes (Postgres rejects them in text/jsonb -> 500) and deep-bound the data so a
+    // malformed or oversized payload can never crash the insert.
+    const data = (dto.data && typeof dto.data === 'object' && !Array.isArray(dto.data)) ? this.sanitizeJson(dto.data) : null;
+    const email = this.sanitizeText(dto.email, 320) || (data ? this.sanitizeText((data as any).email, 320) : null);
+    const name = this.sanitizeText(dto.name, 200) || (data ? this.sanitizeText((data as any).name, 200) : null);
+
+    let leadId: string | null = null;
+    if (email) {
+      const leadRes = await this.db.query(
+        `INSERT INTO mkt_leads (team_id, name, email, source, campaign_id, campaign_name, status)
+         VALUES ($1,$2,$3,$4,$5,$6,'New') RETURNING id`,
+        [teamId, name, email, form.source || 'Form', form.campaign_id, form.campaign_name],
+      );
+      leadId = leadRes.rows[0].id;
+      await this.db.query(
+        `INSERT INTO mkt_touchpoints (team_id, lead_id, campaign_id, campaign_name, channel, touch_type)
+         VALUES ($1,$2,$3,$4,$5,'form_submission')`,
+        [teamId, leadId, form.campaign_id, form.campaign_name, form.source || 'Form'],
+      ).catch(() => undefined);
+      if (form.audience_id) {
+        await this.db.query(
+          `INSERT INTO mkt_audience_members (team_id, audience_id, lead_id, email, name)
+           VALUES ($1,$2,$3,$4,$5) ON CONFLICT (audience_id, lower(email)) WHERE email IS NOT NULL DO NOTHING`,
+          [teamId, form.audience_id, leadId, email, name],
+        ).catch(() => undefined);
+      }
+      await this.logActivity(teamId, 'Form submission', name || email, 'form', form.id, null, null).catch(() => undefined);
+    }
+    await this.db.query(
+      `INSERT INTO mkt_form_submissions (team_id, form_id, data_json, email, name, lead_id, source_ip)
+       VALUES ($1,$2,$3::jsonb,$4,$5,$6,$7)`,
+      [teamId, form.id, data ? JSON.stringify(data) : null, email, name, leadId, sourceIp || null],
+    );
+    return { success: true, message: form.submit_message || 'Thanks — your submission was received.', redirectUrl: form.redirect_url || null };
+  }
+
+  // ─── Automations (idempotent) ────────────────────────────────────────────────
+
+  private readonly automationSelect = `
+    a.id, a.team_id AS "teamId", a.name, a.description,
+    a.trigger_type AS "triggerType", a.trigger_config AS "triggerConfig",
+    a.action_type AS "actionType", a.action_config AS "actionConfig",
+    a.status, a.last_run_at AS "lastRunAt",
+    COALESCE((SELECT COUNT(*) FROM mkt_automation_runs r WHERE r.automation_id = a.id AND r.team_id = a.team_id),0)::int AS "runCount",
+    a.created_at AS "createdAt", a.updated_at AS "updatedAt"
+  `;
+
+  async findAllAutomations(userId: string, userTeamId: string | null, role: string, params: { status?: string; page?: string; limit?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '50'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (page > 1_000_000) page = 1_000_000;
+    if (!Number.isFinite(limit) || limit < 1) limit = 50;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+    const where: string[] = ['a.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) { where.push(`a.status = $${i++}`); vals.push(params.status.trim()); }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(`SELECT COUNT(*)::int AS total FROM mkt_automations a WHERE ${whereSql}`, vals);
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.automationSelect} FROM mkt_automations a WHERE ${whereSql} ORDER BY a.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneAutomation(id: string, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Automation not found');
+    const { rows } = await this.db.query(`SELECT ${this.automationSelect} FROM mkt_automations a WHERE a.id = $1 AND a.team_id = ANY($2) LIMIT 1`, [id, accessible]);
+    if (!rows.length) throw new NotFoundException('Automation not found');
+    return rows[0];
+  }
+
+  async createAutomation(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    // If the action targets an audience, that audience must belong to this account.
+    if (dto.actionConfig && dto.actionConfig.audienceId) {
+      this.assertUuidOrBlank(dto.actionConfig.audienceId, 'audience');
+      await this.assertAudienceInTeam(dto.actionConfig.audienceId, [teamId]);
+    }
+    const { rows } = await this.db.query(
+      `INSERT INTO mkt_automations (team_id, created_by, name, description, trigger_type, trigger_config, action_type, action_config, status)
+       VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8::jsonb,$9) RETURNING id`,
+      [
+        teamId, userId, dto.name || null, dto.description || null,
+        dto.triggerType || 'manual', this.jsonb(dto.triggerConfig),
+        dto.actionType || 'add_tag', this.jsonb(dto.actionConfig),
+        (dto.status && dto.status.trim()) || 'Active',
+      ],
+    );
+    await this.logActivity(teamId, 'Automation created', dto.name || null, 'automation', rows[0].id, userId, null).catch(() => undefined);
+    return this.findOneAutomation(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateAutomation(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Automation not found');
+    const existing = await this.db.query(`SELECT team_id FROM mkt_automations WHERE id = $1 AND team_id = ANY($2) LIMIT 1`, [id, accessible]);
+    if (!existing.rows.length) throw new NotFoundException('Automation not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.actionConfig && dto.actionConfig.audienceId) { this.assertUuidOrBlank(dto.actionConfig.audienceId, 'audience'); await this.assertAudienceInTeam(dto.actionConfig.audienceId, [teamId]); }
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    if (dto.name !== undefined) { sets.push(`name = $${i++}`); vals.push(dto.name); }
+    if (dto.description !== undefined) { sets.push(`description = $${i++}`); vals.push(dto.description); }
+    if (dto.status !== undefined) { sets.push(`status = $${i++}`); vals.push(dto.status); }
+    if (dto.triggerConfig !== undefined) { sets.push(`trigger_config = $${i++}::jsonb`); vals.push(this.jsonb(dto.triggerConfig)); }
+    if (dto.actionConfig !== undefined) { sets.push(`action_config = $${i++}::jsonb`); vals.push(this.jsonb(dto.actionConfig)); }
+    if (!sets.length) return this.findOneAutomation(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(`UPDATE mkt_automations SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`, vals);
+    return this.findOneAutomation(id, userId, userTeamId, role);
+  }
+
+  async removeAutomation(id: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Automation not found');
+    const res = await this.db.query(`DELETE FROM mkt_automations WHERE id = $1 AND team_id = ANY($2)`, [id, accessible]);
+    if (!res.rowCount) throw new NotFoundException('Automation not found');
+    await this.db.query(`DELETE FROM mkt_automation_runs WHERE automation_id = $1 AND team_id = ANY($2)`, [id, accessible]).catch(() => undefined);
+    return { success: true };
+  }
+
+  async listAutomationRuns(id: string, userId: string, userTeamId: string | null, role: string): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Automation not found');
+    const auto = await this.db.query(`SELECT id FROM mkt_automations WHERE id = $1 AND team_id = ANY($2) LIMIT 1`, [id, accessible]);
+    if (!auto.rows.length) throw new NotFoundException('Automation not found');
+    const { rows } = await this.db.query(
+      `SELECT id, entity_type AS "entityType", entity_id AS "entityId", status, detail, created_at AS "createdAt"
+         FROM mkt_automation_runs WHERE automation_id = $1 AND team_id = ANY($2) ORDER BY created_at DESC LIMIT 200`,
+      [id, accessible],
+    );
+    return rows;
+  }
+
+  // Apply an automation to an entity, idempotently. The unique run key guarantees the
+  // action fires AT MOST ONCE per (automation, entity) — retries never duplicate it.
+  async runAutomation(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Automation not found');
+    const { rows } = await this.db.query(
+      `SELECT id, team_id, action_type, action_config, status FROM mkt_automations WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Automation not found');
+    const auto = rows[0];
+    if (auto.status !== 'Active') throw new BadRequestException('Automation is not active');
+    const teamId = auto.team_id;
+    this.assertUuidOrBlank(dto.entityId, 'entity');
+    // A supplied entity must be a lead in THIS account — never trust the id blindly.
+    if (dto.entityId) {
+      const lead = await this.db.query(`SELECT id FROM mkt_leads WHERE id = $1 AND team_id = $2 LIMIT 1`, [dto.entityId, teamId]);
+      if (!lead.rows.length) throw new BadRequestException('Invalid entity reference');
+    }
+    const dedup = (dto.dedupKey && String(dto.dedupKey).trim()) || (dto.entityId ? `entity:${dto.entityId}` : null);
+    const ins = await this.db.query(
+      `INSERT INTO mkt_automation_runs (team_id, automation_id, entity_type, entity_id, dedup_key, status, detail)
+       VALUES ($1,$2,$3,$4,$5,'applied',$6)
+       ON CONFLICT (team_id, automation_id, dedup_key) WHERE dedup_key IS NOT NULL DO NOTHING RETURNING id`,
+      [teamId, id, dto.entityType || (dto.entityId ? 'lead' : 'manual'), dto.entityId || null, dedup, `action=${auto.action_type}`],
+    );
+    const duplicate = ins.rows.length === 0 && dedup !== null;
+    if (!duplicate) {
+      // Real side-effect for add_to_audience: add the lead to the target audience once.
+      const cfg = auto.action_config || {};
+      if (auto.action_type === 'add_to_audience' && cfg.audienceId && dto.entityId) {
+        const inTeam = await this.db.query(`SELECT id FROM mkt_audiences WHERE id = $1 AND team_id = $2 LIMIT 1`, [cfg.audienceId, teamId]);
+        if (inTeam.rows.length) {
+          const lead = await this.db.query(`SELECT email, name FROM mkt_leads WHERE id = $1 AND team_id = $2 LIMIT 1`, [dto.entityId, teamId]);
+          const email = lead.rows[0]?.email || null;
+          await this.db.query(
+            `INSERT INTO mkt_audience_members (team_id, audience_id, lead_id, email, name)
+             VALUES ($1,$2,$3,$4,$5) ON CONFLICT (audience_id, lower(email)) WHERE email IS NOT NULL DO NOTHING`,
+            [teamId, cfg.audienceId, dto.entityId, email, lead.rows[0]?.name || null],
+          ).catch(() => undefined);
+        }
+      }
+      await this.db.query(`UPDATE mkt_automations SET last_run_at = NOW(), updated_at = NOW() WHERE id = $1 AND team_id = $2`, [id, teamId]);
+    }
+    return { applied: !duplicate, duplicate };
+  }
+
+  // ─── Content library ─────────────────────────────────────────────────────────
+
+  private readonly contentSelect = `
+    c.id, c.team_id AS "teamId", c.title, c.type, c.body, c.url, c.status, c.tags,
+    c.campaign_id AS "campaignId", c.created_at AS "createdAt", c.updated_at AS "updatedAt"
+  `;
+
+  async findAllContent(userId: string, userTeamId: string | null, role: string, params: { search?: string; type?: string; status?: string; page?: string; limit?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '50'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (page > 1_000_000) page = 1_000_000;
+    if (!Number.isFinite(limit) || limit < 1) limit = 50;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+    const where: string[] = ['c.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.type && params.type.trim()) { where.push(`c.type = $${i++}`); vals.push(params.type.trim()); }
+    if (params.status && params.status.trim()) { where.push(`c.status = $${i++}`); vals.push(params.status.trim()); }
+    if (params.search && params.search.trim()) { where.push(`c.title ILIKE $${i++}`); vals.push(`%${params.search.trim()}%`); }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(`SELECT COUNT(*)::int AS total FROM mkt_content c WHERE ${whereSql}`, vals);
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.contentSelect} FROM mkt_content c WHERE ${whereSql} ORDER BY c.created_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async createContent(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    this.assertUuidOrBlank(dto.campaignId, 'campaign');
+    if (dto.campaignId) {
+      const c = await this.db.query(`SELECT id FROM mkt_campaigns WHERE id = $1 AND team_id = $2 LIMIT 1`, [dto.campaignId, teamId]);
+      if (!c.rows.length) throw new BadRequestException('Invalid campaign reference');
+    }
+    const { rows } = await this.db.query(
+      `INSERT INTO mkt_content (team_id, created_by, title, type, body, url, status, tags, campaign_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+      [teamId, userId, dto.title || null, dto.type || 'asset', dto.body || null, dto.url || null, (dto.status && dto.status.trim()) || 'Draft', this.cleanTags(dto.tags), dto.campaignId || null],
+    );
+    const full = await this.db.query(`SELECT ${this.contentSelect} FROM mkt_content c WHERE c.id = $1 LIMIT 1`, [rows[0].id]);
+    return full.rows[0];
+  }
+
+  async updateContent(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Content not found');
+    const existing = await this.db.query(`SELECT team_id FROM mkt_content WHERE id = $1 AND team_id = ANY($2) LIMIT 1`, [id, accessible]);
+    if (!existing.rows.length) throw new NotFoundException('Content not found');
+    const teamId = existing.rows[0].team_id;
+    if (dto.campaignId !== undefined && dto.campaignId !== null && dto.campaignId !== '') { this.assertUuidOrBlank(dto.campaignId, 'campaign'); const c = await this.db.query(`SELECT id FROM mkt_campaigns WHERE id = $1 AND team_id = $2 LIMIT 1`, [dto.campaignId, teamId]); if (!c.rows.length) throw new BadRequestException('Invalid campaign reference'); }
+    const colFor: Record<string, string> = { title: 'title', type: 'type', body: 'body', url: 'url', status: 'status' };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [k, col] of Object.entries(colFor)) if (dto[k] !== undefined) { sets.push(`${col} = $${i++}`); vals.push(dto[k]); }
+    if (dto.tags !== undefined) { sets.push(`tags = $${i++}`); vals.push(this.cleanTags(dto.tags)); }
+    if (dto.campaignId !== undefined) { sets.push(`campaign_id = $${i++}`); vals.push(dto.campaignId || null); }
+    if (!sets.length) { const full = await this.db.query(`SELECT ${this.contentSelect} FROM mkt_content c WHERE c.id = $1 AND c.team_id = ANY($2) LIMIT 1`, [id, accessible]); return full.rows[0]; }
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(`UPDATE mkt_content SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`, vals);
+    const full = await this.db.query(`SELECT ${this.contentSelect} FROM mkt_content c WHERE c.id = $1 LIMIT 1`, [id]);
+    return full.rows[0];
+  }
+
+  async removeContent(id: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Content not found');
+    const res = await this.db.query(`DELETE FROM mkt_content WHERE id = $1 AND team_id = ANY($2)`, [id, accessible]);
+    if (!res.rowCount) throw new NotFoundException('Content not found');
+    return { success: true };
+  }
+
+  // ─── Integrations (honest connection status; never fabricates external metrics) ─
+
+  private static readonly INTEGRATION_CATALOG = [
+    { provider: 'google_ads', label: 'Google Ads', category: 'Advertising', icon: 'search' },
+    { provider: 'meta_ads', label: 'Meta Ads', category: 'Advertising', icon: 'facebook' },
+    { provider: 'linkedin_ads', label: 'LinkedIn Ads', category: 'Advertising', icon: 'linkedin' },
+    { provider: 'google_analytics', label: 'Google Analytics', category: 'Analytics', icon: 'chart-no-axes-combined' },
+    { provider: 'mailchimp', label: 'Mailchimp', category: 'Email', icon: 'mail' },
+    { provider: 'hubspot', label: 'HubSpot', category: 'CRM', icon: 'network' },
+    { provider: 'zapier', label: 'Zapier', category: 'Automation', icon: 'zap' },
+    { provider: 'webhook', label: 'Webhook', category: 'Developer', icon: 'webhook' },
+  ];
+
+  async listIntegrations(userId: string, userTeamId: string | null, role: string): Promise<{ data: any[] }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    const teamId = userTeamId && accessible.includes(userTeamId) ? userTeamId : accessible[0];
+    const connected = new Map<string, any>();
+    if (teamId) {
+      const { rows } = await this.db.query(
+        `SELECT provider, status, external_account AS "externalAccount", connected_at AS "connectedAt" FROM mkt_integrations WHERE team_id = $1`,
+        [teamId],
+      );
+      for (const r of rows) connected.set(r.provider, r);
+    }
+    // Every provider defaults to Not Connected; only a real stored 'connected' row flips it.
+    const data = MarketingService.INTEGRATION_CATALOG.map((c) => {
+      const row = connected.get(c.provider);
+      return {
+        ...c,
+        status: row && row.status === 'connected' ? 'connected' : 'not_connected',
+        externalAccount: row ? row.externalAccount : null,
+        connectedAt: row ? row.connectedAt : null,
+      };
+    });
+    return { data };
+  }
+
+  async connectIntegration(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(undefined, userTeamId, accessible);
+    const provider = String(dto.provider || '').trim();
+    if (!MarketingService.INTEGRATION_CATALOG.some((c) => c.provider === provider)) throw new BadRequestException('Unknown integration');
+    const status = dto.status === 'not_connected' ? 'not_connected' : 'connected';
+    await this.db.query(
+      `INSERT INTO mkt_integrations (team_id, provider, status, external_account, config, connected_by, connected_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5::jsonb,$6, CASE WHEN $3 = 'connected' THEN NOW() ELSE NULL END, NOW())
+       ON CONFLICT (team_id, provider) DO UPDATE SET
+         status = EXCLUDED.status,
+         external_account = EXCLUDED.external_account,
+         config = EXCLUDED.config,
+         connected_by = EXCLUDED.connected_by,
+         connected_at = CASE WHEN EXCLUDED.status = 'connected' THEN NOW() ELSE NULL END,
+         updated_at = NOW()`,
+      [teamId, provider, status, dto.externalAccount || null, this.jsonb(dto.config), userId],
+    );
+    await this.logActivity(teamId, status === 'connected' ? 'Integration connected' : 'Integration disconnected', provider, 'integration', null, userId, null).catch(() => undefined);
+    return { success: true, provider, status };
+  }
+
+  async disconnectIntegration(provider: string, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(undefined, userTeamId, accessible);
+    const p = String(provider || '').trim();
+    if (!MarketingService.INTEGRATION_CATALOG.some((c) => c.provider === p)) throw new BadRequestException('Unknown integration');
+    await this.db.query(
+      `UPDATE mkt_integrations SET status = 'not_connected', connected_at = NULL, updated_at = NOW() WHERE team_id = $1 AND provider = $2`,
+      [teamId, p],
+    );
+    return { success: true, provider: p, status: 'not_connected' };
+  }
+
+  // ─── Reports + CSV export ────────────────────────────────────────────────────
+
+  async getReports(userId: string, userTeamId: string | null, role: string, range?: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    const r = this.normalizeRange(range);
+    const empty = {
+      range: r,
+      summary: { campaigns: 0, activeCampaigns: 0, spend: 0, leads: 0, uniqueLeads: 0, conversions: 0, revenue: 0, roi: null as number | null, costPerLead: null as number | null, openRate: null as number | null, ctr: null as number | null, delivered: 0 },
+      funnel: { leads: 0, engaged: 0, converted: 0 },
+      byChannel: [] as any[],
+    };
+    if (!accessible.length) return empty;
+    const since = this.rangeBounds(r).since;
+    // Windowed helpers: created_at/occurred_at >= since (all-time when since is null).
+    const camps = await this.db.query(
+      `SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status = 'Active')::int AS active FROM mkt_campaigns WHERE team_id = ANY($1)`,
+      [accessible],
+    );
+    const spendQ = await this.db.query(
+      since ? `SELECT COALESCE(SUM(amount),0) AS spend FROM mkt_campaign_costs WHERE team_id = ANY($1) AND cost_date >= $2`
+            : `SELECT COALESCE(SUM(amount),0) AS spend FROM mkt_campaign_costs WHERE team_id = ANY($1)`,
+      since ? [accessible, since] : [accessible],
+    );
+    const leadsQ = await this.db.query(
+      since ? `SELECT COUNT(*)::int AS total, COUNT(DISTINCT COALESCE(lower(email), id::text))::int AS uniq FROM mkt_leads WHERE team_id = ANY($1) AND created_at >= $2`
+            : `SELECT COUNT(*)::int AS total, COUNT(DISTINCT COALESCE(lower(email), id::text))::int AS uniq FROM mkt_leads WHERE team_id = ANY($1)`,
+      since ? [accessible, since] : [accessible],
+    );
+    const convQ = await this.db.query(
+      since ? `SELECT COUNT(*)::int AS c, COALESCE(SUM(value),0) AS revenue FROM mkt_conversions WHERE team_id = ANY($1) AND occurred_at >= $2`
+            : `SELECT COUNT(*)::int AS c, COALESCE(SUM(value),0) AS revenue FROM mkt_conversions WHERE team_id = ANY($1)`,
+      since ? [accessible, since] : [accessible],
+    );
+    const emailQ = await this.db.query(
+      since
+        ? `SELECT
+             (SELECT COUNT(*) FROM mkt_message_recipients r JOIN mkt_messages m ON m.id = r.message_id AND m.team_id = r.team_id WHERE r.team_id = ANY($1) AND m.channel = 'Email' AND r.delivered_at IS NOT NULL AND r.delivered_at >= $2)::int AS delivered,
+             (SELECT COUNT(*) FROM mkt_message_recipients r JOIN mkt_messages m ON m.id = r.message_id AND m.team_id = r.team_id WHERE r.team_id = ANY($1) AND m.channel = 'Email' AND r.delivered_at IS NOT NULL AND r.delivered_at >= $2 AND EXISTS (SELECT 1 FROM mkt_message_events e WHERE e.recipient_id = r.id AND e.team_id = r.team_id AND e.event_type = 'open'))::int AS opens,
+             (SELECT COUNT(*) FROM mkt_message_recipients r JOIN mkt_messages m ON m.id = r.message_id AND m.team_id = r.team_id WHERE r.team_id = ANY($1) AND m.channel = 'Email' AND r.delivered_at IS NOT NULL AND r.delivered_at >= $2 AND EXISTS (SELECT 1 FROM mkt_message_events e WHERE e.recipient_id = r.id AND e.team_id = r.team_id AND e.event_type = 'click'))::int AS clicks`
+        : `SELECT
+             (SELECT COUNT(*) FROM mkt_message_recipients r JOIN mkt_messages m ON m.id = r.message_id AND m.team_id = r.team_id WHERE r.team_id = ANY($1) AND m.channel = 'Email' AND r.delivered_at IS NOT NULL)::int AS delivered,
+             (SELECT COUNT(*) FROM mkt_message_recipients r JOIN mkt_messages m ON m.id = r.message_id AND m.team_id = r.team_id WHERE r.team_id = ANY($1) AND m.channel = 'Email' AND r.delivered_at IS NOT NULL AND EXISTS (SELECT 1 FROM mkt_message_events e WHERE e.recipient_id = r.id AND e.team_id = r.team_id AND e.event_type = 'open'))::int AS opens,
+             (SELECT COUNT(*) FROM mkt_message_recipients r JOIN mkt_messages m ON m.id = r.message_id AND m.team_id = r.team_id WHERE r.team_id = ANY($1) AND m.channel = 'Email' AND r.delivered_at IS NOT NULL AND EXISTS (SELECT 1 FROM mkt_message_events e WHERE e.recipient_id = r.id AND e.team_id = r.team_id AND e.event_type = 'click'))::int AS clicks`,
+      since ? [accessible, since] : [accessible],
+    );
+    const channelQ = await this.db.query(
+      since
+        ? `SELECT COALESCE(NULLIF(source,''),'Unknown') AS channel, COUNT(*)::int AS leads,
+                  COALESCE((SELECT COUNT(*) FROM mkt_conversions v WHERE v.team_id = l.team_id AND v.attributed_channel = l.source AND v.occurred_at >= $2),0)::int AS conversions
+             FROM mkt_leads l WHERE l.team_id = ANY($1) AND l.created_at >= $2 GROUP BY l.team_id, source ORDER BY leads DESC LIMIT 8`
+        : `SELECT COALESCE(NULLIF(source,''),'Unknown') AS channel, COUNT(*)::int AS leads,
+                  COALESCE((SELECT COUNT(*) FROM mkt_conversions v WHERE v.team_id = l.team_id AND v.attributed_channel = l.source),0)::int AS conversions
+             FROM mkt_leads l WHERE l.team_id = ANY($1) GROUP BY l.team_id, source ORDER BY leads DESC LIMIT 8`,
+      since ? [accessible, since] : [accessible],
+    );
+
+    const spend = this.money(spendQ.rows[0].spend);
+    const leads = Number(leadsQ.rows[0].total) || 0;
+    const conversions = Number(convQ.rows[0].c) || 0;
+    const revenue = this.money(convQ.rows[0].revenue);
+    const delivered = Number(emailQ.rows[0].delivered) || 0;
+    const opens = Number(emailQ.rows[0].opens) || 0;
+    const clicks = Number(emailQ.rows[0].clicks) || 0;
+    const engaged = Math.max(opens, clicks); // distinct engaged recipients (opened or clicked); bounded by delivered
+    return {
+      range: r,
+      summary: {
+        campaigns: Number(camps.rows[0].total) || 0,
+        activeCampaigns: Number(camps.rows[0].active) || 0,
+        spend,
+        leads,
+        uniqueLeads: Number(leadsQ.rows[0].uniq) || 0,
+        conversions,
+        revenue,
+        roi: spend > 0 ? this.round1(((revenue - spend) / spend) * 100) : null,
+        costPerLead: leads > 0 ? this.round2(spend / leads) : null,
+        openRate: delivered > 0 ? this.round1((opens / delivered) * 100) : null,
+        ctr: delivered > 0 ? this.round1((clicks / delivered) * 100) : null,
+        delivered,
+      },
+      funnel: { leads, engaged, converted: conversions },
+      byChannel: channelQ.rows.map((c: any) => ({ channel: c.channel, leads: Number(c.leads) || 0, conversions: Number(c.conversions) || 0 })),
+    };
+  }
+
+  private csvCell(v: any): string {
+    if (v === null || v === undefined) return '';
+    let s = String(v);
+    // Neutralize spreadsheet formula / DDE injection (CWE-1236): a cell beginning with
+    // = + - @ or a control char is prefixed with a single quote so Excel/Sheets treat
+    // it as text, not an executable formula. Values can be attacker-seeded (e.g. a lead
+    // name from a public form submission), so this runs before RFC-4180 escaping.
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  }
+
+  private toCsv(headers: string[], rows: any[][]): string {
+    const lines = [headers.map((h) => this.csvCell(h)).join(',')];
+    for (const r of rows) lines.push(r.map((c) => this.csvCell(c)).join(','));
+    return lines.join('\r\n');
+  }
+
+  async exportCsv(type: string, range: string | undefined, userId: string, userTeamId: string | null, role: string): Promise<string> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return this.toCsv(['message'], [['No data']]);
+    const since = this.rangeBounds(this.normalizeRange(range)).since;
+    if (type === 'leads') {
+      const { rows } = await this.db.query(
+        since ? `SELECT name, email, phone, source, campaign_name, status, value, created_at FROM mkt_leads WHERE team_id = ANY($1) AND created_at >= $2 ORDER BY created_at DESC LIMIT 50000`
+              : `SELECT name, email, phone, source, campaign_name, status, value, created_at FROM mkt_leads WHERE team_id = ANY($1) ORDER BY created_at DESC LIMIT 50000`,
+        since ? [accessible, since] : [accessible],
+      );
+      return this.toCsv(['Name', 'Email', 'Phone', 'Source', 'Campaign', 'Status', 'Value', 'Created'], rows.map((r: any) => [r.name, r.email, r.phone, r.source, r.campaign_name, r.status, r.value, r.created_at?.toISOString?.() || r.created_at]));
+    }
+    if (type === 'campaigns') {
+      const { rows } = await this.db.query(
+        `SELECT c.campaign_number, c.name, c.campaign_type, c.channel, c.status, c.budget,
+                COALESCE((SELECT SUM(mc.amount) FROM mkt_campaign_costs mc WHERE mc.campaign_id = c.id AND mc.team_id = c.team_id),0) AS spend,
+                COALESCE((SELECT COUNT(*) FROM mkt_leads ml WHERE ml.campaign_id = c.id AND ml.team_id = c.team_id),0) AS leads,
+                COALESCE((SELECT COUNT(*) FROM mkt_conversions mv WHERE mv.attributed_campaign_id = c.id AND mv.team_id = c.team_id),0) AS conversions,
+                c.start_date, c.end_date
+           FROM mkt_campaigns c WHERE c.team_id = ANY($1) ORDER BY c.created_at DESC LIMIT 50000`,
+        [accessible],
+      );
+      return this.toCsv(['Number', 'Name', 'Type', 'Channel', 'Status', 'Budget', 'Spend', 'Leads', 'Conversions', 'Start', 'End'], rows.map((r: any) => [r.campaign_number, r.name, r.campaign_type, r.channel, r.status, r.budget, r.spend, r.leads, r.conversions, r.start_date, r.end_date]));
+    }
+    if (type === 'conversions') {
+      const { rows } = await this.db.query(
+        since ? `SELECT conversion_type, value, currency, attributed_campaign_name, attributed_channel, source, occurred_at FROM mkt_conversions WHERE team_id = ANY($1) AND occurred_at >= $2 ORDER BY occurred_at DESC LIMIT 50000`
+              : `SELECT conversion_type, value, currency, attributed_campaign_name, attributed_channel, source, occurred_at FROM mkt_conversions WHERE team_id = ANY($1) ORDER BY occurred_at DESC LIMIT 50000`,
+        since ? [accessible, since] : [accessible],
+      );
+      return this.toCsv(['Type', 'Value', 'Currency', 'Campaign', 'Channel', 'Source', 'Occurred'], rows.map((r: any) => [r.conversion_type, r.value, r.currency, r.attributed_campaign_name, r.attributed_channel, r.source, r.occurred_at?.toISOString?.() || r.occurred_at]));
+    }
+    throw new BadRequestException('Unknown export type');
+  }
+
+  // ─── Import (leads) ──────────────────────────────────────────────────────────
+
+  async importLeads(dto: any, userId: string, userTeamId: string | null, role: string): Promise<{ imported: number; skipped: number }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(undefined, userTeamId, accessible);
+    this.assertUuidOrBlank(dto.campaignId, 'campaign');
+    let campaignName: string | null = null;
+    if (dto.campaignId) {
+      const c = await this.db.query(`SELECT name FROM mkt_campaigns WHERE id = $1 AND team_id = $2 LIMIT 1`, [dto.campaignId, teamId]);
+      if (!c.rows.length) throw new BadRequestException('Invalid campaign reference');
+      campaignName = c.rows[0].name;
+    }
+    const rows: any[] = Array.isArray(dto.rows) ? dto.rows : [];
+    if (!rows.length) throw new BadRequestException('No rows provided');
+    if (rows.length > 10000) throw new BadRequestException('Too many rows in one request (max 10000)');
+    let imported = 0;
+    let skipped = 0;
+    for (const row of rows) {
+      const name = this.sanitizeText(row?.name, 300);
+      const email = this.sanitizeText(row?.email, 320);
+      const phone = this.sanitizeText(row?.phone, 60);
+      if (!name && !email && !phone) { skipped++; continue; }
+      const source = this.sanitizeText(row?.source, 120) || this.sanitizeText(dto.defaultSource, 120) || 'Import';
+      const ins = await this.db.query(
+        `INSERT INTO mkt_leads (team_id, created_by, name, email, phone, source, campaign_id, campaign_name, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'New') RETURNING id`,
+        [teamId, userId, name, email, phone, source, dto.campaignId || null, campaignName],
+      );
+      if (dto.campaignId || source) {
+        await this.db.query(
+          `INSERT INTO mkt_touchpoints (team_id, lead_id, campaign_id, campaign_name, channel, touch_type)
+           VALUES ($1,$2,$3,$4,$5,'import')`,
+          [teamId, ins.rows[0].id, dto.campaignId || null, campaignName, source],
+        ).catch(() => undefined);
+      }
+      imported++;
+    }
+    await this.logActivity(teamId, 'Leads imported', `${imported} leads`, 'lead', null, userId, null).catch(() => undefined);
+    return { imported, skipped };
+  }
+
+  // ─── AI assistant (strictly team-isolated retrieval) ─────────────────────────
+
+  // Answers ONLY from this account's own marketing data. Retrieval is bounded to the
+  // caller's accessible teams — one account can never see another's data — and no
+  // external service or fabricated figure is involved.
+  async aiQuery(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const question = String(dto.question || '').slice(0, 1000);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { answer: 'No account data is available yet.', facts: [] };
+    const reports = await this.getReports(userId, userTeamId, role, 'month');
+    const s = reports.summary;
+    const topChannel = (reports.byChannel[0] && reports.byChannel[0].leads > 0) ? reports.byChannel[0] : null;
+    const money = (n: number) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    const facts: string[] = [
+      `Leads this month: ${s.leads} (${s.uniqueLeads} unique)`,
+      `Conversions this month: ${s.conversions}, revenue ${money(s.revenue)}`,
+      `Recorded spend this month: ${money(s.spend)}${s.roi != null ? `, ROI ${s.roi}%` : ''}`,
+      topChannel ? `Top channel by leads: ${topChannel.channel} (${topChannel.leads})` : 'No channel data yet',
+      s.delivered ? `Email delivered ${s.delivered}, open rate ${s.openRate}%` : 'No delivered email yet',
+      `Active campaigns: ${s.activeCampaigns} of ${s.campaigns}`,
+    ];
+    const q = question.toLowerCase();
+    let answer: string;
+    if (!question.trim()) {
+      answer = 'Ask a question about your campaigns, leads, conversions, channels, or email performance.';
+    } else if (/(channel|source|where.*leads|best.*channel)/.test(q)) {
+      answer = topChannel
+        ? `Your top channel by leads this month is ${topChannel.channel} with ${topChannel.leads} leads and ${topChannel.conversions} conversions.`
+        : 'No leads with a channel have been recorded yet this month.';
+    } else if (/(roi|revenue|convert|conversion|sales|money|profit)/.test(q)) {
+      answer = `This month you recorded ${s.conversions} conversions worth ${money(s.revenue)} against ${money(s.spend)} in spend${s.roi != null ? `, an ROI of ${s.roi}%` : ''}.`;
+    } else if (/(email|open|click|ctr|deliver)/.test(q)) {
+      answer = s.delivered
+        ? `Across delivered email this month, your open rate is ${s.openRate}% and click-through rate is ${s.ctr}% on ${s.delivered} delivered.`
+        : 'No email has been delivered yet this month, so open and click rates are not available.';
+    } else if (/(lead|contact|signup)/.test(q)) {
+      answer = `You captured ${s.leads} leads this month (${s.uniqueLeads} unique).`;
+    } else if (/(campaign)/.test(q)) {
+      answer = `You have ${s.campaigns} campaigns, ${s.activeCampaigns} currently active.`;
+    } else {
+      answer = `Here is a summary of your marketing this month: ${s.leads} leads, ${s.conversions} conversions worth ${money(s.revenue)}, ${money(s.spend)} spend${s.roi != null ? `, ROI ${s.roi}%` : ''}.`;
+    }
+    return { answer, facts, scopedToAccount: true };
+  }
+
   private normalizeRange(range?: string): string {
     const r = String(range || 'month').toLowerCase();
     return ['month', 'quarter', 'year', 'all'].includes(r) ? r : 'month';
@@ -1430,6 +2472,50 @@ export class MarketingService {
   private round2(n: number): number { return Math.round(n * 100) / 100; }
 
   private money(v: any): number { return Number(v) || 0; }
+
+  // Strip NUL (0x00) which Postgres rejects in text/jsonb, trim, and length-bound.
+  private sanitizeText(v: any, max: number): string | null {
+    if (typeof v !== 'string') return null;
+    const t = v.replace(/\u0000/g, '').trim();
+    if (!t) return null;
+    return t.length > max ? t.slice(0, max) : t;
+  }
+
+  // Deep-clean a submitted JSON value: strip NUL from strings/keys and bound depth,
+  // breadth, array length and string length so a hostile payload cannot 500 or bloat.
+  private sanitizeJson(value: any, depth = 0): any {
+    if (depth > 6) return null;
+    if (typeof value === 'string') return value.replace(/\u0000/g, '').slice(0, 5000);
+    if (typeof value === 'number' || typeof value === 'boolean' || value === null) return value;
+    if (Array.isArray(value)) return value.slice(0, 200).map((v) => this.sanitizeJson(v, depth + 1));
+    if (value && typeof value === 'object') {
+      const out: Record<string, any> = {};
+      let n = 0;
+      for (const [k, v] of Object.entries(value)) {
+        if (n++ >= 100) break;
+        out[k.replace(/\u0000/g, '').slice(0, 200)] = this.sanitizeJson(v, depth + 1);
+      }
+      return out;
+    }
+    return null;
+  }
+
+  // Serialize a value for a JSONB column, NUL-stripped and bounded. Postgres jsonb
+  // cannot represent U+0000, so an un-cleaned config/filter/fields object would 500.
+  private jsonb(v: any): string | null {
+    if (v === undefined || v === null) return null;
+    return JSON.stringify(this.sanitizeJson(v));
+  }
+
+  // Clean a tags array for a text[] column: strip NUL, bound length, drop empties.
+  private cleanTags(v: any): string[] | null {
+    if (!Array.isArray(v)) return null;
+    const out = v
+      .filter((x) => typeof x === 'string')
+      .map((x) => this.sanitizeText(x, 200))
+      .filter((x): x is string => !!x);
+    return out.length ? out : null;
+  }
 
   // Overview KPIs + dashboard. Every figure is real and team-scoped; a KPI is 0 or
   // an explicit no-data state until its data exists — no fabricated numbers, no fake

@@ -5,6 +5,11 @@ import marketingApi from "../../api/marketingApi";
 import MktCampaignModal from "./MktCampaignModal";
 import MktAttribution from "./MktAttribution";
 import MktMessaging from "./MktMessaging";
+import MktAudiences from "./MktAudiences";
+import MktForms from "./MktForms";
+import MktAutomation from "./MktAutomation";
+import MktContent from "./MktContent";
+import MktReports from "./MktReports";
 import { money, formatDate, relativeTime } from "../sales/salesFormat";
 
 // Marketing Workspace, wired to real /marketing data. Campaigns and the Overview
@@ -304,8 +309,8 @@ export default function MarketingWorkspace() {
                     <td>{c.budget != null ? money(c.budget) : "-"}</td>
                     <td>{money(c.spend)}</td>
                     <td>{c.leads ?? 0}</td>
-                    <td>{c.leads ? `${((c.conversions / c.leads) * 100).toFixed(1)}%` : "-"}</td>
-                    <td>-</td>
+                    <td>{c.leads ? `${(((c.convertedLeads ?? 0) / c.leads) * 100).toFixed(1)}%` : "-"}</td>
+                    <td>{Number(c.spend) > 0 ? `${(((Number(c.revenue || 0) - Number(c.spend)) / Number(c.spend)) * 100).toFixed(1)}%` : "-"}</td>
                     <td>{formatDate(c.startDate)}</td>
                     <td>{c.ownerName ? <span className={`avatar a${i % 4}`}>{initials(c.ownerName)}</span> : "-"}</td>
                     <td>
@@ -337,6 +342,16 @@ export default function MarketingWorkspace() {
         <MktAttribution />
       ) : tab === "Email & SMS" ? (
         <MktMessaging />
+      ) : tab === "Audiences" ? (
+        <MktAudiences />
+      ) : tab === "Forms & Landing Pages" ? (
+        <MktForms />
+      ) : tab === "Automation" ? (
+        <MktAutomation />
+      ) : tab === "Content" ? (
+        <MktContent />
+      ) : tab === "Reports" ? (
+        <MktReports />
       ) : (
         <div className="placeholder">
           <I name={tabs.find((x) => x[1] === tab)?.[0] || "megaphone"} size={40} />
