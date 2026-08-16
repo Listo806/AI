@@ -1323,3 +1323,241 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+
+/* ---- Dropdown menus / popovers ---- */
+.pjw-menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.pjw-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 60;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.14);
+  min-width: 210px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pjw-menu-right {
+  right: 0;
+  left: auto;
+}
+.pjw-menu-pad {
+  padding: 12px;
+  gap: 10px;
+  min-width: 230px;
+}
+.pjw-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+}
+.pjw-menu > button:hover {
+  background: #f1f5f9;
+}
+.pjw-menu-danger {
+  color: #b91c1c !important;
+}
+.pjw-menu-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  padding: 6px 10px 2px;
+  font-weight: 600;
+}
+.pjw-menu-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+}
+.pjw-menu-check input {
+  width: auto;
+}
+.pjw-menu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+.pjw-menu-clear {
+  font-size: 12px;
+  color: #2563eb;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  padding: 4px 2px 0;
+}
+.pjw-more-filter.on {
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+/* ---- View toggle group ---- */
+.pjw-view-group {
+  display: inline-flex;
+  gap: 4px;
+}
+.pjw-square.active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+/* ---- Bulk action bar ---- */
+.pjw-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #1d4ed8;
+}
+.pjw-bulk-bar > span {
+  font-weight: 600;
+}
+.pjw-bulk-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.pjw-row-selected {
+  background: #f0f7ff;
+}
+
+/* ---- List (card) view ---- */
+.pjw-card {
+  text-align: left;
+  background: #fff;
+  border: 1px solid #eef2f6;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+}
+.pjw-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+.pjw-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+.pjw-card-top b {
+  font-size: 15px;
+  color: #0f172a;
+}
+.pjw-card small {
+  color: #94a3b8;
+  font-size: 12px;
+}
+.pjw-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* ---- Project calendar ---- */
+.pjw-cal {
+  background: #fff;
+  border: 1px solid #eef2f6;
+  border-radius: 16px;
+  padding: 16px;
+  overflow-x: auto;
+}
+.pjw-cal-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.pjw-cal-head b {
+  font-size: 15px;
+  color: #0f172a;
+}
+.pjw-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  min-width: 680px;
+}
+.pjw-cal-dow {
+  margin-bottom: 6px;
+}
+.pjw-cal-dow-cell {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px;
+}
+.pjw-cal-cell {
+  min-height: 96px;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fff;
+}
+.pjw-cal-cell.empty {
+  background: #fafbfc;
+  border-color: transparent;
+}
+.pjw-cal-cell.today {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+.pjw-cal-daynum {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+.pjw-cal-chip {
+  text-align: left;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
+  border-left: 3px solid #cbd5e1;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
