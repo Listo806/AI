@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil, Clock3 } from "lucide-react";
 import projectsApi from "../../api/projectsApi";
+import { DetailSkeleton } from "./PjwSkeleton";
 import PjwModal from "./PjwModal";
 import { fmtDate, fmtDateTime, minutesToText, cap } from "./projectFormat";
 
@@ -202,7 +203,7 @@ export default function PjwTaskModal({
   return (
     <PjwModal open={open} title={title} subtitle={detail?.projectName || ""} onClose={onClose} footer={footer} wide>
       {loading ? (
-        <div className="pjw-loading">Loading…</div>
+        <DetailSkeleton />
       ) : isView && detail ? (
         <>
           {error ? <div className="pjw-form-error">{error}</div> : null}

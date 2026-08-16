@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, ClipboardList, Eye, Pencil } from "lucide-react";
 import projectsApi from "../../api/projectsApi";
+import { TableSkeletonRows } from "./PjwSkeleton";
 import PjwTaskModal from "./PjwTaskModal";
 import { fmtDate, minutesToText, statusClass, priorityClass } from "./projectFormat";
 
@@ -172,11 +173,7 @@ export default function PjwTasks({ ctx, onChanged, autoCreate, onAutoCreateDone 
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={9} className="pjw-cell-muted" style={{ textAlign: "center", padding: 30 }}>
-                    Loading…
-                  </td>
-                </tr>
+                <TableSkeletonRows cols={9} rows={6} />
               ) : error ? (
                 <tr>
                   <td colSpan={9} style={{ textAlign: "center", padding: 30, color: "#b91c1c" }}>

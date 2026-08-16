@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Clock3, BadgeDollarSign } from "lucide-react";
 import projectsApi from "../../api/projectsApi";
+import { TimeExpensesSkeleton } from "./PjwSkeleton";
 import PjwModal from "./PjwModal";
 import { money, fmtDate, minutesToText } from "./projectFormat";
 
@@ -222,7 +223,7 @@ export default function PjwTimeExpenses({ ctx, onChanged, autoCreate, onAutoCrea
       </section>
 
       {loading ? (
-        <div className="pjw-loading">Loading…</div>
+        <TimeExpensesSkeleton />
       ) : error ? (
         <div className="pjw-error">{error}</div>
       ) : (

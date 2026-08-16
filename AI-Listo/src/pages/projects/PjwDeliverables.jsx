@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import projectsApi from "../../api/projectsApi";
+import { TableSkeletonRows } from "./PjwSkeleton";
 import PjwModal from "./PjwModal";
 import { fmtDate, cap } from "./projectFormat";
 
@@ -235,11 +236,7 @@ export default function PjwDeliverables({ ctx, onChanged, autoCreate, onAutoCrea
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="pjw-cell-muted" style={{ textAlign: "center", padding: 30 }}>
-                    Loading…
-                  </td>
-                </tr>
+                <TableSkeletonRows cols={7} rows={6} />
               ) : error ? (
                 <tr>
                   <td colSpan={7} style={{ textAlign: "center", padding: 30, color: "#b91c1c" }}>

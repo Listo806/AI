@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import projectsApi from "../../api/projectsApi";
+import { ReportsSkeleton } from "./PjwSkeleton";
 import { money, pct } from "./projectFormat";
 
 function Bars({ items, labelKey, valueKey, format }) {
@@ -48,7 +49,7 @@ export default function PjwReports() {
     };
   }, []);
 
-  if (loading) return <div className="pjw-loading">Loading…</div>;
+  if (loading) return <ReportsSkeleton />;
   if (error) return <div className="pjw-error">{error}</div>;
   if (!data) return null;
 

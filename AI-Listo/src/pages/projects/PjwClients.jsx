@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, UsersRound, Eye } from "lucide-react";
 import projectsApi from "../../api/projectsApi";
+import { DetailSkeleton, TableSkeletonRows } from "./PjwSkeleton";
 import PjwModal from "./PjwModal";
 import { money, fmtDate, statusClass } from "./projectFormat";
 
@@ -31,7 +32,7 @@ function ClientModal({ open, clientId, onClose, onOpenProject }) {
   return (
     <PjwModal open={open} title={detail?.name || "Client"} subtitle={detail?.email || ""} onClose={onClose} wide>
       {loading || !detail ? (
-        <div className="pjw-loading">Loading…</div>
+        <DetailSkeleton />
       ) : (
         <>
           <div className="pjw-detail-grid">
@@ -168,11 +169,7 @@ export default function PjwClients({ onOpenProject }) {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="pjw-cell-muted" style={{ textAlign: "center", padding: 30 }}>
-                    Loading…
-                  </td>
-                </tr>
+                <TableSkeletonRows cols={7} rows={6} />
               ) : error ? (
                 <tr>
                   <td colSpan={7} style={{ textAlign: "center", padding: 30, color: "#b91c1c" }}>

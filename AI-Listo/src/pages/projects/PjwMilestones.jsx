@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Milestone as MilestoneIcon } from "lucide-react";
 import projectsApi from "../../api/projectsApi";
+import { TableSkeletonRows } from "./PjwSkeleton";
 import PjwModal from "./PjwModal";
 import { fmtDate, cap } from "./projectFormat";
 
@@ -219,11 +220,7 @@ export default function PjwMilestones({ ctx, onChanged, autoCreate, onAutoCreate
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="pjw-cell-muted" style={{ textAlign: "center", padding: 30 }}>
-                    Loading…
-                  </td>
-                </tr>
+                <TableSkeletonRows cols={6} rows={6} />
               ) : error ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: "center", padding: 30, color: "#b91c1c" }}>
