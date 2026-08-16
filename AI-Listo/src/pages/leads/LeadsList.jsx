@@ -16,6 +16,7 @@ import {
   Phone,
   Video,
   MoreVertical,
+  MoreHorizontal,
   Sparkles,
   Send,
   Users,
@@ -24,6 +25,7 @@ import {
   TrendingUp,
   Flame,
   ArrowRight,
+  ArrowLeft,
   Brain,
   Settings2,
   Home,
@@ -36,6 +38,14 @@ import {
   Layers,
   Check,
   CircleAlert,
+  Target,
+  DollarSign,
+  Flag,
+  Ghost,
+  WandSparkles,
+  Workflow,
+  Mail,
+  Eye,
 } from "lucide-react";
 const getStoredAuthToken = () => {
   const tokenKeys = [
@@ -268,6 +278,9 @@ export default function LeadsPage() {
     setAiView(false);
   };
   const [showFilters, setShowFilters] = useState(false);
+  const [showMobileMore, setShowMobileMore] = useState(false);
+  const [mobileLeadScreen, setMobileLeadScreen] = useState("inbox");
+  const [mobileHandlingMode, setMobileHandlingMode] = useState("ai");
   const stats = [
     {
       title: t("leads.statTotalLeads"),
@@ -373,6 +386,28 @@ export default function LeadsPage() {
     return "score-cool";
   };
 
+  const getMobileLeadStatusClass = (status) => {
+    const value = String(status || "new").toLowerCase();
+
+    if (["qualified", "contacted", "active", "won", "closed-won"].includes(value)) {
+      return "green";
+    }
+
+    if (["follow-up", "follow_up", "followup"].includes(value)) {
+      return "purple";
+    }
+
+    if (["nurturing", "new", "discovery"].includes(value)) {
+      return "blue";
+    }
+
+    if (["past_due", "lost", "closed-lost"].includes(value)) {
+      return "red";
+    }
+
+    return "blue";
+  };
+
   // Localize temperature labels for display only. The raw Hot/Warm/Cool values
   // stay English because filters and score classes compare them in logic.
   const translateTemperature = (temp) => {
@@ -424,6 +459,22 @@ export default function LeadsPage() {
     });
   };
 
+  const formatTimeAgo = (value) => {
+    if (!value) return "";
+
+    const diffMs = Date.now() - new Date(value).getTime();
+    const minutes = Math.max(0, Math.floor(diffMs / 60000));
+
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes}m ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
   const fetchLeadEvents = async (leadId) => {
     try {
       setLeadEventsLoading(true);
@@ -447,8 +498,14 @@ export default function LeadsPage() {
     setSelectedLead(lead);
     setLeadActionMessage("");
     setConversationIntelligence(null);
+
+    if (isMobile) {
+      setMobileLeadScreen("conversation");
+    }
+
     fetchLeadEvents(lead.id);
     fetchLeadMessages(lead.id);
+
     if (lead.phone) {
       fetchConversationIntelligence(lead.phone);
     }
@@ -858,6 +915,11 @@ export default function LeadsPage() {
   };
   const openLeadProfile = () => {
     if (!selectedLead) return;
+
+    if (isMobile) {
+      setMobileLeadScreen("insights");
+      return;
+    }
 
     setLeadProfileForm({
       status: selectedLead.status || "new",
@@ -1788,8 +1850,8 @@ export default function LeadsPage() {
         <div className="header-actions">
           {isMobile ? (
             <>
-              <div className="secondary-btn">
-                <Calendar size={16} />
+              <div className="secondary-btn mobile-header-date">
+                <Calendar size={18} />
                 <select
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
@@ -1800,27 +1862,53 @@ export default function LeadsPage() {
                   <option value="30days">{t("leads.dateLast30Days")}</option>
                   <option value="month">{t("leads.dateThisMonth")}</option>
                 </select>
-                <ChevronDown size={15} />
+                <ChevronDown size={17} />
               </div>
 
               <button
-                className={`secondary-btn ai-btn ${aiView ? "active" : ""}`}
-                onClick={toggleAiView}
+                type="button"
+                className="secondary-btn mobile-header-filter"
+                onClick={() => setShowFilters(true)}
               >
-                <Sparkles size={16} />
-                {aiView ? t("leads.aiViewOn") : t("leads.aiView")}
+                <SlidersHorizontal size={19} />
+                <span>{t("leads.filters")}</span>
               </button>
 
-              <button
-                className="primary-btn"
-                onClick={() => setShowCreateLeadModal(true)}
-              >
-                <Plus size={17} />
-                {t("leads.newLead")}
-              </button>
-              <div className="control-btn" onClick={() => setShowFilters(true)}>
-                <SlidersHorizontal size={15} />
-                <span></span>
+              <div className="mobile-header-more-wrap">
+                <button
+                  type="button"
+                  className="secondary-btn mobile-header-more"
+                  onClick={() => setShowMobileMore((prev) => !prev)}
+                >
+                  <MoreHorizontal size={22} />
+                  <span>More</span>
+                </button>
+
+                {showMobileMore && (
+                  <div className="mobile-header-more-menu">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toggleAiView();
+                        setShowMobileMore(false);
+                      }}
+                    >
+                      <Sparkles size={16} />
+                      {aiView ? t("leads.aiViewOn") : t("leads.aiView")}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCreateLeadModal(true);
+                        setShowMobileMore(false);
+                      }}
+                    >
+                      <Plus size={17} />
+                      {t("leads.newLead")}
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -2088,9 +2176,14 @@ export default function LeadsPage() {
 
       {/* STATS */}
 
+      <div className="mobile-kpi-section-head">
+        <h2>Key Performance Indicators</h2>
+        <span>{leadStats?.rangeLabel || t("leads.allTime")}</span>
+      </div>
+
       <div className="stats-grid">
         {stats.map((item, index) => (
-          <div className="stats-card" key={index}>
+          <div className={`stats-card stats-card-${item.className}`} key={index}>
             <div className={`stats-icon ${item.className}`}>{item.icon}</div>
 
             <div>
@@ -2104,7 +2197,7 @@ export default function LeadsPage() {
 
       {/* PRIORITY BAR */}
 
-      <div className="priority-bar">
+      <div className="priority-bar priority-bar-desktop">
         <div className="item-line">
           <div className="priority-title">
             <h3>{t("leads.aiPriorityQueue")}</h3>
@@ -2175,18 +2268,122 @@ export default function LeadsPage() {
         </div>
       </div>
 
+      {/* MOBILE PRIORITY BAR */}
+      <div className="mobile-priority-bar">
+        <div className="mobile-priority-head">
+          <h3>{t("leads.aiPriorityQueue")}</h3>
+
+          <button
+            type="button"
+            className="mobile-priority-view"
+            onClick={applyPriorityQueue}
+          >
+            {t("leads.viewQueue")}
+          </button>
+        </div>
+
+        <div className="mobile-priority-grid">
+          <div className="mobile-priority-cell mobile-priority-cell-red">
+            <div className="mobile-priority-value-row">
+              <div className="mobile-priority-icon">
+                <Flame size={18} />
+              </div>
+              <strong>{leadStats?.urgentLeads || 0}</strong>
+            </div>
+            <span>{t("leads.urgentLeads")}</span>
+          </div>
+
+          <div className="mobile-priority-cell mobile-priority-cell-orange">
+            <div className="mobile-priority-value-row">
+              <div className="mobile-priority-icon">
+                <Clock3 size={18} />
+              </div>
+              <strong>{leadStats?.needFollowUp || 0}</strong>
+            </div>
+            <span>{t("leads.needFollowUp")}</span>
+          </div>
+
+          <div className="mobile-priority-cell mobile-priority-cell-blue">
+            <div className="mobile-priority-value-row">
+              <div className="mobile-priority-icon">
+                <Phone size={18} />
+              </div>
+              <strong>{leadStats?.readyToCall || 0}</strong>
+            </div>
+            <span>{t("leads.readyToCall")}</span>
+          </div>
+
+          <div className="mobile-priority-cell mobile-priority-cell-green">
+            <div className="mobile-priority-value-row">
+              <div className="mobile-priority-icon">
+                <MessageCircle size={18} />
+              </div>
+              <strong>{leadStats?.pendingReplies || 0}</strong>
+            </div>
+            <span>{t("leads.pendingReplies")}</span>
+          </div>
+
+          <div className="mobile-priority-cell mobile-priority-cell-purple">
+            <div className="mobile-priority-value-row">
+              <div className="mobile-priority-icon">
+                <Users size={18} />
+              </div>
+              <strong>{leadStats?.aiQualifiedToday || 0}</strong>
+            </div>
+            <span>{t("leads.aiQualifiedToday")}</span>
+          </div>
+        </div>
+      </div>
+
       {/* MAIN CONTENT */}
       {/* MAIN CONTENT */}
-      <div className="leads-layout">
+      <div className={`leads-layout ${isMobile ? `mobile-lead-screen-${mobileLeadScreen}` : ""}`}>
         {/* LEFT PANEL - AI LEAD INBOX */}
         <div className="lead-sidebar">
-          <div className="panel-header">
-            <div>
-              <h3>{t("leads.aiLeadInbox")}</h3>
+          <div className="panel-header lead-inbox-header">
+            <div className="lead-inbox-heading-copy">
+              <h3>
+                <Users className="lead-inbox-title-icon" size={24} />
+                {t("leads.aiLeadInbox")}
+              </h3>
               <p>{t("leads.rankedByUrgency")}</p>
             </div>
-            <button className="icon-btn">
+
+            <button
+              type="button"
+              className="icon-btn lead-inbox-desktop-filter"
+              onClick={() => setShowFilters(true)}
+            >
               <SlidersHorizontal size={16} />
+            </button>
+          </div>
+
+          <div className="mobile-lead-inbox-tools">
+            <label className="mobile-lead-search">
+              <Search size={19} />
+              <input
+                value={leadSearch}
+                onChange={(e) => setLeadSearch(e.target.value)}
+                placeholder={t("leads.searchPlaceholder")}
+              />
+            </label>
+
+            <button
+              type="button"
+              className="mobile-lead-filter-btn"
+              onClick={() => setShowFilters(true)}
+            >
+              <SlidersHorizontal size={18} />
+              <span>{t("leads.filters")}</span>
+            </button>
+
+            <button
+              type="button"
+              className="mobile-lead-filter-icon-btn"
+              onClick={() => setShowFilters(true)}
+              aria-label={t("leads.filters")}
+            >
+              <Settings2 size={18} />
             </button>
           </div>
 
@@ -2219,59 +2416,151 @@ export default function LeadsPage() {
                       className={`lead-card count-badge-container ${isActive ? "active" : ""}`}
                       onClick={() => selectLead(lead)}
                     >
-                      <div className="lead-card-top">
-                        <div className="avatar-wrapper">
-                          <div className="lead-avatar avatar-whatsapp">
-                            {getInitials(lead.name)}
+                      <div className="lead-card-desktop-content">
+                        <div className="lead-card-top">
+                          <div className="avatar-wrapper">
+                            <div className="lead-avatar avatar-whatsapp">
+                              {getInitials(lead.name)}
+                            </div>
+                            <div className="avatar-icon-badge">
+                              <MessageCircle
+                                size={12}
+                                color="#16a34a"
+                                fill="#16a34a"
+                              />
+                            </div>
                           </div>
-                          <div className="avatar-icon-badge">
-                            <MessageCircle
-                              size={12}
-                              color="#16a34a"
-                              fill="#16a34a"
-                            />
+
+                          <div className="lead-meta">
+                            <h4>{lead.name || t("leads.unnamedLead")}</h4>
+                            <span>
+                              {lead.phone ||
+                                lead.email ||
+                                t("leads.noContactInfo")}
+                            </span>
+                          </div>
+
+                          <div className="lead-score">
+                            <strong>{score}%</strong>
+                            <p className={getScoreClass(lead)}>
+                              {translateTemperature(temperature)}
+                            </p>
                           </div>
                         </div>
 
-                        <div className="lead-meta">
-                          <h4>{lead.name || t("leads.unnamedLead")}</h4>
-                          <span>
-                            {lead.phone ||
-                              lead.email ||
-                              t("leads.noContactInfo")}
-                          </span>
-                        </div>
-
-                        <div className="lead-score">
-                          <strong>{score}%</strong>
-                          <p className={getScoreClass(lead)}>
-                            {translateTemperature(temperature)}
+                        <div className="lead-message-wrap">
+                          <p className="lead-message">
+                            {lead.notes || lead.source || t("leads.newCrmLead")}
                           </p>
+
+                          <div className="lead-card-financials">
+                            <span className="budget-range">
+                              {lead.source || "CRM"}
+                            </span>
+                            <span className="timestamp">
+                              {lead.status || "new"}
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="lead-message-wrap">
-                        <p className="lead-message">
-                          {lead.notes || lead.source || t("leads.newCrmLead")}
-                        </p>
-
-                        <div className="lead-card-financials">
-                          <span className="budget-range">
-                            {lead.source || "CRM"}
+                        <div className="lead-tags">
+                          <span className="tag-property">
+                            {lead.propertyTitle || t("leads.noPropertyLinked")}
                           </span>
-                          <span className="timestamp">
+                          <span className="tag-status status-new">
                             {lead.status || "new"}
                           </span>
                         </div>
                       </div>
 
-                      <div className="lead-tags">
-                        <span className="tag-property">
-                          {lead.propertyTitle || t("leads.noPropertyLinked")}
-                        </span>
-                        <span className="tag-status status-new">
-                          {lead.status || "new"}
-                        </span>
+                      <div className="mobile-lead-card-content">
+                        <div className="mobile-lead-card-main">
+                          <div className="mobile-lead-avatar-wrap">
+                            <div className="mobile-lead-avatar">
+                              {getInitials(lead.name)}
+                            </div>
+                            <span className="mobile-lead-online-dot" />
+                          </div>
+
+                          <div className="mobile-lead-info">
+                            <h4>{lead.name || t("leads.unnamedLead")}</h4>
+
+                            <div className="mobile-lead-contact">
+                              <MessageCircle size={15} />
+                              <span>
+                                {lead.phone ||
+                                  lead.email ||
+                                  t("leads.noContactInfo")}
+                              </span>
+                            </div>
+
+                            <p>
+                              {lead.notes ||
+                                lead.source ||
+                                t("leads.newCrmLead")}
+                            </p>
+                          </div>
+
+                          <div className="mobile-lead-side">
+                            <span
+                              className={`mobile-lead-status mobile-lead-status-${getMobileLeadStatusClass(
+                                lead.status,
+                              )}`}
+                            >
+                              {lead.status || "new"}
+                            </span>
+
+                            <span className="mobile-lead-time">
+                              {lead.updatedAt
+                                ? formatTimeAgo(lead.updatedAt)
+                                : lead.createdAt
+                                  ? formatTimeAgo(lead.createdAt)
+                                  : ""}
+                            </span>
+
+                            <ArrowRight className="mobile-lead-chevron" size={20} />
+                          </div>
+                        </div>
+
+                        <div className="mobile-lead-metrics">
+                          <div className="mobile-lead-metric">
+                            <span>AI Score</span>
+                            <strong className={`mobile-score-${getScoreClass(lead)}`}>
+                              {score}
+                            </strong>
+                          </div>
+
+                          <div className="mobile-lead-metric">
+                            <span>Priority</span>
+                            <strong>
+                              <i
+                                className={`mobile-priority-dot mobile-priority-${String(
+                                  lead.priority || "medium",
+                                ).toLowerCase()}`}
+                              />
+                              {lead.priority || "Medium"}
+                            </strong>
+                          </div>
+
+                          <div className="mobile-lead-metric">
+                            <span>Temp.</span>
+                            <strong className={`mobile-temp-${temperature.toLowerCase()}`}>
+                              <Flame size={14} />
+                              {translateTemperature(temperature)}
+                            </strong>
+                          </div>
+
+                          <div className="mobile-lead-metric">
+                            <span>Status</span>
+                            <strong
+                              className={`mobile-status-text-${getMobileLeadStatusClass(
+                                lead.status,
+                              )}`}
+                            >
+                              {lead.status || "new"}
+                            </strong>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -2328,6 +2617,33 @@ export default function LeadsPage() {
 
         {/* CENTER PANEL - CONVERSATION WORKSPACE */}
         <div className="conversation-panel">
+          <div className="mobile-conversation-topbar">
+            <button
+              type="button"
+              className="mobile-conversation-back"
+              onClick={() => setMobileLeadScreen("inbox")}
+              aria-label="Back to leads"
+            >
+              <ArrowLeft size={21} />
+            </button>
+
+            <div className="mobile-conversation-title">
+              <strong>Lead Conversation</strong>
+              <span>
+                Lead ID: {selectedLead?.id ? String(selectedLead.id).slice(0, 8) : "—"}
+              </span>
+            </div>
+
+            <div className="mobile-conversation-top-actions">
+              <button type="button" onClick={callSelectedLead}>
+                <Phone size={18} />
+              </button>
+              <button type="button">
+                <MoreHorizontal size={20} />
+              </button>
+            </div>
+          </div>
+
           <div className="conversation-header">
             <div className="conversation-user">
               <div className="lead-avatar large avatar-whatsapp">
@@ -2344,6 +2660,57 @@ export default function LeadsPage() {
                     t("leads.noContactInfo")}{" "}
                   • {selectedLead?.source || "CRM"}
                 </p>
+              </div>
+            </div>
+
+            <div className="mobile-conversation-status">
+              <select
+                value={selectedLead?.status || "new"}
+                onChange={(e) => updateSelectedLead({ status: e.target.value })}
+                disabled={!selectedLead}
+              >
+                <option value="new">{t("leads.optNew")}</option>
+                <option value="contacted">{t("leads.contacted")}</option>
+                <option value="qualified">{t("leads.optQualified")}</option>
+                <option value="follow-up">{t("leads.optFollowUp")}</option>
+                <option value="closed-won">{t("leads.optClosedWon")}</option>
+                <option value="closed-lost">{t("leads.optClosedLost")}</option>
+              </select>
+              <ChevronDown size={16} />
+            </div>
+
+            <div className="mobile-conversation-metrics">
+              <div className="mobile-conversation-metric">
+                <span>AI Score</span>
+                <strong>{selectedLead ? getLeadScore(selectedLead) : "--"}</strong>
+              </div>
+              <div className="mobile-conversation-metric">
+                <span>Priority</span>
+                <strong>
+                  <i className={`mobile-priority-dot mobile-priority-${String(
+                    selectedLead?.priority || "medium",
+                  ).toLowerCase()}`} />
+                  {selectedLead?.priority || "Medium"}
+                </strong>
+              </div>
+              <div className="mobile-conversation-metric">
+                <span>Temp.</span>
+                <strong className={`mobile-temp-${String(
+                  selectedLead ? getLeadTemperature(selectedLead) : "cool",
+                ).toLowerCase()}`}>
+                  <Flame size={14} />
+                  {selectedLead
+                    ? translateTemperature(getLeadTemperature(selectedLead))
+                    : "--"}
+                </strong>
+              </div>
+              <div className="mobile-conversation-metric">
+                <span>Status</span>
+                <strong className={`mobile-status-text-${getMobileLeadStatusClass(
+                  selectedLead?.status,
+                )}`}>
+                  {selectedLead?.status || "new"}
+                </strong>
               </div>
             </div>
 
@@ -2510,8 +2877,38 @@ export default function LeadsPage() {
             </button>
           </div>
 
+          <div className="mobile-handling-tabs">
+            <button
+              type="button"
+              className={mobileHandlingMode === "ai" ? "active" : ""}
+              onClick={() => setMobileHandlingMode("ai")}
+            >
+              <Sparkles size={17} />
+              <span>AI Handling</span>
+            </button>
+
+            <button
+              type="button"
+              className={mobileHandlingMode === "human" ? "active" : ""}
+              onClick={() => setMobileHandlingMode("human")}
+            >
+              <Users size={17} />
+              <span>Human Handling</span>
+            </button>
+
+            <button
+              type="button"
+              className={mobileHandlingMode === "shared" ? "active" : ""}
+              onClick={() => setMobileHandlingMode("shared")}
+            >
+              <Users size={17} />
+              <span>Shared</span>
+            </button>
+          </div>
+
           {/* CHAT BODY */}
           <div className="chat-body" ref={chatBodyRef}>
+            <div className="mobile-chat-day-badge">Today</div>
             {leadMessagesLoading ? (
               <div className="message left">
                 <p>{t("leads.loadingMessages")}</p>
@@ -2620,7 +3017,12 @@ export default function LeadsPage() {
           {/* AI SUGGESTED REPLIES */}
           <div className="suggested-replies-container">
             <div className="suggested-title">
-              <Sparkles size={12} /> {t("leads.aiSuggestedReplies")}
+              <span>
+                <Sparkles size={12} /> {t("leads.aiSuggestedReplies")}
+              </span>
+              <button type="button" className="mobile-suggested-more">
+                See more
+              </button>
             </div>
             <div className="suggested-chips-scroll">
               {aiSuggestedReplies.map((reply, index) => (
@@ -2835,6 +3237,226 @@ export default function LeadsPage() {
 
         {/* RIGHT PANEL - INSIGHTS & CONTROLS */}
         <div className="insights-panel">
+          {/* MOBILE LEAD INTELLIGENCE SCREEN */}
+          <div className="mobile-insights-screen">
+            <div className="mobile-insights-topbar">
+              <button
+                type="button"
+                className="mobile-insights-back"
+                onClick={() => setMobileLeadScreen("conversation")}
+                aria-label="Back to conversation"
+              >
+                <ArrowLeft size={21} />
+              </button>
+
+              <div className="mobile-insights-title">
+                <strong>Lead Intelligence</strong>
+                <span>
+                  Lead ID: {selectedLead?.id ? String(selectedLead.id).slice(0, 8) : "—"}
+                  {selectedLead?.name ? <> • <b>{selectedLead.name}</b></> : null}
+                </span>
+              </div>
+
+              <button type="button" className="mobile-insights-more">
+                <MoreHorizontal size={20} />
+              </button>
+            </div>
+
+            <section className="mobile-insight-card mobile-intelligence-card">
+              <div className="mobile-insight-heading centered">
+                <Brain size={27} />
+                <div>
+                  <h3>AI Lead Intelligence</h3>
+                  <p>AI insights and lead analysis</p>
+                </div>
+              </div>
+
+              <div className="mobile-intelligence-grid">
+                <div className="mobile-ai-score-block">
+                  <div className="mobile-ai-score-ring">
+                    <strong>{leadIntelligence.score}</strong>
+                  </div>
+                  <span>AI Score</span>
+                  <b>{translateTemperature(leadIntelligence.temperature)}</b>
+                </div>
+
+                <div className="mobile-intel-metric metric-purple">
+                  <Target size={31} />
+                  <span>Intent</span>
+                  <strong>{leadIntelligence.interestLevel}</strong>
+                </div>
+
+                <div className="mobile-intel-metric metric-green">
+                  <TrendingUp size={31} />
+                  <span>Response Likelihood</span>
+                  <strong>{leadIntelligence.responseLikelihood}</strong>
+                </div>
+
+                <div className="mobile-intel-metric metric-orange">
+                  <CircleAlert size={31} />
+                  <span>Sentiment</span>
+                  <strong>{leadIntelligence.sentiment}</strong>
+                </div>
+
+                <div className="mobile-intel-metric metric-pink">
+                  <Ghost size={31} />
+                  <span>Ghost Risk</span>
+                  <strong>{leadIntelligence.ghostRisk}</strong>
+                </div>
+              </div>
+            </section>
+
+            <section className="mobile-insight-card mobile-recommended-card">
+              <div className="mobile-recommended-icon">
+                <WandSparkles size={28} />
+              </div>
+              <div className="mobile-recommended-copy">
+                <h3>{t("leads.recommendedAction")}</h3>
+                <p>{leadIntelligence.recommendedAction}</p>
+              </div>
+              <button type="button" className="mobile-card-arrow">
+                <ArrowRight size={20} />
+              </button>
+            </section>
+
+            <section className="mobile-insight-card mobile-revenue-card">
+              <div className="mobile-insight-heading centered">
+                <DollarSign size={25} />
+                <div>
+                  <h3>{t("leads.revenueIntelligence")}</h3>
+                  <p>Key deal and revenue insights</p>
+                </div>
+              </div>
+
+              <div className="mobile-revenue-grid">
+                <div className="mobile-revenue-box revenue-green">
+                  <span className="mobile-revenue-icon"><DollarSign size={22} /></span>
+                  <small>{t("leads.dealValue")}</small>
+                  <strong>{leadIntelligence.expectedRevenue}</strong>
+                  <p>{selectedLead?.priority || "High"}</p>
+                </div>
+
+                <div className="mobile-revenue-box revenue-blue">
+                  <span className="mobile-revenue-icon"><TrendingUp size={22} /></span>
+                  <small>{t("leads.closeProbability")}</small>
+                  <strong>{leadIntelligence.closeProbability}</strong>
+                  <p>{translateTemperature(leadIntelligence.temperature)}</p>
+                </div>
+
+                <div className="mobile-revenue-box revenue-orange">
+                  <span className="mobile-revenue-icon"><Flag size={22} /></span>
+                  <small>{t("leads.pipelineStage")}</small>
+                  <strong>{selectedLead?.dealStage || "new"}</strong>
+                  <p>{selectedLead?.status || "Active"}</p>
+                </div>
+
+                <div className="mobile-revenue-box revenue-purple">
+                  <span className="mobile-revenue-icon"><Calendar size={22} /></span>
+                  <small>{t("leads.timeline")}</small>
+                  <strong>{leadIntelligence.timeline}</strong>
+                  <p>{selectedLead?.status || "Active"}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="mobile-insight-card mobile-automation-card">
+              <div className="mobile-insight-heading centered">
+                <Bot size={27} />
+                <div>
+                  <h3>{t("leads.aiAutomationControls")}</h3>
+                  <p>{t("leads.manageAiActions")}</p>
+                </div>
+              </div>
+
+              <div className="mobile-automation-grid">
+                {automationItems.map((item, idx) => {
+                  const isActive = getAutomationStatus(item.type);
+                  return (
+                    <div className={`mobile-automation-tile automation-tile-${idx + 1}`} key={item.type || idx}>
+                      <span className="mobile-automation-tile-icon">{item.icon}</span>
+                      <strong>{item.title}</strong>
+                      <div className={`mobile-automation-switch ${isActive ? "active" : ""}`}>
+                        <span>{isActive ? "ON" : "OFF"}</span>
+                        <i />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                className="mobile-manage-automation"
+                onClick={() => setShowAutomationModal(true)}
+              >
+                <Settings2 size={17} />
+                <span>Manage All Automation</span>
+                <ArrowRight size={17} />
+              </button>
+            </section>
+
+            <section className="mobile-insight-card mobile-timeline-card">
+              <div className="mobile-timeline-head">
+                <div className="mobile-insight-heading centered">
+                  <Workflow size={25} />
+                  <div>
+                    <h3>{t("leads.leadJourneyTimeline")}</h3>
+                    <p>Timeline of lead interactions and activities</p>
+                  </div>
+                </div>
+
+                <button type="button" className="mobile-card-arrow" onClick={openFullTimeline}>
+                  <ArrowRight size={20} />
+                </button>
+              </div>
+
+              <div className="mobile-timeline-list">
+                {leadEventsLoading ? (
+                  <div className="mobile-timeline-empty">{t("leads.loadingTimeline")}</div>
+                ) : leadEvents.length ? (
+                  leadEvents.slice(0, 5).map((event, idx) => (
+                    <div className={`mobile-timeline-row timeline-color-${(idx % 5) + 1}`} key={event.id}>
+                      <div className="mobile-timeline-time">
+                        <span>{formatLeadEventDate(event.createdAt)}</span>
+                      </div>
+                      <span className="mobile-timeline-dot" />
+                      <div className="mobile-timeline-event-icon">
+                        {idx === 0 ? <MessageCircle size={17} /> :
+                         idx === 1 ? <Eye size={17} /> :
+                         idx === 2 ? <Mail size={17} /> :
+                         idx === 3 ? <Flag size={17} /> :
+                         <Users size={17} />}
+                      </div>
+                      <div className="mobile-timeline-event-copy">
+                        <strong>
+                          {event.metadata?.title ||
+                            event.eventType?.replaceAll("_", " ") ||
+                            t("leads.leadActivity")}
+                        </strong>
+                        <p>
+                          {event.metadata?.sub ||
+                            event.metadata?.description ||
+                            t("leads.leadUpdated")}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="mobile-timeline-row timeline-color-5">
+                    <div className="mobile-timeline-time"><span>—</span></div>
+                    <span className="mobile-timeline-dot" />
+                    <div className="mobile-timeline-event-icon"><Users size={17} /></div>
+                    <div className="mobile-timeline-event-copy">
+                      <strong>{t("leads.leadCreated")}</strong>
+                      <p>{t("leads.noEventYet")}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          <div className="desktop-insights-stack">
           {/* BOX 1: LEAD INTELLIGENCE */}
           <div className="insight-card">
             <div className="panel-header">
@@ -3039,6 +3661,7 @@ export default function LeadsPage() {
                 {t("leads.fullTimeline")} <ArrowRight size={12} />
               </button>
             </div>
+          </div>
           </div>
         </div>
       </div>
