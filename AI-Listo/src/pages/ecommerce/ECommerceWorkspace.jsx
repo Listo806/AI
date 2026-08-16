@@ -28,6 +28,16 @@ import {
   Rocket,
   UserRound,
   RefreshCw,
+  Hourglass,
+  CircleCheckBig,
+  TriangleAlert,
+  CircleX,
+  ChevronRight,
+  Layers3,
+  CalendarDays,
+  Bookmark,
+  Send,
+  Languages,
 } from "lucide-react";
 import AdminPlans from "../admin/AdminPlans";
 import { useAuth } from "../../context/AuthContext";
@@ -61,6 +71,7 @@ import {
   resetEcommercePlanConfig as resetPlanConfig,
 } from "../../api/ecommerceApi";
 import "../platform/platform.css";
+import "./ECommerceWorkspace.css";
 
 
 /*
@@ -87,13 +98,13 @@ const INTERNAL_WORKSPACE_ROLES = new Set([
 const ECOMMERCE_WORKSPACE_FEATURE = "ecommerceWorkspace";
 
 const TABS = [
-  { key: "all", label: "All Subscriptions" },
-  { key: "registered", label: "Registered (Sign-ups)" },
-  { key: "free", label: "Free" },
-  { key: "trialing", label: "Trialing" },
-  { key: "active", label: "Active Paid" },
-  { key: "past_due", label: "Past Due" },
-  { key: "canceled", label: "Canceled" },
+  { key: "all", label: "All Subscriptions", Icon: Users },
+  { key: "registered", label: "Registered (Sign-ups)", Icon: UserCheck },
+  { key: "free", label: "Free", Icon: Gift },
+  { key: "trialing", label: "Trialing", Icon: Hourglass },
+  { key: "active", label: "Active Paid", Icon: CircleCheckBig },
+  { key: "past_due", label: "Past Due", Icon: TriangleAlert },
+  { key: "canceled", label: "Canceled", Icon: CircleX },
 ];
 
 const PLAN_OPTIONS = [
@@ -658,54 +669,92 @@ function ECommerceSubscriptionsUI() {
       {/* Tabs + filters panel */}
       <div className="cxc-panel">
         <div className="cxc-tabs">
-          {TABS.map((tb) => (
-            <button key={tb.key} className={`cxc-tab ${tab === tb.key ? "active" : ""}`} onClick={() => { setPage(1); setTab(tb.key); }}>
-              {tb.label}
-              {summary?.tabs?.[tb.key] != null && <span className="cxc-tab-count">{summary.tabs[tb.key].toLocaleString()}</span>}
-            </button>
-          ))}
+          {TABS.map((tb) => {
+            const TabIcon = tb.Icon;
+            return (
+              <button
+                key={tb.key}
+                className={`cxc-tab cxc-tab--${tb.key} ${tab === tb.key ? "active" : ""}`}
+                onClick={() => { setPage(1); setTab(tb.key); }}
+              >
+                <span className="cxc-tab-icon" aria-hidden="true">
+                  <TabIcon size={20} />
+                </span>
+                <span className="cxc-tab-label">{tb.label}</span>
+                {summary?.tabs?.[tb.key] != null && (
+                  <span className="cxc-tab-count">
+                    {summary.tabs[tb.key].toLocaleString()}
+                  </span>
+                )}
+                <ChevronRight className="cxc-tab-mobile-arrow" size={20} aria-hidden="true" />
+              </button>
+            );
+          })}
         </div>
         <div className="cxc-filters">
           <div className="cxc-search">
             <Search size={15} color="#94a3b8" />
             <input value={filters.q} onChange={(e) => setFilter("q", e.target.value)} placeholder="Search by name, email or company" />
           </div>
-          <select className="cxc-select" value={filters.plan} onChange={(e) => setFilter("plan", e.target.value)}>
-            <option value="all">All Plans</option>
-            {PLAN_FILTER_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-          </select>
-          <select className="cxc-select" value={filters.billing} onChange={(e) => setFilter("billing", e.target.value)}>
-            <option value="all">All Cycles</option>
-            <option value="monthly">Monthly</option>
-            <option value="annual">Annual</option>
-          </select>
-          <select className="cxc-select" value={filters.paymentStatus} onChange={(e) => setFilter("paymentStatus", e.target.value)}>
-            <option value="all">All Statuses</option>
-            <option value="registered">Registered</option>
-            <option value="free">Free</option>
-            <option value="trial">Trialing</option>
-            <option value="active">Active</option>
-            <option value="past_due">Past Due</option>
-            <option value="canceled">Canceled</option>
-          </select>
-          <select className="cxc-select" value={filters.source} onChange={(e) => setFilter("source", e.target.value)}>
-            <option value="all">All Sources</option>
-            {(summary?.breakdowns?.source || []).map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
-          </select>
-          <select className="cxc-select" value={filters.language} onChange={(e) => setFilter("language", e.target.value)}>
-            <option value="all">All Languages</option>
-            <option value="en">English</option>
-            <option value="es">Spanish</option>
-            <option value="pt">Portuguese</option>
-          </select>
-          <select className="cxc-select" value={filters.country} onChange={(e) => setFilter("country", e.target.value)}>
-            <option value="all">All Countries</option>
-            {countryOpts.map((cnt) => (
-              <option key={cnt.key} value={cnt.key}>
-                {cnt.key === "Unknown" ? "Unknown" : `${flagEmoji(cnt.key)} ${countryName(cnt.key)}`}
-              </option>
-            ))}
-          </select>
+          <div className="cxc-mobile-filter cxc-mobile-filter--plan">
+            <Layers3 className="cxc-mobile-filter-icon" size={18} aria-hidden="true" />
+            <select className="cxc-select" value={filters.plan} onChange={(e) => setFilter("plan", e.target.value)}>
+              <option value="all">All Plans</option>
+              {PLAN_FILTER_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+          </div>
+
+          <div className="cxc-mobile-filter cxc-mobile-filter--cycle">
+            <CalendarDays className="cxc-mobile-filter-icon" size={18} aria-hidden="true" />
+            <select className="cxc-select" value={filters.billing} onChange={(e) => setFilter("billing", e.target.value)}>
+              <option value="all">All Cycles</option>
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+
+          <div className="cxc-mobile-filter cxc-mobile-filter--status">
+            <Bookmark className="cxc-mobile-filter-icon" size={18} aria-hidden="true" />
+            <select className="cxc-select" value={filters.paymentStatus} onChange={(e) => setFilter("paymentStatus", e.target.value)}>
+              <option value="all">All Statuses</option>
+              <option value="registered">Registered</option>
+              <option value="free">Free</option>
+              <option value="trial">Trialing</option>
+              <option value="active">Active</option>
+              <option value="past_due">Past Due</option>
+              <option value="canceled">Canceled</option>
+            </select>
+          </div>
+
+          <div className="cxc-mobile-filter cxc-mobile-filter--source">
+            <Send className="cxc-mobile-filter-icon" size={18} aria-hidden="true" />
+            <select className="cxc-select" value={filters.source} onChange={(e) => setFilter("source", e.target.value)}>
+              <option value="all">All Sources</option>
+              {(summary?.breakdowns?.source || []).map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
+            </select>
+          </div>
+
+          <div className="cxc-mobile-filter cxc-mobile-filter--language">
+            <Languages className="cxc-mobile-filter-icon" size={18} aria-hidden="true" />
+            <select className="cxc-select" value={filters.language} onChange={(e) => setFilter("language", e.target.value)}>
+              <option value="all">All Languages</option>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="pt">Portuguese</option>
+            </select>
+          </div>
+
+          <div className="cxc-mobile-filter cxc-mobile-filter--country">
+            <Globe className="cxc-mobile-filter-icon" size={18} aria-hidden="true" />
+            <select className="cxc-select" value={filters.country} onChange={(e) => setFilter("country", e.target.value)}>
+              <option value="all">All Countries</option>
+              {countryOpts.map((cnt) => (
+                <option key={cnt.key} value={cnt.key}>
+                  {cnt.key === "Unknown" ? "Unknown" : `${flagEmoji(cnt.key)} ${countryName(cnt.key)}`}
+                </option>
+              ))}
+            </select>
+          </div>
           <UsersSeatsFilter usersRole={filters.usersRole} seatStatus={filters.seatStatus} setFilter={setFilter} />
           {moreFilters && (
             <>
@@ -767,8 +816,18 @@ function ECommerceSubscriptionsUI() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={12} style={{ padding: 20, color: "#64748b" }}>Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={12} style={{ padding: 20, color: "#64748b" }}>No customers match these filters.</td></tr>}
+              {loading && (
+                <tr className="cxc-table-state-row">
+                  <td className="cxc-table-state-cell" colSpan={12}>Loading…</td>
+                </tr>
+              )}
+              {!loading && rows.length === 0 && (
+                <tr className="cxc-table-state-row">
+                  <td className="cxc-table-state-cell" colSpan={12}>
+                    No customers match these filters.
+                  </td>
+                </tr>
+              )}
               {!loading && rows.map((r) => {
                 const st = r.status;
                 return (
