@@ -1,110 +1,43 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   Plus,
   ChevronDown,
-  Bell,
-  MessageSquare,
-  CircleHelp,
   FolderOpen,
   CircleCheckBig,
   CalendarDays,
   TimerReset,
   BadgeDollarSign,
-  Gauge,
-  Settings2,
   Upload,
   Download,
   RotateCcw,
-  Table2,
-  List,
-  Calendar,
   Eye,
   Pencil,
-  MoreVertical,
   LayoutDashboard,
   ClipboardList,
-  Flag,
   PackageCheck,
   Files,
   Clock3,
   UsersRound,
   FileChartColumn,
-  X,
-  Star,
   Milestone,
-  FileUp,
-  UserRoundCheck,
 } from "lucide-react";
 import "./ProjectWorkspace.css";
 
-const stats = [
-  {
-    label: "Active Projects",
-    value: "32",
-    sub: "18 in progress",
-    trend: "14%",
-    trendText: "vs last month",
-    icon: FolderOpen,
-    tone: "blue",
-  },
-  {
-    label: "Projects Completed",
-    value: "24",
-    sub: "This month",
-    trend: "20%",
-    trendText: "vs last month",
-    icon: CircleCheckBig,
-    tone: "green",
-  },
-  {
-    label: "Tasks In Progress",
-    value: "156",
-    sub: "of 358 total tasks",
-    trend: "16%",
-    trendText: "vs last month",
-    icon: CalendarDays,
-    tone: "amber",
-  },
-  {
-    label: "Tasks Completed",
-    value: "202",
-    sub: "This month",
-    trend: "18%",
-    trendText: "vs last month",
-    icon: CircleCheckBig,
-    tone: "green",
-  },
-  {
-    label: "On Time Delivery",
-    value: "92.4%",
-    sub: "This month",
-    trend: "5.3%",
-    trendText: "vs last month",
-    icon: TimerReset,
-    tone: "purple",
-  },
-  {
-    label: "Budget Utilization",
-    value: "74.6%",
-    sub: "Average",
-    trend: "3.1%",
-    trendText: "vs last month",
-    icon: BadgeDollarSign,
-    tone: "gold",
-  },
-  {
-    label: "Billable Amount (MTD)",
-    value: "$186,750",
-    sub: "Billed this month",
-    trend: "22%",
-    trendText: "vs last month",
-    icon: BadgeDollarSign,
-    tone: "orange",
-  },
-];
+import projectsApi from "../../api/projectsApi";
+import { money, fmtRelative, fmtDate, initials, statusClass, priorityClass, pct } from "./projectFormat";
+import PjwDashboardPanels from "./PjwDashboardPanels";
+import PjwProjectModal from "./PjwProjectModal";
+import PjwOverview from "./PjwOverview";
+import PjwTasks from "./PjwTasks";
+import PjwMilestones from "./PjwMilestones";
+import PjwDeliverables from "./PjwDeliverables";
+import PjwFiles from "./PjwFiles";
+import PjwTimeExpenses from "./PjwTimeExpenses";
+import PjwClients from "./PjwClients";
+import PjwReports from "./PjwReports";
 
-const tabs = [
+const TABS = [
   [LayoutDashboard, "Overview"],
   [FolderOpen, "Projects"],
   [ClipboardList, "Tasks"],
@@ -116,242 +49,215 @@ const tabs = [
   [FileChartColumn, "Reports"],
 ];
 
-const projects = [
-  {
-    name: "Website Redesign & Development",
-    client: "TechFlow Solutions",
-    manager: "Olivia Bennett",
-    status: "In Progress",
-    progress: 68,
-    priority: "High",
-    start: "Apr 15, 2025",
-    due: "Jun 15, 2025",
-    budget: "$24,000",
-    spent: "$16,320",
-    tasks: "18 / 28",
-    milestones: "3 / 5",
-    last: "2h ago",
-  },
-  {
-    name: "Mobile App Development",
-    client: "Bright Marketing",
-    manager: "Ethan Walker",
-    status: "In Progress",
-    progress: 42,
-    priority: "High",
-    start: "Mar 20, 2025",
-    due: "Jun 30, 2025",
-    budget: "$45,000",
-    spent: "$18,900",
-    tasks: "24 / 56",
-    milestones: "2 / 7",
-    last: "1h ago",
-  },
-  {
-    name: "CRM Implementation",
-    client: "GreenLeaf Realty",
-    manager: "Sophia Martinez",
-    status: "In Progress",
-    progress: 75,
-    priority: "Medium",
-    start: "Feb 10, 2025",
-    due: "May 20, 2025",
-    budget: "$18,500",
-    spent: "$13,875",
-    tasks: "32 / 43",
-    milestones: "4 / 6",
-    last: "5h ago",
-  },
-  {
-    name: "Marketing Campaign Q2",
-    client: "Summit Enterprises",
-    manager: "Liam Johnson",
-    status: "Planning",
-    progress: 15,
-    priority: "Medium",
-    start: "May 10, 2025",
-    due: "Jul 15, 2025",
-    budget: "$12,000",
-    spent: "$1,800",
-    tasks: "5 / 20",
-    milestones: "1 / 4",
-    last: "1d ago",
-  },
-  {
-    name: "E-commerce Platform",
-    client: "Innovate Labs",
-    manager: "Noah Davis",
-    status: "In Progress",
-    progress: 55,
-    priority: "High",
-    start: "Mar 01, 2025",
-    due: "Jun 01, 2025",
-    budget: "$32,000",
-    spent: "$17,600",
-    tasks: "26 / 48",
-    milestones: "3 / 6",
-    last: "3h ago",
-  },
-  {
-    name: "Data Migration Project",
-    client: "NextGen Industries",
-    manager: "Ava Thompson",
-    status: "On Hold",
-    progress: 30,
-    priority: "Low",
-    start: "Apr 05, 2025",
-    due: "Jun 25, 2025",
-    budget: "$8,500",
-    spent: "$2,550",
-    tasks: "6 / 18",
-    milestones: "0 / 3",
-    last: "2d ago",
-  },
-  {
-    name: "System Integration",
-    client: "Pulse Technologies",
-    manager: "Mason Clark",
-    status: "In Review",
-    progress: 90,
-    priority: "Medium",
-    start: "Jan 15, 2025",
-    due: "May 10, 2025",
-    budget: "$22,000",
-    spent: "$21,120",
-    tasks: "40 / 44",
-    milestones: "5 / 5",
-    last: "6h ago",
-  },
-  {
-    name: "Brand Identity Design",
-    client: "BlueStone Architects",
-    manager: "Isabella White",
-    status: "Completed",
-    progress: 100,
-    priority: "Low",
-    start: "Feb 01, 2025",
-    due: "Apr 15, 2025",
-    budget: "$7,500",
-    spent: "$7,500",
-    tasks: "12 / 12",
-    milestones: "3 / 3",
-    last: "1d ago",
-  },
-];
-
-const statusRows = [
-  ["In Progress", "18 (56.3%)", "blue"],
-  ["Planning", "5 (15.6%)", "purple"],
-  ["In Review", "4 (12.5%)", "amber"],
-  ["On Hold", "3 (9.4%)", "orange"],
-  ["Completed", "2 (6.3%)", "green"],
-];
-
-const activityRows = [
-  {
-    icon: Star,
-    tone: "green",
-    title: "Task completed",
-    sub: "Design homepage mockup",
-    meta: "Olivia Bennett",
-    time: "1h ago",
-  },
-  {
-    icon: Milestone,
-    tone: "blue",
-    title: "Milestone achieved",
-    sub: "Phase 2 Development Complete",
-    meta: "Website Redesign",
-    time: "3h ago",
-  },
-  {
-    icon: FileUp,
-    tone: "green",
-    title: "File uploaded",
-    sub: "Project Requirements.docx",
-    meta: "Design Team",
-    time: "5h ago",
-  },
-  {
-    icon: ClipboardList,
-    tone: "amber",
-    title: "Task assigned",
-    sub: "API integration",
-    meta: "Sophia Martinez",
-    time: "1d ago",
-  },
-  {
-    icon: Clock3,
-    tone: "green",
-    title: "Time logged",
-    sub: "3.5h logged to Mobile App Development",
-    meta: "Liam Johnson",
-    time: "1d ago",
-  },
-];
-
-const deadlines = [
-  ["Website Redesign & Development", "Design System", "May 25, 2025", "in 7 days", "blue"],
-  ["CRM Implementation", "User Training", "May 28, 2025", "in 10 days", "green"],
-  ["Mobile App Development", "Beta Testing", "May 30, 2025", "in 12 days", "purple"],
-  ["E-commerce Platform", "Payment Gateway Integration", "Jun 01, 2025", "in 14 days", "orange"],
-  ["Marketing Campaign Q2", "Campaign Launch", "Jun 05, 2025", "in 18 days", "green"],
-];
-
-const budgetRows = [
-  ["Website Redesign", 36, 24],
-  ["Mobile App", 49, 31],
-  ["CRM Impl.", 23, 10],
-  ["E-commerce", 38, 21],
-  ["Others", 19, 10],
-];
-
-const initials = (name) =>
-  name
-    .split(" ")
-    .map((x) => x[0])
-    .join("")
-    .slice(0, 2);
+const csvCell = (v) => {
+  const s = v === null || v === undefined ? "" : String(v);
+  const safe = /^[=+\-@]/.test(s) ? `'${s}` : s;
+  return `"${safe.replace(/"/g, '""')}"`;
+};
 
 export default function ProjectWorkspace() {
-  const [tab, setTab] = useState("Projects");
+  const [tab, setTab] = useState("Overview");
+
+  // shared context (team, members, clients) — fetched once
+  const [ctx, setCtx] = useState(null);
+  const [ctxError, setCtxError] = useState("");
+
+  // overview (KPIs + dashboard panels)
+  const [overview, setOverview] = useState(null);
+  const [ovError, setOvError] = useState("");
+
+  const [refreshTick, setRefreshTick] = useState(0);
+  const bump = useCallback(() => setRefreshTick((t) => t + 1), []);
+
+  // projects list state
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [loading, setLoading] = useState(false);
+  const [listError, setListError] = useState("");
+
+  // filters
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All Statuses");
-  const [client, setClient] = useState("All Clients");
-  const [manager, setManager] = useState("All Managers");
-  const [priority, setPriority] = useState("All Priorities");
-  const [showNew, setShowNew] = useState(false);
+  const [debounced, setDebounced] = useState("");
+  const [status, setStatus] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [managerId, setManagerId] = useState("");
+  const [priority, setPriority] = useState("");
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  // project modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [modalId, setModalId] = useState(null);
+  const [modalNonce, setModalNonce] = useState(0);
 
-    return projects.filter((project) => {
-      return (
-        (!q ||
-          [
-            project.name,
-            project.client,
-            project.manager,
-            project.status,
-            project.priority,
-          ]
-            .join(" ")
-            .toLowerCase()
-            .includes(q)) &&
-        (status === "All Statuses" || project.status === status) &&
-        (client === "All Clients" || project.client === client) &&
-        (manager === "All Managers" || project.manager === manager) &&
-        (priority === "All Priorities" || project.priority === priority)
-      );
-    });
-  }, [search, status, client, manager, priority]);
+  const fileInputRef = useRef(null);
+  const [importing, setImporting] = useState(false);
+
+  const openProject = (mode, id = null) => {
+    setModalMode(mode);
+    setModalId(id);
+    setModalNonce((n) => n + 1);
+    setModalOpen(true);
+  };
+
+  // ---- context (once) ----
+  useEffect(() => {
+    let alive = true;
+    projectsApi
+      .getContext()
+      .then((c) => {
+        if (alive) setCtx(c);
+      })
+      .catch(() => {
+        if (alive) setCtxError("Could not load workspace context.");
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // ---- overview (mount + refresh) ----
+  useEffect(() => {
+    let alive = true;
+    projectsApi
+      .getOverview()
+      .then((o) => {
+        if (alive) {
+          setOverview(o);
+          setOvError("");
+        }
+      })
+      .catch(() => {
+        if (alive) setOvError("Could not load overview.");
+      });
+    return () => {
+      alive = false;
+    };
+  }, [refreshTick]);
+
+  // ---- debounce search ----
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(search.trim()), 300);
+    return () => clearTimeout(id);
+  }, [search]);
+
+  // ---- reset page on filter change ----
+  useEffect(() => {
+    setPage(1);
+  }, [debounced, status, clientId, managerId, priority]);
+
+  // ---- projects list ----
+  useEffect(() => {
+    if (tab !== "Projects") return undefined;
+    let alive = true;
+    setLoading(true);
+    projectsApi
+      .listProjects({
+        search: debounced || undefined,
+        status: status || undefined,
+        clientId: clientId || undefined,
+        managerId: managerId || undefined,
+        priority: priority || undefined,
+        page,
+        limit,
+      })
+      .then((res) => {
+        if (!alive) return;
+        setRows(res?.data || []);
+        setTotal(res?.total || 0);
+        setListError("");
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setListError("Could not load projects.");
+        setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [tab, debounced, status, clientId, managerId, priority, page, limit, refreshTick]);
 
   const resetFilters = () => {
     setSearch("");
-    setStatus("All Statuses");
-    setClient("All Clients");
-    setManager("All Managers");
-    setPriority("All Priorities");
+    setStatus("");
+    setClientId("");
+    setManagerId("");
+    setPriority("");
+  };
+
+  const kpis = overview?.kpis || {};
+  const statCards = [
+    { label: "Active Projects", value: kpis.activeProjects ?? 0, sub: `${kpis.inProgressProjects ?? 0} in progress`, icon: FolderOpen, tone: "blue" },
+    { label: "Projects Completed", value: kpis.completedProjectsMonth ?? 0, sub: "This month", icon: CircleCheckBig, tone: "green" },
+    { label: "Tasks In Progress", value: kpis.tasksInProgress ?? 0, sub: `of ${kpis.tasksTotal ?? 0} total tasks`, icon: CalendarDays, tone: "amber" },
+    { label: "Tasks Completed", value: kpis.tasksCompletedMonth ?? 0, sub: "This month", icon: CircleCheckBig, tone: "green" },
+    { label: "On Time Delivery", value: kpis.onTimeDelivery == null ? "—" : pct(kpis.onTimeDelivery), sub: "Milestones", icon: TimerReset, tone: "purple" },
+    { label: "Budget Utilization", value: kpis.budgetUtilization == null ? "—" : pct(kpis.budgetUtilization), sub: "Active projects", icon: BadgeDollarSign, tone: "gold" },
+    { label: "Billable Amount (MTD)", value: money(kpis.billableAmountMonth ?? 0), sub: "Billed this month", icon: BadgeDollarSign, tone: "orange" },
+  ];
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  const exportCsv = () => {
+    const header = ["Code", "Name", "Client", "Manager", "Status", "Priority", "Progress", "Budget", "Spent", "Start", "Due"];
+    const lines = [header.map(csvCell).join(",")];
+    rows.forEach((p) => {
+      lines.push(
+        [
+          p.code,
+          p.name,
+          p.clientName,
+          p.managerName,
+          p.statusLabel,
+          p.priority,
+          `${p.progress}%`,
+          p.budget ?? "",
+          p.spent ?? "",
+          fmtDate(p.startDate),
+          fmtDate(p.dueDate),
+        ]
+          .map(csvCell)
+          .join(","),
+      );
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "projects.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const onImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const linesRaw = text.split(/\r?\n/).filter((l) => l.trim());
+      // Skip a header row if the first cell looks like "name"/"project".
+      const start = /name|project/i.test(linesRaw[0] || "") ? 1 : 0;
+      const names = linesRaw
+        .slice(start, start + 200)
+        .map((l) => l.split(",")[0].replace(/^"|"$/g, "").trim())
+        .filter(Boolean);
+      let created = 0;
+      for (const name of names) {
+        // eslint-disable-next-line no-await-in-loop
+        await projectsApi.createProject({ name });
+        created += 1;
+      }
+      window.alert(`${created} project${created === 1 ? "" : "s"} imported.`);
+      bump();
+    } catch (err) {
+      window.alert(err?.message || "Import failed.");
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (
@@ -365,21 +271,26 @@ export default function ProjectWorkspace() {
         <div className="pjw-header-actions">
           <label className="pjw-global-search">
             <Search size={16} />
-            <input placeholder="Search projects, clients, tasks, milestones..." />
-            <kbd>⌘ K</kbd>
+            <input
+              placeholder="Search projects…"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                if (tab !== "Projects") setTab("Projects");
+              }}
+            />
           </label>
-
-          <button className="pjw-primary" onClick={() => setShowNew(true)}>
-            <Plus size={16} />
-            New
-            <ChevronDown size={14} />
+          <button className="pjw-primary" onClick={() => openProject("create")}>
+            <Plus size={16} /> New Project
           </button>
-
         </div>
       </header>
 
+      {ctxError ? <div className="pjw-error">{ctxError}</div> : null}
+      {ovError ? <div className="pjw-error">{ovError}</div> : null}
+
       <section className="pjw-stats">
-        {stats.map(({ label, value, sub, trend, trendText, icon: StatIcon, tone }) => (
+        {statCards.map(({ label, value, sub, icon: StatIcon, tone }) => (
           <article className={`pjw-stat pjw-stat-${tone}`} key={label}>
             <div className="pjw-stat-top">
               <span>{label}</span>
@@ -389,40 +300,37 @@ export default function ProjectWorkspace() {
             </div>
             <strong>{value}</strong>
             <small>{sub}</small>
-            <p>
-              ↑ {trend} <span>{trendText}</span>
-            </p>
           </article>
         ))}
       </section>
 
       <nav className="pjw-tabs">
-        {tabs.map(([TabIcon, label]) => (
-          <button
-            type="button"
-            key={label}
-            className={tab === label ? "active" : ""}
-            onClick={() => setTab(label)}
-          >
+        {TABS.map(([TabIcon, label]) => (
+          <button type="button" key={label} className={tab === label ? "active" : ""} onClick={() => setTab(label)}>
             <TabIcon size={15} />
             {label}
           </button>
         ))}
       </nav>
 
-      {tab === "Projects" ? (
+      {tab === "Overview" && <PjwOverview overview={overview} />}
+
+      {tab === "Projects" && (
         <>
           <section className="pjw-section-head">
             <div>
               <h2>Projects</h2>
               <p>Track and manage all client delivery projects</p>
             </div>
-
             <div className="pjw-section-actions">
-              <button><Upload size={14} /> Import</button>
-              <button><Download size={14} /> Export</button>
-              <button className="pjw-square"><Settings2 size={15} /></button>
-              <button className="pjw-primary" onClick={() => setShowNew(true)}>
+              <button onClick={() => fileInputRef.current?.click()} disabled={importing}>
+                <Upload size={14} /> {importing ? "Importing…" : "Import"}
+              </button>
+              <input ref={fileInputRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={onImportFile} />
+              <button onClick={exportCsv}>
+                <Download size={14} /> Export
+              </button>
+              <button className="pjw-primary" onClick={() => openProject("create")}>
                 <Plus size={15} /> New Project
               </button>
             </div>
@@ -431,68 +339,48 @@ export default function ProjectWorkspace() {
           <div className="pjw-filters">
             <label className="pjw-search-filter">
               <Search size={14} />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search projects..."
-              />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects..." />
             </label>
 
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option>All Statuses</option>
-              <option>In Progress</option>
-              <option>Planning</option>
-              <option>In Review</option>
-              <option>On Hold</option>
-              <option>Completed</option>
+              <option value="">All Statuses</option>
+              <option value="planning">Planning</option>
+              <option value="in_progress">In Progress</option>
+              <option value="in_review">In Review</option>
+              <option value="on_hold">On Hold</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
 
-            <select value={client} onChange={(e) => setClient(e.target.value)}>
-              <option>All Clients</option>
-              {[...new Set(projects.map((x) => x.client))].map((x) => (
-                <option key={x}>{x}</option>
+            <select value={clientId} onChange={(e) => setClientId(e.target.value)}>
+              <option value="">All Clients</option>
+              {(ctx?.clients || []).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
 
-            <select value={manager} onChange={(e) => setManager(e.target.value)}>
-              <option>All Managers</option>
-              {[...new Set(projects.map((x) => x.manager))].map((x) => (
-                <option key={x}>{x}</option>
+            <select value={managerId} onChange={(e) => setManagerId(e.target.value)}>
+              <option value="">All Managers</option>
+              {(ctx?.members || []).map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
               ))}
             </select>
 
             <select value={priority} onChange={(e) => setPriority(e.target.value)}>
-              <option>All Priorities</option>
-              <option>High</option>
-              <option>Medium</option>
-              <option>Low</option>
+              <option value="">All Priorities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+              <option value="urgent">Urgent</option>
             </select>
-
-            <button className="pjw-date">
-              <CalendarDays size={14} />
-              Date Range
-              <ChevronDown size={13} />
-            </button>
-
-            <select>
-              <option>This Month</option>
-            </select>
-
-            <button className="pjw-more-filter">
-              More Filters <ChevronDown size={13} />
-            </button>
 
             <button className="pjw-reset" onClick={resetFilters}>
               <RotateCcw size={14} /> Reset
             </button>
-
-            <span className="pjw-view-label"></span>
-            <button className="pjw-view">
-              <Table2 size={14} /> Table <ChevronDown size={12} />
-            </button>
-            <button className="pjw-square"><List size={15} /></button>
-            <button className="pjw-square"><Calendar size={15} /></button>
-            <button className="pjw-square"><CalendarDays size={15} /></button>
           </div>
 
           <div className="pjw-table-wrap">
@@ -500,7 +388,6 @@ export default function ProjectWorkspace() {
               <table>
                 <thead>
                   <tr>
-                    <th><input type="checkbox" /></th>
                     <th>Project Name</th>
                     <th>Client</th>
                     <th>Project Manager</th>
@@ -517,262 +404,129 @@ export default function ProjectWorkspace() {
                     <th>Actions</th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  {filtered.map((project, index) => (
-                    <tr key={project.name}>
-                      <td><input type="checkbox" /></td>
-                      <td>
-                        <button className="pjw-project-link">{project.name}</button>
-                      </td>
-                      <td>{project.client}</td>
-                      <td>
-                        <span className="pjw-manager">
-                          <span className={`pjw-avatar a${index % 5}`}>
-                            {initials(project.manager)}
-                          </span>
-                          {project.manager}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`pjw-pill status-${project.status.toLowerCase().replaceAll(" ", "-")}`}>
-                          {project.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="pjw-progress-cell">
-                          <i><b style={{ width: `${project.progress}%` }} /></i>
-                          <span>{project.progress}%</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`pjw-pill priority-${project.priority.toLowerCase()}`}>
-                          {project.priority}
-                        </span>
-                      </td>
-                      <td>{project.start}</td>
-                      <td>{project.due}</td>
-                      <td>{project.budget}</td>
-                      <td>{project.spent}</td>
-                      <td>{project.tasks}</td>
-                      <td>{project.milestones}</td>
-                      <td><span className="pjw-recent">{project.last}</span></td>
-                      <td>
-                        <div className="pjw-row-actions">
-                          <button aria-label="View"><Eye size={14} /></button>
-                          <button aria-label="Edit"><Pencil size={14} /></button>
-                          <button aria-label="More"><MoreVertical size={15} /></button>
-                        </div>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={14} className="pjw-cell-muted" style={{ textAlign: "center", padding: 30 }}>
+                        Loading…
                       </td>
                     </tr>
-                  ))}
+                  ) : listError ? (
+                    <tr>
+                      <td colSpan={14} style={{ textAlign: "center", padding: 30, color: "#b91c1c" }}>
+                        {listError}
+                      </td>
+                    </tr>
+                  ) : rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={14} className="pjw-cell-muted" style={{ textAlign: "center", padding: 30 }}>
+                        No projects yet. Create your first project to get started.
+                      </td>
+                    </tr>
+                  ) : (
+                    rows.map((p, index) => (
+                      <tr key={p.id}>
+                        <td>
+                          <button className="pjw-project-link" onClick={() => openProject("view", p.id)}>
+                            {p.name}
+                            {p.code ? <span className="pjw-cell-muted"> · {p.code}</span> : null}
+                          </button>
+                        </td>
+                        <td>{p.clientName || <span className="pjw-cell-muted">—</span>}</td>
+                        <td>
+                          {p.managerName ? (
+                            <span className="pjw-manager">
+                              <span className={`pjw-avatar a${index % 5}`}>{initials(p.managerName)}</span>
+                              {p.managerName}
+                            </span>
+                          ) : (
+                            <span className="pjw-cell-muted">Unassigned</span>
+                          )}
+                        </td>
+                        <td>
+                          <span className={`pjw-pill ${statusClass(p.status)}`}>{p.statusLabel}</span>
+                        </td>
+                        <td>
+                          <div className="pjw-progress-cell">
+                            <i>
+                              <b style={{ width: `${p.progress}%` }} />
+                            </i>
+                            <span>{p.progress}%</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`pjw-pill ${priorityClass(p.priority)}`}>{p.priority}</span>
+                        </td>
+                        <td>{fmtDate(p.startDate)}</td>
+                        <td>{fmtDate(p.dueDate)}</td>
+                        <td>{p.budget != null ? money(p.budget, p.currency) : <span className="pjw-cell-muted">—</span>}</td>
+                        <td>{money(p.spent, p.currency)}</td>
+                        <td>
+                          {p.taskDone} / {p.taskTotal}
+                        </td>
+                        <td>
+                          {p.milestoneDone} / {p.milestoneTotal}
+                        </td>
+                        <td>
+                          <span className="pjw-recent">{fmtRelative(p.updatedAt)}</span>
+                        </td>
+                        <td>
+                          <div className="pjw-row-actions">
+                            <button aria-label="View" onClick={() => openProject("view", p.id)}>
+                              <Eye size={14} />
+                            </button>
+                            <button aria-label="Edit" onClick={() => openProject("edit", p.id)}>
+                              <Pencil size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
 
             <footer className="pjw-pagination">
-              <span>Showing 1 to {filtered.length} of 32 projects</span>
+              <span>
+                {total === 0 ? "0 projects" : `Showing ${(page - 1) * limit + 1} to ${Math.min(page * limit, total)} of ${total} projects`}
+              </span>
               <div>
-                <button>‹</button>
-                <button className="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>4</button>
-                <button>›</button>
+                <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                  ‹
+                </button>
+                <button className="active">{page}</button>
+                <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                  ›
+                </button>
               </div>
-              <select defaultValue="20">
-                <option value="20">20 / page</option>
-                <option value="50">50 / page</option>
-              </select>
+              <span className="pjw-cell-muted">
+                Page {page} of {totalPages}
+              </span>
             </footer>
           </div>
 
-          <section className="pjw-bottom">
-            <article className="pjw-panel">
-              <div className="pjw-panel-head">
-                <b>Projects by Status</b>
-                <select defaultValue="This Month">
-                  <option>This Month</option>
-                </select>
-              </div>
-
-              <div className="pjw-donut-body">
-                <div className="pjw-donut">
-                  <div>
-                    <strong>32</strong>
-                    <span>Total Projects</span>
-                  </div>
-                </div>
-
-                <div className="pjw-legend">
-                  {statusRows.map(([label, value, tone]) => (
-                    <p key={label}>
-                      <i className={tone} />
-                      <span>{label}</span>
-                      <b>{value}</b>
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </article>
-
-            <article className="pjw-panel">
-              <div className="pjw-panel-head">
-                <b>Budget vs Spent</b>
-                <select defaultValue="This Month">
-                  <option>This Month</option>
-                </select>
-              </div>
-
-              <div className="pjw-budget-chart">
-                <div className="pjw-y-axis">
-                  <span>$60K</span><span>$45K</span><span>$30K</span><span>$15K</span><span>$0</span>
-                </div>
-                <div className="pjw-budget-bars">
-                  {budgetRows.map(([label, budget, spent]) => (
-                    <div className="pjw-budget-group" key={label}>
-                      <div className="pjw-budget-pair">
-                        <i className="budget" style={{ height: `${budget * 2.1}px` }} />
-                        <i className="spent" style={{ height: `${spent * 2.1}px` }} />
-                      </div>
-                      <span>{label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pjw-budget-legend">
-                <span><i className="budget" />Budget</span>
-                <span><i className="spent" />Spent</span>
-              </div>
-            </article>
-
-            <article className="pjw-panel">
-              <div className="pjw-panel-head">
-                <b>Recent Activity</b>
-                <select defaultValue="All Activity">
-                  <option>All Activity</option>
-                </select>
-              </div>
-
-              <div className="pjw-activity-list">
-                {activityRows.map(({ icon: ActivityIcon, tone, title, sub, meta, time }) => (
-                  <div className="pjw-activity-row" key={`${title}-${sub}`}>
-                    <span className={`pjw-activity-icon ${tone}`}>
-                      <ActivityIcon size={14} />
-                    </span>
-                    <div>
-                      <b>{title}</b>
-                      <span>{sub}</span>
-                      <small>{meta}</small>
-                    </div>
-                    <time>{time}</time>
-                  </div>
-                ))}
-              </div>
-
-              <button className="pjw-link">View all activity →</button>
-            </article>
-
-            <article className="pjw-panel">
-              <div className="pjw-panel-head">
-                <b>Upcoming Deadlines</b>
-                <select defaultValue="Next 30 Days">
-                  <option>Next 30 Days</option>
-                </select>
-              </div>
-
-              <div className="pjw-deadlines">
-                {deadlines.map(([project, deliverable, date, remaining, tone]) => (
-                  <div className="pjw-deadline-row" key={project}>
-                    <span className={`pjw-deadline-icon ${tone}`}>
-                      <CalendarDays size={14} />
-                    </span>
-                    <div>
-                      <b>{project}</b>
-                      <small>{deliverable}</small>
-                    </div>
-                    <span>{date}</span>
-                    <strong>{remaining}</strong>
-                  </div>
-                ))}
-              </div>
-
-              <button className="pjw-link">View all deadlines →</button>
-            </article>
-          </section>
+          <PjwDashboardPanels overview={overview} />
         </>
-      ) : (
-        <section className="pjw-placeholder">
-          <FolderOpen size={44} />
-          <h2>{tab}</h2>
-          <p>UI placeholder for the next implementation step.</p>
-        </section>
       )}
 
-      {showNew && (
-        <div className="pjw-modal-bg" onMouseDown={() => setShowNew(false)}>
-          <div className="pjw-modal" onMouseDown={(e) => e.stopPropagation()}>
-            <header>
-              <div>
-                <h3>New Project</h3>
-                <p>Create a new client delivery project.</p>
-              </div>
-              <button onClick={() => setShowNew(false)}><X size={18} /></button>
-            </header>
+      {tab === "Tasks" && <PjwTasks ctx={ctx} onChanged={bump} />}
+      {tab === "Milestones" && <PjwMilestones ctx={ctx} onChanged={bump} />}
+      {tab === "Deliverables" && <PjwDeliverables ctx={ctx} onChanged={bump} />}
+      {tab === "Files" && <PjwFiles ctx={ctx} />}
+      {tab === "Time & Expenses" && <PjwTimeExpenses ctx={ctx} onChanged={bump} />}
+      {tab === "Clients" && <PjwClients ctx={ctx} onOpenProject={(id) => openProject("view", id)} />}
+      {tab === "Reports" && <PjwReports />}
 
-            <div className="pjw-modal-grid">
-              <label>
-                Project Name
-                <input placeholder="e.g. Website Redesign" />
-              </label>
-              <label>
-                Client
-                <input placeholder="Select or enter client" />
-              </label>
-              <label>
-                Project Manager
-                <input placeholder="Assign project manager" />
-              </label>
-              <label>
-                Priority
-                <select defaultValue="Medium">
-                  <option>High</option>
-                  <option>Medium</option>
-                  <option>Low</option>
-                </select>
-              </label>
-              <label>
-                Start Date
-                <input type="date" />
-              </label>
-              <label>
-                Due Date
-                <input type="date" />
-              </label>
-              <label>
-                Budget
-                <input placeholder="$0.00" />
-              </label>
-              <label>
-                Status
-                <select defaultValue="Planning">
-                  <option>Planning</option>
-                  <option>In Progress</option>
-                  <option>On Hold</option>
-                </select>
-              </label>
-            </div>
-
-            <footer>
-              <button onClick={() => setShowNew(false)}>Cancel</button>
-              <button className="pjw-primary" onClick={() => setShowNew(false)}>
-                <Plus size={15} /> Create Project
-              </button>
-            </footer>
-          </div>
-        </div>
-      )}
+      <PjwProjectModal
+        key={modalNonce}
+        open={modalOpen}
+        mode={modalMode}
+        projectId={modalId}
+        ctx={ctx}
+        onClose={() => setModalOpen(false)}
+        onSaved={bump}
+      />
     </div>
   );
 }
