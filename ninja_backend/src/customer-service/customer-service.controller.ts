@@ -28,6 +28,9 @@ import { UpdateCsTicketDto } from './dto/update-cs-ticket.dto';
 import { CreateCsMessageDto } from './dto/create-cs-message.dto';
 import { CreateCsArticleDto } from './dto/create-cs-article.dto';
 import { UpdateCsArticleDto } from './dto/update-cs-article.dto';
+import { CreateCsSlaPolicyDto, UpdateCsSlaPolicyDto } from './dto/cs-sla-policy.dto';
+import { CreateCsEscalationDto, UpdateCsEscalationDto } from './dto/cs-escalation.dto';
+import { CreateCsAutomationDto, UpdateCsAutomationDto } from './dto/cs-automation.dto';
 
 // Customer Service Workspace API. JwtAuthGuard authenticates, PaymentGuard gates
 // unpaid accounts, and WorkspaceLockGuard enforces the $97 add-on ONLY when the
@@ -260,5 +263,101 @@ export class CustomerServiceController {
   @ApiOperation({ summary: 'Delete a Knowledge Base article (team-scoped)' })
   async removeArticle(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.cs.removeArticle(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── SLA policies + recompute ─────────────────────────────────────────────────
+
+  @Get('sla/policies')
+  @ApiOperation({ summary: 'List SLA policies (team-scoped)' })
+  async listSlaPolicies(@CurrentUser() user: any) {
+    return this.cs.findAllSlaPolicies(user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('sla/policies')
+  @ApiOperation({ summary: 'Create an SLA policy' })
+  async createSlaPolicy(@Body() dto: CreateCsSlaPolicyDto, @CurrentUser() user: any) {
+    return this.cs.createSlaPolicy(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('sla/policies/:id')
+  @ApiOperation({ summary: 'Update an SLA policy (team-scoped)' })
+  async updateSlaPolicy(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCsSlaPolicyDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.cs.updateSlaPolicy(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('sla/policies/:id')
+  @ApiOperation({ summary: 'Delete an SLA policy (team-scoped)' })
+  async removeSlaPolicy(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.cs.removeSlaPolicy(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('sla/recompute')
+  @ApiOperation({ summary: 'Re-derive SLA state for open tickets from policies + timestamps (idempotent)' })
+  async recomputeSla(@CurrentUser() user: any) {
+    return this.cs.recomputeSla(user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Escalation rules ─────────────────────────────────────────────────────────
+
+  @Get('escalations')
+  @ApiOperation({ summary: 'List escalation rules (team-scoped)' })
+  async listEscalations(@CurrentUser() user: any) {
+    return this.cs.findAllEscalations(user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('escalations')
+  @ApiOperation({ summary: 'Create an escalation rule' })
+  async createEscalation(@Body() dto: CreateCsEscalationDto, @CurrentUser() user: any) {
+    return this.cs.createEscalation(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('escalations/:id')
+  @ApiOperation({ summary: 'Update an escalation rule (team-scoped)' })
+  async updateEscalation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCsEscalationDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.cs.updateEscalation(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('escalations/:id')
+  @ApiOperation({ summary: 'Delete an escalation rule (team-scoped)' })
+  async removeEscalation(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.cs.removeEscalation(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Automation rules ─────────────────────────────────────────────────────────
+
+  @Get('automations')
+  @ApiOperation({ summary: 'List automation rules (team-scoped)' })
+  async listAutomations(@CurrentUser() user: any) {
+    return this.cs.findAllAutomations(user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Post('automations')
+  @ApiOperation({ summary: 'Create an automation rule' })
+  async createAutomation(@Body() dto: CreateCsAutomationDto, @CurrentUser() user: any) {
+    return this.cs.createAutomation(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('automations/:id')
+  @ApiOperation({ summary: 'Update an automation rule (team-scoped)' })
+  async updateAutomation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCsAutomationDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.cs.updateAutomation(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('automations/:id')
+  @ApiOperation({ summary: 'Delete an automation rule (team-scoped)' })
+  async removeAutomation(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.cs.removeAutomation(id, user.id, user.teamId ?? null, user.role ?? 'owner');
   }
 }

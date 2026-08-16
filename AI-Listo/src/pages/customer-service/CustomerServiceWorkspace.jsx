@@ -5,6 +5,8 @@ import CsTicketModal from "./CsTicketModal";
 import CsTicketDetail from "./CsTicketDetail";
 import CsCustomersSection from "./CsCustomersSection";
 import CsKnowledgeBaseSection from "./CsKnowledgeBaseSection";
+import CsSlaEscalationsSection from "./CsSlaEscalationsSection";
+import CsAutomationSection from "./CsAutomationSection";
 import { relativeTime } from "../sales/salesFormat";
 
 // Customer Service Workspace, wired to real /customer-service data. Only Tickets and
@@ -524,6 +526,10 @@ export default function CustomerServiceWorkspace() {
         <CsCustomersSection />
       ) : tab === "Knowledge Base" ? (
         <CsKnowledgeBaseSection />
+      ) : tab === "SLA & Escalations" ? (
+        <CsSlaEscalationsSection />
+      ) : tab === "Automation" ? (
+        <CsAutomationSection />
       ) : (
         <div className="placeholder">
           <I name={tabs.find((x) => x[1] === tab)?.[0] || "headphones"} size={40} />

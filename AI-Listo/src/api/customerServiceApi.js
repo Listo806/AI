@@ -89,6 +89,51 @@ const customerServiceApi = {
   deleteArticle(id) {
     return apiClient.request(`/customer-service/kb/articles/${id}`, { method: "DELETE" });
   },
+
+  // SLA policies + recompute
+  listSlaPolicies() {
+    return apiClient.request(`/customer-service/sla/policies`, { method: "GET" });
+  },
+  createSlaPolicy(body) {
+    return apiClient.request(`/customer-service/sla/policies`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateSlaPolicy(id, body) {
+    return apiClient.request(`/customer-service/sla/policies/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteSlaPolicy(id) {
+    return apiClient.request(`/customer-service/sla/policies/${id}`, { method: "DELETE" });
+  },
+  recomputeSla() {
+    return apiClient.request(`/customer-service/sla/recompute`, { method: "POST", body: JSON.stringify({}) });
+  },
+
+  // Escalation rules
+  listEscalations() {
+    return apiClient.request(`/customer-service/escalations`, { method: "GET" });
+  },
+  createEscalation(body) {
+    return apiClient.request(`/customer-service/escalations`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateEscalation(id, body) {
+    return apiClient.request(`/customer-service/escalations/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteEscalation(id) {
+    return apiClient.request(`/customer-service/escalations/${id}`, { method: "DELETE" });
+  },
+
+  // Automation rules
+  listAutomations() {
+    return apiClient.request(`/customer-service/automations`, { method: "GET" });
+  },
+  createAutomation(body) {
+    return apiClient.request(`/customer-service/automations`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateAutomation(id, body) {
+    return apiClient.request(`/customer-service/automations/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteAutomation(id) {
+    return apiClient.request(`/customer-service/automations/${id}`, { method: "DELETE" });
+  },
 };
 
 export default customerServiceApi;

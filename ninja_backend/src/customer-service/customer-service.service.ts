@@ -143,6 +143,61 @@ export class CustomerServiceService {
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_kb_articles_team ON cs_kb_articles(team_id)`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_kb_articles_status ON cs_kb_articles(status)`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_kb_articles_category ON cs_kb_articles(category)`);
+    // SLA policies.
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS cs_sla_policies (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        name TEXT,
+        priority TEXT,
+        category TEXT,
+        first_response_target_mins INTEGER,
+        resolution_target_mins INTEGER,
+        active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_sla_policies_team ON cs_sla_policies(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_sla_policies_active ON cs_sla_policies(active)`);
+    // Escalation rules.
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS cs_escalations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        name TEXT,
+        trigger TEXT,
+        threshold_mins INTEGER,
+        action TEXT,
+        target TEXT,
+        active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_escalations_team ON cs_escalations(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_escalations_active ON cs_escalations(active)`);
+    // Automation rules.
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS cs_automations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        name TEXT,
+        trigger TEXT,
+        conditions TEXT,
+        actions TEXT,
+        active BOOLEAN NOT NULL DEFAULT true,
+        last_run_at TIMESTAMP,
+        run_status TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_automations_team ON cs_automations(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_automations_active ON cs_automations(active)`);
     this.schemaReady = true;
   }
 
@@ -483,6 +538,10 @@ export class CustomerServiceService {
     );
     await this.logActivity(teamId, rows[0].id, 'Created', dto.subject || null, userId, agentName)
       .catch(() => undefined);
+    // Derive SLA state from the applicable policy unless the caller set it explicitly.
+    if (dto.slaStatus === undefined) {
+      await this.applySlaToTicket(rows[0].id, teamId).catch(() => undefined);
+    }
     return this.findOneTicket(rows[0].id, userId, userTeamId, role);
   }
 
@@ -545,6 +604,10 @@ export class CustomerServiceService {
       const nowResolvedOrClosed = dto.status === 'Resolved' || dto.status === 'Closed';
       if (nowResolvedOrClosed && !prev.resolved_at) {
         sets.push(`resolved_at = NOW()`);
+      } else if (!nowResolvedOrClosed && prev.resolved_at) {
+        // Reopened: clear the resolution stamp so lifecycle, the resolution KPI and
+        // SLA derivation all stay truthful (the ticket is no longer resolved).
+        sets.push(`resolved_at = NULL`);
       }
     }
     if (dto.status !== undefined && dto.closedAt === undefined) {
@@ -589,6 +652,10 @@ export class CustomerServiceService {
       }
     } catch {
       /* activity logging is best-effort */
+    }
+    // Re-derive SLA state from the applicable policy unless it was set explicitly.
+    if (dto.slaStatus === undefined) {
+      await this.applySlaToTicket(id, teamId).catch(() => undefined);
     }
     return this.findOneTicket(id, userId, userTeamId, role);
   }
@@ -1308,6 +1375,373 @@ export class CustomerServiceService {
       [id, accessible],
     );
     if (!res.rowCount) throw new NotFoundException('Article not found');
+    return { success: true };
+  }
+
+  // ─── SLA policies + real SLA state derivation ────────────────────────────────
+  //
+  // A ticket's SLA state is DERIVED from its timestamps and the applicable policy,
+  // never a decorative manual label: On Track / At Risk (past 80% of a target) /
+  // Breached (past a target with the obligation unmet) / Completed (resolved within
+  // the resolution target). Applied on ticket create/update and re-derivable in bulk
+  // via recomputeSla as time passes. Everything team-scoped.
+
+  private static readonly AT_RISK_FRACTION = 0.8;
+
+  // Pick the most specific active policy that matches the ticket. A policy with a
+  // blank priority/category matches "any"; a specific match outscores "any".
+  private findApplicablePolicy(policies: any[], ticket: any): any | null {
+    let best: any = null;
+    let bestScore = -1;
+    for (const p of policies) {
+      const pPriority = (p.priority || '').trim();
+      const pCategory = (p.category || '').trim();
+      if (pPriority && pPriority !== (ticket.priority || '')) continue;
+      if (pCategory && pCategory !== (ticket.category || '')) continue;
+      const score = (pPriority ? 2 : 1) + (pCategory ? 2 : 1);
+      if (score > bestScore) { bestScore = score; best = p; }
+    }
+    return best;
+  }
+
+  private computeSlaStatus(ticket: any, policy: any, nowMs: number): string | null {
+    if (!policy) return null;
+    const created = ticket.created_at ? new Date(ticket.created_at).getTime() : null;
+    if (created == null || isNaN(created)) return null;
+    const frTarget = policy.first_response_target_mins;
+    const resTarget = policy.resolution_target_mins;
+    const resolvedAt = ticket.resolved_at ? new Date(ticket.resolved_at).getTime() : null;
+    const firstResp = ticket.first_response_at ? new Date(ticket.first_response_at).getTime() : null;
+
+    // Terminal: resolved. Only trust resolved_at when the ticket is actually in a
+    // terminal status (a reopened ticket may still carry a stale resolved_at).
+    const isTerminal = ticket.status === 'Resolved' || ticket.status === 'Closed';
+    if (isTerminal && resolvedAt != null && !isNaN(resolvedAt)) {
+      if (resTarget != null) {
+        return resolvedAt <= created + resTarget * 60000 ? 'Completed' : 'Breached';
+      }
+      return 'Completed';
+    }
+    // Open ticket.
+    let breached = false;
+    let atRisk = false;
+    if (resTarget != null) {
+      const deadline = created + resTarget * 60000;
+      if (nowMs > deadline) breached = true;
+      else if (nowMs > created + resTarget * 60000 * CustomerServiceService.AT_RISK_FRACTION) atRisk = true;
+    }
+    if (!breached && frTarget != null && firstResp == null) {
+      const frDeadline = created + frTarget * 60000;
+      if (nowMs > frDeadline) breached = true;
+      else if (nowMs > created + frTarget * 60000 * CustomerServiceService.AT_RISK_FRACTION) atRisk = true;
+    }
+    if (breached) return 'Breached';
+    if (atRisk) return 'At Risk';
+    return 'On Track';
+  }
+
+  // Derive + persist one ticket's SLA state from the applicable policy. No-op if no
+  // policy matches (leaves any manual value untouched). Best-effort.
+  private async applySlaToTicket(ticketId: string, teamId: string): Promise<void> {
+    const [tr, pr] = await Promise.all([
+      this.db.query(
+        `SELECT id, status, priority, category, created_at, first_response_at, resolved_at, sla_status
+           FROM cs_tickets WHERE id = $1 AND team_id = $2 LIMIT 1`,
+        [ticketId, teamId],
+      ),
+      this.db.query(
+        `SELECT priority, category, first_response_target_mins, resolution_target_mins
+           FROM cs_sla_policies WHERE team_id = $1 AND active = true`,
+        [teamId],
+      ),
+    ]);
+    if (!tr.rows.length) return;
+    const policy = this.findApplicablePolicy(pr.rows, tr.rows[0]);
+    if (!policy) return;
+    const status = this.computeSlaStatus(tr.rows[0], policy, Date.now());
+    if (status && status !== tr.rows[0].sla_status) {
+      await this.db.query(
+        `UPDATE cs_tickets SET sla_status = $1 WHERE id = $2 AND team_id = $3`,
+        [status, ticketId, teamId],
+      );
+    }
+  }
+
+  // Bulk re-derive SLA state for open tickets across the caller's teams as time
+  // passes. Idempotent: only writes when the computed state changed.
+  async recomputeSla(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ updated: number }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { updated: 0 };
+    const now = Date.now();
+    let updated = 0;
+    for (const teamId of accessible) {
+      const policiesRes = await this.db.query(
+        `SELECT priority, category, first_response_target_mins, resolution_target_mins
+           FROM cs_sla_policies WHERE team_id = $1 AND active = true`,
+        [teamId],
+      );
+      if (!policiesRes.rows.length) continue;
+      const ticketsRes = await this.db.query(
+        `SELECT id, status, priority, category, created_at, first_response_at, resolved_at, sla_status
+           FROM cs_tickets WHERE team_id = $1 AND status NOT IN ('Resolved','Closed')`,
+        [teamId],
+      );
+      for (const t of ticketsRes.rows) {
+        const policy = this.findApplicablePolicy(policiesRes.rows, t);
+        if (!policy) continue;
+        const status = this.computeSlaStatus(t, policy, now);
+        if (status && status !== t.sla_status) {
+          await this.db.query(
+            `UPDATE cs_tickets SET sla_status = $1 WHERE id = $2 AND team_id = $3`,
+            [status, t.id, teamId],
+          );
+          updated++;
+        }
+      }
+    }
+    return { updated };
+  }
+
+  private readonly slaSelect = `
+    p.id, p.team_id AS "teamId", p.name, p.priority, p.category,
+    p.first_response_target_mins AS "firstResponseTargetMins",
+    p.resolution_target_mins AS "resolutionTargetMins",
+    p.active, p.created_at AS "createdAt", p.updated_at AS "updatedAt"
+  `;
+
+  async findAllSlaPolicies(userId: string, userTeamId: string | null, role: string): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return [];
+    const { rows } = await this.db.query(
+      `SELECT ${this.slaSelect} FROM cs_sla_policies p
+        WHERE p.team_id = ANY($1) ORDER BY p.created_at DESC`,
+      [accessible],
+    );
+    return rows;
+  }
+
+  async createSlaPolicy(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    const { rows } = await this.db.query(
+      `INSERT INTO cs_sla_policies
+         (team_id, created_by, name, priority, category, first_response_target_mins, resolution_target_mins, active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+      [
+        teamId, userId, dto.name || null, dto.priority || null, dto.category || null,
+        dto.firstResponseTargetMins ?? null, dto.resolutionTargetMins ?? null,
+        dto.active === undefined ? true : !!dto.active,
+      ],
+    );
+    return this.findOneConfig('cs_sla_policies', this.slaSelect, rows[0].id, accessible);
+  }
+
+  async updateSlaPolicy(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    const accessible = await this.assertConfigInTeam('cs_sla_policies', id, userId, userTeamId, role);
+    const colFor: Record<string, string> = {
+      name: 'name', priority: 'priority', category: 'category',
+      firstResponseTargetMins: 'first_response_target_mins',
+      resolutionTargetMins: 'resolution_target_mins', active: 'active',
+    };
+    await this.applyConfigUpdate('cs_sla_policies', id, dto, colFor, accessible);
+    return this.findOneConfig('cs_sla_policies', this.slaSelect, id, accessible);
+  }
+
+  async removeSlaPolicy(id: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    return this.removeConfig('cs_sla_policies', id, userId, userTeamId, role);
+  }
+
+  // ─── Escalation rules ────────────────────────────────────────────────────────
+
+  private readonly escSelect = `
+    e.id, e.team_id AS "teamId", e.name, e.trigger,
+    e.threshold_mins AS "thresholdMins", e.action, e.target, e.active,
+    e.created_at AS "createdAt", e.updated_at AS "updatedAt"
+  `;
+
+  async findAllEscalations(userId: string, userTeamId: string | null, role: string): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return [];
+    const { rows } = await this.db.query(
+      `SELECT ${this.escSelect} FROM cs_escalations e
+        WHERE e.team_id = ANY($1) ORDER BY e.created_at DESC`,
+      [accessible],
+    );
+    return rows;
+  }
+
+  async createEscalation(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    const { rows } = await this.db.query(
+      `INSERT INTO cs_escalations
+         (team_id, created_by, name, trigger, threshold_mins, action, target, active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+      [
+        teamId, userId, dto.name || null, dto.trigger || null,
+        dto.thresholdMins ?? null, dto.action || null, dto.target || null,
+        dto.active === undefined ? true : !!dto.active,
+      ],
+    );
+    return this.findOneConfig('cs_escalations', this.escSelect, rows[0].id, accessible, 'e');
+  }
+
+  async updateEscalation(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    const accessible = await this.assertConfigInTeam('cs_escalations', id, userId, userTeamId, role);
+    const colFor: Record<string, string> = {
+      name: 'name', trigger: 'trigger', thresholdMins: 'threshold_mins',
+      action: 'action', target: 'target', active: 'active',
+    };
+    await this.applyConfigUpdate('cs_escalations', id, dto, colFor, accessible);
+    return this.findOneConfig('cs_escalations', this.escSelect, id, accessible, 'e');
+  }
+
+  async removeEscalation(id: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    return this.removeConfig('cs_escalations', id, userId, userTeamId, role);
+  }
+
+  // ─── Automation rules ────────────────────────────────────────────────────────
+
+  private readonly autoSelect = `
+    m.id, m.team_id AS "teamId", m.name, m.trigger, m.conditions, m.actions,
+    m.active, m.last_run_at AS "lastRunAt", m.run_status AS "runStatus",
+    m.created_at AS "createdAt", m.updated_at AS "updatedAt"
+  `;
+
+  async findAllAutomations(userId: string, userTeamId: string | null, role: string): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return [];
+    const { rows } = await this.db.query(
+      `SELECT ${this.autoSelect} FROM cs_automations m
+        WHERE m.team_id = ANY($1) ORDER BY m.created_at DESC`,
+      [accessible],
+    );
+    return rows;
+  }
+
+  async createAutomation(dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new ForbiddenException('You do not have access to this account');
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    const { rows } = await this.db.query(
+      `INSERT INTO cs_automations
+         (team_id, created_by, name, trigger, conditions, actions, active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+      [
+        teamId, userId, dto.name || null, dto.trigger || null,
+        dto.conditions || null, dto.actions || null,
+        dto.active === undefined ? true : !!dto.active,
+      ],
+    );
+    return this.findOneConfig('cs_automations', this.autoSelect, rows[0].id, accessible, 'm');
+  }
+
+  async updateAutomation(id: string, dto: any, userId: string, userTeamId: string | null, role: string): Promise<any> {
+    const accessible = await this.assertConfigInTeam('cs_automations', id, userId, userTeamId, role);
+    const colFor: Record<string, string> = {
+      name: 'name', trigger: 'trigger', conditions: 'conditions',
+      actions: 'actions', active: 'active',
+    };
+    await this.applyConfigUpdate('cs_automations', id, dto, colFor, accessible);
+    return this.findOneConfig('cs_automations', this.autoSelect, id, accessible, 'm');
+  }
+
+  async removeAutomation(id: string, userId: string, userTeamId: string | null, role: string): Promise<{ success: boolean }> {
+    return this.removeConfig('cs_automations', id, userId, userTeamId, role);
+  }
+
+  // ─── Shared config helpers (team-scoped) ─────────────────────────────────────
+  //
+  // Small internal helpers so the three config entities (SLA policies, escalations,
+  // automations) share one reviewed team-isolation implementation. Table names are
+  // internal constants — never user input — so they are safe to interpolate.
+
+  private async assertConfigInTeam(
+    table: 'cs_sla_policies' | 'cs_escalations' | 'cs_automations',
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<string[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Record not found');
+    const { rows } = await this.db.query(
+      `SELECT id FROM ${table} WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Record not found');
+    return accessible;
+  }
+
+  private async applyConfigUpdate(
+    table: 'cs_sla_policies' | 'cs_escalations' | 'cs_automations',
+    id: string,
+    dto: any,
+    colFor: Record<string, string>,
+    accessible: string[],
+  ): Promise<void> {
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push(col === 'active' ? !!(dto as any)[key] : (dto as any)[key]);
+      }
+    }
+    if (!sets.length) return;
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, accessible);
+    await this.db.query(
+      `UPDATE ${table} SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = ANY($${i++})`,
+      vals,
+    );
+  }
+
+  private async findOneConfig(
+    table: 'cs_sla_policies' | 'cs_escalations' | 'cs_automations',
+    select: string,
+    id: string,
+    accessible: string[],
+    alias = 'p',
+  ): Promise<any> {
+    const { rows } = await this.db.query(
+      `SELECT ${select} FROM ${table} ${alias} WHERE ${alias}.id = $1 AND ${alias}.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Record not found');
+    return rows[0];
+  }
+
+  private async removeConfig(
+    table: 'cs_sla_policies' | 'cs_escalations' | 'cs_automations',
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Record not found');
+    const res = await this.db.query(
+      `DELETE FROM ${table} WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Record not found');
     return { success: true };
   }
 }
