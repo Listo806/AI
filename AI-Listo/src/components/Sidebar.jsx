@@ -5,6 +5,8 @@ import { usePlan } from "../context/PlanContext";
 import { LockBadge } from "./FeatureLock";
 import { openFeatureAddOns, FEATURE_TO_ADDON } from "./FeatureAddOns";
 import { useEffect, useState } from "react";
+import workspaceApi from "../api/workspaceApi";
+import apiClient from "../api/apiClient";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
@@ -108,6 +110,41 @@ export default function Sidebar({
   // false = internal/admin view (all workspaces available to Super Admin)
   // true  = render the same locked/unpaid presentation a normal customer sees
   const [previewWorkspacesAsCustomer, setPreviewWorkspacesAsCustomer] = useState(false);
+
+  // LIVE per-workspace entitlement for the sidebar badges. Keyed by backend catalog
+  // id (e.g. "financial_services"). ACTIVE (green) when the team owns the $97 add-on,
+  // LOCKED (red) otherwise. Sourced from the real entitlement endpoints, never
+  // hard-coded. Fails closed (empty -> LOCKED) so nothing shows ACTIVE by accident.
+  const [wsEntitled, setWsEntitled] = useState({});
+  const [leadGenEntitled, setLeadGenEntitled] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const access = await workspaceApi.getAccess();
+        if (alive && access && Array.isArray(access.workspaces)) {
+          const map = {};
+          access.workspaces.forEach((w) => {
+            map[w.id] = !!w.entitled;
+          });
+          setWsEntitled(map);
+        }
+      } catch (_e) {
+        /* fail closed — leave map empty so badges read LOCKED */
+      }
+      try {
+        const res = await apiClient.request("/subscriptions/my-addons");
+        const data = res && res.data !== undefined ? res.data : res;
+        if (alive) setLeadGenEntitled(!!data?.leadGenerator);
+      } catch (_e) {
+        /* leave false */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user?.id]);
 
   const workspaceItems = [
     {
@@ -285,33 +322,33 @@ export default function Sidebar({
     "super-admin",
   ].includes(String(user?.role || "").toLowerCase());
 
+  // Sidebar workspace id -> backend catalog id. The only divergence is Financial
+  // (sidebar "financial" vs catalog "financial_services").
+  const catalogIdFor = (id) => (id === "financial" ? "financial_services" : id);
+
+  // A workspace is ACTIVE (green) only when the account genuinely holds it, driven by
+  // the LIVE entitlement data — never hard-coded. Team is core; platform support sees
+  // everything; Lead Generator uses its own add-on entitlement for now; every other
+  // paid workspace is ACTIVE only when the team owns the $97 add-on.
   const isWorkspaceActive = (workspace) => {
-    // Team Workspace is always available.
     if (workspace?.id === "team") {
       return true;
     }
-
-    // Super Admin has full access in ADMIN / ACTIVE VIEW.
-    // In CUSTOMER PREVIEW VIEW we intentionally skip this bypass so the
-    // workspace is evaluated exactly like a standard customer account.
     if (isSuperAdminAccount && !previewWorkspacesAsCustomer) {
       return true;
     }
-
-    // For all other accounts, only registered workspace features can
-    // become ACTIVE, and the current plan must include that feature.
-    if (!isWorkspaceFeatureRegistered(workspace)) {
-      return false;
+    if (workspace?.id === "lead-generator") {
+      return !!leadGenEntitled;
     }
-
-    return !isLocked(workspace);
+    return !!wsEntitled[catalogIdFor(workspace?.id)];
   };
 
   const getWorkspaceBadge = (workspace) =>
-    isWorkspaceActive(workspace) ? "ACTIVE" : "PREMIUM";
+    isWorkspaceActive(workspace) ? "ACTIVE" : "LOCKED";
 
-  const canOpenWorkspace = (workspace) =>
-    isWorkspaceActive(workspace) && !!workspace?.path;
+  // Every workspace routes to its page; WorkspaceGate + the backend guard enforce
+  // access and present the $97 add-on purchase when the team is not entitled.
+  const canOpenWorkspace = (workspace) => !!workspace?.path;
 
 
   // Helpful while wiring backend/add-on feature keys. Remove later if desired.
@@ -705,23 +742,13 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       onMouseEnter={() => setHoveredWorkspace(workspace)}
                       onFocus={() => setHoveredWorkspace(workspace)}
                       onClick={() => {
-                        if (workspaceCanOpen) {
+                        // Every workspace opens its route; WorkspaceGate + the backend
+                        // guard enforce access and show the $97 add-on purchase when the
+                        // team is not entitled.
+                        if (workspace.path) {
                           window.location.href = workspace.path;
                           return;
                         }
-
-                        // Same behavior as locked menu items above:
-                        // show the add-on flow if there is a configured add-on.
-                        if (isLocked(workspace)) {
-                          const addon = FEATURE_TO_ADDON[workspace.feature];
-
-                          if (addon) {
-                            openFeatureAddOns(addon);
-                            return;
-                          }
-                        }
-
-                        // Otherwise keep the preview open.
                         setHoveredWorkspace(workspace);
                       }}
                     >
@@ -737,7 +764,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
 
                       <span
                         className={`crm-workspace-badge ${
-                          workspaceActive ? "active" : ""
+                          workspaceActive ? "active" : "locked"
                         }`}
                       >
                         {getWorkspaceBadge(workspace)}
@@ -766,9 +793,20 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                     {t("nav.generator")}
                   </span>
 
-                  <span className="crm-nav-addon">
-                    {t("nav.addOn")}
-                  </span>
+                  {(() => {
+                    const leadGenActive =
+                      leadGenEntitled ||
+                      (isSuperAdminAccount && !previewWorkspacesAsCustomer);
+                    return (
+                      <span
+                        className={`crm-workspace-badge ${
+                          leadGenActive ? "active" : "locked"
+                        }`}
+                      >
+                        {leadGenActive ? "ACTIVE" : "LOCKED"}
+                      </span>
+                    );
+                  })()}
 
                   <SidebarIcon name="chevron-right"
                     className="crm-workspace-chevron" />
@@ -975,7 +1013,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
 
               <span
                 className={`crm-workspace-detail-badge ${
-                  isWorkspaceActive(hoveredWorkspace) ? "active" : ""
+                  isWorkspaceActive(hoveredWorkspace) ? "active" : "locked"
                 }`}
               >
                 {getWorkspaceBadge(hoveredWorkspace)}
