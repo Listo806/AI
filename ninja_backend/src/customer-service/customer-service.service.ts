@@ -123,6 +123,26 @@ export class CustomerServiceService {
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_documents_team ON cs_ticket_documents(team_id)`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_documents_ticket ON cs_ticket_documents(ticket_id)`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_ticket_documents_file ON cs_ticket_documents(stored_file_id)`);
+    // Knowledge Base articles.
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS cs_kb_articles (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        title TEXT,
+        body TEXT,
+        category TEXT,
+        status TEXT NOT NULL DEFAULT 'Draft',
+        author_name TEXT,
+        tags TEXT[],
+        published_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_kb_articles_team ON cs_kb_articles(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_kb_articles_status ON cs_kb_articles(status)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_cs_kb_articles_category ON cs_kb_articles(category)`);
     this.schemaReady = true;
   }
 
@@ -1006,6 +1026,288 @@ export class CustomerServiceService {
       [attachmentId, ticketId, accessible],
     );
     await this.storage.deleteStoredFileById(rows[0].stored_file_id);
+    return { success: true };
+  }
+
+  // ─── Customers (reuse CRM contacts + service rollups) ────────────────────────
+  //
+  // Customers ARE the account's CRM contacts (no duplicate identity). Each row is
+  // enriched with per-customer ticket rollups computed from cs_tickets, every
+  // subquery scoped by both contact_id AND team so a rollup can never count another
+  // account's tickets.
+
+  async findAllCustomers(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (page > 1_000_000) page = 1_000_000;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['c.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.search && params.search.trim()) {
+      where.push(`(c.name ILIKE $${i} OR c.email ILIKE $${i} OR c.phone ILIKE $${i})`);
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM contacts c WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    // Rollups are correlated subqueries scoped by contact + team.
+    const dataRes = await this.db.query(
+      `SELECT c.id, c.name, c.email, c.phone,
+              (SELECT COUNT(*)::int FROM cs_tickets t
+                 WHERE t.contact_id = c.id AND t.team_id = c.team_id) AS "totalTickets",
+              (SELECT COUNT(*)::int FROM cs_tickets t
+                 WHERE t.contact_id = c.id AND t.team_id = c.team_id
+                   AND t.status NOT IN ('Resolved','Closed')) AS "openTickets",
+              (SELECT COUNT(*)::int FROM cs_tickets t
+                 WHERE t.contact_id = c.id AND t.team_id = c.team_id
+                   AND t.status IN ('Resolved','Closed')) AS "resolvedTickets",
+              (SELECT MAX(t.last_activity_at) FROM cs_tickets t
+                 WHERE t.contact_id = c.id AND t.team_id = c.team_id) AS "lastInteraction"
+         FROM contacts c
+        WHERE ${whereSql}
+        ORDER BY c.name ASC NULLS LAST
+        LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneCustomer(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Customer not found');
+    const { rows } = await this.db.query(
+      `SELECT id, name, email, phone, notes, team_id FROM contacts
+        WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Customer not found');
+    const contact = rows[0];
+    // Ticket history for this customer, scoped by contact + the customer's own team.
+    const tickets = await this.db.query(
+      `SELECT id, ticket_number AS "ticketNumber", subject, status, priority,
+              sla_status AS "slaStatus", channel, created_at AS "createdAt",
+              resolved_at AS "resolvedAt", last_activity_at AS "lastActivityAt"
+         FROM cs_tickets
+        WHERE contact_id = $1 AND team_id = $2
+        ORDER BY created_at DESC LIMIT 50`,
+      [id, contact.team_id],
+    );
+    const agg = await this.db.query(
+      `SELECT COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE status NOT IN ('Resolved','Closed'))::int AS open,
+              COUNT(*) FILTER (WHERE status IN ('Resolved','Closed'))::int AS resolved
+         FROM cs_tickets WHERE contact_id = $1 AND team_id = $2`,
+      [id, contact.team_id],
+    );
+    return {
+      id: contact.id,
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone,
+      notes: contact.notes,
+      totalTickets: Number(agg.rows[0].total) || 0,
+      openTickets: Number(agg.rows[0].open) || 0,
+      resolvedTickets: Number(agg.rows[0].resolved) || 0,
+      // Satisfaction history joins in with the Surveys slice; empty until then.
+      satisfaction: { average: null, count: 0 },
+      tickets: tickets.rows,
+    };
+  }
+
+  // ─── Knowledge Base ──────────────────────────────────────────────────────────
+  //
+  // Team-scoped articles (Draft / Published / Archived). Only the caller's account
+  // articles are ever returned; any AI retrieval must reuse these same team-scoped
+  // reads so it can never surface another account's content.
+
+  private static readonly KB_STATUSES = ['Draft', 'Published', 'Archived'];
+
+  private readonly kbSelect = `
+    a.id, a.team_id AS "teamId", a.title, a.body, a.category, a.status,
+    a.author_name AS "authorName", a.tags,
+    a.published_at AS "publishedAt", a.created_at AS "createdAt", a.updated_at AS "updatedAt"
+  `;
+
+  async findAllArticles(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { search?: string; status?: string; category?: string; page?: string; limit?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    let page = parseInt(String(params.page ?? '1'), 10);
+    let limit = parseInt(String(params.limit ?? '20'), 10);
+    if (!Number.isFinite(page) || page < 1) page = 1;
+    if (page > 1_000_000) page = 1_000_000;
+    if (!Number.isFinite(limit) || limit < 1) limit = 20;
+    if (limit > 100) limit = 100;
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['a.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.status && params.status.trim()) {
+      where.push(`a.status = $${i++}`);
+      vals.push(params.status.trim());
+    }
+    if (params.category && params.category.trim()) {
+      where.push(`a.category = $${i++}`);
+      vals.push(params.category.trim());
+    }
+    if (params.search && params.search.trim()) {
+      where.push(`(a.title ILIKE $${i} OR a.body ILIKE $${i} OR a.category ILIKE $${i})`);
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM cs_kb_articles a WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+    const dataRes = await this.db.query(
+      `SELECT ${this.kbSelect} FROM cs_kb_articles a
+        WHERE ${whereSql} ORDER BY a.updated_at DESC LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async findOneArticle(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Article not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.kbSelect} FROM cs_kb_articles a
+        WHERE a.id = $1 AND a.team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Article not found');
+    return rows[0];
+  }
+
+  async createArticle(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    const status = CustomerServiceService.KB_STATUSES.includes(dto.status) ? dto.status : 'Draft';
+    const { rows } = await this.db.query(
+      `INSERT INTO cs_kb_articles
+         (team_id, created_by, title, body, category, status, author_name, tags, published_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, ${status === 'Published' ? 'NOW()' : 'NULL'})
+       RETURNING id`,
+      [
+        teamId,
+        userId,
+        dto.title || null,
+        dto.body || null,
+        dto.category || null,
+        status,
+        dto.authorName || null,
+        Array.isArray(dto.tags) ? dto.tags : null,
+      ],
+    );
+    return this.findOneArticle(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateArticle(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Article not found');
+    const existing = await this.db.query(
+      `SELECT team_id, status, published_at FROM cs_kb_articles
+        WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [id, accessible],
+    );
+    if (!existing.rows.length) throw new NotFoundException('Article not found');
+    const teamId = existing.rows[0].team_id;
+    const colFor: Record<string, string> = {
+      title: 'title',
+      body: 'body',
+      category: 'category',
+      status: 'status',
+      authorName: 'author_name',
+      tags: 'tags',
+    };
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    for (const [key, col] of Object.entries(colFor)) {
+      if ((dto as any)[key] !== undefined) {
+        sets.push(`${col} = $${i++}`);
+        vals.push((dto as any)[key]);
+      }
+    }
+    // Stamp published_at the first time an article becomes Published.
+    if (dto.status === 'Published' && !existing.rows[0].published_at) {
+      sets.push(`published_at = NOW()`);
+    }
+    if (!sets.length) return this.findOneArticle(id, userId, userTeamId, role);
+    sets.push(`updated_at = NOW()`);
+    vals.push(id, teamId);
+    await this.db.query(
+      `UPDATE cs_kb_articles SET ${sets.join(', ')} WHERE id = $${i++} AND team_id = $${i++}`,
+      vals,
+    );
+    return this.findOneArticle(id, userId, userTeamId, role);
+  }
+
+  async removeArticle(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Article not found');
+    const res = await this.db.query(
+      `DELETE FROM cs_kb_articles WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!res.rowCount) throw new NotFoundException('Article not found');
     return { success: true };
   }
 }

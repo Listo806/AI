@@ -64,6 +64,31 @@ const customerServiceApi = {
   deleteAttachment(ticketId, attachmentId) {
     return apiClient.request(`/customer-service/tickets/${ticketId}/attachments/${attachmentId}`, { method: "DELETE" });
   },
+
+  // Customers (CRM contacts + rollups)
+  listCustomers(params = {}) {
+    return apiClient.request(`/customer-service/customers${toQuery(params)}`, { method: "GET" });
+  },
+  getCustomer(id) {
+    return apiClient.request(`/customer-service/customers/${id}`, { method: "GET" });
+  },
+
+  // Knowledge Base
+  listArticles(params = {}) {
+    return apiClient.request(`/customer-service/kb/articles${toQuery(params)}`, { method: "GET" });
+  },
+  getArticle(id) {
+    return apiClient.request(`/customer-service/kb/articles/${id}`, { method: "GET" });
+  },
+  createArticle(body) {
+    return apiClient.request(`/customer-service/kb/articles`, { method: "POST", body: JSON.stringify(body) });
+  },
+  updateArticle(id, body) {
+    return apiClient.request(`/customer-service/kb/articles/${id}`, { method: "PUT", body: JSON.stringify(body) });
+  },
+  deleteArticle(id) {
+    return apiClient.request(`/customer-service/kb/articles/${id}`, { method: "DELETE" });
+  },
 };
 
 export default customerServiceApi;

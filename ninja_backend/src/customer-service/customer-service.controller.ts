@@ -26,6 +26,8 @@ import { CustomerServiceService } from './customer-service.service';
 import { CreateCsTicketDto } from './dto/create-cs-ticket.dto';
 import { UpdateCsTicketDto } from './dto/update-cs-ticket.dto';
 import { CreateCsMessageDto } from './dto/create-cs-message.dto';
+import { CreateCsArticleDto } from './dto/create-cs-article.dto';
+import { UpdateCsArticleDto } from './dto/update-cs-article.dto';
 
 // Customer Service Workspace API. JwtAuthGuard authenticates, PaymentGuard gates
 // unpaid accounts, and WorkspaceLockGuard enforces the $97 add-on ONLY when the
@@ -186,5 +188,77 @@ export class CustomerServiceController {
     @CurrentUser() user: any,
   ) {
     return this.cs.removeAttachment(id, attachmentId, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Customers (CRM contacts + service rollups) ───────────────────────────────
+
+  @Get('customers')
+  @ApiOperation({ summary: 'List customers (CRM contacts + ticket rollups, team-scoped)' })
+  async listCustomers(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.cs.findAllCustomers(user.id, user.teamId ?? null, user.role ?? 'owner', {
+      search,
+      page,
+      limit,
+    });
+  }
+
+  @Get('customers/:id')
+  @ApiOperation({ summary: 'Customer profile + ticket history (team-scoped)' })
+  async getCustomer(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.cs.findOneCustomer(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  // ─── Knowledge Base ───────────────────────────────────────────────────────────
+
+  @Get('kb/articles')
+  @ApiOperation({ summary: 'List Knowledge Base articles (paginated, filterable, team-scoped)' })
+  async listArticles(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('category') category?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.cs.findAllArticles(user.id, user.teamId ?? null, user.role ?? 'owner', {
+      search,
+      status,
+      category,
+      page,
+      limit,
+    });
+  }
+
+  @Post('kb/articles')
+  @ApiOperation({ summary: 'Create a Knowledge Base article' })
+  async createArticle(@Body() dto: CreateCsArticleDto, @CurrentUser() user: any) {
+    return this.cs.createArticle(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Get('kb/articles/:id')
+  @ApiOperation({ summary: 'Get one Knowledge Base article (team-scoped)' })
+  async getArticle(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.cs.findOneArticle(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Put('kb/articles/:id')
+  @ApiOperation({ summary: 'Update a Knowledge Base article (publish/unpublish/archive)' })
+  async updateArticle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCsArticleDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.cs.updateArticle(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  }
+
+  @Delete('kb/articles/:id')
+  @ApiOperation({ summary: 'Delete a Knowledge Base article (team-scoped)' })
+  async removeArticle(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.cs.removeArticle(id, user.id, user.teamId ?? null, user.role ?? 'owner');
   }
 }
