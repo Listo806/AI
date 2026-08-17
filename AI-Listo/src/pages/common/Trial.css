@@ -1,0 +1,354 @@
+/* =========================================================
+   CORTEXA — CREATE ACCOUNT / FREE SIGNUP
+   On-brand redesign. Blue -> violet brand system, Inter,
+   navy ink #0f172a, soft #e5eaf2 lines. Light, committed look
+   matching the marketing landing + pricing pages.
+   Scoped under .cxs-page so it never touches other pages.
+   ========================================================= */
+
+.cxs-page,
+.cxs-page * {
+  box-sizing: border-box;
+}
+
+.cxs-page {
+  min-height: 100svh;
+  width: 100%;
+  padding: 40px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background:
+    radial-gradient(1100px 560px at 50% -8%, rgba(11, 99, 255, 0.10), transparent 60%),
+    radial-gradient(880px 520px at 92% 8%, rgba(123, 66, 255, 0.08), transparent 62%),
+    linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+}
+
+/* -------- Card -------- */
+.cxs-card {
+  position: relative;
+  width: min(468px, 100%);
+  padding: 40px 40px 34px;
+  border: 1px solid #e5eaf2;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  box-shadow:
+    0 18px 50px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(15, 23, 42, 0.03);
+}
+
+/* Thin brand hairline along the very top edge of the card. */
+.cxs-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(100deg, #0b63ff, #7b42ff);
+  opacity: 0.9;
+}
+
+/* -------- Brand / header -------- */
+.cxs-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.cxs-brand img {
+  height: 30px;
+  width: auto;
+  display: block;
+}
+
+.cxs-header {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.cxs-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 16px;
+  padding: 5px 12px;
+  border: 1px solid #d5e2ff;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #2563eb;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.cxs-eyebrow svg {
+  width: 13px;
+  height: 13px;
+}
+
+.cxs-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 33px;
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.032em;
+}
+
+.cxs-header p {
+  margin: 12px 0 0;
+  color: #5b6475;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.cxs-header p b {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* -------- Fields -------- */
+.cxs-fields {
+  display: grid;
+  gap: 13px;
+}
+
+.cxs-field {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 54px;
+  padding: 0 18px;
+  border: 1.5px solid #e5eaf2;
+  border-radius: 12px;
+  background: #ffffff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.cxs-field:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.cxs-field-icon {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  color: #94a3b8;
+  transition: color 0.18s ease;
+}
+
+.cxs-field:focus-within .cxs-field-icon {
+  color: #2563eb;
+}
+
+.cxs-field input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 400;
+}
+
+.cxs-field input::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+.cxs-eye {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.cxs-eye:hover {
+  color: #475569;
+}
+
+/* -------- Submit -------- */
+.cxs-submit {
+  width: 100%;
+  min-height: 54px;
+  margin-top: 22px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(100deg, #0b63ff, #7b42ff);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(70, 62, 255, 0.26);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.cxs-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(70, 62, 255, 0.32);
+  filter: saturate(1.05);
+}
+
+.cxs-submit:active {
+  transform: translateY(0);
+}
+
+.cxs-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+  box-shadow: 0 8px 18px rgba(70, 62, 255, 0.2);
+}
+
+.cxs-submit svg {
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+}
+
+.cxs-submit strong {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.cxs-submit-arrow {
+  transition: transform 0.18s ease;
+}
+
+.cxs-submit:hover .cxs-submit-arrow {
+  transform: translateX(3px);
+}
+
+/* -------- Trust row -------- */
+.cxs-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 20px;
+}
+
+.cxs-trust span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #5b6475;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.cxs-trust svg {
+  width: 15px;
+  height: 15px;
+  color: #059669;
+}
+
+/* -------- Security line -------- */
+.cxs-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #eef1f6;
+  color: #5b6475;
+}
+
+.cxs-security svg {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  color: #94a3b8;
+}
+
+.cxs-security p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+/* -------- Responsive -------- */
+@media (max-width: 600px) {
+  .cxs-page {
+    padding: 22px 14px;
+    align-items: flex-start;
+    background:
+      radial-gradient(700px 380px at 50% -6%, rgba(11, 99, 255, 0.10), transparent 62%),
+      linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  }
+
+  .cxs-card {
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 30px 20px 26px;
+    border-radius: 20px;
+  }
+
+  .cxs-brand img {
+    height: 27px;
+  }
+
+  .cxs-header h1 {
+    font-size: 28px;
+  }
+
+  .cxs-header p {
+    font-size: 15px;
+  }
+
+  .cxs-field {
+    min-height: 52px;
+    padding: 0 15px;
+    gap: 12px;
+  }
+
+  .cxs-field input {
+    height: 50px;
+    font-size: 15px;
+  }
+
+  .cxs-submit strong {
+    font-size: 15px;
+  }
+
+  .cxs-trust {
+    gap: 7px 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .cxs-card {
+    padding: 26px 16px 24px;
+  }
+
+  .cxs-header h1 {
+    font-size: 25px;
+  }
+}
