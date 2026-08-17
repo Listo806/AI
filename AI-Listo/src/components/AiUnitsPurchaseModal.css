@@ -1,4 +1,4 @@
-.aiu-modal-overlay {
+.aiu-ov {
   position: fixed;
   inset: 0;
   z-index: 3000;
@@ -10,88 +10,185 @@
 }
 
 .aiu-modal {
+  position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 540px;
   background: #ffffff;
   color: #0f172a;
-  border-radius: 16px;
-  padding: 22px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  border-radius: 22px;
+  padding: 30px 30px 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
 }
 body.crm-dark .aiu-modal {
   background: #171d27;
   color: #e7ecf3;
 }
 
-.aiu-modal-head {
+.aiu-x {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  background: none;
+  border: 0;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 0;
+}
+.aiu-x:hover {
+  color: #475569;
+}
+
+.aiu-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding-right: 34px;
+}
+.aiu-badge {
+  flex: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  background: #0f172a;
+  color: #ffffff;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
+  justify-content: center;
 }
-.aiu-modal-head h3 {
+body.crm-dark .aiu-badge {
+  background: #0b1120;
+}
+.aiu-head h3 {
+  margin: 2px 0 5px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.aiu-head p {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 14.5px;
+  color: #64748b;
+  line-height: 1.5;
 }
-.aiu-modal-close {
-  background: none;
-  border: none;
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.6;
-  padding: 4px;
+body.crm-dark .aiu-head p {
+  color: #9aa6b6;
 }
-.aiu-modal-sub {
-  margin: 4px 0 16px;
-  font-size: 13px;
-  opacity: 0.72;
+
+.aiu-divider {
+  height: 1px;
+  background: #eef1f5;
+  margin: 22px 0;
+}
+body.crm-dark .aiu-divider {
+  background: #26303d;
 }
 
 .aiu-packs {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 .aiu-pack {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  gap: 16px;
+  width: 100%;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e6eaf0;
   color: inherit;
-  transition: border-color 0.15s ease;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  text-align: left;
 }
 body.crm-dark .aiu-pack {
   background: #1e2632;
   border-color: #2b3444;
 }
 .aiu-pack:hover {
-  border-color: #14b8a6;
+  border-color: #0f172a;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+body.crm-dark .aiu-pack:hover {
+  border-color: #4b5563;
 }
 .aiu-pack:disabled {
   opacity: 0.6;
   cursor: default;
 }
+.aiu-pack-ico {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: #f1f5f9;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.crm-dark .aiu-pack-ico {
+  background: #0f1620;
+  color: #cbd5e1;
+}
 .aiu-pack-units {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.aiu-pack-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .aiu-pack-price {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0d9488;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
-body.crm-dark .aiu-pack-price {
-  color: #2dd4bf;
+.aiu-pack-chev {
+  color: #94a3b8;
 }
 
-.aiu-modal-msg {
-  margin-top: 14px;
+.aiu-msg {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #0d9488;
+  text-align: center;
+}
+
+.aiu-foot {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font-size: 12.5px;
-  opacity: 0.85;
+  color: #94a3b8;
+}
+.aiu-foot b {
+  color: #475569;
+  font-weight: 700;
+}
+body.crm-dark .aiu-foot b {
+  color: #cbd5e1;
+}
+
+@media (max-width: 560px) {
+  .aiu-modal {
+    padding: 26px 20px 20px;
+    border-radius: 18px;
+  }
+  .aiu-head h3 {
+    font-size: 22px;
+  }
+  .aiu-pack-units {
+    font-size: 18px;
+  }
+  .aiu-pack-price {
+    font-size: 21px;
+  }
 }
