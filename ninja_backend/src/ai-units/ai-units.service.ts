@@ -393,6 +393,36 @@ export class AiUnitsService {
     };
   }
 
+  /**
+   * Return Paddle checkout params for a one-time AI-Unit pack. Reads the price
+   * id from server-side env; if the packs are not set up yet it reports
+   * configured:false so the UI can show an honest "not available" message
+   * rather than opening a broken checkout.
+   */
+  async getCheckout(user: any, packageId: string): Promise<any> {
+    const packs: Record<string, { units: number; env: string }> = {
+      boost: { units: 500, env: 'PADDLE_PRICE_AI_UNITS_500' },
+      plus: { units: 1000, env: 'PADDLE_PRICE_AI_UNITS_1000' },
+      max: { units: 2000, env: 'PADDLE_PRICE_AI_UNITS_2000' },
+    };
+    const pack = packs[packageId];
+    if (!pack) return { configured: false, message: 'Unknown package.' };
+    const priceId = (process.env[pack.env] || '').trim();
+    if (!priceId) {
+      return {
+        configured: false,
+        message: 'AI Unit packs are not available yet. Add the Paddle price IDs to enable purchases.',
+      };
+    }
+    return {
+      configured: true,
+      priceId,
+      units: pack.units,
+      email: user?.email || null,
+      customData: { userId: user?.id, product: 'ai_units', packageId, units: pack.units },
+    };
+  }
+
   private isUuid(v: any): boolean {
     return (
       typeof v === 'string' &&
