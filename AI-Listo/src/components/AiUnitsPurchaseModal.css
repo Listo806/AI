@@ -1,0 +1,97 @@
+.aiu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.aiu-modal {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+body.crm-dark .aiu-modal {
+  background: #171d27;
+  color: #e7ecf3;
+}
+
+.aiu-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.aiu-modal-head h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.aiu-modal-close {
+  background: none;
+  border: none;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  padding: 4px;
+}
+.aiu-modal-sub {
+  margin: 4px 0 16px;
+  font-size: 13px;
+  opacity: 0.72;
+}
+
+.aiu-packs {
+  display: grid;
+  gap: 10px;
+}
+.aiu-pack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: inherit;
+  transition: border-color 0.15s ease;
+}
+body.crm-dark .aiu-pack {
+  background: #1e2632;
+  border-color: #2b3444;
+}
+.aiu-pack:hover {
+  border-color: #14b8a6;
+}
+.aiu-pack:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.aiu-pack-units {
+  font-size: 14px;
+  font-weight: 600;
+}
+.aiu-pack-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0d9488;
+}
+body.crm-dark .aiu-pack-price {
+  color: #2dd4bf;
+}
+
+.aiu-modal-msg {
+  margin-top: 14px;
+  font-size: 12.5px;
+  opacity: 0.85;
+}
