@@ -5,9 +5,11 @@ import { usePlan } from "../context/PlanContext";
 import { useAiUnits } from "../context/AiUnitsContext";
 import { LockBadge } from "./FeatureLock";
 import { openFeatureAddOns, FEATURE_TO_ADDON } from "./FeatureAddOns";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import workspaceApi from "../api/workspaceApi";
 import apiClient from "../api/apiClient";
+import { fetchPaddleConfig } from "../api/paddleApi";
+import { initPaddle, openWorkspaceCheckout } from "../pages/checkout/paddleCheckout";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
@@ -147,6 +149,74 @@ export default function Sidebar({
       alive = false;
     };
   }, [user?.id]);
+
+  // Reload the live workspace entitlements (used to flip a badge to ACTIVE
+  // after a successful purchase; the webhook grants asynchronously).
+  const loadAccess = useCallback(async () => {
+    try {
+      const access = await workspaceApi.getAccess();
+      if (access && Array.isArray(access.workspaces)) {
+        const map = {};
+        access.workspaces.forEach((w) => {
+          map[w.id] = !!w.entitled;
+        });
+        setWsEntitled(map);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const paddleReadyRef = useRef(false);
+  const accessTimers = useRef([]);
+  const scheduleAccessRefresh = useCallback(() => {
+    accessTimers.current.forEach((t) => clearTimeout(t));
+    accessTimers.current = [3000, 8000, 15000].map((ms) => setTimeout(loadAccess, ms));
+  }, [loadAccess]);
+  useEffect(() => () => accessTimers.current.forEach((t) => clearTimeout(t)), []);
+
+  const ensurePaddle = useCallback(async () => {
+    if (paddleReadyRef.current) return true;
+    const cfg = await fetchPaddleConfig();
+    if (!cfg?.clientToken) return false;
+    await initPaddle(cfg, (ev) => {
+      if (ev?.name === "checkout.completed") scheduleAccessRefresh();
+    });
+    paddleReadyRef.current = true;
+    return true;
+  }, [scheduleAccessRefresh]);
+
+  // Open the real Paddle checkout for the selected $97 Workspace. Only after a
+  // verified payment does the webhook grant the entitlement — this never
+  // activates the workspace on click. Falls back to the info modal if checkout
+  // is unavailable.
+  const buyWorkspace = useCallback(
+    async (ws) => {
+      try {
+        const intent = await workspaceApi.purchase(ws.id);
+        if (intent?.alreadyEntitled) {
+          await loadAccess();
+          return;
+        }
+        const ok = intent?.priceId && (await ensurePaddle());
+        if (!ok) {
+          const addon = FEATURE_TO_ADDON[ws.feature];
+          if (addon) openFeatureAddOns(addon);
+          return;
+        }
+        openWorkspaceCheckout({
+          priceId: intent.priceId,
+          customData: intent.customData,
+          email: intent.email,
+        });
+        scheduleAccessRefresh();
+      } catch (e) {
+        const addon = FEATURE_TO_ADDON[ws.feature];
+        if (addon) openFeatureAddOns(addon);
+      }
+    },
+    [ensurePaddle, loadAccess, scheduleAccessRefresh],
+  );
 
   const workspaceItems = [
     {
@@ -1115,12 +1185,9 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       previewWorkspacesAsCustomer ||
                       isLocked(hoveredWorkspace)
                     ) {
-                      const addon =
-                        FEATURE_TO_ADDON[hoveredWorkspace.feature];
-
-                      if (addon) {
-                        openFeatureAddOns(addon);
-                      }
+                      // Open the real Paddle checkout for this $97 Workspace.
+                      // The workspace is only activated after a verified payment.
+                      buyWorkspace(hoveredWorkspace);
                     }
                   }}
                 >
