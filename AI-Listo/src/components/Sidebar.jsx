@@ -406,7 +406,13 @@ export default function Sidebar({
     if (workspace?.id === "team") {
       return true;
     }
-    if (isSuperAdminAccount && !previewWorkspacesAsCustomer) {
+    // Admin "Preview as Customer" QA mode: render every paid workspace exactly as
+    // an unpaid customer sees it, regardless of the admin's real entitlement. This
+    // is local, view-only state and never changes what real customers experience.
+    if (previewWorkspacesAsCustomer) {
+      return false;
+    }
+    if (isSuperAdminAccount) {
       return true;
     }
     if (workspace?.id === "lead-generator") {
@@ -867,8 +873,8 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
 
                   {(() => {
                     const leadGenActive =
-                      leadGenEntitled ||
-                      (isSuperAdminAccount && !previewWorkspacesAsCustomer);
+                      !previewWorkspacesAsCustomer &&
+                      (leadGenEntitled || isSuperAdminAccount);
                     return (
                       <span
                         className={`crm-workspace-badge ${
@@ -1022,12 +1028,12 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             <SidebarIcon name="x" />
           </button>
 
-          {isSuperAdminAccount && (
+          {isFullAccessRole && (
             <div className="crm-workspace-admin-previewbar">
               <div className="crm-workspace-admin-previewbar-copy">
                 <span className="crm-workspace-admin-previewbar-eyebrow">
                   <SidebarIcon name="shield-check" />
-                  SUPER ADMIN VIEW
+                  ADMIN VIEW
                 </span>
                 <strong>
                   {previewWorkspacesAsCustomer
@@ -1097,11 +1103,11 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
           </div>
 
           <div className={`crm-workspace-detail-card ${
-            isSuperAdminAccount && previewWorkspacesAsCustomer
+            previewWorkspacesAsCustomer
               ? "is-customer-preview"
               : ""
           }`}>
-            {isSuperAdminAccount && previewWorkspacesAsCustomer && (
+            {previewWorkspacesAsCustomer && (
               <div className="crm-workspace-customer-preview-note">
                 <SidebarIcon name="eye" />
                 CUSTOMER PREVIEW — this is the unpaid customer-facing presentation
@@ -1167,7 +1173,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
 
               <div className="crm-workspace-price-row">
                 {!isWorkspaceActive(hoveredWorkspace) &&
-                  previewWorkspacesAsCustomer && (
+                  hoveredWorkspace.price && (
                     <div className="crm-workspace-preview-price">
                       <strong>
                         ${hoveredWorkspace.price}
@@ -1184,26 +1190,24 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       : ""
                   }
                   onClick={() => {
-                    if (canOpenWorkspace(hoveredWorkspace)) {
-                      window.location.href = hoveredWorkspace.path;
+                    // Active (entitled or admin) -> open the workspace. Locked, or
+                    // an admin previewing the customer state -> open the real Paddle
+                    // checkout for this exact $97 Workspace. It is only activated
+                    // after a verified payment (webhook), never on click.
+                    if (isWorkspaceActive(hoveredWorkspace)) {
+                      if (hoveredWorkspace.path) {
+                        window.location.href = hoveredWorkspace.path;
+                      }
                       return;
                     }
-
-                    if (
-                      previewWorkspacesAsCustomer ||
-                      isLocked(hoveredWorkspace)
-                    ) {
-                      // Open the real Paddle checkout for this $97 Workspace.
-                      // The workspace is only activated after a verified payment.
-                      buyWorkspace(hoveredWorkspace);
-                    }
+                    buyWorkspace(hoveredWorkspace);
                   }}
                 >
                   {isWorkspaceActive(hoveredWorkspace)
                     ? hoveredWorkspace.path
                       ? `Open ${hoveredWorkspace.label}`
                       : `${hoveredWorkspace.label} Active`
-                    : `Add ${hoveredWorkspace.label}`}
+                    : "Add to My Plan"}
                 </button>
 
                 <p className="crm-workspace-price-helper">
