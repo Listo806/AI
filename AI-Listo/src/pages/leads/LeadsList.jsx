@@ -10,6 +10,7 @@ import {
   SlidersHorizontal,
   Download,
   ChevronDown,
+  ChevronRight,
   Plus,
   Calendar,
   MessageCircle,
@@ -46,6 +47,11 @@ import {
   Workflow,
   Mail,
   Eye,
+  Inbox,
+  CircleDot,
+  MapPin,
+  Zap,
+  FileText,
 } from "lucide-react";
 const getStoredAuthToken = () => {
   const tokenKeys = [
@@ -281,6 +287,8 @@ export default function LeadsPage() {
   const [showMobileMore, setShowMobileMore] = useState(false);
   const [mobileLeadScreen, setMobileLeadScreen] = useState("inbox");
   const [mobileHandlingMode, setMobileHandlingMode] = useState("ai");
+  const [mobileInboxFilter, setMobileInboxFilter] = useState("all");
+  const [mobileConversationTab, setMobileConversationTab] = useState("conversation");
   const stats = [
     {
       title: t("leads.statTotalLeads"),
@@ -473,6 +481,50 @@ export default function LeadsPage() {
 
     const days = Math.floor(hours / 24);
     return `${days}d ago`;
+  };
+
+  const getMobileInboxActivity = (lead) => {
+    const when = lead?.updatedAt || lead?.updated_at || lead?.createdAt || lead?.created_at;
+    const ago = formatTimeAgo(when);
+
+    const status = String(lead?.status || "").toLowerCase();
+
+    if (status === "contacted") {
+      return { type: "message", text: `Replied ${ago || ""}`.trim() };
+    }
+
+    if (status === "follow-up" || status === "follow_up") {
+      return { type: "clock", text: `Needs follow-up ${ago || ""}`.trim() };
+    }
+
+    if (status === "qualified") {
+      return { type: "sparkles", text: `Qualified ${ago || ""}`.trim() };
+    }
+
+    if (lead?.phone) {
+      return { type: "message", text: `Updated ${ago || ""}`.trim() };
+    }
+
+    if (lead?.email) {
+      return { type: "mail", text: `Updated ${ago || ""}`.trim() };
+    }
+
+    return { type: "clock", text: ago ? `Updated ${ago}` : "Lead updated" };
+  };
+
+  const getMobileInboxSecondary = (lead) =>
+    lead?.company ||
+    lead?.companyName ||
+    lead?.organization ||
+    lead?.source ||
+    lead?.email ||
+    t("leads.noContactInfo");
+
+  const renderMobileInboxActivityIcon = (type) => {
+    if (type === "message") return <MessageCircle size={15} />;
+    if (type === "mail") return <Mail size={15} />;
+    if (type === "sparkles") return <Sparkles size={15} />;
+    return <Clock3 size={15} />;
   };
 
   const fetchLeadEvents = async (leadId) => {
@@ -1377,6 +1429,20 @@ export default function LeadsPage() {
       String(lead.assignedTo || "").toLowerCase() ===
         leadFilters.agent.toLowerCase();
 
+    const mobileInboxMatches =
+      !isMobile ||
+      mobileInboxFilter === "all" ||
+      (mobileInboxFilter === "urgent" && lead.priority === "high") ||
+      (mobileInboxFilter === "followup" &&
+        ["follow-up", "follow_up"].includes(String(lead.status || "").toLowerCase())) ||
+      (mobileInboxFilter === "replies" &&
+        ["contacted", "follow-up", "follow_up"].includes(
+          String(lead.status || "").toLowerCase(),
+        )) ||
+      (mobileInboxFilter === "ai" &&
+        (getLeadScore(lead) >= 70 ||
+          String(lead.status || "").toLowerCase() === "qualified"));
+
     return (
       matchesQueue &&
       matchesSearch &&
@@ -1385,7 +1451,8 @@ export default function LeadsPage() {
       matchesAiScore &&
       matchesStage &&
       matchesAgent &&
-      matchesAiView
+      matchesAiView &&
+      mobileInboxMatches
     );
   });
 
@@ -1850,7 +1917,7 @@ export default function LeadsPage() {
         <div className="header-actions">
           {isMobile ? (
             <>
-              <div className="secondary-btn mobile-header-date">
+              <div className="secondary-btn mobile-overview-action mobile-overview-date">
                 <Calendar size={18} />
                 <select
                   value={dateRange}
@@ -1867,49 +1934,30 @@ export default function LeadsPage() {
 
               <button
                 type="button"
-                className="secondary-btn mobile-header-filter"
-                onClick={() => setShowFilters(true)}
+                className="secondary-btn mobile-overview-action"
+                onClick={exportLeadsCsv}
               >
-                <SlidersHorizontal size={19} />
-                <span>{t("leads.filters")}</span>
+                <Download size={18} />
+                <span>{t("leads.export")}</span>
               </button>
 
-              <div className="mobile-header-more-wrap">
-                <button
-                  type="button"
-                  className="secondary-btn mobile-header-more"
-                  onClick={() => setShowMobileMore((prev) => !prev)}
-                >
-                  <MoreHorizontal size={22} />
-                  <span>More</span>
-                </button>
+              <button
+                type="button"
+                className={`secondary-btn mobile-overview-action mobile-overview-ai ${aiView ? "active" : ""}`}
+                onClick={toggleAiView}
+              >
+                <Sparkles size={18} />
+                <span>{aiView ? t("leads.aiViewOn") : t("leads.aiView")}</span>
+              </button>
 
-                {showMobileMore && (
-                  <div className="mobile-header-more-menu">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        toggleAiView();
-                        setShowMobileMore(false);
-                      }}
-                    >
-                      <Sparkles size={16} />
-                      {aiView ? t("leads.aiViewOn") : t("leads.aiView")}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowCreateLeadModal(true);
-                        setShowMobileMore(false);
-                      }}
-                    >
-                      <Plus size={17} />
-                      {t("leads.newLead")}
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                className="secondary-btn mobile-overview-action mobile-overview-new"
+                onClick={() => setShowCreateLeadModal(true)}
+              >
+                <Plus size={19} />
+                <span>{t("leads.newLead")}</span>
+              </button>
             </>
           ) : (
             <>
@@ -1952,6 +2000,30 @@ export default function LeadsPage() {
           )}
         </div>
       </div>
+
+      {isMobile && (
+        <div className="mobile-overview-search-row">
+          <label className="mobile-overview-search">
+            <Search size={20} />
+            <input
+              type="search"
+              placeholder={t("leads.searchPlaceholder")}
+              value={leadSearch}
+              onChange={(e) => setLeadSearch(e.target.value)}
+            />
+          </label>
+
+          <button
+            type="button"
+            className="mobile-overview-filter-button"
+            onClick={() => setShowFilters(true)}
+          >
+            <SlidersHorizontal size={20} />
+            <span>{t("leads.filters")}</span>
+          </button>
+        </div>
+      )}
+
       {isMobile && showFilters && (
         <>
           <div
@@ -2186,14 +2258,23 @@ export default function LeadsPage() {
           <div className={`stats-card stats-card-${item.className}`} key={index}>
             <div className={`stats-icon ${item.className}`}>{item.icon}</div>
 
-            <div>
+            <div className="stats-card-copy">
               <span>{item.title}</span>
               <h2>{item.value}</h2>
               <p>{item.change}</p>
             </div>
+
+            <ChevronRight className="mobile-stats-chevron" size={25} />
           </div>
         ))}
       </div>
+
+      {isMobile && (
+        <div className="mobile-realtime-note">
+          <Sparkles size={21} />
+          <span>All metrics update in real time as your team engages with leads.</span>
+        </div>
+      )}
 
       {/* PRIORITY BAR */}
 
@@ -2343,10 +2424,14 @@ export default function LeadsPage() {
           <div className="panel-header lead-inbox-header">
             <div className="lead-inbox-heading-copy">
               <h3>
-                <Users className="lead-inbox-title-icon" size={24} />
-                {t("leads.aiLeadInbox")}
+                <Inbox className="lead-inbox-title-icon" size={28} />
+                <span className="lead-inbox-mobile-title">Lead Inbox</span>
+                <span className="lead-inbox-desktop-title">{t("leads.aiLeadInbox")}</span>
               </h3>
-              <p>{t("leads.rankedByUrgency")}</p>
+              <p className="lead-inbox-mobile-subtitle">
+                Your leads, organized by priority and AI score.
+              </p>
+              <p className="lead-inbox-desktop-subtitle">{t("leads.rankedByUrgency")}</p>
             </div>
 
             <button
@@ -2359,32 +2444,85 @@ export default function LeadsPage() {
           </div>
 
           <div className="mobile-lead-inbox-tools">
-            <label className="mobile-lead-search">
-              <Search size={19} />
-              <input
-                value={leadSearch}
-                onChange={(e) => setLeadSearch(e.target.value)}
-                placeholder={t("leads.searchPlaceholder")}
-              />
-            </label>
+            <div className="mobile-inbox-filter-strip">
+              <button
+                type="button"
+                className={`mobile-inbox-chip mobile-inbox-chip-all ${mobileInboxFilter === "all" ? "active" : ""}`}
+                onClick={() => setMobileInboxFilter("all")}
+              >
+                <span>All</span>
+                <strong>{leadStats?.total ?? leadsData.length}</strong>
+              </button>
 
-            <button
-              type="button"
-              className="mobile-lead-filter-btn"
-              onClick={() => setShowFilters(true)}
-            >
-              <SlidersHorizontal size={18} />
-              <span>{t("leads.filters")}</span>
-            </button>
+              <button
+                type="button"
+                className={`mobile-inbox-chip mobile-inbox-chip-hot ${mobileInboxFilter === "urgent" ? "active" : ""}`}
+                onClick={() => setMobileInboxFilter("urgent")}
+                aria-label="Urgent leads"
+              >
+                <Flame size={21} />
+                <strong>{leadStats?.urgentLeads ?? 0}</strong>
+              </button>
 
-            <button
-              type="button"
-              className="mobile-lead-filter-icon-btn"
-              onClick={() => setShowFilters(true)}
-              aria-label={t("leads.filters")}
-            >
-              <Settings2 size={18} />
-            </button>
+              <button
+                type="button"
+                className={`mobile-inbox-chip mobile-inbox-chip-followup ${mobileInboxFilter === "followup" ? "active" : ""}`}
+                onClick={() => setMobileInboxFilter("followup")}
+                aria-label="Need follow-up"
+              >
+                <Clock3 size={21} />
+                <strong>{leadStats?.needFollowUp ?? 0}</strong>
+              </button>
+
+              <button
+                type="button"
+                className={`mobile-inbox-chip mobile-inbox-chip-replies ${mobileInboxFilter === "replies" ? "active" : ""}`}
+                onClick={() => setMobileInboxFilter("replies")}
+                aria-label="Pending replies"
+              >
+                <MessageCircle size={21} />
+                <strong>{leadStats?.pendingReplies ?? leadStats?.activeConversations ?? 0}</strong>
+              </button>
+
+              <button
+                type="button"
+                className={`mobile-inbox-chip mobile-inbox-chip-ai ${mobileInboxFilter === "ai" ? "active" : ""}`}
+                onClick={() => setMobileInboxFilter("ai")}
+                aria-label="AI qualified"
+              >
+                <Sparkles size={21} />
+                <strong>{leadStats?.aiQualifiedToday ?? leadStats?.qualified ?? 0}</strong>
+              </button>
+
+              <button
+                type="button"
+                className="mobile-inbox-chip mobile-inbox-chip-filter"
+                onClick={() => setShowFilters(true)}
+                aria-label={t("leads.filters")}
+              >
+                <SlidersHorizontal size={21} />
+              </button>
+            </div>
+
+            <div className="mobile-inbox-search-row">
+              <label className="mobile-lead-search">
+                <Search size={21} />
+                <input
+                  value={leadSearch}
+                  onChange={(e) => setLeadSearch(e.target.value)}
+                  placeholder={t("leads.searchPlaceholder")}
+                />
+              </label>
+
+              <button
+                type="button"
+                className="mobile-lead-filter-icon-btn"
+                onClick={() => setShowFilters(true)}
+                aria-label={t("leads.filters")}
+              >
+                <SlidersHorizontal size={21} />
+              </button>
+            </div>
           </div>
 
           <div
@@ -2474,93 +2612,41 @@ export default function LeadsPage() {
                       </div>
 
                       <div className="mobile-lead-card-content">
-                        <div className="mobile-lead-card-main">
-                          <div className="mobile-lead-avatar-wrap">
-                            <div className="mobile-lead-avatar">
-                              {getInitials(lead.name)}
+                        {(() => {
+                          const activity = getMobileInboxActivity(lead);
+                          return (
+                            <div className="mobile-inbox-lead-row">
+                              <div className="mobile-inbox-avatar-wrap">
+                                <div className="mobile-inbox-avatar">
+                                  {getInitials(lead.name)}
+                                </div>
+                              </div>
+
+                              <div className="mobile-inbox-lead-copy">
+                                <div className="mobile-inbox-name-row">
+                                  <h4>{lead.name || t("leads.unnamedLead")}</h4>
+                                  <span className="mobile-inbox-online-dot" />
+                                </div>
+
+                                <p className="mobile-inbox-company">
+                                  {getMobileInboxSecondary(lead)}
+                                </p>
+
+                                <div className={`mobile-inbox-activity mobile-inbox-activity-${activity.type}`}>
+                                  {renderMobileInboxActivityIcon(activity.type)}
+                                  <span>{activity.text}</span>
+                                </div>
+                              </div>
+
+                              <div className="mobile-inbox-score-wrap">
+                                <strong>{score}</strong>
+                                {lead.priority === "high" && (
+                                  <Flame className="mobile-inbox-priority-mark" size={18} />
+                                )}
+                              </div>
                             </div>
-                            <span className="mobile-lead-online-dot" />
-                          </div>
-
-                          <div className="mobile-lead-info">
-                            <h4>{lead.name || t("leads.unnamedLead")}</h4>
-
-                            <div className="mobile-lead-contact">
-                              <MessageCircle size={15} />
-                              <span>
-                                {lead.phone ||
-                                  lead.email ||
-                                  t("leads.noContactInfo")}
-                              </span>
-                            </div>
-
-                            <p>
-                              {lead.notes ||
-                                lead.source ||
-                                t("leads.newCrmLead")}
-                            </p>
-                          </div>
-
-                          <div className="mobile-lead-side">
-                            <span
-                              className={`mobile-lead-status mobile-lead-status-${getMobileLeadStatusClass(
-                                lead.status,
-                              )}`}
-                            >
-                              {lead.status || "new"}
-                            </span>
-
-                            <span className="mobile-lead-time">
-                              {lead.updatedAt
-                                ? formatTimeAgo(lead.updatedAt)
-                                : lead.createdAt
-                                  ? formatTimeAgo(lead.createdAt)
-                                  : ""}
-                            </span>
-
-                            <ArrowRight className="mobile-lead-chevron" size={20} />
-                          </div>
-                        </div>
-
-                        <div className="mobile-lead-metrics">
-                          <div className="mobile-lead-metric">
-                            <span>AI Score</span>
-                            <strong className={`mobile-score-${getScoreClass(lead)}`}>
-                              {score}
-                            </strong>
-                          </div>
-
-                          <div className="mobile-lead-metric">
-                            <span>Priority</span>
-                            <strong>
-                              <i
-                                className={`mobile-priority-dot mobile-priority-${String(
-                                  lead.priority || "medium",
-                                ).toLowerCase()}`}
-                              />
-                              {lead.priority || "Medium"}
-                            </strong>
-                          </div>
-
-                          <div className="mobile-lead-metric">
-                            <span>Temp.</span>
-                            <strong className={`mobile-temp-${temperature.toLowerCase()}`}>
-                              <Flame size={14} />
-                              {translateTemperature(temperature)}
-                            </strong>
-                          </div>
-
-                          <div className="mobile-lead-metric">
-                            <span>Status</span>
-                            <strong
-                              className={`mobile-status-text-${getMobileLeadStatusClass(
-                                lead.status,
-                              )}`}
-                            >
-                              {lead.status || "new"}
-                            </strong>
-                          </div>
-                        </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   );
@@ -2575,11 +2661,17 @@ export default function LeadsPage() {
                 {leadHasMore && !leadLoadingMore && (
                   <button
                     type="button"
-                    className="view-all-btn"
+                    className="mobile-inbox-view-all"
                     onClick={loadMoreLeads}
                   >
-                    {t("leads.loadMoreLeads")} <ArrowRight size={12} />
+                    View All Leads ({leadStats?.total ?? leadsData.length})
                   </button>
+                )}
+
+                {!leadHasMore && leadsData.length > 0 && (
+                  <div className="mobile-inbox-view-all mobile-inbox-view-all-static">
+                    View All Leads ({leadStats?.total ?? leadsData.length})
+                  </div>
                 )}
               </>
             ) : (
@@ -2617,6 +2709,670 @@ export default function LeadsPage() {
 
         {/* CENTER PANEL - CONVERSATION WORKSPACE */}
         <div className="conversation-panel">
+
+          <div className="mobile-lead-detail-screen">
+            <section className="mobile-lead-profile-card">
+              <div className="mobile-lead-profile-main">
+                <div className="mobile-lead-profile-avatar-wrap">
+                  <div className="mobile-lead-profile-avatar">
+                    {getInitials(selectedLead?.name)}
+                  </div>
+                  <span className="mobile-lead-profile-online-dot" />
+                </div>
+
+                <div className="mobile-lead-profile-copy">
+                  <div className="mobile-lead-profile-name-row">
+                    <h2>{selectedLead?.name || t("leads.selectALead")}</h2>
+                  </div>
+
+                  <span className="mobile-lead-online-pill">Online</span>
+                </div>
+
+                <p className="mobile-lead-profile-meta">
+                  {selectedLead?.jobTitle ||
+                    selectedLead?.title ||
+                    selectedLead?.source ||
+                    "Lead"}
+                  <span>•</span>
+                  {selectedLead?.company ||
+                    selectedLead?.companyName ||
+                    selectedLead?.organization ||
+                    selectedLead?.source ||
+                    "CRM"}
+                </p>
+
+                <div className="mobile-lead-profile-actions">
+                  <button type="button" onClick={callSelectedLead} aria-label="Call lead">
+                    <Phone size={21} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const phone = normalizeWhatsAppPhone(selectedLead?.phone);
+                      if (phone) window.open(`https://wa.me/${phone}`, "_blank", "noopener,noreferrer");
+                    }}
+                    aria-label="Open WhatsApp"
+                  >
+                    <MessageCircle size={22} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedLead?.email) {
+                        window.location.href = `mailto:${selectedLead.email}`;
+                      }
+                    }}
+                    aria-label="Email lead"
+                  >
+                    <Mail size={21} />
+                  </button>
+
+                  <button type="button" onClick={openBookShowing} aria-label="Schedule">
+                    <Calendar size={21} />
+                  </button>
+
+                  <button
+                    type="button"
+                    aria-label="More lead details"
+                  >
+                    <MoreHorizontal size={23} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mobile-lead-contact-strip">
+                <div>
+                  <Mail size={17} />
+                  <span>{selectedLead?.email || t("leads.noContactInfo")}</span>
+                </div>
+                <div>
+                  <Phone size={17} />
+                  <span>{selectedLead?.phone || t("leads.noContactInfo")}</span>
+                </div>
+                <div>
+                  <MapPin size={17} />
+                  <span>
+                    {[
+                      selectedLead?.city,
+                      selectedLead?.state,
+                      selectedLead?.country,
+                    ].filter(Boolean).join(", ") || selectedLead?.source || "—"}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <section className="mobile-lead-performance-card">
+              <div className="mobile-performance-cell mobile-performance-score">
+                <span>Close Probability</span>
+                <div className="mobile-score-gauge">
+                  <div className="mobile-score-gauge-value">
+                    {leadIntelligence.score}
+                  </div>
+                </div>
+                <strong>{translateTemperature(leadIntelligence.temperature)}</strong>
+              </div>
+
+              <div className="mobile-performance-cell">
+                <span>Potential Value</span>
+                <strong className="mobile-performance-main">
+                  {leadIntelligence.closeProbability &&
+                  String(leadIntelligence.closeProbability).toLowerCase() !== "unknown"
+                    ? leadIntelligence.closeProbability
+                    : "-"}
+                </strong>
+                <small>↑ {translateTemperature(leadIntelligence.temperature)}</small>
+              </div>
+
+              <div className="mobile-performance-cell">
+                <span>Estimated Value</span>
+                <strong className="mobile-performance-main">
+                  {leadIntelligence.expectedRevenue &&
+                  String(leadIntelligence.expectedRevenue).toLowerCase() !== "unknown"
+                    ? leadIntelligence.expectedRevenue
+                    : "-"}
+                </strong>
+                <small>USD<br />Estimated</small>
+              </div>
+
+              <div className="mobile-performance-cell mobile-performance-intent">
+                <span>Intent</span>
+                <strong className="mobile-performance-main">
+                  {leadIntelligence.interestLevel &&
+                  String(leadIntelligence.interestLevel).toLowerCase() !== "unknown"
+                    ? leadIntelligence.interestLevel
+                    : "-"}
+                </strong>
+                <svg viewBox="0 0 120 45" aria-hidden="true">
+                  <polyline
+                    points="4,38 18,34 30,36 44,24 58,29 72,21 86,14 99,20 116,5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                </svg>
+              </div>
+            </section>
+
+            <section className="mobile-next-best-action-card">
+              <div className="mobile-next-best-action-icon">
+                <Zap size={34} />
+              </div>
+
+              <div className="mobile-next-best-action-copy">
+                <h3>AI Next Best Action</h3>
+                <p>{leadIntelligence.recommendedAction}</p>
+              </div>
+
+              <button type="button" onClick={callSelectedLead}>
+                <Phone size={21} />
+                <span>Call Now</span>
+              </button>
+            </section>
+
+            <section className="mobile-lead-activity-card">
+              <div className="mobile-lead-activity-tabs">
+                {[
+                  ["conversation", "Conversation"],
+                  ["notes", "Notes"],
+                  [
+                    "emails",
+                    `Emails (${leadEvents.filter((event) =>
+                      String(event?.eventType || "").toLowerCase().includes("email"),
+                    ).length})`,
+                  ],
+                  [
+                    "calls",
+                    `Calls (${leadEvents.filter((event) =>
+                      String(event?.eventType || "").toLowerCase().includes("call"),
+                    ).length})`,
+                  ],
+                  ["whatsapp", `WhatsApp (${leadMessages.length})`],
+                  ["files", "Files"],
+                  ["tasks", "Tasks"],
+                ].map(([key, label]) => (
+                  <button
+                    type="button"
+                    key={key}
+                    className={mobileConversationTab === key ? "active" : ""}
+                    onClick={() => setMobileConversationTab(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {(mobileConversationTab === "conversation" ||
+                mobileConversationTab === "whatsapp") && (
+                <div className="mobile-thread-list">
+                  {leadMessagesLoading ? (
+                    <div className="mobile-thread-empty">{t("leads.loadingMessages")}</div>
+                  ) : leadMessages.length ? (
+                    leadMessages
+                      .slice()
+                      .sort(
+                        (a, b) =>
+                          new Date(a.created_at || a.createdAt).getTime() -
+                          new Date(b.created_at || b.createdAt).getTime(),
+                      )
+                      .map((message) => {
+                        const isOutbound =
+                          message.direction === "outbound" ||
+                          message.sender_type === "agent" ||
+                          message.sender_type === "ai";
+
+                        const isAi = message.sender_type === "ai";
+                        const senderLabel = isAi
+                          ? "AI Assistant"
+                          : isOutbound
+                            ? "You"
+                            : selectedLead?.name || t("leads.unnamedLead");
+
+                        const messageText = String(
+                          message.body || message.message || message.text || "",
+                        ).trim();
+
+                        const messageType = String(
+                          message.message_type || "text",
+                        ).toLowerCase();
+
+                        const mediaUrl =
+                          message.media_url ||
+                          message.file_url ||
+                          message.url ||
+                          null;
+
+                        return (
+                          <article
+                            className={`mobile-thread-message ${
+                              isOutbound ? "outbound" : "inbound"
+                            } ${isAi ? "ai-message" : ""}`}
+                            key={
+                              message.id ||
+                              message.message_id ||
+                              `${message.direction}-${message.created_at}-${message.body}`
+                            }
+                          >
+                            <div className="mobile-thread-message-icon">
+                              {isAi ? <Zap size={22} /> : <MessageCircle size={22} />}
+                            </div>
+
+                            <div className="mobile-thread-message-copy">
+                              <strong>{senderLabel}</strong>
+
+                              {messageType === "image" && mediaUrl ? (
+                                <img
+                                  src={mediaUrl}
+                                  alt={t("leads.whatsappAttachment")}
+                                  className="mobile-thread-media"
+                                />
+                              ) : messageType === "audio" && mediaUrl ? (
+                                <audio controls src={mediaUrl} />
+                              ) : messageType === "video" && mediaUrl ? (
+                                <video controls src={mediaUrl} className="mobile-thread-media" />
+                              ) : messageType === "document" && mediaUrl ? (
+                                <a href={mediaUrl} target="_blank" rel="noreferrer">
+                                  {t("leads.downloadAttachment")}
+                                </a>
+                              ) : (
+                                <p>
+                                  {messageText ||
+                                    (messageType === "image"
+                                      ? t("leads.photoMessage")
+                                      : messageType === "audio"
+                                        ? t("leads.voiceMessage")
+                                        : messageType === "video"
+                                          ? t("leads.videoMessage")
+                                          : messageType === "document"
+                                            ? t("leads.documentMessage")
+                                            : t("leads.messageFallback"))}
+                                </p>
+                              )}
+
+                              <span>
+                                {formatTimeAgo(message.created_at || message.createdAt)}
+                              </span>
+                            </div>
+
+                            {isOutbound && (
+                              <div className="mobile-thread-message-status">
+                                <CheckCheck size={22} />
+                              </div>
+                            )}
+                          </article>
+                        );
+                      })
+                  ) : (
+                    <div className="mobile-thread-empty">{t("leads.noMessages")}</div>
+                  )}
+                </div>
+              )}
+
+              {mobileConversationTab === "notes" && (
+                <div className="mobile-tab-simple-content">
+                  <FileText size={22} />
+                  <div>
+                    <strong>Notes</strong>
+                    <p>{selectedLead?.notes || "No notes available for this lead."}</p>
+                  </div>
+                </div>
+              )}
+
+              {["emails", "calls", "tasks"].includes(mobileConversationTab) && (
+                <div className="mobile-event-list">
+                  {leadEvents.filter((event) => {
+                    const type = String(event?.eventType || "").toLowerCase();
+                    if (mobileConversationTab === "emails") return type.includes("email");
+                    if (mobileConversationTab === "calls") return type.includes("call");
+                    return type.includes("task");
+                  }).length ? (
+                    leadEvents
+                      .filter((event) => {
+                        const type = String(event?.eventType || "").toLowerCase();
+                        if (mobileConversationTab === "emails") return type.includes("email");
+                        if (mobileConversationTab === "calls") return type.includes("call");
+                        return type.includes("task");
+                      })
+                      .map((event) => (
+                        <div className="mobile-event-row" key={event.id}>
+                          <div>
+                            {mobileConversationTab === "emails" ? (
+                              <Mail size={18} />
+                            ) : mobileConversationTab === "calls" ? (
+                              <Phone size={18} />
+                            ) : (
+                              <FileText size={18} />
+                            )}
+                          </div>
+                          <div>
+                            <strong>
+                              {event.metadata?.title ||
+                                event.eventType?.replaceAll("_", " ") ||
+                                "Activity"}
+                            </strong>
+                            <p>
+                              {event.metadata?.sub ||
+                                event.metadata?.description ||
+                                formatLeadEventDate(event.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="mobile-thread-empty">No activity available.</div>
+                  )}
+                </div>
+              )}
+
+              {mobileConversationTab === "files" && (
+                <div className="mobile-event-list">
+                  {leadMessages.filter((message) =>
+                    ["image", "audio", "video", "document"].includes(
+                      String(message.message_type || "text").toLowerCase(),
+                    ),
+                  ).length ? (
+                    leadMessages
+                      .filter((message) =>
+                        ["image", "audio", "video", "document"].includes(
+                          String(message.message_type || "text").toLowerCase(),
+                        ),
+                      )
+                      .map((message) => (
+                        <div className="mobile-event-row" key={message.id || message.message_id}>
+                          <div><Paperclip size={18} /></div>
+                          <div>
+                            <strong>{message.message_type || "Attachment"}</strong>
+                            <p>{formatLeadEventDate(message.created_at || message.createdAt)}</p>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="mobile-thread-empty">No files available.</div>
+                  )}
+                </div>
+              )}
+
+              <div className="mobile-lead-composer">
+                <div className="mobile-lead-composer-top">
+                  <input
+                    placeholder="Type a message or use AI Assist..."
+                    value={chatMessage}
+                    onChange={(e) => setChatMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey && !sendingLeadMessage) {
+                        e.preventDefault();
+                        sendLeadMessage();
+                      }
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    className="mobile-ai-assist-btn"
+                    onClick={generateAiAssistMessage}
+                    disabled={!selectedLead}
+                  >
+                    <Sparkles size={20} />
+                    <span>AI Assist</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="mobile-send-message-btn"
+                    onClick={sendLeadMessage}
+                    disabled={!chatMessage.trim() || sendingLeadMessage}
+                  >
+                    <Send size={20} />
+                  </button>
+                </div>
+
+                <div className="mobile-lead-composer-tools">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker((prev) => !prev)}
+                    disabled={!selectedLead}
+                  >
+                    <Smile size={19} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!selectedLead || uploadingChatFile}
+                  >
+                    <Paperclip size={19} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={!selectedLead || uploadingChatFile}
+                  >
+                    <ImageIcon size={19} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!selectedLead || uploadingChatFile}
+                  >
+                    <FileText size={19} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={toggleVoiceRecording}
+                    disabled={!selectedLead || uploadingChatFile}
+                  >
+                    <Mic size={19} />
+                  </button>
+                </div>
+              </div>
+            </section>
+          
+
+            {/* LEAD INTELLIGENCE - ALWAYS VISIBLE ON MOBILE */}
+          <div className="mobile-insights-screen">
+
+
+            <section className="mobile-insight-card mobile-intelligence-card">
+              <div className="mobile-insight-heading centered">
+                <Brain size={27} />
+                <div>
+                  <h3>AI Lead Intelligence</h3>
+                  <p>AI insights and lead analysis</p>
+                </div>
+              </div>
+
+              <div className="mobile-intelligence-grid">
+                <div className="mobile-ai-score-block">
+                  <div className="mobile-ai-score-ring">
+                    <strong>{leadIntelligence.score}</strong>
+                  </div>
+                  <span>AI Score</span>
+                  <b>{translateTemperature(leadIntelligence.temperature)}</b>
+                </div>
+
+                <div className="mobile-intel-metric metric-purple">
+                  <Target size={31} />
+                  <span>Intent</span>
+                  <strong>{leadIntelligence.interestLevel}</strong>
+                </div>
+
+                <div className="mobile-intel-metric metric-green">
+                  <TrendingUp size={31} />
+                  <span>Response Likelihood</span>
+                  <strong>{leadIntelligence.responseLikelihood}</strong>
+                </div>
+
+                <div className="mobile-intel-metric metric-orange">
+                  <CircleAlert size={31} />
+                  <span>Sentiment</span>
+                  <strong>{leadIntelligence.sentiment}</strong>
+                </div>
+
+                <div className="mobile-intel-metric metric-pink">
+                  <Ghost size={31} />
+                  <span>Ghost Risk</span>
+                  <strong>{leadIntelligence.ghostRisk}</strong>
+                </div>
+              </div>
+            </section>
+
+            <section className="mobile-insight-card mobile-recommended-card">
+              <div className="mobile-recommended-icon">
+                <WandSparkles size={28} />
+              </div>
+              <div className="mobile-recommended-copy">
+                <h3>{t("leads.recommendedAction")}</h3>
+                <p>{leadIntelligence.recommendedAction}</p>
+              </div>
+              <button type="button" className="mobile-card-arrow">
+                <ArrowRight size={20} />
+              </button>
+            </section>
+
+            <section className="mobile-insight-card mobile-revenue-card">
+              <div className="mobile-insight-heading centered">
+                <DollarSign size={25} />
+                <div>
+                  <h3>{t("leads.revenueIntelligence")}</h3>
+                  <p>Key deal and revenue insights</p>
+                </div>
+              </div>
+
+              <div className="mobile-revenue-grid">
+                <div className="mobile-revenue-box revenue-green">
+                  <span className="mobile-revenue-icon"><DollarSign size={22} /></span>
+                  <small>{t("leads.dealValue")}</small>
+                  <strong>{leadIntelligence.expectedRevenue}</strong>
+                  <p>{selectedLead?.priority || "High"}</p>
+                </div>
+
+                <div className="mobile-revenue-box revenue-blue">
+                  <span className="mobile-revenue-icon"><TrendingUp size={22} /></span>
+                  <small>{t("leads.closeProbability")}</small>
+                  <strong>{leadIntelligence.closeProbability}</strong>
+                  <p>{translateTemperature(leadIntelligence.temperature)}</p>
+                </div>
+
+                <div className="mobile-revenue-box revenue-orange">
+                  <span className="mobile-revenue-icon"><Flag size={22} /></span>
+                  <small>{t("leads.pipelineStage")}</small>
+                  <strong>{selectedLead?.dealStage || "new"}</strong>
+                  <p>{selectedLead?.status || "Active"}</p>
+                </div>
+
+                <div className="mobile-revenue-box revenue-purple">
+                  <span className="mobile-revenue-icon"><Calendar size={22} /></span>
+                  <small>{t("leads.timeline")}</small>
+                  <strong>{leadIntelligence.timeline}</strong>
+                  <p>{selectedLead?.status || "Active"}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="mobile-insight-card mobile-automation-card">
+              <div className="mobile-insight-heading centered">
+                <Bot size={27} />
+                <div>
+                  <h3>{t("leads.aiAutomationControls")}</h3>
+                  <p>{t("leads.manageAiActions")}</p>
+                </div>
+              </div>
+
+              <div className="mobile-automation-grid">
+                {automationItems.map((item, idx) => {
+                  const isActive = getAutomationStatus(item.type);
+                  return (
+                    <div className={`mobile-automation-tile automation-tile-${idx + 1}`} key={item.type || idx}>
+                      <span className="mobile-automation-tile-icon">{item.icon}</span>
+                      <strong>{item.title}</strong>
+                      <div className={`mobile-automation-switch ${isActive ? "active" : ""}`}>
+                        <span>{isActive ? "ON" : "OFF"}</span>
+                        <i />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                className="mobile-manage-automation"
+                onClick={() => setShowAutomationModal(true)}
+              >
+                <Settings2 size={17} />
+                <span>Manage All Automation</span>
+                <ArrowRight size={17} />
+              </button>
+            </section>
+
+            <section className="mobile-insight-card mobile-timeline-card">
+              <div className="mobile-timeline-head">
+                <div className="mobile-insight-heading centered">
+                  <Workflow size={25} />
+                  <div>
+                    <h3>{t("leads.leadJourneyTimeline")}</h3>
+                    <p>Timeline of lead interactions and activities</p>
+                  </div>
+                </div>
+
+                <button type="button" className="mobile-card-arrow" onClick={openFullTimeline}>
+                  <ArrowRight size={20} />
+                </button>
+              </div>
+
+              <div className="mobile-timeline-list">
+                {leadEventsLoading ? (
+                  <div className="mobile-timeline-empty">{t("leads.loadingTimeline")}</div>
+                ) : leadEvents.length ? (
+                  leadEvents.slice(0, 5).map((event, idx) => (
+                    <div className={`mobile-timeline-row timeline-color-${(idx % 5) + 1}`} key={event.id}>
+                      <div className="mobile-timeline-time">
+                        <span>{formatLeadEventDate(event.createdAt)}</span>
+                      </div>
+                      <span className="mobile-timeline-dot" />
+                      <div className="mobile-timeline-event-icon">
+                        {idx === 0 ? <MessageCircle size={17} /> :
+                         idx === 1 ? <Eye size={17} /> :
+                         idx === 2 ? <Mail size={17} /> :
+                         idx === 3 ? <Flag size={17} /> :
+                         <Users size={17} />}
+                      </div>
+                      <div className="mobile-timeline-event-copy">
+                        <strong>
+                          {event.metadata?.title ||
+                            event.eventType?.replaceAll("_", " ") ||
+                            t("leads.leadActivity")}
+                        </strong>
+                        <p>
+                          {event.metadata?.sub ||
+                            event.metadata?.description ||
+                            t("leads.leadUpdated")}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="mobile-timeline-row timeline-color-5">
+                    <div className="mobile-timeline-time"><span>—</span></div>
+                    <span className="mobile-timeline-dot" />
+                    <div className="mobile-timeline-event-icon"><Users size={17} /></div>
+                    <div className="mobile-timeline-event-copy">
+                      <strong>{t("leads.leadCreated")}</strong>
+                      <p>{t("leads.noEventYet")}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+</div>
+
+          <div className="desktop-conversation-stack">
           <div className="mobile-conversation-topbar">
             <button
               type="button"
@@ -3233,228 +3989,12 @@ export default function LeadsPage() {
               </button>
             ))}
           </div>
+          </div>
         </div>
 
         {/* RIGHT PANEL - INSIGHTS & CONTROLS */}
         <div className="insights-panel">
-          {/* MOBILE LEAD INTELLIGENCE SCREEN */}
-          <div className="mobile-insights-screen">
-            <div className="mobile-insights-topbar">
-              <button
-                type="button"
-                className="mobile-insights-back"
-                onClick={() => setMobileLeadScreen("conversation")}
-                aria-label="Back to conversation"
-              >
-                <ArrowLeft size={21} />
-              </button>
 
-              <div className="mobile-insights-title">
-                <strong>Lead Intelligence</strong>
-                <span>
-                  Lead ID: {selectedLead?.id ? String(selectedLead.id).slice(0, 8) : "—"}
-                  {selectedLead?.name ? <> • <b>{selectedLead.name}</b></> : null}
-                </span>
-              </div>
-
-              <button type="button" className="mobile-insights-more">
-                <MoreHorizontal size={20} />
-              </button>
-            </div>
-
-            <section className="mobile-insight-card mobile-intelligence-card">
-              <div className="mobile-insight-heading centered">
-                <Brain size={27} />
-                <div>
-                  <h3>AI Lead Intelligence</h3>
-                  <p>AI insights and lead analysis</p>
-                </div>
-              </div>
-
-              <div className="mobile-intelligence-grid">
-                <div className="mobile-ai-score-block">
-                  <div className="mobile-ai-score-ring">
-                    <strong>{leadIntelligence.score}</strong>
-                  </div>
-                  <span>AI Score</span>
-                  <b>{translateTemperature(leadIntelligence.temperature)}</b>
-                </div>
-
-                <div className="mobile-intel-metric metric-purple">
-                  <Target size={31} />
-                  <span>Intent</span>
-                  <strong>{leadIntelligence.interestLevel}</strong>
-                </div>
-
-                <div className="mobile-intel-metric metric-green">
-                  <TrendingUp size={31} />
-                  <span>Response Likelihood</span>
-                  <strong>{leadIntelligence.responseLikelihood}</strong>
-                </div>
-
-                <div className="mobile-intel-metric metric-orange">
-                  <CircleAlert size={31} />
-                  <span>Sentiment</span>
-                  <strong>{leadIntelligence.sentiment}</strong>
-                </div>
-
-                <div className="mobile-intel-metric metric-pink">
-                  <Ghost size={31} />
-                  <span>Ghost Risk</span>
-                  <strong>{leadIntelligence.ghostRisk}</strong>
-                </div>
-              </div>
-            </section>
-
-            <section className="mobile-insight-card mobile-recommended-card">
-              <div className="mobile-recommended-icon">
-                <WandSparkles size={28} />
-              </div>
-              <div className="mobile-recommended-copy">
-                <h3>{t("leads.recommendedAction")}</h3>
-                <p>{leadIntelligence.recommendedAction}</p>
-              </div>
-              <button type="button" className="mobile-card-arrow">
-                <ArrowRight size={20} />
-              </button>
-            </section>
-
-            <section className="mobile-insight-card mobile-revenue-card">
-              <div className="mobile-insight-heading centered">
-                <DollarSign size={25} />
-                <div>
-                  <h3>{t("leads.revenueIntelligence")}</h3>
-                  <p>Key deal and revenue insights</p>
-                </div>
-              </div>
-
-              <div className="mobile-revenue-grid">
-                <div className="mobile-revenue-box revenue-green">
-                  <span className="mobile-revenue-icon"><DollarSign size={22} /></span>
-                  <small>{t("leads.dealValue")}</small>
-                  <strong>{leadIntelligence.expectedRevenue}</strong>
-                  <p>{selectedLead?.priority || "High"}</p>
-                </div>
-
-                <div className="mobile-revenue-box revenue-blue">
-                  <span className="mobile-revenue-icon"><TrendingUp size={22} /></span>
-                  <small>{t("leads.closeProbability")}</small>
-                  <strong>{leadIntelligence.closeProbability}</strong>
-                  <p>{translateTemperature(leadIntelligence.temperature)}</p>
-                </div>
-
-                <div className="mobile-revenue-box revenue-orange">
-                  <span className="mobile-revenue-icon"><Flag size={22} /></span>
-                  <small>{t("leads.pipelineStage")}</small>
-                  <strong>{selectedLead?.dealStage || "new"}</strong>
-                  <p>{selectedLead?.status || "Active"}</p>
-                </div>
-
-                <div className="mobile-revenue-box revenue-purple">
-                  <span className="mobile-revenue-icon"><Calendar size={22} /></span>
-                  <small>{t("leads.timeline")}</small>
-                  <strong>{leadIntelligence.timeline}</strong>
-                  <p>{selectedLead?.status || "Active"}</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="mobile-insight-card mobile-automation-card">
-              <div className="mobile-insight-heading centered">
-                <Bot size={27} />
-                <div>
-                  <h3>{t("leads.aiAutomationControls")}</h3>
-                  <p>{t("leads.manageAiActions")}</p>
-                </div>
-              </div>
-
-              <div className="mobile-automation-grid">
-                {automationItems.map((item, idx) => {
-                  const isActive = getAutomationStatus(item.type);
-                  return (
-                    <div className={`mobile-automation-tile automation-tile-${idx + 1}`} key={item.type || idx}>
-                      <span className="mobile-automation-tile-icon">{item.icon}</span>
-                      <strong>{item.title}</strong>
-                      <div className={`mobile-automation-switch ${isActive ? "active" : ""}`}>
-                        <span>{isActive ? "ON" : "OFF"}</span>
-                        <i />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                type="button"
-                className="mobile-manage-automation"
-                onClick={() => setShowAutomationModal(true)}
-              >
-                <Settings2 size={17} />
-                <span>Manage All Automation</span>
-                <ArrowRight size={17} />
-              </button>
-            </section>
-
-            <section className="mobile-insight-card mobile-timeline-card">
-              <div className="mobile-timeline-head">
-                <div className="mobile-insight-heading centered">
-                  <Workflow size={25} />
-                  <div>
-                    <h3>{t("leads.leadJourneyTimeline")}</h3>
-                    <p>Timeline of lead interactions and activities</p>
-                  </div>
-                </div>
-
-                <button type="button" className="mobile-card-arrow" onClick={openFullTimeline}>
-                  <ArrowRight size={20} />
-                </button>
-              </div>
-
-              <div className="mobile-timeline-list">
-                {leadEventsLoading ? (
-                  <div className="mobile-timeline-empty">{t("leads.loadingTimeline")}</div>
-                ) : leadEvents.length ? (
-                  leadEvents.slice(0, 5).map((event, idx) => (
-                    <div className={`mobile-timeline-row timeline-color-${(idx % 5) + 1}`} key={event.id}>
-                      <div className="mobile-timeline-time">
-                        <span>{formatLeadEventDate(event.createdAt)}</span>
-                      </div>
-                      <span className="mobile-timeline-dot" />
-                      <div className="mobile-timeline-event-icon">
-                        {idx === 0 ? <MessageCircle size={17} /> :
-                         idx === 1 ? <Eye size={17} /> :
-                         idx === 2 ? <Mail size={17} /> :
-                         idx === 3 ? <Flag size={17} /> :
-                         <Users size={17} />}
-                      </div>
-                      <div className="mobile-timeline-event-copy">
-                        <strong>
-                          {event.metadata?.title ||
-                            event.eventType?.replaceAll("_", " ") ||
-                            t("leads.leadActivity")}
-                        </strong>
-                        <p>
-                          {event.metadata?.sub ||
-                            event.metadata?.description ||
-                            t("leads.leadUpdated")}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="mobile-timeline-row timeline-color-5">
-                    <div className="mobile-timeline-time"><span>—</span></div>
-                    <span className="mobile-timeline-dot" />
-                    <div className="mobile-timeline-event-icon"><Users size={17} /></div>
-                    <div className="mobile-timeline-event-copy">
-                      <strong>{t("leads.leadCreated")}</strong>
-                      <p>{t("leads.noEventYet")}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          </div>
 
           <div className="desktop-insights-stack">
           {/* BOX 1: LEAD INTELLIGENCE */}
