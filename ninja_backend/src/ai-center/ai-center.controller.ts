@@ -21,6 +21,7 @@ import {
   ApiBody,
 } from "@nestjs/swagger";
 import { AiCenterService } from "./ai-center.service";
+import { AiUnitsService } from "../ai-units/ai-units.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PaymentGuard } from "../auth/guards/payment.guard";
 import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
@@ -41,7 +42,10 @@ import { FilesInterceptor } from "@nestjs/platform-express";
 //@UseGuards(JwtAuthGuard, CrmAccessGuard, AiCenterAccessGuard)
 @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
 export class AiCenterController {
-  constructor(private readonly service: AiCenterService) {}
+  constructor(
+    private readonly service: AiCenterService,
+    private readonly aiUnits: AiUnitsService,
+  ) {}
 
   @Get("overview")
   @ApiOperation({
@@ -402,10 +406,15 @@ export class AiCenterController {
       workspaceId?: string;
     },
   ) {
-    return this.service.cortexaAgent({
+    // Meter AI Units for this dashboard AI action: stop when a Free account is
+    // out of units, charge only after a successful response.
+    await this.aiUnits.guardUser(user, 'simple');
+    const res = await this.service.cortexaAgent({
       user,
       body,
     });
+    this.aiUnits.settleUser(user, 'simple', { feature: 'ai_agent' }).catch(() => {});
+    return res;
   }
 
   @Post("upload")
