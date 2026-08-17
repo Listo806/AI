@@ -36,6 +36,7 @@ import { AiBookingController } from './ai-booking.controller';
 import { CalendarModule } from '../calendar/calendar.module';
 import { PaymentGuard } from '../auth/guards/payment.guard';
 import { PlansModule } from '../plans/plans.module';
+import { AiUnitsModule } from '../ai-units/ai-units.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { PlansModule } from '../plans/plans.module';
     forwardRef(() => PropertiesModule),
     CalendarModule,
     PlansModule,
+    AiUnitsModule,
   ],
   controllers: [
     WhatsAppController,

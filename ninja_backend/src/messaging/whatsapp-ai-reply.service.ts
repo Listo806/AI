@@ -10,6 +10,7 @@ import { PropertyMatchingService } from '../properties/property-matching.service
 import { AiPropertyVisibilityService } from './ai-property-visibility.service';
 import { DatabaseService } from '../database/database.service';
 import { WhatsAppAiBookingService } from './whatsapp-ai-booking.service';
+import { AiUnitsService } from '../ai-units/ai-units.service';
 
 const CONTEXT_MESSAGE_LIMIT = 30;
 const WHATSAPP_SYSTEM_PROMPT = `You are a helpful real estate assistant replying over WhatsApp. Be concise, friendly, and professional. Answer in the same language the lead uses when possible.`;
@@ -30,6 +31,7 @@ export class WhatsAppAiReplyService {
     private readonly aiPropertyVisibility: AiPropertyVisibilityService,
     private readonly db: DatabaseService,
     private readonly booking: WhatsAppAiBookingService,
+    private readonly aiUnits: AiUnitsService,
   ) {}
 
   private detectSpanish(text: string): boolean {
@@ -404,6 +406,14 @@ export class WhatsAppAiReplyService {
       );
     } catch (err: any) {
       this.logger.warn(`logAiActivity failed: ${err?.message}`);
+    }
+    // Charge AI Units for a real AI-generated auto-reply (best-effort, only for
+    // metered Free accounts — paid plans are never charged). Never affects the
+    // reply itself and never surfaces an out-of-units state to the lead.
+    if (action === 'auto_reply' && teamId) {
+      this.aiUnits
+        .charge(teamId, null, 'writing', { metadata: { feature: 'whatsapp_ai', channel } })
+        .catch(() => {});
     }
   }
 }
