@@ -886,55 +886,46 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
               </div>
 
               {(() => {
-                // Real AI Units from the single backend balance. Unlimited plans
-                // show a full green "Unlimited" bar; Free shows the live number.
+                // The single AI Units display: label + real number on one line,
+                // then one horizontal bar. Unlimited plans show "Unlimited" + a
+                // full green bar. Reads from the real backend balance.
                 const b = aiUnits.balance;
+                if (!b || b.entitled === false) return null;
                 const COLORS = { green: "#16a34a", yellow: "#ea580c", red: "#dc2626", empty: "#dc2626" };
-                const fmt = (ymd) => {
-                  if (!ymd) return "";
-                  try {
-                    return new Date(`${ymd}T00:00:00Z`).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                      timeZone: "UTC",
-                    });
-                  } catch {
-                    return ymd;
-                  }
-                };
+
                 if (aiUnits.unlimited) {
                   return (
                     <div className="crm-workspaces-expand-card crm-workspaces-ai-usage">
                       <div className="crm-workspaces-ai-usage-head">
-                        <span>AI Usage</span>
-                        <strong>Unlimited</strong>
+                        <span>AI Units</span>
+                        <strong style={{ color: "#16a34a" }}>Unlimited</strong>
                       </div>
-                      <div className="crm-workspaces-ai-usage-track" role="progressbar" aria-label="AI Usage" aria-valuenow="100">
+                      <div className="crm-workspaces-ai-usage-track" role="progressbar" aria-label="AI Units" aria-valuenow="100">
                         <span className="crm-workspaces-ai-usage-fill" style={{ width: "100%", background: "#16a34a" }} />
                       </div>
                     </div>
                   );
                 }
+
                 const remaining = b?.totalRemaining ?? 0;
                 const pct = Math.max(0, Math.min(100, b?.percentRemaining ?? 0));
-                const color = COLORS[b?.color] || "#2563eb";
+                const color = COLORS[b?.color] || "#16a34a";
                 return (
                   <div className="crm-workspaces-expand-card crm-workspaces-ai-usage">
                     <div className="crm-workspaces-ai-usage-head">
-                      <span>AI Usage</span>
-                      <strong>{remaining} left</strong>
+                      <span>AI Units Remaining</span>
+                      <strong style={{ color }}>{remaining}</strong>
                     </div>
                     <div
                       className="crm-workspaces-ai-usage-track"
                       role="progressbar"
-                      aria-label="AI Usage"
+                      aria-label="AI Units Remaining"
                       aria-valuemin="0"
                       aria-valuemax="100"
                       aria-valuenow={pct}
                     >
                       <span className="crm-workspaces-ai-usage-fill" style={{ width: `${pct}%`, background: color }} />
                     </div>
-                    {b?.resetDate && <div className="crm-workspaces-ai-usage-reset">Resets {fmt(b.resetDate)}</div>}
                   </div>
                 );
               })()}

@@ -204,44 +204,7 @@ export class AiUnitsService {
   }
 
   // ---------------------------------------------------------------------------
-  // Admin HUD preview override (per-admin, opt-in). Lets an admin see the exact
-  // Free floating-HUD experience on THEIR OWN account for UX review, without
-  // changing the global rule — Solo/Business/Scale/unlimited still never see it.
-  // ---------------------------------------------------------------------------
-  private async getAdminPreviewIds(): Promise<string[]> {
-    try {
-      const { rows } = await this.db.query(`SELECT admin_preview_user_ids AS ids FROM ai_unit_config WHERE id = 1`);
-      const ids = rows[0]?.ids;
-      return Array.isArray(ids) ? ids : [];
-    } catch {
-      return [];
-    }
-  }
-
-  async isAdminPreview(userId: string): Promise<boolean> {
-    await this.ensureSchema();
-    if (!userId) return false;
-    const ids = await this.getAdminPreviewIds();
-    return ids.includes(userId);
-  }
-
-  async setAdminPreview(userId: string, enabled: boolean): Promise<{ enabled: boolean }> {
-    await this.ensureSchema();
-    await this.db.query(
-      `INSERT INTO ai_unit_config (id, config) VALUES (1, '{}'::jsonb) ON CONFLICT (id) DO NOTHING`,
-    );
-    let ids = await this.getAdminPreviewIds();
-    ids = ids.filter((x) => x !== userId);
-    if (enabled) ids.push(userId);
-    await this.db.query(
-      `UPDATE ai_unit_config SET admin_preview_user_ids = $1::jsonb, updated_at = NOW() WHERE id = 1`,
-      [JSON.stringify(ids)],
-    );
-    return { enabled };
-  }
-
-  // ---------------------------------------------------------------------------
-  // Public balance (the single source of truth for sidebar + HUD + admin).
+  // Public balance (the single source of truth for the sidebar meter + admin).
   // ---------------------------------------------------------------------------
   async getBalance(user: any): Promise<any> {
     await this.ensureSchema();
@@ -249,23 +212,17 @@ export class AiUnitsService {
     const config = await this.getConfig();
 
     if (!teamId) {
-      return { entitled: false, unlimited: false, showHud: false };
+      return { entitled: false, unlimited: false };
     }
 
     const plan = await this.usage.resolveTeamPlan(teamId).catch(() => ({ planId: 'free', isFree: true, paid: false } as any));
 
-    // Admin preview: an admin who explicitly enabled preview on their own
-    // account sees the Free HUD experience even though their plan is unlimited.
-    const previewOn =
-      ['admin', 'super_admin'].includes(user?.role) && (await this.isAdminPreview(user?.id));
-
-    // Paid / unlimited-AI plans never see the limited-AI HUD — unless this is the
-    // admin's own opt-in preview.
-    if (!plan.isFree && !previewOn) {
+    // Paid / unlimited-AI plans show "Unlimited" (full green bar), never a
+    // limited-unit meter.
+    if (!plan.isFree) {
       return {
         entitled: true,
         unlimited: true,
-        showHud: false,
         plan: plan.planId,
       };
     }
@@ -275,8 +232,6 @@ export class AiUnitsService {
     return {
       entitled: true,
       unlimited: false,
-      showHud: true,
-      preview: previewOn && !plan.isFree,
       plan: plan.planId,
       ...view,
       cycleStart: acct.cycle_start,

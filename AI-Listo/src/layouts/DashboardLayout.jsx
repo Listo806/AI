@@ -10,8 +10,6 @@ import { useTheme } from "../theme/ThemeProvider";
 import "../styles/crm-dashboard.css";
 import BottomNav from "../components/BottomNav";
 import FeatureAddOns from "../components/FeatureAddOns";
-import AIPowerHud from "../components/AIPowerHud";
-import AiHudPreviewToggle from "../components/AiHudPreviewToggle";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 
@@ -386,8 +384,6 @@ export default function DashboardLayout() {
       </div>
     </div>
     <FeatureAddOns />
-    <AIPowerHud />
-    <AiHudPreviewToggle />
     </AiUnitsProvider>
     </PlanProvider>
   );
