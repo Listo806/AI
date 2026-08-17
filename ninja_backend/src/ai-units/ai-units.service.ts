@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { UsageService } from '../plans/usage.service';
 import {
@@ -421,6 +421,37 @@ export class AiUnitsService {
       email: user?.email || null,
       customData: { userId: user?.id, product: 'ai_units', packageId, units: pack.units },
     };
+  }
+
+  /**
+   * Dashboard metering helpers. Call guardUser BEFORE a user-initiated AI
+   * action to stop it (with a surfaced message) when a Free account is out of
+   * units, and settleUser AFTER it succeeds to charge the configured cost.
+   * Both no-op for paid/unlimited plans and when no team resolves. Only use
+   * these on dashboard endpoints — never on customer-facing message paths, so
+   * an out-of-units state can never be sent to a lead.
+   */
+  async guardUser(user: any, action: string): Promise<void> {
+    const teamId = await this.resolveAccountTeam(user);
+    if (!teamId) return;
+    const gate = await this.canAfford(teamId, action);
+    if (!gate.unlimited && !gate.ok) {
+      // The 🔒 prefix is the convention the frontend uses to surface the real
+      // message (same as PaymentGuard), so the user sees a clear prompt.
+      throw new ForbiddenException(
+        '🔒 You have used all your AI Units for this cycle. Add more AI Units or upgrade to keep using AI.',
+      );
+    }
+  }
+
+  async settleUser(user: any, action: string, meta: any = {}): Promise<void> {
+    try {
+      const teamId = await this.resolveAccountTeam(user);
+      if (!teamId) return;
+      await this.charge(teamId, this.isUuid(user?.id) ? user.id : null, action, meta);
+    } catch {
+      /* metering must never break a successful AI response */
+    }
   }
 
   private isUuid(v: any): boolean {
