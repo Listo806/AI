@@ -4,6 +4,7 @@ import { useAiUnits } from "../context/AiUnitsContext";
 import aiUnitsApi from "../api/aiUnitsApi";
 import { initPaddle, openWorkspaceCheckout } from "../pages/checkout/paddleCheckout";
 import { fetchPaddleConfig } from "../api/paddleApi";
+import { trackEvent } from "../utils/track";
 import "./AIPowerHud.css";
 
 const COLOR_CLASS = { green: "green", yellow: "yellow", red: "red", empty: "red" };
@@ -32,6 +33,24 @@ export default function AIPowerHud() {
   const [buying, setBuying] = useState(null);
   const [msg, setMsg] = useState(null);
   const paddleReady = useRef(false);
+  const shownRef = useRef(false);
+  const zeroRef = useRef(false);
+
+  // Funnel: HUD displayed (once per mount) + zero-balance reached.
+  useEffect(() => {
+    if (!showHud || !balance) return;
+    if (!shownRef.current) {
+      shownRef.current = true;
+      trackEvent("ai_units_hud_shown", {
+        remaining: balance.totalRemaining,
+        color: balance.color,
+      });
+    }
+    if ((balance.totalRemaining ?? 0) <= 0 && !zeroRef.current) {
+      zeroRef.current = true;
+      trackEvent("ai_units_zero_reached", {});
+    }
+  }, [showHud, balance]);
 
   // Low-balance auto-expand — at most once per browser session.
   useEffect(() => {
@@ -39,6 +58,7 @@ export default function AIPowerHud() {
     const low = (balance.percentRemaining ?? 100) <= (balance.lowThreshold ?? 20);
     if (low && !sessionStorage.getItem(LOW_SESSION_KEY)) {
       setExpanded(true);
+      trackEvent("ai_units_low_shown", { remaining: balance.totalRemaining });
       try {
         sessionStorage.setItem(LOW_SESSION_KEY, "1");
       } catch {
@@ -64,6 +84,7 @@ export default function AIPowerHud() {
     async (packageId) => {
       setBuying(packageId);
       setMsg(null);
+      trackEvent("ai_units_pack_selected", { packageId });
       try {
         const co = await aiUnitsApi.getCheckout(packageId);
         if (!co?.configured) {
@@ -72,6 +93,7 @@ export default function AIPowerHud() {
         }
         await ensurePaddle();
         openWorkspaceCheckout({ priceId: co.priceId, customData: co.customData, email: co.email });
+        trackEvent("ai_units_checkout_opened", { packageId });
       } catch (e) {
         setMsg(e?.message || "Could not open checkout.");
       } finally {
@@ -99,7 +121,14 @@ export default function AIPowerHud() {
   return (
     <div className={`aipwr-root aipwr-${colorClass}`}>
       {!expanded && (
-        <button className="aipwr-compact" onClick={() => setExpanded(true)} aria-label="AI Power — open">
+        <button
+          className="aipwr-compact"
+          onClick={() => {
+            setExpanded(true);
+            trackEvent("ai_units_hud_expanded", { source: "compact" });
+          }}
+          aria-label="AI Power — open"
+        >
           <span className="aipwr-title">AI POWER</span>
           <div className="aipwr-remaining">
             <b>{remaining}</b> AI Units left
@@ -115,6 +144,7 @@ export default function AIPowerHud() {
               e.stopPropagation();
               setExpanded(true);
               setShowPacks(true);
+              trackEvent("ai_units_get_more_clicked", { source: "compact" });
             }}
           >
             Get More AI →
@@ -159,10 +189,22 @@ export default function AIPowerHud() {
               )}
               {balance.resetDate && <div className="aipwr-reset">Resets {fmtReset(balance.resetDate)}</div>}
               <div className="aipwr-actions">
-                <button className="aipwr-btn primary" onClick={() => setShowPacks(true)}>
+                <button
+                  className="aipwr-btn primary"
+                  onClick={() => {
+                    setShowPacks(true);
+                    trackEvent("ai_units_get_more_clicked", { source: "panel" });
+                  }}
+                >
                   Get More AI
                 </button>
-                <button className="aipwr-btn ghost" onClick={() => navigate("/pricing")}>
+                <button
+                  className="aipwr-btn ghost"
+                  onClick={() => {
+                    trackEvent("ai_units_solo_viewed", { source: "panel" });
+                    navigate("/pricing");
+                  }}
+                >
                   View Solo
                 </button>
               </div>
@@ -183,7 +225,13 @@ export default function AIPowerHud() {
                   <span className="aipwr-pack-price">${p.price}</span>
                 </button>
               ))}
-              <button className="aipwr-btn ghost full" onClick={() => navigate("/pricing")}>
+              <button
+                className="aipwr-btn ghost full"
+                onClick={() => {
+                  trackEvent("ai_units_solo_viewed", { source: "packs" });
+                  navigate("/pricing");
+                }}
+              >
                 Upgrade to Solo · ${config?.soloPrice || 197}/mo
               </button>
             </div>
