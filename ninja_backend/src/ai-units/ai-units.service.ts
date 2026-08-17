@@ -151,8 +151,29 @@ export class AiUnitsService {
   // ---------------------------------------------------------------------------
   private async resolveAccountTeam(user: any): Promise<string | null> {
     if (user?.teamId) return user.teamId;
-    const { rows } = await this.db.query(`SELECT id FROM teams WHERE owner_id = $1 LIMIT 1`, [user?.id]);
-    return rows[0]?.id || null;
+    if (!user?.id) return null;
+    // Team the user owns.
+    const owned = await this.db.query(`SELECT id FROM teams WHERE owner_id = $1 LIMIT 1`, [user.id]);
+    if (owned.rows[0]?.id) return owned.rows[0].id;
+    // Team the user belongs to as a member (covers members/admins whose
+    // users.team_id is not set). Guarded in case the table is absent.
+    try {
+      const member = await this.db.query(
+        `SELECT team_id FROM team_members WHERE user_id = $1 AND status <> 'removed' LIMIT 1`,
+        [user.id],
+      );
+      if (member.rows[0]?.team_id) return member.rows[0].team_id;
+    } catch {
+      /* team_members not present — fall through */
+    }
+    // Last resort: the team recorded on the user row.
+    try {
+      const u = await this.db.query(`SELECT team_id FROM users WHERE id = $1 LIMIT 1`, [user.id]);
+      if (u.rows[0]?.team_id) return u.rows[0].team_id;
+    } catch {
+      /* ignore */
+    }
+    return null;
   }
 
   private async getTeamSignup(teamId: string): Promise<Date> {
