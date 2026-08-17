@@ -7,9 +7,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { MembersModule } from './members/members.module';
 import { TeamAIInsightsService } from "./insights/ai-insights.service";
 import { TeamAnalyticsService } from "./analytics/team-analytics.service";
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 
 @Module({
-  imports: [UsersModule, AnalyticsModule, NotificationsModule, forwardRef(() => MembersModule),],
+  imports: [UsersModule, AnalyticsModule, NotificationsModule, forwardRef(() => MembersModule), WorkspacesModule,],
   controllers: [TeamsController],
   providers: [TeamsService, TeamAIInsightsService, TeamAnalyticsService],
   exports: [TeamsService],

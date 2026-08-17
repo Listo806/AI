@@ -55,7 +55,7 @@ export const PLANS = {
     limits: { aiConversationsPerMonth: null, automationWorkflows: null, integrations: null, whatsappConnections: null },
     features: {
       crm: true, aiAgent: true, automations: true, emailSmsMarketing: true,
-      calendar: true, reports: true, advancedAnalytics: true, teamWorkspace: true,
+      calendar: true, reports: true, advancedAnalytics: true, teamWorkspace: false,
       advancedAutomations: true, workflowsSequences: true, customFields: true,
       advancedPermissions: false, whiteLabel: false, customObjects: false,
       aiWhatsapp: true, aiBooking: true, aiAppointmentSetter: true,
@@ -73,7 +73,7 @@ export const PLANS = {
     limits: { aiConversationsPerMonth: null, automationWorkflows: null, integrations: null, whatsappConnections: null },
     features: {
       crm: true, aiAgent: true, automations: true, emailSmsMarketing: true,
-      calendar: true, reports: true, advancedAnalytics: true, teamWorkspace: true,
+      calendar: true, reports: true, advancedAnalytics: true, teamWorkspace: false,
       advancedAutomations: true, workflowsSequences: true, customFields: true,
       advancedPermissions: true, whiteLabel: true, customObjects: true,
       aiWhatsapp: true, aiBooking: true, aiAppointmentSetter: true,

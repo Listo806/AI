@@ -457,12 +457,9 @@ function AppRoutes() {
         <Route
           path="e-commerce-workspace"
           element={
-            <FeatureRoute
-              feature="ecommerceWorkspace"
-              title="E-Commerce Workspace is a premium workspace"
-            >
+            <WorkspaceGate workspaceId="ecommerce">
               <ECommerceWorkspace />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
 
@@ -470,68 +467,65 @@ function AppRoutes() {
         <Route
           path="team"
           element={
-            <FeatureRoute
-              feature="teamWorkspace"
-              title="Team workspace is on a paid plan"
-            >
+            <WorkspaceGate workspaceId="team">
               <Team />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
         <Route
           path="team/members"
           element={
-            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+            <WorkspaceGate workspaceId="team">
               <TeamMembersPage />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
         <Route
           path="team/ai-insights"
           element={
-            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+            <WorkspaceGate workspaceId="team">
               <TeamAIInsightsPage />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
         <Route
           path="team/performance"
           element={
-            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+            <WorkspaceGate workspaceId="team">
               <TeamPerformancePage />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
         <Route
           path="team/activity"
           element={
-            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+            <WorkspaceGate workspaceId="team">
               <TeamActivityPage />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
         <Route
           path="team/notifications"
           element={
-            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+            <WorkspaceGate workspaceId="team">
               <TeamNotificationsPage />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
         <Route
           path="team/manage"
           element={
-            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+            <WorkspaceGate workspaceId="team">
               <TeamManagePage />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
         <Route
           path="team/invites"
           element={
-            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+            <WorkspaceGate workspaceId="team">
               <TeamPendingInvitesPage />
-            </FeatureRoute>
+            </WorkspaceGate>
           }
         />
 

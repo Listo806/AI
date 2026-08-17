@@ -147,6 +147,89 @@ export class WorkspacesController {
     };
   }
 
+  // One-time LEGACY WORKSPACE ACCESS CLEANUP (platform support only).
+  //
+  // Every paid Workspace is now LOCKED by default and access is enforced server-side
+  // by WorkspaceLockGuard, so any account WITHOUT a verified active entitlement is
+  // already locked out at the data layer — no per-account reset is needed for that.
+  // This endpoint (a) reports the exact numbers, and (b) revokes any ACTIVE
+  // entitlement row that is improper: an unknown/legacy workspace id, or one with no
+  // real Paddle subscription id (i.e. never a verified $97 purchase). Legitimately
+  // purchased entitlements (valid workspace id + real subscription id) are preserved,
+  // and CRM data / accounts / ids are never touched.
+  @Post('legacy-audit')
+  @ApiOperation({ summary: 'Platform support: one-time legacy Workspace access lockdown + report' })
+  async legacyAudit(@CurrentUser() user: any) {
+    if (String(user?.role || '').toLowerCase() !== 'super_admin') {
+      throw new ForbiddenException('Platform support only');
+    }
+
+    // Guarantee the entitlements table exists before we query it.
+    await this.entitlements
+      .listActiveWorkspaceIds('00000000-0000-0000-0000-000000000000')
+      .catch(() => []);
+
+    const validIds = WORKSPACE_CATALOG.map((w) => w.id);
+
+    const [teamsRes, beforeRes, byWsRes] = await Promise.all([
+      this.db.query(`SELECT COUNT(*)::int AS n FROM teams`),
+      this.db.query(
+        `SELECT COUNT(*)::int AS rows, COUNT(DISTINCT team_id)::int AS teams
+           FROM workspace_entitlements WHERE status = 'active'`,
+      ),
+      this.db.query(
+        `SELECT workspace_id AS "workspaceId", COUNT(*)::int AS n
+           FROM workspace_entitlements WHERE status = 'active'
+          GROUP BY workspace_id ORDER BY n DESC`,
+      ),
+    ]);
+
+    // Revoke improper active grants: unknown workspace id, or no real subscription.
+    const revokedRes = await this.db.query(
+      `UPDATE workspace_entitlements
+          SET status = 'canceled', revoked_at = NOW(), updated_at = NOW()
+        WHERE status = 'active'
+          AND (
+            workspace_id <> ALL($1::text[])
+            OR paddle_subscription_id IS NULL
+            OR btrim(paddle_subscription_id) = ''
+          )
+        RETURNING id, team_id AS "teamId", workspace_id AS "workspaceId"`,
+      [validIds],
+    );
+
+    const afterRes = await this.db.query(
+      `SELECT COUNT(*)::int AS rows, COUNT(DISTINCT team_id)::int AS teams
+         FROM workspace_entitlements WHERE status = 'active'`,
+    );
+
+    const totalTeams = teamsRes.rows[0]?.n || 0;
+    const teamsKeepingAccess = afterRes.rows[0]?.teams || 0;
+
+    return {
+      enforcement: 'All paid Workspaces are locked by default; access requires a verified $97 entitlement (or super_admin). Plans never include a Workspace.',
+      lockedWorkspaces: getLockedWorkspaceIds(),
+      totals: {
+        totalTeams,
+        // Every team without a verified entitlement is now locked out of every paid
+        // workspace by the server-side guard.
+        teamsLockedOut: Math.max(0, totalTeams - teamsKeepingAccess),
+        teamsKeepingWorkspaceAccess: teamsKeepingAccess,
+      },
+      entitlements: {
+        activeBefore: beforeRes.rows[0]?.rows || 0,
+        activeAfter: afterRes.rows[0]?.rows || 0,
+        byWorkspace: byWsRes.rows,
+      },
+      revoked: {
+        count: revokedRes.rowCount || 0,
+        rows: revokedRes.rows,
+      },
+      note:
+        'Revoked entries were improper grants (unknown workspace id or no real Paddle subscription). CRM data, accounts, and ids were not modified.',
+    };
+  }
+
   @Post(':workspaceId/purchase')
   @ApiOperation({
     summary: 'Get the Paddle checkout parameters to buy a Workspace add-on',

@@ -14,6 +14,8 @@ import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { EcommerceWorkspaceService } from './ecommerce-workspace.service';
+import { WorkspaceLockGuard } from '../workspaces/workspace-lock.guard';
+import { RequiresWorkspace } from '../workspaces/requires-workspace.decorator';
 
 const CSV_FIELDS = [
   'email',
@@ -47,8 +49,9 @@ function csvCell(value: any): string {
  * workspace users and every operation is tenant-scoped inside the service.
  */
 @ApiTags('ecommerce-workspace')
+@RequiresWorkspace('ecommerce')
 @Controller('ecommerce/customers-hub')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, WorkspaceLockGuard)
 @ApiBearerAuth('JWT-auth')
 export class EcommerceWorkspaceController {
   constructor(private readonly ecommerce: EcommerceWorkspaceService) {}

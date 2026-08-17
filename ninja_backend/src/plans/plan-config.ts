@@ -174,7 +174,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       calendar: true,
       reports: true,
       advancedAnalytics: true,
-      teamWorkspace: true,
+      teamWorkspace: false, // Team is a separate $97 workspace add-on, never bundled in a plan
       advancedAutomations: true,
       workflowsSequences: true,
       customFields: true,
@@ -209,7 +209,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       calendar: true,
       reports: true,
       advancedAnalytics: true,
-      teamWorkspace: true,
+      teamWorkspace: false, // Team is a separate $97 workspace add-on, never bundled in a plan
       advancedAutomations: true,
       workflowsSequences: true,
       customFields: true,

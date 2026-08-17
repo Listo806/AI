@@ -67,6 +67,12 @@ export const WORKSPACE_CATALOG: WorkspaceDef[] = [
     featureKey: 'realEstateWorkspace',
     route: '/dashboard/properties',
   },
+  {
+    id: 'team',
+    name: 'Team Workspace',
+    featureKey: 'teamWorkspace',
+    route: '/dashboard/team',
+  },
 ];
 
 const BY_ID: Record<string, WorkspaceDef> = WORKSPACE_CATALOG.reduce(
@@ -90,20 +96,32 @@ export function isValidWorkspaceId(id: unknown): boolean {
   return !!BY_ID[normalizeWorkspaceId(id)];
 }
 
-// Which workspaces currently require the paid add-on to access. Driven by the
-// env var WORKSPACE_LOCKED_IDS (comma-separated workspace ids), so locks are
-// turned on ONE AT A TIME by config with no redeploy of logic — empty by default,
-// meaning every workspace stays open until the client explicitly enables a lock.
-// Only valid, known workspace ids are honored.
-export function getLockedWorkspaceIds(): string[] {
-  const raw = process.env.WORKSPACE_LOCKED_IDS || '';
+// GLOBAL WORKSPACE ENTITLEMENT RULE:
+// Every paid Workspace is its OWN $97/month add-on, separate from the base CRM
+// plan. Workspaces are NOT included in Free / Solo / Business / Scale. So every
+// workspace is LOCKED by default for every account, and access is granted ONLY by
+// a verified workspace entitlement (or platform support / super_admin).
+//
+// Escape hatch: WORKSPACE_UNLOCKED_IDS (comma-separated ids) can force-unlock a
+// specific workspace for everyone if ever needed operationally. Empty by default,
+// so the default is "all paid workspaces locked".
+export function getUnlockedWorkspaceIds(): string[] {
+  const raw = process.env.WORKSPACE_UNLOCKED_IDS || '';
   return raw
     .split(',')
     .map((s) => normalizeWorkspaceId(s))
     .filter((id) => !!BY_ID[id]);
 }
 
+// The set of workspaces enforced behind the add-on right now = every catalog
+// workspace that has not been explicitly unlocked via the escape hatch.
+export function getLockedWorkspaceIds(): string[] {
+  const unlocked = new Set(getUnlockedWorkspaceIds());
+  return WORKSPACE_CATALOG.map((w) => w.id).filter((id) => !unlocked.has(id));
+}
+
 export function isWorkspaceLocked(id: unknown): boolean {
   const wid = normalizeWorkspaceId(id);
-  return getLockedWorkspaceIds().includes(wid);
+  if (!BY_ID[wid]) return false; // unknown id -> not a gated workspace route
+  return !getUnlockedWorkspaceIds().includes(wid); // locked unless explicitly unlocked
 }
