@@ -53,6 +53,7 @@ import {
   setPlanConfig,
   resetPlanConfig,
 } from "../../api/platformApi";
+import aiUnitsApi from "../../api/aiUnitsApi";
 import AdminPlans from "./AdminPlans";
 import "../platform/platform.css";
 import "./AdminCustomers.css";
@@ -899,6 +900,15 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
   }, [id]);
   useEffect(() => { reload(); }, [reload]);
 
+  // AI Units snapshot for this customer (support view). Fails quietly.
+  const [aiUnits, setAiUnits] = useState(null);
+  useEffect(() => {
+    if (!id) { setAiUnits(null); return; }
+    let alive = true;
+    aiUnitsApi.getAdminByUser(id).then((r) => { if (alive) setAiUnits(r); }).catch(() => { if (alive) setAiUnits(null); });
+    return () => { alive = false; };
+  }, [id]);
+
   const setTab = (t) => onSelectTab && onSelectTab(t);
   const c = data?.customer;
   const sub = data?.subscription;
@@ -1088,6 +1098,27 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                               <span>{a.label}</span>
                             </div>
                           ))}
+                    </section>
+
+                    <section className="cxc-cust-block">
+                      <div className="cxc-block-title">AI Units</div>
+                      {!aiUnits ? (
+                        <div className="cxc-muted" style={{ fontSize: 12 }}>—</div>
+                      ) : aiUnits.noTeam ? (
+                        <div className="cxc-muted" style={{ fontSize: 12 }}>No workspace yet.</div>
+                      ) : aiUnits.unlimited ? (
+                        <div className="cxc-ov-row"><span className="k">AI</span><span className="v">Unlimited ({aiUnits.plan})</span></div>
+                      ) : (
+                        <>
+                          <div className="cxc-ov-row"><span className="k">Total remaining</span><span className="v"><strong>{aiUnits.totalRemaining}</strong></span></div>
+                          <div className="cxc-ov-row"><span className="k">Free</span><span className="v">{aiUnits.freeRemaining} / {aiUnits.freeAllowance}</span></div>
+                          <div className="cxc-ov-row"><span className="k">Purchased</span><span className="v">{aiUnits.purchased}</span></div>
+                          <div className="cxc-ov-row"><span className="k">Resets</span><span className="v">{aiUnits.cycleReset || "—"}</span></div>
+                          {Array.isArray(aiUnits.purchases) && aiUnits.purchases.length > 0 && (
+                            <div className="cxc-muted" style={{ fontSize: 11, marginTop: 6 }}>{aiUnits.purchases.length} purchase(s) on file</div>
+                          )}
+                        </>
+                      )}
                     </section>
                   </div>
                 </>

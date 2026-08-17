@@ -454,6 +454,19 @@ export class AiUnitsService {
     }
   }
 
+  /** Admin: resolve a customer's team from their (owner) user id, then snapshot. */
+  async getAdminViewByUser(userId: string): Promise<any> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query(
+      `SELECT COALESCE(u.team_id, (SELECT id FROM teams WHERE owner_id = u.id LIMIT 1)) AS team_id
+         FROM users u WHERE u.id = $1 LIMIT 1`,
+      [userId],
+    );
+    const teamId = rows[0]?.team_id;
+    if (!teamId) return { noTeam: true };
+    return this.getAdminView(teamId);
+  }
+
   private isUuid(v: any): boolean {
     return (
       typeof v === 'string' &&
