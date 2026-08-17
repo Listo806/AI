@@ -207,6 +207,26 @@ export class WorkspaceEntitlementsService {
     return rows.map((r: any) => r.workspace_id);
   }
 
+  /**
+   * Resolve the account's team id from a JWT user. Owners frequently have
+   * users.team_id = NULL and own their team via teams.owner_id, so fall back to
+   * that (mirrors crm-access/subscription guards). Never blocks: returns null when
+   * no team can be resolved, and the caller decides.
+   */
+  async resolveTeamId(user: any): Promise<string | null> {
+    if (user?.teamId) return user.teamId;
+    if (!user?.id) return null;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT id FROM teams WHERE owner_id = $1 LIMIT 1`,
+        [user.id],
+      );
+      return rows[0]?.id || null;
+    } catch {
+      return null;
+    }
+  }
+
   /** True if the team currently holds an active entitlement for the workspace. */
   async hasActiveEntitlement(
     teamId: string,

@@ -37,7 +37,9 @@ export class WorkspaceLockGuard implements CanActivate {
     const role = String(user?.role || '').toLowerCase();
     if (role === 'super_admin') return true; // platform support
 
-    const teamId = user?.teamId || null;
+    // Resolve the team owner-aware: owners often have users.team_id = NULL and own
+    // the team via teams.owner_id, so never key on user.teamId alone.
+    const teamId = await this.entitlements.resolveTeamId(user);
     const has = teamId
       ? await this.entitlements.hasActiveEntitlement(teamId, workspaceId)
       : false;

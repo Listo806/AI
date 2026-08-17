@@ -253,6 +253,7 @@ export class TeamsController {
     return { message: "Member removed successfully" };
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/dashboard")
   async getDashboard(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
@@ -312,6 +313,7 @@ export class TeamsController {
     };
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/ai-insights")
   async getAIInsights(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
@@ -319,6 +321,7 @@ export class TeamsController {
     return this.teamsService.getAIInsights(teamId);
   }
 
+  @RequiresWorkspace('team')
   @Post(":id/ai-insights/refresh")
   async refreshAIInsights(
     @Param("id") teamId: string,
@@ -329,6 +332,7 @@ export class TeamsController {
     return this.teamsService.refreshAIInsights(teamId, user.id);
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/activities/export")
   async exportActivities(
     @Param("id") teamId: string,
@@ -362,6 +366,7 @@ export class TeamsController {
     return res.status(200).send(csv);
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/activities")
   async getActivities(
     @Param("id") teamId: string,

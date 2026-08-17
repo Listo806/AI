@@ -725,8 +725,14 @@ export class PaymentsService {
       let teamId: string | null = null;
       if (customUserId) {
         try {
+          // Owner-aware: owners often have users.team_id = NULL and own the team via
+          // teams.owner_id, so a paid owner must still be granted the entitlement.
           const u = await this.db.query(
-            `SELECT team_id FROM users WHERE id = $1`,
+            `SELECT COALESCE(u.team_id, t.id) AS team_id
+               FROM users u
+               LEFT JOIN teams t ON t.owner_id = u.id
+              WHERE u.id = $1
+              LIMIT 1`,
             [customUserId],
           );
           teamId = u.rows[0]?.team_id || null;

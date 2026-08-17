@@ -60,7 +60,7 @@ export class WorkspacesController {
   @Get('entitlements')
   @ApiOperation({ summary: "The current team's Workspace entitlements" })
   async getEntitlements(@CurrentUser() user: any) {
-    const teamId = user?.teamId;
+    const teamId = await this.entitlements.resolveTeamId(user);
     const [rows, activeWorkspaceIds] = await Promise.all([
       this.entitlements.listForTeam(teamId),
       this.entitlements.listActiveWorkspaceIds(teamId),
@@ -73,7 +73,7 @@ export class WorkspacesController {
     summary: 'Per-workspace lock + entitlement state for the current team',
   })
   async getAccess(@CurrentUser() user: any) {
-    const teamId = user?.teamId;
+    const teamId = await this.entitlements.resolveTeamId(user);
     const activeIds = await this.entitlements.listActiveWorkspaceIds(teamId);
     const isSupport = String(user?.role || '').toLowerCase() === 'super_admin';
     return {
@@ -245,7 +245,7 @@ export class WorkspacesController {
       throw new BadRequestException(`Unknown workspace: ${workspaceId}`);
     }
 
-    const teamId = user?.teamId;
+    const teamId = await this.entitlements.resolveTeamId(user);
     if (!teamId) {
       throw new BadRequestException('A team is required to purchase a workspace add-on.');
     }
