@@ -926,6 +926,23 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                     >
                       <span className="crm-workspaces-ai-usage-fill" style={{ width: `${pct}%`, background: color }} />
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new Event("cortexa:open-ai-units"))}
+                      style={{
+                        display: "block",
+                        marginTop: 8,
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                        color: "#14b8a6",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Get More AI →
+                    </button>
                   </div>
                 );
               })()}
