@@ -407,12 +407,14 @@
   border-radius: 4px;
 }
 
-.pipeline-page .ai-banner-action-buttons-group {
+.pipeline-page .ai-banner-action-buttons-group, .pipeline-page .ai-mobile-actions-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
+.pipeline-page .ai-banner-action-buttons-group .ai-action-icon-box svg{
+  max-width: 20px;
+}
 .pipeline-page .ai-action-primary-trigger-btn {
   background-color: #2563eb;
   color: white;
@@ -2306,7 +2308,17 @@
 .pipeline-page .ai-mobile-metric-progress {
   display: none;
 }
-
+@media (min-width: 769px) {
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-copy small{
+    display: none;
+  }
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-copy strong{
+    font-size: 10px;
+  }
+  .pipeline-page .ai-action-primary-trigger-btn svg, .pipeline-page .ai-action-secondary-trigger-btn svg{
+    display: none;
+  }
+}
 @media (max-width: 768px) {
   /* ---------- PAGE HEADING ---------- */
   .pipeline-page > .heading_page {
