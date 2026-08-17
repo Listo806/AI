@@ -1029,6 +1029,10 @@
     }
   },
   "whatsapp": {
+    "backToInbox":"Back to Inbox",
+    "exportCsv":"Export CSV",
+    "importCustomers":"Import Customers",
+    "addCustomer":"Add Customer",
     "title": "WhatsApp",
     "apiStatus": "WhatsApp Business API Status",
     "accountStatus": "Account Status",

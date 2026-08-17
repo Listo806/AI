@@ -9,6 +9,7 @@ import {
   Search,
   SlidersHorizontal,
   Download,
+  Upload,
   ChevronDown,
   Plus,
   Calendar,
@@ -48,6 +49,7 @@ export default function WhatsAppPage() {
   const { t } = useTranslation();
   const [showTimelineDrawer, setShowTimelineDrawer] = React.useState(false);
   const [visibleConversations, setVisibleConversations] = React.useState(10);
+  const [mobileChatOpen, setMobileChatOpen] = React.useState(false);
 
   const {
     loading,
@@ -162,24 +164,626 @@ export default function WhatsAppPage() {
       .toLowerCase()
       .includes("ai"),
   );
+
+  const exportMobileConversationsCsv = () => {
+    const rows = (filteredConversations || []).map((conv) => ({
+      name: conv.displayName || "",
+      phone: conv.contact_phone || "",
+      lastMessage: conv.lastMessage || "",
+      unread: Number(conv.unread_count || 0),
+      tag: conv.tag || "",
+      assignedAgent: conv.assigned_agent_name || "",
+    }));
+
+    const headers = [
+      "Name",
+      "Phone",
+      "Last Message",
+      "Unread",
+      "Tag",
+      "Assigned Agent",
+    ];
+
+    const escapeCsv = (value) =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+    const csv = [
+      headers.join(","),
+      ...rows.map((row) =>
+        [
+          row.name,
+          row.phone,
+          row.lastMessage,
+          row.unread,
+          row.tag,
+          row.assignedAgent,
+        ]
+          .map(escapeCsv)
+          .join(","),
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "whatsapp-conversations.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const mobileStats = (dashboardStats || []).slice(0, 4);
+
+  const renderMobileStatIcon = (item, index) => {
+    if (item?.iconKey === "bot") return <Bot size={28} />;
+    if (item?.iconKey === "calendar") return <Calendar size={28} />;
+    if (item?.iconKey === "clock") return <Clock3 size={28} />;
+    if (item?.iconKey === "smartphone") return <MessageCircle size={28} />;
+    if (index === 1) return <Bot size={28} />;
+    if (index === 2) return <Calendar size={28} />;
+    if (index === 3) return <Clock3 size={28} />;
+    return <MessageCircle size={28} />;
+  };
+
   return (
     <div className="leads-page whatsapp-page">
       <AiCapBanner />
-      <div className="heading_page">
-        <MessageCircle className="header-icon" size={20} />
-        <h1>
-          {t("whatsapp.inboxTitle")}{" "}
-          <CheckCircle2
-            size={16}
-            fill="#2563eb"
-            color="white"
-            className="verified-badge"
-          />
-        </h1>
+      <div className="whatsapp-mobile-heading-row">
+        <div>
+          <div className="heading_page">
+            <MessageCircle className="header-icon" size={20} />
+            <h1>
+              {t("whatsapp.inboxTitle")}{" "}
+              <CheckCircle2
+                size={16}
+                fill="#2563eb"
+                color="white"
+                className="verified-badge"
+              />
+            </h1>
+          </div>
+          <p className="sub_head">
+            {t("whatsapp.subHeading")}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="whatsapp-mobile-heading-more"
+          aria-label="More WhatsApp options"
+        >
+          <MoreVertical size={26} />
+        </button>
       </div>
-      <p className="sub_head">
-        {t("whatsapp.subHeading")}
-      </p>
+
+      {/* MOBILE WHATSAPP OVERVIEW */}
+      <div
+        className={`whatsapp-mobile-overview ${
+          mobileChatOpen ? "is-hidden" : ""
+        }`}
+      >
+        <div className="whatsapp-mobile-stats">
+          {mobileStats.map((item, index) => (
+            <div
+              className={`whatsapp-mobile-stat-card whatsapp-mobile-stat-card-${index + 1}`}
+              key={`${item.label}-${index}`}
+            >
+              <div className="whatsapp-mobile-stat-icon">
+                {renderMobileStatIcon(item, index)}
+              </div>
+
+              <div className="whatsapp-mobile-stat-copy">
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+                <small>{item.subtext}</small>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="whatsapp-mobile-status-strip">
+          <div className="whatsapp-mobile-status-item">
+            <Sparkles size={18} />
+            <strong>{t("whatsapp.aiStatus")}</strong>
+            <span className={`whatsapp-mobile-status-pill ${status?.connected ? "is-on" : ""}`}>
+              {status?.connected ? t("whatsapp.statusActive") : t("whatsapp.statusOffline")}
+            </span>
+          </div>
+
+          <div className="whatsapp-mobile-status-divider" />
+
+          <div className="whatsapp-mobile-status-item">
+            <User size={18} />
+            <strong>{t("whatsapp.humanMode")}</strong>
+            <span className={`whatsapp-mobile-status-pill is-on`}>
+              {(aiStatus?.human ?? 0) > 0 ? t("whatsapp.on") : t("whatsapp.off")}
+            </span>
+          </div>
+        </div>
+
+        <div className="whatsapp-mobile-actions">
+          <button type="button" onClick={exportMobileConversationsCsv}>
+            <Download size={22} />
+            <span>{t("whatsapp.exportCsv") || "Export CSV"}</span>
+          </button>
+
+          <button type="button">
+            <Upload size={22} />
+            <span>{t("whatsapp.importCustomers") || "Import Customers"}</span>
+          </button>
+
+          <button type="button" className="primary">
+            <Plus size={24} />
+            <span>{t("whatsapp.addCustomer") || "Add Customer"}</span>
+          </button>
+        </div>
+
+        <section className="whatsapp-mobile-inbox">
+          <div className="whatsapp-mobile-inbox-tabs">
+            <button
+              type="button"
+              className={statusFilter === "all" ? "active" : ""}
+              onClick={() => setStatusFilter("all")}
+            >
+              <span>{t("whatsapp.tabAll")}</span>
+              <b>{conversations.length}</b>
+            </button>
+
+            <button
+              type="button"
+              className={statusFilter === "unread" ? "active" : ""}
+              onClick={() => setStatusFilter("unread")}
+            >
+              <span>{t("whatsapp.tabUnread")}</span>
+              <b>
+                {conversations.filter((i) => Number(i.unread_count || 0) > 0).length}
+              </b>
+            </button>
+
+            <button
+              type="button"
+              className={statusFilter === "human" ? "active" : ""}
+              onClick={() => setStatusFilter("human")}
+            >
+              <span>{t("whatsapp.tabMine")}</span>
+              <b>{conversations.filter((i) => !i.ai_enabled).length}</b>
+            </button>
+
+            <button
+              type="button"
+              className="whatsapp-mobile-filter-icon"
+              onClick={() => setAiFilter(aiFilter === "all" ? "ai" : "all")}
+              aria-label="Filter conversations"
+            >
+              <SlidersHorizontal size={22} />
+            </button>
+          </div>
+
+          <div className="whatsapp-mobile-search">
+            <Search size={22} />
+            <input
+              type="text"
+              placeholder={t("whatsapp.searchPlaceholder")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch("")}>
+                ×
+              </button>
+            )}
+          </div>
+
+          <div className="whatsapp-mobile-conversation-list">
+            {filteredConversations.length ? (
+              filteredConversations.slice(0, 5).map((conv) => {
+                const displayName = conv.displayName || conv.contact_phone || "WhatsApp";
+                const initial = String(displayName).trim().charAt(0).toUpperCase() || "+";
+                const lastMessage = String(conv.lastMessage || "").trim();
+                const invalidValues = ["[text]", "[message]", "text", "null", "undefined"];
+                const messagePreview =
+                  lastMessage && !invalidValues.includes(lastMessage.toLowerCase())
+                    ? lastMessage
+                    : t("whatsapp.noMessagesYet");
+
+                return (
+                  <button
+                    type="button"
+                    key={conv.id}
+                    className={`whatsapp-mobile-conversation-card ${
+                      selectedConversation?.id === conv.id ? "active" : ""
+                    }`}
+                    onClick={() => {
+                      setSelectedConversation(conv);
+                      setMobileChatOpen(true);
+                    }}
+                  >
+                    <div className="whatsapp-mobile-conversation-avatar">
+                      {conv.avatarUrl ? (
+                        <img src={conv.avatarUrl} alt="" />
+                      ) : (
+                        <span>{initial}</span>
+                      )}
+                    </div>
+
+                    <div className="whatsapp-mobile-conversation-main">
+                      <strong>{displayName}</strong>
+                      <p>{messagePreview}</p>
+                    </div>
+
+                    <div className="whatsapp-mobile-conversation-meta">
+                      <time>{conv.timeAgo}</time>
+                      <div>
+                        {conv.tag && (
+                          <span className={`pill-tag-temp ${String(conv.tag).toLowerCase()}`}>
+                            {conv.tag}
+                          </span>
+                        )}
+                        {Number(conv.unread_count || 0) > 0 && (
+                          <b>{conv.unread_count}</b>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="whatsapp-mobile-empty">
+                {t("whatsapp.noConversationsFound")}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+
+
+      {/* MOBILE CONVERSATION DETAIL */}
+      <section
+        className={`whatsapp-mobile-chat-screen ${
+          mobileChatOpen ? "is-open" : ""
+        }`}
+      >
+        <div className="whatsapp-mobile-chat-shell">
+          <div className="whatsapp-mobile-chat-profile">
+            <div className="whatsapp-mobile-chat-profile-left">
+              <div className="whatsapp-mobile-chat-avatar">
+                {selectedConversation?.avatarUrl ? (
+                  <img src={selectedConversation.avatarUrl} alt="" />
+                ) : (
+                  <span>
+                    {selectedConversation?.initials ||
+                      String(
+                        selectedConversation?.displayName ||
+                          selectedConversation?.contact_phone ||
+                          "W",
+                      )
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              <div className="whatsapp-mobile-chat-profile-copy">
+                <div className="whatsapp-mobile-chat-name-row">
+                  <h2>
+                    {selectedConversation?.displayName ||
+                      selectedConversation?.contact_phone ||
+                      t("whatsapp.selectConversation")}
+                  </h2>
+
+                  {selectedConversation?.tag && (
+                    <span
+                      className={`pill-tag-temp ${String(
+                        selectedConversation.tag,
+                      ).toLowerCase()}`}
+                    >
+                      {selectedConversation.tag}
+                    </span>
+                  )}
+                </div>
+
+                <p>
+                  {selectedConversation?.contact_phone || "-"} • WhatsApp
+                  {selectedConversation?.lead_status
+                    ? ` • ${selectedConversation.lead_status}`
+                    : ""}
+                  {selectedConversation?.assigned_agent_name
+                    ? ` • ${selectedConversation.assigned_agent_name}`
+                    : " • Unassigned"}
+                </p>
+              </div>
+            </div>
+
+            <div className="whatsapp-mobile-chat-header-actions">
+              <button
+                type="button"
+                className="human"
+                onClick={toggleSelectedAi}
+                disabled={!selectedConversation}
+              >
+                <Sparkles size={18} />
+                <span>
+                  {selectedConversation?.ai_enabled
+                    ? t("whatsapp.aiHandling")
+                    : t("whatsapp.humanHandling")}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleSelectedAi}
+                disabled={!selectedConversation}
+              >
+                <BriefcaseBusiness size={18} />
+                <span>
+                  {selectedConversation?.ai_enabled
+                    ? t("whatsapp.takeOver")
+                    : t("whatsapp.resumeAi")}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="whatsapp-mobile-ai-summary">
+            <div className="whatsapp-mobile-summary-title-row">
+              <h3>{t("whatsapp.aiSummary")}</h3>
+
+              <div className="whatsapp-mobile-summary-tags">
+                {selectedIntelligence?.lead?.status && (
+                  <span>{selectedIntelligence.lead.status}</span>
+                )}
+                {selectedIntelligence?.lead?.priority && (
+                  <span>{selectedIntelligence.lead.priority}</span>
+                )}
+              </div>
+            </div>
+
+            <p>
+              {intelligenceLoading
+                ? t("whatsapp.analyzingConversation")
+                : selectedIntelligence.summary || t("whatsapp.defaultSummary")}
+            </p>
+
+            <div className="whatsapp-mobile-summary-metrics">
+              <div>
+                <span>{t("whatsapp.sentiment")}</span>
+                <strong className="sentiment">
+                  {selectedIntelligence.sentiment || "-"}
+                </strong>
+              </div>
+
+              <div>
+                <span>{t("whatsapp.intent")}</span>
+                <strong className="intent">
+                  {selectedIntelligence.intent || "-"}
+                </strong>
+              </div>
+
+              <div>
+                <span>{t("whatsapp.aiScore")}</span>
+                <strong className="score">
+                  {selectedIntelligence.score
+                    ? `${selectedIntelligence.score}%`
+                    : "-"}
+                </strong>
+              </div>
+
+              <div className="next-action">
+                <span>{t("whatsapp.nextAction")}</span>
+                <strong>
+                  {selectedIntelligence.recommendedAction ||
+                    t("whatsapp.sendPropertyDetails")}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="whatsapp-mobile-chat-messages">
+            {messagesLoading ? (
+              <div className="whatsapp-mobile-chat-empty">
+                {t("whatsapp.loadingMessages")}
+              </div>
+            ) : messages.length ? (
+              messages.map((msg) => {
+                const isInbound = msg.direction === "inbound";
+                const isAi = msg.sender_type === "ai";
+
+                return (
+                  <div
+                    className={`whatsapp-mobile-chat-message ${
+                      isInbound ? "inbound" : "outbound"
+                    }`}
+                    key={msg.id}
+                  >
+                    <div className="whatsapp-mobile-chat-message-avatar">
+                      {isInbound ? (
+                        selectedConversation?.initials ||
+                        String(
+                          selectedConversation?.displayName ||
+                            selectedConversation?.contact_phone ||
+                            "W",
+                        )
+                          .trim()
+                          .charAt(0)
+                          .toUpperCase()
+                      ) : isAi ? (
+                        <Bot size={16} />
+                      ) : (
+                        <User size={16} />
+                      )}
+                    </div>
+
+                    <div className="whatsapp-mobile-chat-message-bubble">
+                      <p>{msg.body || `[${msg.message_type || "message"}]`}</p>
+                      <span>
+                        {formatChatDateTime(msg.created_at)}
+                        {!isInbound && getMessageStatusIcon(msg)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="whatsapp-mobile-chat-empty">
+                {t("whatsapp.emptyMessages")}
+              </div>
+            )}
+          </div>
+
+          <div className="whatsapp-mobile-response-mode">
+            <div className="whatsapp-mobile-response-label">
+              {t("whatsapp.whoIsResponding")}
+            </div>
+
+            <div className="whatsapp-mobile-response-controls">
+              <button
+                type="button"
+                className={selectedConversation?.ai_enabled ? "active ai" : "ai"}
+                onClick={toggleSelectedAi}
+              >
+                <Bot size={17} />
+                <span>{t("whatsapp.aiActive")}</span>
+              </button>
+
+              <button
+                type="button"
+                className={!selectedConversation?.ai_enabled ? "active" : ""}
+                onClick={toggleSelectedAi}
+              >
+                <User size={17} />
+                <span>{t("whatsapp.humanActive")}</span>
+              </button>
+
+              <button type="button">
+                <Users size={17} />
+                <span>{t("whatsapp.sharedMode")}</span>
+              </button>
+
+              <Info size={20} className="whatsapp-mobile-response-info" />
+            </div>
+          </div>
+
+          <div className="whatsapp-mobile-suggested-replies">
+            {(selectedIntelligence.suggestedReplies || []).length ? (
+              selectedIntelligence.suggestedReplies
+                .slice(0, 3)
+                .map((reply, index) => (
+                  <button
+                    type="button"
+                    key={index}
+                    onClick={() => setMessageText(reply)}
+                  >
+                    <Sparkles size={15} />
+                    <span>{reply}</span>
+                  </button>
+                ))
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMessageText(
+                      t("whatsapp.sendPropertyOptions") ||
+                        "Send property options",
+                    )
+                  }
+                >
+                  <Sparkles size={15} />
+                  <span>{t("whatsapp.sendPropertyOptions")}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMessageText(
+                      t("whatsapp.bookAppointment") || "Book appointment",
+                    )
+                  }
+                >
+                  <Sparkles size={15} />
+                  <span>{t("whatsapp.bookAppointment")}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMessageText(t("whatsapp.askBudget") || "Ask budget")
+                  }
+                >
+                  <Sparkles size={15} />
+                  <span>{t("whatsapp.askBudget")}</span>
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="whatsapp-mobile-chat-composer">
+            <button type="button" className="attach">
+              <Paperclip size={25} />
+            </button>
+
+            <input
+              type="text"
+              placeholder={t("whatsapp.typeMessagePlaceholder")}
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!sending && messageText.trim()) {
+                    sendMessage();
+                  }
+                }
+              }}
+            />
+
+            <button
+              type="button"
+              className="assist"
+              onClick={async () => {
+                setShowAiAssist(true);
+                if (!aiAssistReply) {
+                  await generateAiAssistReply();
+                }
+              }}
+              disabled={
+                !selectedConversation?.contact_phone || aiAssistLoading
+              }
+            >
+              <Sparkles size={18} />
+              <span>
+                {aiAssistLoading
+                  ? t("whatsapp.thinking")
+                  : t("whatsapp.aiAssist")}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="send"
+              onClick={sendMessage}
+              disabled={
+                sending ||
+                !selectedConversation?.contact_phone ||
+                !messageText.trim()
+              }
+            >
+              {sending ? <span className="wa-send-spinner" /> : <Send size={22} />}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="whatsapp-mobile-chat-back"
+            onClick={() => setMobileChatOpen(false)}
+          >
+            ← {t("whatsapp.backToInbox") || "Back to Inbox"}
+          </button>
+        </div>
+      </section>
 
       {/* MAIN THREE-COLUMN WORKSPACE */}
       <div className="leads-layout main-workspace-layout">
