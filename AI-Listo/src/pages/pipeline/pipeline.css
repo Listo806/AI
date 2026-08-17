@@ -2295,3 +2295,2227 @@
     width: 38px;
   }
 }
+
+
+/* =========================================================
+   PIPELINE MOBILE — HEADER / KPI / AI INTELLIGENCE
+   Layout rules are separated from dark-theme color rules.
+   ========================================================= */
+
+.pipeline-page .ai-mobile-metric-icon,
+.pipeline-page .ai-mobile-metric-progress {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* ---------- PAGE HEADING ---------- */
+  .pipeline-page > .heading_page {
+    justify-content: center;
+    margin: 0;
+    text-align: center;
+  }
+
+  .pipeline-page > .heading_page .header-icon {
+    display: none;
+  }
+
+  .pipeline-page > .heading_page h1 {
+    width: 100%;
+    margin: 0;
+    font-size: 27px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .pipeline-page > .sub_head {
+    margin: 6px 0 24px;
+    font-size: 15px;
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  .pipeline-page .pipeline-page-header {
+    margin-bottom: 18px;
+  }
+
+  .pipeline-page .header-global-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    gap: 12px;
+  }
+
+  .pipeline-page .header-search-input-wrapper {
+    width: 100%;
+  }
+
+  .pipeline-page .global-search-input {
+    width: 100%;
+    height: 58px;
+    padding-left: 50px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+
+  .pipeline-page .search-icon-inside {
+    left: 16px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .pipeline-page .header-global-actions .filter-btn {
+    display: flex !important;
+    width: 100%;
+    height: 58px;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 16px;
+    gap: 10px;
+  }
+
+  .pipeline-page .header-global-actions .active-view-btn,
+  .pipeline-page .header-global-actions > .secondary-btn:not(.filter-btn),
+  .pipeline-page .header-global-actions > .primary-btn {
+    display: none;
+  }
+
+  .pipeline-page .pipeline-stats-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .pipeline-page .pipeline-stat-card-item {
+    position: relative;
+    min-height: 164px;
+    padding: 22px 28px;
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr) 112px;
+    align-items: center;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .pipeline-page .stat-card-icon-box {
+    grid-column: 1;
+    width: 82px;
+    height: 82px;
+    justify-self: start;
+  }
+
+  .pipeline-page .stat-card-icon-box svg {
+    width: 38px;
+    height: 38px;
+  }
+
+  .pipeline-page .stat-card-content-wrapper {
+    grid-column: 2;
+    min-width: 0;
+    align-items: center;
+    text-align: center;
+  }
+
+  .pipeline-page .stat-card-label-title {
+    font-size: 20px;
+    line-height: 1.15;
+    font-weight: 650;
+  }
+
+  .pipeline-page .stat-card-numeric-value {
+    margin: 8px 0 6px;
+    font-size: 48px;
+    line-height: 1;
+    font-weight: 750;
+  }
+
+  .pipeline-page .stat-card-trend-indicator {
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 550;
+  }
+
+  /* ---------- AI INTELLIGENCE ---------- */
+  .pipeline-page section.ai-intelligence-insight-banner {
+    padding: 8px 0 0 !important;
+    margin: 8px 0 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-radius: 0;
+  }
+
+  .pipeline-page .ai-banner-left-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .pipeline-page .ai-sparkle-avatar-glow {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+  }
+
+  .pipeline-page .ai-banner-text-details {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pipeline-page .ai-banner-text-details > .flex {
+    justify-content: center;
+  }
+
+  .pipeline-page .ai-banner-header-title {
+    font-size: 27px;
+    line-height: 1.15;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .pipeline-page .ai-intelligence-active-badge {
+    display: none;
+  }
+
+  .pipeline-page .ai-banner-description {
+    margin-top: 8px;
+    font-size: 16px;
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  .pipeline-page .pipeline-ai-analysis-result {
+    width: 100%;
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  .pipeline-page .ai-banner-metrics-container {
+    width: 100%;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    border: 0;
+  }
+
+  .pipeline-page .ai-metric-column-box {
+    position: relative;
+    min-height: 204px;
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: 118px minmax(0, 1fr) 118px;
+    align-items: center;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .pipeline-page .ai-mobile-metric-icon {
+    grid-column: 1;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+
+  .pipeline-page .ai-mobile-metric-main {
+    grid-column: 2;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pipeline-page .ai-metric-box-label {
+    font-size: 18px;
+    line-height: 1.15;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .pipeline-page .ai-metric-content-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .pipeline-page .ai-metric-value-group {
+    width: 100%;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .pipeline-page .ai-metric-box-value {
+    font-size: 46px;
+    line-height: 1;
+    font-weight: 750;
+  }
+
+  .pipeline-page .ai-metric-pill-green,
+  .pipeline-page .ai-metric-pill-red,
+  .pipeline-page .ai-metric-pill-blue {
+    padding: 0;
+    font-size: 17px;
+    line-height: 1.2;
+    background: transparent;
+  }
+
+  .pipeline-page .ai-mini-chart-inline {
+    display: none;
+  }
+
+  .pipeline-page .ai-mobile-metric-progress {
+    width: 100%;
+    height: 8px;
+    margin-top: 18px;
+    display: block;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .pipeline-page .ai-mobile-metric-progress span {
+    display: block;
+    width: 68%;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+  .pipeline-page .ai-metric-column-box-2 .ai-mobile-metric-progress span {
+    width: 63%;
+  }
+
+  .pipeline-page .ai-metric-column-box-3 .ai-mobile-metric-progress span {
+    width: 68%;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-primary-trigger-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 68px;
+    justify-content: flex-start;
+    padding: 0 24px;
+    border-radius: 8px;
+    font-size: 17px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-secondary-trigger-btn {
+    width: 100%;
+    min-height: 88px;
+    padding: 0 20px;
+    border-radius: 12px;
+    justify-content: flex-start;
+    font-size: 15px;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 480px) {
+  .pipeline-page .header-global-actions {
+    grid-template-columns: minmax(0, 1fr) 118px;
+    gap: 8px;
+  }
+
+  .pipeline-page .global-search-input,
+  .pipeline-page .header-global-actions .filter-btn {
+    height: 54px;
+  }
+
+  .pipeline-page .pipeline-stat-card-item {
+    min-height: 130px;
+    padding: 18px 18px;
+    grid-template-columns: 84px minmax(0, 1fr) 84px;
+  }
+
+  .pipeline-page .stat-card-icon-box {
+    width: 68px;
+    height: 68px;
+  }
+
+  .pipeline-page .stat-card-label-title {
+    font-size: 17px;
+  }
+
+  .pipeline-page .stat-card-numeric-value {
+    font-size: 40px;
+  }
+
+  .pipeline-page .stat-card-trend-indicator {
+    font-size: 14px;
+  }
+
+  .pipeline-page .ai-banner-header-title {
+    font-size: 20px;
+  }
+
+  .pipeline-page .ai-banner-description {
+    font-size: 14px;
+  }
+
+  .pipeline-page .ai-metric-column-box {
+    min-height: 180px;
+    padding: 20px 18px;
+    grid-template-columns: 90px minmax(0, 1fr) 90px;
+  }
+
+  .pipeline-page .ai-mobile-metric-icon {
+    width: 72px;
+    height: 72px;
+  }
+
+  .pipeline-page .ai-mobile-metric-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .pipeline-page .ai-metric-box-label {
+    font-size: 15px;
+  }
+
+  .pipeline-page .ai-metric-box-value {
+    font-size: 39px;
+  }
+
+  .pipeline-page .ai-metric-pill-green,
+  .pipeline-page .ai-metric-pill-red,
+  .pipeline-page .ai-metric-pill-blue {
+    font-size: 15px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-primary-trigger-btn {
+    min-height: 45px;
+    font-size: 15px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-secondary-trigger-btn {
+    min-height: 45px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .crm-dark .pipeline-page > .heading_page h1 {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page > .sub_head {
+    color: #cbd2dc;
+  }
+
+  .crm-dark .pipeline-page .global-search-input,
+  .crm-dark .pipeline-page .header-global-actions .filter-btn {
+    color: #f5f7fb;
+    background: rgba(6, 10, 17, .96);
+    border: 1px solid rgba(92, 104, 122, .62);
+  }
+
+  .crm-dark .pipeline-page .global-search-input::placeholder {
+    color: #b5abd5;
+  }
+
+  .crm-dark .pipeline-page .search-icon-inside {
+    color: #c8bff2;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item {
+    color: #f8fafc;
+    background: rgba(3, 8, 14, .985);
+    border: 1px solid currentColor;
+    box-shadow: inset 0 0 42px color-mix(in srgb, currentColor 8%, transparent),
+      0 14px 34px rgba(0, 0, 0, .18);
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(1) {
+    color: #1593ff;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(2) {
+    color: #28d86f;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(3) {
+    color: #d246ff;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(4) {
+    color: #ff850f;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(5) {
+    color: #1ed9df;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(6) {
+    color: #ff4545;
+  }
+
+  .crm-dark .pipeline-page .stat-card-icon-box {
+    color: currentColor !important;
+    background: color-mix(in srgb, currentColor 13%, transparent) !important;
+    border: 1px solid color-mix(in srgb, currentColor 36%, transparent);
+    box-shadow: inset 0 0 26px color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  .crm-dark .pipeline-page .stat-card-label-title,
+  .crm-dark .pipeline-page .stat-card-numeric-value {
+    color: #f8fafc;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(1) .stat-card-trend-indicator {
+    color: #218cff;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(2) .stat-card-trend-indicator {
+    color: #22dc76;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(3) .stat-card-trend-indicator {
+    color: #d24dff;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(4) .stat-card-trend-indicator {
+    color: #ff8a0a;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(5) .stat-card-trend-indicator {
+    color: #ff4c4c;
+  }
+
+  .crm-dark #root .pipeline-page .pipeline-stat-card-item:nth-child(6) .stat-card-trend-indicator {
+    color: #ff4b4b;
+  }
+
+  .crm-dark #root .pipeline-page section.ai-intelligence-insight-banner {
+    background: var(--bg) !important;;
+    border: 0;
+  }
+
+  .crm-dark #root .pipeline-page .ai-sparkle-avatar-glow {
+    color: #ff512f;
+    background: rgba(255, 76, 31, .08);
+    box-shadow: none;
+  }
+
+  .crm-dark #root .pipeline-page .ai-banner-header-title {
+    color: #f8fafc;
+  }
+
+  .crm-dark #root .pipeline-page .ai-banner-description {
+    color: #c7ced8;
+  }
+
+  .crm-dark #root .pipeline-page .ai-metric-column-box {
+    color: #ff6819;
+    background:
+      radial-gradient(circle at 88% 50%, rgba(255, 85, 17, .09), transparent 42%),
+      rgba(8, 5, 4, .98);
+    border: 1px solid currentColor;
+    box-shadow: inset 0 0 42px color-mix(in srgb, currentColor 8%, transparent),
+      0 14px 34px rgba(0, 0, 0, .18);
+  }
+
+  .crm-dark #root .pipeline-page .ai-metric-column-box-2 {
+    color: #ff3434;
+    background:
+      radial-gradient(circle at 88% 50%, rgba(255, 40, 40, .10), transparent 42%),
+      rgba(10, 3, 4, .98);
+  }
+
+  .crm-dark #root .pipeline-page .ai-metric-column-box-3 {
+    color: #ffc000;
+    background:
+      radial-gradient(circle at 88% 50%, rgba(255, 192, 0, .10), transparent 42%),
+      rgba(11, 8, 1, .98);
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-metric-icon {
+    color: currentColor;
+    background: color-mix(in srgb, currentColor 13%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 55%, transparent);
+    box-shadow: inset 0 0 28px color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .crm-dark .pipeline-page .ai-metric-box-label {
+    color: currentColor;
+  }
+
+  .crm-dark .pipeline-page .ai-metric-box-value {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .ai-metric-pill-green,
+  .crm-dark .pipeline-page .ai-metric-pill-red,
+  .crm-dark .pipeline-page .ai-metric-pill-blue {
+    color: currentColor;
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-metric-progress {
+    background: rgba(79, 90, 106, .42);
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-metric-progress span {
+    background: currentColor;
+    box-shadow: 0 0 12px color-mix(in srgb, currentColor 40%, transparent);
+  }
+
+  .crm-dark .pipeline-page .ai-banner-action-buttons-group .ai-action-primary-trigger-btn,
+  .crm-dark .pipeline-page .ai-banner-action-buttons-group .ai-action-secondary-trigger-btn {
+    color: #f8fafc;
+    background: var(--bg);
+    border: 1px solid rgba(74, 84, 101, .62);
+  }
+
+  .crm-dark #root .pipeline-page .ai-banner-action-buttons-group .ai-action-primary-trigger-btn,
+  .crm-dark #root .pipeline-page .ai-banner-action-buttons-group .ai-action-primary-trigger-btn svg,
+  .crm-dark #root .pipeline-page .ai-banner-action-buttons-group .ai-action-secondary-trigger-btn svg {
+    color: #ff6716;
+  }
+}
+
+.pipeline-page .ai-mobile-actions-heading,
+.pipeline-page .ai-mobile-actions-footer {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .pipeline-page .ai-banner-action-buttons-group {
+    width: 100%;
+    margin-top: 8px;
+    padding: 28px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    border-radius: 12px;
+  }
+
+  .pipeline-page .ai-mobile-actions-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .pipeline-page .ai-mobile-actions-heading > svg {
+    margin-bottom: 14px;
+  }
+
+  .pipeline-page .ai-mobile-actions-heading h3 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.15;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .pipeline-page .ai-mobile-actions-heading p {
+    margin: 12px 0 0;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .pipeline-page .ai-mobile-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-primary-trigger-btn,
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-secondary-trigger-btn {
+    width: 100%;
+    min-height: 172px;
+    height: auto;
+    padding: 22px 28px;
+    border-radius: 15px;
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 22px;
+    justify-content: stretch;
+    text-align: left;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-icon-box {
+    width: 72px;
+    height: 72px;
+    display: grid;
+    place-items: center;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-copy strong {
+    font-size: 22px;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-copy small {
+    font-size: 16px;
+    line-height: 1.35;
+    font-weight: 400;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-chevron {
+    justify-self: end;
+    flex-shrink: 0;
+  }
+
+  .pipeline-page .ai-mobile-actions-footer {
+    min-height: 118px;
+    padding: 18px 24px;
+    border-radius: 14px;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .pipeline-page .ai-mobile-actions-footer p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.45;
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .pipeline-page .ai-banner-action-buttons-group {
+    padding: 24px 14px 16px;
+    gap: 18px;
+  }
+
+  .pipeline-page .ai-mobile-actions-heading p {
+    font-size: 14px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-primary-trigger-btn,
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-secondary-trigger-btn {
+    min-height: 140px;
+    padding: 18px 16px;
+    grid-template-columns: 68px minmax(0, 1fr) 26px;
+    gap: 12px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-icon-box {
+    width: 58px;
+    height: 58px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-icon-box svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-copy strong {
+    font-size: 18px;
+  }
+
+  .pipeline-page .ai-banner-action-buttons-group .ai-action-copy small {
+    font-size: 13px;
+  }
+
+  .pipeline-page .ai-mobile-actions-footer {
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .pipeline-page .ai-mobile-actions-footer p {
+    font-size: 13px;
+  }
+
+  .pipeline-page .ai-mobile-actions-footer svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .crm-dark .pipeline-page .ai-banner-action-buttons-group {
+    border: 1px solid rgba(58, 67, 79, .72);
+    box-shadow: inset 0 0 42px rgba(14, 30, 46, .12);
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-actions-heading > svg {
+    color: #ff5b0b;
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-actions-heading h3 {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-actions-heading p {
+    color: #c4cad4;
+  }
+
+  .crm-dark #root .pipeline-page .ai-banner-action-buttons-group .ai-action-primary-trigger-btn,
+  .crm-dark #root .pipeline-page .ai-banner-action-buttons-group .ai-action-secondary-trigger-btn {
+    color: #f8fafc;
+    background:
+      radial-gradient(circle at 10% 50%, rgba(255, 93, 8, .10), transparent 32%),
+      rgba(9, 7, 5, .97);
+    border: 1px solid #ff6500;
+    box-shadow:
+      inset 0 0 32px rgba(255, 93, 8, .04),
+      0 8px 22px rgba(0, 0, 0, .18);
+  }
+
+  .crm-dark .pipeline-page .ai-banner-action-buttons-group .ai-action-icon-box,
+  .crm-dark .pipeline-page .ai-banner-action-buttons-group .ai-action-icon-box svg,
+  .crm-dark .pipeline-page .ai-banner-action-buttons-group .ai-action-chevron {
+    color: #ff6500;
+  }
+
+  .crm-dark .pipeline-page .ai-banner-action-buttons-group .ai-action-copy strong {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .ai-banner-action-buttons-group .ai-action-copy small {
+    color: #c8ced8;
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-actions-footer {
+    color: #ff6500;
+    border: 1px solid rgba(72, 82, 96, .68);
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-actions-footer p {
+    color: #d1d6df;
+  }
+
+  .crm-dark .pipeline-page .ai-mobile-actions-footer > svg:last-child {
+    color: #ff6500;
+  }
+}
+
+.pipeline-page .pipeline-mobile-stages-panel {
+  display: none;
+}
+
+.pipeline-page .pipeline-desktop-kanban-wrap {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .pipeline-page .pipeline-desktop-kanban-wrap {
+    display: none;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-panel {
+    margin: 22px 0 18px;
+    padding: 26px 18px 18px!important;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-heading > svg {
+    margin-bottom: 14px;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-heading h2 {
+    margin: 0;
+    font-size: 27px;
+    line-height: 1.12;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-heading p {
+    margin: 10px 0 0;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-card {
+    width: 100%;
+    min-height: 142px;
+    padding: 18px 26px;
+    border-radius: 14px;
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) 92px;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-icon {
+    grid-column: 1;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-copy {
+    grid-column: 2;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-title {
+    font-size: 17px;
+    line-height: 1.1;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-count {
+    margin-top: 6px;
+    font-size: 43px;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-meta {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-meta em {
+    font-style: normal;
+    font-weight: 750;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-meta i {
+    font-style: normal;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-footer {
+    min-height: 102px;
+    padding: 16px 22px;
+    border-radius: 13px;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-footer p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.45;
+    text-align: left;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-loading {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pipeline-page .pipeline-mobile-stages-panel {
+    padding: 22px 12px 14px!important;
+    gap: 17px;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-heading h2 {
+    font-size: 20px;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-heading p {
+    font-size: 14px;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-card {
+    min-height: 126px;
+    padding: 15px 14px;
+    grid-template-columns: 74px minmax(0, 1fr) 74px;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-icon svg {
+    width: 27px;
+    height: 27px;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-title {
+    font-size: 15px;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-count {
+    font-size: 38px;
+  }
+
+  .pipeline-page .pipeline-mobile-stage-meta {
+    gap: 5px;
+    font-size: 13px;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-footer {
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-footer p {
+    font-size: 13px;
+  }
+
+  .pipeline-page .pipeline-mobile-stages-footer svg {
+    width: 27px;
+    height: 27px;
+  }
+}
+
+@media (max-width: 768px) {
+  .crm-dark .pipeline-page .pipeline-mobile-stages-panel {
+    border: 1px solid rgba(54, 64, 78, .72);
+    box-shadow: inset 0 0 36px rgba(21, 35, 50, .10);
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stages-heading > svg {
+    color: #ff6200;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stages-heading h2 {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stages-heading p {
+    color: #c8ced8;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card {
+    color: #ff6500;
+    background:
+      radial-gradient(circle at 10% 50%, rgba(255, 95, 8, .09), transparent 31%),
+      rgba(8, 6, 4, .985);
+    border: 1px solid currentColor;
+    box-shadow:
+      inset 0 0 30px color-mix(in srgb, currentColor 5%, transparent),
+      0 8px 22px rgba(0, 0, 0, .15);
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-new {
+    color: #ff5c11;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-qualified {
+    color: #ff7b00;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-proposal,
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-showing {
+    color: #ffb400;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-negotiation,
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-offer {
+    color: #ff4b16;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-won,
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-closed {
+    color: #58e331;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-card.stage-lost {
+    color: #a944f4;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-icon {
+    color: currentColor;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    border: 1px solid currentColor;
+    box-shadow: inset 0 0 22px color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-title,
+  .crm-dark .pipeline-page .pipeline-mobile-stage-count {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-meta {
+    color: #d1d6de;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stage-meta em {
+    color: currentColor;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stages-footer {
+    color: #ff6200;
+    border: 1px solid rgba(68, 79, 95, .66);
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stages-footer p {
+    color: #d0d6df;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stages-footer > svg:last-child {
+    color: #ff6200;
+  }
+
+  .crm-dark .pipeline-page .pipeline-mobile-stages-loading {
+    color: #aeb8c7;
+  }
+}
+
+.pipeline-page .mobile-risk-queue-layout { display: none; }
+.pipeline-page .desktop-risk-queue-layout { display: block; }
+
+@media (max-width: 768px) {
+  body #root .pipeline-page .risk-queue-panel { padding: 0; background: transparent; }
+  .pipeline-page .desktop-risk-queue-layout { display: none; }
+  .pipeline-page .mobile-risk-queue-layout {
+    padding: 28px 16px 18px;
+    border-radius: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .pipeline-page .mobile-risk-queue-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .pipeline-page .mobile-risk-queue-heading > svg { margin-bottom: 14px; }
+  .pipeline-page .mobile-risk-queue-heading h2 {
+    margin: 0;
+    font-size: 27px;
+    line-height: 1.12;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .pipeline-page .mobile-risk-queue-heading p {
+    margin: 9px 0 0;
+    font-size: 16px;
+    line-height: 1.35;
+  }
+  .pipeline-page .mobile-risk-deals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .pipeline-page .mobile-risk-deal-card {
+    width: 100%;
+    padding: 18px 20px 16px;
+    border-radius: 15px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .pipeline-page .mobile-risk-deal-top {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) auto 28px;
+    gap: 16px;
+    align-items: center;
+  }
+  .pipeline-page .mobile-risk-deal-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .pipeline-page .mobile-risk-deal-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pipeline-page .mobile-risk-deal-main strong { font-size: 20px; line-height: 1.15; font-weight: 750; }
+  .pipeline-page .mobile-risk-deal-main small { margin-top: 5px; font-size: 15px; line-height: 1.25; }
+  .pipeline-page .mobile-risk-deal-main b { margin-top: 4px; font-size: 18px; line-height: 1.2; }
+  .pipeline-page .mobile-risk-deal-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .pipeline-page .mobile-risk-deal-status em {
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    line-height: 1;
+    font-style: normal;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
+  .pipeline-page .mobile-risk-deal-status small { font-size: 13px; font-weight: 650; }
+  .pipeline-page .mobile-risk-deal-chevron { justify-self: end; }
+  .pipeline-page .mobile-risk-deal-metrics {
+    margin-top: 16px;
+    padding-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .pipeline-page .mobile-risk-metric {
+    min-width: 0;
+    min-height: 62px;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 0 15px;
+  }
+  .pipeline-page .mobile-risk-metric + .mobile-risk-metric { border-left: 1px solid; }
+  .pipeline-page .mobile-risk-metric > span { min-width: 0; display: flex; flex-direction: column; }
+  .pipeline-page .mobile-risk-metric small { font-size: 12px; line-height: 1.15; }
+  .pipeline-page .mobile-risk-metric strong { margin-top: 4px; font-size: 22px; line-height: 1; font-weight: 800; }
+  .pipeline-page .mobile-risk-queue-footer {
+    min-height: 94px;
+    padding: 16px 20px;
+    border-radius: 13px;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    align-items: center;
+    gap: 14px;
+  }
+  .pipeline-page .mobile-risk-queue-footer p { margin: 0; font-size: 14px; line-height: 1.45; text-align: left; }
+  .pipeline-page .mobile-risk-empty-state {
+    min-height: 150px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .pipeline-page .mobile-risk-queue-layout { padding: 24px 12px 14px; }
+  .pipeline-page .mobile-risk-queue-heading h2 { font-size: 20px; }
+  .pipeline-page .mobile-risk-queue-heading p { font-size: 14px; }
+  .pipeline-page .mobile-risk-deal-card { padding: 15px 13px 14px; }
+  .pipeline-page .mobile-risk-deal-top { grid-template-columns: 62px minmax(0, 1fr) auto 22px; gap: 10px; }
+  .pipeline-page .mobile-risk-deal-icon { width: 56px; height: 56px; }
+  .pipeline-page .mobile-risk-deal-main strong { font-size: 16px; }
+  .pipeline-page .mobile-risk-deal-main small { font-size: 12px; }
+  .pipeline-page .mobile-risk-deal-main b { font-size: 16px; }
+  .pipeline-page .mobile-risk-deal-status em { padding: 7px 10px; font-size: 10px; }
+  .pipeline-page .mobile-risk-deal-status small { font-size: 10px; }
+  .pipeline-page .mobile-risk-deal-metrics { margin-top: 13px; padding-top: 13px; }
+  .pipeline-page .mobile-risk-metric { grid-template-columns: 26px minmax(0, 1fr); gap: 5px; padding: 0 7px; }
+  .pipeline-page .mobile-risk-metric svg { width: 20px; height: 20px; }
+  .pipeline-page .mobile-risk-metric small { font-size: 9px; }
+  .pipeline-page .mobile-risk-metric strong { font-size: 17px; }
+  .pipeline-page .mobile-risk-queue-footer { grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 9px; padding: 13px; }
+  .pipeline-page .mobile-risk-queue-footer p { font-size: 12px; }
+  .pipeline-page .mobile-risk-queue-footer svg { width: 25px; height: 25px; }
+}
+
+@media (max-width: 768px) {
+  .crm-dark .pipeline-page .mobile-risk-queue-heading > svg { color: #ff3b30; }
+  .crm-dark .pipeline-page .mobile-risk-queue-heading h2 { color: #f8fafc; }
+  .crm-dark .pipeline-page .mobile-risk-queue-heading p { color: #cbd2dc; }
+
+  .crm-dark .pipeline-page .mobile-risk-deal-card {
+    color: #ff3b30;
+    background: radial-gradient(circle at 13% 28%, rgba(255,60,45,.10), transparent 31%), rgba(9,7,7,.985);
+    border: 1px solid currentColor;
+  }
+  .crm-dark .pipeline-page .mobile-risk-deal-card.risk-medium { color: #ff7a00; }
+  .crm-dark .pipeline-page .mobile-risk-deal-card.risk-low { color: #f2c400; }
+
+  .crm-dark .pipeline-page .mobile-risk-deal-icon {
+    color: currentColor;
+    background: rgba(255,255,255,.02);
+    border: 1px solid currentColor;
+  }
+  .crm-dark .pipeline-page .mobile-risk-deal-main strong,
+  .crm-dark .pipeline-page .mobile-risk-deal-main b { color: #f8fafc; }
+  .crm-dark .pipeline-page .mobile-risk-deal-main small { color: #cbd2dc; }
+
+  .crm-dark .pipeline-page .mobile-risk-deal-status em {
+    color: currentColor;
+    background: rgba(255,255,255,.02);
+    border: 1px solid currentColor;
+  }
+  .crm-dark .pipeline-page .mobile-risk-deal-status small,
+  .crm-dark .pipeline-page .mobile-risk-deal-chevron,
+  .crm-dark .pipeline-page .mobile-risk-metric > svg { color: currentColor; }
+
+  .crm-dark .pipeline-page .mobile-risk-deal-metrics { border-top: 1px solid rgba(112,122,136,.28); }
+  .crm-dark .pipeline-page .mobile-risk-metric + .mobile-risk-metric { border-left-color: rgba(112,122,136,.28); }
+  .crm-dark .pipeline-page .mobile-risk-metric small { color: #c8d0da; }
+  .crm-dark .pipeline-page .mobile-risk-metric strong { color: #f8fafc; }
+
+  .crm-dark .pipeline-page .mobile-risk-queue-footer {
+    color: #ff6200;
+    border: 1px solid rgba(68,79,95,.66);
+  }
+  .crm-dark .pipeline-page .mobile-risk-queue-footer p { color: #d0d6df; }
+
+  .crm-dark .pipeline-page .mobile-risk-empty-state {
+    color: #ff7a00;
+    border: 1px solid rgba(255,122,0,.45);
+    background: rgba(255,122,0,.035);
+  }
+  .crm-dark .pipeline-page .mobile-risk-empty-state strong { color: #f8fafc; }
+  .crm-dark .pipeline-page .mobile-risk-empty-state span { color: #aeb8c7; }
+}
+
+.pipeline-page .mobile-revenue-forecast-layout {
+  display: none;
+}
+
+.pipeline-page .desktop-revenue-forecast-layout {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  body #root .pipeline-page .revenue-forecast-panel {
+    padding: 0;
+    background: transparent;
+  }
+
+  .pipeline-page .desktop-revenue-forecast-layout {
+    display: none;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 28px 16px 18px;
+    border-radius: 22px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2px 10px 8px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-heading > svg {
+    margin-bottom: 14px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-heading h2 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.12;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-heading p {
+    margin: 10px 0 0;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pipeline-page .mobile-forecast-card {
+    min-height: 182px;
+    padding: 22px 26px;
+    border-radius: 16px;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: center;
+    gap: 22px;
+  }
+
+  .pipeline-page .mobile-forecast-icon {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+
+  .pipeline-page .mobile-forecast-content {
+    min-width: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pipeline-page .mobile-forecast-label {
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .pipeline-page .mobile-forecast-content strong {
+    margin-top: 6px;
+    font-size: 46px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .pipeline-page .mobile-forecast-content small {
+    margin-top: 8px;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .pipeline-page .mobile-forecast-progress {
+    width: 100%;
+    height: 9px;
+    margin-top: 17px;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .pipeline-page .mobile-forecast-progress > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-footer {
+    min-height: 104px;
+    padding: 18px 22px;
+    border-radius: 14px;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 48px;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-footer p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+  }
+}
+
+@media (max-width: 520px) {
+  .pipeline-page .mobile-revenue-forecast-layout {
+    padding: 24px 12px 14px;
+    gap: 14px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-heading h2 {
+    font-size: 20px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-heading p {
+    font-size: 14px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-heading > svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pipeline-page .mobile-forecast-card {
+    min-height: 154px;
+    padding: 18px 16px;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .pipeline-page .mobile-forecast-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .pipeline-page .mobile-forecast-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .pipeline-page .mobile-forecast-label {
+    font-size: 13px;
+  }
+
+  .pipeline-page .mobile-forecast-content strong {
+    font-size: 36px;
+  }
+
+  .pipeline-page .mobile-forecast-content small {
+    font-size: 13px;
+  }
+
+  .pipeline-page .mobile-forecast-progress {
+    height: 7px;
+    margin-top: 14px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-footer {
+    min-height: 92px;
+    padding: 14px;
+    grid-template-columns: 34px minmax(0, 1fr) 36px;
+    gap: 10px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-footer p {
+    font-size: 12px;
+  }
+
+  .pipeline-page .mobile-revenue-forecast-footer svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (max-width: 768px) {
+  .crm-dark .pipeline-page .mobile-revenue-forecast-layout {
+    border: 0;
+    box-shadow: inset 0 0 34px rgba(31, 23, 47, .10);
+    background: transparent;
+  }
+
+  .crm-dark .pipeline-page .mobile-revenue-forecast-heading > svg {
+    color: #9b42ff;
+  }
+
+  .crm-dark .pipeline-page .mobile-revenue-forecast-heading h2 {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .mobile-revenue-forecast-heading p {
+    color: #c8ced8;
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-card {
+    background: rgba(7, 8, 11, .985);
+    border: 1px solid currentColor;
+    box-shadow:
+      inset 0 0 32px color-mix(in srgb, currentColor 5%, transparent),
+      0 8px 22px rgba(0, 0, 0, .16);
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-card.forecast-purple {
+    color: #b144ff;
+    background:
+      radial-gradient(circle at 18% 42%, rgba(171, 61, 255, .12), transparent 32%),
+      rgba(9, 6, 12, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-card.forecast-green {
+    color: #50e64d;
+    background:
+      radial-gradient(circle at 18% 42%, rgba(80, 230, 77, .10), transparent 32%),
+      rgba(5, 12, 7, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-card.forecast-orange {
+    color: #ff6500;
+    background:
+      radial-gradient(circle at 18% 42%, rgba(255, 101, 0, .12), transparent 32%),
+      rgba(12, 8, 4, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-card.forecast-pink {
+    color: #f42d89;
+    background:
+      radial-gradient(circle at 18% 42%, rgba(244, 45, 137, .12), transparent 32%),
+      rgba(12, 5, 9, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-icon {
+    color: currentColor;
+    background: color-mix(in srgb, currentColor 11%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 62%, transparent);
+    box-shadow: inset 0 0 24px color-mix(in srgb, currentColor 11%, transparent);
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-label {
+    color: currentColor;
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-content strong {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-content small {
+    color: #d1d6de;
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-progress {
+    background: #20252e;
+  }
+
+  .crm-dark .pipeline-page .mobile-forecast-progress > span {
+    background: currentColor;
+    box-shadow: 0 0 12px color-mix(in srgb, currentColor 42%, transparent);
+  }
+
+  .crm-dark .pipeline-page .mobile-revenue-forecast-footer {
+    color: #9b42ff;
+    border: 1px solid rgba(68, 79, 95, .68);
+  }
+
+  .crm-dark .pipeline-page .mobile-revenue-forecast-footer p {
+    color: #d0d6df;
+  }
+
+  .crm-dark .pipeline-page .mobile-revenue-forecast-footer > svg:last-child {
+    color: #9b42ff;
+  }
+}
+
+
+
+/* =========================================================
+   MOBILE / TABLET — SELECTED DEAL DETAIL
+   ========================================================= */
+
+.pipeline-page .mobile-selected-deal-detail-panel {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .pipeline-page .desktop-selected-deal-inspector,
+  .pipeline-page .revenue-command-center-sticky-bottom-bar {
+    display: none;
+  }
+
+  .pipeline-page .mobile-selected-deal-detail-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .pipeline-page .mobile-selected-deal-summary-card {
+    border-radius: 18px;
+    padding: 22px 20px 18px;
+  }
+
+  .pipeline-page .mobile-selected-deal-summary-top {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr) auto 26px;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 18px;
+  }
+
+  .pipeline-page .mobile-selected-deal-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 27px;
+    font-weight: 700;
+  }
+
+  .pipeline-page .mobile-selected-deal-title-block {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px 8px;
+  }
+
+  .pipeline-page .mobile-selected-deal-title-block h2 {
+    width: 100%;
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.15;
+    text-align: left;
+  }
+
+  .pipeline-page .mobile-selected-deal-title-block p {
+    width: 100%;
+    margin: 3px 0 0;
+    font-size: 15px;
+    text-align: left;
+  }
+
+  .pipeline-page .mobile-selected-deal-title-block strong {
+    font-size: 17px;
+  }
+
+  .pipeline-page .mobile-selected-deal-probability-inline {
+    font-size: 14px;
+  }
+
+  .pipeline-page .mobile-selected-deal-stage-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .pipeline-page .mobile-selected-deal-stage-pill {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .pipeline-page .mobile-selected-deal-stage-block small {
+    font-size: 12px;
+  }
+
+  .pipeline-page .mobile-selected-deal-summary-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding-top: 18px;
+  }
+
+  .pipeline-page .mobile-selected-summary-metric {
+    min-width: 0;
+    min-height: 90px;
+    padding: 0 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+  }
+
+  .pipeline-page .mobile-selected-summary-metric + .mobile-selected-summary-metric {
+    border-left: 1px solid;
+  }
+
+  .pipeline-page .mobile-selected-summary-metric span {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .pipeline-page .mobile-selected-summary-metric strong {
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-card {
+    border-radius: 18px;
+    padding: 18px 22px 14px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-heading h3 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-heading span {
+    width: 54px;
+    height: 3px;
+    border-radius: 99px;
+    margin-top: 8px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-list {
+    position: relative;
+    margin-top: 4px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-list::before {
+    content: "";
+    position: absolute;
+    left: 21px;
+    top: 29px;
+    bottom: 29px;
+    width: 2px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-row {
+    position: relative;
+    min-height: 78px;
+    display: grid;
+    grid-template-columns: 44px 58px minmax(0, 1fr) 26px;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-row + .mobile-selected-deal-activity-row {
+    border-top: 1px solid;
+  }
+
+  .pipeline-page .mobile-selected-activity-timeline-dot {
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    justify-self: center;
+    z-index: 1;
+  }
+
+  .pipeline-page .mobile-selected-activity-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+
+  .pipeline-page .mobile-selected-activity-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: left;
+  }
+
+  .pipeline-page .mobile-selected-activity-copy strong {
+    font-size: 15px;
+    line-height: 1.25;
+  }
+
+  .pipeline-page .mobile-selected-activity-copy span {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .pipeline-page .mobile-selected-view-all-activity {
+    width: 100%;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pipeline-page .mobile-selected-deal-action-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pipeline-page .mobile-selected-action-card {
+    min-height: 86px;
+    width: 100%;
+    border-radius: 15px;
+    padding: 12px 20px;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 28px;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .pipeline-page .mobile-selected-action-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+
+  .pipeline-page .mobile-selected-action-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .pipeline-page .mobile-selected-action-copy strong {
+    font-size: 17px;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .pipeline-page .mobile-selected-action-copy small {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .pipeline-page .mobile-selected-deal-personalized-note {
+    min-height: 80px;
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) 42px;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .pipeline-page .mobile-selected-deal-personalized-note p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    text-align: left;
+  }
+
+  .pipeline-page .mobile-selected-deal-empty,
+  .pipeline-page .mobile-selected-deal-activity-empty {
+    min-height: 100px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .pipeline-page .mobile-selected-deal-summary-card {
+    padding: 17px 14px 14px;
+  }
+
+  .pipeline-page .mobile-selected-deal-summary-top {
+    grid-template-columns: 66px minmax(0, 1fr) auto 18px;
+    gap: 10px;
+  }
+
+  .pipeline-page .mobile-selected-deal-avatar {
+    width: 58px;
+    height: 58px;
+    font-size: 21px;
+  }
+
+  .pipeline-page .mobile-selected-deal-title-block h2 {
+    font-size: 17px;
+  }
+
+  .pipeline-page .mobile-selected-deal-title-block p,
+  .pipeline-page .mobile-selected-deal-probability-inline {
+    font-size: 11px;
+  }
+
+  .pipeline-page .mobile-selected-deal-title-block strong {
+    font-size: 14px;
+  }
+
+  .pipeline-page .mobile-selected-deal-stage-pill {
+    padding: 6px 9px;
+    font-size: 9px;
+  }
+
+  .pipeline-page .mobile-selected-deal-stage-block small {
+    font-size: 9px;
+  }
+
+  .pipeline-page .mobile-selected-deal-summary-metrics {
+    padding-top: 14px;
+  }
+
+  .pipeline-page .mobile-selected-summary-metric {
+    min-height: 78px;
+    padding: 0 5px;
+  }
+
+  .pipeline-page .mobile-selected-summary-metric svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .pipeline-page .mobile-selected-summary-metric span {
+    font-size: 9px;
+  }
+
+  .pipeline-page .mobile-selected-summary-metric strong {
+    font-size: 13px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-card {
+    padding: 16px 13px 12px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-heading h3 {
+    font-size: 19px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-row {
+    grid-template-columns: 32px 48px minmax(0, 1fr) 20px;
+    gap: 9px;
+    min-height: 70px;
+  }
+
+  .pipeline-page .mobile-selected-deal-activity-list::before {
+    left: 15px;
+  }
+
+  .pipeline-page .mobile-selected-activity-timeline-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .pipeline-page .mobile-selected-activity-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .pipeline-page .mobile-selected-activity-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .pipeline-page .mobile-selected-activity-copy strong {
+    font-size: 12px;
+  }
+
+  .pipeline-page .mobile-selected-activity-copy span {
+    font-size: 10px;
+  }
+
+  .pipeline-page .mobile-selected-action-card {
+    min-height: 72px;
+    padding: 10px 13px;
+    grid-template-columns: 52px minmax(0, 1fr) 22px;
+    gap: 9px;
+  }
+
+  .pipeline-page .mobile-selected-action-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .pipeline-page .mobile-selected-action-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .pipeline-page .mobile-selected-action-copy strong {
+    font-size: 13px;
+  }
+
+  .pipeline-page .mobile-selected-action-copy small {
+    font-size: 10px;
+  }
+
+  .pipeline-page .mobile-selected-deal-personalized-note {
+    grid-template-columns: 31px minmax(0, 1fr) 31px;
+    padding: 12px;
+  }
+
+  .pipeline-page .mobile-selected-deal-personalized-note p {
+    font-size: 10px;
+  }
+}
+
+
+@media (max-width: 1024px) {
+  .crm-dark .pipeline-page .automation-health-list-rows-stack{
+    border: 1px solid rgba(122, 130, 143, .34); 
+    background: var(--bg) !important;
+  }
+  .crm-dark .pipeline-page .mobile-selected-deal-summary-card {
+    border: 1px solid #9b42ff;
+    box-shadow: inset 0 0 34px rgba(138, 57, 255, .04);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-avatar {
+    color: #f8fafc;
+    background: linear-gradient(135deg, rgba(138, 67, 255, .6), rgba(78, 21, 125, .72));
+    border: 1px solid #9b42ff;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-title-block h2,
+  .crm-dark .pipeline-page .mobile-selected-deal-title-block strong {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-title-block p,
+  .crm-dark .pipeline-page .mobile-selected-deal-probability-inline {
+    color: #d1d6df;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-stage-pill {
+    color: #c76dff;
+    background: rgba(156, 66, 255, .1);
+    border: 1px solid rgba(177, 68, 255, .62);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-stage-block small {
+    color: #c66dff;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-top-chevron {
+    color: #d1d5db;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-summary-metrics {
+    border-top: 1px solid rgba(122, 130, 143, .34);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-summary-metric {
+    color: #b14cff;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-summary-metric + .mobile-selected-summary-metric {
+    border-left-color: rgba(122, 130, 143, .34);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-summary-metric span {
+    color: #d2d6dd;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-summary-metric strong {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-activity-card {
+    border: 1px solid rgba(91, 101, 115, .58);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-activity-heading h3 {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-activity-heading span,
+  .crm-dark .pipeline-page .mobile-selected-deal-activity-list::before {
+    background: #a743ff;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-activity-row + .mobile-selected-deal-activity-row {
+    border-top-color: rgba(97, 105, 118, .26);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-activity-timeline-dot {
+    background: #a743ff;
+    border: 2px solid #ece6ff;
+    box-shadow: 0 0 10px rgba(167, 67, 255, .9);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-activity-icon {
+    color: #b84eff;
+    background: rgba(153, 56, 255, .12);
+    border: 1px solid rgba(172, 70, 255, .45);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-activity-copy strong {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-activity-copy span {
+    color: #cbd2dc;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-activity-row > svg {
+    color: #d6d9df;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-view-all-activity {
+    color: #b84eff;
+    border-top: 1px solid rgba(97, 105, 118, .26);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-card {
+    background: rgba(7, 7, 8, .985);
+    border: 1px solid currentColor;
+    box-shadow: inset 0 0 28px color-mix(in srgb, currentColor 5%, transparent);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-card.action-purple {
+    color: #b84eff;
+    background:
+      radial-gradient(circle at 12% 50%, rgba(172, 61, 255, .12), transparent 30%),
+      rgba(9, 6, 11, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-card.action-red {
+    color: #ff3448;
+    background:
+      radial-gradient(circle at 12% 50%, rgba(255, 52, 72, .11), transparent 30%),
+      rgba(12, 5, 6, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-card.action-amber {
+    color: #f3a000;
+    background:
+      radial-gradient(circle at 12% 50%, rgba(243, 160, 0, .12), transparent 30%),
+      rgba(12, 9, 4, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-card.action-green {
+    color: #55df3f;
+    background:
+      radial-gradient(circle at 12% 50%, rgba(85, 223, 63, .11), transparent 30%),
+      rgba(5, 11, 5, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-card.action-blue {
+    color: #2a9cff;
+    background:
+      radial-gradient(circle at 12% 50%, rgba(42, 156, 255, .11), transparent 30%),
+      rgba(4, 8, 13, .985);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-icon {
+    color: currentColor;
+    background: color-mix(in srgb, currentColor 11%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 58%, transparent);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-copy strong {
+    color: #f8fafc;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-copy small {
+    color: #d1d6df;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-action-card > svg {
+    color: #d8dce2;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-personalized-note {
+    color: #a843ff;
+    border: 1px solid rgba(78, 88, 103, .7);
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-personalized-note p {
+    color: #d1d6df;
+  }
+
+  .crm-dark .pipeline-page .mobile-selected-deal-empty,
+  .crm-dark .pipeline-page .mobile-selected-deal-activity-empty {
+    color: #9aa6b6;
+  }
+}
+

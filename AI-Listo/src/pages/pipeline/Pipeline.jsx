@@ -50,6 +50,12 @@ import {
   GitFork,
   AlertCircle,
   UserCheck,
+  Star,
+  Handshake,
+  Trophy,
+  CircleX,
+  Target,
+  Info,
 } from "lucide-react";
 import PipelineListModal from "./components/PipelineListModal";
 import { openFeatureAddOns, FEATURE_TO_ADDON } from "../../components/FeatureAddOns";
@@ -853,6 +859,80 @@ export default function PipelinePage() {
       setAgents([]);
     }
   };
+  const mobilePipelineTotalDeals = visibleColumns.reduce(
+    (sum, col) => sum + Number(col.count ?? col.deals?.length ?? 0),
+    0,
+  );
+
+  const getMobileStagePercent = (col) => {
+    const count = Number(col.count ?? col.deals?.length ?? 0);
+    if (!mobilePipelineTotalDeals) return 0;
+    return Math.round((count / mobilePipelineTotalDeals) * 100);
+  };
+
+  const getRiskDealDetails = (row) => {
+    const allDeals = pipelineColumns.flatMap((col) => col.deals || []);
+    const matchedDeal = allDeals.find(
+      (deal) => String(deal.id) === String(row?.id),
+    );
+
+    const rawScore =
+      matchedDeal?.score ??
+      row?.winProbability ??
+      row?.probability ??
+      row?.score ??
+      null;
+
+    const scoreNumber =
+      rawScore === null || rawScore === undefined || rawScore === ""
+        ? null
+        : Number(String(rawScore).replace("%", ""));
+
+    return {
+      matchedDeal,
+      probability: Number.isFinite(scoreNumber) ? `${scoreNumber}%` : "-",
+      subtitle:
+        matchedDeal?.property ||
+        row?.plan ||
+        row?.company ||
+        row?.reason ||
+        "-",
+      closeDate:
+        row?.closeDate ||
+        row?.expectedCloseDate ||
+        matchedDeal?.closeDate ||
+        matchedDeal?.expectedCloseDate ||
+        "-",
+      inactivity:
+        row?.inactivity ||
+        row?.inactiveFor ||
+        row?.reason ||
+        "-",
+    };
+  };
+
+  const renderMobileStageIcon = (stageId) => {
+    switch (String(stageId || "").toLowerCase()) {
+      case "new":
+        return <Plus size={30} />;
+      case "qualified":
+        return <UserCheck size={30} />;
+      case "proposal":
+      case "showing":
+        return <FileText size={29} />;
+      case "negotiation":
+      case "offer":
+        return <Handshake size={30} />;
+      case "won":
+      case "closed":
+        return <Trophy size={30} />;
+      case "lost":
+        return <CircleX size={30} />;
+      default:
+        return <GitFork size={29} />;
+    }
+  };
+
   return (
     <div className="pipeline-container-layout pipeline-page">
       <div className="heading_page">
@@ -1055,7 +1135,11 @@ export default function PipelinePage() {
       )}
 
       {/* SUMMARY STATS GRID */}
-      <section className="pipeline-stats-cards-grid">
+      <section
+        className={`pipeline-stats-cards-grid ${
+          pipelineViewMode === "ai" ? "is-ai-view" : "is-standard-view"
+        }`}
+      >
         {pipelineStats.map((card, idx) => (
           <div className="pipeline-stat-card-item" key={idx}>
             <div className={`stat-card-icon-box ${card.className}`}>
@@ -1077,7 +1161,7 @@ export default function PipelinePage() {
         <section className="ai-intelligence-insight-banner">
           <div className="ai-banner-left-info">
             <div className="ai-sparkle-avatar-glow">
-              <Sparkles size={20} className="text-white" />
+              <Brain size={22} className="text-white" />
             </div>
             <div className="ai-banner-text-details">
               <div className="flex items-center gap-2 mb-1">
@@ -1112,36 +1196,55 @@ export default function PipelinePage() {
               aiMetrics?.revenueAtRisk,
               aiMetrics?.expectedClosings,
             ].map((metric, index) => (
-              <div className="ai-metric-column-box" key={index}>
-                <span className="ai-metric-box-label">
-                  {metric?.label || t("pipeline.metricFallback")}
-                </span>
+              <div
+                className={`ai-metric-column-box ai-metric-column-box-${index + 1}`}
+                key={index}
+              >
+                <div className="ai-mobile-metric-icon" aria-hidden="true">
+                  {index === 0 ? (
+                    <Star size={34} />
+                  ) : index === 1 ? (
+                    <AlertTriangle size={34} />
+                  ) : (
+                    <Building2 size={34} />
+                  )}
+                </div>
 
-                <div className="ai-metric-content-wrapper">
-                  <div className="ai-metric-value-group">
-                    <strong className="ai-metric-box-value">
-                      {metric?.value || "0"}
-                    </strong>
+                <div className="ai-mobile-metric-main">
+                  <span className="ai-metric-box-label">
+                    {metric?.label || t("pipeline.metricFallback")}
+                  </span>
 
-                    <span
-                      className={metric?.badgeClass || "ai-metric-pill-blue"}
-                    >
-                      {metric?.badge || t("pipeline.pending")}
-                    </span>
+                  <div className="ai-metric-content-wrapper">
+                    <div className="ai-metric-value-group">
+                      <strong className="ai-metric-box-value">
+                        {metric?.value || "0"}
+                      </strong>
+
+                      <span
+                        className={metric?.badgeClass || "ai-metric-pill-blue"}
+                      >
+                        {metric?.badge || t("pipeline.pending")}
+                      </span>
+                    </div>
+
+                    <div className="ai-mini-chart-inline">
+                      <ResponsiveContainer width="100%" height={24}>
+                        <LineChart data={metric?.chart || [{ v: 0 }, { v: 0 }]}>
+                          <YAxis hide domain={["dataMin", "dataMax"]} />
+                          <Line
+                            type="monotone"
+                            dataKey="v"
+                            strokeWidth={1.5}
+                            dot={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
 
-                  <div className="ai-mini-chart-inline">
-                    <ResponsiveContainer width="100%" height={24}>
-                      <LineChart data={metric?.chart || [{ v: 0 }, { v: 0 }]}>
-                        <YAxis hide domain={["dataMin", "dataMax"]} />
-                        <Line
-                          type="monotone"
-                          dataKey="v"
-                          strokeWidth={1.5}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <div className="ai-mobile-metric-progress">
+                    <span />
                   </div>
                 </div>
               </div>
@@ -1149,385 +1252,773 @@ export default function PipelinePage() {
           </div>
 
           <div className="ai-banner-action-buttons-group">
-            <button
-              className="ai-action-primary-trigger-btn"
-              onClick={analyzePipeline}
-              disabled={analyzingPipeline}
-            >
-              <Sparkles size={14} />
-              {analyzingPipeline
-                ? t("pipeline.analyzing")
-                : t("pipeline.analyzePipeline")}
-            </button>
-            <button
-              className="ai-action-secondary-trigger-btn"
-              onClick={autoPrioritizeDeals}
-              disabled={prioritizingDeals}
-            >
-              <Bot size={14} />
-              {prioritizingDeals
-                ? t("pipeline.prioritizing")
-                : t("pipeline.autoPrioritizeDeals")}
-            </button>
-            <button
-              className="ai-action-secondary-trigger-btn"
-              onClick={exportPipelineReport}
-            >
-              <Download size={14} /> {t("pipeline.exportReport")}
-            </button>
+            <div className="ai-mobile-actions-heading">
+              <Sparkles size={36} />
+              <h3>
+                {t("pipeline.pipelineIntelligenceActions", {
+                  defaultValue: "Pipeline Intelligence Actions",
+                })}
+              </h3>
+              <p>
+                {t("pipeline.pipelineIntelligenceActionsSubtitle", {
+                  defaultValue: "AI-powered tools to optimize your pipeline",
+                })}
+              </p>
+            </div>
+
+            <div className="ai-mobile-actions-list">
+              <button
+                className="ai-action-primary-trigger-btn"
+                onClick={analyzePipeline}
+                disabled={analyzingPipeline}
+              >
+                <span className="ai-action-icon-box">
+                  <Sparkles size={34} />
+                </span>
+
+                <span className="ai-action-copy">
+                  <strong>
+                    {analyzingPipeline
+                      ? t("pipeline.analyzing")
+                      : t("pipeline.analyzePipeline")}
+                  </strong>
+                  <small>
+                    {t("pipeline.analyzePipelineDescription", {
+                      defaultValue: "Get AI insights and recommendations",
+                    })}
+                  </small>
+                </span>
+
+                <ArrowRight className="ai-action-chevron" size={28} />
+              </button>
+
+              <button
+                className="ai-action-secondary-trigger-btn"
+                onClick={autoPrioritizeDeals}
+                disabled={prioritizingDeals}
+              >
+                <span className="ai-action-icon-box">
+                  <Building2 size={34} />
+                </span>
+
+                <span className="ai-action-copy">
+                  <strong>
+                    {prioritizingDeals
+                      ? t("pipeline.prioritizing")
+                      : t("pipeline.autoPrioritizeDeals")}
+                  </strong>
+                  <small>
+                    {t("pipeline.autoPrioritizeDealsDescription", {
+                      defaultValue:
+                        "Let AI rank and prioritize your best opportunities",
+                    })}
+                  </small>
+                </span>
+
+                <ArrowRight className="ai-action-chevron" size={28} />
+              </button>
+
+              <button
+                className="ai-action-secondary-trigger-btn"
+                onClick={exportPipelineReport}
+              >
+                <span className="ai-action-icon-box">
+                  <Download size={34} />
+                </span>
+
+                <span className="ai-action-copy">
+                  <strong>{t("pipeline.exportReport")}</strong>
+                  <small>
+                    {t("pipeline.exportReportDescription", {
+                      defaultValue: "Download your pipeline report",
+                    })}
+                  </small>
+                </span>
+
+                <ArrowRight className="ai-action-chevron" size={28} />
+              </button>
+            </div>
+
+            <div className="ai-mobile-actions-footer">
+              <AlertCircle size={34} />
+              <p>
+                {t("pipeline.pipelineActionsFooter", {
+                  defaultValue:
+                    "AI analyzes deal velocity, risk, and value to help you focus on what closes.",
+                })}
+              </p>
+              <TrendingUp size={34} />
+            </div>
           </div>
         </section>
       )}
 
       {/* KANBAN BOARD SECTION */}
-      <section className="pipeline-kanban-board-scrollable-container">
-        {pipelineLoading ? (
-          <div className="pipeline-loading-state">
-            <RefreshCw size={18} className="spin" />
-            {t("pipeline.loadingPipeline")}
-          </div>
-        ) : (
-          visibleColumns.map((col) => (
-            <div
-              className={`kanban-stage-column-wrapper ${
-                dragOverStage === col.id ? "drag-over" : ""
-              }`}
-              key={col.id}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOverStage(col.id);
-              }}
-              onDragLeave={() => setDragOverStage(null)}
-              onDrop={() => handleDropDeal(col.id)}
-            >
-              <div className="kanban-column-header-details">
-                <div className="flex justify-between items-center w-full">
-                  <div className="flex items-center gap-2">
-                    <span className={`column-status-dot dot-${col.id}`}></span>
-                    <h3 className="column-stage-title-text">{col.title}</h3>
+      <section className="pipeline-mobile-stages-panel">
+        <div className="pipeline-mobile-stages-heading">
+          <GitFork size={38} />
+          <h2>
+            {t("pipeline.pipelineStages", {
+              defaultValue: "Pipeline Stages",
+            })}
+          </h2>
+          <p>
+            {t("pipeline.pipelineStagesSubtitle", {
+              defaultValue: "Track deals across every stage of your pipeline",
+            })}
+          </p>
+        </div>
+
+        <div className="pipeline-mobile-stage-list">
+          {pipelineLoading ? (
+            <div className="pipeline-mobile-stages-loading">
+              <RefreshCw size={20} className="spin" />
+              {t("pipeline.loadingPipeline")}
+            </div>
+          ) : visibleColumns.length ? (
+            visibleColumns.map((col) => (
+              <button
+                type="button"
+                key={col.id}
+                className={`pipeline-mobile-stage-card stage-${String(
+                  col.id || "",
+                ).toLowerCase()}`}
+                onClick={() => {
+                  setPipelineFilters((prev) => ({
+                    ...prev,
+                    stage: col.id,
+                  }));
+
+                  setTimeout(() => {
+                    document
+                      .querySelector(
+                        `.kanban-stage-column-wrapper[data-stage-id="${col.id}"]`,
+                      )
+                      ?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                  }, 50);
+                }}
+              >
+                <span className="pipeline-mobile-stage-icon">
+                  {renderMobileStageIcon(col.id)}
+                </span>
+
+                <span className="pipeline-mobile-stage-copy">
+                  <strong className="pipeline-mobile-stage-title">
+                    {col.title}
+                  </strong>
+
+                  <b className="pipeline-mobile-stage-count">
+                    {Number(col.count ?? col.deals?.length ?? 0)}
+                  </b>
+
+                  <span className="pipeline-mobile-stage-meta">
+                    <em>{col.amount || "$0"}</em>
+                    <i>•</i>
+                    <span>
+                      {getMobileStagePercent(col)}%{" "}
+                      {t("pipeline.ofPipeline", {
+                        defaultValue: "of pipeline",
+                      })}
+                    </span>
+                  </span>
+                </span>
+              </button>
+            ))
+          ) : (
+            <div className="pipeline-mobile-stages-loading">
+              {t("pipeline.noDealsFound", {
+                defaultValue: "No pipeline stages available",
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="pipeline-mobile-stages-footer">
+          <AlertCircle size={31} />
+          <p>
+            {t("pipeline.pipelineStagesFooter", {
+              defaultValue:
+                "Keep your pipeline moving and focus on the deals that matter most.",
+            })}
+          </p>
+          <TrendingUp size={32} />
+        </div>
+      </section>
+
+      <div className="pipeline-desktop-kanban-wrap">
+        <section className="pipeline-kanban-board-scrollable-container">
+          {pipelineLoading ? (
+            <div className="pipeline-loading-state">
+              <RefreshCw size={18} className="spin" />
+              {t("pipeline.loadingPipeline")}
+            </div>
+          ) : (
+            visibleColumns.map((col) => (
+              <div
+                className={`kanban-stage-column-wrapper ${
+                  dragOverStage === col.id ? "drag-over" : ""
+                }`}
+                data-stage-id={col.id}
+                key={col.id}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOverStage(col.id);
+                }}
+                onDragLeave={() => setDragOverStage(null)}
+                onDrop={() => handleDropDeal(col.id)}
+              >
+                <div className="kanban-column-header-details">
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex items-center gap-2">
+                      <span className={`column-status-dot dot-${col.id}`}></span>
+                      <h3 className="column-stage-title-text">{col.title}</h3>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="kanban-sub flex items-center gap-2 text-xs text-slate-500">
-                <span className="column-deals-counter-badge">
-                  {t("pipeline.dealsCount", { count: col.count })}
-                </span>
-                <span className="column-header-divider">•</span>
-                <span className="column-aggregate-financial-sum">
-                  {col.amount}
-                </span>
-              </div>
+                <div className="kanban-sub flex items-center gap-2 text-xs text-slate-500">
+                  <span className="column-deals-counter-badge">
+                    {t("pipeline.dealsCount", { count: col.count })}
+                  </span>
+                  <span className="column-header-divider">•</span>
+                  <span className="column-aggregate-financial-sum">
+                    {col.amount}
+                  </span>
+                </div>
 
-              <div className="kanban-column-ai-insight-strip">
-                <span>
-                  {t("pipeline.aiInsightLabel", { insight: col.insight })}
-                </span>
-              </div>
+                <div className="kanban-column-ai-insight-strip">
+                  <span>
+                    {t("pipeline.aiInsightLabel", { insight: col.insight })}
+                  </span>
+                </div>
 
-              <div className="kanban-cards-vertical-stack">
-                {col.deals.map((deal, dIdx) => (
-                  <div
-                    className={`kanban-deal-card-item ${
-                      selectedDeal?.id === deal.id ? "active" : ""
-                    } ${draggingDeal?.id === deal.id ? "dragging" : ""}`}
-                    key={deal.id}
-                    draggable
-                    onDragStart={() => setDraggingDeal(deal)}
-                    onDragEnd={() => {
-                      setDraggingDeal(null);
-                      setDragOverStage(null);
-                    }}
-                    onClick={() => selectDeal(deal)}
-                  >
-                    <div className="deal-card-header-top-row">
-                      <div
-                        className={`deal-card-avatar-circle ${deal.avatarClass}`}
-                      >
-                        {deal.avatarInitials}
+                <div className="kanban-cards-vertical-stack">
+                  {col.deals.map((deal, dIdx) => (
+                    <div
+                      className={`kanban-deal-card-item ${
+                        selectedDeal?.id === deal.id ? "active" : ""
+                      } ${draggingDeal?.id === deal.id ? "dragging" : ""}`}
+                      key={deal.id}
+                      draggable
+                      onDragStart={() => setDraggingDeal(deal)}
+                      onDragEnd={() => {
+                        setDraggingDeal(null);
+                        setDragOverStage(null);
+                      }}
+                      onClick={() => selectDeal(deal)}
+                    >
+                      <div className="deal-card-header-top-row">
+                        <div
+                          className={`deal-card-avatar-circle ${deal.avatarClass}`}
+                        >
+                          {deal.avatarInitials}
+                        </div>
+
+                        <div className="deal-card-lead-identity">
+                          <div className="flex justify-between items-start w-full">
+                            <h4 className="deal-card-client-name">{deal.name}</h4>
+
+                            <span
+                              className={`deal-card-temperature-tag tag-${deal.tag.toLowerCase()}`}
+                            >
+                              {deal.tag}
+                            </span>
+                          </div>
+                          <span className="deal-card-property-title">
+                            {deal.property}
+                          </span>
+                          <strong className="deal-card-financial-value">
+                            {deal.amount}
+                          </strong>
+                        </div>
+                        <button
+                          className="deal-card-context-menu-trigger"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDealModal(deal);
+                          }}
+                        >
+                          <MoreVertical size={14} />
+                        </button>
                       </div>
 
-                      <div className="deal-card-lead-identity">
-                        <div className="flex justify-between items-start w-full">
-                          <h4 className="deal-card-client-name">{deal.name}</h4>
-
-                          <span
-                            className={`deal-card-temperature-tag tag-${deal.tag.toLowerCase()}`}
-                          >
-                            {deal.tag}
+                      <div className="deal-card-ai-score-metric-row">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="ai-score-label-text">
+                            {t("pipeline.aiScore")}
+                          </span>
+                          <span className="ai-score-numeric-percentage">
+                            {deal.score}
                           </span>
                         </div>
-                        <span className="deal-card-property-title">
-                          {deal.property}
-                        </span>
-                        <strong className="deal-card-financial-value">
-                          {deal.amount}
-                        </strong>
+                        <div className="ai-score-horizontal-progress-bar-bg">
+                          <div
+                            className="ai-score-horizontal-progress-fill-active"
+                            style={{ width: deal.score }}
+                          ></div>
+                        </div>
                       </div>
-                      <button
-                        className="deal-card-context-menu-trigger"
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openDealModal(deal);
-                        }}
-                      >
-                        <MoreVertical size={14} />
-                      </button>
-                    </div>
 
-                    <div className="deal-card-ai-score-metric-row">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="ai-score-label-text">
-                          {t("pipeline.aiScore")}
-                        </span>
-                        <span className="ai-score-numeric-percentage">
-                          {deal.score}
+                      <div className="deal-card-recommended-next-action-box">
+                        <div className="flex justify-between items-center">
+                          <span className="next-action-label-title">
+                            {t("pipeline.nextBestAction")}
+                          </span>
+                          <span className="next-action-timestamp-clock">
+                            <Clock3 size={11} /> {deal.time}
+                          </span>
+                        </div>
+                        <span className="next-action-description-text">
+                          <Clock3 size={11} /> {deal.action}
                         </span>
                       </div>
-                      <div className="ai-score-horizontal-progress-bar-bg">
-                        <div
-                          className="ai-score-horizontal-progress-fill-active"
-                          style={{ width: deal.score }}
-                        ></div>
+
+                      <div className="deal-card-bottom-interactive-action-triggers">
+                        <button
+                          className="deal-card-footer-action-trigger-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            scoreDeal(deal);
+                          }}
+                          disabled={scoringDealId === deal.id}
+                        >
+                          <Sparkles size={12} />
+                          {scoringDealId === deal.id
+                            ? t("pipeline.scoring")
+                            : t("pipeline.score")}
+                        </button>
+                        <button
+                          className="deal-card-footer-action-trigger-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            moveDealToNextStage(deal, col.id);
+                          }}
+                          disabled={movingDealId === deal.id || col.id === "lost"}
+                        >
+                          <ArrowUpRight size={12} />
+                          {movingDealId === deal.id
+                            ? t("pipeline.moving")
+                            : t("pipeline.move")}
+                        </button>
                       </div>
                     </div>
+                  ))}
 
-                    <div className="deal-card-recommended-next-action-box">
-                      <div className="flex justify-between items-center">
-                        <span className="next-action-label-title">
-                          {t("pipeline.nextBestAction")}
-                        </span>
-                        <span className="next-action-timestamp-clock">
-                          <Clock3 size={11} /> {deal.time}
-                        </span>
-                      </div>
-                      <span className="next-action-description-text">
-                        <Clock3 size={11} /> {deal.action}
-                      </span>
-                      {/*{deal.nextStep && (
-                      <div className="deal-card-extended-next-step-strip">
-                       <span className="extended-step-label">Next Step:</span>
-                        <span className="extended-step-desc">
-                          {deal.nextStep}
-                        </span>
-                      </div>
-                    )}*/}
-                    </div>
-
-                    <div className="deal-card-bottom-interactive-action-triggers">
-                      <button
-                        className="deal-card-footer-action-trigger-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          scoreDeal(deal);
-                        }}
-                        disabled={scoringDealId === deal.id}
-                      >
-                        <Sparkles size={12} />
-                        {scoringDealId === deal.id
-                          ? t("pipeline.scoring")
-                          : t("pipeline.score")}
-                      </button>
-                      <button
-                        className="deal-card-footer-action-trigger-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveDealToNextStage(deal, col.id);
-                        }}
-                        disabled={movingDealId === deal.id || col.id === "lost"}
-                      >
-                        <ArrowUpRight size={12} />
-                        {movingDealId === deal.id
-                          ? t("pipeline.moving")
-                          : t("pipeline.move")}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                <button
-                  className="kanban-column-add-deal-inline-trigger-btn"
-                  onClick={() => {
-                    setCreateDealForm((prev) => ({
-                      ...prev,
-                      stage: col.id,
-                    }));
-                    setShowCreateDealModal(true);
-                  }}
-                >
-                  <Plus size={14} /> {t("pipeline.addDeal")}
-                </button>
+                  <button
+                    className="kanban-column-add-deal-inline-trigger-btn"
+                    onClick={() => {
+                      setCreateDealForm((prev) => ({
+                        ...prev,
+                        stage: col.id,
+                      }));
+                      setShowCreateDealModal(true);
+                    }}
+                  >
+                    <Plus size={14} /> {t("pipeline.addDeal")}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
-        )}
-      </section>
+            ))
+          )}
+        </section>
+      </div>
 
       {/* SPLIT BOTTOM INTELLIGENCE GRID */}
       {pipelineViewMode === "ai" && (
         <section className="pipeline-bottom-split-intelligence-grid">
           {/* PANEL 1: AI DEAL RISK QUEUE */}
-          <div className="bottom-intelligence-card-panel">
-            <div className="intelligence-card-header-row">
-              <div className="flex items-center gap-2">
-                <AlertTriangle size={18} className="intelligence-header-icon" />
-                <h3 className="intelligence-card-main-title">
-                  {t("pipeline.aiDealRiskQueue")}
-                </h3>
-                <span className="intelligence-card-sub-header-counter">
-                  {t("pipeline.atRiskDealsAttention", {
-                    count: riskQueue.length,
-                  })}
-                </span>
+          <div className="bottom-intelligence-card-panel risk-queue-panel">
+            <div className="mobile-risk-queue-layout">
+              <div className="mobile-risk-queue-heading">
+                <AlertTriangle size={42} />
+                <h2>{t("pipeline.aiDealRiskQueue", { defaultValue: "AI Deal Risk Queue" })}</h2>
+                <p>{t("pipeline.riskQueueMobileSubtitle", { defaultValue: "Deals that need your attention" })}</p>
               </div>
-              <button
-                className="intelligence-view-all-navigation-link"
-                onClick={() => {
-                  setRiskModalLimit(5);
-                  setRiskModalOpen(true);
-                }}
-              >
-                {t("pipeline.viewAll")} <ArrowRight size={14} />
-              </button>
+
+              <div className="mobile-risk-deals-list">
+                {riskQueue.length ? (
+                  riskQueue.map((row, index) => {
+                    const details = getRiskDealDetails(row);
+                    const status = String(row.status || "medium").toLowerCase();
+                    const statusLabel =
+                      status === "high"
+                        ? t("pipeline.highRisk", { defaultValue: "High Risk" })
+                        : status === "low"
+                          ? t("pipeline.lowRisk", { defaultValue: "Low Risk" })
+                          : t("pipeline.mediumRisk", { defaultValue: "Medium Risk" });
+
+                    const RiskIcon =
+                      index % 3 === 0 ? Building2 : index % 3 === 1 ? Handshake : Users;
+
+                    return (
+                      <button
+                        type="button"
+                        className={`mobile-risk-deal-card risk-${status}`}
+                        key={row.id}
+                        onClick={() => reviewRiskDeal(row.id)}
+                      >
+                        <div className="mobile-risk-deal-top">
+                          <span className="mobile-risk-deal-icon">
+                            <RiskIcon size={31} />
+                          </span>
+
+                          <span className="mobile-risk-deal-main">
+                            <strong>{row.name || t("pipeline.unnamedDeal", { defaultValue: "Deal" })}</strong>
+                            <small>{details.subtitle}</small>
+                            <b>{row.value || "$0"}</b>
+                          </span>
+
+                          <span className="mobile-risk-deal-status">
+                            <em>{statusLabel}</em>
+                            <small>{details.inactivity}</small>
+                          </span>
+
+                          <ArrowRight className="mobile-risk-deal-chevron" size={28} />
+                        </div>
+
+                        <div className="mobile-risk-deal-metrics">
+                          <span className="mobile-risk-metric">
+                            <TrendingUp size={24} />
+                            <span>
+                              <small>{t("pipeline.winProbability", { defaultValue: "Win Probability" })}</small>
+                              <strong>{details.probability}</strong>
+                            </span>
+                          </span>
+
+                          <span className="mobile-risk-metric">
+                            <DollarSign size={24} />
+                            <span>
+                              <small>{t("pipeline.revenueAtRisk", { defaultValue: "Revenue at Risk" })}</small>
+                              <strong>{row.value || "$0"}</strong>
+                            </span>
+                          </span>
+
+                          <span className="mobile-risk-metric">
+                            <Calendar size={24} />
+                            <span>
+                              <small>{t("pipeline.closeDate", { defaultValue: "Close Date" })}</small>
+                              <strong>{details.closeDate}</strong>
+                            </span>
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="mobile-risk-empty-state">
+                    <AlertTriangle size={30} />
+                    <strong>{t("pipeline.noAtRiskDeals")}</strong>
+                    <span>{t("pipeline.pipelineHealthy")}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mobile-risk-queue-footer">
+                <AlertCircle size={31} />
+                <p>{t("pipeline.riskQueueFooter", { defaultValue: "Focus on high-risk deals to improve win rate and protect your revenue." })}</p>
+                <TrendingUp size={32} />
+              </div>
             </div>
 
-            <div className="risk-queue-table-rows-wrapper">
-              {riskQueue.length ? (
-                riskQueue.map((row) => (
-                  <div className="risk-queue-table-row-item" key={row.id}>
-                    <span className="risk-table-cell-property-name">
-                      {row.name}
-                    </span>
-                    <strong className="risk-table-cell-deal-value">
-                      {row.value}
-                    </strong>
-                    <span className="risk-table-cell-risk-reason-desc">
-                      {row.reason}
-                    </span>
-                    <span
-                      className={`risk-table-cell-severity-badge status-${String(
-                        row.status || "medium",
-                      ).toLowerCase()}`}
-                    >
-                      {row.status}
-                    </span>
-                    <button
-                      className="risk-table-cell-action-review-trigger-btn"
-                      onClick={() => reviewRiskDeal(row.id)}
-                    >
-                      {t("pipeline.review")}
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="risk-queue-table-row-item">
-                  <span className="risk-table-cell-property-name">
-                    {t("pipeline.noAtRiskDeals")}
-                  </span>
-                  <strong className="risk-table-cell-deal-value">$0</strong>
-                  <span className="risk-table-cell-risk-reason-desc">
-                    {t("pipeline.pipelineHealthy")}
-                  </span>
-                  <span className="risk-table-cell-severity-badge status-medium">
-                    {t("pipeline.low")}
+            <div className="desktop-risk-queue-layout">
+              <div className="intelligence-card-header-row">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={18} className="intelligence-header-icon" />
+                  <h3 className="intelligence-card-main-title">{t("pipeline.aiDealRiskQueue")}</h3>
+                  <span className="intelligence-card-sub-header-counter">
+                    {t("pipeline.atRiskDealsAttention", { count: riskQueue.length })}
                   </span>
                 </div>
-              )}
+                <button
+                  className="intelligence-view-all-navigation-link"
+                  onClick={() => {
+                    setRiskModalLimit(5);
+                    setRiskModalOpen(true);
+                  }}
+                >
+                  {t("pipeline.viewAll")} <ArrowRight size={14} />
+                </button>
+              </div>
+
+              <div className="risk-queue-table-rows-wrapper">
+                {riskQueue.length ? (
+                  riskQueue.map((row) => (
+                    <div className="risk-queue-table-row-item" key={row.id}>
+                      <span className="risk-table-cell-property-name">{row.name}</span>
+                      <strong className="risk-table-cell-deal-value">{row.value}</strong>
+                      <span className="risk-table-cell-risk-reason-desc">{row.reason}</span>
+                      <span className={`risk-table-cell-severity-badge status-${String(row.status || "medium").toLowerCase()}`}>
+                        {row.status}
+                      </span>
+                      <button
+                        className="risk-table-cell-action-review-trigger-btn"
+                        onClick={() => reviewRiskDeal(row.id)}
+                      >
+                        {t("pipeline.review")}
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="risk-queue-table-row-item">
+                    <span className="risk-table-cell-property-name">{t("pipeline.noAtRiskDeals")}</span>
+                    <strong className="risk-table-cell-deal-value">$0</strong>
+                    <span className="risk-table-cell-risk-reason-desc">{t("pipeline.pipelineHealthy")}</span>
+                    <span className="risk-table-cell-severity-badge status-medium">{t("pipeline.low")}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* PANEL 2: REVENUE FORECAST */}
-          <div className="bottom-intelligence-card-panel">
-            <div className="intelligence-card-header-row">
-              <div className="flex items-center gap-2">
-                <LineChartIcon size={18} className="intelligence-header-icon" />
-                <h3 className="intelligence-card-main-title">
-                  {t("pipeline.revenueForecast")}
-                </h3>
+          <div className="bottom-intelligence-card-panel revenue-forecast-panel">
+            {/* MOBILE / TABLET REVENUE FORECAST */}
+            <div className="mobile-revenue-forecast-layout">
+              <div className="mobile-revenue-forecast-heading">
+                <TrendingUp size={48} />
+                <h2>
+                  {t("pipeline.revenueForecast", {
+                    defaultValue: "Revenue Forecast",
+                  })}
+                </h2>
+                <p>
+                  {t("pipeline.revenueForecastMobileSubtitle", {
+                    defaultValue: "Real-time forecast of your pipeline revenue",
+                  })}
+                </p>
               </div>
-              <div className="secondary-btn compact-dropdown-trigger">
-                <select
-                  value={forecastRange}
-                  onChange={(e) => setForecastRange(e.target.value)}
-                >
-                  <option value="week">{t("pipeline.thisWeek")}</option>
-                  <option value="month">{t("pipeline.thisMonth")}</option>
-                  <option value="quarter">{t("pipeline.thisQuarter")}</option>
-                  <option value="year">{t("pipeline.thisYear")}</option>
-                </select>
+
+              <div className="mobile-revenue-forecast-cards">
+                <div className="mobile-forecast-card forecast-purple">
+                  <span className="mobile-forecast-icon">
+                    <DollarSign size={38} />
+                  </span>
+
+                  <div className="mobile-forecast-content">
+                    <span className="mobile-forecast-label">
+                      {t("pipeline.forecastedRevenue")}
+                    </span>
+                    <strong>
+                      {forecast?.forecastedRevenue || "$0"}
+                    </strong>
+                    <small>
+                      {t("pipeline.totalPipelineValue", {
+                        defaultValue: "Total Pipeline Value",
+                      })}
+                    </small>
+
+                    <div className="mobile-forecast-progress">
+                      <span style={{ width: "72%" }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mobile-forecast-card forecast-green">
+                  <span className="mobile-forecast-icon">
+                    <CheckSquare size={36} />
+                  </span>
+
+                  <div className="mobile-forecast-content">
+                    <span className="mobile-forecast-label">
+                      {t("pipeline.expectedClosings", {
+                        defaultValue: "Expected Closings",
+                      })}
+                    </span>
+                    <strong>
+                      {forecast?.forecastedClosings || "$0"}
+                    </strong>
+                    <small>
+                      {forecastRange === "week"
+                        ? t("pipeline.thisWeek")
+                        : forecastRange === "quarter"
+                          ? t("pipeline.thisQuarter")
+                          : forecastRange === "year"
+                            ? t("pipeline.thisYear")
+                            : t("pipeline.thisMonth")}
+                    </small>
+
+                    <div className="mobile-forecast-progress">
+                      <span style={{ width: "63%" }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mobile-forecast-card forecast-orange">
+                  <span className="mobile-forecast-icon">
+                    <TrendingUp size={36} />
+                  </span>
+
+                  <div className="mobile-forecast-content">
+                    <span className="mobile-forecast-label">
+                      {t("pipeline.pipelineVelocity")}
+                    </span>
+                    <strong>
+                      {forecast?.pipelineVelocity || "-"}
+                    </strong>
+                    <small>
+                      {t("pipeline.perWeek", {
+                        defaultValue: "Per Week",
+                      })}
+                    </small>
+
+                    <div className="mobile-forecast-progress">
+                      <span style={{ width: "70%" }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mobile-forecast-card forecast-pink">
+                  <span className="mobile-forecast-icon">
+                    <Target size={36} />
+                  </span>
+
+                  <div className="mobile-forecast-content">
+                    <span className="mobile-forecast-label">
+                      {t("pipeline.closeConfidence")}
+                    </span>
+                    <strong>
+                      {forecast?.closeConfidence || "0%"}
+                    </strong>
+                    <small>
+                      {renderTrend(
+                        forecast?.closeConfidenceTrend,
+                        t("pipeline.mediumConfidence"),
+                      )}
+                    </small>
+
+                    <div className="mobile-forecast-progress">
+                      <span
+                        style={{
+                          width: `${Math.max(
+                            0,
+                            Math.min(
+                              100,
+                              Number(
+                                String(
+                                  forecast?.closeConfidence || "0",
+                                ).replace("%", ""),
+                              ) || 0,
+                            ),
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mobile-revenue-forecast-footer">
+                <Info size={32} />
+                <p>
+                  {forecast?.description ||
+                    t("pipeline.revenueForecastFooter", {
+                      defaultValue:
+                        "AI analyzes your pipeline data to provide accurate revenue forecasts and probabilities.",
+                    })}
+                </p>
+                <TrendingUp size={36} />
               </div>
             </div>
 
-            <div className="revenue-forecast-metrics-grid-quad">
-              <div className="revenue-forecast-metric-quad-card">
-                <span className="forecast-quad-card-label">
-                  {t("pipeline.forecastedRevenue")}
-                </span>
-                <strong className="forecast-quad-card-large-numeric">
-                  {forecast?.forecastedRevenue || "$0"}
-                </strong>
-                <span
-                  className={`forecast-quad-card-trend-subtext ${getTrendClass(
-                    forecast?.forecastedRevenueTrend,
-                  )}`}
-                >
-                  {renderTrend(forecast?.forecastedRevenueTrend)}
-                </span>
+            {/* DESKTOP REVENUE FORECAST */}
+            <div className="desktop-revenue-forecast-layout">
+              <div className="intelligence-card-header-row">
+                <div className="flex items-center gap-2">
+                  <LineChartIcon size={18} className="intelligence-header-icon" />
+                  <h3 className="intelligence-card-main-title">
+                    {t("pipeline.revenueForecast")}
+                  </h3>
+                </div>
+                <div className="secondary-btn compact-dropdown-trigger">
+                  <select
+                    value={forecastRange}
+                    onChange={(e) => setForecastRange(e.target.value)}
+                  >
+                    <option value="week">{t("pipeline.thisWeek")}</option>
+                    <option value="month">{t("pipeline.thisMonth")}</option>
+                    <option value="quarter">{t("pipeline.thisQuarter")}</option>
+                    <option value="year">{t("pipeline.thisYear")}</option>
+                  </select>
+                </div>
               </div>
-              <div className="revenue-forecast-metric-quad-card">
-                <span className="forecast-quad-card-label">
-                  {t("pipeline.forecastedClosings")}
-                </span>
-                <strong className="forecast-quad-card-large-numeric">
-                  {forecast?.forecastedClosings || 0}
-                </strong>
-                <span
-                  className={`forecast-quad-card-trend-subtext ${getTrendClass(
-                    forecast?.forecastedClosingsTrend,
-                  )}`}
-                >
-                  {renderTrend(forecast?.forecastedClosingsTrend)}
-                </span>
-              </div>
-              <div className="revenue-forecast-metric-quad-card">
-                <span className="forecast-quad-card-label">
-                  {t("pipeline.pipelineVelocity")}
-                </span>
-                <strong className="forecast-quad-card-large-numeric">
-                  {forecast?.pipelineVelocity || "0x"}
-                </strong>
-                <span
-                  className={`forecast-quad-card-trend-subtext ${getTrendClass(
-                    forecast?.pipelineVelocityTrend,
-                  )}`}
-                >
-                  {renderTrend(forecast?.pipelineVelocityTrend)}
-                </span>
-              </div>
-              <div className="revenue-forecast-metric-quad-card">
-                <span className="forecast-quad-card-label">
-                  {t("pipeline.closeConfidence")}
-                </span>
-                <strong className="forecast-quad-card-large-numeric">
-                  {forecast?.closeConfidence || "0%"}
-                </strong>
-                <span
-                  className={`forecast-quad-card-trend-subtext ${getTrendClass(
-                    forecast?.closeConfidenceTrend,
-                  )}`}
-                >
-                  {renderTrend(
-                    forecast?.closeConfidenceTrend,
-                    t("pipeline.mediumConfidence"),
-                  )}
-                </span>
-              </div>
-            </div>
 
-            <p className="revenue-forecast-footer-explanatory-text">
-              {forecast?.description || t("pipeline.noForecastAvailable")}
-            </p>
+              <div className="revenue-forecast-metrics-grid-quad">
+                <div className="revenue-forecast-metric-quad-card">
+                  <span className="forecast-quad-card-label">
+                    {t("pipeline.forecastedRevenue")}
+                  </span>
+                  <strong className="forecast-quad-card-large-numeric">
+                    {forecast?.forecastedRevenue || "$0"}
+                  </strong>
+                  <span
+                    className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                      forecast?.forecastedRevenueTrend,
+                    )}`}
+                  >
+                    {renderTrend(forecast?.forecastedRevenueTrend)}
+                  </span>
+                </div>
+
+                <div className="revenue-forecast-metric-quad-card">
+                  <span className="forecast-quad-card-label">
+                    {t("pipeline.forecastedClosings")}
+                  </span>
+                  <strong className="forecast-quad-card-large-numeric">
+                    {forecast?.forecastedClosings || 0}
+                  </strong>
+                  <span
+                    className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                      forecast?.forecastedClosingsTrend,
+                    )}`}
+                  >
+                    {renderTrend(forecast?.forecastedClosingsTrend)}
+                  </span>
+                </div>
+
+                <div className="revenue-forecast-metric-quad-card">
+                  <span className="forecast-quad-card-label">
+                    {t("pipeline.pipelineVelocity")}
+                  </span>
+                  <strong className="forecast-quad-card-large-numeric">
+                    {forecast?.pipelineVelocity || "0x"}
+                  </strong>
+                  <span
+                    className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                      forecast?.pipelineVelocityTrend,
+                    )}`}
+                  >
+                    {renderTrend(forecast?.pipelineVelocityTrend)}
+                  </span>
+                </div>
+
+                <div className="revenue-forecast-metric-quad-card">
+                  <span className="forecast-quad-card-label">
+                    {t("pipeline.closeConfidence")}
+                  </span>
+                  <strong className="forecast-quad-card-large-numeric">
+                    {forecast?.closeConfidence || "0%"}
+                  </strong>
+                  <span
+                    className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                      forecast?.closeConfidenceTrend,
+                    )}`}
+                  >
+                    {renderTrend(
+                      forecast?.closeConfidenceTrend,
+                      t("pipeline.mediumConfidence"),
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              <p className="revenue-forecast-footer-explanatory-text">
+                {forecast?.description || t("pipeline.noForecastAvailable")}
+              </p>
+            </div>
           </div>
 
           {/* PANEL 3: AUTOMATION HEALTH */}
@@ -1567,8 +2058,311 @@ export default function PipelinePage() {
         </section>
       )}
 
+
+      {/* MOBILE SELECTED DEAL DETAIL */}
+      <section className="mobile-selected-deal-detail-panel">
+        {selectedDeal ? (
+          <>
+            <div className="mobile-selected-deal-summary-card">
+              <div className="mobile-selected-deal-summary-top">
+                <div className="mobile-selected-deal-avatar">
+                  {selectedDeal?.avatarInitials ||
+                    String(selectedDeal?.name || "D")
+                      .split(" ")
+                      .map((part) => part?.[0] || "")
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
+                </div>
+
+                <div className="mobile-selected-deal-title-block">
+                  <h2>{selectedDeal?.name || t("pipeline.selectADeal")}</h2>
+                  <p>{selectedDeal?.property || t("pipeline.noDealSelected")}</p>
+                  <strong>{selectedDeal?.amount || "$0"}</strong>
+                  <span className="mobile-selected-deal-probability-inline">
+                    • {selectedDeal?.score || "0%"}{" "}
+                    {t("pipeline.probability", { defaultValue: "Probability" })}
+                  </span>
+                </div>
+
+                <div className="mobile-selected-deal-stage-block">
+                  <span className="mobile-selected-deal-stage-pill">
+                    {String(selectedDeal?.stage || "new").toUpperCase()}
+                  </span>
+                  <small>
+                    {t("pipeline.expectedClose", {
+                      defaultValue: "Expected Close",
+                    })}
+                    :{" "}
+                    {selectedDeal?.expectedCloseDate ||
+                      selectedDeal?.closeDate ||
+                      "-"}
+                  </small>
+                </div>
+
+                <ArrowRight className="mobile-selected-deal-top-chevron" size={28} />
+              </div>
+
+              <div className="mobile-selected-deal-summary-metrics">
+                <div className="mobile-selected-summary-metric">
+                  <DollarSign size={26} />
+                  <span>{t("pipeline.dealValue")}</span>
+                  <strong>{selectedDeal?.amount || "$0"}</strong>
+                </div>
+
+                <div className="mobile-selected-summary-metric">
+                  <Target size={26} />
+                  <span>
+                    {t("pipeline.probability", {
+                      defaultValue: "Probability",
+                    })}
+                  </span>
+                  <strong>{selectedDeal?.score || "0%"}</strong>
+                </div>
+
+                <div className="mobile-selected-summary-metric">
+                  <Calendar size={26} />
+                  <span>
+                    {t("pipeline.forecastedClose", {
+                      defaultValue: "Forecasted Close",
+                    })}
+                  </span>
+                  <strong>
+                    {selectedDeal?.expectedCloseDate ||
+                      selectedDeal?.closeDate ||
+                      "-"}
+                  </strong>
+                </div>
+
+                <div className="mobile-selected-summary-metric">
+                  <Users size={26} />
+                  <span>
+                    {t("pipeline.dealOwner", {
+                      defaultValue: "Deal Owner",
+                    })}
+                  </span>
+                  <strong>
+                    {selectedDeal?.ownerName ||
+                      selectedDeal?.owner?.name ||
+                      selectedDeal?.agentName ||
+                      "-"}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="mobile-selected-deal-activity-card">
+              <div className="mobile-selected-deal-activity-heading">
+                <h3>{t("pipeline.dealActivity")}</h3>
+                <span />
+              </div>
+
+              <div className="mobile-selected-deal-activity-list">
+                {selectedDealLoading ? (
+                  <div className="mobile-selected-deal-activity-empty">
+                    {t("pipeline.loadingActivity")}
+                  </div>
+                ) : selectedDealEvents.length ? (
+                  selectedDealEvents.slice(0, 4).map((event, index) => {
+                    const ActivityIcon =
+                      index === 0
+                        ? Send
+                        : index === 1
+                          ? MessageCircle
+                          : index === 2
+                            ? Brain
+                            : Phone;
+
+                    return (
+                      <div
+                        className="mobile-selected-deal-activity-row"
+                        key={event.id || index}
+                      >
+                        <span className="mobile-selected-activity-timeline-dot" />
+
+                        <div className="mobile-selected-activity-icon">
+                          <ActivityIcon size={23} />
+                        </div>
+
+                        <div className="mobile-selected-activity-copy">
+                          <strong>
+                            {event.metadata?.title ||
+                              event.title ||
+                              t("pipeline.dealActivityItem")}
+                          </strong>
+                          <span>
+                            {event.metadata?.date ||
+                              event.createdAt ||
+                              event.timeAgo ||
+                              t("pipeline.recentlyUpdated")}
+                          </span>
+                        </div>
+
+                        <ArrowRight size={24} />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="mobile-selected-deal-activity-empty">
+                    {t("pipeline.noActivityYet")}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="mobile-selected-view-all-activity"
+                onClick={openActivityModal}
+                disabled={!selectedDeal?.id}
+              >
+                {t("pipeline.viewAllActivity", {
+                  defaultValue: "View All Activity",
+                })}
+                <ArrowRight size={18} />
+              </button>
+            </div>
+
+            <div className="mobile-selected-deal-action-cards">
+              <button
+                type="button"
+                className="mobile-selected-action-card action-purple"
+                onClick={sendAiSuggestions}
+                disabled={sendingSuggestions || !selectedDeal?.id}
+              >
+                <span className="mobile-selected-action-icon">
+                  <Sparkles size={28} />
+                </span>
+                <span className="mobile-selected-action-copy">
+                  <strong>
+                    {t("pipeline.aiSuggestedNextSteps")}
+                  </strong>
+                  <small>
+                    {t("pipeline.aiSuggestedNextStepsDescription", {
+                      defaultValue:
+                        "Recommended actions to move this deal forward",
+                    })}
+                  </small>
+                </span>
+                <ArrowRight size={26} />
+              </button>
+
+              <button
+                type="button"
+                className="mobile-selected-action-card action-red"
+                onClick={commandGenerateFollowUp}
+                disabled={!selectedDeal?.id || commandActionLoading === "followup"}
+              >
+                <span className="mobile-selected-action-icon">
+                  <MessageCircle size={28} />
+                </span>
+                <span className="mobile-selected-action-copy">
+                  <strong>
+                    {t("pipeline.followUpActions", {
+                      defaultValue: "Follow-Up Actions",
+                    })}
+                  </strong>
+                  <small>
+                    {t("pipeline.followUpActionsDescription", {
+                      defaultValue:
+                        "Tasks and follow-ups to keep this deal moving",
+                    })}
+                  </small>
+                </span>
+                <ArrowRight size={26} />
+              </button>
+
+              <button
+                type="button"
+                className="mobile-selected-action-card action-amber"
+              >
+                <span className="mobile-selected-action-icon">
+                  <Users size={28} />
+                </span>
+                <span className="mobile-selected-action-copy">
+                  <strong>
+                    {t("pipeline.stakeholderEngagement", {
+                      defaultValue: "Stakeholder Engagement",
+                    })}
+                  </strong>
+                  <small>
+                    {t("pipeline.stakeholderEngagementDescription", {
+                      defaultValue:
+                        "Key people involved and engagement insights",
+                    })}
+                  </small>
+                </span>
+                <ArrowRight size={26} />
+              </button>
+
+              <button
+                type="button"
+                className="mobile-selected-action-card action-green"
+                onClick={commandScoreDeal}
+                disabled={!selectedDeal?.id || commandActionLoading === "score"}
+              >
+                <span className="mobile-selected-action-icon">
+                  <TrendingUp size={28} />
+                </span>
+                <span className="mobile-selected-action-copy">
+                  <strong>
+                    {t("pipeline.dealInsightsAnalysis", {
+                      defaultValue: "Deal Insights & Analysis",
+                    })}
+                  </strong>
+                  <small>
+                    {t("pipeline.dealInsightsAnalysisDescription", {
+                      defaultValue:
+                        "AI insights, win probability and deal health",
+                    })}
+                  </small>
+                </span>
+                <ArrowRight size={26} />
+              </button>
+
+              <button
+                type="button"
+                className="mobile-selected-action-card action-blue"
+              >
+                <span className="mobile-selected-action-icon">
+                  <ShieldCheck size={28} />
+                </span>
+                <span className="mobile-selected-action-copy">
+                  <strong>
+                    {t("pipeline.riskCompetitionMonitor", {
+                      defaultValue: "Risk & Competition Monitor",
+                    })}
+                  </strong>
+                  <small>
+                    {t("pipeline.riskCompetitionMonitorDescription", {
+                      defaultValue:
+                        "Identify risks, competitors and objections",
+                    })}
+                  </small>
+                </span>
+                <ArrowRight size={26} />
+              </button>
+            </div>
+
+            <div className="mobile-selected-deal-personalized-note">
+              <Info size={30} />
+              <p>
+                {t("pipeline.personalizedRecommendationsNote", {
+                  defaultValue:
+                    "All recommendations are personalized based on deal stage, activity, and historical win patterns.",
+                })}
+              </p>
+              <TrendingUp size={34} />
+            </div>
+          </>
+        ) : (
+          <div className="mobile-selected-deal-empty">
+            {t("pipeline.selectADeal")}
+          </div>
+        )}
+      </section>
+
       {/* SELECTED DEAL BOTTOM DRILLDOWN VIEW CARD */}
-      <section className="selected-deal-bottom-drilldown-inspector-panel">
+      <section className="selected-deal-bottom-drilldown-inspector-panel desktop-selected-deal-inspector">
         <div className="inspector-panel-grid-layout">
           <div className="select-deal">
             <div className="inspector-left-identity-column">
