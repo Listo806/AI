@@ -4,6 +4,7 @@ import { PayPalService } from './paypal.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import { normalizePlanId, getPlan } from '../plans/plan-config';
 import { WorkspaceEntitlementsService } from '../workspaces/workspace-entitlements.service';
+import { AiUnitsService } from '../ai-units/ai-units.service';
 import { isValidWorkspaceId, normalizeWorkspaceId } from '../workspaces/workspace-registry';
 
 // Seat allowance per normalized plan, mirrored from plan-config so a Paddle
@@ -25,6 +26,7 @@ export class PaymentsService {
     private readonly paypalService: PayPalService,
     private readonly mailer: PlatformMailerService,
     private readonly workspaceEntitlements: WorkspaceEntitlementsService,
+    private readonly aiUnits: AiUnitsService,
   ) {}
 
   // Fire the once-only welcome email after a confirmed payment. Best-effort:
@@ -347,6 +349,47 @@ export class PaymentsService {
     const customCycle: string | null =
       data?.custom_data?.billingCycle || data?.custom_data?.billing_cycle || null;
 
+    // --- AI Unit refill packs (one-time purchase) ---
+    // Detect by the ACTUAL purchased Paddle price id (server-side env), never
+    // trusting client-supplied unit counts. Credits AI Units exactly once
+    // (idempotent on the Paddle transaction id). Never throws, so it cannot
+    // trigger a base-plan retry. Dormant until the three price ids are set.
+    if (eventType === 'transaction.completed' || eventType === 'transaction.paid') {
+      const pack = this.resolveAiUnitsPack(data);
+      if (pack && customUserId) {
+        let credited = false;
+        try {
+          const { rows } = await this.db.query(
+            `SELECT COALESCE(u.team_id, (SELECT id FROM teams WHERE owner_id = u.id LIMIT 1)) AS team_id
+               FROM users u WHERE u.id = $1`,
+            [customUserId],
+          );
+          const teamId = rows[0]?.team_id;
+          if (teamId) {
+            const amount = Number(data?.details?.totals?.grand_total ?? 0) / 100;
+            const r = await this.aiUnits.creditPurchase(
+              teamId,
+              pack.packageId,
+              pack.units,
+              String(data?.id || ''),
+              amount,
+              data?.currency_code || 'USD',
+            );
+            credited = r.credited;
+          }
+        } catch (err: any) {
+          this.logger.error(`ai-units credit failed (recorded, no retry): ${err?.message}`);
+        }
+        await this.db.query(
+          `INSERT INTO webhook_events (provider, event_id, event_type, payload)
+           VALUES ('paddle', $1, $2, $3::jsonb)
+           ON CONFLICT (provider, event_id) DO NOTHING`,
+          [eventId, eventType, JSON.stringify(body)],
+        );
+        return { status: 'success', matched: credited, eventType };
+      }
+    }
+
     // --- Workspace add-on (its OWN separate Paddle subscription) ---
     // A paid Workspace is billed as an independent $97/month Paddle subscription,
     // separate from the base plan and from every other Workspace. Detect and fully
@@ -568,6 +611,26 @@ export class PaymentsService {
       }
     }
     return Array.from(ids);
+  }
+
+  // Match a webhook's purchased price ids against the configured AI-Unit packs.
+  // Units are derived from the price id (server authority), not client data.
+  private resolveAiUnitsPack(
+    data: any,
+  ): { units: number; packageId: string; priceId: string } | null {
+    const map: Record<string, { units: number; packageId: string }> = {};
+    const reg = (env: string, units: number, packageId: string) => {
+      const v = (process.env[env] || '').trim();
+      if (v) map[v] = { units, packageId };
+    };
+    reg('PADDLE_PRICE_AI_UNITS_500', 500, 'boost');
+    reg('PADDLE_PRICE_AI_UNITS_1000', 1000, 'plus');
+    reg('PADDLE_PRICE_AI_UNITS_2000', 2000, 'max');
+    if (!Object.keys(map).length) return null;
+    for (const id of this.extractPaddlePriceIds(data)) {
+      if (map[id]) return { ...map[id], priceId: id };
+    }
+    return null;
   }
 
   // Is this Paddle event about a Workspace add-on subscription? True when the

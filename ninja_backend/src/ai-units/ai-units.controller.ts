@@ -19,6 +19,12 @@ export class AiUnitsController {
     return this.aiUnits.getBalance(user);
   }
 
+  /** Paddle checkout params for a one-time AI-Unit pack (boost/plus/max). */
+  @Get('checkout/:packageId')
+  getCheckout(@CurrentUser() user: any, @Param('packageId') packageId: string) {
+    return this.aiUnits.getCheckout(user, packageId);
+  }
+
   /** Public-facing config: allowance, action costs, packages, thresholds. */
   @Get('config')
   async getConfig() {

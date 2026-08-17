@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { usePlan } from "../context/PlanContext";
+import { useAiUnits } from "../context/AiUnitsContext";
 import { LockBadge } from "./FeatureLock";
 import { openFeatureAddOns, FEATURE_TO_ADDON } from "./FeatureAddOns";
 import { useEffect, useState } from "react";
@@ -88,6 +89,7 @@ export default function Sidebar({
   const { t } = useTranslation();
   const { user, loading } = useAuth();
   const plan = usePlan();
+  const aiUnits = useAiUnits();
   // A nav item is locked when it maps to a plan feature the account lacks. Fails
   // open: usePlan returns "allowed" while loading / on error, so no badge flashes
   // for users who actually have access.
@@ -813,30 +815,59 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                 </NavLink>
               </div>
 
-              <div className="crm-workspaces-expand-card crm-workspaces-ai-usage">
-                <div className="crm-workspaces-ai-usage-head">
-                  <span>AI Usage</span>
-                  <strong>82%</strong>
-                </div>
-
-                <div
-                  className="crm-workspaces-ai-usage-track"
-                  role="progressbar"
-                  aria-label="AI Usage"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow="82"
-                >
-                  <span
-                    className="crm-workspaces-ai-usage-fill"
-                    style={{ width: "82%" }}
-                  />
-                </div>
-
-                <div className="crm-workspaces-ai-usage-reset">
-                  Resets Aug 30
-                </div>
-              </div>
+              {(() => {
+                // Real AI Units from the single backend balance. Unlimited plans
+                // show a full green "Unlimited" bar; Free shows the live number.
+                const b = aiUnits.balance;
+                const COLORS = { green: "#16a34a", yellow: "#ea580c", red: "#dc2626", empty: "#dc2626" };
+                const fmt = (ymd) => {
+                  if (!ymd) return "";
+                  try {
+                    return new Date(`${ymd}T00:00:00Z`).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      timeZone: "UTC",
+                    });
+                  } catch {
+                    return ymd;
+                  }
+                };
+                if (aiUnits.unlimited) {
+                  return (
+                    <div className="crm-workspaces-expand-card crm-workspaces-ai-usage">
+                      <div className="crm-workspaces-ai-usage-head">
+                        <span>AI Usage</span>
+                        <strong>Unlimited</strong>
+                      </div>
+                      <div className="crm-workspaces-ai-usage-track" role="progressbar" aria-label="AI Usage" aria-valuenow="100">
+                        <span className="crm-workspaces-ai-usage-fill" style={{ width: "100%", background: "#16a34a" }} />
+                      </div>
+                    </div>
+                  );
+                }
+                const remaining = b?.totalRemaining ?? 0;
+                const pct = Math.max(0, Math.min(100, b?.percentRemaining ?? 0));
+                const color = COLORS[b?.color] || "#2563eb";
+                return (
+                  <div className="crm-workspaces-expand-card crm-workspaces-ai-usage">
+                    <div className="crm-workspaces-ai-usage-head">
+                      <span>AI Usage</span>
+                      <strong>{remaining} left</strong>
+                    </div>
+                    <div
+                      className="crm-workspaces-ai-usage-track"
+                      role="progressbar"
+                      aria-label="AI Usage"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-valuenow={pct}
+                    >
+                      <span className="crm-workspaces-ai-usage-fill" style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                    {b?.resetDate && <div className="crm-workspaces-ai-usage-reset">Resets {fmt(b.resetDate)}</div>}
+                  </div>
+                );
+              })()}
             </section>
           )}
 

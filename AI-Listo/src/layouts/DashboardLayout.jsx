@@ -5,10 +5,12 @@ import Sidebar from "../components/Sidebar";
 import LanguageSelector from "../components/LanguageSelector";
 import { useAuth } from "../context/AuthContext";
 import { PlanProvider } from "../context/PlanContext";
+import { AiUnitsProvider } from "../context/AiUnitsContext";
 import { useTheme } from "../theme/ThemeProvider";
 import "../styles/crm-dashboard.css";
 import BottomNav from "../components/BottomNav";
 import FeatureAddOns from "../components/FeatureAddOns";
+import AIPowerHud from "../components/AIPowerHud";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 
@@ -211,6 +213,7 @@ export default function DashboardLayout() {
 
   return (
     <PlanProvider>
+    <AiUnitsProvider>
     <div className={`crm-root ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <Sidebar
         isOpen={sidebarOpen} 
@@ -382,6 +385,8 @@ export default function DashboardLayout() {
       </div>
     </div>
     <FeatureAddOns />
+    <AIPowerHud />
+    </AiUnitsProvider>
     </PlanProvider>
   );
 }
