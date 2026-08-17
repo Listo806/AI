@@ -32,6 +32,7 @@ export default function AIPowerHud() {
   const [showPacks, setShowPacks] = useState(false);
   const [buying, setBuying] = useState(null);
   const [msg, setMsg] = useState(null);
+  const [previewState, setPreviewState] = useState(null); // admin preview: null | full | warm | low | zero
   const paddleReady = useRef(false);
   const shownRef = useRef(false);
   const zeroRef = useRef(false);
@@ -105,10 +106,21 @@ export default function AIPowerHud() {
 
   if (!showHud || !balance) return null;
 
-  const colorClass = COLOR_CLASS[balance.color] || "green";
-  const remaining = balance.totalRemaining ?? 0;
-  const pct = Math.max(0, Math.min(100, balance.percentRemaining ?? 0));
-  const zero = remaining <= 0;
+  const isPreview = !!balance.preview;
+  let colorClass = COLOR_CLASS[balance.color] || "green";
+  let remaining = balance.totalRemaining ?? 0;
+  let pct = Math.max(0, Math.min(100, balance.percentRemaining ?? 0));
+  let zero = remaining <= 0;
+
+  // Admin preview cycler: override only the VISUALS so every state can be
+  // inspected without spending real units. Does not touch the real balance.
+  if (isPreview && previewState) {
+    const allowance = balance.freeAllowance || 50;
+    if (previewState === "full") { pct = 100; colorClass = "green"; remaining = allowance; zero = false; }
+    else if (previewState === "warm") { pct = 40; colorClass = "yellow"; remaining = Math.round(allowance * 0.4); zero = false; }
+    else if (previewState === "low") { pct = 12; colorClass = "red"; remaining = Math.max(1, Math.round(allowance * 0.12)); zero = false; }
+    else if (previewState === "zero") { pct = 0; colorClass = "red"; remaining = 0; zero = true; }
+  }
   const packages =
     config?.packages && config.packages.length
       ? config.packages
@@ -120,6 +132,26 @@ export default function AIPowerHud() {
 
   return (
     <div className={`aipwr-root aipwr-${colorClass}`}>
+      {isPreview && (
+        <div className="aipwr-preview-strip">
+          <span className="aipwr-preview-tag">PREVIEW</span>
+          {[
+            ["live", "Live"],
+            ["full", "Full"],
+            ["warm", "Warm"],
+            ["low", "Low"],
+            ["zero", "Zero"],
+          ].map(([st, label]) => (
+            <button
+              key={st}
+              className={(st === "live" && !previewState) || previewState === st ? "on" : ""}
+              onClick={() => setPreviewState(st === "live" ? null : st)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {!expanded && (
         <button
           className="aipwr-compact"

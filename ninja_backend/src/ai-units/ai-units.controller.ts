@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body, Param, UseGuards, ForbiddenException, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, ForbiddenException, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AiUnitsService } from './ai-units.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -46,6 +46,24 @@ export class AiUnitsController {
       throw new ForbiddenException('Admin only');
     }
     return this.aiUnits.setConfig(body);
+  }
+
+  /** Admin: is the floating-HUD preview enabled on the calling admin's account? */
+  @Get('admin/preview')
+  async getPreview(@CurrentUser() user: any) {
+    if (!ADMIN_ROLES.includes(user?.role)) {
+      throw new ForbiddenException('Admin only');
+    }
+    return { enabled: await this.aiUnits.isAdminPreview(user?.id) };
+  }
+
+  /** Admin: toggle the floating-HUD preview on the calling admin's OWN account. */
+  @Post('admin/preview')
+  setPreview(@CurrentUser() user: any, @Body() body: any) {
+    if (!ADMIN_ROLES.includes(user?.role)) {
+      throw new ForbiddenException('Admin only');
+    }
+    return this.aiUnits.setAdminPreview(user?.id, !!body?.enabled);
   }
 
   /** Admin: AI-Units snapshot resolved from a customer's (owner) user id. */
