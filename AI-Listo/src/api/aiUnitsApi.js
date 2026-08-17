@@ -14,6 +14,12 @@ const aiUnitsApi = {
       method: "GET",
     });
   },
+  // Admin: AI Units snapshot for a customer, resolved from their (owner) user id.
+  getAdminByUser(userId) {
+    return apiClient.request(`/ai-units/admin/by-user/${encodeURIComponent(userId)}`, {
+      method: "GET",
+    });
+  },
 };
 
 export default aiUnitsApi;

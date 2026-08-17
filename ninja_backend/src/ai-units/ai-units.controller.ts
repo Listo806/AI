@@ -48,6 +48,15 @@ export class AiUnitsController {
     return this.aiUnits.setConfig(body);
   }
 
+  /** Admin: AI-Units snapshot resolved from a customer's (owner) user id. */
+  @Get('admin/by-user/:userId')
+  adminViewByUser(@CurrentUser() user: any, @Param('userId', ParseUUIDPipe) userId: string) {
+    if (!ADMIN_ROLES.includes(user?.role)) {
+      throw new ForbiddenException('Admin only');
+    }
+    return this.aiUnits.getAdminViewByUser(userId);
+  }
+
   /** Admin: full AI-Units snapshot for a team (customer support). */
   @Get('admin/:teamId')
   adminView(@CurrentUser() user: any, @Param('teamId', ParseUUIDPipe) teamId: string) {
