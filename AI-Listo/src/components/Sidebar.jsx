@@ -115,6 +115,11 @@ export default function Sidebar({
   // true  = render the same locked/unpaid presentation a normal customer sees
   const [previewWorkspacesAsCustomer, setPreviewWorkspacesAsCustomer] = useState(false);
 
+  // Inline "Add to My Plan" feedback shown in the workspace flyout. Cleared each
+  // time a different workspace is hovered so a stale message never lingers.
+  const [wsError, setWsError] = useState(null);
+  const [wsBusy, setWsBusy] = useState(false);
+
   // LIVE per-workspace entitlement for the sidebar badges. Keyed by backend catalog
   // id (e.g. "financial_services"). ACTIVE (green) when the team owns the $97 add-on,
   // LOCKED (red) otherwise. Sourced from the real entitlement endpoints, never
@@ -192,16 +197,27 @@ export default function Sidebar({
   // is unavailable.
   const buyWorkspace = useCallback(
     async (ws) => {
+      // The sidebar workspace id must match the backend catalog id. The only
+      // divergence is Financial (sidebar "financial" -> catalog "financial_services").
+      const catalogId = ws.id === "financial" ? "financial_services" : ws.id;
+      setWsError(null);
+      setWsBusy(true);
       try {
-        const intent = await workspaceApi.purchase(ws.id);
+        const intent = await workspaceApi.purchase(catalogId);
         if (intent?.alreadyEntitled) {
           await loadAccess();
+          setWsError(null);
           return;
         }
-        const ok = intent?.priceId && (await ensurePaddle());
+        if (!intent?.priceId) {
+          setWsError(
+            "Workspace checkout is not available yet. Please try again shortly.",
+          );
+          return;
+        }
+        const ok = await ensurePaddle();
         if (!ok) {
-          const addon = FEATURE_TO_ADDON[ws.feature];
-          if (addon) openFeatureAddOns(addon);
+          setWsError("Checkout could not open right now. Please try again in a moment.");
           return;
         }
         openWorkspaceCheckout({
@@ -211,12 +227,24 @@ export default function Sidebar({
         });
         scheduleAccessRefresh();
       } catch (e) {
-        const addon = FEATURE_TO_ADDON[ws.feature];
-        if (addon) openFeatureAddOns(addon);
+        // Never a dead click: surface why checkout could not open (unknown
+        // workspace, admin-only billing, price not configured, etc.).
+        setWsError(
+          e?.message ||
+            "Could not open the workspace checkout. Please try again shortly.",
+        );
+      } finally {
+        setWsBusy(false);
       }
     },
     [ensurePaddle, loadAccess, scheduleAccessRefresh],
   );
+
+  // Reset the Add-to-Plan feedback whenever a different workspace is hovered.
+  useEffect(() => {
+    setWsError(null);
+    setWsBusy(false);
+  }, [hoveredWorkspace?.id]);
 
   const workspaceItems = [
     {
@@ -1184,6 +1212,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
 
                 <button
                   type="button"
+                  disabled={wsBusy && !isWorkspaceActive(hoveredWorkspace)}
                   className={
                     isWorkspaceActive(hoveredWorkspace)
                       ? "is-active"
@@ -1207,14 +1236,22 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                     ? hoveredWorkspace.path
                       ? `Open ${hoveredWorkspace.label}`
                       : `${hoveredWorkspace.label} Active`
-                    : "Add to My Plan"}
+                    : wsBusy
+                      ? "Opening checkout…"
+                      : "Add to My Plan"}
                 </button>
 
-                <p className="crm-workspace-price-helper">
-                  {isWorkspaceActive(hoveredWorkspace)
-                    ? "This workspace is active on your account."
-                    : "Add this workspace to your plan."}
-                </p>
+                {wsError && !isWorkspaceActive(hoveredWorkspace) ? (
+                  <p className="crm-workspace-price-helper" style={{ color: "#dc2626" }}>
+                    {wsError}
+                  </p>
+                ) : (
+                  <p className="crm-workspace-price-helper">
+                    {isWorkspaceActive(hoveredWorkspace)
+                      ? "This workspace is active on your account."
+                      : "Add this workspace to your plan."}
+                  </p>
+                )}
               </div>
 
             </div>

@@ -55,6 +55,18 @@ export const WORKSPACE_CATALOG: WorkspaceDef[] = [
     featureKey: 'projectsWorkspace',
     route: '/dashboard/projects-workspace',
   },
+  {
+    id: 'ecommerce',
+    name: 'E-Commerce Workspace',
+    featureKey: 'ecommerceWorkspace',
+    route: '/dashboard/e-commerce-workspace',
+  },
+  {
+    id: 'real-estate',
+    name: 'Real Estate Workspace',
+    featureKey: 'realEstateWorkspace',
+    route: '/dashboard/properties',
+  },
 ];
 
 const BY_ID: Record<string, WorkspaceDef> = WORKSPACE_CATALOG.reduce(
