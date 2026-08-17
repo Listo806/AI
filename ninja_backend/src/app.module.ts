@@ -39,6 +39,7 @@ import { MarketingModule } from "./marketing/marketing.module";
 import { EcommerceWorkspaceModule } from './ecommerce/ecommerce-workspace.module';
 import { ProjectsModule } from './projects/projects.module';
 import { LeadgenModule } from './leadgen/leadgen.module';
+import { AiUnitsModule } from './ai-units/ai-units.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { LeadgenModule } from './leadgen/leadgen.module';
     MarketingModule,
     ProjectsModule,
     LeadgenModule,
+    AiUnitsModule,
   ],
   controllers: [AppController],
 })
