@@ -431,9 +431,11 @@ export default function Sidebar({
   // everything; Lead Generator uses its own add-on entitlement for now; every other
   // paid workspace is ACTIVE only when the team owns the $97 add-on.
   const isWorkspaceActive = (workspace) => {
-    if (workspace?.id === "team") {
-      return true;
-    }
+    // GLOBAL RULE: every paid Workspace (Team included) is LOCKED unless the account
+    // holds a verified $97 entitlement. No base plan (Free/Solo/Business/Scale) ever
+    // includes a Workspace. Platform support (super_admin) sees everything for
+    // support, except while previewing the customer experience.
+
     // Admin "Preview as Customer" QA mode: render every paid workspace exactly as
     // an unpaid customer sees it, regardless of the admin's real entitlement. This
     // is local, view-only state and never changes what real customers experience.
@@ -848,10 +850,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       onMouseEnter={() => setHoveredWorkspace(workspace)}
                       onFocus={() => setHoveredWorkspace(workspace)}
                       onClick={() => {
-                        // Every workspace opens its route; WorkspaceGate + the backend
-                        // guard enforce access and show the $97 add-on purchase when the
-                        // team is not entitled.
-                        if (workspace.path) {
+                        // GLOBAL RULE: a LOCKED workspace never navigates. Clicking it
+                        // only opens the hover card (with its "Add to My Plan" $97 CTA).
+                        // Only an ACTIVE (purchased/entitled) workspace opens its route.
+                        if (isWorkspaceActive(workspace) && workspace.path) {
                           window.location.href = workspace.path;
                           return;
                         }

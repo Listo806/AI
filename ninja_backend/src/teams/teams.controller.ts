@@ -24,6 +24,8 @@ import {
 import { TeamsService } from "./teams.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { VaRestrictionGuard } from "../auth/guards/va-restriction.guard";
+import { WorkspaceLockGuard } from "../workspaces/workspace-lock.guard";
+import { RequiresWorkspace } from "../workspaces/requires-workspace.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
 import { CreateTeamDto } from "./dto/create-team.dto";
@@ -33,7 +35,10 @@ import { NotificationsService } from "../notifications/notifications.service";
 @ApiTags("teams")
 @ApiBearerAuth("JWT-auth")
 @Controller("teams")
-@UseGuards(JwtAuthGuard, VaRestrictionGuard)
+// WorkspaceLockGuard runs on every route but only enforces where a route is
+// marked @RequiresWorkspace('team') (the Team WORKSPACE data endpoints below).
+// Base team management (create/members/invites/seats) stays plan-independent.
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, WorkspaceLockGuard)
 export class TeamsController {
   constructor(
     private readonly teamsService: TeamsService,
@@ -248,6 +253,7 @@ export class TeamsController {
     return { message: "Member removed successfully" };
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/dashboard")
   async getDashboard(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
@@ -307,6 +313,7 @@ export class TeamsController {
     };
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/ai-insights")
   async getAIInsights(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
@@ -314,6 +321,7 @@ export class TeamsController {
     return this.teamsService.getAIInsights(teamId);
   }
 
+  @RequiresWorkspace('team')
   @Post(":id/ai-insights/refresh")
   async refreshAIInsights(
     @Param("id") teamId: string,
@@ -324,6 +332,7 @@ export class TeamsController {
     return this.teamsService.refreshAIInsights(teamId, user.id);
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/activities/export")
   async exportActivities(
     @Param("id") teamId: string,
@@ -357,6 +366,7 @@ export class TeamsController {
     return res.status(200).send(csv);
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/activities")
   async getActivities(
     @Param("id") teamId: string,
@@ -427,6 +437,7 @@ export class TeamsController {
      TEAM WORKSPACE — PROJECT / TASK / TIME DATA
      ===================================================== */
 
+  @RequiresWorkspace('team')
   @Get(":id/workspace")
   async getWorkspaceOverview(
     @Param("id") teamId: string,
@@ -436,6 +447,7 @@ export class TeamsController {
     return this.teamsService.getWorkspaceOverview(teamId, user.id);
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/workspace/tasks")
   async getWorkspaceTasks(
     @Param("id") teamId: string,
@@ -446,6 +458,7 @@ export class TeamsController {
     return this.teamsService.getWorkspaceTasks(teamId, user.id, query);
   }
 
+  @RequiresWorkspace('team')
   @Post(":id/workspace/tasks")
   async createWorkspaceTask(
     @Param("id") teamId: string,
@@ -456,6 +469,7 @@ export class TeamsController {
     return this.teamsService.createWorkspaceTask(teamId, user.id, body);
   }
 
+  @RequiresWorkspace('team')
   @Patch(":id/workspace/tasks/:taskId")
   async updateWorkspaceTask(
     @Param("id") teamId: string,
@@ -467,6 +481,7 @@ export class TeamsController {
     return this.teamsService.updateWorkspaceTask(teamId, taskId, user.id, body);
   }
 
+  @RequiresWorkspace('team')
   @Delete(":id/workspace/tasks/:taskId")
   async deleteWorkspaceTask(
     @Param("id") teamId: string,
@@ -477,6 +492,7 @@ export class TeamsController {
     return this.teamsService.deleteWorkspaceTask(teamId, taskId, user.id);
   }
 
+  @RequiresWorkspace('team')
   @Post(":id/workspace/tasks/:taskId/time")
   async logWorkspaceTaskTime(
     @Param("id") teamId: string,
@@ -489,6 +505,7 @@ export class TeamsController {
   }
 
 
+  @RequiresWorkspace('team')
   @Get(":id/workspace/time-tracking")
   async getWorkspaceTimeTracking(
     @Param("id") teamId: string,
@@ -499,6 +516,7 @@ export class TeamsController {
     return this.teamsService.getWorkspaceTimeTracking(teamId, query);
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/workspace/reports")
   async getWorkspaceReports(
     @Param("id") teamId: string,
@@ -509,6 +527,7 @@ export class TeamsController {
     return this.teamsService.getWorkspaceReports(teamId, query);
   }
 
+  @RequiresWorkspace('team')
   @Get(":id/workspace/projects")
   async getWorkspaceProjects(
     @Param("id") teamId: string,
@@ -518,6 +537,7 @@ export class TeamsController {
     return this.teamsService.getWorkspaceProjects(teamId);
   }
 
+  @RequiresWorkspace('team')
   @Post(":id/workspace/projects")
   async createWorkspaceProject(
     @Param("id") teamId: string,
@@ -528,7 +548,8 @@ export class TeamsController {
     return this.teamsService.createWorkspaceProject(teamId, user.id, body);
   }
 
-    @Get(":id/workspace/projects/:projectId")
+  @RequiresWorkspace('team')
+  @Get(":id/workspace/projects/:projectId")
   async getWorkspaceProjectDetail(
     @Param("id") teamId: string,
     @Param("projectId") projectId: string,
@@ -542,6 +563,7 @@ export class TeamsController {
     );
   }
 
+  @RequiresWorkspace('team')
   @Patch(":id/workspace/projects/:projectId")
   async updateWorkspaceProject(
     @Param("id") teamId: string,
@@ -559,6 +581,7 @@ export class TeamsController {
     );
   }
 
+  @RequiresWorkspace('team')
   @Delete(":id/workspace/projects/:projectId")
   async deleteWorkspaceProject(
     @Param("id") teamId: string,

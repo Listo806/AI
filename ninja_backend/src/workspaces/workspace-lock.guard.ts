@@ -9,12 +9,12 @@ import { WORKSPACE_KEY } from './requires-workspace.decorator';
 import { WorkspaceEntitlementsService } from './workspace-entitlements.service';
 import { isWorkspaceLocked, getWorkspace } from './workspace-registry';
 
-// Enforces the paid Workspace add-on for a controller marked with
-// @RequiresWorkspace(id). It is a NO-OP unless that workspace's lock is turned on
-// (via WORKSPACE_LOCKED_IDS), so it changes nothing for existing customers until
-// the client explicitly enables the lock. When enabled, the caller's team must
-// hold an active entitlement for that workspace; platform support (super_admin) is
-// always allowed.
+// Enforces the paid Workspace add-on for a controller/route marked with
+// @RequiresWorkspace(id). Every paid Workspace is LOCKED by default (see
+// isWorkspaceLocked), so the caller's team MUST hold an active entitlement for that
+// workspace to pass. Workspaces are never included in the base CRM plan. Platform
+// support (super_admin) is always allowed. The WORKSPACE_UNLOCKED_IDS escape hatch
+// can force-open a specific workspace operationally if ever required.
 @Injectable()
 export class WorkspaceLockGuard implements CanActivate {
   constructor(
@@ -37,7 +37,9 @@ export class WorkspaceLockGuard implements CanActivate {
     const role = String(user?.role || '').toLowerCase();
     if (role === 'super_admin') return true; // platform support
 
-    const teamId = user?.teamId || null;
+    // Resolve the team owner-aware: owners often have users.team_id = NULL and own
+    // the team via teams.owner_id, so never key on user.teamId alone.
+    const teamId = await this.entitlements.resolveTeamId(user);
     const has = teamId
       ? await this.entitlements.hasActiveEntitlement(teamId, workspaceId)
       : false;
