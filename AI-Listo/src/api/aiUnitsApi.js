@@ -20,6 +20,16 @@ const aiUnitsApi = {
       method: "GET",
     });
   },
+  // Admin: read / toggle the floating-HUD preview on the calling admin's account.
+  getPreview() {
+    return apiClient.request(`/ai-units/admin/preview`, { method: "GET" });
+  },
+  setPreview(enabled) {
+    return apiClient.request(`/ai-units/admin/preview`, {
+      method: "POST",
+      body: JSON.stringify({ enabled }),
+    });
+  },
 };
 
 export default aiUnitsApi;
