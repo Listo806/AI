@@ -4662,24 +4662,44 @@ body .leads-page {
 }
 
 @media (max-width: 1024px) {
+  /*
+   * Initial mobile screen = Insights.
+   * mobile-insights-screen currently lives inside conversation-panel,
+   * so the conversation-panel must remain mounted/visible in this state.
+   */
   .leads-page .mobile-lead-screen-insights .lead-sidebar,
-  .leads-page .mobile-lead-screen-insights .conversation-panel {
+  .leads-page .mobile-lead-screen-insights .insights-panel {
     display: none;
   }
 
-  .leads-page .mobile-lead-screen-insights .insights-panel {
+  .leads-page .mobile-lead-screen-insights .conversation-panel {
     display: block;
     width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
   }
 
-  .leads-page .mobile-lead-screen-insights .desktop-insights-stack {
+  /* Hide the lead-detail sections; show only Intelligence on first load. */
+  .leads-page .mobile-lead-screen-insights .mobile-lead-profile-card,
+  .leads-page .mobile-lead-screen-insights .mobile-lead-performance-card,
+  .leads-page .mobile-lead-screen-insights .mobile-next-best-action-card,
+  .leads-page .mobile-lead-screen-insights .mobile-lead-activity-card,
+  .leads-page .mobile-lead-screen-insights .desktop-conversation-stack {
     display: none;
+  }
+
+  .leads-page .mobile-lead-screen-insights .mobile-lead-detail-screen {
+    display: block;
+    width: 100%;
   }
 
   .leads-page .mobile-insights-screen {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    width: 100%;
   }
 
   .leads-page .mobile-insights-topbar {

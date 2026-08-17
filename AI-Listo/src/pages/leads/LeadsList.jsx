@@ -285,7 +285,7 @@ export default function LeadsPage() {
   };
   const [showFilters, setShowFilters] = useState(false);
   const [showMobileMore, setShowMobileMore] = useState(false);
-  const [mobileLeadScreen, setMobileLeadScreen] = useState("inbox");
+  const [mobileLeadScreen, setMobileLeadScreen] = useState("insights");
   const [mobileHandlingMode, setMobileHandlingMode] = useState("ai");
   const [mobileInboxFilter, setMobileInboxFilter] = useState("all");
   const [mobileConversationTab, setMobileConversationTab] = useState("conversation");
