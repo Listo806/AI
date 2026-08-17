@@ -346,7 +346,9 @@ export default function StartTrial() {
 
   return (
     <main className="cxs-page">
-      <section className="cxs-card">
+      {/* Card is a <div>, not a <section>: a global `section { padding:0!important }`
+          rule elsewhere in the app would otherwise zero out the card padding. */}
+      <div className="cxs-card">
         <div className="cxs-brand">
           <img src={headlogoImg} alt="Cortexa" />
         </div>
@@ -473,7 +475,7 @@ export default function StartTrial() {
             </p>
           </div>
         </form>
-      </section>
+      </div>
     </main>
   );
 }
