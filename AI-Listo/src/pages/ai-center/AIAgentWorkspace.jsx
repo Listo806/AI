@@ -24,7 +24,6 @@ const SUGGESTED_COMMANDS = [
   "suggestDraftWhatsappFollowUp",
   "suggestInactiveDeals",
   "suggestAppointmentsToday",
-  "suggestPropertiesNoActivity",
   "suggestCreateTasksOverdue",
   "suggestCrmSummaryToday",
   "suggestWeeklySalesReport",
@@ -262,7 +261,7 @@ export default function AIAgentWorkspace() {
 
   /* ---------------- Send ---------------- */
   const handleSend = useCallback(
-    async (overrideText) => {
+    async (overrideText, options = {}) => {
       const text = String(overrideText ?? input).trim();
       if ((!text && attachments.length === 0) || sending) return;
 
@@ -290,6 +289,8 @@ export default function AIAgentWorkspace() {
             message: text,
             sessionId: activeSessionId || undefined,
             attachments: sentAttachments,
+            activeContext:
+              options.activeContext || selectedMobileContext || undefined,
           }),
         );
 
@@ -332,7 +333,15 @@ export default function AIAgentWorkspace() {
         setSending(false);
       }
     },
-    [input, attachments, sending, activeSessionId, loadSessions, t],
+    [
+      input,
+      attachments,
+      sending,
+      activeSessionId,
+      selectedMobileContext,
+      loadSessions,
+      t,
+    ],
   );
 
   /* ---------------- File attachment ---------------- */
@@ -411,7 +420,7 @@ export default function AIAgentWorkspace() {
   const handleMobileContext = useCallback(
     (context) => {
       setSelectedMobileContext(context.id);
-      handleSend(context.prompt);
+      handleSend(context.prompt, { activeContext: context.id });
     },
     [handleSend],
   );

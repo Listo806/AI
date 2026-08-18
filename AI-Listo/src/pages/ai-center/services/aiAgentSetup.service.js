@@ -190,8 +190,7 @@ export const aiAgentSetupService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: message }),
     });
-    const content =
-      r?.reply || r?.note || "The AI Agent returned no response.";
+    const content = r?.reply || r?.note || "The AI Agent returned no response.";
     return {
       success: true,
       answer: content,
@@ -234,12 +233,12 @@ export const aiAgentSetupService = {
     });
   },
 
+  // payload may include activeContext (leads, pipeline, contacts, etc.).
+  // Backend uses it only as a CRM module focus;
+  // industry context remains account-driven.
   sendChatMessage(payload) {
     return request("/ai-center/agent/chat/messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(payload),
     });
   },

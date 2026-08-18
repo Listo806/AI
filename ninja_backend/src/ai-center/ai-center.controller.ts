@@ -404,6 +404,7 @@ export class AiCenterController {
       attachments?: any[];
       conversationId?: string;
       workspaceId?: string;
+      activeContext?: string;
     },
   ) {
     // Meter AI Units for this dashboard AI action: stop when a Free account is
@@ -660,6 +661,7 @@ export class AiCenterController {
       message: string;
       sessionId?: string;
       attachments?: any[];
+      activeContext?: string;
     },
   ) {
     return this.service.sendAgentChatMessage(user.teamId, user.id, body);

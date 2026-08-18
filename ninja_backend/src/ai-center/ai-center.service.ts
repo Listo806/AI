@@ -158,8 +158,11 @@ export class AiCenterService {
 
     if (
       value.includes("property") ||
+      value.includes("properties") ||
       value.includes("listing") ||
-      value.includes("recommend")
+      value.includes("listings") ||
+      value.includes("showing") ||
+      value.includes("showings")
     ) {
       return {
         key: "propertyRecommendations",
@@ -615,9 +618,10 @@ export class AiCenterService {
       name: r?.name ?? "Default",
       updated_at: r?.updated_at ?? null,
       rule_summary: {
-        budget_constraint: "Property price <= lead parsed_budget_max",
+        budget_constraint:
+          "Use the customer's configured qualification rules and available CRM fields.",
         location_constraint:
-          "Property city must match lead parsed_city (case-insensitive)",
+          "Use location only when the customer's workflow or CRM data requires it.",
         booking_enabled: connectedCalendars.length > 0,
         escalation_thresholds: [
           "Lead requests human (agent_request intent)",
@@ -850,10 +854,30 @@ export class AiCenterService {
     const behaviorConfigured = behaviorResult.rows.length > 0;
     const automationsConfigured = automationsResult.rows.length > 0;
 
+    const activeWorkspaceRows = await this.safeAgentRows(
+      `
+      SELECT DISTINCT workspace_id
+      FROM workspace_entitlements
+      WHERE team_id = $1
+        AND status = 'active'
+      `,
+      [teamId],
+      "setup_workspace_entitlements",
+    );
+
+    const activeWorkspaceIds = activeWorkspaceRows.map((row: any) =>
+      String(row.workspace_id || "").trim().toLowerCase(),
+    );
+
+    const businessProfileRow = businessProfileResult.rows[0] || null;
+    const requiresRealEstateSetup =
+      activeWorkspaceIds.includes("real-estate") ||
+      this.isRealEstateBusinessType(businessProfileRow?.business_type);
+
     const requiredSteps = [
       whatsappConnected,
       businessProfileCompleted,
-      propertyCount > 0,
+      ...(requiresRealEstateSetup ? [propertyCount > 0] : []),
       appointmentRulesCompleted,
       behaviorConfigured,
       automationsConfigured,
@@ -864,13 +888,14 @@ export class AiCenterService {
     const launchUnlocked = completedBeforeLaunch === requiredSteps.length;
     const launched = Boolean(config.launched && launchUnlocked);
     const completedSteps = completedBeforeLaunch + (launched ? 1 : 0);
-    const progress = Math.round((completedSteps / 8) * 100);
+    const totalSteps = requiredSteps.length + 1;
+    const progress = Math.round((completedSteps / totalSteps) * 100);
 
     return {
       isSetupComplete: launched,
       agentStatus: config.paused ? "paused" : launched ? "active" : "setup",
       completedSteps,
-      totalSteps: 8,
+      totalSteps,
       progress,
       whatsapp: {
         connected: whatsappConnected,
@@ -2599,6 +2624,384 @@ export class AiCenterService {
     return `${Math.floor(seconds / 86400)}d ago`;
   }
 
+
+  private normalizeAgentContext(value: unknown): string | null {
+    const normalized = String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/_/g, "-");
+
+    const allowed = new Set([
+      "leads",
+      "pipeline",
+      "contacts",
+      "analytics",
+      "appointments",
+      "whatsapp",
+      "tasks",
+      "revenue",
+      "automations",
+      "more",
+      "real-estate",
+    ]);
+
+    return allowed.has(normalized) ? normalized : null;
+  }
+
+  private detectAgentContext(message: string): string | null {
+    const value = String(message || "").toLowerCase();
+
+    if (/\b(property|properties|listing|listings|showing|showings|buyer|buyers|seller|sellers)\b/.test(value)) {
+      return "real-estate";
+    }
+    if (/\b(whatsapp|conversation|conversations|message|messages|reply|replies)\b/.test(value)) {
+      return "whatsapp";
+    }
+    if (/\b(appointment|appointments|calendar|booking|bookings|schedule)\b/.test(value)) {
+      return "appointments";
+    }
+    if (/\b(task|tasks|todo|to-do|overdue)\b/.test(value)) {
+      return "tasks";
+    }
+    if (/\b(revenue|forecast|forecasted|mrr|arr|income|sales value)\b/.test(value)) {
+      return "revenue";
+    }
+    if (/\b(automation|automations|workflow|workflows|trigger)\b/.test(value)) {
+      return "automations";
+    }
+    if (/\b(analytics|metric|metrics|performance|dashboard|report|reports)\b/.test(value)) {
+      return "analytics";
+    }
+    if (/\b(contact|contacts|customer|customers)\b/.test(value)) {
+      return "contacts";
+    }
+    if (/\b(pipeline|deal|deals|stage|stages|stuck)\b/.test(value)) {
+      return "pipeline";
+    }
+    if (/\b(lead|leads|prospect|prospects)\b/.test(value)) {
+      return "leads";
+    }
+
+    return null;
+  }
+
+  private isRealEstateBusinessType(value: unknown): boolean {
+    const normalized = String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[_-]+/g, " ");
+
+    return (
+      normalized === "real estate" ||
+      normalized.includes("real estate") ||
+      normalized.includes("realtor") ||
+      normalized.includes("property management")
+    );
+  }
+
+  private async safeAgentRows(
+    sql: string,
+    params: any[],
+    label: string,
+  ): Promise<any[]> {
+    try {
+      const result = await this.db.query(sql, params);
+      return result.rows || [];
+    } catch (error: any) {
+      console.warn(`AI CONTEXT ${label} LOAD FAILED:`, error?.message || error);
+      return [];
+    }
+  }
+
+  private async loadCoreAgentContext(params: {
+    teamId: string;
+    userId?: string | null;
+    activeContext: string | null;
+    message: string;
+    attachments: any[];
+  }) {
+    const { teamId, userId, activeContext, message, attachments } = params;
+
+    const [profileRows, teamRows, workspaceRows, plan] = await Promise.all([
+      this.safeAgentRows(
+        `
+        SELECT
+          business_name,
+          business_type,
+          description,
+          website,
+          email,
+          phone,
+          city,
+          state,
+          country,
+          service_areas,
+          specialties,
+          languages,
+          timezone,
+          currency
+        FROM ai_agent_business_profiles
+        WHERE team_id = $1
+        LIMIT 1
+        `,
+        [teamId],
+        "business_profile",
+      ),
+      this.safeAgentRows(
+        `
+        SELECT id, name, whatsapp_phone, created_at
+        FROM teams
+        WHERE id = $1
+        LIMIT 1
+        `,
+        [teamId],
+        "team",
+      ),
+      this.safeAgentRows(
+        `
+        SELECT DISTINCT workspace_id
+        FROM workspace_entitlements
+        WHERE team_id = $1
+          AND status = 'active'
+        ORDER BY workspace_id
+        `,
+        [teamId],
+        "workspace_entitlements",
+      ),
+      this.usage.resolveTeamPlan(teamId),
+    ]);
+
+    const businessProfile = profileRows[0] || null;
+    const team = teamRows[0] || null;
+    const activeWorkspaceIds = workspaceRows.map((row: any) =>
+      String(row.workspace_id || "").trim().toLowerCase(),
+    );
+
+    const explicitRealEstateRequest =
+      activeContext === "real-estate" ||
+      /\b(property|properties|listing|listings|showing|showings|buyer|buyers|seller|sellers)\b/i.test(
+        message,
+      );
+
+    const realEstateEnabled =
+      activeWorkspaceIds.includes("real-estate") ||
+      this.isRealEstateBusinessType(businessProfile?.business_type);
+
+    const allowRealEstateContext = explicitRealEstateRequest || realEstateEnabled;
+
+    const context: Record<string, any> = {
+      account: {
+        teamId,
+        userId: userId || null,
+        teamName: team?.name || null,
+        businessProfile,
+        plan: {
+          id: plan?.planId || null,
+          isFree: Boolean(plan?.isFree),
+          paid: Boolean(plan?.paid),
+        },
+        activeWorkspaceIds,
+      },
+      request: {
+        activeContext,
+        detectedContext: this.detectAgentContext(message),
+        attachments,
+      },
+    };
+
+    const needs = new Set<string>();
+    if (activeContext) needs.add(activeContext);
+
+    const detected = this.detectAgentContext(message);
+    if (detected) needs.add(detected);
+
+    if (needs.size === 0) {
+      needs.add("analytics");
+    }
+
+    // Pipeline questions commonly require leads + deals together.
+    if (needs.has("pipeline")) {
+      needs.add("leads");
+    }
+
+    if (needs.has("revenue") || needs.has("analytics")) {
+      needs.add("pipeline");
+    }
+
+    if (needs.has("leads")) {
+      context.leads = await this.safeAgentRows(
+        `
+        SELECT id, name, email, phone, status, notes, source, created_at, updated_at
+        FROM leads
+        WHERE team_id = $1
+        ORDER BY updated_at DESC NULLS LAST, created_at DESC
+        LIMIT 50
+        `,
+        [teamId],
+        "leads",
+      );
+    }
+
+    if (needs.has("pipeline") || needs.has("revenue") || needs.has("analytics")) {
+      context.pipeline = await this.safeAgentRows(
+        `
+        SELECT id, stage, value, name, notes, created_at, updated_at
+        FROM deals
+        WHERE team_id = $1
+        ORDER BY updated_at DESC NULLS LAST, created_at DESC
+        LIMIT 50
+        `,
+        [teamId],
+        "pipeline",
+      );
+    }
+
+    if (needs.has("contacts")) {
+      context.contacts = await this.safeAgentRows(
+        `
+        SELECT to_jsonb(c) AS item
+        FROM contacts c
+        WHERE c.team_id = $1
+        ORDER BY c.created_at DESC
+        LIMIT 40
+        `,
+        [teamId],
+        "contacts",
+      ).then((rows) => rows.map((row: any) => row.item));
+    }
+
+    if (needs.has("tasks")) {
+      context.tasks = await this.safeAgentRows(
+        `
+        SELECT id, lead_id, title, status, due_date, created_at
+        FROM lead_tasks
+        WHERE team_id = $1
+        ORDER BY
+          CASE WHEN status IN ('completed', 'cancelled') THEN 1 ELSE 0 END,
+          due_date ASC NULLS LAST,
+          created_at DESC
+        LIMIT 50
+        `,
+        [teamId],
+        "tasks",
+      );
+    }
+
+    if (needs.has("appointments")) {
+      context.appointments = await this.safeAgentRows(
+        `
+        SELECT id, action, lead_id, channel, outcome, metadata, created_at
+        FROM ai_activity
+        WHERE team_id = $1
+          AND (
+            action ILIKE '%appointment%'
+            OR action ILIKE '%book%'
+            OR COALESCE(metadata::text, '') ILIKE '%calendar%'
+          )
+        ORDER BY created_at DESC
+        LIMIT 40
+        `,
+        [teamId],
+        "appointments",
+      );
+    }
+
+    if (needs.has("whatsapp")) {
+      context.whatsapp = await this.safeAgentRows(
+        `
+        SELECT to_jsonb(c) AS item
+        FROM whatsapp_qr_conversations c
+        WHERE c.team_id = $1
+        ORDER BY c.created_at DESC
+        LIMIT 30
+        `,
+        [teamId],
+        "whatsapp_qr",
+      ).then((rows) => rows.map((row: any) => row.item));
+
+      context.communicationActivity = await this.safeAgentRows(
+        `
+        SELECT id, action, lead_id, channel, outcome, metadata, created_at
+        FROM ai_activity
+        WHERE team_id = $1
+          AND (
+            channel = 'whatsapp'
+            OR action ILIKE '%whatsapp%'
+            OR action ILIKE '%message%'
+            OR action ILIKE '%reply%'
+          )
+        ORDER BY created_at DESC
+        LIMIT 40
+        `,
+        [teamId],
+        "communication_activity",
+      );
+    }
+
+    if (needs.has("automations")) {
+      context.automations = await this.safeAgentRows(
+        `
+        SELECT *
+        FROM ai_agent_automations
+        WHERE team_id = $1
+        LIMIT 1
+        `,
+        [teamId],
+        "automations",
+      );
+    }
+
+    if (needs.has("analytics") || needs.has("revenue")) {
+      const analyticsRows = await this.safeAgentRows(
+        `
+        SELECT
+          (SELECT COUNT(*)::int FROM leads WHERE team_id = $1) AS total_leads,
+          (SELECT COUNT(*)::int FROM deals WHERE team_id = $1) AS total_deals,
+          (
+            SELECT COALESCE(SUM(value), 0)
+            FROM deals
+            WHERE team_id = $1
+          ) AS total_pipeline_value,
+          (
+            SELECT COUNT(*)::int
+            FROM lead_tasks
+            WHERE team_id = $1
+              AND COALESCE(status, '') NOT IN ('completed', 'cancelled')
+          ) AS open_tasks
+        `,
+        [teamId],
+        "analytics_summary",
+      );
+      context.analytics = analyticsRows[0] || {};
+    }
+
+    if (allowRealEstateContext && (needs.has("real-estate") || explicitRealEstateRequest)) {
+      context.realEstate = {
+        enabledByWorkspaceOrProfile: realEstateEnabled,
+        properties: await this.safeAgentRows(
+          `
+          SELECT id, title, city, price, created_at
+          FROM properties
+          WHERE team_id = $1
+          ORDER BY created_at DESC
+          LIMIT 30
+          `,
+          [teamId],
+          "real_estate_properties",
+        ),
+      };
+    }
+
+    return {
+      context,
+      activeWorkspaceIds,
+      businessProfile,
+      realEstateEnabled,
+      explicitRealEstateRequest,
+      allowRealEstateContext,
+    };
+  }
+
   async cortexaAgent({
     user,
     body,
@@ -2609,9 +3012,16 @@ export class AiCenterService {
       attachments?: any[];
       conversationId?: string;
       workspaceId?: string;
+      activeContext?: string;
     };
   }) {
-    const { message, attachments = [], conversationId, workspaceId } = body;
+    const {
+      message,
+      attachments = [],
+      conversationId,
+      workspaceId,
+      activeContext: rawActiveContext,
+    } = body;
 
     if (!message?.trim() && (!attachments || attachments.length === 0)) {
       throw new ForbiddenException("Message or attachment is required");
@@ -2643,46 +3053,23 @@ export class AiCenterService {
       },
     );
 
-    const leadsResult = await this.db.query(
-      `
-        SELECT id, name, email, phone, status, notes, source, created_at
-        FROM leads
-        WHERE team_id = $1
-        ORDER BY created_at DESC
-        LIMIT 30
-        `,
-      [teamId],
-    );
+    const activeContext =
+      this.normalizeAgentContext(rawActiveContext) ||
+      this.detectAgentContext(message);
 
-    const propertiesResult = await this.db.query(
-      `
-        SELECT id, title, city, price, created_at
-        FROM properties
-        WHERE team_id = $1
-        ORDER BY created_at DESC
-        LIMIT 20
-        `,
-      [teamId],
-    );
-
-    const pipelineResult = await this.db.query(
-      `
-        SELECT id, stage, value, name, notes
-        FROM deals
-        WHERE team_id = $1
-        LIMIT 30
-        `,
-      [teamId],
-    );
-
-    const crmContext = {
+    const {
+      context: crmContext,
+      activeWorkspaceIds,
+      businessProfile,
+      realEstateEnabled,
+      explicitRealEstateRequest,
+    } = await this.loadCoreAgentContext({
       teamId,
-      userId: user?.id,
+      userId: user?.id || null,
+      activeContext,
+      message,
       attachments,
-      leads: leadsResult.rows,
-      properties: propertiesResult.rows,
-      pipeline: pipelineResult.rows,
-    };
+    });
 
     /*
      * SYSTEM PROMPT
@@ -2700,24 +3087,36 @@ export class AiCenterService {
     const responseToneInstruction =
       toneInstructions[runtimeControls.responseTone] ||
       toneInstructions.professional;
+    const industryLabel =
+      businessProfile?.business_type &&
+      String(businessProfile.business_type).trim()
+        ? String(businessProfile.business_type).trim()
+        : "unknown / not provided";
+
     const systemPrompt = `
-You are CORTEXA AI, an AI agent built for real estate agents and teams.
+You are CORTEXA AI, the core business-neutral CRM intelligence agent for Cortexa.
 
-You help users:
-- manage leads
-- follow-ups
-- WhatsApp replies
-- appointments
-- pipelines
-- listings
-- ad copy
-- CRM analytics
+PRIMARY RULES:
+- Understand the authenticated customer's actual business from the account context and CRM data.
+- NEVER guess or assume the customer's industry.
+- NEVER default to real estate or any other industry.
+- Do not introduce properties, listings, buyers, sellers, showings, real-estate terminology, or real-estate workflows unless:
+  1) the customer explicitly asks about real estate, OR
+  2) Real Estate Workspace is active, OR
+  3) the customer's business profile/data clearly establishes a real-estate context.
+- One core agent serves every business. Industry/workspace specialization is optional context layered only when relevant.
+- Treat activeContext as a CRM module focus, not as an industry identity.
+- For data questions, answer from the supplied account CRM data. Do not invent records, counts, stages, customers, tasks, appointments, revenue, or activity.
+- If the required data is not supplied or is empty, say exactly what information is unavailable and what the customer should connect/create.
+- When the question spans modules (for example leads + pipeline), combine only the relevant supplied modules.
+- Keep tenant data isolated to the authenticated team context.
 
-Only answer using available CRM data when data is required.
-
-If data is missing:
-- explain exactly what is missing
-- explain what the user should connect or create
+CURRENT ACCOUNT:
+- Business industry/type: ${industryLabel}
+- Active paid Workspaces: ${JSON.stringify(activeWorkspaceIds)}
+- Active CRM context: ${activeContext || "general"}
+- Real Estate Workspace/profile enabled: ${realEstateEnabled ? "yes" : "no"}
+- Explicit real-estate request: ${explicitRealEstateRequest ? "yes" : "no"}
 
 Communication style:
 ${responseToneInstruction}
@@ -2725,8 +3124,8 @@ ${responseToneInstruction}
 Enabled capabilities:
 ${JSON.stringify(runtimeControls.capabilities)}
 
-Be direct, professional, and action-oriented.
-Always give clear next steps.
+Be direct, professional, concise, and action-oriented.
+Give clear next steps when useful.
 `;
 
     /*
@@ -2798,6 +3197,7 @@ Always give clear next steps.
         JSON.stringify({
           message,
           conversationId,
+          activeContext,
         }),
       ],
     );
@@ -2909,7 +3309,7 @@ Always give clear next steps.
         completed: false,
 
         businessName: team.name || "",
-        businessType: "real_estate",
+        businessType: "",
         description: "",
 
         website: "",
@@ -3982,7 +4382,7 @@ Always give clear next steps.
         responseLength: "balanced",
 
         greetingMessage:
-          "Hi! I’m the AI assistant for our real estate team. How can I help you today?",
+          "Hi! I’m your Cortexa AI assistant. How can I help with your business today?",
 
         fallbackMessage:
           "I’m not fully certain about that. Let me connect you with a team member.",
@@ -3991,9 +4391,9 @@ Always give clear next steps.
           "I’m bringing in a human agent who can help you further.",
 
         qualificationQuestions: [
-          "What type of property are you looking for?",
-          "What is your preferred location?",
-          "What is your budget range?",
+          "What are you trying to accomplish?",
+          "What information should I use to help you?",
+          "What timeline or priority should I consider?",
         ],
 
         forbiddenTopics: [],
@@ -5190,6 +5590,7 @@ Always give clear next steps.
       message: string;
       sessionId?: string;
       attachments?: any[];
+      activeContext?: string;
     },
   ) {
     if (!teamId) {
@@ -5266,6 +5667,7 @@ Always give clear next steps.
 
         JSON.stringify({
           attachments,
+          activeContext: this.normalizeAgentContext(body.activeContext),
         }),
       ],
     );
@@ -5280,6 +5682,7 @@ Always give clear next steps.
         message,
         attachments,
         conversationId: sessionId,
+        activeContext: this.normalizeAgentContext(body.activeContext) || undefined,
       },
     });
     const assistantContent = String(
@@ -5313,6 +5716,7 @@ Always give clear next steps.
         assistantContent,
         JSON.stringify({
           usage: aiResponse?.usage || null,
+          activeContext: this.normalizeAgentContext(body.activeContext),
         }),
       ],
     );
