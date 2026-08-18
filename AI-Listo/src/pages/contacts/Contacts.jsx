@@ -35,6 +35,21 @@ import {
   LayoutDashboard,
   GitFork,
   Menu,
+  Filter,
+  ArrowUpDown,
+  Star,
+  Target,
+  Bell,
+  Download,
+  Activity,
+  Folder,
+  CheckSquare,
+  CalendarDays,
+  MapPin,
+  Globe2,
+  Info,
+  Copy,
+  BriefcaseBusiness,
 } from "lucide-react";
 
 export default function ContactsRelationshipsPage() {
@@ -65,6 +80,8 @@ export default function ContactsRelationshipsPage() {
   const [noteContact, setNoteContact] = useState(null);
   const [noteText, setNoteText] = useState("");
   const [showDetailMoreMenu, setShowDetailMoreMenu] = useState(false);
+  const [mobileSort, setMobileSort] = useState("activity");
+  const [mobileDetailSection, setMobileDetailSection] = useState("activity");
 
   const [contactMessages, setContactMessages] = useState([]);
   const [contactMessagesLoading, setContactMessagesLoading] = useState(false);
@@ -681,6 +698,153 @@ export default function ContactsRelationshipsPage() {
     }
   };
 
+
+  const scrollToMobileDetailSection = (section, elementId) => {
+    setMobileDetailSection(section);
+
+    window.requestAnimationFrame(() => {
+      document.getElementById(elementId)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
+
+  const mobileStatValue = (index, fallback = 0) => {
+    const raw = stats?.[index]?.value;
+    return raw === undefined || raw === null || raw === "" ? fallback : raw;
+  };
+
+  const mobileAiScore = (contact) =>
+    Math.max(0, Math.min(100, Number(contact?.score || contact?.aiScore || 0)));
+
+  const mobileCompany = (contact) =>
+    contact?.company ||
+    contact?.companyName ||
+    contact?.linkedLeadName ||
+    contact?.interest ||
+    "";
+
+  const mobileOwner = (contact) =>
+    contact?.assignedAgentName ||
+    contact?.assignedAgentEmail ||
+    t("contacts.unassigned");
+
+  const mobileRelativeTime = (value) => {
+    if (!value) return "—";
+    const time = new Date(value).getTime();
+    if (!Number.isFinite(time)) return "—";
+    const diff = Math.max(0, Date.now() - time);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${Math.max(1, mins)}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    return new Date(value).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const mobileContactTone = (contact, index) => {
+    const status = String(contact?.status || "").toLowerCase();
+    if (status === "active") return "green";
+    if (status === "hot") return "red";
+    if (status === "warm") return "orange";
+    return ["purple", "blue", "orange"][index % 3];
+  };
+
+  const mobileSortedContacts = [...contacts].sort((a, b) => {
+    if (mobileSort === "score") {
+      return mobileAiScore(b) - mobileAiScore(a);
+    }
+    if (mobileSort === "name") {
+      return String(a?.name || "").localeCompare(String(b?.name || ""));
+    }
+    const aTime = new Date(a?.updatedAt || a?.createdAt || 0).getTime();
+    const bTime = new Date(b?.updatedAt || b?.createdAt || 0).getTime();
+    return bTime - aTime;
+  });
+
+  const mobileTotalContacts =
+    Number(String(mobileStatValue(0, contacts.length)).replace(/[^\d.-]/g, "")) ||
+    contacts.length;
+
+  const mobileCommandStats = [
+    {
+      label: "Total Contacts",
+      value: mobileStatValue(0, contacts.length),
+      trend: "18%",
+      tone: "purple",
+      icon: Users,
+      path: "M0 32 L20 27 L40 29 L60 21 L80 15 L100 17 L120 10 L140 13 L160 8 L180 3",
+    },
+    {
+      label: "New Contacts",
+      value: contacts.filter((contact) => {
+        if (!contact?.createdAt) return false;
+        return Date.now() - new Date(contact.createdAt).getTime() <= 30 * 86400000;
+      }).length,
+      trend: "24%",
+      tone: "green",
+      icon: UserPlus,
+      path: "M0 33 L20 25 L40 28 L60 19 L80 13 L100 16 L120 10 L140 8 L160 3 L180 0",
+    },
+    {
+      label: "Active Customers",
+      value: contacts.filter(
+        (contact) => String(contact?.status || "").toLowerCase() === "active",
+      ).length,
+      trend: "16%",
+      tone: "blue",
+      icon: UserCheck,
+      path: "M0 34 L20 28 L40 30 L60 22 L80 16 L100 20 L120 14 L140 10 L160 5 L180 4",
+    },
+    {
+      label: "Open Opportunities",
+      value: contacts.filter((contact) =>
+        ["warm", "hot"].includes(String(contact?.status || "").toLowerCase()),
+      ).length,
+      trend: "21%",
+      tone: "orange",
+      icon: Target,
+      path: "M0 35 L20 30 L40 31 L60 23 L80 16 L100 20 L120 14 L140 11 L160 5 L180 0",
+    },
+    {
+      label: "Needs Follow-Up",
+      value: contacts.filter(
+        (contact) =>
+          Boolean(contact?.recommendedAction) ||
+          Boolean(contact?.followUpRecommended),
+      ).length,
+      trend: "15%",
+      tone: "red",
+      icon: Bell,
+      path: "M0 34 L20 28 L40 30 L60 21 L80 13 L100 18 L120 11 L140 8 L160 2 L180 0",
+    },
+    {
+      label: "AI Engagement",
+      value: mobileStatValue(5, "0%"),
+      trend: "12%",
+      tone: "purple",
+      icon: Star,
+      path: "M0 34 L20 30 L40 31 L60 24 L80 17 L100 21 L120 13 L140 10 L160 4 L180 2",
+    },
+  ];
+
+  const mobileActivityIcon = (activity) => {
+    const key = String(activity?.type || activity?.title || "").toLowerCase();
+    if (key.includes("whatsapp") || key.includes("message")) return MessageSquare;
+    if (key.includes("email")) return Mail;
+    if (key.includes("call") || key.includes("phone")) return Phone;
+    if (key.includes("meeting") || key.includes("appointment")) return CalendarDays;
+    if (key.includes("task")) return CheckSquare;
+    if (key.includes("form")) return StickyNote;
+    return Activity;
+  };
+
   const Modals = () => (
     <>
       {showEditModal && editForm && (
@@ -947,7 +1111,633 @@ export default function ContactsRelationshipsPage() {
   );
 
   if (selectedContact) {
+    const selectedScore = mobileAiScore(selectedContact);
+    const selectedCompany = mobileCompany(selectedContact);
+    const selectedLastContact =
+      selectedContact.lastContactAt ||
+      selectedContact.updatedAt ||
+      selectedContact.createdAt;
+
     return (
+      <>
+        <section className="contacts-mobile-detail-v2">
+          <header className="cmd2-header">
+            <button type="button" className="cmd2-header-btn" onClick={closeDetail}>
+              <ChevronLeft />
+            </button>
+
+            <div className="cmd2-heading">
+              <h1>Contact Profile</h1>
+              <p>
+                View and manage contact information, communication, and relationship
+                details.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="cmd2-header-btn"
+              onClick={() => setShowDetailMoreMenu((prev) => !prev)}
+            >
+              <MoreVertical />
+            </button>
+          </header>
+
+          {showDetailMoreMenu && (
+            <div className="contact-menu detail-more-menu cmd2-more-menu">
+              <button
+                onClick={() => {
+                  setShowDetailMoreMenu(false);
+                  openEditContact(selectedContact);
+                }}
+              >
+                <Edit3 size={15} /> {t("contacts.editContactTitle")}
+              </button>
+              <button
+                onClick={() => {
+                  setShowDetailMoreMenu(false);
+                  openAssignAgent(selectedContact);
+                }}
+              >
+                <UserCog size={15} /> {t("contacts.assignAgentTitle")}
+              </button>
+              {selectedContact.linkedLeadId && (
+                <button onClick={() => openLinkedLead(selectedContact)}>
+                  <GitFork size={15} /> {t("contacts.openLead")}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setShowDetailMoreMenu(false);
+                  openNoteModal(selectedContact);
+                }}
+              >
+                <StickyNote size={15} /> {t("contacts.addNoteTitle")}
+              </button>
+              <button
+                className="warning"
+                onClick={() => {
+                  setShowDetailMoreMenu(false);
+                  archiveContact(selectedContact.id);
+                }}
+              >
+                <Archive size={15} /> {t("contacts.archiveContact")}
+              </button>
+              <button
+                className="danger"
+                onClick={() => {
+                  setShowDetailMoreMenu(false);
+                  deleteContact(selectedContact.id);
+                  setSelectedContact(null);
+                }}
+              >
+                <Trash2 size={15} /> {t("contacts.deleteContactAction")}
+              </button>
+            </div>
+          )}
+
+          <section className="cmd2-profile-card">
+            <div className="cmd2-profile-main">
+              <div className="cmd2-avatar">
+                {selectedContact.avatar ||
+                  selectedContact.name?.charAt(0)?.toUpperCase() ||
+                  "?"}
+                <span />
+              </div>
+
+              <div className="cmd2-profile-copy">
+                <div className="cmd2-name-row">
+                  <h2>{selectedContact.name}</h2>
+                  <span
+                    className={`badge-status ${String(
+                      selectedContact.status || "",
+                    ).toLowerCase()}`}
+                  >
+                    {selectedContact.status ||
+                      selectedContact.type ||
+                      "Contact"}
+                  </span>
+                </div>
+                <p>{selectedCompany || selectedContact.email || "—"}</p>
+                <div className="cmd2-profile-meta">
+                  <span>
+                    <BriefcaseBusiness />
+                    {selectedContact.title ||
+                      selectedContact.type ||
+                      "Contact"}
+                  </span>
+                  <i />
+                  <span>
+                    <Star />
+                    {selectedScore >= 80
+                      ? "High Value"
+                      : selectedScore >= 50
+                        ? "Engaged"
+                        : "Contact"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="cmd2-quick-actions">
+              <button onClick={() => messageContact(selectedContact.id)}>
+                <MessageSquare />
+                <span>WhatsApp</span>
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedContact.email) {
+                    window.location.href = `mailto:${selectedContact.email}`;
+                  }
+                }}
+              >
+                <Mail />
+                <span>Email</span>
+              </button>
+              <button onClick={() => callContact(selectedContact.phone)}>
+                <Phone />
+                <span>Call</span>
+              </button>
+              <button onClick={() => navigate("/dashboard/calendar")}>
+                <CalendarDays />
+                <span>Schedule</span>
+              </button>
+              <button onClick={() => setShowDetailMoreMenu((prev) => !prev)}>
+                <MoreVertical />
+                <span>More</span>
+              </button>
+            </div>
+          </section>
+
+          <section className="cmd2-section-card">
+            <div className="cmd2-section-head">
+              <h2>
+                <UserPlus /> Contact Information
+              </h2>
+              <button onClick={() => openEditContact(selectedContact)}>
+                <Edit3 /> Edit
+              </button>
+            </div>
+
+            <div className="cmd2-info-list">
+              <div>
+                <Mail />
+                <span>Email</span>
+                <strong>{selectedContact.email || "—"}</strong>
+                <Copy />
+              </div>
+              <div>
+                <Phone />
+                <span>Phone</span>
+                <strong>{selectedContact.phone || "—"}</strong>
+                <Phone />
+              </div>
+              <div>
+                <Building2 />
+                <span>Company</span>
+                <strong>{selectedCompany || "—"}</strong>
+                <ChevronRight />
+              </div>
+              <div>
+                <BriefcaseBusiness />
+                <span>Title</span>
+                <strong>{selectedContact.title || selectedContact.type || "—"}</strong>
+                <ChevronRight />
+              </div>
+              <div>
+                <Target />
+                <span>Status</span>
+                <strong>{selectedContact.status || "—"}</strong>
+                <ChevronRight />
+              </div>
+            </div>
+          </section>
+
+          <section className="cmd2-section-card">
+            <div className="cmd2-section-head">
+              <h2>
+                <Info /> Additional Details
+              </h2>
+            </div>
+            <div className="cmd2-info-list">
+              <div>
+                <MapPin />
+                <span>Location</span>
+                <strong>{selectedContact.location || "—"}</strong>
+                <ChevronRight />
+              </div>
+              <div>
+                <Globe2 />
+                <span>Source</span>
+                <strong>{selectedContact.source || "—"}</strong>
+                <ChevronRight />
+              </div>
+              <div>
+                <UserCog />
+                <span>Owner</span>
+                <strong>{mobileOwner(selectedContact)}</strong>
+                <ChevronRight />
+              </div>
+              <div>
+                <CalendarDays />
+                <span>Lead Created</span>
+                <strong>
+                  {selectedContact.createdAt
+                    ? new Date(selectedContact.createdAt).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : "—"}
+                </strong>
+                <ChevronRight />
+              </div>
+              <div>
+                <Clock />
+                <span>Last Contact</span>
+                <strong>{mobileRelativeTime(selectedLastContact)}</strong>
+                <ChevronRight />
+              </div>
+            </div>
+          </section>
+
+          <button
+            type="button"
+            className="cmd2-wide-link"
+            onClick={() => openNoteModal(selectedContact)}
+          >
+            <StickyNote />
+            <span>Add Tags / Notes</span>
+            <ChevronRight />
+          </button>
+
+          <div className="cmd2-major-title">
+            <Sparkles />
+            <div>
+              <h2>AI Contact Intelligence</h2>
+              <p>
+                AI-powered insights and recommendations to help you build stronger
+                relationships.
+              </p>
+            </div>
+          </div>
+
+          <section className="cmd2-section-card cmd2-ai-summary">
+            <div className="cmd2-section-head">
+              <h2>
+                <Sparkles /> AI Summary
+              </h2>
+              <em>AI Generated</em>
+            </div>
+            <div className="cmd2-ai-summary-body">
+              <p>
+                {selectedContact.aiSummary ||
+                  selectedContact.notes ||
+                  t("contacts.aiInsightPlaceholder")}
+              </p>
+              <button onClick={loadAiInsights}>
+                View full analysis <ChevronRight />
+              </button>
+            </div>
+          </section>
+
+          <section className="cmd2-section-card cmd2-next-action">
+            <div className="cmd2-section-head">
+              <h2>
+                <Target /> AI Next Best Action
+              </h2>
+              <em>Recommended</em>
+            </div>
+            <div className="cmd2-next-action-body">
+              <span className="cmd2-next-icon">
+                <CalendarDays />
+              </span>
+              <div>
+                <strong>
+                  {selectedContact.recommendedAction || "Schedule Follow-up"}
+                </strong>
+                <p>
+                  {selectedContact.followUpRecommended
+                    ? "Follow-up is recommended based on this contact’s recent activity."
+                    : "Review the latest contact activity and choose the next best step."}
+                </p>
+              </div>
+              <button onClick={() => navigate("/dashboard/calendar")}>
+                Take Action
+              </button>
+            </div>
+          </section>
+
+          <section className="cmd2-section-card cmd2-score-card">
+            <div className="cmd2-section-head">
+              <h2>
+                <Activity /> AI Relationship Score
+              </h2>
+            </div>
+            <div className="cmd2-score-layout">
+              <div>
+                <div
+                  className="cmd2-score-ring"
+                  style={{ "--score": `${selectedScore * 3.6}deg` }}
+                >
+                  <strong>{selectedScore}</strong>
+                </div>
+                <span>
+                  {selectedScore >= 80
+                    ? "Excellent"
+                    : selectedScore >= 60
+                      ? "Strong"
+                      : selectedScore >= 40
+                        ? "Developing"
+                        : "Needs Attention"}
+                </span>
+              </div>
+
+              <div className="cmd2-score-bars">
+                {[
+                  ["Engagement", Math.min(100, selectedScore + 3)],
+                  ["Recency", Math.max(0, selectedScore - 4)],
+                  ["Relationship Strength", Math.min(100, selectedScore + 1)],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <span>{label}</span>
+                    <i>
+                      <b style={{ width: `${value}%` }} />
+                    </i>
+                    <strong>{value}%</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="cmd2-section-card">
+            <div className="cmd2-section-head">
+              <h2>
+                <MessageSquare /> AI Conversation Highlights
+              </h2>
+              <button>View All</button>
+            </div>
+            <div className="cmd2-highlights">
+              {(contactMessages.length
+                ? contactMessages.slice(0, 3)
+                : activities.slice(0, 3)
+              ).map((item, index) => (
+                <div key={item.id || index}>
+                  <span>•</span>
+                  <strong>
+                    {item.message ||
+                      item.title ||
+                      item.sub ||
+                      "Contact activity"}
+                  </strong>
+                  <em>{mobileRelativeTime(item.createdAt || item.timestamp)}</em>
+                </div>
+              ))}
+              {!contactMessages.length && !activities.length && (
+                <div>
+                  <span>•</span>
+                  <strong>{t("contacts.noActivity")}</strong>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <div className="cmd2-major-title cmd2-major-title-activity">
+            <Activity />
+            <div>
+              <h2>{selectedContact.name}</h2>
+              <p>Activity, deals, tasks, and files</p>
+            </div>
+          </div>
+
+          <nav className="cmd2-detail-tabs" aria-label="Contact detail sections">
+            <button
+              type="button"
+              className={mobileDetailSection === "activity" ? "active activity" : "activity"}
+              aria-current={mobileDetailSection === "activity" ? "page" : undefined}
+              onClick={() =>
+                scrollToMobileDetailSection(
+                  "activity",
+                  "cmd2-recent-activity",
+                )
+              }
+            >
+              <Activity />
+              <span>Activity</span>
+            </button>
+
+            <button
+              type="button"
+              className={mobileDetailSection === "deals" ? "active deals" : "deals"}
+              aria-current={mobileDetailSection === "deals" ? "page" : undefined}
+              onClick={() =>
+                scrollToMobileDetailSection(
+                  "deals",
+                  "cmd2-deals",
+                )
+              }
+            >
+              <CalendarDays />
+              <span>Deals</span>
+            </button>
+
+            <button
+              type="button"
+              className={mobileDetailSection === "tasks" ? "active tasks" : "tasks"}
+              aria-current={mobileDetailSection === "tasks" ? "page" : undefined}
+              onClick={() =>
+                scrollToMobileDetailSection(
+                  "tasks",
+                  "cmd2-upcoming-tasks",
+                )
+              }
+            >
+              <CheckSquare />
+              <span>Tasks</span>
+            </button>
+
+            <button
+              type="button"
+              className={mobileDetailSection === "files" ? "active files" : "files"}
+              aria-current={mobileDetailSection === "files" ? "page" : undefined}
+              onClick={() =>
+                scrollToMobileDetailSection(
+                  "files",
+                  "cmd2-files-documents",
+                )
+              }
+            >
+              <Folder />
+              <span>Files</span>
+            </button>
+          </nav>
+
+          <section
+            id="cmd2-recent-activity"
+            className="cmd2-activity-section cmd2-scroll-target"
+          >
+            <div className="cmd2-activity-heading">
+              <h2>Recent Activity</h2>
+              <button
+                type="button"
+                onClick={() =>
+                  scrollToMobileDetailSection(
+                    "activity",
+                    "cmd2-recent-activity",
+                  )
+                }
+              >
+                View All <ChevronRight />
+              </button>
+            </div>
+
+            <div className="cmd2-activity-list">
+              {activitiesLoading ? (
+                <div className="cmd2-empty">
+                  {t("contacts.loadingActivities")}
+                </div>
+              ) : activities.length ? (
+                activities.slice(0, 6).map((activity) => {
+                  const ActivityIcon = mobileActivityIcon(activity);
+                  return (
+                    <button
+                      type="button"
+                      key={activity.id}
+                      className="cmd2-activity-row"
+                    >
+                      <span className="cmd2-activity-icon">
+                        <ActivityIcon />
+                      </span>
+                      <div>
+                        <strong>{activity.title || activity.type}</strong>
+                        <small>{activity.sub || "Contact activity"}</small>
+                      </div>
+                      <time>{mobileRelativeTime(activity.createdAt)}</time>
+                      <ChevronRight />
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="cmd2-empty">{t("contacts.noActivity")}</div>
+              )}
+            </div>
+          </section>
+
+          <section
+            id="cmd2-deals"
+            className="cmd2-activity-section cmd2-scroll-target"
+          >
+            <div className="cmd2-activity-heading">
+              <h2>Deals</h2>
+              {selectedContact.linkedLeadId ? (
+                <button
+                  type="button"
+                  onClick={() => openLinkedLead(selectedContact)}
+                >
+                  View Deal <ChevronRight />
+                </button>
+              ) : null}
+            </div>
+
+            {selectedContact.linkedLeadId ? (
+              <button
+                type="button"
+                className="cmd2-deal-row"
+                onClick={() => openLinkedLead(selectedContact)}
+              >
+                <span className="cmd2-deal-icon">
+                  <Handshake />
+                </span>
+                <div>
+                  <strong>
+                    {selectedContact.linkedLeadName ||
+                      selectedContact.linkedLead ||
+                      "Linked Opportunity"}
+                  </strong>
+                  <small>
+                    Open the linked lead / deal in the existing pipeline flow.
+                  </small>
+                </div>
+                <ChevronRight />
+              </button>
+            ) : (
+              <div className="cmd2-empty cmd2-deal-empty">
+                No linked deal for this contact yet.
+              </div>
+            )}
+          </section>
+
+          <section
+            id="cmd2-upcoming-tasks"
+            className="cmd2-activity-section cmd2-scroll-target"
+          >
+            <div className="cmd2-activity-heading">
+              <h2>Upcoming Tasks</h2>
+              <button
+                type="button"
+                onClick={() =>
+                  scrollToMobileDetailSection(
+                    "tasks",
+                    "cmd2-upcoming-tasks",
+                  )
+                }
+              >
+                View All
+              </button>
+            </div>
+            <button
+              type="button"
+              className="cmd2-task-row"
+              onClick={() => openNoteModal(selectedContact)}
+            >
+              <CheckSquare />
+              <div>
+                <strong>
+                  {selectedContact.recommendedAction || "Follow up with contact"}
+                </strong>
+                <small>Review the next action and latest contact notes.</small>
+              </div>
+              <em>High</em>
+              <ChevronRight />
+            </button>
+          </section>
+
+          <section
+            id="cmd2-files-documents"
+            className="cmd2-activity-section cmd2-scroll-target"
+          >
+            <div className="cmd2-activity-heading">
+              <h2>Files & Documents</h2>
+              <button
+                type="button"
+                onClick={() =>
+                  scrollToMobileDetailSection(
+                    "files",
+                    "cmd2-files-documents",
+                  )
+                }
+              >
+                View All
+              </button>
+            </div>
+            <button type="button" className="cmd2-file-row">
+              <Folder />
+              <div>
+                <strong>Contact documents</strong>
+                <small>Files linked to this contact will appear here.</small>
+              </div>
+              <Download />
+              <ChevronRight />
+            </button>
+          </section>
+
+          <Modals />
+        </section>
+
+        <div className="contacts-desktop-detail-v2">
       <div className="mobile-detail-page contacts-page">
         <div className="detail-header">
           <button className="back-btn" onClick={closeDetail}>
@@ -1236,10 +2026,368 @@ export default function ContactsRelationshipsPage() {
         </div>
         <Modals />
       </div>
+        </div>
+      </>
     );
   }
 
+
   return (
+    <>
+      <section className="contacts-mobile-v2">
+        <header className="cmv2-header">
+          <div className="cmv2-heading">
+            <h1>Contacts & Relationships</h1>
+            <p>
+              Manage every customer, prospect, company, and relationship in one
+              AI-powered workspace.
+            </p>
+          </div>
+        </header>
+
+        <div className="cmv2-search-row">
+          <label>
+            <Search />
+            <input
+              placeholder={t("contacts.searchPlaceholder")}
+              value={search}
+              onChange={handleSearch}
+            />
+          </label>
+          <button type="button">
+            <SlidersHorizontal />
+            <span>Filters</span>
+          </button>
+        </div>
+
+        <section className="cmv2-command-center">
+          <h2>CONTACTS COMMAND CENTER</h2>
+          <i />
+          <div className="cmv2-kpi-list">
+            {mobileCommandStats.map((stat) => {
+              const StatIcon = stat.icon;
+              return (
+                <article key={stat.label} className={`cmv2-kpi-card ${stat.tone}`}>
+                  <div className="cmv2-kpi-icon">
+                    <StatIcon />
+                  </div>
+                  <div className="cmv2-kpi-copy">
+                    <strong>{stat.label}</strong>
+                    <em>{stat.value}</em>
+                  </div>
+                  <div className="cmv2-kpi-trend">
+                    <span>
+                    <b>↑ {stat.trend}</b><br />
+                    <span>vs last 30 days</span>
+                    </span>
+                    <svg viewBox="0 0 180 42" preserveAspectRatio="none">
+                      <path
+                        d={stat.path}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <ChevronRight />
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="cmv2-actions">
+          <button className="purple" onClick={loadAiInsights}>
+            <Sparkles />
+            <div>
+              <strong>AI Insights</strong>
+              <span>Get AI-powered contact insights</span>
+            </div>
+            <ChevronRight />
+          </button>
+
+          <button className="orange" onClick={runAiReview}>
+            <Bot />
+            <div>
+              <strong>Run AI Review</strong>
+              <span>Review contacts with AI</span>
+            </div>
+            <ChevronRight />
+          </button>
+
+          <button className="green">
+            <Download />
+            <div>
+              <strong>Import</strong>
+              <span>Import contacts from CSV</span>
+            </div>
+            <ChevronRight />
+          </button>
+
+          <button className="pink" onClick={() => setShowCreateModal(true)}>
+            <UserPlus />
+            <div>
+              <strong>Add Contact</strong>
+              <span>Manually add a new contact</span>
+            </div>
+            <ChevronRight />
+          </button>
+        </section>
+
+        <div className="cmv2-list-summary">
+          <div>
+            <Users />
+            <div>
+              <strong>{mobileTotalContacts.toLocaleString()} Contacts</strong>
+              <span>Showing all contacts</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setMobileSort((current) =>
+                current === "activity"
+                  ? "score"
+                  : current === "score"
+                    ? "name"
+                    : "activity",
+              )
+            }
+          >
+            <ArrowUpDown />
+            <div>
+              <span>Sort by</span>
+              <strong>
+                {mobileSort === "score"
+                  ? "AI Score"
+                  : mobileSort === "name"
+                    ? "Name"
+                    : "Last Activity"}
+              </strong>
+            </div>
+            <ChevronRight />
+          </button>
+        </div>
+
+        <div className="cmv2-contact-list">
+          {loading ? (
+            <div className="cmv2-empty">{t("contacts.loading")}</div>
+          ) : mobileSortedContacts.length ? (
+            mobileSortedContacts.map((contact, index) => {
+              const tone = mobileContactTone(contact, index);
+              const score = mobileAiScore(contact);
+              const lastContact =
+                contact.lastContactAt || contact.updatedAt || contact.createdAt;
+
+              return (
+                <article
+                  key={contact.id}
+                  className={`cmv2-contact-card ${tone}`}
+                >
+                  <div className="cmv2-contact-top">
+                    <div className="cmv2-contact-avatar">
+                      {contact.avatar ||
+                        contact.name?.charAt(0)?.toUpperCase() ||
+                        "?"}
+                      <span />
+                    </div>
+
+                    <div className="cmv2-contact-main">
+                      <h3>{contact.name}</h3>
+                      <p>{mobileCompany(contact) || contact.email || "—"}</p>
+                      <em>{contact.type || contact.status || "Contact"}</em>
+                    </div>
+
+                    <div className="cmv2-contact-action">
+                      <small>{mobileRelativeTime(lastContact)}</small>
+                      <strong>{contact.recommendedAction || "Follow up"}</strong>
+                      <em>{contact.followUpRecommended ? "Today" : "Next"}</em>
+                    </div>
+
+                    <div className="cmv2-ai-score">
+                      <strong>{score}</strong>
+                      <span>AI Score</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="cmv2-more"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenMenuId(
+                          openMenuId === contact.id ? null : contact.id,
+                        );
+                      }}
+                    >
+                      <MoreVertical />
+                    </button>
+                  </div>
+
+                  {openMenuId === contact.id && (
+                    <div
+                      className="contact-menu cmv2-card-menu"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <button onClick={() => openEditContact(contact)}>
+                        <Edit3 size={15} /> {t("contacts.editContactTitle")}
+                      </button>
+                      <button onClick={() => openAssignAgent(contact)}>
+                        <UserCog size={15} /> {t("contacts.assignAgentTitle")}
+                      </button>
+                      <button onClick={() => openNoteModal(contact)}>
+                        <StickyNote size={15} /> {t("contacts.addNoteTitle")}
+                      </button>
+                      <button onClick={runAiReview}>
+                        <Bot size={15} /> {t("contacts.runAiReview")}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="cmv2-contact-meta">
+                    <div>
+                      <Target />
+                      <span>Source</span>
+                      <strong>{contact.source || "—"}</strong>
+                    </div>
+                    <div>
+                      <UserCog />
+                      <span>Owner</span>
+                      <strong>{mobileOwner(contact)}</strong>
+                    </div>
+                    <div>
+                      <Clock />
+                      <span>Last Contact</span>
+                      <strong>{mobileRelativeTime(lastContact)}</strong>
+                    </div>
+                    <div>
+                      <CalendarDays />
+                      <span>Next Action</span>
+                      <strong>{contact.recommendedAction || "Follow up"}</strong>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="cmv2-view-contact"
+                    onClick={() => openContactDetail(contact)}
+                  >
+                    View Contact <ChevronRight />
+                  </button>
+                </article>
+              );
+            })
+          ) : (
+            <div className="cmv2-empty">No contacts found.</div>
+          )}
+        </div>
+
+        {showCreateModal && (
+          <div className="modal-overlay">
+            <div className="contact-modal">
+              <div className="modal-header">
+                <h2>{t("contacts.addContactTitle")}</h2>
+                <button
+                  className="icon-btn"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <form onSubmit={createContact}>
+                <div className="modal-grid">
+                  <div className="form-group">
+                    <label>{t("contacts.contactName")}</label>
+                    <input
+                      required
+                      value={createForm.name}
+                      onChange={(event) =>
+                        setCreateForm({
+                          ...createForm,
+                          name: event.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>{t("contacts.labelEmail")}</label>
+                    <input
+                      type="email"
+                      required
+                      value={createForm.email}
+                      onChange={(event) =>
+                        setCreateForm({
+                          ...createForm,
+                          email: event.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>{t("contacts.labelPhone")}</label>
+                    <input
+                      value={createForm.phone}
+                      onChange={(event) =>
+                        setCreateForm({
+                          ...createForm,
+                          phone: event.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>{t("contacts.labelType")}</label>
+                    <select
+                      value={createForm.type}
+                      onChange={(event) =>
+                        setCreateForm({
+                          ...createForm,
+                          type: event.target.value,
+                        })
+                      }
+                    >
+                      <option>Buyer</option>
+                      <option>Seller</option>
+                      <option>Developer</option>
+                      <option>Renter</option>
+                    </select>
+                  </div>
+                  <div className="form-group full">
+                    <label>{t("contacts.notes")}</label>
+                    <textarea
+                      rows="4"
+                      value={createForm.notes}
+                      onChange={(event) =>
+                        setCreateForm({
+                          ...createForm,
+                          notes: event.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={() => setShowCreateModal(false)}
+                  >
+                    {t("contacts.cancel")}
+                  </button>
+                  <button type="submit" className="primary-action">
+                    {t("contacts.createContactTitle")}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <Modals />
+      </section>
+
+      <div className="contacts-desktop-v2">
     <div>
       <div className="heading_page">
         <Users className="header-icon" size={20} />
@@ -1616,6 +2764,8 @@ export default function ContactsRelationshipsPage() {
         </main>
       </div>
     </div>
+      </div>
+    </>
   );
 }
 
