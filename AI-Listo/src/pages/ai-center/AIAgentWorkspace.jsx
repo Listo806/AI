@@ -72,37 +72,15 @@ const IconSpark = () => (
   </svg>
 );
 
-const IconBell = () => (
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
-      fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const IconClose = () => (
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-    <path d="M6 6l12 12M18 6 6 18"
-      fill="none" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 const IconChevronRight = () => (
-  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
     <path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2"
       strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-const IconStar = () => (
-  <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
-    <path d="m12 3 2.4 5.1 5.6.7-4.1 4 1 5.6-4.9-2.7-4.9 2.7 1-5.6-4.1-4 5.6-.7z"
-      fill="currentColor" />
-  </svg>
-);
-
-const IconPrompt = ({ type }) => {
-  const common = {
+const IconContext = ({ type }) => {
+  const p = {
     fill: "none",
     stroke: "currentColor",
     strokeWidth: 1.8,
@@ -110,119 +88,80 @@ const IconPrompt = ({ type }) => {
     strokeLinejoin: "round",
   };
 
-  const shapes = {
-    followup: (
+  const icons = {
+    leads: (
       <>
-        <circle cx="9" cy="8" r="3" {...common} />
-        <path d="M4 19c.7-3.4 2.8-5 5-5s4.3 1.6 5 5M16 7h4M18 5v4" {...common} />
+        <circle cx="9" cy="8" r="3" {...p} />
+        <path d="M3.8 20c.7-3.6 2.6-5.4 5.2-5.4s4.5 1.8 5.2 5.4M16 9a2.5 2.5 0 1 1 0 5M16 15c2.4 0 4.1 1.4 4.7 4" {...p} />
       </>
     ),
-    pipeline: <path d="M5 19V9M10 19V5M15 19v-7M20 19V3" {...common} />,
-    hot: <path d="M13 3c1 4-3 4-1 8 1.5-1 3-2 4-4 3 4 3 9-1 12-4 3-10 0-10-5 0-3 2-5 4-7 .2 2 1.8 3.2 4 4 0-3 2-5 2-8z" {...common} />,
+    pipeline: <path d="M5 18v-4m0 0 4-4m-4 4 4 4m0-8 4-4m0 0 4 4m-4-4v12m0 0 4-4" {...p} />,
+    contacts: (
+      <>
+        <rect x="5" y="4" width="14" height="16" rx="2" {...p} />
+        <circle cx="12" cy="9" r="2.2" {...p} />
+        <path d="M8.5 16c.6-2.2 1.9-3.3 3.5-3.3s2.9 1.1 3.5 3.3" {...p} />
+      </>
+    ),
+    analytics: (
+      <>
+        <path d="M4 20h16" {...p} />
+        <path d="M6 17V9M11 17V5M16 17v-6M20 17V3" {...p} />
+      </>
+    ),
+    appointments: (
+      <>
+        <rect x="4" y="6" width="16" height="14" rx="2" {...p} />
+        <path d="M8 3v5M16 3v5M4 10h16M8 14h8" {...p} />
+      </>
+    ),
     whatsapp: (
       <>
-        <circle cx="12" cy="12" r="8" {...common} />
-        <path d="m7 20 1.5-3M9 9c1 3 3 5 6 6" {...common} />
+        <circle cx="12" cy="12" r="8" {...p} />
+        <path d="m7 20 1.5-3M9 9c1 3 3 5 6 6" {...p} />
       </>
     ),
-    clock: (
+    tasks: (
       <>
-        <circle cx="12" cy="12" r="8" {...common} />
-        <path d="M12 7v5l3 2" {...common} />
+        <rect x="5" y="4" width="14" height="16" rx="2" {...p} />
+        <path d="m8 12 2 2 5-5" {...p} />
       </>
     ),
-    calendar: (
+    revenue: (
       <>
-        <rect x="4" y="6" width="16" height="14" rx="2" {...common} />
-        <path d="M8 3v5M16 3v5M4 10h16" {...common} />
+        <circle cx="12" cy="12" r="8" {...p} />
+        <path d="M14.5 8.5c-.6-.8-1.5-1.2-2.6-1.2-1.5 0-2.5.7-2.5 1.8 0 2.8 5.2 1.4 5.2 4.2 0 1.2-1.1 2-2.7 2-1.2 0-2.2-.4-2.9-1.3M12 5.5v13" {...p} />
       </>
     ),
-    task: (
+    automations: <path d="m13 2-8 12h6l-1 8 9-13h-6z" {...p} />,
+    more: (
       <>
-        <rect x="5" y="4" width="14" height="16" rx="2" {...common} />
-        <path d="m8 12 2 2 5-5" {...common} />
-      </>
-    ),
-    chart: (
-      <>
-        <path d="M5 20h14" {...common} />
-        <path d="M7 17V9M12 17V5M17 17v-4" {...common} />
-      </>
-    ),
-    gear: (
-      <>
-        <circle cx="12" cy="12" r="3" {...common} />
-        <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" {...common} />
-      </>
-    ),
-    team: (
-      <>
-        <circle cx="9" cy="9" r="3" {...common} />
-        <circle cx="16" cy="10" r="2.5" {...common} />
-        <path d="M3.5 19c.8-3.2 2.8-5 5.5-5s4.7 1.8 5.5 5M14 15c2.5 0 4.3 1.3 5 4" {...common} />
-      </>
-    ),
-    message: (
-      <>
-        <rect x="4" y="5" width="16" height="12" rx="4" {...common} />
-        <path d="m8 17-2 3M8 9h8M8 13h5" {...common} />
-      </>
-    ),
-    summary: (
-      <>
-        <rect x="5" y="4" width="14" height="16" rx="2" {...common} />
-        <path d="M8 8h8M8 12h8M8 16h5" {...common} />
+        <circle cx="6" cy="12" r="1.4" fill="currentColor" />
+        <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+        <circle cx="18" cy="12" r="1.4" fill="currentColor" />
       </>
     ),
   };
 
   return (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      {shapes[type] || shapes.summary}
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+      {icons[type] || icons.more}
     </svg>
   );
 };
 
-
-const formatChatTime = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-};
-
-const normalizeAssistantPayload = (data) => {
-  return (
-    data?.assistantMessage?.metadata ||
-    data?.assistantMessage?.payload ||
-    data?.metadata ||
-    data?.payload ||
-    data?.result ||
-    null
-  );
-};
-
-const PROMPT_META = {
-  suggestLeadsFollowUpToday: { type: "followup", tone: "green" },
-  suggestSummarizePipeline: { type: "pipeline", tone: "green" },
-  suggestHottestOpportunities: { type: "hot", tone: "blue" },
-  suggestDraftWhatsappFollowUp: { type: "whatsapp", tone: "cyan" },
-  suggestInactiveDeals: { type: "clock", tone: "purple" },
-  suggestAppointmentsToday: { type: "calendar", tone: "purple" },
-  suggestPropertiesNoActivity: { type: "task", tone: "orange" },
-  suggestCreateTasksOverdue: { type: "task", tone: "orange" },
-  suggestCrmSummaryToday: { type: "chart", tone: "orange" },
-  suggestWeeklySalesReport: { type: "chart", tone: "red" },
-  suggestBuildAutomation: { type: "gear", tone: "cyan" },
-  suggestTeamPerformance: { type: "team", tone: "blue" },
-  suggestLeadsNoReply: { type: "message", tone: "purple" },
-  suggestOverdueTasks: { type: "clock", tone: "orange" },
-  suggestFollowUpSequence: { type: "message", tone: "green" },
-  suggestSummarizeConversations: { type: "message", tone: "green" },
-};
+const MOBILE_AI_CONTEXTS = [
+  { id: "leads", label: "Leads", prompt: "Open my Leads context and show me what I should focus on today." },
+  { id: "pipeline", label: "Pipeline", prompt: "Open my Pipeline context and summarize the deals I should focus on." },
+  { id: "contacts", label: "Contacts", prompt: "Open my Contacts context and help me understand the customers who need attention." },
+  { id: "analytics", label: "Analytics", prompt: "Open my Analytics context and give me a concise business performance summary." },
+  { id: "appointments", label: "Appointments", prompt: "Open my Appointments context and show me my schedule and anything needing attention." },
+  { id: "whatsapp", label: "WhatsApp", prompt: "Open my WhatsApp context and show me conversations that need attention." },
+  { id: "tasks", label: "Tasks", prompt: "Open my Tasks context and tell me what I should do next." },
+  { id: "revenue", label: "Revenue", prompt: "Open my Revenue context and summarize expected revenue and revenue at risk." },
+  { id: "automations", label: "Automations", prompt: "Open my Automations context and show me what is running, failing, or worth improving." },
+  { id: "more", label: "More", prompt: "Show me additional AI Agent capabilities available for my CRM." },
+];
 
 export default function AIAgentWorkspace() {
   const { t } = useTranslation();
@@ -239,11 +178,11 @@ export default function AIAgentWorkspace() {
   const [attachments, setAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [listening, setListening] = useState(false);
+  const [selectedMobileContext, setSelectedMobileContext] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     return window.innerWidth > 860;
   });
-  const [mobileAllPrompts, setMobileAllPrompts] = useState(false);
 
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -251,15 +190,12 @@ export default function AIAgentWorkspace() {
   const textareaRef = useRef(null);
 
   useEffect(() => {
-    const handleResponsiveHistory = () => {
-      if (window.innerWidth <= 860) {
-        setHistoryOpen(false);
-      }
+    const handleMobileResize = () => {
+      if (window.innerWidth <= 860) setHistoryOpen(false);
     };
-
-    handleResponsiveHistory();
-    window.addEventListener("resize", handleResponsiveHistory);
-    return () => window.removeEventListener("resize", handleResponsiveHistory);
+    handleMobileResize();
+    window.addEventListener("resize", handleMobileResize);
+    return () => window.removeEventListener("resize", handleMobileResize);
   }, []);
 
   const firstName = useMemo(() => {
@@ -299,7 +235,6 @@ export default function AIAgentWorkspace() {
           role: m.role,
           content: m.content,
           createdAt: m.createdAt || m.created_at,
-          metadata: m.metadata || m.payload || m.data || null,
         })),
       );
     } catch (_e) {
@@ -377,7 +312,6 @@ export default function AIAgentWorkspace() {
             content: answer,
             createdAt:
               data?.assistantMessage?.createdAt || new Date().toISOString(),
-            metadata: normalizeAssistantPayload(data),
           },
         ]);
 
@@ -474,6 +408,14 @@ export default function AIAgentWorkspace() {
     setListening(true);
   }, [listening, t]);
 
+  const handleMobileContext = useCallback(
+    (context) => {
+      setSelectedMobileContext(context.id);
+      handleSend(context.prompt);
+    },
+    [handleSend],
+  );
+
   const onKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -494,39 +436,20 @@ export default function AIAgentWorkspace() {
           onClick={() => setHistoryOpen(false)}
         />
       )}
-
       <aside
         className={`aiw-history ${historyOpen ? "" : "aiw-history-collapsed"}`}
       >
         <div className="aiw-history-head">
           <span className="aiw-history-title">{t("aiCenter.conversations")}</span>
-
-          <div className="aiw-history-head-actions">
-            <button
-              type="button"
-              className="aiw-newchat"
-              onClick={() => {
-                startNewChat();
-                if (typeof window !== "undefined" && window.innerWidth <= 860) {
-                  setHistoryOpen(false);
-                }
-              }}
-              title={t("aiCenter.newConversationTitle")}
-            >
-              <IconPlus />
-              <span>{t("aiCenter.new")}</span>
-            </button>
-
-            <button
-              type="button"
-              className="aiw-history-close"
-              onClick={() => setHistoryOpen(false)}
-              aria-label="Close conversation history"
-              title="Close"
-            >
-              <IconClose />
-            </button>
-          </div>
+          <button
+            type="button"
+            className="aiw-newchat"
+            onClick={startNewChat}
+            title={t("aiCenter.newConversationTitle")}
+          >
+            <IconPlus />
+            <span>{t("aiCenter.new")}</span>
+          </button>
         </div>
         <div className="aiw-history-list">
           {loadingSessions && (
@@ -562,173 +485,110 @@ export default function AIAgentWorkspace() {
         <header className="aiw-topbar">
           <button
             type="button"
-            className="aiw-icon-btn aiw-history-toggle"
+            className="aiw-icon-btn"
             onClick={() => setHistoryOpen((o) => !o)}
             title={t("aiCenter.toggleHistoryTitle")}
           >
             <IconMenu />
           </button>
-
           <div className="aiw-topbar-titles">
-            <div className="aiw-title">
-              {t("aiCenter.aiAgent")}
-              {!isEmpty && (
-                <span className="aiw-title-chat-spark" aria-hidden="true">
-                  <IconSpark />
-                </span>
-              )}
-            </div>
+            <div className="aiw-title">{t("aiCenter.aiAgent")}</div>
             <div className="aiw-subtitle">{t("aiCenter.subtitle")}</div>
           </div>
 
+          <div className="aiw-mobile-brand" aria-label="Cortexa">
+            <span className="aiw-mobile-brand-mark">
+              <IconSpark />
+            </span>
+            <span className="aiw-mobile-brand-copy">
+              <strong>CORTEXA</strong>
+              <small>AGENTIC AI REVENUE OS</small>
+            </span>
+          </div>
+
+          <div className="aiw-mobile-account">
+            <span className="aiw-mobile-language">◎&nbsp; EN⌄</span>
+            <span className="aiw-mobile-avatar">
+              {String(user?.name || user?.email || "J").trim().charAt(0).toUpperCase()}
+            </span>
+          </div>
         </header>
 
         <div className="aiw-scroll" ref={scrollRef}>
           {isEmpty ? (
-            <div className="aiw-empty">
-              <div className="aiw-empty-mark">
-                <IconSpark />
-              </div>
-
-              <h1 className="aiw-empty-title">
-                <span className="aiw-empty-title-desktop">
+            <>
+              <div className="aiw-empty aiw-empty-desktop">
+                <div className="aiw-empty-mark">
+                  <IconSpark />
+                </div>
+                <h1 className="aiw-empty-title">
                   {t("aiCenter.greeting", { name: firstName })}
-                </span>
-                <span className="aiw-empty-title-mobile">
-                  How can I help you today?
-                </span>
-              </h1>
+                </h1>
+                <p className="aiw-empty-sub">{t("aiCenter.emptySubtitle")}</p>
+                <div className="aiw-suggestions">
+                  {SUGGESTED_COMMANDS.map((key) => {
+                    const cmd = t(`aiCenter.${key}`);
+                    return (
+                      <button
+                        type="button"
+                        key={key}
+                        className="aiw-suggestion"
+                        onClick={() => handleSend(cmd)}
+                      >
+                        {cmd}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-              <p className="aiw-empty-sub">
-                <span className="aiw-empty-sub-desktop">
-                  {t("aiCenter.emptySubtitle")}
-                </span>
-                <span className="aiw-empty-sub-mobile">
-                  Ask anything about your leads, pipeline,
+              <div className="aiw-mobile-home">
+                <div className="aiw-mobile-agent-badge">
+                  <IconSpark />
+                </div>
+
+                <h1 className="aiw-mobile-agent-title">CORTEXA AI AGENT</h1>
+                <p className="aiw-mobile-agent-subtitle">
+                  Your business copilot. Connected to your data.
                   <br />
-                  appointments, tasks, or business.
-                </span>
-              </p>
+                  Built for results.
+                </p>
 
-              <div className="aiw-mobile-composer">
-                {attachments.length > 0 && (
-                  <div className="aiw-composer-attachments">
-                    {attachments.map((a, i) => (
-                      <span key={i} className="aiw-attach-chip">
-                        {a.name}
-                        <button
-                          type="button"
-                          className="aiw-attach-remove"
-                          onClick={() => removeAttachment(i)}
-                          title={t("aiCenter.removeAttachmentTitle")}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <span className="aiw-mobile-accent-line" />
 
-                <div className="aiw-inputrow">
-                  <textarea
-                    ref={textareaRef}
-                    className="aiw-textarea"
-                    placeholder={t("aiCenter.composerPlaceholder")}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={onKeyDown}
-                    rows={1}
-                  />
+                <h2 className="aiw-mobile-question">
+                  What would you like to do today?
+                </h2>
+                <p className="aiw-mobile-question-sub">
+                  Ask anything about your business. I can help you with
+                  <br />
+                  leads, pipeline, appointments, analytics, tasks, and more.
+                </p>
 
-                  <div className="aiw-actions">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFilesSelected}
-                      multiple
-                      style={{ display: "none" }}
-                    />
-
+                <div className="aiw-mobile-context-list">
+                  {MOBILE_AI_CONTEXTS.map((context) => (
                     <button
                       type="button"
-                      className="aiw-tool-btn"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      title={t("aiCenter.attachFileTitle")}
+                      key={context.id}
+                      className={`aiw-mobile-context-btn ${
+                        selectedMobileContext === context.id ? "is-selected" : ""
+                      }`}
+                      onClick={() => handleMobileContext(context)}
                     >
-                      <IconPaperclip />
-                      <span>
-                        {uploading ? t("aiCenter.uploading") : t("aiCenter.attach")}
+                      <span className="aiw-mobile-context-icon">
+                        <IconContext type={context.id} />
                       </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`aiw-tool-btn ${listening ? "aiw-listening" : ""}`}
-                      onClick={toggleVoice}
-                      title={t("aiCenter.voiceInputTitle")}
-                    >
-                      <IconMic />
-                      <span>
-                        {listening ? t("aiCenter.listening") : t("aiCenter.voice")}
+                      <span className="aiw-mobile-context-label">
+                        {context.label}
                       </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="aiw-send"
-                      onClick={() => handleSend()}
-                      disabled={!canSend}
-                      title={t("aiCenter.sendTitle")}
-                    >
-                      <IconSend />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="aiw-suggestions-head">
-                <div className="aiw-suggestions-label">
-                  <IconStar />
-                  <span>SUGGESTED PROMPTS</span>
-                </div>
-                <button
-                  type="button"
-                  className="aiw-all-prompts-btn"
-                  onClick={() => setMobileAllPrompts((v) => !v)}
-                >
-                  <span>{mobileAllPrompts ? "Suggested" : "All Prompts"}</span>
-                  <IconChevronRight />
-                </button>
-              </div>
-
-              <div className={`aiw-suggestions ${mobileAllPrompts ? "show-all" : ""}`}>
-                {SUGGESTED_COMMANDS.map((key) => {
-                  const cmd = t(`aiCenter.${key}`);
-                  const meta = PROMPT_META[key] || {
-                    type: "summary",
-                    tone: "green",
-                  };
-
-                  return (
-                    <button
-                      type="button"
-                      key={key}
-                      className={`aiw-suggestion aiw-suggestion-${meta.tone}`}
-                      onClick={() => handleSend(cmd)}
-                    >
-                      <span className="aiw-suggestion-icon">
-                        <IconPrompt type={meta.type} />
-                      </span>
-                      <span className="aiw-suggestion-text">{cmd}</span>
-                      <span className="aiw-suggestion-chevron">
+                      <span className="aiw-mobile-context-chevron">
                         <IconChevronRight />
                       </span>
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             <div className="aiw-messages">
               {loadingMessages && (
@@ -736,154 +596,32 @@ export default function AIAgentWorkspace() {
                   {t("aiCenter.loadingConversation")}
                 </div>
               )}
-
-              {messages.map((m) => {
-                const structuredLeads = Array.isArray(m?.metadata?.leads)
-                  ? m.metadata.leads
-                  : Array.isArray(m?.metadata?.items)
-                    ? m.metadata.items
-                    : [];
-
-                return (
-                  <div key={m.id} className={`aiw-msg aiw-msg-${m.role}`}>
-                    {m.role === "assistant" && (
-                      <div className="aiw-msg-avatar aiw-assistant-spark-avatar">
-                        <IconSpark />
+              {messages.map((m) => (
+                <div key={m.id} className={`aiw-msg aiw-msg-${m.role}`}>
+                  <div className="aiw-msg-avatar">
+                    {m.role === "user" ? t("aiCenter.avatarYou") : <IconSpark />}
+                  </div>
+                  <div
+                    className={`aiw-bubble ${
+                      m.error ? "aiw-bubble-error" : ""
+                    }`}
+                  >
+                    <div className="aiw-bubble-text">{m.content}</div>
+                    {m.attachments?.length > 0 && (
+                      <div className="aiw-msg-attachments">
+                        {m.attachments.map((a, i) => (
+                          <span key={i} className="aiw-attach-chip">
+                            {a.name}
+                          </span>
+                        ))}
                       </div>
                     )}
-
-                    <div
-                      className={`aiw-bubble ${
-                        m.error ? "aiw-bubble-error" : ""
-                      }`}
-                    >
-                      <div className="aiw-bubble-text">{m.content}</div>
-
-                      {!!formatChatTime(m.createdAt) && (
-                        <div className="aiw-msg-time">
-                          {formatChatTime(m.createdAt)}
-                          {m.role === "user" && (
-                            <span className="aiw-msg-checks" aria-hidden="true">
-                              ✓✓
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {m.attachments?.length > 0 && (
-                        <div className="aiw-msg-attachments">
-                          {m.attachments.map((a, i) => (
-                            <span key={i} className="aiw-attach-chip">
-                              {a.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {m.role === "assistant" && structuredLeads.length > 0 && (
-                        <div className="aiw-rich-result-card">
-                          <div className="aiw-rich-result-head">
-                            <span className="aiw-rich-result-icon">
-                              <IconPrompt type="followup" />
-                            </span>
-                            <div>
-                              <strong>
-                                {structuredLeads.length} Leads Need Follow-Up
-                              </strong>
-                              <small>
-                                Recommended actions to keep your pipeline moving.
-                              </small>
-                            </div>
-                          </div>
-
-                          <div className="aiw-rich-result-list">
-                            {structuredLeads.slice(0, 5).map((lead, index) => {
-                              const tone =
-                                index === 0
-                                  ? "red"
-                                  : index === 1
-                                    ? "orange"
-                                    : "yellow";
-                              const initials = String(
-                                lead?.name || lead?.fullName || "Lead",
-                              )
-                                .split(" ")
-                                .map((part) => part?.[0] || "")
-                                .join("")
-                                .slice(0, 2)
-                                .toUpperCase();
-
-                              return (
-                                <div
-                                  className={`aiw-followup-lead-card aiw-followup-${tone}`}
-                                  key={lead?.id || `${m.id}-${index}`}
-                                >
-                                  <span className="aiw-followup-avatar">
-                                    {initials}
-                                  </span>
-
-                                  <div className="aiw-followup-copy">
-                                    <strong>
-                                      {lead?.name ||
-                                        lead?.fullName ||
-                                        "Lead"}
-                                    </strong>
-                                    <span>
-                                      {lead?.company ||
-                                        lead?.companyName ||
-                                        lead?.email ||
-                                        "-"}
-                                    </span>
-                                    <small>
-                                      {lead?.priority ||
-                                        lead?.status ||
-                                        ""}
-                                    </small>
-                                  </div>
-
-                                  <div className="aiw-followup-last-contact">
-                                    <span>Last contacted</span>
-                                    <strong>
-                                      {lead?.lastContactedAgo ||
-                                        lead?.lastContacted ||
-                                        lead?.last_contacted ||
-                                        "-"}
-                                    </strong>
-                                  </div>
-
-                                  {(lead?.phone || lead?.whatsapp) && (
-                                    <button
-                                      type="button"
-                                      className="aiw-followup-action-btn"
-                                      onClick={() => {
-                                        const number =
-                                          lead?.whatsapp || lead?.phone;
-                                        if (number) {
-                                          window.location.href = `https://wa.me/${String(
-                                            number,
-                                          ).replace(/\D/g, "")}`;
-                                        }
-                                      }}
-                                    >
-                                      WhatsApp
-                                    </button>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
-                );
-              })}
-
+                </div>
+              ))}
               {sending && (
                 <div className="aiw-msg aiw-msg-assistant">
-                  <div className="aiw-msg-avatar aiw-assistant-spark-avatar">
-                    <IconSpark />
-                  </div>
+                  <div className="aiw-msg-avatar"><IconSpark /></div>
                   <div className="aiw-bubble aiw-typing">
                     <span />
                     <span />
@@ -897,7 +635,7 @@ export default function AIAgentWorkspace() {
 
         {error && <div className="aiw-error">{error}</div>}
 
-        <div className={`aiw-composer ${isEmpty ? "aiw-composer-empty" : ""}`}>
+        <div className="aiw-composer">
           {attachments.length > 0 && (
             <div className="aiw-composer-attachments">
               {attachments.map((a, i) => (
@@ -968,6 +706,13 @@ export default function AIAgentWorkspace() {
             </div>
           </div>
           <div className="aiw-disclaimer">{t("aiCenter.disclaimer")}</div>
+          {isEmpty && (
+            <div className="aiw-mobile-privacy">
+              <span aria-hidden="true">♙</span>
+              <span>I only use your data to give you answers.</span>
+              <button type="button">Learn more</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
