@@ -1,89 +1,107 @@
+import { ArrowUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePlan } from "../context/PlanContext";
 
-// Compact Free-plan usage panel: shows this month's AI conversations against the
-// plan limit (plus integrations and WhatsApp connections) with an upgrade CTA.
-// Renders nothing for paid accounts, while loading, or if usage is unavailable —
-// so it is always safe to drop onto any dashboard page.
-function Bar({ label, used, limit }) {
-  const unlimited = limit == null;
-  const u = Number(used) || 0;
-  const pct = unlimited ? 6 : Math.min(100, Math.round((u / Math.max(1, limit)) * 100));
-  const color = unlimited ? "#2563eb" : pct >= 100 ? "#dc2626" : pct >= 80 ? "#ea580c" : "#2563eb";
-  return (
-    <div style={{ flex: "1 1 180px", minWidth: 160 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-        <span style={{ color: "#475569", fontWeight: 600 }}>{label}</span>
-        <span style={{ color: "#64748b" }}>
-          {u} / {unlimited ? "unlimited" : limit}
-        </span>
-      </div>
-      <div style={{ height: 8, borderRadius: 999, background: "#e5e7eb", overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 999, background: color }} />
-      </div>
-    </div>
-  );
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+function getStatus(remainingPercent) {
+  if (remainingPercent <= 10) {
+    return {
+      key: "critical",
+      text: remainingPercent <= 0 ? "AI Units depleted" : "Almost out of AI Units",
+    };
+  }
+
+  if (remainingPercent <= 25) {
+    return { key: "low", text: "Running low on AI Units" };
+  }
+
+  if (remainingPercent <= 50) {
+    return { key: "watch", text: "AI Units are getting lower" };
+  }
+
+  return { key: "healthy", text: "Plenty of AI Units remaining" };
 }
 
 export default function AiUsageMeter() {
   const { isFree, usage, limits } = usePlan();
   const navigate = useNavigate();
 
+  // Free-plan component only. Paid / Unlimited customers never see it.
   if (!isFree || !usage) return null;
 
-  const aiLimit = limits?.aiConversationsPerMonth ?? 50;
-  const aiUsed = usage?.aiConversationsThisMonth ?? 0;
-  const atLimit = aiLimit != null && aiUsed >= aiLimit;
+  const aiLimit = Number(limits?.aiConversationsPerMonth ?? 50);
+  const aiUsed = Math.max(0, Number(usage?.aiConversationsThisMonth ?? 0));
+  const safeLimit = Number.isFinite(aiLimit) && aiLimit > 0 ? aiLimit : 50;
+
+  const remaining = Math.max(0, safeLimit - aiUsed);
+  const usedPercent = clamp(Math.round((aiUsed / safeLimit) * 100), 0, 100);
+  const remainingPercent = clamp(100 - usedPercent, 0, 100);
+  const status = getStatus(remainingPercent);
+
+  const goToUpgrade = () => {
+    // Reuse the existing pricing / paid-plan upgrade flow.
+    navigate("/pricing");
+  };
 
   return (
-    <div className="box-plan" 
-      style={{
-        margin: "0 0 20px",
-        padding: "14px 18px",
-        border: `1px solid ${atLimit ? "#fecaca" : "#e5e7eb"}`,
-        borderRadius: 12,
-        background: atLimit ? "#fef2f2" : "#f9fafb",
-      }}
+    <section
+      className={`cx-free-ai-units cx-free-ai-units--${status.key}`}
+      aria-label="Free plan AI Units Remaining"
     >
-      <div className="box-plan-head" 
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-          flexWrap: "wrap",
-          marginBottom: 12,
-        }}
-      >
-        <div style={{ fontSize: 14, color: "#374151" }}>
-          <strong style={{ color: "#111827" }}>Free plan</strong>
-          {atLimit
-            ? "  •  You've reached this month's AI conversation limit. New leads are still captured, and you can reply manually."
-            : "  •  Your Cortexa AI usage this month"}
+      <div className="cx-free-ai-units__top">
+        <div className="cx-free-ai-units__balance">
+          <div className="cx-free-ai-units__eyebrow">AI UNITS REMAINING</div>
+
+          <div className="cx-free-ai-units__numbers">
+            <strong>{remaining}</strong>
+            <span>/ {safeLimit}</span>
+          </div>
+
+          <div className="cx-free-ai-units__usage-copy">
+            {usedPercent}% used this month
+          </div>
+
+          <div className="cx-free-ai-units__status">{status.text}</div>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate("/pricing")}
-          style={{
-            flexShrink: 0,
-            padding: "8px 16px",
-            borderRadius: 8,
-            border: "none",
-            background: "#111827",
-            color: "#fff",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
+
+        <div className="cx-free-ai-units__upgrade-wrap">
+          <button
+            type="button"
+            className="cx-free-ai-units__upgrade-btn"
+            onClick={goToUpgrade}
+          >
+            <ArrowUp size={20} strokeWidth={2.2} aria-hidden="true" />
+            <span>Upgrade your plan</span>
+          </button>
+          <p>Get more AI Units and power your business.</p>
+        </div>
+      </div>
+
+      <div className="cx-free-ai-units__meter-wrap">
+        <div
+          className="cx-free-ai-units__meter"
+          role="progressbar"
+          aria-label="AI Units used this month"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow={usedPercent}
         >
-          Upgrade Plan
-        </button>
+          <div
+            className="cx-free-ai-units__marker"
+            style={{ left: `${usedPercent}%` }}
+            aria-hidden="true"
+          />
+        </div>
+
+        <div className="cx-free-ai-units__scale" aria-hidden="true">
+          <span>0</span>
+          <span>25%</span>
+          <span>50%</span>
+          <span>75%</span>
+          <span>{safeLimit}</span>
+        </div>
       </div>
-      <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-        <Bar label="AI conversations" used={aiUsed} limit={aiLimit} />
-        <Bar label="Integrations" used={usage?.integrationsConnected ?? 0} limit={limits?.integrations ?? 1} />
-        <Bar label="WhatsApp connections" used={usage?.whatsappConnections ?? 0} limit={limits?.whatsappConnections ?? 1} />
-      </div>
-    </div>
+    </section>
   );
 }

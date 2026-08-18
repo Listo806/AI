@@ -12,7 +12,6 @@
   --red-accent: #dc2626;
 }
 
-/* CONTAINER LAYOUT STRUCTURE */
 .dashboard-container {
   display: flex;
   min-height: 100vh;
@@ -21,7 +20,6 @@
   flex-direction: column;
 }
 
-/* HEADER AREA */
 .dashboard-header {
   display: flex;
   justify-content: right;
@@ -86,7 +84,6 @@
   cursor: pointer;
 }
 
-/* AI COMMAND CENTER BANNER */
 .ai-command-banner {
   background: var(--blue-hero-gradient);
   color: white;
@@ -254,7 +251,6 @@ body .next-action-card svg {
   border: none;
 }
 
-/* REUSABLE GRIDS */
 .grid-6-col {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -275,7 +271,6 @@ body .next-action-card svg {
   gap: 12px;
 }
 
-/* REUSABLE CARD CONTAINER WITHOUT CONTAINERS */
 .content-card,
 .kpi-mini-card {
   background-color: var(--bg-card);
@@ -288,7 +283,6 @@ body .next-action-card svg {
   border: 1px solid #e2e8f0;
 }
 
-/* KPI CARDS INTERNAL STYLING */
 .kpi-card-header {
   display: flex;
   justify-content: space-between;
@@ -380,7 +374,6 @@ body .next-action-card svg {
   gap: 10px;
 }
 
-/* Wrapper bo tròn cho icon */
 .kpi-icon-wrapper {
   width: 35px;
   height: 35px;
@@ -400,7 +393,6 @@ body .next-action-card svg {
   background: transparent;
 }
 
-/* Phần nội dung bọc bên dưới icon */
 .kpi-meta-content {
   display: flex;
   flex-direction: column;
@@ -469,7 +461,6 @@ body .next-action-card svg {
   color: #7c3aed;
 }
 
-/* CONTENT CARD TOP HEADER SYSTEM */
 .card-top-header {
   display: flex;
   justify-content: space-between;
@@ -522,7 +513,6 @@ body .next-action-card svg {
   color: white;
 }
 
-/* DATA VISUALIZATION AREA STYLING */
 .chart-viewbox {
   height: 180px;
 }
@@ -572,7 +562,6 @@ body .next-action-card svg {
   border-radius: 50%;
 }
 
-/* PRIORITY QUEUE SYSTEM */
 .queue-list-wrapper {
   display: flex;
   flex-direction: column;
@@ -664,7 +653,6 @@ body .next-action-card svg {
   color: #000;
 }
 
-/* RISK UTILITY & ALERTS */
 .risk-alerts-list {
   display: flex;
   flex-direction: column;
@@ -691,7 +679,6 @@ body .next-action-card svg {
   min-width: 35px;
 }
 
-/* TRACKING TIMELINE SYSTEM */
 .tracking-timeline-list {
   display: flex;
   flex-direction: column;
@@ -725,7 +712,6 @@ body .next-action-card svg {
   color: #94a3b8;
 }
 
-/* STAGE FUNNEL & PIPELINE GRAPHIC CHUNKS */
 .deals-by-stage-box {
   display: flex;
   flex-direction: column;
@@ -788,7 +774,6 @@ body .next-action-card svg {
   font-weight: 700;
 }
 
-/* LOWER SUB-LEVEL FUNNELS AND LAYERS */
 .funnel-vertical-stack {
   display: flex;
   flex-direction: column;
@@ -829,7 +814,6 @@ body .next-action-card svg {
   font-weight: 600;
 }
 
-/* AUTOMATION MANAGEMENT ROW STATS */
 .health-status-list {
   display: flex;
   flex-direction: column;
@@ -865,7 +849,6 @@ body .next-action-card svg {
   color: var(--orange-accent);
 }
 
-/* TO-DO ACTIONS LAYOUT */
 .action-todo-list {
   display: flex;
   flex-direction: column;
@@ -899,7 +882,6 @@ body .next-action-card svg {
   color: var(--text-muted);
 }
 
-/* DARK INTERACTION HERO BOX */
 .action-center-dark-card {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: white;
@@ -971,7 +953,6 @@ body .next-action-card svg {
   cursor: pointer;
 }
 
-/* GLOBAL MODIFIER UTILITIES */
 .text-royal-blue {
   color: var(--blue-primary);
 }
@@ -1023,7 +1004,6 @@ body .next-action-card svg {
   flex-shrink: 0;
 }
 
-/* Upcoming Closings */
 .closing-list-wrapper {
   display: flex;
   flex-direction: column;
@@ -1262,13 +1242,6 @@ body .next-action-card svg {
   }
 }
 
-
-/* =========================================================
-   CORTEXA DASHBOARD — DARK NEON THEME
-   Visual-only overrides for .crm-dark.
-   Background/layout/data remain unchanged.
-   ========================================================= */
-
 .crm-dark .dashboard-container {
   --cx-dark-card: rgba(5, 11, 21, 0.94);
   --cx-dark-card-2: rgba(7, 13, 24, 0.96);
@@ -1310,7 +1283,6 @@ body .next-action-card svg {
   color: var(--cx-muted);
 }
 
-/* Header controls */
 .crm-dark .dashboard-container .control-btn {
   color: #f8fafc;
   background: linear-gradient(180deg, rgba(14, 21, 34, 0.96), rgba(7, 12, 21, 0.96));
@@ -1322,7 +1294,6 @@ body .next-action-card svg {
   color: #dbeafe;
 }
 
-/* AI Command Center */
 .crm-dark .dashboard-container .ai-command-banner {
   background:
     radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.16), transparent 28%),
@@ -1391,7 +1362,6 @@ body .next-action-card svg {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.22), inset 0 0 22px rgba(56, 189, 248, 0.08);
 }
 
-/* Generic dashboard cards */
 .crm-dark .dashboard-container .content-card,
 .crm-dark .dashboard-container .kpi-mini-card {
   background:
@@ -1403,7 +1373,6 @@ body .next-action-card svg {
     inset 0 0 28px rgba(59, 130, 246, 0.018);
 }
 
-/* Primary KPI accents */
 .crm-dark .dashboard-container .kpi-row-grid:first-of-type .kpi-mini-card:nth-child(1),
 .crm-dark .dashboard-container .kpi-row-grid:first-of-type .kpi-mini-card:nth-child(5) {
   border-color: rgba(62, 139, 255, 0.48);
@@ -1426,7 +1395,6 @@ body .next-action-card svg {
   box-shadow: 0 0 22px rgba(249, 115, 22, 0.08), inset 0 0 26px rgba(249, 115, 22, 0.035);
 }
 
-/* Icon circles */
 .crm-dark .dashboard-container .bg-light-blue {
   background: rgba(37, 99, 235, 0.13);
   box-shadow: 0 0 20px rgba(37, 99, 235, 0.11);
@@ -1471,7 +1439,6 @@ body .next-action-card svg {
   color: #9aa7bd !important;
 }
 
-/* CHART / QUEUE row: 1 trend, 2 source, 3 queue, 4 risk, 5 tracking, 6 stage */
 .crm-dark .dashboard-container .dashboard-chart-row > .content-card:nth-child(1) {
   border-color: #4298ff;
   box-shadow: 0 0 28px rgba(45, 137, 255, 0.10), inset 0 0 28px rgba(45, 137, 255, 0.025);
@@ -1543,7 +1510,6 @@ body .next-action-card svg {
   color: #49a8ff;
 }
 
-/* Chart neon treatment */
 .crm-dark .dashboard-container .recharts-cartesian-grid line {
   stroke: rgba(148, 163, 184, 0.30);
 }
@@ -1565,7 +1531,6 @@ body .next-action-card svg {
   filter: drop-shadow(0 10px 18px rgba(0,0,0,0.38));
 }
 
-/* Tables / queue */
 .crm-dark .dashboard-container .list-tbl-header {
   color: #e5e7eb;
 }
@@ -1610,7 +1575,6 @@ body .next-action-card svg {
   color: #bd5cff;
 }
 
-/* Risk badges */
 .crm-dark .dashboard-container .risk-count-badge {
   color: #ff6070;
   background: rgba(127, 29, 29, 0.16);
@@ -1623,7 +1587,6 @@ body .next-action-card svg {
   box-shadow: 0 0 10px rgba(85, 173, 255, 0.60);
 }
 
-/* Active deals by stage */
 .crm-dark .dashboard-container .stage-column-item {
   border-color: rgba(71, 85, 105, 0.40);
 }
@@ -1648,7 +1611,6 @@ body .next-action-card svg {
   color: #4ade80;
 }
 
-/* FOOTER cards: funnel, automation, next, upcoming, AI action */
 .crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(1) {
   border-color: #ff7a2f;
   box-shadow: 0 0 28px rgba(255, 122, 47, 0.10), inset 0 0 30px rgba(255, 122, 47, 0.022);
@@ -1695,7 +1657,6 @@ body .next-action-card svg {
   color: #ff4f72 !important;
 }
 
-/* Funnel */
 .crm-dark .dashboard-container .layer-graphic-track {
   background: rgba(51, 65, 85, 0.42);
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.45);
@@ -1726,7 +1687,6 @@ body .next-action-card svg {
   box-shadow: 0 0 8px rgba(255,83,100,.40);
 }
 
-/* Automation Health */
 .crm-dark .dashboard-container .health-row-item {
   border-color: rgba(71, 85, 105, 0.30);
 }
@@ -1781,7 +1741,6 @@ body .next-action-card svg {
   background: rgba(20, 83, 45, .14);
 }
 
-/* Empty-state circles in Next Actions / Upcoming Closings */
 .crm-dark .dashboard-container .dashboard-footer-grid > .content-card:nth-child(3) .action-todo-list::before {
   border-color: rgba(76, 156, 255, 0.75);
   color: #4c9cff;
@@ -1794,7 +1753,6 @@ body .next-action-card svg {
   box-shadow: 0 0 22px rgba(74, 222, 128, 0.10);
 }
 
-/* AI Action Center */
 .crm-dark .dashboard-container .action-center-dark-card {
   background:
     radial-gradient(circle at 15% 10%, rgba(255, 79, 114, 0.055), transparent 28%),
@@ -1826,7 +1784,6 @@ body .next-action-card svg {
   box-shadow: 0 0 26px rgba(33, 87, 255, 0.30), inset 0 1px 0 rgba(255,255,255,.15);
 }
 
-/* Mobile/tablet: stronger neon borders like supplied reference */
 @media (max-width: 1024px) {
   .crm-dark .dashboard-container .content-card {
     border-width: 1px;
@@ -1845,11 +1802,6 @@ body .next-action-card svg {
     color: #f8fafc;
   }
 }
-
-/* =========================================================
-   KPI ROW GRID — MOBILE STRUCTURE ONLY
-   No theme colors in this block.
-   ========================================================= */
 
 .kpi-mobile-chevron {
   display: none;
@@ -1952,7 +1904,6 @@ body .next-action-card svg {
     justify-self: end;
   }
 
-  /* Secondary rows do not have helper text, so center naturally. */
   .dashboard-page .kpi-row-secondary .kpi-flex-body > div {
     text-align: center;
   }
@@ -1996,12 +1947,6 @@ body .next-action-card svg {
   }
 }
 
-
-/* =========================================================
-   KPI ROW GRID — DARK THEME COLORS ONLY
-   Every visual/color rule is scoped by .crm-dark.
-   ========================================================= */
-
 .crm-dark .dashboard-page .kpi-row-grid .kpi-mini-card {
   background:
     radial-gradient(circle at 12% 50%, rgba(46, 107, 255, 0.055), transparent 25%),
@@ -2027,9 +1972,6 @@ body .next-action-card svg {
   color: #aab4c4;
 }
 
-/* ---------- PRIMARY KPI CARD ACCENTS ---------- */
-
-/* 1 New Leads — blue */
 .crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(1) {
   border-color: #347cff;
   box-shadow:
@@ -2046,7 +1988,6 @@ body .next-action-card svg {
     inset 0 0 16px rgba(52, 124, 255, 0.05);
 }
 
-/* 2 Active Deals — purple */
 .crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(2) {
   border-color: #a845e8;
   box-shadow:
@@ -2063,7 +2004,6 @@ body .next-action-card svg {
     inset 0 0 16px rgba(168, 69, 232, 0.05);
 }
 
-/* 3 Revenue — green */
 .crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(3) {
   border-color: #2bbf63;
   box-shadow:
@@ -2080,7 +2020,6 @@ body .next-action-card svg {
     inset 0 0 16px rgba(43, 191, 99, 0.05);
 }
 
-/* 4 Conversion — orange */
 .crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(4) {
   border-color: #f36f27;
   box-shadow:
@@ -2097,7 +2036,6 @@ body .next-action-card svg {
     inset 0 0 16px rgba(243, 111, 39, 0.05);
 }
 
-/* 5 AI Conversations — blue */
 .crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(5) {
   border-color: #347cff;
   box-shadow:
@@ -2114,7 +2052,6 @@ body .next-action-card svg {
     inset 0 0 16px rgba(52, 124, 255, 0.05);
 }
 
-/* 6 Appointments — green */
 .crm-dark .dashboard-page .kpi-row-primary .kpi-mini-card:nth-child(6) {
   border-color: #2bbf63;
   box-shadow:
@@ -2131,10 +2068,6 @@ body .next-action-card svg {
     inset 0 0 16px rgba(43, 191, 99, 0.05);
 }
 
-
-/* ---------- SECONDARY KPI CARD ACCENTS ---------- */
-
-/* 1 First Response Time — cyan/blue */
 .crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(1) {
   border-color: #319fe2;
   box-shadow: 0 0 20px rgba(49, 159, 226, 0.11);
@@ -2147,7 +2080,6 @@ body .next-action-card svg {
   box-shadow: 0 0 17px rgba(49, 159, 226, 0.12);
 }
 
-/* 2 Follow-up Completion — green */
 .crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(2) {
   border-color: #2bbf63;
   box-shadow: 0 0 20px rgba(43, 191, 99, 0.10);
@@ -2160,7 +2092,6 @@ body .next-action-card svg {
   box-shadow: 0 0 17px rgba(43, 191, 99, 0.11);
 }
 
-/* 3 Lead Quality Score — purple */
 .crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(3) {
   border-color: #a845e8;
   box-shadow: 0 0 20px rgba(168, 69, 232, 0.11);
@@ -2173,7 +2104,6 @@ body .next-action-card svg {
   box-shadow: 0 0 17px rgba(168, 69, 232, 0.11);
 }
 
-/* 4 Pipeline Velocity — blue */
 .crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(4) {
   border-color: #347cff;
   box-shadow: 0 0 20px rgba(52, 124, 255, 0.11);
@@ -2186,7 +2116,6 @@ body .next-action-card svg {
   box-shadow: 0 0 17px rgba(52, 124, 255, 0.11);
 }
 
-/* 5 Revenue at Risk — orange */
 .crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(5) {
   border-color: #f36f27;
   box-shadow: 0 0 20px rgba(243, 111, 39, 0.11);
@@ -2199,7 +2128,6 @@ body .next-action-card svg {
   box-shadow: 0 0 17px rgba(243, 111, 39, 0.11);
 }
 
-/* 6 WhatsApp Response — green */
 .crm-dark .dashboard-page .kpi-row-secondary .kpi-mini-card:nth-child(6) {
   border-color: #2bbf63;
   box-shadow: 0 0 20px rgba(43, 191, 99, 0.10);
@@ -2212,8 +2140,6 @@ body .next-action-card svg {
   box-shadow: 0 0 17px rgba(43, 191, 99, 0.11);
 }
 
-
-/* Mobile dark treatment: slightly stronger glow, exactly like the reference. */
 @media (max-width: 768px) {
   .crm-dark .dashboard-page .kpi-row-grid .kpi-mini-card {
     background:
@@ -2237,12 +2163,6 @@ body .next-action-card svg {
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.08));
   }
 }
-
-
-/* =========================================================
-   PRIMARY KPI — MOBILE COMBINED META LINE
-   Structural rules only. Theme colors are below under .crm-dark.
-   ========================================================= */
 
 .kpi-mobile-meta-line {
   display: none;
@@ -2285,11 +2205,323 @@ body .next-action-card svg {
   }
 }
 
-/* Dark theme color only */
 .crm-dark .dashboard-page .kpi-row-primary .kpi-mobile-meta-line {
   color: #a9b3c5;
 }
 
 .crm-dark .dashboard-page .kpi-row-primary .kpi-mobile-meta-dot {
   color: #76839a;
+}
+
+.cx-free-ai-units {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-page .cx-free-ai-units {
+    display: block;
+    width: 100%;
+    margin: 18px 0 20px;
+    padding: 10px 2px 14px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+
+  .dashboard-page .cx-free-ai-units__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .dashboard-page .cx-free-ai-units__balance {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .dashboard-page .cx-free-ai-units__eyebrow {
+    margin-bottom: 10px;
+    color: #9aa4b6;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-page .cx-free-ai-units__numbers {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    line-height: 1;
+  }
+
+  .dashboard-page .cx-free-ai-units__numbers strong {
+    color: #ffffff;
+    font-size: clamp(42px, 7vw, 62px);
+    font-weight: 600;
+    letter-spacing: -0.045em;
+  }
+
+  .dashboard-page .cx-free-ai-units__numbers span {
+    color: #606a7d;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 600;
+  }
+
+  .dashboard-page .cx-free-ai-units__usage-copy {
+    margin-top: 10px;
+    color: #a6afbd;
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 500;
+  }
+
+  .dashboard-page .cx-free-ai-units__status {
+    margin-top: 5px;
+    color: #7f899c;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-wrap {
+    width: min(315px, 38vw);
+    text-align: center;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-btn {
+    width: 100%;
+    min-height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    color: #ff8a31;
+    background:
+      linear-gradient(#050811, #050811) padding-box,
+      linear-gradient(100deg, #ffb21f 0%, #ff8a26 45%, #ff4b55 100%) border-box;
+    box-shadow:
+      0 0 20px rgba(255, 112, 42, 0.08),
+      inset 0 0 18px rgba(255, 92, 44, 0.025);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+    box-shadow:
+      0 0 28px rgba(255, 112, 42, 0.16),
+      inset 0 0 18px rgba(255, 92, 44, 0.035);
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-btn:active {
+    transform: translateY(0);
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-btn:focus-visible {
+    outline: 2px solid #ff9a34;
+    outline-offset: 3px;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-wrap p {
+    margin: 9px auto 0;
+    max-width: 250px;
+    color: #858e9e;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .dashboard-page .cx-free-ai-units__meter-wrap {
+    margin-top: 22px;
+  }
+
+  .dashboard-page .cx-free-ai-units__meter {
+    position: relative;
+    width: 100%;
+    height: 5px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      #16f879 0%,
+      #88f44b 18%,
+      #f4e829 38%,
+      #ff9c24 62%,
+      #ff5a25 80%,
+      #ff2738 100%
+    );
+    box-shadow:
+      0 0 8px rgba(255, 173, 35, 0.16),
+      0 0 7px rgba(39, 239, 116, 0.10);
+  }
+
+  .dashboard-page .cx-free-ai-units__marker {
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    border: 3px solid #ff9a28;
+    border-radius: 50%;
+    background: #0a0d14;
+    box-shadow:
+      0 0 0 3px rgba(255, 154, 40, 0.14),
+      0 0 13px rgba(255, 126, 37, 0.38);
+    transform: translate(-50%, -50%);
+    transition: left 0.35s ease;
+  }
+
+  .dashboard-page .cx-free-ai-units--healthy .cx-free-ai-units__marker {
+    border-color: #2ee980;
+    box-shadow: 0 0 0 3px rgba(46, 233, 128, 0.13), 0 0 13px rgba(46, 233, 128, 0.32);
+  }
+
+  .dashboard-page .cx-free-ai-units--watch .cx-free-ai-units__marker {
+    border-color: #f2df2c;
+    box-shadow: 0 0 0 3px rgba(242, 223, 44, 0.13), 0 0 13px rgba(242, 223, 44, 0.28);
+  }
+
+  .dashboard-page .cx-free-ai-units--low .cx-free-ai-units__marker {
+    border-color: #ff8b27;
+    box-shadow: 0 0 0 3px rgba(255, 139, 39, 0.13), 0 0 13px rgba(255, 139, 39, 0.32);
+  }
+
+  .dashboard-page .cx-free-ai-units--critical .cx-free-ai-units__marker {
+    border-color: #ff3546;
+    box-shadow: 0 0 0 3px rgba(255, 53, 70, 0.13), 0 0 14px rgba(255, 53, 70, 0.38);
+  }
+
+  .dashboard-page .cx-free-ai-units__scale {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    margin-top: 14px;
+    color: #7b8495;
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .dashboard-page .cx-free-ai-units__scale span:nth-child(1) {
+    text-align: left;
+  }
+
+  .dashboard-page .cx-free-ai-units__scale span:nth-child(2),
+  .dashboard-page .cx-free-ai-units__scale span:nth-child(3),
+  .dashboard-page .cx-free-ai-units__scale span:nth-child(4) {
+    text-align: center;
+  }
+
+  .dashboard-page .cx-free-ai-units__scale span:nth-child(5) {
+    text-align: right;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-page .cx-free-ai-units {
+    margin: 14px 0 18px;
+    padding: 8px 0 12px;
+  }
+
+  .dashboard-page .cx-free-ai-units__top {
+    grid-template-columns: minmax(0, 1fr) minmax(155px, 42%);
+    gap: 12px;
+    align-items: end;
+  }
+
+  .dashboard-page .cx-free-ai-units__eyebrow {
+    margin-bottom: 9px;
+    font-size: 11px;
+    letter-spacing: 0.115em;
+  }
+
+  .dashboard-page .cx-free-ai-units__numbers {
+    gap: 7px;
+  }
+
+  .dashboard-page .cx-free-ai-units__numbers strong {
+    font-size: 46px;
+  }
+
+  .dashboard-page .cx-free-ai-units__numbers span {
+    font-size: 27px;
+  }
+
+  .dashboard-page .cx-free-ai-units__usage-copy {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .dashboard-page .cx-free-ai-units__status {
+    display: none;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-wrap {
+    width: 100%;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-btn {
+    min-height: 40px;
+    gap: 5px;
+    padding: 10px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-btn svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-wrap p {
+    margin-top: 7px;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .dashboard-page .cx-free-ai-units__meter-wrap {
+    margin-top: 18px;
+  }
+
+  .dashboard-page .cx-free-ai-units__meter {
+    height: 4px;
+  }
+
+  .dashboard-page .cx-free-ai-units__marker {
+    width: 19px;
+    height: 19px;
+    border-width: 3px;
+  }
+
+  .dashboard-page .cx-free-ai-units__scale {
+    margin-top: 12px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-page .cx-free-ai-units__top {
+    grid-template-columns: minmax(0, 1fr) minmax(142px, 43%);
+    gap: 9px;
+  }
+
+  .dashboard-page .cx-free-ai-units__numbers strong {
+    font-size: 42px;
+  }
+
+  .dashboard-page .cx-free-ai-units__numbers span {
+    font-size: 24px;
+  }
+
+  .dashboard-page .cx-free-ai-units__upgrade-btn {
+    font-size: 12px;
+    border-radius: 15px;
+  }
 }
