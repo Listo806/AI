@@ -334,11 +334,24 @@ function AppRoutes() {
         {/* Pipeline Route */}
         <Route path="pipeline" element={<Pipeline />} />
 
-        {/* Properties Routes */}
+        {/* Properties Routes (core CRM — used by VAs and internal, not the paid workspace) */}
         <Route path="properties" element={<PropertiesList />} />
         <Route path="properties/new" element={<PropertyForm />} />
         <Route path="properties/:id/edit" element={<PropertyForm />} />
         <Route path="properties/:id" element={<PropertyDetail />} />
+
+        {/* Real Estate Workspace — its OWN gated surface (same $97 lock pattern as
+            every other Workspace). Locked customers see the purchase screen here,
+            never the general Properties screen; only an active real-estate
+            entitlement lets them in. */}
+        <Route
+          path="real-estate-workspace"
+          element={
+            <WorkspaceGate workspaceId="real-estate">
+              <PropertiesList />
+            </WorkspaceGate>
+          }
+        />
         <Route
           path="vacation-rentals/upload"
           element={<VacationRentalsUpload />}

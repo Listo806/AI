@@ -374,7 +374,7 @@ export default function Sidebar({
         ["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."],
       ],
       price: 97,
-      path: "/dashboard/properties",
+      path: "/dashboard/real-estate-workspace",
     },
     {
       id: "team",
