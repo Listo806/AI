@@ -250,7 +250,17 @@ export class WorkspacesController {
       throw new BadRequestException('A team is required to purchase a workspace add-on.');
     }
 
-    const priceId = process.env.PADDLE_PRICE_WORKSPACE;
+    // Per-workspace Paddle price so the checkout shows the SPECIFIC workspace name
+    // (e.g. "Sales Workspace Add-On"). Set PADDLE_PRICE_WORKSPACE_<ID> (id upper-cased,
+    // hyphens -> underscores, e.g. PADDLE_PRICE_WORKSPACE_SALES,
+    // PADDLE_PRICE_WORKSPACE_FINANCIAL_SERVICES, PADDLE_PRICE_WORKSPACE_LEAD_GENERATOR).
+    // Falls back to the shared generic price when a specific one is not configured, so
+    // nothing breaks before the named prices exist. The workspace name is always in
+    // custom_data below, so metadata/webhook/admin are workspace-specific regardless.
+    const specificEnvKey = `PADDLE_PRICE_WORKSPACE_${workspace.id
+      .toUpperCase()
+      .replace(/-/g, '_')}`;
+    const priceId = process.env[specificEnvKey] || process.env.PADDLE_PRICE_WORKSPACE;
     if (!priceId) {
       throw new BadRequestException(
         'PADDLE_PRICE_WORKSPACE is not configured yet. Add the $97 Workspace Paddle price id to enable purchases.',
@@ -278,6 +288,10 @@ export class WorkspacesController {
         addon: 'workspace',
         workspaceId: workspace.id,
         workspaceName: workspace.name,
+        // Exact checkout/billing descriptor for this purchase, e.g.
+        // "Sales Workspace Add-On" — recorded so Admin/billing always shows which
+        // workspace the $97 recurring charge belongs to.
+        addonLabel: `${workspace.name} Add-On`,
       },
       email: user?.email || null,
     };
