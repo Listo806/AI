@@ -404,6 +404,25 @@ export default function Sidebar({
     },
   ];
 
+  // Compact flyout copy shared by desktop hover and mobile/tablet tap.
+  // Reuses the existing workspace data; "Includes" is the compact form of
+  // the old Key Capabilities list.
+  const getWorkspaceConnectionLine = (workspace) => {
+    const connectedBenefit = (workspace?.benefits || []).find(
+      (item) => String(item?.[1] || "").toUpperCase().includes("CONNECTED TO CORTEXA"),
+    );
+
+    if (connectedBenefit?.[2]) {
+      return String(connectedBenefit[2])
+        .replace(/^Works seamlessly with your existing\s+/i, "Connected to your ")
+        .replace(/^New leads flow straight into your existing\s+/i, "Connected to your ")
+        .replace(/\.$/, ".");
+    }
+
+    return "Connected to your Cortexa CRM, data, AI, and automation.";
+  };
+
+
 
   // CORTEXA WORKSPACES uses the same plan-feature gating as the
   // regular sidebar, but MUST NOT inherit PlanContext's fail-open behavior
@@ -860,7 +879,11 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       className={`crm-workspace-item ${
                         workspaceActive ? "is-active" : ""
                       } ${workspaceCanOpen ? "is-clickable" : "is-premium"}`}
-                      onMouseEnter={() => setHoveredWorkspace(workspace)}
+                      onMouseEnter={() => {
+                        if (typeof window !== "undefined" && window.innerWidth > 1024) {
+                          setHoveredWorkspace(workspace);
+                        }
+                      }}
                       onFocus={() => setHoveredWorkspace(workspace)}
                       onClick={() => {
                         // GLOBAL RULE: a LOCKED workspace never navigates. Clicking it
@@ -1024,8 +1047,16 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
       {!isCollapsed && hoveredWorkspace && (
         <aside
           className="crm-workspace-flyout"
-          onMouseEnter={() => setHoveredWorkspace(hoveredWorkspace)}
-          onMouseLeave={() => setHoveredWorkspace(null)}
+          onMouseEnter={() => {
+            if (typeof window !== "undefined" && window.innerWidth > 1024) {
+              setHoveredWorkspace(hoveredWorkspace);
+            }
+          }}
+          onMouseLeave={() => {
+            if (typeof window !== "undefined" && window.innerWidth > 1024) {
+              setHoveredWorkspace(null);
+            }
+          }}
         >
           <button
             type="button"
@@ -1144,10 +1175,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             </div>
 
             <div className="crm-workspace-detail-body">
-              <h4>Key Capabilities</h4>
+              <h4>WHAT&apos;S INCLUDED</h4>
 
               <div className="crm-workspace-capabilities">
-                {hoveredWorkspace.capabilities.map((capability) => (
+                {(hoveredWorkspace.capabilities || []).slice(0, 6).map((capability) => (
                   <span key={capability}>
                     <SidebarIcon name="circle-check" />
                     {capability}
@@ -1157,27 +1188,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
 
               <div className="crm-workspace-divider" />
 
-              <h4>Perfect For</h4>
-
-              <div className="crm-workspace-tags">
-                {hoveredWorkspace.perfectFor.map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-
-              <div className="crm-workspace-divider" />
-
-              <h4>What You Get</h4>
-
-              <div className="crm-workspace-benefits">
-                {hoveredWorkspace.benefits.map(([icon, title, desc]) => (
-                  <div key={title}>
-                    <SidebarIcon name={icon} />
-                    <strong>{title}</strong>
-                    <p>{desc}</p>
-                  </div>
-                ))}
-              </div>
+              <p className="crm-workspace-connected-line">
+                <SidebarIcon name="link-2" />
+                <span>{getWorkspaceConnectionLine(hoveredWorkspace)}</span>
+              </p>
 
               <div className="crm-workspace-price-row">
                 {!isWorkspaceActive(hoveredWorkspace) &&
@@ -1218,18 +1232,21 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       : `${hoveredWorkspace.label} Active`
                     : wsBusy
                       ? "Opening checkout…"
-                      : "Add to My Plan"}
+                      : "Add to My Plan →"}
                 </button>
 
                 {wsError && !isWorkspaceActive(hoveredWorkspace) ? (
                   <p className="crm-workspace-price-helper" style={{ color: "#dc2626" }}>
                     {wsError}
                   </p>
-                ) : (
+                ) : isWorkspaceActive(hoveredWorkspace) ? (
                   <p className="crm-workspace-price-helper">
-                    {isWorkspaceActive(hoveredWorkspace)
-                      ? "This workspace is active on your account."
-                      : "Add this workspace to your plan."}
+                    This workspace is active on your account.
+                  </p>
+                ) : (
+                  <p className="crm-workspace-secure">
+                    <SidebarIcon name="lock-keyhole" />
+                    <span>Secure checkout powered by Paddle</span>
                   </p>
                 )}
               </div>
