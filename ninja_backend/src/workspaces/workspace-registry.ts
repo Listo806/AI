@@ -65,7 +65,7 @@ export const WORKSPACE_CATALOG: WorkspaceDef[] = [
     id: 'real-estate',
     name: 'Real Estate Workspace',
     featureKey: 'realEstateWorkspace',
-    route: '/dashboard/properties',
+    route: '/dashboard/real-estate-workspace',
   },
   {
     id: 'team',
