@@ -1,6 +1,31 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import {
+  Bell,
+  CalendarDays,
+  CalendarRange,
+  CalendarCheck2,
+  CheckCircle2,
+  Clock3,
+  XCircle,
+  Sparkles,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  List,
+  Search,
+  Filter,
+  Users,
+  Timer,
+  Bot,
+  UserRound,
+  MapPin,
+  Coffee,
+  BriefcaseBusiness,
+  SlidersHorizontal,
+} from "lucide-react";
 import "./CalendarPage.css";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -94,6 +119,9 @@ export default function CalendarPage() {
   const [error, setError] = useState("");
   const [form, setForm] = useState(null);
   const [activity, setActivity] = useState([]);
+  const [mobileSearch, setMobileSearch] = useState("");
+  const [mobileOnlyMine, setMobileOnlyMine] = useState(true);
+  const [mobileShowCanceled, setMobileShowCanceled] = useState(false);
 
   // CRM picker state (type-ahead over leads + contacts).
   const [crmQuery, setCrmQuery] = useState("");
@@ -331,8 +359,387 @@ export default function CalendarPage() {
     return m ? m.name : null;
   };
 
+  const mobileToday = useMemo(() => {
+    const today = new Date();
+    return items
+      .filter((a) => sameDay(a.start, today))
+      .filter((a) => mobileShowCanceled || a.status !== "canceled")
+      .filter((a) => {
+        if (!mobileOnlyMine || !user?.id) return true;
+        return !a.assignedTo || a.assignedTo === user.id;
+      })
+      .filter((a) => {
+        const q = mobileSearch.trim().toLowerCase();
+        if (!q) return true;
+        return [a.title, a.attendeeName, a.location, typeLabel(a.type)]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q));
+      })
+      .sort((a, b) => a.start - b.start);
+  }, [items, mobileSearch, mobileOnlyMine, mobileShowCanceled, user?.id]);
+
+  const mobileHours = useMemo(() => {
+    const ms = mobileToday.reduce((sum, a) => sum + Math.max(0, a.end - a.start), 0);
+    return Math.round((ms / 3600000) * 10) / 10;
+  }, [mobileToday]);
+
+  const mobileMeetingCount = mobileToday.filter((a) =>
+    ["meeting", "consultation", "showing"].includes(a.type),
+  ).length;
+
+  const mobileFollowUps = mobileToday.filter((a) => a.type === "call").length;
+
+  const mobilePeriodInsight = useMemo(() => {
+    if (!items.length) return { label: t("calendar.mobile.noPattern"), pct: 0 };
+    const buckets = { morning: 0, afternoon: 0, evening: 0 };
+    items.forEach((a) => {
+      const h = a.start.getHours();
+      if (h < 12) buckets.morning += 1;
+      else if (h < 17) buckets.afternoon += 1;
+      else buckets.evening += 1;
+    });
+    const [key, count] = Object.entries(buckets).sort((a, b) => b[1] - a[1])[0];
+    return {
+      label:
+        key === "morning"
+          ? t("calendar.mobile.morning")
+          : key === "afternoon"
+            ? t("calendar.mobile.afternoon")
+            : t("calendar.mobile.evening"),
+      pct: Math.round((count / Math.max(1, items.length)) * 100),
+    };
+  }, [items, t]);
+
+  const mobileBusiestDay = useMemo(() => {
+    if (!items.length) return t("calendar.mobile.noBusyDay");
+    const counts = Array(7).fill(0);
+    items.forEach((a) => { counts[a.start.getDay()] += 1; });
+    const maxIndex = counts.indexOf(Math.max(...counts));
+    return new Date(2026, 0, 4 + maxIndex).toLocaleDateString([], { weekday: "long" });
+  }, [items, t]);
+
+  const mobileGapCount = useMemo(() => {
+    const day = mobileToday.slice().sort((a, b) => a.start - b.start);
+    if (day.length < 2) return 0;
+    let gaps = 0;
+    for (let i = 0; i < day.length - 1; i += 1) {
+      const gapMinutes = (day[i + 1].start - day[i].end) / 60000;
+      if (gapMinutes >= 15) gaps += 1;
+    }
+    return gaps;
+  }, [mobileToday]);
+
+  const mobileUpcoming = useMemo(() => {
+    const q = mobileSearch.trim().toLowerCase();
+    return upcoming
+      .filter((a) => mobileShowCanceled || a.status !== "canceled")
+      .filter((a) => {
+        if (!mobileOnlyMine || !user?.id) return true;
+        return !a.assignedTo || a.assignedTo === user.id;
+      })
+      .filter((a) => {
+        if (!q) return true;
+        return [a.title, a.attendeeName, a.location, typeLabel(a.type)]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q));
+      })
+      .slice(0, 4);
+  }, [upcoming, mobileSearch, mobileOnlyMine, mobileShowCanceled, user?.id]);
+
   return (
     <div className="cal-page">
+      <section className="cal-mobile-shell">
+        <div className="cal-mobile-top">
+          <div className="cal-mobile-title">
+            <h1>{t("calendar.title")}</h1>
+            <p>{t("calendar.subtitle")}</p>
+          </div>
+
+        </div>
+
+        <div className="cal-mobile-primary-actions">
+          <button type="button" className="cal-mobile-action is-ai" onClick={() => navigate("/dashboard/ai-cortexa")}>
+            <Sparkles />
+            <span>AI Assistant</span>
+          </button>
+          <button type="button" className="cal-mobile-action">
+            <Settings />
+            <span>Calendar Settings</span>
+          </button>
+        </div>
+
+        <section className="cal-mobile-section">
+          <h2>CALENDAR OVERVIEW</h2>
+          <div className="cal-mobile-kpis">
+            {[
+              { cls: "blue", icon: <CalendarDays />, value: kpi.total, label: t("calendar.kpiTotal"), sub: "" },
+              { cls: "green", icon: <CheckCircle2 />, value: kpi.confirmed, label: t("calendar.status.confirmed"), sub: "" },
+              { cls: "orange", icon: <Clock3 />, value: kpi.pending, label: t("calendar.status.pending"), sub: "" },
+              { cls: "blue", icon: <CalendarCheck2 />, value: kpi.completed, label: t("calendar.status.completed"), sub: "" },
+              { cls: "red", icon: <XCircle />, value: kpi.canceled, label: t("calendar.status.canceled"), sub: "" },
+            ].map((card) => (
+              <div key={card.label} className={`cal-mobile-kpi ${card.cls}`}>
+                <div className="cal-mobile-kpi-icon">{card.icon}</div>
+                <div className="cal-mobile-kpi-copy">
+                  <strong>{card.value}</strong>
+                  <span>{card.label}</span>
+                  {card.sub ? <small>{card.sub}</small> : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="cal-mobile-section">
+          <h2>CALENDAR CONTROLS</h2>
+
+          <button type="button" className="cal-mobile-control blue" onClick={() => setAnchor(new Date())}>
+            <CalendarDays />
+            <strong>{t("calendar.today").toUpperCase()}</strong>
+            <ChevronRight />
+          </button>
+
+          <button type="button" className="cal-mobile-control green">
+            <CalendarRange />
+            <strong>{rangeLabel.toUpperCase()}</strong>
+            <ChevronRight />
+          </button>
+
+          <div className="cal-mobile-prev-next">
+            <button type="button" onClick={() => move(-1)}>
+              <ChevronLeft />
+              <span>PREVIOUS</span>
+            </button>
+            <button type="button" onClick={() => move(1)}>
+              <span>NEXT</span>
+              <ChevronRight />
+            </button>
+          </div>
+
+          <button type="button" className="cal-mobile-new" onClick={() => openNew()}>
+            <Plus />
+            <span>{t("calendar.newAppointment").toUpperCase()}</span>
+          </button>
+
+          <div className="cal-mobile-view-list">
+            {[
+              ["day", <CalendarDays key="d" />, "blue"],
+              ["week", <CalendarRange key="w" />, "green"],
+              ["month", <CalendarDays key="m" />, "orange"],
+              ["agenda", <List key="a" />, "red"],
+            ].map(([v, icon, cls]) => (
+              <button key={v} type="button" className={cls} onClick={() => setView(v)}>
+                {icon}
+                <strong>{t(`calendar.view.${v}`).toUpperCase()}</strong>
+                <ChevronRight />
+              </button>
+            ))}
+          </div>
+
+          <div className="cal-mobile-filter-row">
+            <button type="button">
+              <Filter />
+              <span>ALL TYPES</span>
+              <ChevronRight />
+            </button>
+            <button
+              type="button"
+              className={mobileOnlyMine ? "active" : ""}
+              onClick={() => setMobileOnlyMine((v) => !v)}
+            >
+              <span className="cal-mobile-check">{mobileOnlyMine ? "✓" : ""}</span>
+              <span>MY APPOINTMENTS</span>
+            </button>
+            <button
+              type="button"
+              className={mobileShowCanceled ? "active" : ""}
+              onClick={() => setMobileShowCanceled((v) => !v)}
+            >
+              <span className="cal-mobile-check">{mobileShowCanceled ? "✓" : ""}</span>
+              <span>SHOW CANCELED</span>
+            </button>
+          </div>
+
+          <div className="cal-mobile-search-row">
+            <label>
+              <Search />
+              <input
+                value={mobileSearch}
+                onChange={(e) => setMobileSearch(e.target.value)}
+                placeholder="Search appointments..."
+              />
+            </label>
+            <button type="button">
+              <SlidersHorizontal />
+              <span>FILTERS</span>
+            </button>
+          </div>
+        </section>
+
+        <section className="cal-mobile-section">
+          <h2>CALENDAR SCHEDULE</h2>
+
+          <div className="cal-mobile-schedule">
+            <div className="cal-mobile-schedule-head">
+              <CalendarDays />
+              <button type="button" onClick={() => move(-1)}><ChevronLeft /></button>
+              <div>
+                <strong>{anchor.toLocaleDateString([], { weekday: "long" }).toUpperCase()}</strong>
+                <span>{anchor.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" }).toUpperCase()}</span>
+              </div>
+              <button type="button" onClick={() => move(1)}><ChevronRight /></button>
+            </div>
+
+            <div className="cal-mobile-timeline">
+              {mobileToday.length === 0 ? (
+                <div className="cal-mobile-empty">{t("calendar.nothingUpcoming")}</div>
+              ) : (
+                mobileToday.slice(0, 6).map((a) => {
+                  const info = typeInfo(a.type);
+                  return (
+                    <button
+                      type="button"
+                      key={a.id}
+                      className="cal-mobile-event-row"
+                      onClick={() => openView(a)}
+                      style={{ "--event-color": info.color }}
+                    >
+                      <time>{fmtTime(a.start)}</time>
+                      <span className="cal-mobile-event-dot" />
+                      <div className="cal-mobile-event-card">
+                        <strong>{a.title}</strong>
+                        <small>{fmtTime(a.start)} - {fmtTime(a.end)}</small>
+                        <span>
+                          <UserRound />
+                          {a.attendeeName || typeLabel(a.type)}
+                          {a.location ? <><i /><MapPin />{a.location}</> : null}
+                        </span>
+                      </div>
+                      <em className={`s-${a.status}`}>{t(`calendar.status.${a.status}`)}</em>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            <button type="button" className="cal-mobile-view-full" onClick={() => setView("day")}>
+              <CalendarDays />
+              <span>View Full Calendar</span>
+              <ChevronRight />
+            </button>
+          </div>
+
+          <div className="cal-mobile-summary-strip">
+            <div><CalendarDays /><strong>{mobileToday.length}</strong><span><span>Appointments</span><br />Today</span></div>
+            <div><Users /><strong>{mobileMeetingCount}</strong><span><span>Meetings</span><br />Today</span></div>
+            <div><Timer /><strong>{mobileHours}</strong><span><span>Hours Scheduled</span><br />Today</span></div>
+            <div><CheckCircle2 /><strong>{mobileFollowUps}</strong><span><span>Tasks Due</span><br />Today</span></div>
+          </div>
+        </section>
+
+        <section className="cal-mobile-section">
+          <h2>AI CALENDAR INSIGHTS</h2>
+          <div className="cal-mobile-insights">
+            <button type="button" className="green">
+              <div className="cal-mobile-insight-icon"><Sparkles /></div>
+              <div><strong>You’re Most Productive in the {mobilePeriodInsight.label}</strong><span>{mobilePeriodInsight.pct}% of your loaded meetings fall in this time period.</span></div>
+              <ChevronRight />
+            </button>
+            <button type="button" className="purple">
+              <div className="cal-mobile-insight-icon"><Users /></div>
+              <div><strong>Meeting Load: {mobileBusiestDay}</strong><span>This is your busiest day in the loaded calendar range.</span></div>
+              <ChevronRight />
+            </button>
+            <button type="button" className="orange">
+              <div className="cal-mobile-insight-icon"><Clock3 /></div>
+              <div><strong>{mobileGapCount} Gaps Available</strong><span>Open gaps of at least 15 minutes between today’s appointments.</span></div>
+              <ChevronRight />
+            </button>
+            <button type="button" className="cyan">
+              <div className="cal-mobile-insight-icon"><CalendarCheck2 /></div>
+              <div><strong>{mobileFollowUps} Follow Ups Due</strong><span>Follow-up calls scheduled for today.</span></div>
+              <ChevronRight />
+            </button>
+            <button type="button" className="pink">
+              <div className="cal-mobile-insight-icon"><Bot /></div>
+              <div><strong>AI Recommendation</strong><span>{mobileToday.length > 3 ? "Keep buffer time between appointments to reduce back-to-back load." : "Your day has room for focused follow-up and preparation time."}</span></div>
+              <ChevronRight />
+            </button>
+          </div>
+
+          <button type="button" className="cal-mobile-optimize">
+            <Sparkles />
+            <span>Optimize My Day</span>
+          </button>
+        </section>
+
+        <section className="cal-mobile-section cal-mobile-upcoming-section">
+          <h2>UPCOMING OVERVIEW</h2>
+          <div className="cal-mobile-mini-calendar-card">
+            <div className="cal-mobile-mini-title">
+              <CalendarDays />
+              <span>CALENDAR</span>
+              <strong>{anchor.toLocaleDateString([], { month: "long", year: "numeric" }).toUpperCase()}</strong>
+            </div>
+            <div className="cal-mobile-mini-grid">
+              {WEEKDAYS.map((w) => <div key={w} className="head">{w.toUpperCase()}</div>)}
+              {monthCells.map((d, i) => {
+                const dayEvents = items.filter((a) => sameDay(a.start, d));
+                return (
+                  <button
+                    type="button"
+                    key={i}
+                    className={`${d.getMonth() === anchor.getMonth() ? "" : "muted"} ${isToday(d) ? "today" : ""}`}
+                    onClick={() => { setAnchor(new Date(d)); setView("day"); }}
+                  >
+                    <span>{d.getDate()}</span>
+                    {dayEvents.length > 0 ? <i style={{ background: typeInfo(dayEvents[0].type).color }} /> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="cal-mobile-upcoming-card">
+            <div className="cal-mobile-upcoming-head">
+              <span><CalendarDays /> UPCOMING APPOINTMENTS</span>
+              <button type="button" onClick={() => setView("agenda")}>View All <ChevronRight /></button>
+            </div>
+            {mobileUpcoming.length === 0 ? (
+              <div className="cal-mobile-empty">{t("calendar.nothingUpcoming")}</div>
+            ) : (
+              mobileUpcoming.map((a) => (
+                <button
+                  type="button"
+                  key={a.id}
+                  className="cal-mobile-upcoming-row"
+                  onClick={() => openView(a)}
+                  style={{ "--event-color": typeInfo(a.type).color }}
+                >
+                  <div className="cal-mobile-upcoming-icon"><Users /></div>
+                  <div>
+                    <strong>{a.title}</strong>
+                    <span>{sameDay(a.start, new Date()) ? "Today" : a.start.toLocaleDateString([], { month: "short", day: "numeric" })} · {fmtTime(a.start)} - {fmtTime(a.end)}</span>
+                  </div>
+                  <em className={`s-${a.status}`}>{t(`calendar.status.${a.status}`)}</em>
+                  <ChevronRight />
+                </button>
+              ))
+            )}
+          </div>
+
+          <button type="button" className="cal-mobile-create-bottom" onClick={() => openNew()}>
+            <Plus />
+            <div>
+              <strong>CREATE NEW APPOINTMENT</strong>
+              <span>Quickly add a new event to your calendar.</span>
+            </div>
+            <ChevronRight />
+          </button>
+        </section>
+      </section>
+
+      <div className="cal-desktop-layout">
       <div className="cal-header">
         <h1>{t("calendar.title")}</h1>
         <p className="cal-sub">{t("calendar.subtitle")}</p>
@@ -474,6 +881,8 @@ export default function CalendarPage() {
             <button onClick={() => openNew({ type: "meeting" })}>🤝 {t("calendar.qaMeeting")}</button>
           </div>
         </div>
+      </div>
+
       </div>
 
       {modalOpen && mode === "view" && editing && (

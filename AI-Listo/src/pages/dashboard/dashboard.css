@@ -2543,9 +2543,9 @@ body .next-action-card svg {
 
   .dashboard-page .cx-free-ai-units__top {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 250px;
+    grid-template-columns: minmax(0, 1fr) 155px;
     align-items: center;
-    gap: 28px;
+    gap: 10px;
   }
 
   .dashboard-page .cx-free-ai-units__balance {
@@ -2597,11 +2597,6 @@ body .next-action-card svg {
     color: #94a3b8;
     font-size: 10px;
     line-height: 1.35;
-  }
-
-  .dashboard-page .cx-free-ai-units__upgrade-wrap {
-    width: 250px;
-    text-align: center;
   }
 
   .dashboard-page .cx-free-ai-units__upgrade-btn {
@@ -2800,11 +2795,6 @@ body .next-action-card svg {
     box-shadow: 0 5px 16px rgba(15, 23, 42, 0.04);
   }
 
-  .dashboard-page .cx-free-ai-units__top {
-    grid-template-columns: minmax(0, 1fr) 132px;
-    gap: 12px;
-  }
-
   .dashboard-page .cx-free-ai-units__eyebrow {
     margin-bottom: 4px;
     font-size: 8px;
@@ -2833,7 +2823,7 @@ body .next-action-card svg {
   }
 
   .dashboard-page .cx-free-ai-units__upgrade-wrap {
-    width: 132px;
+    width: 155px;
   }
 
   .dashboard-page .cx-free-ai-units__upgrade-btn {
@@ -2851,7 +2841,7 @@ body .next-action-card svg {
 
   .dashboard-page .cx-free-ai-units__upgrade-wrap p {
     margin-top: 4px;
-    font-size: 7px;
+    font-size: 8px;
     line-height: 1.25;
   }
 
@@ -2872,7 +2862,7 @@ body .next-action-card svg {
 
   .dashboard-page .cx-free-ai-units__scale {
     margin-top: 5px;
-    font-size: 7px;
+    font-size: 9px;
   }
 }
 
