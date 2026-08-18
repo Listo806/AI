@@ -11,18 +11,16 @@ import { useAuth } from "../../context/AuthContext";
 import { currentSiteLanguage } from "../../i18n/currentLanguage";
 import {
   ArrowRight,
-  CheckCircle2,
+  Box,
   Eye,
   EyeOff,
   LockKeyhole,
   Mail,
   Phone,
   ShieldCheck,
-  Sparkles,
   User,
 } from "lucide-react";
-import headlogoImg from "../../assets/cortexa/headlogo.png";
-import "./Trial.css";
+import "./Common.css";
 
 const t = {
   en: {
@@ -345,37 +343,38 @@ export default function StartTrial() {
   };
 
   return (
-    <main className="cxs-page">
-      {/* Card is a <div>, not a <section>: a global `section { padding:0!important }`
-          rule elsewhere in the app would otherwise zero out the card padding. */}
-      <div className="cxs-card">
-        <div className="cxs-brand">
-          <img src={headlogoImg} alt="Cortexa" />
+    <main className="trial-v3-page">
+      <section className="trial-v3-card">
+        <div className="trial-v3-mobile-brand" aria-hidden="true">
+          <Box size={52} strokeWidth={2.2} />
         </div>
 
-        <header className="cxs-header">
+        <header className="trial-v3-header">
+          <h1>
+            <span className="trial-v3-desktop-copy">{tr.title}</span>
+            <span className="trial-v3-mobile-copy">{tr.mobileTitle}</span>
+          </h1>
           {isFreeAccessFlow && (
-            <span className="cxs-eyebrow">
-              <Sparkles strokeWidth={2.4} aria-hidden="true" />
-              Free Forever Plan
-            </span>
+            <p>
+              <span className="trial-v3-desktop-copy">
+                Create your Free Forever account.
+              </span>
+              <span className="trial-v3-mobile-copy">
+                Create your Free Forever account.
+              </span>
+            </p>
           )}
-          <h1>{tr.mobileTitle}</h1>
-          <p>
-            {isFreeAccessFlow ? (
-              <>
-                Set up your <b>Free Forever</b> account. No card, no commitment.
-              </>
-            ) : (
-              tr.subtitle
-            )}
-          </p>
         </header>
 
-        <form className="cxs-form" onSubmit={handleSubmit}>
-          <div className="cxs-fields">
-            <label className="cxs-field">
-              <User className="cxs-field-icon" strokeWidth={2} aria-hidden="true" />
+        <form className="trial-v3-form" onSubmit={handleSubmit}>
+          <div className="trial-v3-fields">
+            <label className="trial-v3-field">
+              <User
+                className="trial-v3-field-icon"
+                size={28}
+                strokeWidth={2}
+                aria-hidden="true"
+              />
               <input
                 type="text"
                 name="name"
@@ -387,8 +386,13 @@ export default function StartTrial() {
               />
             </label>
 
-            <label className="cxs-field">
-              <Mail className="cxs-field-icon" strokeWidth={2} aria-hidden="true" />
+            <label className="trial-v3-field">
+              <Mail
+                className="trial-v3-field-icon"
+                size={28}
+                strokeWidth={2}
+                aria-hidden="true"
+              />
               <input
                 type="email"
                 name="email"
@@ -400,8 +404,13 @@ export default function StartTrial() {
               />
             </label>
 
-            <label className="cxs-field">
-              <Phone className="cxs-field-icon" strokeWidth={2} aria-hidden="true" />
+            <label className="trial-v3-field">
+              <Phone
+                className="trial-v3-field-icon"
+                size={28}
+                strokeWidth={2}
+                aria-hidden="true"
+              />
               <input
                 type="tel"
                 name="phone"
@@ -413,8 +422,13 @@ export default function StartTrial() {
               />
             </label>
 
-            <label className="cxs-field">
-              <LockKeyhole className="cxs-field-icon" strokeWidth={2} aria-hidden="true" />
+            <label className="trial-v3-field">
+              <LockKeyhole
+                className="trial-v3-field-icon"
+                size={28}
+                strokeWidth={2}
+                aria-hidden="true"
+              />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -427,55 +441,62 @@ export default function StartTrial() {
               />
               <button
                 type="button"
-                className="cxs-eye"
+                className="trial-v3-password-toggle"
                 onClick={() => setShowPassword((current) => !current)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                {showPassword ? <EyeOff size={27} /> : <Eye size={27} />}
               </button>
             </label>
           </div>
 
-          <button type="submit" className="cxs-submit" disabled={loading}>
-            {loading ? (
-              <strong>{tr.loadingBtn}</strong>
-            ) : (
-              <>
-                <strong>
-                  {isFreeAccessFlow ? "Create My Free Account" : tr.continueBtn}
-                </strong>
-                <ArrowRight className="cxs-submit-arrow" strokeWidth={2.2} aria-hidden="true" />
-              </>
-            )}
+          <button type="submit" className="trial-v3-submit" disabled={loading}>
+            <span className="trial-v3-submit-main">
+              <LockKeyhole size={27} strokeWidth={2} />
+              <strong>
+                {loading ? (
+                  tr.loadingBtn
+                ) : (
+                  <>
+                    <span className="trial-v3-desktop-copy">
+                      {isFreeAccessFlow
+                        ? "CREATE MY FREE ACCOUNT"
+                        : tr.continueBtn}
+                    </span>
+                    <span className="trial-v3-mobile-copy">
+                      {isFreeAccessFlow
+                        ? "Create My Free Account"
+                        : tr.mobileContinueBtn}
+                    </span>
+                  </>
+                )}
+              </strong>
+            </span>
+
+            <ArrowRight
+              className="trial-v3-submit-arrow"
+              size={34}
+              strokeWidth={2}
+            />
           </button>
 
-          {isFreeAccessFlow && (
-            <div className="cxs-trust">
-              <span>
-                <CheckCircle2 strokeWidth={2.4} aria-hidden="true" />
-                No credit card
-              </span>
-              <span>
-                <CheckCircle2 strokeWidth={2.4} aria-hidden="true" />
-                Free forever
-              </span>
-              <span>
-                <CheckCircle2 strokeWidth={2.4} aria-hidden="true" />
-                Cancel anytime
-              </span>
-            </div>
-          )}
-
-          <div className="cxs-security">
-            <ShieldCheck strokeWidth={2} aria-hidden="true" />
+          <div className="trial-v3-security">
+            <ShieldCheck size={30} strokeWidth={2} />
             <p>
-              {isFreeAccessFlow
-                ? "Your information is safe and never shared."
-                : tr.security}
+              <span className="trial-v3-desktop-copy">
+                {isFreeAccessFlow
+                  ? "No credit card required. Free forever."
+                  : tr.security}
+              </span>
+              <span className="trial-v3-mobile-copy">
+                {isFreeAccessFlow
+                  ? "No credit card required. Free forever."
+                  : tr.mobileSecurity}
+              </span>
             </p>
           </div>
         </form>
-      </div>
+      </section>
     </main>
   );
 }

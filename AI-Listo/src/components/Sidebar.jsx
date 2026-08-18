@@ -386,7 +386,21 @@ export default function Sidebar({
       capabilities: ["Projects","Kanban Boards","Tasks & Assignments","My Tasks","Team Calendar","Deadlines & Priorities","Time Tracking","Workload Visibility","Files & Documents","Comments & @Mentions","Team Collaboration","Roles & Permissions","Activity Tracking","Team Reporting","AI-Assisted Workflows"],
       perfectFor: ["Sales Teams","Operations Teams","Project Teams","Agencies","Service Businesses","Growing Companies"],
       benefits: [["users-round","COMPLETE TEAM OPERATIONS","Manage internal projects, tasks, boards, assignments, deadlines, priorities, files, and team activity from one organized workspace."],["key-round","WORK MANAGEMENT","Give every team member clear ownership of their work with tasks, priorities, deadlines, calendars, workload visibility, and time tracking."],["chart-spline","CONNECTED COLLABORATION","Keep projects, tasks, comments, files, approvals, activity, and team communication connected to the work being completed."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa CRM, customers, contacts, AI, automation, analytics, and business data."]],
+      price: 97,
       path: "/dashboard/team",
+    },
+    {
+      id: "lead-generator",
+      feature: "leadGenerator",
+      label: "Lead Generator",
+      icon: "target",
+      tone: "indigo",
+      description: "Find, verify, and enrich new business leads on demand, then push them straight into your Cortexa pipeline.",
+      capabilities: ["Business Lead Search","Company & Contact Discovery","Email Finding","Email Verification","Data Enrichment","Bulk Lead Export","CRM Pipeline Sync","Search History","Credit Usage Tracking","Lead Quality Scoring"],
+      perfectFor: ["Sales Teams","Agencies","Recruiters","B2B Companies","Growth Teams"],
+      benefits: [["target","FIND NEW LEADS ON DEMAND","Search companies and decision-makers by industry, location, and role, and pull fresh prospects whenever you need them."],["mail-check","VERIFIED CONTACT DATA","Find and verify business emails so your outreach reaches real inboxes and your sender reputation stays clean."],["shield-check","CONNECTED TO CORTEXA","New leads flow straight into your existing Cortexa pipeline, contacts, AI, and automation."]],
+      price: 97,
+      path: "/dashboard/generator",
     },
   ];
 
@@ -445,9 +459,8 @@ export default function Sidebar({
     if (isSuperAdminAccount) {
       return true;
     }
-    if (workspace?.id === "lead-generator") {
-      return !!leadGenEntitled;
-    }
+    // Lead Generator now uses the SAME workspace entitlement as every other $97
+    // workspace (catalog id "lead-generator"), no separate add-on system.
     return !!wsEntitled[catalogIdFor(workspace?.id)];
   };
 
@@ -610,7 +623,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
     { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
-    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics", feature: "advancedAnalytics" },
+    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
   ];
 
   let navItems = operationalNav;
@@ -884,41 +897,6 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                   );
                 })}
 
-                {/* Lead Generator lives inside CORTEXA WORKSPACES, immediately
-                    after Team Workspace. It is not a PREMIUM/ACTIVE workspace. */}
-                <NavLink
-                  to="/dashboard/generator"
-                  className="crm-workspace-item crm-workspace-lead-generator"
-                  onClick={() => {
-                    if (onClose) onClose();
-                  }}
-                >
-                  <span className="crm-workspace-icon crm-workspace-icon-indigo">
-                    <SidebarIcon name="target" />
-                  </span>
-
-                  <span className="crm-workspace-label">
-                    {t("nav.generator")}
-                  </span>
-
-                  {(() => {
-                    const leadGenActive =
-                      !previewWorkspacesAsCustomer &&
-                      (leadGenEntitled || isSuperAdminAccount);
-                    return (
-                      <span
-                        className={`crm-workspace-badge ${
-                          leadGenActive ? "active" : "locked"
-                        }`}
-                      >
-                        {leadGenActive ? "ACTIVE" : "LOCKED"}
-                      </span>
-                    );
-                  })()}
-
-                  <SidebarIcon name="chevron-right"
-                    className="crm-workspace-chevron" />
-                </NavLink>
               </div>
 
               {(() => {

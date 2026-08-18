@@ -380,18 +380,8 @@ function AppRoutes() {
         <Route path="ai-messaging" element={<AIMessaging />} />
         <Route path="ai-logs" element={<AIActivityLogs />} />
 
-        {/* Analytics Route (paid: advanced analytics) */}
-        <Route
-          path="analytics"
-          element={
-            <FeatureRoute
-              feature="advancedAnalytics"
-              title="Advanced analytics is on a paid plan"
-            >
-              <Analytics />
-            </FeatureRoute>
-          }
-        />
+        {/* Analytics Route — included for all plans, Free included. No paywall. */}
+        <Route path="analytics" element={<Analytics />} />
 
         {/* Sales Workspace */}
         <Route
@@ -560,7 +550,15 @@ function AppRoutes() {
             </FeatureRoute>
           }
         />
-        <Route path="generator" element={<LeadGeneratorGate />} />
+        {/* Lead Generator — same $97 workspace add-on flow as every other Workspace. */}
+        <Route
+          path="generator"
+          element={
+            <WorkspaceGate workspaceId="lead-generator">
+              <LeadGeneratorPage />
+            </WorkspaceGate>
+          }
+        />
 
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js 
         <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />*/}

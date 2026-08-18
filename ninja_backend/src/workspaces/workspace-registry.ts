@@ -73,6 +73,12 @@ export const WORKSPACE_CATALOG: WorkspaceDef[] = [
     featureKey: 'teamWorkspace',
     route: '/dashboard/team',
   },
+  {
+    id: 'lead-generator',
+    name: 'Lead Generator Workspace',
+    featureKey: 'leadGenerator',
+    route: '/dashboard/generator',
+  },
 ];
 
 const BY_ID: Record<string, WorkspaceDef> = WORKSPACE_CATALOG.reduce(
