@@ -567,7 +567,6 @@ export default function CortexaDashboard() {
       <p className="sub_head">
         {t("dashboard.subheading")}
       </p>
-      <AiUsageMeter />
       <header className="dashboard-header">
         <div className="header-actions">
           {isMobile ? (
@@ -688,6 +687,9 @@ export default function CortexaDashboard() {
           <AlertTriangle size={14} /> {error}
         </div>
       )}
+
+      {/* FREE PLAN AI UNITS — shown only for Free accounts by AiUsageMeter */}
+      <AiUsageMeter />
 
       {/* AI COMMAND CENTER */}
       <section className="ai-command-banner">
