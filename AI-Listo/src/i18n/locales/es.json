@@ -1719,7 +1719,20 @@
     "estimatedRevenueNext30Days": "Ingresos estimados en los próximos 30 días",
     "topOpportunity": "Mejor oportunidad: {{value}}",
     "predictiveForecastingComingSoon": "El pronóstico predictivo llegará pronto.",
-    "dataReflectsSyncedActivity": "Los datos reflejan tu actividad sincronizada más reciente"
+    "dataReflectsSyncedActivity": "Los datos reflejan tu actividad sincronizada más reciente",
+    "mobileNotifications": "Notificaciones",
+    "mobileKeyPerformanceIndicators": "Indicadores clave de rendimiento",
+    "mobileAcrossConnectedSources": "En las fuentes de leads conectadas",
+    "mobileAboutLeadSources": "Acerca de las fuentes de leads",
+    "mobileAboutLeadSourcesDesc": "Los datos se capturan de los canales conectados y se atribuyen usando la fuente disponible más reciente.",
+    "mobileAboutPipelineLeakage": "Acerca de la pérdida del pipeline",
+    "mobileAboutPipelineLeakageDesc": "Este análisis ayuda a entender la caída de conversión en cada etapa para tomar medidas y cerrar más negocios.",
+    "mobileVsPreviousPeriod": "vs. período anterior",
+    "mobileAboutActivity": "Acerca de la actividad",
+    "mobileAboutActivityDesc": "Datos en tiempo real de conversaciones, respuestas y citas en todos los canales conectados.",
+    "mobileAboutTeamPerformance": "Acerca del rendimiento del equipo",
+    "mobileAboutTeamPerformanceDesc": "Las métricas se basan en los datos disponibles de equipo, negocios y conversaciones dentro del rango de fechas seleccionado."
+
   },
   "aiAssistant": {
     "title": "Asistente IA",

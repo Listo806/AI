@@ -1029,10 +1029,10 @@
     }
   },
   "whatsapp": {
-    "backToInbox":"Back to Inbox",
-    "exportCsv":"Export CSV",
-    "importCustomers":"Import Customers",
-    "addCustomer":"Add Customer",
+    "backToInbox": "Back to Inbox",
+    "exportCsv": "Export CSV",
+    "importCustomers": "Import Customers",
+    "addCustomer": "Add Customer",
     "title": "WhatsApp",
     "apiStatus": "WhatsApp Business API Status",
     "accountStatus": "Account Status",
@@ -1719,7 +1719,20 @@
     "estimatedRevenueNext30Days": "Estimated revenue next 30 days",
     "topOpportunity": "Top Opportunity: {{value}}",
     "predictiveForecastingComingSoon": "Predictive forecasting is coming soon.",
-    "dataReflectsSyncedActivity": "Data reflects your most recent synced activity"
+    "dataReflectsSyncedActivity": "Data reflects your most recent synced activity",
+    "mobileNotifications": "Notifications",
+    "mobileKeyPerformanceIndicators": "Key Performance Indicators",
+    "mobileAcrossConnectedSources": "Across connected lead sources",
+    "mobileAboutLeadSources": "About Lead Sources",
+    "mobileAboutLeadSourcesDesc": "Data is captured from connected channels and attributed using the latest available source.",
+    "mobileAboutPipelineLeakage": "About Pipeline Leakage",
+    "mobileAboutPipelineLeakageDesc": "This analysis helps you understand conversion drop-off at each stage so you can take action and close more deals.",
+    "mobileVsPreviousPeriod": "vs prev. period",
+    "mobileAboutActivity": "About Activity",
+    "mobileAboutActivityDesc": "Real-time data from conversations, replies, and appointments across connected channels.",
+    "mobileAboutTeamPerformance": "About Team Performance",
+    "mobileAboutTeamPerformanceDesc": "Metrics are based on available team, deal, and conversation data within the selected date range."
+
   },
   "aiAssistant": {
     "title": "AI Assistant",

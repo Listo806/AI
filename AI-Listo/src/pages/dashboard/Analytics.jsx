@@ -55,6 +55,13 @@ import {
   PieChartIcon,
   CheckCircle,
   ArrowRight,
+  Menu,
+  Plus,
+  MoreHorizontal,
+  ChevronRight,
+  PhoneCall,
+  CircleDollarSign,
+  XCircle,
 } from "lucide-react";
 
 import {
@@ -102,14 +109,14 @@ function periodLabel(range, t) {
   return t("analytics.periodLast30Days");
 }
 
-function dateRangeLabel(range) {
+function dateRangeLabel(range, locale = "en-US") {
   const days = rangeToDays(range);
   const end = new Date();
   const start = new Date();
   start.setDate(start.getDate() - days);
   const opts = { month: "short", day: "numeric" };
-  return `${start.toLocaleDateString("en-US", opts)} – ${end.toLocaleDateString(
-    "en-US",
+  return `${start.toLocaleDateString(locale, opts)} – ${end.toLocaleDateString(
+    locale,
     opts
   )}, ${end.getFullYear()}`;
 }
@@ -122,7 +129,7 @@ function shortDate(value) {
 
 export default function CortexaAnalyticsDashboard() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [range, setRange] = useState("30d");
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = () => setRefreshTick((t) => t + 1);
@@ -319,6 +326,32 @@ export default function CortexaAnalyticsDashboard() {
   const lostReasons = [];
   const teamPerformance = [];
 
+
+  const mobileKpiTones = [
+    "green",
+    "blue",
+    "cyan",
+    "purple",
+    "orange",
+    "red",
+    "blue",
+    "green",
+  ];
+
+  const mobilePipelineTones = ["blue", "cyan", "orange", "green", "red"];
+
+  const mobileSourceTone = (index) =>
+    ["blue", "green", "cyan", "blue", "purple", "neutral"][index % 6];
+
+  const mobileSourceIcon = (sourceName) => {
+    const source = String(sourceName || "").toLowerCase();
+    if (source.includes("whatsapp")) return MessageCircle;
+    if (source.includes("facebook") || source.includes("instagram")) return Megaphone;
+    if (source.includes("google")) return Globe;
+    if (source.includes("website") || source.includes("web")) return Globe;
+    return Globe;
+  };
+
   // Build a CSV from the already-loaded analytics data (no fabricated values).
   function exportData() {
     const rows = [];
@@ -390,6 +423,436 @@ export default function CortexaAnalyticsDashboard() {
 
   return (
     <div className="analytics-page">
+
+      <section className="analytics-mobile-v2">
+        <header className="amv2-header">
+          
+          <div className="amv2-heading">
+            <h1>{t("analytics.analyticsOverview")}</h1>
+            <p>{t("analytics.subheading")}</p>
+          </div>
+
+        </header>
+
+        <div className="amv2-controls">
+          <div className="amv2-range-select">
+            <Calendar />
+            <select value={range} onChange={(e) => setRange(e.target.value)}>
+              <option value="today">{t("analytics.periodToday")}</option>
+              <option value="7d">{t("analytics.periodLast7Days")}</option>
+              <option value="30d">{t("analytics.periodLast30Days")}</option>
+            </select>
+            <ChevronDown />
+          </div>
+
+          <div className="amv2-date-range">
+            <Calendar />
+            <span>{dateRangeLabel(range, i18n.language)}</span>
+          </div>
+
+          <button type="button" className="amv2-refresh" onClick={refresh}>
+            <RefreshCw />
+            <span>{t("analytics.refresh")}</span>
+          </button>
+        </div>
+
+        {loading && (
+          <div className="amv2-system-message">
+            <RefreshCw />
+            {t("analytics.loadingAnalytics")}
+          </div>
+        )}
+
+        {error && (
+          <div className="amv2-system-message error">
+            <AlertTriangle />
+            {error}
+          </div>
+        )}
+
+        <section className="amv2-section amv2-section-kpi">
+          <div className="amv2-section-title">
+            <span>1</span>
+            <div>
+              <h2>{t("analytics.mobileKeyPerformanceIndicators")}</h2>
+            </div>
+          </div>
+
+          <div className="amv2-kpi-list">
+            {kpisRow1.map((kpi, index) => {
+              const Icon = kpi.icon;
+              return (
+                <article
+                  key={kpi.title}
+                  className={`amv2-kpi-card ${mobileKpiTones[index]}`}
+                >
+                  <div className="amv2-kpi-icon">
+                    <Icon />
+                  </div>
+                  <div className="amv2-kpi-copy">
+                    <span>{kpi.title}</span>
+                    <strong>{kpi.value}</strong>
+                  </div>
+                  <div className="amv2-kpi-period">
+                    <strong>{NO_DATA}</strong>
+                    <span>{kpi.subtext}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="amv2-section amv2-section-source">
+          <div className="amv2-section-title with-action">
+            <span>2</span>
+            <div>
+              <h2>{t("analytics.leadSourceIntelligence")}</h2>
+              <p>{t("analytics.leadVolumeBySource")}</p>
+            </div>
+            <button type="button" onClick={() => navigate("/dashboard/leads")}>
+              {t("analytics.viewAllSources")} <ArrowRight />
+            </button>
+          </div>
+
+          <div className="amv2-source-total">
+            <div className="amv2-source-total-icon">
+              <Users />
+            </div>
+            <div>
+              <span>{t("analytics.totalLeads")}</span>
+              <strong>{totalSourceLeads}</strong>
+              <small>
+                {leadSources.length === 0
+                  ? t("analytics.noLeadSourceData")
+                  : t("analytics.mobileAcrossConnectedSources")}
+              </small>
+            </div>
+          </div>
+
+          <div className="amv2-source-list">
+            {leadSources.length === 0 ? (
+              <div className="amv2-empty">{t("analytics.noLeadSourceData")}</div>
+            ) : (
+              leadSources.map((source, index) => {
+                const SourceIcon = mobileSourceIcon(source.name);
+                return (
+                  <div
+                    key={source.name}
+                    className={`amv2-source-row ${mobileSourceTone(index)}`}
+                  >
+                    <span className="amv2-source-icon">
+                      <SourceIcon />
+                    </span>
+                    <strong>{source.name}</strong>
+                    <span>{source.value}</span>
+                    <span>{source.percentage}</span>
+                    <ChevronRight />
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="amv2-about-box blue">
+            <HelpCircle />
+            <div>
+              <strong>{t("analytics.mobileAboutLeadSources")}</strong>
+              <p>{t("analytics.mobileAboutLeadSourcesDesc")}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="amv2-section amv2-section-pipeline">
+          <div className="amv2-section-title with-action">
+            <span>3</span>
+            <div>
+              <h2>{t("analytics.pipelineLeakageAnalysis")}</h2>
+              <p>{t("analytics.pipelineLeakageSubtitle")}</p>
+            </div>
+            <button type="button" onClick={() => navigate("/dashboard/pipeline")}>
+              {t("analytics.viewFullPipeline")} <ArrowRight />
+            </button>
+          </div>
+
+          <div className="amv2-pipeline-list">
+            {pipelineStages.length === 0 ? (
+              <div className="amv2-empty">{t("analytics.noDataAvailable")}</div>
+            ) : (
+              pipelineStages.map((stage, index) => {
+                const width = `${Math.round((stage.count / funnelMax) * 100)}%`;
+                const conversion =
+                  totalLeads > 0
+                    ? `${Math.round((stage.count / totalLeads) * 100)}%`
+                    : "0%";
+                const previous = index > 0 ? pipelineStages[index - 1].count : null;
+                const drop =
+                  index > 0 && previous > 0
+                    ? `${Math.round(((stage.count - previous) / previous) * 100)}%`
+                    : NO_DATA;
+                const StageIcon =
+                  index === 0
+                    ? Users
+                    : index === 1
+                      ? PhoneCall
+                      : index === 2
+                        ? ShieldCheck
+                        : index === 3
+                          ? CheckCircle
+                          : XCircle;
+
+                return (
+                  <article
+                    key={stage.name}
+                    className={`amv2-pipeline-row ${mobilePipelineTones[index]}`}
+                  >
+                    <div className="amv2-pipeline-icon">
+                      <StageIcon />
+                    </div>
+                    <div className="amv2-pipeline-main">
+                      <strong>{stage.name}</strong>
+                      <div className="amv2-pipeline-progress">
+                        <i style={{ width }} />
+                      </div>
+                    </div>
+                    <div className="amv2-pipeline-stats">
+                      <strong>{stage.count}</strong>
+                      <span>{conversion}</span>
+                      <small>{t("analytics.vsPrev")}</small>
+                      <em>{drop}</em>
+                    </div>
+                    <ChevronRight />
+                  </article>
+                );
+              })
+            )}
+          </div>
+
+          <div className="amv2-about-box blue">
+            <HelpCircle />
+            <div>
+              <strong>{t("analytics.mobileAboutPipelineLeakage")}</strong>
+              <p>{t("analytics.mobileAboutPipelineLeakageDesc")}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="amv2-section amv2-section-activity">
+          <div className="amv2-section-title">
+            <span>4</span>
+            <div>
+              <h2>{t("analytics.activityOverTime")}</h2>
+              <p>{t("analytics.platformActivitySubtitle")}</p>
+            </div>
+          </div>
+
+          <div className="amv2-activity-chart">
+            {activityData.length === 0 ? (
+              <div className="amv2-empty chart-empty">
+                {t("analytics.noActivityInPeriod")}
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <AreaChart
+                  data={activityData}
+                  margin={{ top: 12, right: 12, left: -20, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient
+                      id="mobileActivityGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor="#33d353" stopOpacity={0.32} />
+                      <stop offset="100%" stopColor="#33d353" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="5 5"
+                    vertical={false}
+                    stroke="rgba(173,181,193,.26)"
+                  />
+                  <XAxis
+                    dataKey="day"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#adb5c1", fontSize: 11 }}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#adb5c1", fontSize: 11 }}
+                  />
+                  <Tooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="conversations"
+                    stroke="#33d353"
+                    strokeWidth={3}
+                    fill="url(#mobileActivityGradient)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          <div className="amv2-activity-metrics">
+            <article className="green">
+              <MessageCircle />
+              <div>
+                <span>{t("analytics.conversations")}</span>
+                <strong>{metrics ? metrics.conversations_total ?? 0 : NO_DATA}</strong>
+              </div>
+              <div>
+                <strong>{NO_DATA}</strong>
+                <span>{t("analytics.mobileVsPreviousPeriod")}</span>
+              </div>
+            </article>
+
+            <article className="cyan">
+              <MessageCircle />
+              <div>
+                <span>{t("analytics.repliesSent")}</span>
+                <strong>{NO_DATA}</strong>
+              </div>
+              <div>
+                <strong>{NO_DATA}</strong>
+                <span>{t("analytics.mobileVsPreviousPeriod")}</span>
+              </div>
+            </article>
+
+            <article className="blue">
+              <MessageCircle />
+              <div>
+                <span>{t("analytics.repliesThisPeriod")}</span>
+                <strong>{NO_DATA}</strong>
+              </div>
+              <div>
+                <strong>{NO_DATA}</strong>
+                <span>{t("analytics.mobileVsPreviousPeriod")}</span>
+              </div>
+            </article>
+
+            <article className="purple">
+              <CalendarCheck />
+              <div>
+                <span>{t("analytics.appointmentsBooked")}</span>
+                <strong>{NO_DATA}</strong>
+              </div>
+              <div>
+                <strong>{NO_DATA}</strong>
+                <span>{t("analytics.mobileVsPreviousPeriod")}</span>
+              </div>
+            </article>
+          </div>
+
+          <button
+            type="button"
+            className="amv2-workspace-link"
+            onClick={() => navigate("/dashboard/whatsapp")}
+          >
+            <MessageCircle />
+            <span>{t("analytics.openWhatsappWorkspace")}</span>
+            <ChevronRight />
+          </button>
+
+          <div className="amv2-about-box green">
+            <HelpCircle />
+            <div>
+              <strong>{t("analytics.mobileAboutActivity")}</strong>
+              <p>{t("analytics.mobileAboutActivityDesc")}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="amv2-section amv2-section-lost">
+          <div className="amv2-section-title with-action">
+            <span>5</span>
+            <div>
+              <h2>{t("analytics.lostDealReasons")}</h2>
+              <p>{t("analytics.whyDealsDidntClose")}</p>
+            </div>
+            <button type="button" onClick={() => navigate("/dashboard/pipeline")}>
+              {t("analytics.viewAllReasons")} <ArrowRight />
+            </button>
+          </div>
+
+          <div className="amv2-lost-list">
+            {lostReasons.length === 0 ? (
+              <div className="amv2-empty">{t("analytics.noDataAvailable")}</div>
+            ) : (
+              lostReasons.map((item, index) => (
+                <article key={`${item.reason}-${index}`}>
+                  <span className="amv2-lost-icon">
+                    <AlertTriangle />
+                  </span>
+                  <div>
+                    <strong>{item.reason}</strong>
+                    <div className="amv2-lost-progress">
+                      <i style={{ width: item.width }} />
+                    </div>
+                  </div>
+                  <span>{item.count}</span>
+                  <span>{item.percentage}%</span>
+                  <ChevronRight />
+                </article>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section className="amv2-section amv2-section-team">
+          <div className="amv2-section-title with-action">
+            <span>5</span>
+            <div>
+              <h2>{t("analytics.teamPerformance")}</h2>
+              <p>{t("analytics.howYourTeamIsPerforming")}</p>
+            </div>
+            <button type="button" onClick={() => navigate("/dashboard/team")}>
+              {t("analytics.viewFullTeamReport")} <ArrowRight />
+            </button>
+          </div>
+
+          <div className="amv2-team-list">
+            {teamPerformance.length === 0 ? (
+              <div className="amv2-empty">{t("analytics.noDataAvailable")}</div>
+            ) : (
+              teamPerformance.map((agent, index) => (
+                <article key={`${agent.name}-${index}`}>
+                  <span className="amv2-team-avatar">
+                    {String(agent.name || "?")
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((part) => part.charAt(0))
+                      .join("")
+                      .toUpperCase()}
+                  </span>
+                  <strong>{agent.name}</strong>
+                  <span>{agent.rate}</span>
+                  <span>{agent.time}</span>
+                  <span>{agent.deals}</span>
+                  <span>{agent.revenue}</span>
+                  <ChevronRight />
+                </article>
+              ))
+            )}
+          </div>
+
+          <div className="amv2-about-box blue">
+            <HelpCircle />
+            <div>
+              <strong>{t("analytics.mobileAboutTeamPerformance")}</strong>
+              <p>{t("analytics.mobileAboutTeamPerformanceDesc")}</p>
+            </div>
+          </div>
+        </section>
+
+      </section>
+
+      <div className="analytics-desktop-v2">
       <div className="heading_page">
         <BarChart3 className="header-icon" size={20} />
         <h1>{t("analytics.analyticsOverview")}</h1>
@@ -398,7 +861,7 @@ export default function CortexaAnalyticsDashboard() {
       <header className="main-header">
         <div className="header-controls">
           <div className="date-picker-wrapper">
-            <span>{dateRangeLabel(range)}</span>
+            <span>{dateRangeLabel(range, i18n.language)}</span>
             <Calendar size={16} className="text-gray-icon" />
           </div>
 
@@ -894,6 +1357,7 @@ export default function CortexaAnalyticsDashboard() {
 
       {/* ROW 5: AI INSIGHTS & FORECAST */}
       <div className="insights-forecast-grid"><span className="dot-bottom"></span>{t("analytics.dataReflectsSyncedActivity")}</div>
+      </div>
     </div>
   );
 }
