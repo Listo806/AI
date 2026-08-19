@@ -638,12 +638,17 @@ body .sales-ws-section-actions button.primary {
 .sales-ws-tabs-mobile-more-menu {
     display: none;
 }
+
 .sales-ws-tabs-mobile,
 .sales-ws-mobile-toolbar,
 .sales-ws-mobile-search-row,
 .sales-ws-mobile-quote-list,
 .sales-ws-mobile-intelligence,
 .sales-ws-mobile-more {
+    display: none;
+}
+
+.sales-ws-mobile-record-list {
     display: none;
 }
 
@@ -853,20 +858,20 @@ body .sales-ws-section-actions button.primary {
     }
 
     .sales-ws-tabs-mobile button {
-        min-height: 46px;
-        padding: 0 0 3px;
+        min-height: 36px;
+        padding: 0 2px 3px;
         display: inline-flex;
         align-items: center;
         gap: 5px;
         color: var(--mut);
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 500;
     }
 
     .sales-ws-tabs-mobile button.active {
         color: var(--blue);
         border: 0 !important;
-        border-bottom: 3px solid var(--blue) !important;
+        border-bottom: 2px solid var(--blue) !important;
         background: none !important;
     }
 
@@ -890,11 +895,12 @@ body .sales-ws-section-actions button.primary {
 
     .sales-ws-quickrow button {
         font-weight: 500 !important;
-        font-size: 10px !important;
-        gap: 4px !important;
-        padding: 7px 4px !important;
+        font-size: 11px !important;
+        gap: 5px !important;
+        padding: 7px 5px !important;
     }
-    .sales-ws-quickrow button svg{
+
+    .sales-ws-quickrow button svg {
         width: 11px;
         height: 11px;
     }
@@ -976,37 +982,41 @@ body .sales-ws-section-actions button.primary {
         font-size: 14px;
     }
 
-    .sales-ws-mobile-quote-card {
+    body #root .sales-ws-mobile-quote-list .sales-ws-mobile-quote-card {
         --tone: var(--blue);
         --tone-rgb: 11, 140, 255;
         overflow: hidden;
         border: 1px solid var(--tone);
         border-radius: 16px;
-        background: var(--card);
+        background: var(--card) !important;
         box-shadow: inset 0 0 34px rgba(var(--tone-rgb), .045);
     }
 
-    .sales-ws-mobile-quote-card.green {
+    body #root .sales-ws-mobile-quote-list .sales-ws-mobile-quote-card .green {
         --tone: var(--green);
         --tone-rgb: 22, 217, 79;
     }
 
-    .sales-ws-mobile-quote-card.amber {
+    body #root .sales-ws-mobile-quote-list .sales-ws-mobile-quote-card.amber {
         --tone: var(--amber);
         --tone-rgb: 255, 152, 0;
     }
 
     .sales-ws-mobile-quote-main {
         display: grid;
-        grid-template-columns: 70px minmax(150px, 1.4fr) minmax(100px, .8fr) minmax(90px, .7fr) minmax(110px, .8fr);
-        gap: 18px;
+        grid-template-columns: 52px auto 1fr 0.7fr 1fr;
+        gap: 12px;
         align-items: center;
         padding: 22px 22px 18px;
     }
 
+    .sales-ws-mobile-quote-identity {
+        text-align: left;
+    }
+
     .sales-ws-mobile-quote-icon {
-        width: 62px;
-        height: 62px;
+        width: 42px;
+        height: 42px;
         display: grid;
         place-items: center;
         border-radius: 50%;
@@ -1015,8 +1025,8 @@ body .sales-ws-section-actions button.primary {
     }
 
     .sales-ws-mobile-quote-icon svg {
-        width: 30px;
-        height: 30px;
+        width: 22px;
+        height: 22px;
     }
 
     .sales-ws-mobile-quote-identity strong,
@@ -1024,8 +1034,8 @@ body .sales-ws-section-actions button.primary {
     .sales-ws-mobile-quote-valid strong {
         display: block;
         color: var(--txt);
-        font-size: 17px;
-        font-weight: 800;
+        font-size: 12px;
+        font-weight: 400;
     }
 
     .sales-ws-mobile-quote-identity span {
@@ -1058,12 +1068,12 @@ body .sales-ws-section-actions button.primary {
 
     .sales-ws-mobile-quote-status .status-pill {
         display: inline-flex;
-        padding: 5px 8px;
+        padding: 4px 8px;
         border-radius: 6px;
         background: rgba(var(--tone-rgb), .12);
         color: var(--tone);
-        font-size: 14px;
-        font-weight: 800;
+        font-size: 13px;
+        font-weight: 600;
     }
 
     .sales-ws-mobile-quote-meta {
@@ -1075,12 +1085,14 @@ body .sales-ws-section-actions button.primary {
         padding: 12px 22px;
         border-top: 1px solid var(--bd);
         border-bottom: 1px solid var(--bd);
+        text-align: left;
     }
 
     .sales-ws-mobile-quote-meta strong {
         display: block;
         color: var(--txt);
-        font-size: 15px;
+        font-size: 12px;
+        font-weight: 500;
     }
 
     .sales-ws-mobile-quote-meta button {
@@ -1332,6 +1344,7 @@ body .sales-ws-section-actions button.primary {
         color: var(--txt);
         font-size: 14px;
         font-weight: 500;
+        text-align: left;
     }
 
     .sales-ws-mobile-intel-activity time {
@@ -1342,7 +1355,8 @@ body .sales-ws-section-actions button.primary {
     .sales-ws-mobile-reps {
         padding: 2px 22px 12px;
     }
-    .sales-ws-mobile-reps p{
+
+    .sales-ws-mobile-reps p {
         font-size: 12px;
     }
 
@@ -1395,7 +1409,7 @@ body .sales-ws-section-actions button.primary {
     .sales-ws-mobile-more {
         display: grid;
         gap: 18px;
-        padding-top: 28px;
+        padding-top: 28px !important;
     }
 
     body.crm-dark #root .sales-ws-mobile-assistant,
@@ -1404,7 +1418,7 @@ body .sales-ws-section-actions button.primary {
         --tone-rgb: 139, 53, 255;
         border: 1px solid var(--tone);
         border-radius: 10px;
-        background: var(--card)!important;
+        background: var(--card) !important;
     }
 
     .sales-ws-mobile-assistant {
@@ -1563,6 +1577,7 @@ body .sales-ws-section-actions button.primary {
         gap: 12px;
         padding: 12px 0;
         border-bottom: 1px solid var(--bd);
+        text-align: left;
     }
 
     .sales-ws-mobile-more-activity>div:last-child {
@@ -1619,9 +1634,11 @@ body .sales-ws-section-actions button.primary {
         border-color: var(--amber);
         justify-content: center;
     }
-    .sales-ws-mobile-support-grid button  svg{
+
+    .sales-ws-mobile-support-grid button svg {
         color: var(--amber);
     }
+
     .sales-ws-mobile-shortcuts {
         margin-top: 14px;
         display: grid;
@@ -1634,16 +1651,348 @@ body .sales-ws-section-actions button.primary {
         font-size: 12px;
         padding-left: 32%;
     }
+
     .sales-ws-mobile-shortcuts button svg {
         height: 17px;
         color: var(--purple);
     }
+
     body.crm-dark #root .sales-ws-mobile-assistant-actions button,
     body.crm-dark #root .sales-ws-mobile-quick-grid button,
     body.crm-dark #root .sales-ws-mobile-support-grid button,
     body.crm-dark #root .sales-ws-mobile-shortcuts button {
-        background: #0b0f19!important;
+        background: #0b0f19 !important;
     }
+
+    /* =========================================================
+   GENERIC MOBILE SALES RECORDS
+   Proposals / Orders / Contracts / Returns /
+   Invoices / Commissions
+   Same visual language as Quote cards
+   ========================================================= */
+
+    .sales-ws-mobile-record-list {
+        display: grid;
+        gap: 16px;
+        margin-top: 0;
+    }
+
+
+    /* =========================================================
+   CARD
+   ========================================================= */
+
+    body #root .sales-ws-mobile-record-list .sales-ws-mobile-record-card {
+        --tone: var(--blue);
+        --tone-rgb: 11, 140, 255;
+
+        overflow: hidden;
+
+        border: 1px solid var(--tone);
+        border-radius: 16px;
+
+        background: var(--card) !important;
+
+        color: var(--txt);
+
+        box-shadow:
+            inset 0 0 34px rgba(var(--tone-rgb), .045);
+    }
+
+
+    /* rotate card colors like quote design */
+
+    body #root .sales-ws-mobile-record-list .sales-ws-mobile-record-card:nth-child(3n + 1) {
+        --tone: var(--blue);
+        --tone-rgb: 11, 140, 255;
+    }
+
+    body #root .sales-ws-mobile-record-list .sales-ws-mobile-record-card:nth-child(3n + 2) {
+        --tone: var(--green);
+        --tone-rgb: 22, 217, 79;
+    }
+
+    body #root .sales-ws-mobile-record-list .sales-ws-mobile-record-card:nth-child(3n + 3) {
+        --tone: var(--amber);
+        --tone-rgb: 255, 152, 0;
+    }
+
+    .sales-ws-mobile-record-head {
+        min-height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--bd);
+    }
+
+    .sales-ws-mobile-record-title {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        text-align: left;
+    }
+
+    .sales-ws-mobile-record-label {
+        display: block;
+        margin: 0;
+        color: var(--mut);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.2;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    .sales-ws-mobile-record-title>strong {
+        min-width: 0;
+        display: block;
+        color: var(--txt);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.35;
+    }
+
+    .sales-ws-mobile-record-more {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(var(--tone-rgb), .12);
+        color: var(--tone);
+    }
+
+    .sales-ws-mobile-record-more svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .sales-ws-mobile-record-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+        padding: 0;
+    }
+
+    .sales-ws-mobile-record-field {
+        min-width: 0;
+        min-height: 72px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 12px 22px;
+        border-bottom: 1px solid var(--bd);
+        text-align: left;
+    }
+
+    .sales-ws-mobile-record-field:nth-child(odd) {
+        border-right: 1px solid var(--bd);
+    }
+
+    .sales-ws-mobile-record-field:nth-last-child(-n + 2) {
+        border-bottom: 0;
+    }
+
+    .sales-ws-mobile-record-field>span {
+        order: 2;
+        display: block;
+        margin: 7px 0 0;
+        color: var(--mut);
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.3;
+    }
+
+    .sales-ws-mobile-record-value {
+        order: 1;
+        min-width: 0;
+        color: var(--txt);
+        font-size: 11px;
+        font-weight: 300;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .sales-ws-mobile-record-value .sales-ws-two-line {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 3px;
+        text-align: left;
+    }
+
+    .sales-ws-mobile-record-value .sales-ws-two-line strong {
+        display: block;
+        color: var(--txt);
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .sales-ws-mobile-record-value .sales-ws-two-line span {
+        display: block;
+        margin: 2px 0 0;
+        color: var(--mut);
+        font-size: 12px;
+        font-weight: 400;
+    }
+
+    .sales-ws-mobile-record-value .sales-ws-customer {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 7px;
+        text-align: left;
+    }
+
+    .sales-ws-mobile-record-value .sales-ws-customer strong {
+        color: var(--txt);
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .sales-ws-mobile-record-value .sales-ws-customer span {
+        margin: 0;
+        padding: 3px 7px;
+        border-radius: 5px;
+        background: rgba(var(--tone-rgb), .12);
+        color: var(--tone);
+        font-size: 11px;
+    }
+
+    .sales-ws-mobile-record-value.sales-ws-money {
+        color: var(--txt) !important;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .sales-ws-mobile-record-value .sales-ws-status {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        min-height: 22px;
+        padding: 4px 6px;
+        border-radius: 6px;
+        background: rgba(var(--tone-rgb), .12);
+        color: var(--tone);
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .sales-ws-mobile-record-card .sales-ws-status.draft,
+    .sales-ws-mobile-record-card .sales-ws-status.sent,
+    .sales-ws-mobile-record-card .sales-ws-status.viewed {
+        background: rgba(var(--tone-rgb), .12);
+        color: var(--tone);
+    }
+
+    .sales-ws-mobile-record-value .sales-ws-owner {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--txt);
+        font-size: 14px;
+    }
+
+
+    .sales-ws-mobile-record-value .sales-ws-owner>span:first-child {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(var(--tone-rgb), .12);
+        color: var(--tone);
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .sales-ws-mobile-record-actions {
+        min-height: 56px;
+        display: grid;
+        grid-template-columns:
+            repeat(var(--action-count, 3),
+                minmax(0, 1fr));
+        border-top: 1px solid var(--bd);
+    }
+
+    .sales-ws-mobile-record-actions>button {
+        min-width: 0;
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 8px 6px;
+        border: 0;
+        border-right: 1px solid var(--bd);
+        border-radius: 0;
+        background: transparent;
+        color: var(--tone);
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .sales-ws-mobile-record-actions>button:last-child {
+        border-right: 0;
+    }
+
+    .sales-ws-mobile-record-actions>button:hover {
+        background: rgba(var(--tone-rgb), .06);
+        color: var(--tone);
+    }
+
+    .sales-ws-mobile-record-actions>button svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+    }
+
+    .sales-ws-mobile-record-state {
+        padding: 42px 20px;
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        background: var(--card);
+        color: var(--mut);
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .sales-ws-mobile-record-state.error {
+        border-color: #ef4444;
+        color: #ef4444;
+    }
+
+    /* =========================
+     EMPTY / ERROR
+     ========================= */
+
+    .sales-ws-mobile-record-state {
+        padding: 32px 16px;
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        background: var(--card);
+        color: var(--mut);
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .sales-ws-mobile-record-state.error {
+        color: #ef4444;
+    }
+
 }
 
 @media (max-width: 640px) {
@@ -1679,27 +2028,14 @@ body .sales-ws-section-actions button.primary {
     }
 
     .sales-ws-mobile-quote-main {
-        grid-template-columns: 64px minmax(0, 1fr) minmax(92px, .65fr);
-        gap: 12px;
-        padding: 18px 16px;
+        grid-template-columns: 52px auto 1fr 0.7fr 1fr;
+        gap: 6px;
+        padding: 16px 10px;
     }
 
-    .sales-ws-mobile-quote-value {
-        text-align: right;
-    }
-
-    .sales-ws-mobile-quote-status,
-    .sales-ws-mobile-quote-valid {
-        grid-column: 2 / 4;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .sales-ws-mobile-quote-status>span,
-    .sales-ws-mobile-quote-valid span {
-        margin-top: 0;
+    .sales-ws-mobile-quote-icon {
+        width: 52px;
+        height: 52px;
     }
 
     .sales-ws-mobile-quote-meta {
@@ -1720,6 +2056,7 @@ body .sales-ws-section-actions button.primary {
         height: 36px;
         flex-basis: 36px;
     }
+
     .assistant-icon svg {
         width: 22px;
         height: 22px;
@@ -1740,7 +2077,8 @@ body .sales-ws-section-actions button.primary {
 .crm-dark .iw-field textarea,
 .crm-dark .iw-btn,
 .crm-dark .iw-contact-input,
-.crm-dark .iw-field select, .crm-dark .sales-ws-section-actions button {
+.crm-dark .iw-field select,
+.crm-dark .sales-ws-section-actions button {
     border: 1px solid var(--bd) !important;
     background: var(--card2);
     color: var(--txt) !important;
@@ -1753,12 +2091,18 @@ body .sales-ws-section-actions button.primary {
 .crm-dark .iw-contact-input input {
     border: 0 !important;
 }
-.crm-dark .sales-ws-mobile-shortcuts button{
+
+.crm-dark .sales-ws-mobile-shortcuts button {
     color: var(--txt) !important;
     border: 1px solid var(--tone);
 }
+
 .crm-dark .sales-ws-mobile-support-grid button svg {
     color: var(--amber);
+}
+
+.iw-field label {
+    text-align: left;
 }
 
 @media (max-width: 1024px) {
@@ -1771,7 +2115,6 @@ body .sales-ws-section-actions button.primary {
 
     .sales-ws-tabs-mobile-wrap .sales-ws-tabs-mobile {
         margin: 0;
-        border-bottom: 0;
     }
 
     .sales-ws-tabs-mobile button.more-open {
@@ -1822,5 +2165,346 @@ body .sales-ws-section-actions button.primary {
     .sales-ws-tabs-mobile-more-menu {
         padding-left: 18px;
         padding-right: 18px;
+    }
+}
+
+/* =========================================================
+   SALES RECORD SECTIONS — MOBILE CARDS
+   Proposals / Orders / Contracts / Returns /
+   Invoices / Commissions
+   ========================================================= */
+
+
+
+
+
+@media (max-width: 640px) {
+    .sales-ws-mobile-record-list {
+        gap: 10px;
+    }
+
+    .sales-ws-mobile-record-head {
+        padding: 12px;
+    }
+
+    .sales-ws-mobile-record-field {
+        padding: 10px 12px;
+    }
+}
+
+.sales-ws-mobile-customer-list {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .sales-ws-mobile-customer-list {
+        display: grid;
+        gap: 16px;
+        margin-top: 14px;
+    }
+
+    body #root .sales-ws-mobile-customer-list
+    .sales-ws-mobile-customer-card {
+        --tone: var(--blue);
+        --tone-rgb: 11, 140, 255;
+
+        overflow: hidden;
+        border: 1px solid var(--tone);
+        border-radius: 16px;
+        background: var(--card) !important;
+        color: var(--txt);
+        box-shadow:
+            inset 0 0 34px rgba(var(--tone-rgb), .045);
+    }
+
+    body #root .sales-ws-mobile-customer-list
+    .sales-ws-mobile-customer-card:nth-child(3n + 1) {
+        --tone: var(--blue);
+        --tone-rgb: 11, 140, 255;
+    }
+
+    body #root .sales-ws-mobile-customer-list
+    .sales-ws-mobile-customer-card:nth-child(3n + 2) {
+        --tone: var(--green);
+        --tone-rgb: 22, 217, 79;
+    }
+
+    body #root .sales-ws-mobile-customer-list
+    .sales-ws-mobile-customer-card:nth-child(3n + 3) {
+        --tone: var(--amber);
+        --tone-rgb: 255, 152, 0;
+    }
+
+    .sales-ws-mobile-customer-head {
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--bd);
+    }
+
+    .sales-ws-mobile-customer-head .sales-ws-owner {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        text-align: left;
+    }
+
+    .sales-ws-mobile-customer-head
+    .sales-ws-owner > span:first-child {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(var(--tone-rgb), .12);
+        color: var(--tone);
+        font-size: 12px;
+        font-weight: 700;
+        box-shadow:
+            inset 0 0 0 1px rgba(var(--tone-rgb), .08);
+    }
+
+    .sales-ws-mobile-customer-head
+    .sales-ws-two-line {
+        min-width: 0;
+    }
+
+    .sales-ws-mobile-customer-head
+    .sales-ws-two-line strong {
+        display: block;
+        color: var(--txt);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    .sales-ws-mobile-customer-head
+    .sales-ws-two-line span {
+        display: block;
+        max-width: 220px;
+        margin-top: 4px;
+        overflow: hidden;
+        color: var(--mut);
+        font-size: 11px;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sales-ws-mobile-customer-head > button {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(var(--tone-rgb), .10);
+        color: var(--tone);
+    }
+
+    .sales-ws-mobile-customer-head > button svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .sales-ws-mobile-customer-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border-bottom: 1px solid var(--bd);
+    }
+
+    .sales-ws-mobile-customer-stats > div {
+        min-width: 0;
+        min-height: 68px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 8px;
+        border-right: 1px solid var(--bd);
+        text-align: center;
+    }
+
+    .sales-ws-mobile-customer-stats > div:last-child {
+        border-right: 0;
+    }
+
+    .sales-ws-mobile-customer-stats strong,
+    .sales-ws-mobile-customer-stats span {
+        display: block;
+    }
+
+    .sales-ws-mobile-customer-stats strong {
+        color: var(--tone);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .sales-ws-mobile-customer-stats span {
+        margin-top: 5px;
+        color: var(--mut);
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1.3;
+    }
+
+    .sales-ws-mobile-customer-stats > div {
+        background:
+            linear-gradient(
+                180deg,
+                rgba(var(--tone-rgb), .025),
+                transparent
+            );
+    }
+
+    .sales-ws-mobile-customer-bottom {
+        display: grid;
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .sales-ws-mobile-customer-bottom > div {
+        min-width: 0;
+        min-height: 62px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 11px 14px;
+    }
+
+    .sales-ws-mobile-customer-bottom > div:first-child {
+        border-right: 1px solid var(--bd);
+    }
+
+    .sales-ws-mobile-customer-bottom span,
+    .sales-ws-mobile-customer-bottom strong {
+        display: block;
+    }
+
+    .sales-ws-mobile-customer-bottom span {
+        margin-bottom: 5px;
+        color: var(--mut);
+        font-size: 10px;
+        font-weight: 400;
+    }
+
+    .sales-ws-mobile-customer-bottom strong {
+        overflow: hidden;
+        color: var(--txt);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sales-ws-mobile-customer-bottom
+    > div:first-child strong {
+        color: var(--tone);
+    }
+
+    .sales-ws-mobile-customer-card button {
+        transition:
+            background .18s ease,
+            color .18s ease,
+            opacity .18s ease;
+    }
+
+    .sales-ws-mobile-customer-card button:hover {
+        background: rgba(var(--tone-rgb), .14);
+        color: var(--tone);
+    }
+
+    .sales-ws-mobile-record-main {
+        display: grid;
+        grid-template-columns:
+            minmax(150px, 1.5fr) repeat(3, minmax(80px, 1fr));
+        gap: 5px;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .sales-ws-mobile-record-primary {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .sales-ws-mobile-record-icon {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(var(--tone-rgb), .12);
+        color: var(--tone);
+    }
+
+    .sales-ws-mobile-record-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .sales-ws-mobile-record-title span,
+    .sales-ws-mobile-record-main-field>span,
+    .sales-ws-mobile-record-meta-field>span {
+        display: block;
+        color: var(--mut);
+        font-size: 11px;
+    }
+
+    .sales-ws-mobile-record-main-field {
+        min-width: 0;
+        text-align: left;
+    }
+
+    .sales-ws-mobile-record-meta {
+        min-height: 74px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 10px;
+        border-top: 1px solid var(--bd);
+        border-bottom: 1px solid var(--bd);
+        text-align: left;
+    }
+
+    .sales-ws-mobile-record-meta>* {
+        flex: 1 1 120px;
+    }
+
+    .sales-ws-mobile-record-meta>*:last-child {
+        flex: 0 0 auto;
+    }
+
+
+
+    .sales-ws-mobile-record-meta-field {
+        min-width: 0;
+    }
+
+
+    .sales-ws-mobile-record-meta>button {
+        width: 36px;
+        height: 36px;
+
+        display: grid;
+        place-items: center;
+
+        border: 0;
+
+        background: transparent;
+
+        color: var(--mut);
     }
 }

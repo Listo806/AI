@@ -55,6 +55,35 @@ export class SalesController {
     );
   }
 
+
+  @Get('activity')
+  @ApiOperation({ summary: 'Sales workspace activity (real, team-scoped)' })
+  async listActivity(
+    @CurrentUser() user: any,
+    @Query('limit') limit?: string,
+  ) {
+    return this.sales.listActivity(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { limit },
+    );
+  }
+
+  @Post('activity')
+  @ApiOperation({ summary: 'Log a sales workspace activity' })
+  async logActivity(
+    @Body() body: { title: string; details?: string; type?: string },
+    @CurrentUser() user: any,
+  ) {
+    return this.sales.logActivity(
+      body,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
   @Get('contacts')
   @ApiOperation({ summary: "Search the account's existing contacts for a quote" })
   async searchContacts(

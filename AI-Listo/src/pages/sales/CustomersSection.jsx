@@ -73,7 +73,69 @@ export default function CustomersSection() {
           <RotateCcw size={13} /> Reset
         </button>
       </div>
+      <div className="sales-ws-mobile-customer-list">
+        {loading ? (
+          <div className="sales-ws-mobile-record-state">Loading…</div>
+        ) : error ? (
+          <div className="sales-ws-mobile-record-state error">{error}</div>
+        ) : rows.length === 0 ? (
+          <div className="sales-ws-mobile-record-state">No customers yet.</div>
+        ) : (
+          rows.map((c) => (
+            <article className="sales-ws-mobile-customer-card" key={c.id}>
+              <div className="sales-ws-mobile-customer-head">
+                <div className="sales-ws-owner">
+                  <span>{initials(c.name)}</span>
 
+                  <div className="sales-ws-two-line">
+                    <strong>{c.name || "-"}</strong>
+                    {c.email && <span>{c.email}</span>}
+                  </div>
+                </div>
+
+                {c.status ? (
+                  <span
+                    className={`sales-ws-status ${String(
+                      c.status,
+                    ).toLowerCase()}`}
+                  >
+                    {c.status}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="sales-ws-mobile-customer-stats">
+                <div>
+                  <strong>{c.quoteCount ?? 0}</strong>
+                  <span>Quotes</span>
+                </div>
+
+                <div>
+                  <strong>{c.orderCount ?? 0}</strong>
+                  <span>Orders</span>
+                </div>
+
+                <div>
+                  <strong>{c.invoiceCount ?? 0}</strong>
+                  <span>Invoices</span>
+                </div>
+              </div>
+
+              <div className="sales-ws-mobile-customer-bottom">
+                <div>
+                  <span>Order Revenue</span>
+                  <strong>{money(c.orderRevenue)}</strong>
+                </div>
+
+                <div>
+                  <span>Customer Since</span>
+                  <strong>{formatDate(c.createdAt)}</strong>
+                </div>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
       <div className="sales-ws-table-wrap">
         <table className="sales-ws-table">
           <thead>
@@ -90,15 +152,21 @@ export default function CustomersSection() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="sales-ws-empty-row">Loading…</td>
+                <td colSpan={7} className="sales-ws-empty-row">
+                  Loading…
+                </td>
               </tr>
             ) : error ? (
               <tr>
-                <td colSpan={7} className="sales-ws-empty-row">{error}</td>
+                <td colSpan={7} className="sales-ws-empty-row">
+                  {error}
+                </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="sales-ws-empty-row">No customers yet.</td>
+                <td colSpan={7} className="sales-ws-empty-row">
+                  No customers yet.
+                </td>
               </tr>
             ) : (
               rows.map((c) => (
@@ -114,7 +182,11 @@ export default function CustomersSection() {
                   </td>
                   <td>
                     {c.status ? (
-                      <span className={`sales-ws-status ${String(c.status).toLowerCase()}`}>{c.status}</span>
+                      <span
+                        className={`sales-ws-status ${String(c.status).toLowerCase()}`}
+                      >
+                        {c.status}
+                      </span>
                     ) : (
                       "-"
                     )}
@@ -136,15 +208,24 @@ export default function CustomersSection() {
           Showing {from} to {to} of {total.toLocaleString("en-US")} customers
         </span>
         <div>
-          <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
             <ChevronLeft size={14} />
           </button>
           <button className="active">{page}</button>
-          <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+          <button
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
             <ChevronRight size={14} />
           </button>
         </div>
-        <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
+        <select
+          value={limit}
+          onChange={(e) => setLimit(Number(e.target.value))}
+        >
           <option value="20">20 / page</option>
           <option value="50">50 / page</option>
           <option value="100">100 / page</option>

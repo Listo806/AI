@@ -15,6 +15,18 @@ const salesApi = {
   getStats() {
     return apiClient.request(`/sales/stats`, { method: "GET" });
   },
+  listActivity(params = {}) {
+    return apiClient.request(`/sales/activity${toQuery(params)}`, {
+      method: "GET",
+    });
+  },
+
+  logActivity(body) {
+    return apiClient.request(`/sales/activity`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
   searchContacts(search) {
     return apiClient.request(`/sales/contacts${toQuery({ search })}`, {
       method: "GET",

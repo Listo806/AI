@@ -241,6 +241,23 @@ export class SalesService {
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_sales_commissions_order ON sales_commissions(order_id)`,
     );
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS sales_activity (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        user_id UUID,
+        type TEXT NOT NULL DEFAULT 'note',
+        title TEXT NOT NULL,
+        details TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_sales_activity_team_created
+         ON sales_activity(team_id, created_at DESC)`,
+    );
+
     this.schemaReady = true;
   }
 
@@ -310,6 +327,156 @@ export class SalesService {
       [id, teamId],
     );
     return rows.length > 0;
+  }
+
+
+  async listActivity(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { limit?: string },
+  ): Promise<{ data: any[] }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [] };
+
+    let limit = parseInt(String(params.limit ?? '50'), 10);
+    if (!Number.isFinite(limit) || limit < 1) limit = 50;
+    if (limit > 100) limit = 100;
+
+    const { rows } = await this.db.query(
+      `
+      SELECT *
+      FROM (
+        SELECT
+          q.id,
+          'quote' AS type,
+          CONCAT('Quote ', COALESCE(q.quote_number, '')) AS title,
+          CONCAT_WS(' · ', NULLIF(q.customer_name, ''), NULLIF(q.status, '')) AS subtitle,
+          q.updated_at AS at
+        FROM sales_quotes q
+        WHERE q.team_id = ANY($1)
+
+        UNION ALL
+
+        SELECT
+          p.id,
+          'proposal',
+          CONCAT('Proposal ', COALESCE(p.proposal_number, '')),
+          CONCAT_WS(' · ', NULLIF(p.customer_name, ''), NULLIF(p.status, '')),
+          p.updated_at
+        FROM sales_proposals p
+        WHERE p.team_id = ANY($1)
+
+        UNION ALL
+
+        SELECT
+          o.id,
+          'order',
+          CONCAT('Order ', COALESCE(o.order_number, '')),
+          CONCAT_WS(' · ', NULLIF(o.customer_name, ''), NULLIF(o.status, '')),
+          o.updated_at
+        FROM sales_orders o
+        WHERE o.team_id = ANY($1)
+
+        UNION ALL
+
+        SELECT
+          i.id,
+          'invoice',
+          CONCAT('Invoice ', COALESCE(i.invoice_number, '')),
+          CONCAT_WS(' · ', NULLIF(i.customer_name, ''), NULLIF(i.status, '')),
+          i.updated_at
+        FROM sales_invoices i
+        WHERE i.team_id = ANY($1)
+
+        UNION ALL
+
+        SELECT
+          c.id,
+          'contract',
+          CONCAT('Contract ', COALESCE(c.contract_number, '')),
+          CONCAT_WS(' · ', NULLIF(c.customer_name, ''), NULLIF(c.status, '')),
+          c.updated_at
+        FROM sales_contracts c
+        WHERE c.team_id = ANY($1)
+
+        UNION ALL
+
+        SELECT
+          r.id,
+          'return',
+          CONCAT('Return ', COALESCE(r.return_number, '')),
+          CONCAT_WS(' · ', NULLIF(r.customer_name, ''), NULLIF(r.status, '')),
+          r.updated_at
+        FROM sales_returns r
+        WHERE r.team_id = ANY($1)
+
+        UNION ALL
+
+        SELECT
+          cm.id,
+          'commission',
+          CONCAT('Commission ', COALESCE(cm.commission_number, '')),
+          CONCAT_WS(' · ', NULLIF(cm.customer_name, ''), NULLIF(cm.status, '')),
+          cm.updated_at
+        FROM sales_commissions cm
+        WHERE cm.team_id = ANY($1)
+
+        UNION ALL
+
+        SELECT
+          a.id,
+          a.type,
+          a.title,
+          a.details,
+          a.created_at
+        FROM sales_activity a
+        WHERE a.team_id = ANY($1)
+      ) activity
+      ORDER BY at DESC
+      LIMIT $2
+      `,
+      [accessible, limit],
+    );
+
+    return { data: rows };
+  }
+
+  async logActivity(
+    body: { title: string; details?: string; type?: string },
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+
+    const title = String(body?.title || '').trim();
+    if (!title) throw new BadRequestException('Activity title is required');
+
+    const teamId = this.resolveTeamId(undefined, userTeamId, accessible);
+    const type = String(body?.type || 'note').trim().slice(0, 40) || 'note';
+    const details = String(body?.details || '').trim().slice(0, 4000) || null;
+
+    const { rows } = await this.db.query(
+      `
+      INSERT INTO sales_activity (team_id, user_id, type, title, details)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING
+        id,
+        type,
+        title,
+        details AS subtitle,
+        created_at AS at
+      `,
+      [teamId, userId, type, title.slice(0, 240), details],
+    );
+
+    return rows[0];
   }
 
   // Search the account's EXISTING Cortexa contacts to attach one to a quote.
@@ -2104,6 +2271,7 @@ export class SalesService {
             UNION ALL SELECT 'Contract', contract_number, customer_name, status, updated_at FROM sales_contracts WHERE team_id = ANY($1)
             UNION ALL SELECT 'Return', return_number, customer_name, status, updated_at FROM sales_returns WHERE team_id = ANY($1)
             UNION ALL SELECT 'Commission', commission_number, customer_name, status, updated_at FROM sales_commissions WHERE team_id = ANY($1)
+            UNION ALL SELECT 'Activity', title, details, type, created_at FROM sales_activity WHERE team_id = ANY($1)
          ) t ORDER BY updated_at DESC LIMIT 6`,
         [accessible],
       ),
@@ -2140,8 +2308,14 @@ export class SalesService {
     }));
 
     const recentActivity = activityRes.rows.map((a: any) => ({
-      title: `${a.kind} ${a.ref || ''}`.trim(),
-      subtitle: [a.name, a.status].filter(Boolean).join(' · '),
+      title:
+        a.kind === 'Activity'
+          ? String(a.ref || 'Activity').trim()
+          : `${a.kind} ${a.ref || ''}`.trim(),
+      subtitle:
+        a.kind === 'Activity'
+          ? [a.name, a.status].filter(Boolean).join(' · ')
+          : [a.name, a.status].filter(Boolean).join(' · '),
       at: a.updated_at,
     }));
 

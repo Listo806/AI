@@ -140,7 +140,118 @@ export default function SalesRecordSection({
           <CalendarDays size={13} />
         </button>
       </div>
+      
+      <div className="sales-ws-mobile-record-list">
+        {loading ? (
+          <div className="sales-ws-mobile-record-state">Loading…</div>
+        ) : error ? (
+          <div className="sales-ws-mobile-record-state error">{error}</div>
+        ) : rows.length === 0 ? (
+          <div className="sales-ws-mobile-record-state">
+            No {title.toLowerCase()} yet.
+          </div>
+        ) : (
+          rows.map((row) => {
+            const primaryColumn = columns[0];
+            const detailColumns = columns.slice(1);
 
+            return (
+              <article className="sales-ws-mobile-record-card" key={row.id}>
+                {/* HEADER */}
+                <div className="sales-ws-mobile-record-main">
+  <div className="sales-ws-mobile-record-primary">
+    <div className="sales-ws-mobile-record-icon">
+      <Table2 size={28} />
+    </div>
+
+    <div className="sales-ws-mobile-record-title">
+      <strong>
+        {primaryColumn?.render
+          ? primaryColumn.render(row)
+          : "-"}
+      </strong>
+
+      <span>{primaryColumn?.header}</span>
+    </div>
+  </div>
+
+  {detailColumns.slice(0, 3).map((column) => (
+    <div
+      className="sales-ws-mobile-record-main-field"
+      key={column.header}
+    >
+      <div className="sales-ws-mobile-record-value">
+        {column.render(row)}
+      </div>
+
+      <span>{column.header}</span>
+    </div>
+  ))}
+</div>
+
+<div className="sales-ws-mobile-record-meta">
+  {detailColumns.slice(3).map((column) => (
+    <div
+      className="sales-ws-mobile-record-meta-field"
+      key={column.header}
+    >
+      <div className="sales-ws-mobile-record-value">
+        {column.render(row)}
+      </div>
+
+      <span>{column.header}</span>
+    </div>
+  ))}
+
+  <button
+    type="button"
+    onClick={() => openModal("view", row.id)}
+    aria-label={`View ${title}`}
+  >
+    <MoreVertical size={20} />
+  </button>
+</div>
+
+                {/* ACTIONS */}
+                <div
+                  className="sales-ws-mobile-record-actions"
+                  style={{
+                    "--action-count": extraActions ? 4 : 3,
+                  }}
+                >
+                  {extraActions
+                    ? extraActions(row, () => setTick((t) => t + 1))
+                    : null}
+
+                  <button
+                    type="button"
+                    onClick={() => openModal("view", row.id)}
+                  >
+                    <Eye size={15} />
+                    <span>View</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => openModal("edit", row.id)}
+                  >
+                    <Pencil size={15} />
+                    <span>Edit</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => openModal("view", row.id)}
+                  >
+                    <span>More</span>
+                    <MoreVertical size={15} />
+                  </button>
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
       <div className="sales-ws-table-wrap">
         <table className="sales-ws-table">
           <thead>
@@ -186,7 +297,9 @@ export default function SalesRecordSection({
                   ))}
                   <td>
                     <div className="sales-ws-row-actions">
-                      {extraActions ? extraActions(row, () => setTick((t) => t + 1)) : null}
+                      {extraActions
+                        ? extraActions(row, () => setTick((t) => t + 1))
+                        : null}
                       <button
                         type="button"
                         onClick={() => openModal("view", row.id)}
@@ -219,10 +332,14 @@ export default function SalesRecordSection({
 
       <div className="sales-ws-pagination">
         <span>
-          Showing {from} to {to} of {total.toLocaleString("en-US")} {title.toLowerCase()}
+          Showing {from} to {to} of {total.toLocaleString("en-US")}{" "}
+          {title.toLowerCase()}
         </span>
         <div>
-          <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
             <ChevronLeft size={14} />
           </button>
           <button className="active">{page}</button>
@@ -233,7 +350,10 @@ export default function SalesRecordSection({
             <ChevronRight size={14} />
           </button>
         </div>
-        <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
+        <select
+          value={limit}
+          onChange={(e) => setLimit(Number(e.target.value))}
+        >
           <option value="20">20 / page</option>
           <option value="50">50 / page</option>
           <option value="100">100 / page</option>

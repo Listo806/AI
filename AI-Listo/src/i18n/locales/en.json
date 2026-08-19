@@ -4093,7 +4093,14 @@
       "salesShortcuts": "Sales Shortcuts",
       "myPipeline": "My Pipeline",
       "topCustomers": "Top Customers",
-      "reports": "Reports"
+      "reports": "Reports",
+      "activityTitle": "Activity title",
+      "activityTitlePlaceholder": "Example: Followed up with customer",
+      "activityDetails": "Details",
+      "activityDetailsPlaceholder": "Add notes about this activity...",
+      "saveActivity": "Save Activity",
+      "activitySaved": "Activity saved.",
+      "activitySaveFailed": "Could not save activity."
     },
     "messages": {
       "proposalCreated": "Proposal created. Open the Proposals tab to see it."

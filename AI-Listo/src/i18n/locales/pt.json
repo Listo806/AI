@@ -4093,7 +4093,14 @@
       "salesShortcuts": "Atalhos de vendas",
       "myPipeline": "Meu pipeline",
       "topCustomers": "Principais clientes",
-      "reports": "Relatórios"
+      "reports": "Relatórios",
+      "activityTitle": "Título da atividade",
+      "activityTitlePlaceholder": "Exemplo: Acompanhamento com o cliente",
+      "activityDetails": "Detalhes",
+      "activityDetailsPlaceholder": "Adicione notas sobre esta atividade...",
+      "saveActivity": "Salvar atividade",
+      "activitySaved": "Atividade salva.",
+      "activitySaveFailed": "Não foi possível salvar a atividade."
     },
     "messages": {
       "proposalCreated": "Proposta criada. Abra a aba Propostas para visualizá-la."

@@ -46,6 +46,7 @@ import CustomersSection from "./CustomersSection";
 import SalesOverviewSection from "./SalesOverviewSection";
 import { relativeTime } from "./salesFormat";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 // KPI card config. Values come from the live /sales/stats endpoint. In this first
 // slice only Quotes exist, so Open Quotes is real and the rest report 0 until
@@ -157,6 +158,7 @@ const TABS = [
 
 export default function SalesWorkspace() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const locale =
     i18n.language?.startsWith("es")
       ? "es-ES"
@@ -165,6 +167,13 @@ export default function SalesWorkspace() {
         : "en-US";
   const [activeTab, setActiveTab] = useState("Quotes");
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [activityLogOpen, setActivityLogOpen] = useState(false);
+  const [activityRows, setActivityRows] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityTitle, setActivityTitle] = useState("");
+  const [activityDetails, setActivityDetails] = useState("");
+  const [activitySaving, setActivitySaving] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -247,6 +256,48 @@ export default function SalesWorkspace() {
     } catch (e) {
       // eslint-disable-next-line no-alert
       window.alert(e?.message || t("salesWorkspace.errors.createProposal"));
+    }
+  };
+
+  const goToSalesTab = (tab) => {
+    setActiveTab(tab);
+    setMobileMoreOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openAllSalesActivity = async () => {
+    setActivityModalOpen(true);
+    setActivityLoading(true);
+    try {
+      const res = await salesApi.listActivity({ limit: 50 });
+      setActivityRows(Array.isArray(res?.data) ? res.data : []);
+    } catch (e) {
+      setActivityRows([]);
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  const saveSalesActivity = async () => {
+    const title = activityTitle.trim();
+    if (!title || activitySaving) return;
+
+    setActivitySaving(true);
+    try {
+      await salesApi.logActivity({
+        title,
+        details: activityDetails.trim() || undefined,
+        type: "note",
+      });
+      setActivityTitle("");
+      setActivityDetails("");
+      setActivityLogOpen(false);
+      handleSaved();
+      window.alert(t("salesWorkspace.more.activitySaved"));
+    } catch (e) {
+      window.alert(e?.message || t("salesWorkspace.more.activitySaveFailed"));
+    } finally {
+      setActivitySaving(false);
     }
   };
 
@@ -825,7 +876,7 @@ export default function SalesWorkspace() {
 
             <button
               className="sales-ws-mobile-intel-link"
-              onClick={() => setActiveTab("Overview")}
+              onClick={() => navigate("/dashboard/pipeline")}
             >
               {t("salesWorkspace.intelligence.viewFullPipeline")} →
             </button>
@@ -854,7 +905,11 @@ export default function SalesWorkspace() {
               )}
             </div>
 
-            <button className="sales-ws-mobile-intel-link">
+            <button
+              type="button"
+              className="sales-ws-mobile-intel-link"
+              onClick={openAllSalesActivity}
+            >
               {t("salesWorkspace.viewAllActivity")} →
             </button>
           </div>
@@ -883,9 +938,221 @@ export default function SalesWorkspace() {
               )}
             </div>
 
-            <button className="sales-ws-mobile-intel-link">
+            <button
+              type="button"
+              className="sales-ws-mobile-intel-link"
+              onClick={() => navigate("/dashboard/analytics")}
+            >
               {t("salesWorkspace.viewFullLeaderboard")} →
             </button>
+          </div>
+        </section>
+      )}
+
+
+      {activeTab === "Overview" && (
+        <section className="sales-ws-mobile-more">
+          <div className="sales-ws-mobile-assistant">
+            <div className="sales-ws-mobile-assistant-head">
+              <div className="assistant-icon">
+                <Bot />
+              </div>
+
+              <div>
+                <h2>{t("salesWorkspace.more.aiAssistantTitle")}</h2>
+                <p>{t("salesWorkspace.more.aiAssistantSubtitle")}</p>
+                <span className="online">
+                  <i />
+                  {t("salesWorkspace.more.online")}
+                </span>
+              </div>
+            </div>
+
+            <div className="sales-ws-mobile-assistant-actions">
+              <button
+                type="button"
+                className="purple"
+                onClick={() => navigate("/dashboard/ai-cortexa")}
+              >
+                <Zap />
+                {t("salesWorkspace.more.askAi")}
+              </button>
+
+              <button
+                type="button"
+                className="blue"
+                onClick={() => navigate("/dashboard/leads")}
+              >
+                <UsersRound />
+                {t("salesWorkspace.more.leadHelp")}
+              </button>
+
+              <button
+                type="button"
+                className="green"
+                onClick={() => navigate("/dashboard/leads")}
+              >
+                <CalendarDays />
+                {t("salesWorkspace.more.followUp")}
+              </button>
+
+              <button
+                type="button"
+                className="amber"
+                onClick={() => navigate("/dashboard/contacts")}
+              >
+                <Mail />
+                {t("salesWorkspace.more.sendEmail")}
+              </button>
+            </div>
+          </div>
+
+          <div className="sales-ws-mobile-more-card green">
+            <div className="sales-ws-mobile-more-title">
+              <h3>{t("salesWorkspace.more.quickActions")}</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                {t("salesWorkspace.more.allTools")} →
+              </button>
+            </div>
+
+            <div className="sales-ws-mobile-quick-grid">
+              <button
+                type="button"
+                className="blue"
+                onClick={() => openModal("create")}
+              >
+                <FileText />
+                {t("salesWorkspace.actions.newQuote")}
+              </button>
+
+              <button
+                type="button"
+                className="green"
+                onClick={() => goToSalesTab("Proposals")}
+              >
+                <Handshake />
+                {t("salesWorkspace.more.newProposal")}
+              </button>
+
+              <button
+                type="button"
+                className="purple"
+                onClick={() => goToSalesTab("Orders")}
+              >
+                <ShoppingCart />
+                {t("salesWorkspace.more.addOrder")}
+              </button>
+
+              <button
+                type="button"
+                className="amber"
+                onClick={() => goToSalesTab("Customers")}
+              >
+                <UserPlus />
+                {t("salesWorkspace.more.newCustomer")}
+              </button>
+
+              <button
+                type="button"
+                className="cyan"
+                onClick={() => goToSalesTab("Contracts")}
+              >
+                <FileText />
+                {t("salesWorkspace.more.createContract")}
+              </button>
+
+              <button
+                type="button"
+                className="blue"
+                onClick={() => setActivityLogOpen(true)}
+              >
+                <Zap />
+                {t("salesWorkspace.more.logActivity")}
+              </button>
+            </div>
+          </div>
+
+          <div className="sales-ws-mobile-more-card green">
+            <div className="sales-ws-mobile-more-title">
+              <h3>{t("salesWorkspace.recentActivity")}</h3>
+              <button type="button" onClick={openAllSalesActivity}>
+                {t("salesWorkspace.viewAll")} →
+              </button>
+            </div>
+
+            <div className="sales-ws-mobile-more-activity">
+              {activity.length === 0 ? (
+                <p>{t("salesWorkspace.noRecentActivity")}</p>
+              ) : (
+                activity.slice(0, 2).map((item, index) => (
+                  <div key={`${item.title}-${index}`}>
+                    <span className={index === 0 ? "green" : "blue"}>
+                      {index === 0 ? <FileText /> : <Mail />}
+                    </span>
+                    <div>
+                      <strong>{item.title}</strong>
+                      {item.subtitle && <small>{item.subtitle}</small>}
+                      <time>{relativeTime(item.at)}</time>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="sales-ws-mobile-more-card amber compact">
+            <h3>{t("salesWorkspace.more.helpSupport")}</h3>
+            <div className="sales-ws-mobile-support-grid">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/help-center")}
+              >
+                <CircleHelp />
+                {t("salesWorkspace.more.helpCenter")}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/help-center")}
+              >
+                <Headphones />
+                {t("salesWorkspace.more.contactSupport")}
+              </button>
+            </div>
+          </div>
+
+          <div className="sales-ws-mobile-more-card purple compact">
+            <h3>{t("salesWorkspace.more.salesShortcuts")}</h3>
+            <div className="sales-ws-mobile-shortcuts">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/pipeline")}
+              >
+                <BarChart3 />
+                {t("salesWorkspace.more.myPipeline")}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => goToSalesTab("Customers")}
+              >
+                <UsersRound />
+                {t("salesWorkspace.more.topCustomers")}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/analytics")}
+              >
+                <BarChart3 />
+                {t("salesWorkspace.more.reports")}
+              </button>
+            </div>
           </div>
         </section>
       )}
@@ -946,7 +1213,7 @@ export default function SalesWorkspace() {
             )}
           </div>
 
-          <button className="sales-ws-link-btn">{t("salesWorkspace.viewAllActivity")} →</button>
+          <button className="sales-ws-link-btn" onClick={openAllSalesActivity}>{t("salesWorkspace.viewAllActivity")} →</button>
         </div>
 
         <div className="sales-ws-bottom-card">
@@ -973,9 +1240,86 @@ export default function SalesWorkspace() {
             )}
           </div>
 
-          <button className="sales-ws-link-btn">{t("salesWorkspace.viewFullLeaderboard")} →</button>
+          <button className="sales-ws-link-btn" onClick={() => navigate("/dashboard/analytics")}>{t("salesWorkspace.viewFullLeaderboard")} →</button>
         </div>
       </div>
+
+
+      {activityModalOpen && (
+        <div className="sales-ws-activity-modal-backdrop" onClick={() => setActivityModalOpen(false)}>
+          <div className="sales-ws-activity-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sales-ws-activity-modal-head">
+              <h3>{t("salesWorkspace.recentActivity")}</h3>
+              <button type="button" onClick={() => setActivityModalOpen(false)}>×</button>
+            </div>
+
+            <div className="sales-ws-activity-modal-list">
+              {activityLoading ? (
+                <p>{t("common.loading")}</p>
+              ) : activityRows.length === 0 ? (
+                <p>{t("salesWorkspace.noRecentActivity")}</p>
+              ) : (
+                activityRows.map((item, index) => (
+                  <div key={item.id || `${item.title}-${index}`}>
+                    <span className="activity-dot" />
+                    <div>
+                      <strong>{item.title}</strong>
+                      {item.subtitle && <small>{item.subtitle}</small>}
+                    </div>
+                    <time>{relativeTime(item.at || item.createdAt)}</time>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activityLogOpen && (
+        <div className="sales-ws-activity-modal-backdrop" onClick={() => setActivityLogOpen(false)}>
+          <div className="sales-ws-activity-modal sales-ws-log-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sales-ws-activity-modal-head">
+              <h3>{t("salesWorkspace.more.logActivity")}</h3>
+              <button type="button" onClick={() => setActivityLogOpen(false)}>×</button>
+            </div>
+
+            <label>
+              <span>{t("salesWorkspace.more.activityTitle")}</span>
+              <input
+                value={activityTitle}
+                onChange={(e) => setActivityTitle(e.target.value)}
+                placeholder={t("salesWorkspace.more.activityTitlePlaceholder")}
+              />
+            </label>
+
+            <label>
+              <span>{t("salesWorkspace.more.activityDetails")}</span>
+              <textarea
+                value={activityDetails}
+                onChange={(e) => setActivityDetails(e.target.value)}
+                placeholder={t("salesWorkspace.more.activityDetailsPlaceholder")}
+                rows={4}
+              />
+            </label>
+
+            <div className="sales-ws-log-actions">
+              <button type="button" onClick={() => setActivityLogOpen(false)}>
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                className="primary"
+                disabled={!activityTitle.trim() || activitySaving}
+                onClick={saveSalesActivity}
+              >
+                {activitySaving
+                  ? t("common.saving")
+                  : t("salesWorkspace.more.saveActivity")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <QuoteModal
         key={modalNonce}
