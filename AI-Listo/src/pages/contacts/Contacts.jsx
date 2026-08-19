@@ -32,6 +32,7 @@ import {
   Calendar,
   MessageSquare,
   ChevronRight,
+  ChevronDown,
   LayoutDashboard,
   GitFork,
   Menu,
@@ -82,6 +83,15 @@ export default function ContactsRelationshipsPage() {
   const [showDetailMoreMenu, setShowDetailMoreMenu] = useState(false);
   const [mobileSort, setMobileSort] = useState("activity");
   const [mobileDetailSection, setMobileDetailSection] = useState("activity");
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 1025px)").matches
+      : false,
+  );
+  const [desktopDetailTab, setDesktopDetailTab] = useState("overview");
+  const [desktopPage, setDesktopPage] = useState(1);
+  const [desktopPerPage, setDesktopPerPage] = useState(25);
+
 
   const [contactMessages, setContactMessages] = useState([]);
   const [contactMessagesLoading, setContactMessagesLoading] = useState(false);
@@ -127,6 +137,15 @@ export default function ContactsRelationshipsPage() {
       window.removeEventListener("click", closeMenu);
     };
   }, []);
+
+  useEffect(() => {
+    const desktopMediaQuery = window.matchMedia("(min-width: 1025px)");
+    const syncDesktop = () => setIsDesktop(desktopMediaQuery.matches);
+    syncDesktop();
+    desktopMediaQuery.addEventListener?.("change", syncDesktop);
+    return () => desktopMediaQuery.removeEventListener?.("change", syncDesktop);
+  }, []);
+
 
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
@@ -339,6 +358,7 @@ export default function ContactsRelationshipsPage() {
 
   const handleSearch = (e) => {
     const value = e.target.value;
+    setDesktopPage(1);
     setSearch(value);
     if (!value) {
       fetchContacts();
@@ -348,6 +368,7 @@ export default function ContactsRelationshipsPage() {
   };
 
   const applyFilter = (query) => {
+    setDesktopPage(1);
     fetchContacts(query);
   };
 
@@ -580,6 +601,7 @@ export default function ContactsRelationshipsPage() {
 
   const openContactDetail = (contact) => {
     setSelectedContact(contact);
+    setDesktopDetailTab("overview");
     fetchActivities(contact.id);
     fetchContactMessages(contact.id);
   };
@@ -1110,7 +1132,50 @@ export default function ContactsRelationshipsPage() {
     </>
   );
 
-  if (selectedContact) {
+
+  const desktopTotalContacts = contacts.length;
+  const desktopTotalPages = Math.max(
+    1,
+    Math.ceil(desktopTotalContacts / desktopPerPage),
+  );
+  const desktopSafePage = Math.min(desktopPage, desktopTotalPages);
+  const desktopStartIndex = (desktopSafePage - 1) * desktopPerPage;
+  const desktopVisibleContacts = contacts.slice(
+    desktopStartIndex,
+    desktopStartIndex + desktopPerPage,
+  );
+
+  const desktopStatusClass = (contact) =>
+    String(contact?.status || contact?.type || "contact")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-");
+
+  const desktopContactAvatar = (contact) => {
+    const value = contact?.avatar;
+    if (
+      typeof value === "string" &&
+      (value.startsWith("http://") ||
+        value.startsWith("https://") ||
+        value.startsWith("data:"))
+    ) {
+      return <img src={value} alt="" />;
+    }
+
+    return (
+      <span>
+        {value ||
+          contact?.name
+            ?.split(/\s+/)
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase() ||
+          "?"}
+      </span>
+    );
+  };
+
+  if (selectedContact && !isDesktop) {
     const selectedScore = mobileAiScore(selectedContact);
     const selectedCompany = mobileCompany(selectedContact);
     const selectedLastContact =
@@ -2453,6 +2518,13 @@ export default function ContactsRelationshipsPage() {
                     <Bot /> {t("contacts.runAiReview")}
                   </button>
                   <button
+                    type="button"
+                    className="action-btn import"
+                    onClick={() => showToast(t("contacts.importReady"), "success")}
+                  >
+                    <Download /> {t("contacts.import")}
+                  </button>
+                  <button
                     className="primary-btn"
                     onClick={() => setShowCreateModal(true)}
                   >
@@ -2462,183 +2534,701 @@ export default function ContactsRelationshipsPage() {
               </div>
             </div>
 
-            {/* CONTACTS GRID */}
-            <div className="contacts-grid">
-              {loading ? (
-                <div>{t("contacts.loading")}</div>
-              ) : (
-                contacts.map((contact) => (
-                  <div
-                    className="contact-card clickable-card"
-                    key={contact.id}
-                    onClick={() => openContactDetail(contact)}
-                  >
-                    <div className="contact-top">
-                      <div className="contact-user">
-                        <div className="contact-avatar">
-                          {contact.avatar ||
-                            contact.name?.charAt(0)?.toUpperCase()}
-                        </div>
-                        <div className="contact-group-right">
-                          <div className="contact-name">{contact.name}</div>
-                          <div className="contact-badges-row">
-                            <span className="badge-type">
-                              {contact.type || "Buyer"}
-                            </span>
-                            <span className="badge-dot">•</span>
-                            <span
-                              className={`badge-status ${String(contact.status).toLowerCase()}`}
+            {/* DESKTOP CONTACTS TABLE + DETAIL DRAWER */}
+            <div
+              className={`contacts-table-layout ${
+                selectedContact ? "has-detail" : ""
+              }`}
+            >
+              <section className="contacts-table-card">
+                <div className="contacts-table-summary">
+                  {t("contacts.desktopContactCount", {
+                    count: desktopTotalContacts,
+                  })}
+                </div>
+
+                <div className="contacts-table-scroll">
+                  <table className="contacts-table">
+                    <thead>
+                      <tr>
+                        <th className="check-column">
+                          <span className="contacts-table-checkbox" />
+                        </th>
+                        <th>
+                          {t("contacts.desktopColumnContact")}
+                          <ArrowUpDown size={12} />
+                        </th>
+                        <th>{t("contacts.desktopColumnCompany")}</th>
+                        <th>{t("contacts.desktopColumnStatus")}</th>
+                        <th>{t("contacts.desktopColumnSource")}</th>
+                        <th>{t("contacts.desktopColumnOwner")}</th>
+                        <th>{t("contacts.desktopColumnLastContact")}</th>
+                        <th>{t("contacts.desktopColumnNextAction")}</th>
+                        <th>{t("contacts.desktopColumnAiScore")}</th>
+                        <th>{t("contacts.desktopColumnActions")}</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {loading ? (
+                        <tr>
+                          <td colSpan="10" className="contacts-table-empty">
+                            {t("contacts.loading")}
+                          </td>
+                        </tr>
+                      ) : desktopVisibleContacts.length ? (
+                        desktopVisibleContacts.map((contact) => {
+                          const score = mobileAiScore(contact);
+                          const lastContact =
+                            contact.lastContactAt ||
+                            contact.updatedAt ||
+                            contact.createdAt;
+
+                          return (
+                            <tr
+                              key={contact.id}
+                              className={
+                                selectedContact?.id === contact.id
+                                  ? "is-selected"
+                                  : ""
+                              }
+                              onClick={() => openContactDetail(contact)}
                             >
-                              {contact.status || "Cold"}
-                            </span>
-                            <span className="badge-dot">•</span>
-                            <span className="badge-ai-score">
-                              AI {contact.score || "25"}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                              <td className="check-column">
+                                <span className="contacts-table-checkbox" />
+                              </td>
 
-                      <div
-                        className="contact-action"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(
-                            openMenuId === contact.id ? null : contact.id,
-                          );
-                        }}
-                      >
-                        <MoreVertical size={18} />
-                        {openMenuId === contact.id && (
-                          <div
-                            className="contact-menu"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button onClick={() => openEditContact(contact)}>
-                              <Edit3 size={15} /> {t("contacts.editContactTitle")}
-                            </button>
-                            <button onClick={() => openAssignAgent(contact)}>
-                              <UserCog size={15} /> {t("contacts.assignAgentTitle")}
-                            </button>
-                            {contact.linkedLeadId && (
-                              <button onClick={() => openLinkedLead(contact)}>
-                                <GitFork size={15} />
-                                {t("contacts.openLead")}
-                              </button>
-                            )}
-                            <div className="status-menu-group">
-                              <button>
-                                <StickyNote size={15} /> {t("contacts.changeStatus")}
-                              </button>
+                              <td>
+                                <div className="contacts-table-person">
+                                  <div className="contacts-table-avatar">
+                                    {desktopContactAvatar(contact)}
+                                  </div>
+                                  <div>
+                                    <strong>{contact.name || "—"}</strong>
+                                    <span>{contact.email || "—"}</span>
+                                    <small>{contact.phone || "—"}</small>
+                                  </div>
+                                </div>
+                              </td>
 
-                              <div className="status-submenu">
-                                {["Cold", "Warm", "Hot", "Active"].map(
-                                  (status) => (
+                              <td>{mobileCompany(contact) || "—"}</td>
+
+                              <td>
+                                <span
+                                  className={`contacts-table-status ${desktopStatusClass(
+                                    contact,
+                                  )}`}
+                                >
+                                  {contact.status || contact.type || "—"}
+                                </span>
+                              </td>
+
+                              <td>{contact.source || "—"}</td>
+
+                              <td>
+                                <div className="contacts-table-owner">
+                                  <span>
+                                    {mobileOwner(contact)
+                                      ?.charAt(0)
+                                      ?.toUpperCase() || "?"}
+                                  </span>
+                                  <strong>{mobileOwner(contact)}</strong>
+                                </div>
+                              </td>
+
+                              <td>
+                                <div className="contacts-table-last">
+                                  <MessageSquare />
+                                  <span>{mobileRelativeTime(lastContact)}</span>
+                                </div>
+                              </td>
+
+                              <td>
+                                <div className="contacts-table-next">
+                                  <strong>
+                                    {contact.recommendedAction ||
+                                      t("contacts.desktopNoNextAction")}
+                                  </strong>
+                                  <span>
+                                    {contact.followUpRecommended
+                                      ? t("contacts.desktopToday")
+                                      : "—"}
+                                  </span>
+                                </div>
+                              </td>
+
+                              <td>
+                                <span
+                                  className={`contacts-table-score ${
+                                    score >= 80
+                                      ? "high"
+                                      : score >= 60
+                                        ? "medium"
+                                        : "low"
+                                  }`}
+                                >
+                                  {score}
+                                </span>
+                              </td>
+
+                              <td className="contacts-table-actions-cell">
+                                <button
+                                  type="button"
+                                  className="contacts-table-more"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setOpenMenuId(
+                                      openMenuId === contact.id
+                                        ? null
+                                        : contact.id,
+                                    );
+                                  }}
+                                >
+                                  <MoreVertical />
+                                </button>
+
+                                {openMenuId === contact.id && (
+                                  <div
+                                    className="contact-menu contacts-table-menu"
+                                    onClick={(event) => event.stopPropagation()}
+                                  >
                                     <button
-                                      key={status}
+                                      onClick={() => openEditContact(contact)}
+                                    >
+                                      <Edit3 size={15} />
+                                      {t("contacts.editContactTitle")}
+                                    </button>
+
+                                    <button
+                                      onClick={() => openAssignAgent(contact)}
+                                    >
+                                      <UserCog size={15} />
+                                      {t("contacts.assignAgentTitle")}
+                                    </button>
+
+                                    {contact.linkedLeadId && (
+                                      <button
+                                        onClick={() => openLinkedLead(contact)}
+                                      >
+                                        <GitFork size={15} />
+                                        {t("contacts.openLead")}
+                                      </button>
+                                    )}
+
+                                    <div className="status-menu-group">
+                                      <button>
+                                        <StickyNote size={15} />
+                                        {t("contacts.changeStatus")}
+                                      </button>
+
+                                      <div className="status-submenu">
+                                        {["Cold", "Warm", "Hot", "Active"].map(
+                                          (status) => (
+                                            <button
+                                              key={status}
+                                              onClick={() =>
+                                                changeContactStatus(
+                                                  contact.id,
+                                                  status,
+                                                )
+                                              }
+                                            >
+                                              {status}
+                                            </button>
+                                          ),
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <button
+                                      className="warning"
                                       onClick={() =>
-                                        changeContactStatus(contact.id, status)
+                                        archiveContact(contact.id)
                                       }
                                     >
-                                      {status}
+                                      <Archive size={15} />
+                                      {t("contacts.archiveContact")}
                                     </button>
-                                  ),
+
+                                    <button
+                                      className="danger"
+                                      onClick={() =>
+                                        deleteContact(contact.id)
+                                      }
+                                    >
+                                      <Trash2 size={15} />
+                                      {t("contacts.deleteContactAction")}
+                                    </button>
+                                  </div>
                                 )}
-                              </div>
-                            </div>
-                            <button onClick={runAiReview}>
-                              <Bot size={15} /> {t("contacts.runAiReview")}
-                            </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan="10" className="contacts-table-empty">
+                            {t("contacts.noContacts")}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <footer className="contacts-table-pagination">
+                  <span>
+                    {desktopTotalContacts > 0
+                      ? t("contacts.desktopShowingRange", {
+                          from: desktopStartIndex + 1,
+                          to: Math.min(
+                            desktopStartIndex + desktopPerPage,
+                            desktopTotalContacts,
+                          ),
+                          total: desktopTotalContacts,
+                        })
+                      : t("contacts.desktopShowingRange", {
+                          from: 0,
+                          to: 0,
+                          total: 0,
+                        })}
+                  </span>
+
+                  <div className="contacts-table-pages">
+                    <button
+                      type="button"
+                      disabled={desktopSafePage <= 1}
+                      onClick={() =>
+                        setDesktopPage((page) => Math.max(1, page - 1))
+                      }
+                    >
+                      <ChevronLeft />
+                    </button>
+
+                    {Array.from(
+                      { length: Math.min(desktopTotalPages, 5) },
+                      (_, index) => {
+                        let page = index + 1;
+                        if (
+                          desktopTotalPages > 5 &&
+                          desktopSafePage > 3
+                        ) {
+                          page = Math.min(
+                            desktopTotalPages - 4 + index,
+                            desktopSafePage - 2 + index,
+                          );
+                        }
+
+                        return (
+                          <button
+                            type="button"
+                            key={page}
+                            className={
+                              page === desktopSafePage ? "active" : ""
+                            }
+                            onClick={() => setDesktopPage(page)}
+                          >
+                            {page}
+                          </button>
+                        );
+                      },
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={desktopSafePage >= desktopTotalPages}
+                      onClick={() =>
+                        setDesktopPage((page) =>
+                          Math.min(desktopTotalPages, page + 1),
+                        )
+                      }
+                    >
+                      <ChevronRight />
+                    </button>
+                  </div>
+
+                  <label className="contacts-table-per-page">
+                    <select
+                      value={desktopPerPage}
+                      onChange={(event) => {
+                        setDesktopPerPage(Number(event.target.value));
+                        setDesktopPage(1);
+                      }}
+                    >
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <span>{t("contacts.desktopPerPage")}</span>
+                    <ChevronDown />
+                  </label>
+                </footer>
+              </section>
+
+              {selectedContact && (
+                <aside className="contacts-detail-drawer">
+                  <header className="contacts-detail-drawer-head">
+                    <div className="contacts-detail-person">
+                      <div className="contacts-detail-avatar">
+                        {desktopContactAvatar(selectedContact)}
+                      </div>
+
+                      <div>
+                        <div className="contacts-detail-name-row">
+                          <strong>{selectedContact.name || "—"}</strong>
+                          <span
+                            className={`contacts-table-status ${desktopStatusClass(
+                              selectedContact,
+                            )}`}
+                          >
+                            {selectedContact.status ||
+                              selectedContact.type ||
+                              "—"}
+                          </span>
+                        </div>
+                        <small>{mobileCompany(selectedContact) || "—"}</small>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="contacts-detail-close"
+                      onClick={() => setSelectedContact(null)}
+                    >
+                      ×
+                    </button>
+                  </header>
+
+                  <div className="contacts-detail-actions">
+                    <button
+                      type="button"
+                      className="whatsapp"
+                      onClick={() => messageContact(selectedContact.id)}
+                    >
+                      <MessageSquare />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedContact.email) {
+                          window.location.href = `mailto:${selectedContact.email}`;
+                        }
+                      }}
+                    >
+                      <Mail />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => callContact(selectedContact.phone)}
+                    >
+                      <Phone />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowDetailMoreMenu((value) => !value)
+                      }
+                    >
+                      <MoreVertical />
+                    </button>
+                  </div>
+
+                  <nav className="contacts-detail-tabs">
+                    {[
+                      ["overview", t("contacts.desktopTabOverview")],
+                      ["activity", t("contacts.desktopTabActivity")],
+                      ["deals", t("contacts.desktopTabDeals")],
+                      ["tasks", t("contacts.desktopTabTasks")],
+                      ["files", t("contacts.desktopTabFiles")],
+                    ].map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={
+                          desktopDetailTab === key ? "active" : ""
+                        }
+                        onClick={() => setDesktopDetailTab(key)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </nav>
+
+                  <div className="contacts-detail-body">
+                    {desktopDetailTab === "overview" && (
+                      <>
+                        <section className="contacts-detail-section">
+                          <div className="contacts-detail-section-title">
+                            <strong>
+                              {t("contacts.desktopContactInformation")}
+                            </strong>
                             <button
-                              className="warning"
-                              onClick={() => archiveContact(contact.id)}
+                              type="button"
+                              onClick={() =>
+                                openEditContact(selectedContact)
+                              }
                             >
-                              <Archive size={15} /> {t("contacts.archiveContact")}
-                            </button>
-                            <button
-                              className="danger"
-                              onClick={() => deleteContact(contact.id)}
-                            >
-                              <Trash2 size={15} /> {t("contacts.deleteContactAction")}
+                              {t("common.edit")}
                             </button>
                           </div>
+
+                          <div className="contacts-detail-info">
+                            <div>
+                              <Mail />
+                              <span>
+                                {selectedContact.email || "—"}
+                              </span>
+                            </div>
+                            <div>
+                              <Phone />
+                              <span>
+                                {selectedContact.phone || "—"}
+                              </span>
+                            </div>
+                            <div>
+                              <MapPin />
+                              <span>
+                                {selectedContact.location || "—"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="contacts-detail-meta">
+                            <div>
+                              <span>{t("contacts.labelSource")}</span>
+                              <strong>
+                                {selectedContact.source || "—"}
+                              </strong>
+                            </div>
+                            <div>
+                              <span>
+                                {t("contacts.desktopColumnOwner")}
+                              </span>
+                              <strong>
+                                {mobileOwner(selectedContact)}
+                              </strong>
+                            </div>
+                          </div>
+                        </section>
+
+                        <section className="contacts-detail-section">
+                          <div className="contacts-detail-section-title ai">
+                            <strong>
+                              <Sparkles />
+                              {t("contacts.desktopAiSummary")}
+                            </strong>
+                          </div>
+                          <p>
+                            {selectedContact.aiSummary ||
+                              selectedContact.notes ||
+                              t("contacts.noInsights")}
+                          </p>
+                          <button
+                            type="button"
+                            className="contacts-detail-outline"
+                            onClick={loadAiInsights}
+                          >
+                            {t("contacts.desktopSeeFullSummary")}
+                          </button>
+                        </section>
+
+                        <section className="contacts-detail-section">
+                          <div className="contacts-detail-section-title ai">
+                            <strong>
+                              <Target />
+                              {t("contacts.desktopNextAction")}
+                            </strong>
+                          </div>
+
+                          <div className="contacts-detail-next">
+                            <div>
+                              <strong>
+                                {selectedContact.recommendedAction ||
+                                  t("contacts.desktopNoNextAction")}
+                              </strong>
+                              <span>
+                                {selectedContact.followUpRecommended
+                                  ? t("contacts.desktopToday")
+                                  : "—"}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openNoteModal(selectedContact)
+                              }
+                            >
+                              {t("contacts.desktopMarkComplete")}
+                            </button>
+                          </div>
+                        </section>
+
+                        <button
+                          type="button"
+                          className="contacts-detail-full"
+                          onClick={() => setDesktopDetailTab("activity")}
+                        >
+                          {t("contacts.desktopViewFullProfile")}
+                        </button>
+                      </>
+                    )}
+
+                    {desktopDetailTab === "activity" && (
+                      <section className="contacts-detail-section">
+                        <div className="contacts-detail-section-title">
+                          <strong>
+                            {t("contacts.desktopRecentActivity")}
+                          </strong>
+                        </div>
+
+                        {activitiesLoading ? (
+                          <div className="contacts-detail-empty">
+                            {t("contacts.loadingActivities")}
+                          </div>
+                        ) : activities.length ? (
+                          <div className="contacts-detail-activity-list">
+                            {activities.slice(0, 10).map((activity) => (
+                              <article key={activity.id}>
+                                <Activity />
+                                <div>
+                                  <strong>
+                                    {activity.title ||
+                                      activity.type ||
+                                      "—"}
+                                  </strong>
+                                  <span>{activity.sub || "—"}</span>
+                                </div>
+                                <small>
+                                  {formatActivityDate(
+                                    activity.createdAt,
+                                  )}
+                                </small>
+                              </article>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="contacts-detail-empty">
+                            {t("contacts.noActivity")}
+                          </div>
                         )}
-                      </div>
-                    </div>
+                      </section>
+                    )}
 
-                    <div className="contact-info-list">
-                      <div className="info-item">
-                        <div className="info-label-group">
-                          <Mail size={16} /> <span>{t("contacts.labelEmail")}:</span>
+                    {desktopDetailTab === "deals" && (
+                      <section className="contacts-detail-section">
+                        <div className="contacts-detail-section-title">
+                          <strong>{t("contacts.desktopTabDeals")}</strong>
                         </div>
-                        <div className="info-value text-link">
-                          {contact.email || "-"}
-                        </div>
-                      </div>
-                      <div className="info-item">
-                        <div className="info-label-group">
-                          <Phone size={16} /> <span>{t("contacts.labelPhone")}:</span>
-                        </div>
-                        <div className="info-value">{contact.phone || "-"}</div>
-                      </div>
-                      <div className="info-item">
-                        <div className="info-label-group">
-                          <UserPlus size={16} /> <span>{t("contacts.labelSource")}:</span>
-                        </div>
-                        <div className="info-value">
-                          {contact.source || "-"}
-                        </div>
-                      </div>
-                      <div className="info-item">
-                        <div className="info-label-group">
-                          <Home size={16} /> <span>{t("contacts.labelInterested")}:</span>
-                        </div>
-                        <div className="info-value emphasis">
-                          {contact.interest || "-"}
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="contact-actions-footer">
-                      <button
-                        className="footer-action-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openContactDetail(contact);
-                        }}
-                      >
-                        <Eye size={16} /> <span>{t("contacts.view")}</span>
-                      </button>
-                      <button
-                        className="footer-action-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          messageContact(contact.id);
-                        }}
-                      >
-                        <Send size={16} /> <span>{t("contacts.message")}</span>
-                      </button>
-                      <button
-                        className="footer-action-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          callContact(contact.phone);
-                        }}
-                      >
-                        <Phone size={16} /> <span>{t("contacts.call")}</span>
-                      </button>
-                      <button
-                        className="footer-action-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openNoteModal(contact);
-                        }}
-                      >
-                        <StickyNote size={16} /> <span>{t("contacts.notes")}</span>
-                      </button>
-                    </div>
+                        {selectedContact.linkedLeadId ? (
+                          <button
+                            type="button"
+                            className="contacts-detail-linked"
+                            onClick={() =>
+                              openLinkedLead(selectedContact)
+                            }
+                          >
+                            <Handshake />
+                            <div>
+                              <strong>
+                                {selectedContact.linkedLeadName ||
+                                  selectedContact.linkedLead ||
+                                  t(
+                                    "contacts.desktopLinkedOpportunity",
+                                  )}
+                              </strong>
+                              <span>{t("contacts.openLead")}</span>
+                            </div>
+                            <ChevronRight />
+                          </button>
+                        ) : (
+                          <div className="contacts-detail-empty">
+                            {t("contacts.desktopNoLinkedDeal")}
+                          </div>
+                        )}
+                      </section>
+                    )}
+
+                    {desktopDetailTab === "tasks" && (
+                      <section className="contacts-detail-section">
+                        <div className="contacts-detail-section-title">
+                          <strong>{t("contacts.desktopTabTasks")}</strong>
+                        </div>
+
+                        {selectedContact.recommendedAction ? (
+                          <button
+                            type="button"
+                            className="contacts-detail-linked task"
+                            onClick={() =>
+                              openNoteModal(selectedContact)
+                            }
+                          >
+                            <CheckSquare />
+                            <div>
+                              <strong>
+                                {selectedContact.recommendedAction}
+                              </strong>
+                              <span>
+                                {selectedContact.followUpRecommended
+                                  ? t("contacts.desktopToday")
+                                  : t("contacts.desktopReviewNextAction")}
+                              </span>
+                            </div>
+                            <ChevronRight />
+                          </button>
+                        ) : (
+                          <div className="contacts-detail-empty">
+                            {t("contacts.desktopNoTaskData")}
+                          </div>
+                        )}
+                      </section>
+                    )}
+
+                    {desktopDetailTab === "files" && (
+                      <section className="contacts-detail-section">
+                        <div className="contacts-detail-section-title">
+                          <strong>{t("contacts.desktopTabFiles")}</strong>
+                        </div>
+                        <div className="contacts-detail-empty">
+                          {t("contacts.desktopNoFileData")}
+                        </div>
+                      </section>
+                    )}
                   </div>
-                ))
+
+                  {showDetailMoreMenu && (
+                    <div className="contact-menu contacts-detail-menu">
+                      <button
+                        onClick={() => {
+                          setShowDetailMoreMenu(false);
+                          openEditContact(selectedContact);
+                        }}
+                      >
+                        <Edit3 size={15} />
+                        {t("contacts.editContactTitle")}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDetailMoreMenu(false);
+                          openAssignAgent(selectedContact);
+                        }}
+                      >
+                        <UserCog size={15} />
+                        {t("contacts.assignAgentTitle")}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDetailMoreMenu(false);
+                          openNoteModal(selectedContact);
+                        }}
+                      >
+                        <StickyNote size={15} />
+                        {t("contacts.addNoteTitle")}
+                      </button>
+                    </div>
+                  )}
+                </aside>
               )}
             </div>
           </div>
