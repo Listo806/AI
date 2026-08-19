@@ -21,6 +21,17 @@ import {
   List,
   CalendarDays,
   ChevronDown,
+  Bot,
+  Zap,
+  Mail,
+  Handshake,
+  UserPlus,
+  Headphones,
+  BarChart3,
+  UsersRound,
+  CircleHelp,
+  Activity,
+  Filter,
 } from "lucide-react";
 import "./SalesWorkspace.css";
 import salesApi from "../../api/salesApi";
@@ -34,40 +45,59 @@ import CommissionsSection from "./CommissionsSection";
 import CustomersSection from "./CustomersSection";
 import SalesOverviewSection from "./SalesOverviewSection";
 import { relativeTime } from "./salesFormat";
+import { useTranslation } from "react-i18next";
 
 // KPI card config. Values come from the live /sales/stats endpoint. In this first
 // slice only Quotes exist, so Open Quotes is real and the rest report 0 until
 // their tabs are wired — no invented numbers, and no fake "vs last month" trend
 // (comparisons appear only once real history exists).
 const STAT_CONFIG = [
-  { key: "openQuotes", label: "Open Quotes", noun: "Quotes", Icon: FileText, tone: "blue" },
-  { key: "openProposals", label: "Open Proposals", noun: "Proposals", Icon: ClipboardList, tone: "purple" },
-  { key: "ordersThisMonth", label: "Orders This Month", noun: "Orders", Icon: PackageCheck, tone: "green" },
-  { key: "outstandingInvoices", label: "Outstanding Invoices", noun: "Invoices", Icon: BadgeDollarSign, tone: "amber" },
-  { key: "commissionsDue", label: "Commissions Due", Icon: ShoppingCart, tone: "cyan" },
-  { key: "conversionRate", label: "Conversion Rate", Icon: Percent, tone: "pink" },
+  { key: "openQuotes", labelKey: "kpi.openQuotes", nounKey: "kpi.quotes", Icon: FileText, tone: "blue" },
+  { key: "openProposals", labelKey: "kpi.openProposals", nounKey: "kpi.proposals", Icon: ClipboardList, tone: "purple" },
+  { key: "ordersThisMonth", labelKey: "kpi.ordersThisMonth", nounKey: "kpi.orders", Icon: PackageCheck, tone: "green" },
+  { key: "outstandingInvoices", labelKey: "kpi.outstandingInvoices", nounKey: "kpi.invoices", Icon: BadgeDollarSign, tone: "amber" },
+  { key: "commissionsDue", labelKey: "kpi.commissionsDue", Icon: ShoppingCart, tone: "cyan" },
+  { key: "conversionRate", labelKey: "kpi.conversionRate", Icon: Percent, tone: "pink" },
 ];
 
-function money(value) {
+function money(value, locale = "en-US") {
   const n = Number(value) || 0;
-  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(n);
 }
 
-function formatDate(value) {
+function formatDate(value, locale = "en-US") {
   if (!value) return "-";
   const d = new Date(value);
   if (isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+  return d.toLocaleDateString(locale, {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
 }
 
-function daysLeftNote(validUntil) {
+function daysLeftNote(validUntil, t) {
   if (!validUntil) return { text: "", danger: false };
   const d = new Date(validUntil);
   if (isNaN(d.getTime())) return { text: "", danger: false };
   const diff = Math.ceil((d.getTime() - Date.now()) / 86400000);
-  if (diff < 0) return { text: "expired", danger: true };
-  if (diff === 0) return { text: "0 days left", danger: true };
-  return { text: `${diff} day${diff === 1 ? "" : "s"} left`, danger: false };
+
+  if (diff < 0) {
+    return { text: t("salesWorkspace.validity.expired"), danger: true };
+  }
+
+  if (diff === 0) {
+    return { text: t("salesWorkspace.validity.daysLeft", { count: 0 }), danger: true };
+  }
+
+  return {
+    text: t("salesWorkspace.validity.daysLeft", { count: diff }),
+    danger: false,
+  };
 }
 
 function initials(name) {
@@ -80,38 +110,61 @@ function initials(name) {
 }
 
 // Build a KPI card's value + sub-line from the live stats payload.
-function statCard(key, stats) {
+function statCard(key, stats, t, locale) {
   const s = stats?.[key];
   if (!s) return { value: "—", sub: "" };
+
+  const config = STAT_CONFIG.find((item) => item.key === key);
+
   switch (key) {
     case "openQuotes":
     case "openProposals":
     case "ordersThisMonth":
     case "outstandingInvoices":
-      return { value: money(s.value), sub: `${(s.count || 0).toLocaleString("en-US")} ${STAT_CONFIG.find((c) => c.key === key).noun}` };
+      return {
+        value: money(s.value, locale),
+        sub: t("salesWorkspace.kpi.countLabel", {
+          count: Number(s.count || 0).toLocaleString(locale),
+          noun: t(`salesWorkspace.${config.nounKey}`),
+        }),
+      };
     case "commissionsDue":
-      return { value: money(s.amount), sub: `${s.count || 0} Pending` };
+      return {
+        value: money(s.amount, locale),
+        sub: t("salesWorkspace.kpi.pendingCount", { count: s.count || 0 }),
+      };
     case "conversionRate":
-      return { value: `${s.percent || 0}%`, sub: "Accepted vs closed" };
+      return {
+        value: `${s.percent || 0}%`,
+        sub: t("salesWorkspace.kpi.acceptedVsClosed"),
+      };
     default:
       return { value: "—", sub: "" };
   }
 }
 
 const TABS = [
-  "Overview",
-  "Customers",
-  "Quotes",
-  "Proposals",
-  "Orders",
-  "Contracts",
-  "Invoices",
-  "Commissions",
-  "Returns",
+  { key: "Overview", labelKey: "tabs.overview" },
+  { key: "Customers", labelKey: "tabs.customers" },
+  { key: "Quotes", labelKey: "tabs.quotes" },
+  { key: "Proposals", labelKey: "tabs.proposals" },
+  { key: "Orders", labelKey: "tabs.orders" },
+  { key: "Contracts", labelKey: "tabs.contracts" },
+  { key: "Invoices", labelKey: "tabs.invoices" },
+  { key: "Commissions", labelKey: "tabs.commissions" },
+  { key: "Returns", labelKey: "tabs.returns" },
 ];
 
 export default function SalesWorkspace() {
+  const { t, i18n } = useTranslation();
+  const locale =
+    i18n.language?.startsWith("es")
+      ? "es-ES"
+      : i18n.language?.startsWith("pt")
+        ? "pt-BR"
+        : "en-US";
   const [activeTab, setActiveTab] = useState("Quotes");
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -169,13 +222,13 @@ export default function SalesWorkspace() {
       })
       .catch(() => {
         if (!alive) return;
-        setError("Could not load quotes.");
+        setError(t("salesWorkspace.errors.loadQuotes"));
         setLoading(false);
       });
     return () => {
       alive = false;
     };
-  }, [activeTab, debouncedSearch, page, limit, refreshTick]);
+  }, [activeTab, debouncedSearch, page, limit, refreshTick, t]);
 
   const openModal = (mode, id = null) => {
     setModalMode(mode);
@@ -190,10 +243,10 @@ export default function SalesWorkspace() {
       await salesApi.convertQuoteToProposal(id);
       handleSaved();
       // eslint-disable-next-line no-alert
-      window.alert("Proposal created. Open the Proposals tab to see it.");
+      window.alert(t("salesWorkspace.messages.proposalCreated"));
     } catch (e) {
       // eslint-disable-next-line no-alert
-      window.alert(e?.message || "Could not create proposal");
+      window.alert(e?.message || t("salesWorkspace.errors.createProposal"));
     }
   };
 
@@ -202,40 +255,68 @@ export default function SalesWorkspace() {
   const activity = stats?.recentActivity || [];
   const reps = stats?.topReps || [];
   const pipelineTotal = pipeline.reduce((sum, p) => sum + (Number(p.value) || 0), 0);
+  const openDeals = pipeline.reduce(
+    (sum, item) => sum + (Number(item.dealCount) || 0),
+    0,
+  );
+  const expectedRevenue = Number(
+    stats?.expectedRevenue?.value ??
+      stats?.expectedRevenue ??
+      stats?.revenue?.expected ??
+      0,
+  );
 
   const from = total === 0 ? 0 : (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
+
+  const statusLabel = (status) => {
+    const key = String(status || "").trim().toLowerCase();
+    const known = {
+      pending: "pending",
+      sent: "sent",
+      approved: "approved",
+      draft: "draft",
+      viewed: "viewed",
+      accepted: "accepted",
+      rejected: "rejected",
+      expired: "expired",
+    };
+
+    return known[key]
+      ? t(`salesWorkspace.status.${known[key]}`)
+      : status || "-";
+  };
 
   return (
     <div className="sales-ws">
       <div className="sales-ws-header">
         <div>
-          <h1>Sales Workspace</h1>
-          <p>Manage your entire sales cycle from quote to commission.</p>
+          <h1>{t("salesWorkspace.title")}</h1>
+          <p>{t("salesWorkspace.subtitle")}</p>
         </div>
 
         <div className="sales-ws-header-actions">
           <label className="sales-ws-global-search">
             <Search size={15} />
-            <input placeholder="Search anything..." />
+            <input placeholder={t("salesWorkspace.searchAnything")} />
             <kbd>⌘ K</kbd>
           </label>
           <button className="sales-ws-quick-create" onClick={() => openModal("create")}>
             <Plus size={15} />
-            Quick Create
+            {t("salesWorkspace.quickCreate")}
           </button>
         </div>
       </div>
 
       <div className="sales-ws-stat-grid">
-        {STAT_CONFIG.map(({ key, label, Icon, tone }) => {
-          const { value, sub } = statCard(key, stats);
+        {STAT_CONFIG.map(({ key, labelKey, Icon, tone }) => {
+          const { value, sub } = statCard(key, stats, t, locale);
           return (
             <div className="sales-ws-stat-card" key={key}>
               <div className={`sales-ws-stat-icon ${tone}`}>
                 <Icon size={18} />
               </div>
-              <span>{label}</span>
+              <span>{t(`salesWorkspace.${labelKey}`)}</span>
               <strong>{value}</strong>
               <small>{sub}</small>
             </div>
@@ -243,18 +324,71 @@ export default function SalesWorkspace() {
         })}
       </div>
 
-      <nav className="sales-ws-tabs">
+      <nav className="sales-ws-tabs sales-ws-tabs-desktop">
         {TABS.map((tab) => (
           <button
-            key={tab}
+            key={tab.key}
             type="button"
-            className={activeTab === tab ? "active" : ""}
-            onClick={() => setActiveTab(tab)}
+            className={activeTab === tab.key ? "active" : ""}
+            onClick={() => setActiveTab(tab.key)}
           >
-            {tab}
+            {t(`salesWorkspace.${tab.labelKey}`)}
           </button>
         ))}
       </nav>
+
+      <div className="sales-ws-tabs-mobile-wrap">
+        <nav className="sales-ws-tabs sales-ws-tabs-mobile">
+          {TABS.slice(0, 6).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              className={activeTab === tab.key ? "active" : ""}
+              onClick={() => {
+                setActiveTab(tab.key);
+                setMobileMoreOpen(false);
+              }}
+            >
+              {t(`salesWorkspace.${tab.labelKey}`)}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            className={
+              mobileMoreOpen || TABS.slice(6).some((tab) => tab.key === activeTab)
+                ? "more-open"
+                : ""
+            }
+            aria-expanded={mobileMoreOpen}
+            onClick={() => setMobileMoreOpen((open) => !open)}
+          >
+            {t("salesWorkspace.tabs.more")}
+            <ChevronDown
+              size={15}
+              className={mobileMoreOpen ? "rotate" : ""}
+            />
+          </button>
+        </nav>
+
+        {mobileMoreOpen && (
+          <div className="sales-ws-tabs-mobile-more-menu">
+            {TABS.slice(6).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={activeTab === tab.key ? "active" : ""}
+                onClick={() => {
+                  setActiveTab(tab.key);
+                  setMobileMoreOpen(false);
+                }}
+              >
+                {t(`salesWorkspace.${tab.labelKey}`)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {activeTab === "Overview" ? (
         <SalesOverviewSection stats={stats} onGoTo={setActiveTab} />
@@ -264,22 +398,22 @@ export default function SalesWorkspace() {
         <section className="sales-ws-quotes">
           <div className="sales-ws-section-head">
             <div>
-              <h2>Quotes</h2>
-              <p>Create, manage and track all your quotes</p>
+              <h2>{t("salesWorkspace.quotes.title")}</h2>
+              <p>{t("salesWorkspace.quotes.subtitle")}</p>
             </div>
 
             <div className="sales-ws-section-actions">
               <button>
-                <Upload size={14} /> Import
+                <Upload size={14} /> {t("salesWorkspace.actions.import")}
               </button>
               <button>
-                <Download size={14} /> Export
+                <Download size={14} /> {t("salesWorkspace.actions.export")}
               </button>
-              <button>
+              <button className="btn-filter">
                 <Settings2 size={14} />
               </button>
               <button className="primary" onClick={() => openModal("create")}>
-                <Plus size={14} /> New Quote
+                <Plus size={14} /> {t("salesWorkspace.actions.newQuote")}
               </button>
             </div>
           </div>
@@ -290,24 +424,30 @@ export default function SalesWorkspace() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search quotes..."
+                placeholder={t("salesWorkspace.quotes.searchPlaceholder")}
               />
             </label>
 
-            {["Status", "Owner", "Date Range", "Pipeline", "More Filters"].map((item) => (
-              <button key={item}>
-                {item}
+            {[
+              ["status", t("salesWorkspace.filters.status")],
+              ["owner", t("salesWorkspace.filters.owner")],
+              ["dateRange", t("salesWorkspace.filters.dateRange")],
+              ["pipeline", t("salesWorkspace.filters.pipeline")],
+              ["more", t("salesWorkspace.filters.more")],
+            ].map(([key, label]) => (
+              <button key={key}>
+                {label}
                 <ChevronDown size={14} />
               </button>
             ))}
 
             <button className="reset" onClick={() => setSearch("")}>
-              <RotateCcw size={13} /> Reset
+              <RotateCcw size={13} /> {t("salesWorkspace.filters.reset")}
             </button>
 
-            <span>View</span>
+            <span>{t("salesWorkspace.filters.view")}</span>
             <button>
-              <Table2 size={13} /> Table
+              <Table2 size={13} /> {t("salesWorkspace.filters.table")}
             </button>
             <button>
               <List size={13} />
@@ -317,6 +457,142 @@ export default function SalesWorkspace() {
             </button>
           </div>
 
+
+          <div className="sales-ws-mobile-toolbar">
+            <button className="primary" onClick={() => openModal("create")}>
+              <Plus size={20} />
+              {t("salesWorkspace.actions.newQuote")}
+            </button>
+            <button>
+              <Upload size={18} />
+              {t("salesWorkspace.actions.importExport")}
+            </button>
+          </div>
+
+          <div className="sales-ws-mobile-search-row">
+            <label>
+              <Search size={20} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("salesWorkspace.quotes.searchPlaceholder")}
+              />
+            </label>
+            <button type="button">
+              <Filter size={20} />
+              {t("salesWorkspace.filters.filters")}
+            </button>
+          </div>
+
+          <div className="sales-ws-mobile-quote-list">
+            {loading ? (
+              <div className="sales-ws-mobile-empty">{t("common.loading")}</div>
+            ) : error ? (
+              <div className="sales-ws-mobile-empty">{error}</div>
+            ) : quotes.length === 0 ? (
+              <div className="sales-ws-mobile-empty">
+                {t("salesWorkspace.quotes.empty")}
+              </div>
+            ) : (
+              quotes.map((quote) => {
+                const status = String(quote.status || "").toLowerCase();
+                const tone =
+                  status === "sent" || status === "accepted"
+                    ? "green"
+                    : status === "approved" || status === "viewed"
+                      ? "amber"
+                      : "blue";
+
+                return (
+                  <article
+                    className={`sales-ws-mobile-quote-card ${tone}`}
+                    key={`mobile-${quote.id}`}
+                  >
+                    <div className="sales-ws-mobile-quote-main">
+                      <div className="sales-ws-mobile-quote-icon">
+                        <FileText />
+                      </div>
+
+                      <div className="sales-ws-mobile-quote-identity">
+                        <strong>
+                          {quote.quoteNumber ||
+                            t("salesWorkspace.quotes.unnumbered")}
+                        </strong>
+                        <span>{quote.customerName || "—"}</span>
+                        {(quote.dealName || quote.segment) && (
+                          <em>{quote.dealName || quote.segment}</em>
+                        )}
+                      </div>
+
+                      <div className="sales-ws-mobile-quote-value">
+                        <strong>
+                          {quote.value != null
+                            ? money(quote.value, locale)
+                            : "—"}
+                        </strong>
+                        <span>{t("salesWorkspace.table.value")}</span>
+                      </div>
+
+                      <div className="sales-ws-mobile-quote-status">
+                        <strong className={`status-pill ${status || "pending"}`}>
+                          {statusLabel(quote.status)}
+                        </strong>
+                        <span>{t("salesWorkspace.table.status")}</span>
+                      </div>
+
+                      <div className="sales-ws-mobile-quote-valid">
+                        <strong>{formatDate(quote.validUntil, locale)}</strong>
+                        <span>{t("salesWorkspace.table.validUntil")}</span>
+                      </div>
+                    </div>
+
+                    <div className="sales-ws-mobile-quote-meta">
+                      <div>
+                        <strong>{quote.ownerName || "—"}</strong>
+                        <span>{t("salesWorkspace.table.owner")}</span>
+                      </div>
+                      <div>
+                        <strong>{formatDate(quote.createdAt, locale)}</strong>
+                        <span>{t("salesWorkspace.table.created")}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openModal("view", quote.id)}
+                        aria-label={t("salesWorkspace.tabs.more")}
+                      >
+                        <MoreVertical />
+                      </button>
+                    </div>
+
+                    <div className="sales-ws-mobile-quote-actions">
+                      <button
+                        type="button"
+                        onClick={() => openModal("view", quote.id)}
+                      >
+                        <Eye />
+                        {t("common.view")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openModal("edit", quote.id)}
+                      >
+                        <Pencil />
+                        {t("common.edit")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openModal("view", quote.id)}
+                      >
+                        {t("salesWorkspace.tabs.more")}
+                        <MoreVertical />
+                      </button>
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </div>
+
           <div className="sales-ws-table-wrap">
             <table className="sales-ws-table">
               <thead>
@@ -324,16 +600,16 @@ export default function SalesWorkspace() {
                   <th>
                     <input type="checkbox" />
                   </th>
-                  <th>Quote #</th>
-                  <th>Customer</th>
-                  <th>Contact</th>
-                  <th>Pipeline / Deal</th>
-                  <th>Value</th>
-                  <th>Status</th>
-                  <th>Valid Until</th>
-                  <th>Owner</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th>{t("salesWorkspace.table.quoteNumber")}</th>
+                  <th>{t("salesWorkspace.table.customer")}</th>
+                  <th>{t("salesWorkspace.table.contact")}</th>
+                  <th>{t("salesWorkspace.table.pipelineDeal")}</th>
+                  <th>{t("salesWorkspace.table.value")}</th>
+                  <th>{t("salesWorkspace.table.status")}</th>
+                  <th>{t("salesWorkspace.table.validUntil")}</th>
+                  <th>{t("salesWorkspace.table.owner")}</th>
+                  <th>{t("salesWorkspace.table.created")}</th>
+                  <th>{t("salesWorkspace.table.actions")}</th>
                 </tr>
               </thead>
 
@@ -341,7 +617,7 @@ export default function SalesWorkspace() {
                 {loading ? (
                   <tr>
                     <td colSpan={11} className="sales-ws-empty-row">
-                      Loading…
+                      {t("common.loading")}
                     </td>
                   </tr>
                 ) : error ? (
@@ -353,12 +629,12 @@ export default function SalesWorkspace() {
                 ) : quotes.length === 0 ? (
                   <tr>
                     <td colSpan={11} className="sales-ws-empty-row">
-                      No quotes yet. Create your first quote to get started.
+                      {t("salesWorkspace.quotes.empty")}
                     </td>
                   </tr>
                 ) : (
                   quotes.map((quote) => {
-                    const valid = daysLeftNote(quote.validUntil);
+                    const valid = daysLeftNote(quote.validUntil, t);
                     return (
                       <tr key={quote.id}>
                         <td>
@@ -388,20 +664,20 @@ export default function SalesWorkspace() {
                         </td>
 
                         <td className="sales-ws-money">
-                          {quote.value != null ? money(quote.value) : "-"}
+                          {quote.value != null ? money(quote.value, locale) : "-"}
                         </td>
 
                         <td>
                           <span
                             className={`sales-ws-status ${String(quote.status || "").toLowerCase()}`}
                           >
-                            {quote.status || "-"}
+                            {statusLabel(quote.status)}
                           </span>
                         </td>
 
                         <td>
                           <div className="sales-ws-valid">
-                            <strong>{formatDate(quote.validUntil)}</strong>
+                            <strong>{formatDate(quote.validUntil, locale)}</strong>
                             {valid.text && (
                               <span className={valid.danger ? "danger" : ""}>{valid.text}</span>
                             )}
@@ -421,7 +697,7 @@ export default function SalesWorkspace() {
 
                         <td>
                           <div className="sales-ws-two-line">
-                            <strong>{formatDate(quote.createdAt)}</strong>
+                            <strong>{formatDate(quote.createdAt, locale)}</strong>
                           </div>
                         </td>
 
@@ -430,29 +706,29 @@ export default function SalesWorkspace() {
                             <button
                               type="button"
                               onClick={() => convertToProposal(quote.id)}
-                              aria-label="Create proposal from quote"
-                              title="Create proposal"
+                              aria-label={t("salesWorkspace.actions.createProposal")}
+                              title={t("salesWorkspace.actions.createProposal")}
                             >
                               <ClipboardList size={14} />
                             </button>
                             <button
                               type="button"
                               onClick={() => openModal("view", quote.id)}
-                              aria-label="View quote"
+                              aria-label={t("salesWorkspace.actions.viewQuote")}
                             >
                               <Eye size={14} />
                             </button>
                             <button
                               type="button"
                               onClick={() => openModal("edit", quote.id)}
-                              aria-label="Edit quote"
+                              aria-label={t("salesWorkspace.actions.editQuote")}
                             >
                               <Pencil size={14} />
                             </button>
                             <button
                               type="button"
                               onClick={() => openModal("view", quote.id)}
-                              aria-label="More"
+                              aria-label={t("salesWorkspace.tabs.more")}
                             >
                               <MoreVertical size={14} />
                             </button>
@@ -468,7 +744,11 @@ export default function SalesWorkspace() {
 
           <div className="sales-ws-pagination">
             <span>
-              Showing {from} to {to} of {total.toLocaleString("en-US")} quotes
+              {t("salesWorkspace.pagination.showingQuotes", {
+                from,
+                to,
+                total: total.toLocaleString(locale),
+              })}
             </span>
             <div>
               <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
@@ -483,9 +763,9 @@ export default function SalesWorkspace() {
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
             >
-              <option value="20">20 / page</option>
-              <option value="50">50 / page</option>
-              <option value="100">100 / page</option>
+              <option value="20">{t("salesWorkspace.pagination.perPage", { count: 20 })}</option>
+              <option value="50">{t("salesWorkspace.pagination.perPage", { count: 50 })}</option>
+              <option value="100">{t("salesWorkspace.pagination.perPage", { count: 100 })}</option>
             </select>
           </div>
         </section>
@@ -505,9 +785,107 @@ export default function SalesWorkspace() {
         <section className="sales-ws-quotes">
           <div className="sales-ws-section-head">
             <div>
-              <h2>{activeTab}</h2>
-              <p>{activeTab} workspace is ready for the next implementation step.</p>
+              <h2>{t(`salesWorkspace.tabs.${String(activeTab).toLowerCase()}`)}</h2>
+              <p>{t("salesWorkspace.workspaceReady", { workspace: t(`salesWorkspace.tabs.${String(activeTab).toLowerCase()}`) })}</p>
             </div>
+          </div>
+        </section>
+      )}
+
+      {activeTab !== "More" && (
+        <section className="sales-ws-mobile-intelligence">
+          <div className="sales-ws-mobile-intelligence-heading">
+            <h2>{t("salesWorkspace.intelligence.title")}</h2>
+            <p>{t("salesWorkspace.intelligence.subtitle")}</p>
+          </div>
+
+          <div className="sales-ws-mobile-intel-card blue">
+            <div className="sales-ws-mobile-intel-head">
+              <div>
+                <span className="intel-icon"><BarChart3 /></span>
+                <strong>{t("salesWorkspace.pipelineSummary")}</strong>
+              </div>
+              <button>{t("common.thisMonth")} <ChevronDown /></button>
+            </div>
+
+            <div className="sales-ws-mobile-pipeline-summary">
+              <div>
+                <span>{t("salesWorkspace.intelligence.totalPipelineValue")}</span>
+                <strong>{money(pipelineTotal, locale)}</strong>
+              </div>
+              <div>
+                <span>{t("salesWorkspace.intelligence.openDeals")}</span>
+                <strong>{openDeals}</strong>
+              </div>
+              <div>
+                <span>{t("salesWorkspace.intelligence.expectedRevenue")}</span>
+                <strong>{money(expectedRevenue, locale)}</strong>
+              </div>
+            </div>
+
+            <button
+              className="sales-ws-mobile-intel-link"
+              onClick={() => setActiveTab("Overview")}
+            >
+              {t("salesWorkspace.intelligence.viewFullPipeline")} →
+            </button>
+          </div>
+
+          <div className="sales-ws-mobile-intel-card green">
+            <div className="sales-ws-mobile-intel-head">
+              <div>
+                <span className="intel-icon"><Activity /></span>
+                <strong>{t("salesWorkspace.recentActivity")}</strong>
+              </div>
+              <button>{t("salesWorkspace.intelligence.allActivity")} <ChevronDown /></button>
+            </div>
+
+            <div className="sales-ws-mobile-intel-activity">
+              {activity.length === 0 ? (
+                <p>{t("salesWorkspace.noRecentActivity")}</p>
+              ) : (
+                activity.slice(0, 4).map((item, index) => (
+                  <div key={`${item.title}-${index}`}>
+                    <span><FileText /></span>
+                    <strong>{item.title}</strong>
+                    <time>{relativeTime(item.at)}</time>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <button className="sales-ws-mobile-intel-link">
+              {t("salesWorkspace.viewAllActivity")} →
+            </button>
+          </div>
+
+          <div className="sales-ws-mobile-intel-card amber">
+            <div className="sales-ws-mobile-intel-head">
+              <div>
+                <span className="intel-icon"><UsersRound /></span>
+                <strong>{t("salesWorkspace.topPerformingReps")}</strong>
+              </div>
+              <button>{t("common.thisMonth")} <ChevronDown /></button>
+            </div>
+
+            <div className="sales-ws-mobile-reps">
+              {reps.length === 0 ? (
+                <p>{t("salesWorkspace.noDataYet")}</p>
+              ) : (
+                reps.slice(0, 3).map((rep, index) => (
+                  <div key={rep.name || index}>
+                    <b>{index + 1}</b>
+                    <span className="avatar">{initials(rep.name)}</span>
+                    <strong>{rep.name}</strong>
+                    <em>{money(rep.amount, locale)}</em>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <button className="sales-ws-mobile-intel-link">
+              {t("salesWorkspace.viewFullLeaderboard")} →
+            </button>
           </div>
         </section>
       )}
@@ -515,20 +893,20 @@ export default function SalesWorkspace() {
       <div className="sales-ws-bottom">
         <div className="sales-ws-bottom-card pipeline">
           <div className="sales-ws-card-head">
-            <strong>Sales Pipeline Summary</strong>
-            <span>This Month⌄</span>
+            <strong>{t("salesWorkspace.pipelineSummary")}</strong>
+            <span>{t("common.thisMonth")}⌄</span>
           </div>
 
           <div className="sales-ws-pipeline">
             {pipeline.length === 0 ? (
               <div>
-                <span>No pipeline data yet</span>
+                <span>{t("salesWorkspace.noPipelineData")}</span>
               </div>
             ) : (
               pipeline.map((p) => (
                 <div key={p.label}>
                   <span>{p.label}</span>
-                  <strong>{money(p.value)}</strong>
+                  <strong>{money(p.value, locale)}</strong>
                   <small>{p.dealCount || 0} Deals</small>
                   <i className={p.tone || "blue"} />
                 </div>
@@ -537,21 +915,22 @@ export default function SalesWorkspace() {
           </div>
 
           <div className="sales-ws-pipeline-total">
-            Total Pipeline Value: <strong>{money(pipelineTotal)}</strong>
+            {t("salesWorkspace.intelligence.totalPipelineValue")}:{" "}
+            <strong>{money(pipelineTotal, locale)}</strong>
           </div>
         </div>
 
         <div className="sales-ws-bottom-card">
           <div className="sales-ws-card-head">
-            <strong>Recent Activity</strong>
-            <span>All Activity⌄</span>
+            <strong>{t("salesWorkspace.recentActivity")}</strong>
+            <span>{t("salesWorkspace.intelligence.allActivity")}⌄</span>
           </div>
 
           <div className="sales-ws-activity-list">
             {activity.length === 0 ? (
               <div className="sales-ws-activity-row">
                 <div>
-                  <small>No recent activity</small>
+                  <small>{t("salesWorkspace.noRecentActivity")}</small>
                 </div>
               </div>
             ) : (
@@ -567,19 +946,19 @@ export default function SalesWorkspace() {
             )}
           </div>
 
-          <button className="sales-ws-link-btn">View all activity →</button>
+          <button className="sales-ws-link-btn">{t("salesWorkspace.viewAllActivity")} →</button>
         </div>
 
         <div className="sales-ws-bottom-card">
           <div className="sales-ws-card-head">
-            <strong>Top Performing Reps</strong>
-            <span>This Month⌄</span>
+            <strong>{t("salesWorkspace.topPerformingReps")}</strong>
+            <span>{t("common.thisMonth")}⌄</span>
           </div>
 
           <div className="sales-ws-reps">
             {reps.length === 0 ? (
               <div>
-                <span>No data yet</span>
+                <span>{t("salesWorkspace.noDataYet")}</span>
               </div>
             ) : (
               reps.map((r, index) => (
@@ -587,14 +966,14 @@ export default function SalesWorkspace() {
                   <b>{index + 1}</b>
                   <span className="avatar">{initials(r.name)}</span>
                   <strong>{r.name}</strong>
-                  <span>{money(r.amount)}</span>
-                  <small>{r.orders || 0} Orders</small>
+                  <span>{money(r.amount, locale)}</span>
+                  <small>{t("salesWorkspace.kpi.countLabel", { count: r.orders || 0, noun: t("salesWorkspace.kpi.orders") })}</small>
                 </div>
               ))
             )}
           </div>
 
-          <button className="sales-ws-link-btn">View full leaderboard →</button>
+          <button className="sales-ws-link-btn">{t("salesWorkspace.viewFullLeaderboard")} →</button>
         </div>
       </div>
 

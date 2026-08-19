@@ -3967,5 +3967,145 @@
     "loadMoreCount": "Cargar más ({{n}} más)",
     "loadFailed": "No se pudieron cargar los alquileres vacacionales",
     "notAvailable": "N/D"
+  },
+  "salesWorkspace": {
+    "title": "Espacio de Ventas",
+    "subtitle": "Gestiona todo tu ciclo de ventas, desde la cotización hasta la comisión.",
+    "searchAnything": "Buscar cualquier cosa...",
+    "quickCreate": "Creación rápida",
+    "tabs": {
+      "overview": "Resumen",
+      "customers": "Clientes",
+      "quotes": "Cotizaciones",
+      "proposals": "Propuestas",
+      "orders": "Pedidos",
+      "contracts": "Contratos",
+      "invoices": "Facturas",
+      "commissions": "Comisiones",
+      "returns": "Devoluciones",
+      "more": "Más"
+    },
+    "kpi": {
+      "openQuotes": "Cotizaciones abiertas",
+      "openProposals": "Propuestas abiertas",
+      "ordersThisMonth": "Pedidos este mes",
+      "outstandingInvoices": "Facturas pendientes",
+      "commissionsDue": "Comisiones por pagar",
+      "conversionRate": "Tasa de conversión",
+      "quotes": "Cotizaciones",
+      "proposals": "Propuestas",
+      "orders": "Pedidos",
+      "invoices": "Facturas",
+      "countLabel": "{{count}} {{noun}}",
+      "pendingCount": "{{count}} pendientes",
+      "acceptedVsClosed": "Aceptadas vs. cerradas"
+    },
+    "quotes": {
+      "title": "Cotizaciones",
+      "subtitle": "Crea, gestiona y realiza seguimiento de todas tus cotizaciones.",
+      "searchPlaceholder": "Buscar cotizaciones...",
+      "empty": "Aún no hay cotizaciones. Crea tu primera cotización para comenzar.",
+      "unnumbered": "Cotización"
+    },
+    "actions": {
+      "import": "Importar",
+      "export": "Exportar",
+      "importExport": "Importar / Exportar",
+      "newQuote": "Nueva cotización",
+      "createProposal": "Crear propuesta",
+      "viewQuote": "Ver cotización",
+      "editQuote": "Editar cotización"
+    },
+    "filters": {
+      "filters": "Filtros",
+      "status": "Estado",
+      "owner": "Responsable",
+      "dateRange": "Rango de fechas",
+      "pipeline": "Pipeline",
+      "more": "Más filtros",
+      "reset": "Restablecer",
+      "view": "Vista",
+      "table": "Tabla"
+    },
+    "table": {
+      "quoteNumber": "Cotización #",
+      "customer": "Cliente",
+      "contact": "Contacto",
+      "pipelineDeal": "Pipeline / Negocio",
+      "value": "Valor",
+      "status": "Estado",
+      "validUntil": "Válida hasta",
+      "owner": "Responsable",
+      "created": "Creada",
+      "actions": "Acciones"
+    },
+    "pagination": {
+      "showingQuotes": "Mostrando {{from}} a {{to}} de {{total}} cotizaciones",
+      "perPage": "{{count}} / página"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "sent": "Enviada",
+      "approved": "Aprobada",
+      "draft": "Borrador",
+      "viewed": "Vista",
+      "accepted": "Aceptada",
+      "rejected": "Rechazada",
+      "expired": "Vencida"
+    },
+    "intelligence": {
+      "title": "Inteligencia de Ventas",
+      "subtitle": "Controla el rendimiento y mantente al día con tus ventas.",
+      "totalPipelineValue": "Valor total del pipeline",
+      "openDeals": "Negocios abiertos",
+      "expectedRevenue": "Ingresos esperados",
+      "viewFullPipeline": "Ver pipeline completo",
+      "allActivity": "Toda la actividad"
+    },
+    "pipelineSummary": "Resumen del Pipeline de Ventas",
+    "recentActivity": "Actividad reciente",
+    "topPerformingReps": "Representantes con mejor rendimiento",
+    "noPipelineData": "Aún no hay datos del pipeline",
+    "noRecentActivity": "No hay actividad reciente",
+    "noDataYet": "Aún no hay datos",
+    "viewAllActivity": "Ver toda la actividad",
+    "viewFullLeaderboard": "Ver clasificación completa",
+    "viewAll": "Ver todo",
+    "workspaceReady": "El espacio {{workspace}} está listo para el siguiente paso de implementación.",
+    "more": {
+      "aiAssistantTitle": "Asistente de Ventas IA de Cortexa",
+      "aiAssistantSubtitle": "Responde, guía y te ayuda a cerrar más negocios.",
+      "online": "En línea",
+      "askAi": "Preguntar a IA",
+      "leadHelp": "Ayuda con leads",
+      "followUp": "Seguimiento",
+      "sendEmail": "Enviar email",
+      "quickActions": "Acciones rápidas",
+      "allTools": "Todas las herramientas",
+      "newProposal": "Nueva propuesta",
+      "addOrder": "Agregar pedido",
+      "newCustomer": "Nuevo cliente",
+      "createContract": "Crear contrato",
+      "logActivity": "Registrar actividad",
+      "helpSupport": "Ayuda y soporte",
+      "helpCenter": "Centro de ayuda",
+      "contactSupport": "Contactar soporte",
+      "salesShortcuts": "Atajos de ventas",
+      "myPipeline": "Mi pipeline",
+      "topCustomers": "Mejores clientes",
+      "reports": "Reportes"
+    },
+    "messages": {
+      "proposalCreated": "Propuesta creada. Abre la pestaña Propuestas para verla."
+    },
+    "errors": {
+      "loadQuotes": "No se pudieron cargar las cotizaciones.",
+      "createProposal": "No se pudo crear la propuesta"
+    },
+    "validity": {
+      "expired": "Vencida",
+      "daysLeft_one": "Queda {{count}} día",
+      "daysLeft_other": "Quedan {{count}} días"
+    }
   }
 }

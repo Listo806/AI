@@ -292,10 +292,6 @@
   font-size: 13px;
 }
 
-.contacts-page .kpi-trend.neutral {
-  color: #9ca3af;
-}
-
 .contacts-page .kpi-trend.neutral::before {
   content: "";
 }
@@ -553,7 +549,7 @@ body .contacts-page .map svg{
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 99999999999;
 }
 
 .contacts-page .contact-modal {
@@ -3627,18 +3623,16 @@ body .contacts-page .map svg{
     gap: 10px;
   }
 }
-.crm-dark .contacts-page .kpi-grid, .crm-dark .contacts-table-per-page{
+.crm-dark .contacts-table-per-page,
+.crm-dark .contacts-page .form-group textarea{
   border: 1px solid #35383c;
 }
 
 .crm-dark .contacts-table-status.cold, .crm-dark .contacts-table-status.prospect,
-.crm-dark .contacts-table-score.low{
+.crm-dark .contacts-table-score.low, .crm-dark .contacts-import-upload label{
   background: rgba(37, 99, 235, 0.08);
 }
 
-/* =========================================================
-   CONTACTS DESKTOP KPI + FILTER BAR — 2026-08-19
-   ========================================================= */
 @media (min-width: 1025px) {
   .contacts-page .kpi-grid {
     gap: 8px;
@@ -3694,12 +3688,7 @@ body .contacts-page .map svg{
   .contacts-page .kpi-value {
     color: #11182c;
     font-size: 25px;
-    font-weight: 800;
-  }
-
-  .contacts-page .kpi-trend {
-    font-size: 10px;
-    font-weight: 800;
+    font-weight: 700;
   }
 
   .contacts-page .kpi-trend::before {
@@ -3712,10 +3701,6 @@ body .contacts-page .map svg{
 
   .contacts-page .kpi-trend.negative {
     color: #dc2626;
-  }
-
-  .contacts-page .kpi-trend.neutral {
-    color: #8b95a8;
   }
 
   .contacts-page .kpi-chart_wrap {
@@ -3818,19 +3803,6 @@ body .contacts-page .map svg{
     border-radius: 8px;
   }
 
-  .contacts-page .contacts-desktop-filter-bar .filter-btn {
-    min-width: 66px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 0 11px;
-    border-color: #dbe1ea;
-    color: #27334d;
-    font-size: 10px;
-    white-space: nowrap;
-  }
-
   .contacts-page .contacts-desktop-filter-bar .filter-btn.selected {
     border-color: #dbe1ea;
     background: #fff;
@@ -3839,7 +3811,6 @@ body .contacts-page .map svg{
 
   .contacts-page .contacts-desktop-filter-bar .filter-select {
     position: relative;
-    min-width: 84px;
     display: flex;
     align-items: center;
     border: 1px solid #dbe1ea;
@@ -3852,7 +3823,7 @@ body .contacts-page .map svg{
     appearance: none;
     border: 0;
     outline: 0;
-    padding: 0 27px 0 11px;
+    padding: 0 18px 0 8px;
     background: transparent;
     color: #27334d;
     font-size: 10px;
@@ -3861,18 +3832,13 @@ body .contacts-page .map svg{
 
   .contacts-page .contacts-desktop-filter-bar .filter-select > svg:last-child {
     position: absolute;
-    right: 8px;
+    right: 3px;
     width: 13px;
     color: #718096;
     pointer-events: none;
   }
 
-  .contacts-page .contacts-desktop-filter-bar .filter-last-activity {
-    min-width: 104px;
-  }
-
   .contacts-page .contacts-desktop-filter-bar .more-filters {
-    min-width: 112px;
     padding-left: 8px;
   }
 
@@ -3950,6 +3916,7 @@ body .contacts-page .map svg{
   overflow-y: auto;
   padding: 0;
   border-radius: 16px;
+  background: #fff;
 }
 
 .contacts-import-head {

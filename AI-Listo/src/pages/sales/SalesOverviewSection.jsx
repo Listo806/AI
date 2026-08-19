@@ -33,7 +33,7 @@ export default function SalesOverviewSection({ stats, onGoTo }) {
         </div>
       </div>
 
-      <div style={ST.quickRow}>
+      <div className="sales-ws-quickrow" style={ST.quickRow}>
         {QUICK.map((q) => (
           <button key={q.tab} type="button" style={ST.quickBtn} onClick={() => onGoTo && onGoTo(q.tab)}>
             <q.Icon size={16} />
@@ -47,7 +47,7 @@ export default function SalesOverviewSection({ stats, onGoTo }) {
 }
 
 const ST = {
-  quickRow: { display: "flex", flexWrap: "wrap", gap: 10, padding: "4px 0 8px" },
+  quickRow: { display: "flex", gap: 6, padding: "4px 0 8px" },
   quickBtn: {
     display: "inline-flex",
     alignItems: "center",

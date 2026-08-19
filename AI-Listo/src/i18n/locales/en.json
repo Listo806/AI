@@ -3967,5 +3967,145 @@
     "loadMoreCount": "Load more ({{n}} more)",
     "loadFailed": "Failed to load vacation rentals",
     "notAvailable": "N/A"
+  },
+  "salesWorkspace": {
+    "title": "Sales Workspace",
+    "subtitle": "Manage your entire sales cycle from quote to commission.",
+    "searchAnything": "Search anything...",
+    "quickCreate": "Quick Create",
+    "tabs": {
+      "overview": "Overview",
+      "customers": "Customers",
+      "quotes": "Quotes",
+      "proposals": "Proposals",
+      "orders": "Orders",
+      "contracts": "Contracts",
+      "invoices": "Invoices",
+      "commissions": "Commissions",
+      "returns": "Returns",
+      "more": "More"
+    },
+    "kpi": {
+      "openQuotes": "Open Quotes",
+      "openProposals": "Open Proposals",
+      "ordersThisMonth": "Orders This Month",
+      "outstandingInvoices": "Outstanding Invoices",
+      "commissionsDue": "Commissions Due",
+      "conversionRate": "Conversion Rate",
+      "quotes": "Quotes",
+      "proposals": "Proposals",
+      "orders": "Orders",
+      "invoices": "Invoices",
+      "countLabel": "{{count}} {{noun}}",
+      "pendingCount": "{{count}} Pending",
+      "acceptedVsClosed": "Accepted vs closed"
+    },
+    "quotes": {
+      "title": "Quotes",
+      "subtitle": "Create, manage and track all your quotes.",
+      "searchPlaceholder": "Search quotes...",
+      "empty": "No quotes yet. Create your first quote to get started.",
+      "unnumbered": "Quote"
+    },
+    "actions": {
+      "import": "Import",
+      "export": "Export",
+      "importExport": "Import / Export",
+      "newQuote": "New Quote",
+      "createProposal": "Create proposal",
+      "viewQuote": "View quote",
+      "editQuote": "Edit quote"
+    },
+    "filters": {
+      "filters": "Filters",
+      "status": "Status",
+      "owner": "Owner",
+      "dateRange": "Date Range",
+      "pipeline": "Pipeline",
+      "more": "More Filters",
+      "reset": "Reset",
+      "view": "View",
+      "table": "Table"
+    },
+    "table": {
+      "quoteNumber": "Quote #",
+      "customer": "Customer",
+      "contact": "Contact",
+      "pipelineDeal": "Pipeline / Deal",
+      "value": "Value",
+      "status": "Status",
+      "validUntil": "Valid Until",
+      "owner": "Owner",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "pagination": {
+      "showingQuotes": "Showing {{from}} to {{to}} of {{total}} quotes",
+      "perPage": "{{count}} / page"
+    },
+    "status": {
+      "pending": "Pending",
+      "sent": "Sent",
+      "approved": "Approved",
+      "draft": "Draft",
+      "viewed": "Viewed",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    },
+    "intelligence": {
+      "title": "Sales Intelligence",
+      "subtitle": "Track performance and stay on top of your sales.",
+      "totalPipelineValue": "Total Pipeline Value",
+      "openDeals": "Open Deals",
+      "expectedRevenue": "Expected Revenue",
+      "viewFullPipeline": "View full pipeline",
+      "allActivity": "All Activity"
+    },
+    "pipelineSummary": "Sales Pipeline Summary",
+    "recentActivity": "Recent Activity",
+    "topPerformingReps": "Top Performing Reps",
+    "noPipelineData": "No pipeline data yet",
+    "noRecentActivity": "No recent activity",
+    "noDataYet": "No data yet",
+    "viewAllActivity": "View all activity",
+    "viewFullLeaderboard": "View full leaderboard",
+    "viewAll": "View All",
+    "workspaceReady": "{{workspace}} workspace is ready for the next implementation step.",
+    "more": {
+      "aiAssistantTitle": "Cortexa AI Sales Assistant",
+      "aiAssistantSubtitle": "Answers, guides and helps you close more deals.",
+      "online": "Online",
+      "askAi": "Ask AI",
+      "leadHelp": "Lead Help",
+      "followUp": "Follow Up",
+      "sendEmail": "Send Email",
+      "quickActions": "Quick Actions",
+      "allTools": "All Tools",
+      "newProposal": "New Proposal",
+      "addOrder": "Add Order",
+      "newCustomer": "New Customer",
+      "createContract": "Create Contract",
+      "logActivity": "Log Activity",
+      "helpSupport": "Help & Support",
+      "helpCenter": "Help Center",
+      "contactSupport": "Contact Support",
+      "salesShortcuts": "Sales Shortcuts",
+      "myPipeline": "My Pipeline",
+      "topCustomers": "Top Customers",
+      "reports": "Reports"
+    },
+    "messages": {
+      "proposalCreated": "Proposal created. Open the Proposals tab to see it."
+    },
+    "errors": {
+      "loadQuotes": "Could not load quotes.",
+      "createProposal": "Could not create proposal"
+    },
+    "validity": {
+      "expired": "Expired",
+      "daysLeft_one": "{{count}} day left",
+      "daysLeft_other": "{{count}} days left"
+    }
   }
 }
