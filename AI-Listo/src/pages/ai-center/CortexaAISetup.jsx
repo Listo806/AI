@@ -16,6 +16,9 @@ import {
   TestTube2,
   Zap,
   ShieldCheck,
+  Sparkles,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
@@ -36,6 +39,8 @@ export default function CortexaAISetup({
   onLaunch,
   launchingAgent,
   launchError,
+  onExploreWorkspace,
+  onDismissWorkspaceRecommendation,
 }) {
   const { t } = useTranslation();
 
@@ -48,6 +53,8 @@ export default function CortexaAISetup({
         key: "whatsapp",
         title: t("aiCenter.stepWhatsappTitle"),
         desc: t("aiCenter.stepWhatsappDesc"),
+        desktopTitle: t("aiCenter.desktopStepWhatsappTitle"),
+        desktopDesc: t("aiCenter.desktopStepWhatsappDesc"),
         icon: MessageSquare,
         status: whatsappSetup?.connected
           ? t("aiCenter.statusConnected")
@@ -70,6 +77,10 @@ export default function CortexaAISetup({
         key: "businessProfile",
         title: t("aiCenter.stepBusinessTitle"),
         desc: t("aiCenter.stepBusinessDesc"),
+        desktopTitle: t("aiCenter.desktopStepBusinessTitle"),
+        desktopDesc: t("aiCenter.desktopStepBusinessDesc"),
+        desktopAction: t("aiCenter.desktopActionStart"),
+        desktopHideStatus: true,
         icon: Building2,
         status: data?.businessProfile?.status || t("aiCenter.statusIncomplete"),
         statusType: data?.businessProfile?.completed ? "success" : "warning",
@@ -84,6 +95,15 @@ export default function CortexaAISetup({
         key: "properties",
         title: t("aiCenter.stepPropertiesTitle"),
         desc: t("aiCenter.stepPropertiesDesc"),
+        desktopTitle: t("aiCenter.desktopStepProductsTitle"),
+        desktopDesc: t("aiCenter.desktopStepProductsDesc"),
+        desktopStatus:
+          Number(data?.properties?.imported || 0) > 0
+            ? t("aiCenter.statusImported", {
+                count: Number(data?.properties?.imported || 0),
+              })
+            : t("aiCenter.desktopStatusNotAdded"),
+        desktopAction: t("aiCenter.desktopActionAdd"),
         icon: Home,
         status:
           data?.properties?.status ||
@@ -91,9 +111,7 @@ export default function CortexaAISetup({
             count: Number(data?.properties?.imported || 0),
           }),
         statusType:
-          Number(data?.properties?.imported || 0) > 0
-            ? "success"
-            : "muted",
+          Number(data?.properties?.imported || 0) > 0 ? "success" : "muted",
         action: t("aiCenter.actionImport"),
         accent: "orange",
         complete: Number(data?.properties?.imported || 0) > 0,
@@ -103,12 +121,12 @@ export default function CortexaAISetup({
         key: "appointmentRules",
         title: t("aiCenter.stepAppointmentTitle"),
         desc: t("aiCenter.stepAppointmentDesc"),
+        desktopTitle: t("aiCenter.desktopStepAppointmentTitle"),
+        desktopDesc: t("aiCenter.desktopStepAppointmentDesc"),
         icon: CalendarDays,
         status:
           data?.appointmentRules?.status || t("aiCenter.statusNotConfigured"),
-        statusType: data?.appointmentRules?.configured
-          ? "success"
-          : "muted",
+        statusType: data?.appointmentRules?.configured ? "success" : "muted",
         action: t("aiCenter.actionConfigure"),
         accent: "indigo",
         complete: Boolean(data?.appointmentRules?.configured),
@@ -118,6 +136,8 @@ export default function CortexaAISetup({
         key: "behavior",
         title: t("aiCenter.stepBehaviorTitle"),
         desc: t("aiCenter.stepBehaviorDesc"),
+        desktopTitle: t("aiCenter.desktopStepBehaviorTitle"),
+        desktopDesc: t("aiCenter.desktopStepBehaviorDesc"),
         icon: MessageSquare,
         status: data?.behavior?.status || t("aiCenter.statusNotConfigured"),
         statusType: data?.behavior?.configured ? "success" : "muted",
@@ -130,11 +150,14 @@ export default function CortexaAISetup({
         key: "automations",
         title: t("aiCenter.stepAutomationsTitle"),
         desc: t("aiCenter.stepAutomationsDesc"),
+        desktopTitle: t("aiCenter.desktopStepAutomationsTitle"),
+        desktopDesc: t("aiCenter.desktopStepAutomationsDesc"),
+        desktopStatus: data?.automations?.configured
+          ? data?.automations?.status || t("aiCenter.statusConnected")
+          : t("aiCenter.desktopStatusNotSet"),
         icon: Zap,
         status: data?.automations?.status || t("aiCenter.statusNotConfigured"),
-        statusType: data?.automations?.configured
-          ? "success"
-          : "muted",
+        statusType: data?.automations?.configured ? "success" : "muted",
         action: data?.automations?.configured
           ? t("aiCenter.actionEdit")
           : t("aiCenter.actionSetUp"),
@@ -146,6 +169,8 @@ export default function CortexaAISetup({
         key: "testAi",
         title: t("aiCenter.stepTestTitle"),
         desc: t("aiCenter.stepTestDesc"),
+        desktopTitle: t("aiCenter.desktopStepTestTitle"),
+        desktopDesc: t("aiCenter.desktopStepTestDesc"),
         icon: TestTube2,
         status: data?.testAi?.status || t("aiCenter.statusNotTested"),
         statusType: data?.testAi?.tested ? "success" : "muted",
@@ -158,6 +183,8 @@ export default function CortexaAISetup({
         key: "launch",
         title: t("aiCenter.stepLaunchTitle"),
         desc: t("aiCenter.stepLaunchDesc"),
+        desktopTitle: t("aiCenter.desktopStepLaunchTitle"),
+        desktopDesc: t("aiCenter.desktopStepLaunchDesc"),
         icon: Rocket,
         status: data?.launch?.status || t("aiCenter.statusLocked"),
         statusType: data?.launch?.unlocked ? "success" : "locked",
@@ -214,13 +241,21 @@ export default function CortexaAISetup({
   return (
     <div className="cx-ai-setup-page">
       <header className="cx-ai-setup-topbar heading_page">
-        <div>
+        <div className="cx-ai-setup-title-mobile">
           <h1>
             <Bot size={24} />
             {t("aiCenter.welcomeTitle")}
           </h1>
-
           <p className="sub_head">{t("aiCenter.welcomeSubtitle")}</p>
+        </div>
+        <div className="cx-ai-setup-title-desktop">
+          <div className="cx-ai-setup-title-desktop-icon">
+            <Sparkles size={30} />
+          </div>
+          <div>
+            <h1>{t("aiCenter.desktopWelcomeTitle")}</h1>
+            <p className="sub_head">{t("aiCenter.desktopWelcomeSubtitle")}</p>
+          </div>
         </div>
       </header>
 
@@ -236,9 +271,7 @@ export default function CortexaAISetup({
               return (
                 <article
                   key={step.id}
-                  className={`cx-setup-step ${
-                    isOpen ? "is-open" : ""
-                  }`}
+                  className={`cx-setup-step ${isOpen ? "is-open" : ""}`}
                 >
                   <div className="cx-setup-step-head">
                     <div className="cx-setup-step-left">
@@ -255,16 +288,39 @@ export default function CortexaAISetup({
                       </div>
 
                       <div>
-                        <h3>{step.title}</h3>
-                        <p>{step.desc}</p>
+                        <h3>
+                          <span className="cx-step-copy-mobile">
+                            {step.title}
+                          </span>
+                          <span className="cx-step-copy-desktop">
+                            {step.desktopTitle || step.title}
+                          </span>
+                        </h3>
+                        <p>
+                          <span className="cx-step-copy-mobile">
+                            {step.desc}
+                          </span>
+                          <span className="cx-step-copy-desktop">
+                            {step.desktopDesc || step.desc}
+                          </span>
+                        </p>
                       </div>
                     </div>
 
                     <div className="cx-setup-step-right">
                       <span
-                        className={`cx-status-pill ${step.statusType}`}
+                        className={`cx-status-pill ${step.statusType} ${step.desktopHideStatus ? "cx-status-desktop-hidden" : ""}`}
                       >
-                        {step.status}
+                        {step.statusType === "success" && (
+                          <CircleCheck size={15} />
+                        )}
+                        <span className="cx-step-copy-mobile">
+                          {step.status}
+                        </span>
+                        <span className="cx-step-copy-desktop">
+                          {step.desktopStatus || step.status}
+                        </span>
+                        {step.statusType === "locked" && <Lock size={13} />}
                       </span>
 
                       {step.id !== 1 && (
@@ -279,18 +335,25 @@ export default function CortexaAISetup({
                           }
                           onClick={() => handleStepAction(step)}
                         >
-                          {step.key === "launch" && launchingAgent
-                            ? t("aiCenter.launching")
-                            : step.action}
+                          {step.key === "launch" && launchingAgent ? (
+                            t("aiCenter.launching")
+                          ) : (
+                            <>
+                              <span className="cx-step-copy-mobile">
+                                {step.action}
+                              </span>
+                              <span className="cx-step-copy-desktop">
+                                {step.desktopAction || step.action}
+                              </span>
+                            </>
+                          )}
                         </button>
                       )}
 
                       <button
                         type="button"
                         className="cx-step-toggle"
-                        onClick={() =>
-                          setOpenStep(isOpen ? null : step.id)
-                        }
+                        onClick={() => setOpenStep(isOpen ? null : step.id)}
                       >
                         {isOpen ? (
                           <ChevronUp size={20} />
@@ -302,157 +365,92 @@ export default function CortexaAISetup({
                   </div>
 
                   {isOpen && step.id === 1 && (
-                    <WhatsAppConnectCard
-                      qr={whatsappSetup?.qr}
-                      pairingCode={whatsappSetup?.pairingCode}
-                      connected={whatsappSetup?.connected}
-                      phone={whatsappSetup?.phone}
-                      loading={whatsappSetup?.loading}
-                      connecting={whatsappSetup?.connecting}
-                      disconnecting={whatsappSetup?.disconnecting}
-                      socketConnected={whatsappSetup?.socketConnected}
-                      error={whatsappSetup?.error}
-                      onConnect={whatsappSetup?.connect}
-                      onConnectWithCode={whatsappSetup?.connectWithCode}
-                      onDisconnect={whatsappSetup?.disconnect}
-                      onRefreshQr={whatsappSetup?.refreshQr}
-                    />
+                    <div className="cx-desktop-whatsapp-connect-wrap">
+                      <WhatsAppConnectCard
+                        setupDesktopLayout
+                        qr={whatsappSetup?.qr}
+                        pairingCode={whatsappSetup?.pairingCode}
+                        connected={whatsappSetup?.connected}
+                        phone={whatsappSetup?.phone}
+                        loading={whatsappSetup?.loading}
+                        connecting={whatsappSetup?.connecting}
+                        disconnecting={whatsappSetup?.disconnecting}
+                        socketConnected={whatsappSetup?.socketConnected}
+                        error={whatsappSetup?.error}
+                        onConnect={whatsappSetup?.connect}
+                        onConnectWithCode={whatsappSetup?.connectWithCode}
+                        onDisconnect={whatsappSetup?.disconnect}
+                        onRefreshQr={whatsappSetup?.refreshQr}
+                      />
+                    </div>
+                  )}
+                  {step.id === 2 && (
+                    <div className="cx-workspace-recommendation-desktop">
+                      <span className="cx-workspace-recommendation-label">
+                        {t("aiCenter.desktopRecommendedForYou")}
+                      </span>
+                      <div className="cx-workspace-recommendation-copy">
+                        <strong>
+                          {t("aiCenter.desktopRecommendedWorkspaceTitle")}
+                        </strong>
+                        <span>
+                          {t("aiCenter.desktopRecommendedWorkspaceDesc")}
+                        </span>
+                      </div>
+                      <div className="cx-workspace-recommendation-price">
+                        <strong>
+                          {t("aiCenter.desktopRecommendedWorkspacePrice")}
+                        </strong>
+                      </div>
+                      <div className="cx-workspace-recommendation-actions">
+                        <button
+                          type="button"
+                          className="cx-workspace-explore-btn"
+                          onClick={() => onExploreWorkspace?.("real-estate")}
+                        >
+                          {t("aiCenter.desktopExploreWorkspace")}
+                        </button>
+                        <button
+                          type="button"
+                          className="cx-workspace-not-now-btn"
+                          onClick={() =>
+                            onDismissWorkspaceRecommendation?.("real-estate")
+                          }
+                        >
+                          {t("aiCenter.desktopNotNow")}
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </article>
               );
             })}
 
             {launchError && (
-              <div className="cx-ai-error-banner">
-                {launchError}
-              </div>
+              <div className="cx-ai-error-banner">{launchError}</div>
             )}
             <div className="cx-setup-progress-save">
               <div className="cx-setup-progress-save-left">
                 <div className="cx-setup-progress-save-icon">
-                  <ShieldCheck size={30}/>
+                  <ShieldCheck size={30} />
                 </div>
 
                 <div className="cx-setup-progress-save-copy">
-                  <strong>Your progress is saved automatically.</strong>
-                  <span>You can exit and continue anytime.</span>
+                  <strong>{t("aiCenter.desktopProgressSaved")}</strong>
+                  <span>{t("aiCenter.desktopContinueAnytime")}</span>
                 </div>
               </div>
 
               <div className="cx-setup-progress-save-help">
-                <span>Need help?</span>
-
+                <span>{t("aiCenter.desktopNeedHelp")}</span>
                 <a href="/support">
-                  Contact support ↗
+                  {t("aiCenter.desktopContactSupport")}{" "}
+                  <ExternalLink size={14} />
                 </a>
               </div>
             </div>
           </div>
         </section>
-
-        <aside className="cx-ai-setup-sidebar">
-          <div className="cx-side-card cx-progress-card">
-            <h3>{t("aiCenter.overallProgress")}</h3>
-
-            <div className="cx-progress-row">
-              <div
-                className="cx-progress-circle"
-                style={{
-                  "--progress": `${progress * 3.6}deg`,
-                }}
-              >
-                <span>{progress}%</span>
-              </div>
-
-              <div>
-                <strong>
-                  {t("aiCenter.stepsCompleted", {
-                    completed: completedSteps,
-                    total: totalSteps,
-                  })}
-                </strong>
-
-                <p>
-                  {progress === 100
-                    ? t("aiCenter.greatWork")
-                    : t("aiCenter.doingGreat")}
-                </p>
-
-                <p>
-                  {progress === 100
-                    ? t("aiCenter.agentReady")
-                    : t("aiCenter.finishSetup")}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="cx-side-card">
-            <h3>{t("aiCenter.aiSetupStatus")}</h3>
-
-            {setupSteps.map((row) => {
-              const Icon = row.icon;
-
-              return (
-                <div className="cx-status-row" key={row.id}>
-                  <div className="cx-status-name">
-                    <Icon className={row.accent} size={22} />
-                    <span>{row.title}</span>
-                  </div>
-
-                  <div
-                    className={`cx-status-value ${
-                      row.complete
-                        ? "success"
-                        : row.locked
-                          ? "locked"
-                          : "pending"
-                    }`}
-                  >
-                    {row.complete ? (
-                      <CircleCheck size={15} />
-                    ) : row.locked ? (
-                      <Lock size={15} />
-                    ) : (
-                      <Clock3 size={15} />
-                    )}
-
-                    {row.status}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="cx-side-card">
-            <h3 className="cx-tips-title">
-              <Settings2 size={22} />
-              {t("aiCenter.setupTips")}
-            </h3>
-
-            <div className="cx-tips-list">
-              <p>
-                <CheckCircle2 size={18} />
-                {t("aiCenter.tipEditAnytime")}
-              </p>
-
-              <p>
-                <CheckCircle2 size={18} />
-                {t("aiCenter.tipProgressSaved")}
-              </p>
-
-              <p>
-                <CheckCircle2 size={18} />
-                {t("aiCenter.tipFinishFast")}
-              </p>
-
-              <p>
-                <CheckCircle2 size={18} />
-                {t("aiCenter.tipNeedHelp")}
-              </p>
-            </div>
-          </div>
-        </aside>
       </main>
     </div>
   );

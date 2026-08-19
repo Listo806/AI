@@ -55,9 +55,8 @@
 
 .cx-ai-setup-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 20px;
   padding-top: 50px;
+  padding-bottom: 10px;
 }
 
 .cx-ai-setup-main h2 {
@@ -90,7 +89,6 @@
 .cx-setup-step.is-open {
   border-color: #beb5ff;
   box-shadow: 0 12px 34px rgba(71, 45, 255, 0.08);
-  margin-bottom: 10px;
 }
 .crm-dark .cx-setup-step.is-open{
   border: 1px solid #202733;  
@@ -218,6 +216,7 @@
 }
 .crm-dark .cx-status-pill.success{
   border: 1px solid #202733;  
+  background: #b3f0ab1f;
 }
 .cx-status-pill.danger {
   background: #fff1f1;
@@ -3944,11 +3943,6 @@
   }
 }
 
-/* =========================================================
-   AI AGENT SETUP — MOBILE / TABLET DARK LAYOUT
-   Matches the approved compact mobile setup direction.
-   Desktop stays on the existing light layout.
-   ========================================================= */
 .cx-whatsapp-mobile-phone-art {
   display: none;
 }
@@ -4187,7 +4181,6 @@
     mix-blend-mode: screen;
   }
 
-  /* Existing WhatsApp card: keep functionality, restyle it for the mobile panel. */
   .cx-whatsapp-mobile-connect-wrap .cx-whatsapp-panel {
     margin: 0;
     padding: 16px;
@@ -4251,7 +4244,6 @@
     box-shadow: 0 8px 22px rgba(76, 38, 247, .28);
   }
 
-  /* On a phone, pairing by phone number/code is the primary UX. QR stays out of the way. */
   .cx-whatsapp-mobile-connect-wrap .cx-qr-col {
     display: none !important;
   }
@@ -4320,11 +4312,6 @@
   }
 }
 
-
-/* =========================================================
-   AI SETUP MOBILE/TABLET STEP ACCENTS
-   Matches the numbered/action color treatment in the mobile mockup.
-   ========================================================= */
 @media (max-width: 1024px) {
   .cx-step-number {
     border: 0 !important;
@@ -4472,7 +4459,7 @@
   .cx-setup-progress-save-copy strong,
   .cx-setup-progress-save-copy span {
     color: #2d3b72;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
     font-weight: 500;
   }
@@ -4482,7 +4469,7 @@
     align-items: center;
     gap: 5px;
     flex-shrink: 0;
-    font-size: 11px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
@@ -4521,4 +4508,833 @@
     height: 34px;
     font-size: 18px;
   }
+}
+
+.cx-ai-setup-title-desktop,
+.cx-step-copy-desktop,
+.cx-whatsapp-desktop-panel,
+.cx-workspace-recommendation-desktop {
+    display: none;
+}
+@media (min-width: 1025px) {
+    .cx-ai-setup-title-mobile,
+    .cx-step-copy-mobile {
+        display: none !important;
+    }
+    .cx-step-copy-desktop {
+        display: inline;
+    }
+    .cx-ai-setup-title-desktop {
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+    }
+    .cx-ai-setup-title-desktop-icon {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        color: #6542ff;
+    }
+    .cx-ai-setup-title-desktop-icon svg {
+        width: 34px;
+        height: 34px;
+        color: #6542ff !important;
+    }
+    .cx-ai-setup-topbar,
+    .cx-ai-setup-topbar.heading_page {
+        padding: 18px 8px 8px;
+        background: transparent;
+    }
+    .cx-ai-setup-title-desktop h1 {
+        margin: 0;
+        color: #07113a;
+        font-size: 27px;
+        line-height: 1.12;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+    }
+    .cx-ai-setup-title-desktop .sub_head {
+        margin: 8px 0 0;
+        color: #23325d;
+        font-size: 14px;
+    }
+    
+    .cx-ai-setup-main > h2 {
+        display: none;
+    }
+    .cx-setup-step,
+    .cx-setup-step.is-open {
+        margin: 0 !important;
+        border: 1px solid #dde2ee;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: none;
+    }
+    .cx-setup-step.is-open {
+        border-color: #c8bcff;
+    }
+    .cx-setup-step + .cx-setup-step {
+        margin-top: -1px !important;
+    }
+    .cx-setup-step-head {
+        min-height: 58px;
+        padding: 9px 18px;
+    }
+    .cx-setup-step-left {
+        gap: 12px;
+    }
+    .cx-step-number {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+        border: 1px solid #d9dded;
+        color: #4030dc;
+        background: #f7f7ff;
+    }
+    .cx-step-number.active {
+        color: #fff;
+        background: linear-gradient(145deg, #7353ff, #4730ec);
+        box-shadow: 0 6px 16px rgba(83, 53, 232, 0.24);
+    }
+    .cx-setup-step:first-child .cx-step-icon {
+        display: none;
+    }
+    .cx-step-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 9px;
+    }
+    .cx-step-icon.green {
+        color: #5a31e9;
+        background: #f1edff;
+    }
+    .cx-step-icon.blue,
+    .cx-step-icon.indigo {
+        color: #2467ff;
+        background: #edf3ff;
+    }
+    .cx-step-icon.orange {
+        color: #18a84c;
+        background: #edfbf1;
+    }
+    .cx-step-icon.purple {
+        color: #ff7b12;
+        background: #fff4e9;
+    }
+    .cx-step-icon.pink,
+    .cx-step-icon.rose {
+        color: #ec3e91;
+        background: #fff0f7;
+    }
+    .cx-setup-step-left h3 {
+        color: #111831;
+        font-size: 14px;
+    }
+    .cx-setup-step-left p {
+        margin-top: 3px;
+        color: #344262;
+        font-size: 11.5px;
+    }
+    .cx-status-pill {
+        min-width: 88px;
+        padding: 7px 10px;
+        border-radius: 7px;
+        font-size: 11px;
+    }
+    .cx-status-pill.success {
+        color: #1b8a3b;
+        background: #eef9f0;
+        border-color: #d1e9d6;
+    }
+    .cx-status-pill.muted,
+    .cx-status-pill.locked {
+        color: #58627a;
+        background: transparent;
+        border: 0;
+        min-width: auto;
+    }
+    .cx-status-desktop-hidden {
+        display: none !important;
+    }
+    .cx-step-action {
+        width: 78px;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 7px;
+        color: #4b2cf5;
+        border: 1px solid #bcb0ff;
+        background: #fff;
+        font-size: 11px;
+    }
+    .cx-step-action-orange {
+        color: #168d39;
+        border-color: #96d7a8;
+    }
+    .cx-step-action-purple {
+        color: #e96911;
+        border-color: #ffc28f;
+    }
+    .cx-step-action-pink {
+        color: #df3586;
+        border-color: #f0a4cc;
+    }
+    .cx-step-action.disabled {
+        color: #9aa1b1;
+        border-color: #e2e5eb;
+        background: #f5f6f8;
+    }
+    .cx-step-toggle {
+        color: #0e1837;
+    }
+    .cx-whatsapp-mobile-existing {
+        display: none;
+    }
+    .cx-whatsapp-desktop-panel {
+        display: grid;
+        grid-template-columns: minmax(320px, 1.1fr) minmax(220px, 0.7fr) minmax(260px, 0.85fr);
+        gap: 42px;
+        align-items: center;
+        margin: 4px 28px 22px;
+        padding: 18px 40px;
+        min-height: 196px;
+        border: 1px solid #e0e5ef;
+        border-radius: 10px;
+        background: #fff;
+    }
+    .cx-whatsapp-desktop-steps {
+        padding-right: 38px;
+        border-right: 1px solid #e1e6ef;
+    }
+    .cx-whatsapp-desktop-steps h4 {
+        margin: 0 0 16px;
+        color: #111831;
+        font-size: 12px;
+        text-align: left;
+    }
+    .cx-whatsapp-desktop-steps ol {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: cxwa;
+        display: grid;
+        gap: 12px;
+    }
+    .cx-whatsapp-desktop-steps li {
+        counter-increment: cxwa;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #273756;
+        font-size: 11.5px;
+    }
+    .cx-whatsapp-desktop-steps li:before {
+        content: counter(cxwa);
+        width: 21px;
+        height: 21px;
+        flex: 0 0 21px;
+        display: grid;
+        place-items: center;
+        border: 1.5px solid #6e4bff;
+        border-radius: 50%;
+        color: #6241ef;
+        font-size: 10px;
+        font-weight: 800;
+    }
+    .cx-whatsapp-desktop-qr {
+        justify-self: center;
+        width: 178px;
+        height: 178px;
+        padding: 11px;
+        box-sizing: border-box;
+        display: grid;
+        place-items: center;
+        border: 1px solid #dde3ed;
+        border-radius: 9px;
+        background: #fff;
+    }
+    .cx-whatsapp-desktop-qr img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .cx-whatsapp-desktop-qr-placeholder {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 8px;
+        color: #69738b;
+        text-align: center;
+        font-size: 11px;
+    }
+    .cx-whatsapp-desktop-state {
+        display: grid;
+        gap: 14px;
+        justify-items: start;
+    }
+    .cx-whatsapp-desktop-state-card {
+        width: 100%;
+        max-width: 300px;
+        min-height: 82px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        border: 1px solid #dfe4ee;
+        border-radius: 10px;
+        color: #667085;
+        background: #fbfcfe;
+        text-align: left;
+    }
+    .cx-whatsapp-desktop-state-card.is-connected > svg {
+        color: #25a449;
+    }
+    .cx-whatsapp-desktop-state-card strong,
+    .cx-whatsapp-desktop-state-card span {
+        display: block;
+    }
+    .cx-whatsapp-desktop-state-card strong {
+        color: #1a2340;
+        font-size: 12px;
+    }
+    .cx-whatsapp-desktop-state-card span {
+        margin-top: 5px;
+        color: #43516e;
+        font-size: 11px;
+    }
+    .cx-whatsapp-desktop-reconnect {
+        min-width: 126px;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 15px;
+        border: 1px solid #9c86ff;
+        border-radius: 7px;
+        background: #fff;
+        color: #5a39ed;
+        font-size: 11px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+    .cx-workspace-recommendation-desktop {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 180px 280px;
+        align-items: center;
+        gap: 18px;
+        margin: 10px 55px 14px 68px;
+        padding: 14px 20px;
+        border-radius: 9px;
+        background: linear-gradient(90deg, #f7f4ff, #f5f3ff 55%, #f8f7ff);
+    }
+    .cx-workspace-recommendation-label {
+        position: absolute;
+        top: -9px;
+        left: 18px;
+        padding: 3px 8px;
+        border: 1px solid #8a6bff;
+        border-radius: 5px;
+        background: #f7f4ff;
+        color: #603df2;
+        font-size: 9px;
+        font-weight: 700;
+    }
+    .cx-workspace-recommendation-copy strong,
+    .cx-workspace-recommendation-copy span {
+        display: block;
+    }
+    .cx-workspace-recommendation-copy{
+      text-align: left;
+    }
+    .cx-workspace-recommendation-copy strong {
+        color: #12182e;
+        font-size: 12px;
+    }
+    .cx-workspace-recommendation-copy span {
+        margin-top: 4px;
+        color: #38445f;
+        font-size: 10.5px;
+    }
+    .cx-workspace-recommendation-price {
+        min-height: 40px;
+        display: grid;
+        place-items: center;
+        border-left: 1px solid #dddbea;
+        color: #171c35;
+        font-size: 12px;
+    }
+    .cx-workspace-recommendation-actions {
+        display: grid;
+        grid-template-columns: 1.4fr 0.8fr;
+        gap: 10px;
+    }
+    .cx-workspace-explore-btn,
+    .cx-workspace-not-now-btn {
+        min-height: 36px;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+    .cx-workspace-explore-btn {
+        border: 0;
+        color: #fff;
+        background: linear-gradient(90deg, #6634ef, #5b2aed);
+    }
+    .cx-workspace-not-now-btn {
+        border: 1px solid #c9ced9;
+        color: #273047;
+        background: #fff;
+    }
+    .cx-setup-progress-save {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+        padding: 11px 17px;
+        border: 1px solid #eceaf8;
+        border-radius: 9px;
+        background: linear-gradient(90deg, #f5f2ff, #fbfaff);
+    }
+    .cx-setup-progress-save-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .cx-setup-progress-save-icon {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        color: #5a39ed;
+    }
+    .cx-setup-progress-save-copy {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .cx-setup-progress-save-copy strong,
+    .cx-setup-progress-save-copy span {
+        color: #33415f;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    .cx-setup-progress-save-help {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: #4b5871;
+        font-size: 11px;
+    }
+    .cx-setup-progress-save-help a {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #6040f2;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .crm-dark .cx-ai-setup-page,
+    .crm-dark .cx-ai-setup-topbar,
+    .crm-dark .cx-setup-step,
+    .crm-dark .cx-setup-step.is-open,
+    .crm-dark .cx-whatsapp-desktop-panel,
+    .crm-dark .cx-whatsapp-desktop-qr,
+    .crm-dark .cx-whatsapp-desktop-state-card,
+    .crm-dark .cx-workspace-not-now-btn {
+        background: #0b0f19;
+    }
+    .crm-dark .cx-ai-setup-title-desktop h1,
+    .crm-dark .cx-setup-step-left h3,
+    .crm-dark .cx-whatsapp-desktop-steps h4,
+    .crm-dark .cx-whatsapp-desktop-state-card strong,
+    .crm-dark .cx-workspace-recommendation-copy strong,
+    .crm-dark .cx-workspace-recommendation-price {
+        color: #f8fafc;
+    }
+    .crm-dark .cx-ai-setup-title-desktop .sub_head,
+    .crm-dark .cx-setup-step-left p,
+    .crm-dark .cx-whatsapp-desktop-steps li,
+    .crm-dark .cx-whatsapp-desktop-state-card span,
+    .crm-dark .cx-workspace-recommendation-copy span,
+    .crm-dark .cx-setup-progress-save-copy strong,
+    .crm-dark .cx-setup-progress-save-copy span,
+    .crm-dark .cx-setup-progress-save-help {
+        color: #adb5c1;
+    }
+    .crm-dark .cx-setup-step,
+    .crm-dark .cx-setup-step.is-open,
+    .crm-dark .cx-whatsapp-desktop-panel,
+    .crm-dark .cx-whatsapp-desktop-qr,
+    .crm-dark .cx-whatsapp-desktop-state-card,
+    .crm-dark .cx-setup-progress-save {
+        border-color: #3d46527a;
+    }
+    .crm-dark .cx-workspace-recommendation-desktop {
+        background: linear-gradient(90deg, rgba(88, 55, 170, 0.16), #0b0f19);
+    }
+    .crm-dark .cx-workspace-recommendation-label {
+        background: #0b0f19;
+    }
+    .crm-dark .cx-setup-progress-save {
+        background: linear-gradient(90deg, rgba(88, 55, 170, 0.13), #0b0f19);
+    }
+}
+@media (min-width: 1025px) and (max-width: 1240px) {
+    .cx-whatsapp-desktop-panel {
+        grid-template-columns: minmax(260px, 1fr) 190px minmax(220px, 0.8fr);
+        gap: 22px;
+        padding-inline: 28px;
+    }
+    .cx-workspace-recommendation-desktop {
+        grid-template-columns: minmax(0, 1fr) 145px 235px;
+        margin-inline: 68px;
+    }
+}
+
+@media (min-width: 1025px) {
+  .cx-desktop-whatsapp-connect-wrap {
+    margin: 0 28px 22px;
+  }
+
+  .cx-desktop-whatsapp-connect-wrap .cx-wa-setup-desktop {
+    width: 100%;
+  }
+
+  .cx-wa-setup-desktop {
+    border: 1px solid #e0e5ef;
+    border-radius: 10px;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .cx-wa-setup-desktop > .cx-wa-connect-error {
+    margin: 12px 18px 0;
+  }
+
+  .cx-wa-setup-desktop-grid {
+    min-height: 206px;
+    display: grid;
+    grid-template-columns:
+      minmax(320px, 1.1fr)
+      minmax(215px, .72fr)
+      minmax(260px, .82fr);
+    align-items: center;
+    gap: 34px;
+    padding: 17px 46px;
+    box-sizing: border-box;
+  }
+
+  .cx-wa-setup-desktop-guide {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-right: 38px;
+    border-right: 1px solid #e1e6ef;
+  }
+
+  .cx-wa-setup-desktop-guide h4 {
+    margin: 0 0 16px;
+    color: #111831;
+    font-size: 12px;
+    line-height: 1.25;
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .cx-wa-setup-desktop-guide ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: cx-wa-desktop-step;
+    display: grid;
+    gap: 12px;
+  }
+
+  .cx-wa-setup-desktop-guide li {
+    counter-increment: cx-wa-desktop-step;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #273756;
+    font-size: 11.5px;
+    line-height: 1.3;
+  }
+
+  .cx-wa-setup-desktop-guide li::before {
+    content: counter(cx-wa-desktop-step);
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid #6e4bff;
+    border-radius: 50%;
+    color: #6241ef;
+    background: #fff;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .cx-wa-setup-desktop-qr-column {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+  }
+
+  .cx-wa-setup-desktop-qr-frame {
+    width: 184px;
+    height: 184px;
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    padding: 4px;
+    border: 1px solid #dce2ed;
+    border-radius: 9px;
+    background: #ffffff;
+  }
+
+  .cx-wa-setup-desktop-qr-frame.has-qr {
+    padding: 4px;
+  }
+
+  .cx-wa-setup-desktop-qr-frame canvas {
+    width: 176px !important;
+    height: 176px !important;
+    display: block;
+    background: #fff;
+  }
+
+  .cx-wa-setup-desktop-qr-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 8px;
+    padding: 14px;
+    box-sizing: border-box;
+    color: #64748b;
+    text-align: center;
+  }
+
+  .cx-wa-setup-desktop-qr-placeholder > svg {
+    color: #6947ef;
+  }
+
+  .cx-wa-setup-desktop-qr-placeholder.is-connected > svg {
+    color: #22a447;
+  }
+
+  .cx-wa-setup-desktop-qr-placeholder strong {
+    color: #17213d;
+    font-size: 11px;
+  }
+
+  .cx-wa-setup-desktop-qr-placeholder span {
+    max-width: 145px;
+    color: #667085;
+    font-size: 9.5px;
+    line-height: 1.35;
+  }
+
+  .cx-wa-setup-desktop-refresh {
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 10px;
+    border: 0;
+    background: transparent;
+    color: #6241ef;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .cx-wa-setup-desktop-state {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+  }
+
+  .cx-wa-setup-desktop-state-card {
+    width: 100%;
+    max-width: 295px;
+    min-height: 82px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 16px;
+    border: 1px solid #dfe4ee;
+    border-radius: 10px;
+    background: #fbfcfe;
+    color: #758198;
+    text-align: left;
+  }
+
+  .cx-wa-setup-desktop-state-card > svg {
+    flex: 0 0 auto;
+    color: #7b879a;
+  }
+
+  .cx-wa-setup-desktop-state-card.is-connected > svg {
+    color: #25a449;
+  }
+
+  .cx-wa-setup-desktop-state-card strong,
+  .cx-wa-setup-desktop-state-card span,
+  .cx-wa-setup-desktop-state-card small {
+    display: block;
+  }
+
+  .cx-wa-setup-desktop-state-card strong {
+    color: #1a2340;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .cx-wa-setup-desktop-state-card span {
+    margin-top: 5px;
+    color: #43516e;
+    font-size: 10.5px;
+    line-height: 1.35;
+  }
+
+  .cx-wa-setup-desktop-state-card small {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #5f6d84;
+    font-size: 9.5px;
+  }
+
+  .cx-wa-setup-desktop-connect-btn {
+    min-width: 126px;
+    min-height: 35px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 15px;
+    border: 1px solid #9c86ff;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #5a39ed;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 750;
+    cursor: pointer;
+  }
+
+  .cx-wa-setup-desktop-connect-btn:hover:not(:disabled) {
+    background: #f8f6ff;
+    border-color: #765cff;
+  }
+
+  .cx-wa-setup-desktop-connect-btn:disabled,
+  .cx-wa-setup-desktop-refresh:disabled {
+    opacity: .58;
+    cursor: not-allowed;
+  }
+
+  .cx-whatsapp-desktop-panel {
+    display: none !important;
+  }
+
+  .crm-dark .cx-wa-setup-desktop,
+  .crm-dark .cx-wa-setup-desktop-qr-frame,
+  .crm-dark .cx-wa-setup-desktop-state-card,
+  .crm-dark .cx-wa-setup-desktop-connect-btn {
+    background: #0b0f19;
+  }
+
+  .crm-dark .cx-wa-setup-desktop {
+    border-color: #3d46527a;
+  }
+
+  .crm-dark .cx-wa-setup-desktop-guide {
+    border-color: #3d46527a;
+  }
+
+  .crm-dark .cx-wa-setup-desktop-guide h4,
+  .crm-dark .cx-wa-setup-desktop-state-card strong,
+  .crm-dark .cx-wa-setup-desktop-qr-placeholder strong {
+    color: #f8fafc;
+  }
+
+  .crm-dark .cx-wa-setup-desktop-guide li,
+  .crm-dark .cx-wa-setup-desktop-state-card span,
+  .crm-dark .cx-wa-setup-desktop-state-card small,
+  .crm-dark .cx-wa-setup-desktop-qr-placeholder,
+  .crm-dark .cx-wa-setup-desktop-qr-placeholder span {
+    color: #adb5c1;
+  }
+
+  .crm-dark .cx-wa-setup-desktop-qr-frame,
+  .crm-dark .cx-wa-setup-desktop-state-card {
+    border-color: #3d46527a;
+  }
+
+  .crm-dark .cx-wa-setup-desktop-guide li::before {
+    background: #0b0f19;
+  }
+
+  .crm-dark .cx-wa-setup-desktop-qr-frame canvas {
+    background: #ffffff;
+  }
+
+  .crm-dark .cx-wa-setup-desktop-connect-btn {
+    border-color: #765cff;
+    color: #a996ff;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1240px) {
+  .cx-wa-setup-desktop-grid {
+    grid-template-columns:
+      minmax(250px, 1fr)
+      190px
+      minmax(220px, .82fr);
+    gap: 20px;
+    padding-inline: 26px;
+  }
+
+  .cx-wa-setup-desktop-guide {
+    padding-right: 20px;
+  }
+
+  .cx-wa-setup-desktop-qr-frame {
+    width: 174px;
+    height: 174px;
+  }
+
+  .cx-wa-setup-desktop-qr-frame canvas {
+    width: 166px !important;
+    height: 166px !important;
+  }
+}
+.crm-dark .cx-step-number{
+  background: transparent;
+  border-color: #3d46527a;
+}
+.crm-dark .cx-step-icon.indigo, .crm-dark .cx-step-icon.rose{
+  background-color: rgba(37, 99, 235, 0.08) !important;
+}
+.crm-dark .cx-step-action, .crm-dark .cx-workspace-not-now-btn{
+  border: 1px solid #3d46527a;  
+  background: rgba(37, 99, 235, 0.08);
+}
+.crm-dark .cx-workspace-not-now-btn{
+  color: #f8fafc;
 }

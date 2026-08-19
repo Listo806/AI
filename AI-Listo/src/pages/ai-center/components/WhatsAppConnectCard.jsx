@@ -29,12 +29,22 @@ export default function WhatsAppConnectCard({
   onConnectWithCode,
   onDisconnect,
   onRefreshQr,
+  setupDesktopLayout = false,
 }) {
   const { t } = useTranslation();
 
   // Mobile (touch-primary phones/tablets) connect by phone number and get a code,
   // since a QR cannot be scanned on the same device. Desktop keeps the QR.
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
+      return false;
+    }
+
+    return window.matchMedia("(pointer: coarse)").matches;
+  });
   const [phoneInput, setPhoneInput] = useState("");
   const [changeNumber, setChangeNumber] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("US");
@@ -81,7 +91,7 @@ export default function WhatsAppConnectCard({
     );
   }
 
-  if (connected) {
+  if (connected && (!setupDesktopLayout || isMobile)) {
     return (
       <div className="cx-wa-connected-card">
         <div className="cx-wa-connected-icon">
@@ -299,6 +309,212 @@ export default function WhatsAppConnectCard({
             </button>
           </form>
         )}
+      </div>
+    );
+  }
+
+  if (setupDesktopLayout && !isMobile) {
+    const handleDesktopReconnect = async () => {
+      if (connecting || disconnecting) return;
+
+      try {
+        if (connected) {
+          await onDisconnect?.();
+        }
+
+        await onConnect?.();
+      } catch (reconnectError) {
+        console.error("WhatsApp reconnect failed:", reconnectError);
+      }
+    };
+
+    return (
+      <div className="cx-wa-setup-desktop">
+        {error && <div className="cx-wa-connect-error">{error}</div>}
+
+        <div className="cx-wa-setup-desktop-grid">
+          <div className="cx-wa-setup-desktop-guide">
+            <h4>
+              {t(
+                "aiCenter.desktopWhatsappEasySteps",
+                "Connect in just 4 easy steps",
+              )}
+            </h4>
+
+            <ol>
+              <li>
+                {t(
+                  "aiCenter.desktopWhatsappStep1",
+                  "Open WhatsApp on your phone",
+                )}
+              </li>
+              <li>
+                {t(
+                  "aiCenter.desktopWhatsappStep2",
+                  "Go to Settings → Linked Devices",
+                )}
+              </li>
+              <li>
+                {t(
+                  "aiCenter.desktopWhatsappStep3",
+                  "Tap “Link a Device”",
+                )}
+              </li>
+              <li>
+                {t(
+                  "aiCenter.desktopWhatsappStep4",
+                  "Scan the QR code",
+                )}
+              </li>
+            </ol>
+          </div>
+
+          <div className="cx-wa-setup-desktop-qr-column">
+            <div
+              className={`cx-wa-setup-desktop-qr-frame ${
+                qr ? "has-qr" : ""
+              }`}
+            >
+              {qr ? (
+                <QRCodeCanvas
+                  value={qr}
+                  size={176}
+                  level="M"
+                  includeMargin={false}
+                />
+              ) : connecting ? (
+                <div className="cx-wa-setup-desktop-qr-placeholder">
+                  <RefreshCw className="cx-wa-spin" size={30} />
+                  <strong>
+                    {t(
+                      "aiCenter.whatsappConnect.generatingQr",
+                      "Generating QR code...",
+                    )}
+                  </strong>
+                  <span>
+                    {t(
+                      "aiCenter.whatsappConnect.generatingQrHint",
+                      "This can take a few seconds.",
+                    )}
+                  </span>
+                </div>
+              ) : connected ? (
+                <div className="cx-wa-setup-desktop-qr-placeholder is-connected">
+                  <CheckCircle2 size={38} />
+                  <strong>
+                    {t(
+                      "aiCenter.desktopWhatsappConnectedTitle",
+                      "WhatsApp Connected",
+                    )}
+                  </strong>
+                  <span>
+                    {t(
+                      "aiCenter.desktopWhatsappQrReconnectHint",
+                      "Reconnect to generate a fresh QR code.",
+                    )}
+                  </span>
+                </div>
+              ) : (
+                <div className="cx-wa-setup-desktop-qr-placeholder">
+                  <Smartphone size={34} />
+                  <strong>
+                    {t(
+                      "aiCenter.whatsappConnect.readyToConnect",
+                      "Ready to connect",
+                    )}
+                  </strong>
+                  <span>
+                    {t(
+                      "aiCenter.whatsappConnect.readyToConnectHint",
+                      "Click Connect WhatsApp to generate a QR code.",
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {connecting && qr && (
+              <button
+                type="button"
+                className="cx-wa-setup-desktop-refresh"
+                onClick={onRefreshQr}
+                disabled={!onRefreshQr}
+              >
+                <RefreshCw size={15} />
+                {t("aiCenter.whatsappConnect.refreshQr", "Refresh QR")}
+              </button>
+            )}
+          </div>
+
+          <div className="cx-wa-setup-desktop-state">
+            <div
+              className={`cx-wa-setup-desktop-state-card ${
+                connected ? "is-connected" : ""
+              }`}
+            >
+              {connected ? (
+                <CheckCircle2 size={29} />
+              ) : socketConnected ? (
+                <Wifi size={29} />
+              ) : (
+                <WifiOff size={29} />
+              )}
+
+              <div>
+                <strong>
+                  {connected
+                    ? t(
+                        "aiCenter.desktopWhatsappConnectedTitle",
+                        "WhatsApp Connected",
+                      )
+                    : t(
+                        "aiCenter.desktopWhatsappNotConnectedTitle",
+                        "WhatsApp Not Connected",
+                      )}
+                </strong>
+
+                <span>
+                  {connected
+                    ? t(
+                        "aiCenter.desktopWhatsappConnectedDesc",
+                        "Your AI Agent is ready to chat!",
+                      )
+                    : t(
+                        "aiCenter.desktopWhatsappNotConnectedDesc",
+                        "Connect WhatsApp so your AI Agent can chat with customers.",
+                      )}
+                </span>
+
+                {connected && phone && (
+                  <small>
+                    <Smartphone size={14} />
+                    {phone}
+                  </small>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="cx-wa-setup-desktop-connect-btn"
+              onClick={handleDesktopReconnect}
+              disabled={connecting || disconnecting}
+            >
+              <RefreshCw
+                size={16}
+                className={connecting ? "cx-wa-spin" : ""}
+              />
+              {connecting
+                ? t(
+                    "aiCenter.whatsappConnect.waitingForScan",
+                    "Waiting for scan...",
+                  )
+                : connected
+                  ? t("aiCenter.desktopReconnect", "Reconnect")
+                  : t("aiCenter.desktopConnect", "Connect")}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
