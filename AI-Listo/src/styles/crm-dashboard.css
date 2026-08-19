@@ -739,6 +739,7 @@ body.crm-dark .crm-main::after {
 @media (max-width: 1024px) {
   .crm-content {
     margin-top: 85px;
+    margin-bottom: 20px;
   }
 
   body .crm-header {

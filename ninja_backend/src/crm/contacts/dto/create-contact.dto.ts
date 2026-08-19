@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsNumber,
   IsDateString,
+  IsArray,
 } from 'class-validator';
 
 export class CreateContactDto {
@@ -54,6 +55,12 @@ export class CreateContactDto {
   @IsOptional()
   @IsDateString()
   lastContactAt?: string;
+
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
 
   @IsOptional()
   @IsUUID()

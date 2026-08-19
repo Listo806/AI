@@ -3635,3 +3635,642 @@ body .contacts-page .map svg{
 .crm-dark .contacts-table-score.low{
   background: rgba(37, 99, 235, 0.08);
 }
+
+/* =========================================================
+   CONTACTS DESKTOP KPI + FILTER BAR — 2026-08-19
+   ========================================================= */
+@media (min-width: 1025px) {
+  .contacts-page .kpi-grid {
+    gap: 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .contacts-page .kpi-box {
+    min-width: 0;
+    min-height: 130px;
+    padding: 14px 15px 12px;
+    border: 1px solid #e2e7ef;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .02);
+  }
+
+  .contacts-page .kpi-box::after {
+    display: none !important;
+  }
+
+  .contacts-page .kpi-left {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .contacts-page .kpi-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+
+  .contacts-page .kpi-content {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .contacts-page .kpi-title {
+    color: #35415a;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .contacts-page .kpi-value-row {
+    margin-top: 6px;
+    gap: 8px;
+  }
+
+  .contacts-page .kpi-value {
+    color: #11182c;
+    font-size: 25px;
+    font-weight: 800;
+  }
+
+  .contacts-page .kpi-trend {
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .contacts-page .kpi-trend::before {
+    display: none;
+  }
+
+  .contacts-page .kpi-trend.positive {
+    color: #16a34a;
+  }
+
+  .contacts-page .kpi-trend.negative {
+    color: #dc2626;
+  }
+
+  .contacts-page .kpi-trend.neutral {
+    color: #8b95a8;
+  }
+
+  .contacts-page .kpi-chart_wrap {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+  }
+
+  .contacts-page .kpi-chart {
+    height: 30px;
+    margin: 0;
+  }
+
+  .contacts-page .kpi-chart svg {
+    height: 30px;
+  }
+
+  .contacts-page .kpi-bottom span {
+    color: #69758c;
+    font-size: 9px;
+  }
+
+  .contacts-page .kpi-box.total .kpi-icon {
+    background: linear-gradient(135deg, #5c42ee, #4338ca);
+  }
+
+  .contacts-page .kpi-box.total .kpi-chart {
+    color: #5d43ff;
+  }
+
+  .contacts-page .kpi-box.new .kpi-icon {
+    background: linear-gradient(135deg, #38c86d, #16a34a);
+  }
+
+  .contacts-page .kpi-box.new .kpi-chart {
+    color: #25b85a;
+  }
+
+  .contacts-page .kpi-box.active .kpi-icon {
+    background: linear-gradient(135deg, #3d6cff, #2456e8);
+  }
+
+  .contacts-page .kpi-box.active .kpi-chart {
+    color: #3168ff;
+  }
+
+  .contacts-page .kpi-box.opportunities .kpi-icon {
+    background: linear-gradient(135deg, #ff9d25, #f97316);
+  }
+
+  .contacts-page .kpi-box.opportunities .kpi-chart {
+    color: #ff9418;
+  }
+
+  .contacts-page .kpi-box.followup .kpi-icon {
+    background: linear-gradient(135deg, #ff4d62, #e92f49);
+  }
+
+  .contacts-page .kpi-box.followup .kpi-chart {
+    color: #f43f5e;
+  }
+
+  .contacts-page .kpi-box.ai .kpi-icon {
+    background: linear-gradient(135deg, #9b51f3, #7c3aed);
+  }
+
+  .contacts-page .kpi-box.ai .kpi-chart {
+    color: #9747ff;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar {
+    margin-top: 18px;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-left {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .search-box {
+    width: 184px;
+    min-width: 184px;
+    height: 40px;
+    border-color: #dbe1ea;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-btn,
+  .contacts-page .contacts-desktop-filter-bar .filter-select,
+  .contacts-page .contacts-desktop-filter-bar .action-btn,
+  .contacts-page .contacts-desktop-filter-bar .primary-btn {
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-btn {
+    min-width: 66px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 11px;
+    border-color: #dbe1ea;
+    color: #27334d;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-btn.selected {
+    border-color: #dbe1ea;
+    background: #fff;
+    color: #11182c;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-select {
+    position: relative;
+    min-width: 84px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #dbe1ea;
+    background: #fff;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-select select {
+    width: 100%;
+    height: 100%;
+    appearance: none;
+    border: 0;
+    outline: 0;
+    padding: 0 27px 0 11px;
+    background: transparent;
+    color: #27334d;
+    font-size: 10px;
+    cursor: pointer;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-select > svg:last-child {
+    position: absolute;
+    right: 8px;
+    width: 13px;
+    color: #718096;
+    pointer-events: none;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-last-activity {
+    min-width: 104px;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .more-filters {
+    min-width: 112px;
+    padding-left: 8px;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .more-filters > svg:first-child {
+    width: 14px;
+    color: #718096;
+    flex: 0 0 14px;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .more-filters select {
+    padding-left: 4px;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .action-btn,
+  .contacts-page .contacts-desktop-filter-bar .primary-btn {
+    min-width: auto;
+    padding: 0 12px;
+    gap: 5px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .primary-btn {
+    background: linear-gradient(135deg, #315fff, #2455e8);
+  }
+
+  body.crm-dark .contacts-page .kpi-box,
+  body.crm-dark .contacts-page .contacts-desktop-filter-bar .search-box,
+  body.crm-dark .contacts-page .contacts-desktop-filter-bar .filter-btn,
+  body.crm-dark .contacts-page .contacts-desktop-filter-bar .filter-select {
+    border-color: #3d46527a;
+    background: #0b0f19;
+  }
+
+  body.crm-dark .contacts-page .kpi-title,
+  body.crm-dark .contacts-page .kpi-value,
+  body.crm-dark .contacts-page .contacts-desktop-filter-bar .filter-btn,
+  body.crm-dark .contacts-page .contacts-desktop-filter-bar .filter-select select {
+    color: #f8fafc;
+  }
+
+  body.crm-dark .contacts-page .kpi-bottom span {
+    color: #adb5c1;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1450px) {
+  .contacts-page .contacts-desktop-filter-bar .filter-left {
+    flex-wrap: wrap;
+  }
+
+  .contacts-page .contacts-desktop-filter-bar .filter-actions {
+    margin-left: 0;
+  }
+}
+
+
+/* =========================================================
+   CONTACTS CSV IMPORT
+   ========================================================= */
+.contacts-import-overlay {
+  z-index: 1400;
+}
+
+.contacts-import-modal {
+  width: min(760px, calc(100vw - 40px));
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  padding: 0;
+  border-radius: 16px;
+}
+
+.contacts-import-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid #e7ebf2;
+}
+
+.contacts-import-head h3 {
+  margin: 0;
+  font-size: 19px;
+  color: #111827;
+}
+
+.contacts-import-head p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.contacts-import-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.contacts-import-upload {
+  margin: 20px 24px 0;
+  min-height: 88px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  border: 1px dashed #aeb9cb;
+  border-radius: 12px;
+  background: #fafbff;
+}
+
+.contacts-import-upload > svg {
+  width: 30px;
+  height: 30px;
+  color: #315fff;
+}
+
+.contacts-import-upload strong,
+.contacts-import-upload span {
+  display: block;
+}
+
+.contacts-import-upload strong {
+  color: #17213a;
+  font-size: 12px;
+}
+
+.contacts-import-upload span {
+  margin-top: 5px;
+  color: #6d7890;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.contacts-import-upload label {
+  position: relative;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid #6f87ff;
+  border-radius: 8px;
+  color: #315fff;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.contacts-import-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.contacts-import-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 14px;
+  padding: 18px 24px 0;
+}
+
+.contacts-import-options label > span {
+  display: block;
+  margin-bottom: 7px;
+  color: #455169;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.contacts-import-options select {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #dce2eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1c2740;
+  font-size: 10px;
+}
+
+.contacts-import-count {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 62px;
+  border: 1px solid #e2e7ef;
+  border-radius: 10px;
+  background: #fbfcff;
+}
+
+.contacts-import-count strong {
+  font-size: 20px;
+  color: #315fff;
+}
+
+.contacts-import-count span {
+  margin-top: 3px;
+  color: #6c778e;
+  font-size: 9px;
+}
+
+.contacts-import-preview {
+  margin: 18px 24px 0;
+  border: 1px solid #e3e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.contacts-import-preview-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fbfcff;
+}
+
+.contacts-import-preview-title strong {
+  color: #17213a;
+  font-size: 10px;
+}
+
+.contacts-import-preview-title span {
+  color: #7b8598;
+  font-size: 9px;
+}
+
+.contacts-import-preview-scroll {
+  overflow-x: auto;
+}
+
+.contacts-import-preview table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+}
+
+.contacts-import-preview th,
+.contacts-import-preview td {
+  padding: 8px 10px;
+  border-top: 1px solid #edf0f5;
+  text-align: left;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.contacts-import-preview th {
+  color: #45516b;
+  font-weight: 700;
+  background: #fff;
+}
+
+.contacts-import-preview td {
+  color: #293650;
+}
+
+.contacts-import-result {
+  margin: 18px 24px 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.contacts-import-result > div {
+  min-height: 62px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border: 1px solid #e2e7ef;
+  border-radius: 9px;
+}
+
+.contacts-import-result strong {
+  color: #17213a;
+  font-size: 18px;
+}
+
+.contacts-import-result span {
+  margin-top: 3px;
+  color: #727d92;
+  font-size: 8px;
+}
+
+.contacts-import-errors {
+  margin: 12px 24px 0;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fff7f7;
+}
+
+.contacts-import-errors > div {
+  display: grid;
+  grid-template-columns: 75px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #fee2e2;
+  font-size: 9px;
+}
+
+.contacts-import-errors > div:last-child {
+  border-bottom: 0;
+}
+
+.contacts-import-errors strong {
+  color: #b91c1c;
+}
+
+.contacts-import-errors span {
+  color: #7f1d1d;
+}
+
+.contacts-import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 20px 24px 24px;
+}
+
+.contacts-import-actions button {
+  min-width: 110px;
+  height: 38px;
+  border-radius: 8px;
+}
+
+body.crm-dark .contacts-import-modal,
+body.crm-dark .contacts-import-upload,
+body.crm-dark .contacts-import-options select,
+body.crm-dark .contacts-import-count,
+body.crm-dark .contacts-import-preview,
+body.crm-dark .contacts-import-preview th,
+body.crm-dark .contacts-import-preview-title,
+body.crm-dark .contacts-import-result > div {
+  background: #0b0f19;
+}
+
+body.crm-dark .contacts-import-head,
+body.crm-dark .contacts-import-preview,
+body.crm-dark .contacts-import-preview th,
+body.crm-dark .contacts-import-preview td,
+body.crm-dark .contacts-import-result > div,
+body.crm-dark .contacts-import-count,
+body.crm-dark .contacts-import-options select {
+  border-color: #3d46527a;
+}
+
+body.crm-dark .contacts-import-head h3,
+body.crm-dark .contacts-import-upload strong,
+body.crm-dark .contacts-import-options select,
+body.crm-dark .contacts-import-preview-title strong,
+body.crm-dark .contacts-import-preview th,
+body.crm-dark .contacts-import-preview td,
+body.crm-dark .contacts-import-result strong {
+  color: #f8fafc;
+}
+
+body.crm-dark .contacts-import-head p,
+body.crm-dark .contacts-import-upload span,
+body.crm-dark .contacts-import-options label > span,
+body.crm-dark .contacts-import-count span,
+body.crm-dark .contacts-import-preview-title span,
+body.crm-dark .contacts-import-result span {
+  color: #adb5c1;
+}
+
+@media (max-width: 1024px) {
+  .contacts-import-modal {
+    width: min(94vw, 720px);
+  }
+
+  .contacts-import-upload {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .contacts-import-upload label {
+    grid-column: 1 / -1;
+  }
+
+  .contacts-import-options {
+    grid-template-columns: 1fr;
+  }
+
+  .contacts-import-result {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

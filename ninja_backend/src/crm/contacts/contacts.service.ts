@@ -38,6 +38,7 @@ export class ContactsService {
   c.status,
   c.source,
   c.notes,
+  c.tags,
   c.assigned_to AS "assignedTo",
   au.name AS "assignedAgentName",
   au.email AS "assignedAgentEmail",
@@ -65,6 +66,7 @@ export class ContactsService {
   status,
   source,
   notes,
+  tags,
   assigned_to AS "assignedTo",
   created_at AS "createdAt",
   updated_at AS "updatedAt"
@@ -116,6 +118,40 @@ export class ContactsService {
     if (query.status) {
       where.push(`c.status = $${param}`);
       values.push(query.status);
+      param++;
+    }
+
+    if (query.source) {
+      where.push(`c.source = $${param}`);
+      values.push(query.source);
+      param++;
+    }
+
+    if (query.assignedTo) {
+      where.push(`c.assigned_to = $${param}`);
+      values.push(query.assignedTo);
+      param++;
+    }
+
+    if (query.lastActivity) {
+      const activityExpression = `COALESCE(c.last_contact_at, c.updated_at, c.created_at)`;
+
+      if (query.lastActivity === "today") {
+        where.push(`${activityExpression} >= CURRENT_DATE`);
+      }
+
+      if (query.lastActivity === "7d") {
+        where.push(`${activityExpression} >= NOW() - INTERVAL '7 days'`);
+      }
+
+      if (query.lastActivity === "30d") {
+        where.push(`${activityExpression} >= NOW() - INTERVAL '30 days'`);
+      }
+    }
+
+    if (query.tag) {
+      where.push(`$${param} = ANY(COALESCE(c.tags, ARRAY[]::text[]))`);
+      values.push(query.tag);
       param++;
     }
 
@@ -171,46 +207,810 @@ export class ContactsService {
       role,
     );
 
+    const emptySeries = Array.from({ length: 30 }, () => 0);
+
     if (!accessible.length) {
       return {
         totalContacts: 0,
+        newContacts: 0,
+        activeCustomers: 0,
+        openOpportunities: 0,
+        needsFollowUp: 0,
+        aiEngagement: 0,
+
+        totalContactsTrend: 0,
+        newContactsTrend: 0,
+        activeCustomersTrend: 0,
+        openOpportunitiesTrend: 0,
+        needsFollowUpTrend: 0,
+        aiEngagementTrend: 0,
+
+        series: {
+          totalContacts: emptySeries,
+          newContacts: emptySeries,
+          activeCustomers: emptySeries,
+          openOpportunities: emptySeries,
+          needsFollowUp: emptySeries,
+          aiEngagement: emptySeries,
+        },
+
+        // Legacy keys kept for existing consumers.
         activeBuyers: 0,
         activeSellers: 0,
         activeRenters: 0,
         activeDevelopers: 0,
-        aiEngagement: 0,
       };
     }
 
-    const { rows } = await this.db.query(
+    const percentChange = (current: number, previous: number) => {
+      if (previous <= 0) {
+        return current > 0 ? 100 : 0;
+      }
+
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    const { rows: contactRows } = await this.db.query(
       `
-    SELECT
-      COUNT(*)::int AS "totalContacts",
+      SELECT
+        COUNT(*)::int AS "totalContacts",
 
-      COUNT(*) FILTER (
-        WHERE type = 'Buyer'
-      )::int AS "activeBuyers",
+        COUNT(*) FILTER (
+          WHERE created_at >= NOW() - INTERVAL '30 days'
+        )::int AS "newContacts",
 
-      COUNT(*) FILTER (
-        WHERE type = 'Seller'
-      )::int AS "activeSellers",
+        COUNT(*) FILTER (
+          WHERE created_at >= NOW() - INTERVAL '60 days'
+            AND created_at < NOW() - INTERVAL '30 days'
+        )::int AS "previousNewContacts",
 
-      COUNT(*) FILTER (
-        WHERE type = 'Renter'
-      )::int AS "activeRenters",
+        COUNT(*) FILTER (
+          WHERE created_at < NOW() - INTERVAL '30 days'
+        )::int AS "previousTotalContacts",
 
-      COUNT(*) FILTER (
-        WHERE type IN ('Developer', 'Developer')
-      )::int AS "activeDevelopers",
+        COUNT(*) FILTER (
+          WHERE status = 'Active'
+        )::int AS "activeCustomers",
 
-      COALESCE(AVG(score), 0)::int AS "aiEngagement"
-    FROM contacts
-    WHERE team_id = ANY($1)
-    `,
+        COUNT(*) FILTER (
+          WHERE status = 'Active'
+            AND created_at < NOW() - INTERVAL '30 days'
+        )::int AS "previousActiveCustomers",
+
+        COALESCE(AVG(score), 0)::numeric(10,2) AS "aiEngagement",
+
+        COALESCE(AVG(score) FILTER (
+          WHERE created_at < NOW() - INTERVAL '30 days'
+        ), 0)::numeric(10,2) AS "previousAiEngagement",
+
+        COUNT(*) FILTER (WHERE type = 'Buyer')::int AS "activeBuyers",
+        COUNT(*) FILTER (WHERE type = 'Seller')::int AS "activeSellers",
+        COUNT(*) FILTER (WHERE type = 'Renter')::int AS "activeRenters",
+        COUNT(*) FILTER (WHERE type = 'Developer')::int AS "activeDevelopers"
+      FROM contacts
+      WHERE team_id = ANY($1)
+      `,
       [accessible],
     );
 
-    return rows[0];
+    const { rows: opportunityRows } = await this.db.query(
+      `
+      SELECT
+        COUNT(*) FILTER (
+          WHERE stage NOT IN ('won', 'lost')
+        )::int AS "openOpportunities",
+
+        COUNT(*) FILTER (
+          WHERE stage NOT IN ('won', 'lost')
+            AND created_at < NOW() - INTERVAL '30 days'
+        )::int AS "previousOpenOpportunities"
+      FROM deals
+      WHERE team_id = ANY($1)
+      `,
+      [accessible],
+    );
+
+    const { rows: followUpRows } = await this.db.query(
+      `
+      SELECT
+        COUNT(DISTINCT c.id)::int AS "needsFollowUp",
+
+        COUNT(DISTINCT c.id) FILTER (
+          WHERE c.created_at < NOW() - INTERVAL '30 days'
+        )::int AS "previousNeedsFollowUp"
+      FROM contacts c
+      JOIN leads l
+        ON l.team_id = c.team_id
+       AND (
+         l.id = c.lead_id
+         OR l.contact_id = c.id
+       )
+      WHERE c.team_id = ANY($1)
+        AND l.status = 'follow-up'
+      `,
+      [accessible],
+    );
+
+    const { rows: seriesRows } = await this.db.query(
+      `
+      WITH days AS (
+        SELECT generate_series(
+          CURRENT_DATE - INTERVAL '29 days',
+          CURRENT_DATE,
+          INTERVAL '1 day'
+        )::date AS day
+      ),
+      contact_daily AS (
+        SELECT
+          created_at::date AS day,
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE status = 'Active')::int AS active,
+          COALESCE(AVG(score), 0)::numeric(10,2) AS ai
+        FROM contacts
+        WHERE team_id = ANY($1)
+          AND created_at >= CURRENT_DATE - INTERVAL '29 days'
+        GROUP BY created_at::date
+      ),
+      opportunity_daily AS (
+        SELECT
+          created_at::date AS day,
+          COUNT(*) FILTER (
+            WHERE stage NOT IN ('won', 'lost')
+          )::int AS total
+        FROM deals
+        WHERE team_id = ANY($1)
+          AND created_at >= CURRENT_DATE - INTERVAL '29 days'
+        GROUP BY created_at::date
+      ),
+      follow_up_daily AS (
+        SELECT
+          c.created_at::date AS day,
+          COUNT(DISTINCT c.id)::int AS total
+        FROM contacts c
+        JOIN leads l
+          ON l.team_id = c.team_id
+         AND (
+           l.id = c.lead_id
+           OR l.contact_id = c.id
+         )
+        WHERE c.team_id = ANY($1)
+          AND l.status = 'follow-up'
+          AND c.created_at >= CURRENT_DATE - INTERVAL '29 days'
+        GROUP BY c.created_at::date
+      )
+      SELECT
+        d.day,
+        COALESCE(cd.total, 0)::int AS "newContacts",
+        COALESCE(cd.active, 0)::int AS "activeCustomers",
+        COALESCE(od.total, 0)::int AS "openOpportunities",
+        COALESCE(fd.total, 0)::int AS "needsFollowUp",
+        COALESCE(cd.ai, 0)::float AS "aiEngagement"
+      FROM days d
+      LEFT JOIN contact_daily cd ON cd.day = d.day
+      LEFT JOIN opportunity_daily od ON od.day = d.day
+      LEFT JOIN follow_up_daily fd ON fd.day = d.day
+      ORDER BY d.day
+      `,
+      [accessible],
+    );
+
+    const contacts = contactRows[0] || {};
+    const opportunities = opportunityRows[0] || {};
+    const followUp = followUpRows[0] || {};
+
+    const totalContacts = Number(contacts.totalContacts || 0);
+    const newContacts = Number(contacts.newContacts || 0);
+    const activeCustomers = Number(contacts.activeCustomers || 0);
+    const openOpportunities = Number(opportunities.openOpportunities || 0);
+    const needsFollowUp = Number(followUp.needsFollowUp || 0);
+    const aiEngagement = Math.round(Number(contacts.aiEngagement || 0));
+
+    const cumulativeTotalSeries: number[] = [];
+    let runningTotal = Number(contacts.previousTotalContacts || 0);
+
+    for (const row of seriesRows) {
+      runningTotal += Number(row.newContacts || 0);
+      cumulativeTotalSeries.push(runningTotal);
+    }
+
+    return {
+      totalContacts,
+      newContacts,
+      activeCustomers,
+      openOpportunities,
+      needsFollowUp,
+      aiEngagement,
+
+      totalContactsTrend: percentChange(
+        totalContacts,
+        Number(contacts.previousTotalContacts || 0),
+      ),
+      newContactsTrend: percentChange(
+        newContacts,
+        Number(contacts.previousNewContacts || 0),
+      ),
+      activeCustomersTrend: percentChange(
+        activeCustomers,
+        Number(contacts.previousActiveCustomers || 0),
+      ),
+      openOpportunitiesTrend: percentChange(
+        openOpportunities,
+        Number(opportunities.previousOpenOpportunities || 0),
+      ),
+      needsFollowUpTrend: percentChange(
+        needsFollowUp,
+        Number(followUp.previousNeedsFollowUp || 0),
+      ),
+      aiEngagementTrend: percentChange(
+        aiEngagement,
+        Math.round(Number(contacts.previousAiEngagement || 0)),
+      ),
+
+      series: {
+        totalContacts: cumulativeTotalSeries,
+        newContacts: seriesRows.map((row) => Number(row.newContacts || 0)),
+        activeCustomers: seriesRows.map((row) =>
+          Number(row.activeCustomers || 0),
+        ),
+        openOpportunities: seriesRows.map((row) =>
+          Number(row.openOpportunities || 0),
+        ),
+        needsFollowUp: seriesRows.map((row) =>
+          Number(row.needsFollowUp || 0),
+        ),
+        aiEngagement: seriesRows.map((row) =>
+          Math.round(Number(row.aiEngagement || 0)),
+        ),
+      },
+
+      // Legacy keys kept for existing consumers.
+      activeBuyers: Number(contacts.activeBuyers || 0),
+      activeSellers: Number(contacts.activeSellers || 0),
+      activeRenters: Number(contacts.activeRenters || 0),
+      activeDevelopers: Number(contacts.activeDevelopers || 0),
+    };
+  }
+
+  async getFilterOptions(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ) {
+    const accessible = await this.getAccessibleTeamIds(
+      userId,
+      userTeamId,
+      role,
+    );
+
+    if (!accessible.length) {
+      return {
+        statuses: [],
+        sources: [],
+        owners: [],
+        types: [],
+        tags: [],
+      };
+    }
+
+    const { rows: sources } = await this.db.query(
+      `
+      SELECT DISTINCT source
+      FROM contacts
+      WHERE team_id = ANY($1)
+        AND source IS NOT NULL
+        AND BTRIM(source) <> ''
+      ORDER BY source
+      `,
+      [accessible],
+    );
+
+    const { rows: owners } = await this.db.query(
+      `
+      SELECT DISTINCT
+        u.id,
+        COALESCE(NULLIF(BTRIM(u.name), ''), u.email) AS name
+      FROM contacts c
+      JOIN users u ON u.id = c.assigned_to
+      WHERE c.team_id = ANY($1)
+      ORDER BY name
+      `,
+      [accessible],
+    );
+
+    const { rows: types } = await this.db.query(
+      `
+      SELECT DISTINCT type
+      FROM contacts
+      WHERE team_id = ANY($1)
+        AND type IS NOT NULL
+        AND BTRIM(type) <> ''
+      ORDER BY type
+      `,
+      [accessible],
+    );
+
+    const { rows: tagRows } = await this.db.query(
+      `
+      SELECT DISTINCT tag
+      FROM contacts c
+      CROSS JOIN LATERAL unnest(COALESCE(c.tags, ARRAY[]::text[])) AS tag
+      WHERE c.team_id = ANY($1)
+        AND BTRIM(tag) <> ''
+      ORDER BY tag
+      `,
+      [accessible],
+    );
+
+    return {
+      statuses: ["Cold", "Warm", "Hot", "Active", "Archived"],
+      sources: sources.map((row) => row.source),
+      owners,
+      types: types.map((row) => row.type),
+      tags: tagRows.map((row) => row.tag),
+    };
+  }
+
+
+  private normalizeTags(value: unknown): string[] {
+    const values = Array.isArray(value)
+      ? value
+      : typeof value === "string"
+        ? value.split(/[|;,]/g)
+        : [];
+
+    return Array.from(
+      new Set(
+        values
+          .map((tag) => String(tag || "").trim())
+          .filter(Boolean)
+          .map((tag) => tag.slice(0, 80)),
+      ),
+    ).slice(0, 30);
+  }
+
+  private normalizeImportKey(value: unknown): string {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[\s_\-./]+/g, "");
+  }
+
+  private valueFromImportRow(
+    row: Record<string, any>,
+    aliases: string[],
+  ): any {
+    const lookup = new Map<string, any>();
+
+    for (const [key, value] of Object.entries(row || {})) {
+      lookup.set(this.normalizeImportKey(key), value);
+    }
+
+    for (const alias of aliases) {
+      const value = lookup.get(this.normalizeImportKey(alias));
+      if (value !== undefined && value !== null && String(value).trim() !== "") {
+        return value;
+      }
+    }
+
+    return undefined;
+  }
+
+  private normalizeContactStatus(value: unknown): string {
+    const allowed = ["Cold", "Warm", "Hot", "Active", "Archived"];
+    const normalized = String(value || "").trim().toLowerCase();
+    return (
+      allowed.find((item) => item.toLowerCase() === normalized) || "Cold"
+    );
+  }
+
+  private normalizeContactType(value: unknown): string | null {
+    const allowed = ["Buyer", "Seller", "Investor", "Renter", "Developer"];
+    const normalized = String(value || "").trim().toLowerCase();
+
+    if (!normalized) return null;
+
+    return (
+      allowed.find((item) => item.toLowerCase() === normalized) || null
+    );
+  }
+
+  async importBatch(
+    body: {
+      importId?: string;
+      fileName?: string;
+      rows: Record<string, any>[];
+      duplicateStrategy?: "skip" | "update";
+      isFirstBatch?: boolean;
+      isLastBatch?: boolean;
+    },
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ) {
+    const accessible = await this.getAccessibleTeamIds(
+      userId,
+      userTeamId,
+      role,
+    );
+
+    if (!accessible.length) {
+      throw new ForbiddenException("No accessible team found");
+    }
+
+    const teamId =
+      userTeamId && accessible.includes(userTeamId)
+        ? userTeamId
+        : accessible[0];
+
+    const rows = Array.isArray(body.rows) ? body.rows : [];
+
+    if (!rows.length) {
+      throw new BadRequestException("Import batch is empty");
+    }
+
+    if (rows.length > 250) {
+      throw new BadRequestException("Import batch cannot exceed 250 rows");
+    }
+
+    const duplicateStrategy =
+      body.duplicateStrategy === "update" ? "update" : "skip";
+
+    let importId = body.importId || null;
+
+    if (!importId || body.isFirstBatch) {
+      const { rows: importRows } = await this.db.query(
+        `
+        INSERT INTO crm_imports_integrations (
+          team_id,
+          source_type,
+          file_name,
+          status,
+          total_rows,
+          processed_rows,
+          imported_rows,
+          failed_rows,
+          duplicate_strategy,
+          mapping,
+          raw_rows,
+          updated_at
+        )
+        VALUES ($1, 'contacts_csv', $2, 'processing', 0, 0, 0, 0, $3, $4, '[]'::jsonb, NOW())
+        RETURNING id
+        `,
+        [
+          teamId,
+          body.fileName || "contacts.csv",
+          duplicateStrategy,
+          {
+            supportedFields: [
+              "name",
+              "email",
+              "phone",
+              "type",
+              "status",
+              "source",
+              "interest",
+              "notes",
+              "tags",
+              "lastContactAt",
+            ],
+          },
+        ],
+      );
+
+      importId = importRows[0]?.id;
+    } else {
+      const { rows: existingImport } = await this.db.query(
+        `
+        SELECT id
+        FROM crm_imports_integrations
+        WHERE id = $1
+          AND team_id = $2
+          AND source_type = 'contacts_csv'
+        LIMIT 1
+        `,
+        [importId, teamId],
+      );
+
+      if (!existingImport.length) {
+        throw new BadRequestException("Import session not found");
+      }
+    }
+
+    let imported = 0;
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    const batchErrors: Array<{
+      rowNumber: number;
+      message: string;
+    }> = [];
+
+    for (let index = 0; index < rows.length; index++) {
+      const raw = rows[index] || {};
+      const rowNumber = Number(raw.__rowNumber || index + 2);
+
+      try {
+        const name = String(
+          this.valueFromImportRow(raw, [
+            "name",
+            "full name",
+            "fullname",
+            "contact name",
+          ]) || "",
+        ).trim();
+
+        const email = String(
+          this.valueFromImportRow(raw, ["email", "email address"]) || "",
+        ).trim();
+
+        const phone = String(
+          this.valueFromImportRow(raw, [
+            "phone",
+            "mobile",
+            "phone number",
+            "telephone",
+          ]) || "",
+        ).trim();
+
+        if (!name) {
+          throw new BadRequestException("Name is required");
+        }
+
+        const type = this.normalizeContactType(
+          this.valueFromImportRow(raw, ["type", "contact type"]),
+        );
+
+        const status = this.normalizeContactStatus(
+          this.valueFromImportRow(raw, ["status"]),
+        );
+
+        const sourceValue = this.valueFromImportRow(raw, [
+          "source",
+          "lead source",
+        ]);
+
+        const interestValue = this.valueFromImportRow(raw, [
+          "interest",
+          "interests",
+        ]);
+
+        const notesValue = this.valueFromImportRow(raw, [
+          "notes",
+          "note",
+          "description",
+        ]);
+
+        const tags = this.normalizeTags(
+          this.valueFromImportRow(raw, ["tags", "tag", "labels", "label"]),
+        );
+
+        const lastContactValue = this.valueFromImportRow(raw, [
+          "last contact",
+          "lastcontact",
+          "last contact at",
+          "lastcontactat",
+        ]);
+
+        const duplicateValues: any[] = [teamId];
+        const duplicateParts: string[] = [];
+
+        if (email) {
+          duplicateValues.push(email.toLowerCase());
+          duplicateParts.push(
+            `LOWER(COALESCE(email, '')) = $${duplicateValues.length}`,
+          );
+        }
+
+        if (phone) {
+          duplicateValues.push(phone);
+          duplicateParts.push(`phone = $${duplicateValues.length}`);
+        }
+
+        let existingContact: any = null;
+
+        if (duplicateParts.length) {
+          const { rows: duplicateRows } = await this.db.query(
+            `
+            SELECT id
+            FROM contacts
+            WHERE team_id = $1
+              AND (${duplicateParts.join(" OR ")})
+            ORDER BY created_at DESC
+            LIMIT 1
+            `,
+            duplicateValues,
+          );
+
+          existingContact = duplicateRows[0] || null;
+        }
+
+        if (existingContact && duplicateStrategy === "skip") {
+          skipped++;
+
+          await this.db.query(
+            `
+            INSERT INTO crm_import_logs (
+              import_id,
+              row_number,
+              status,
+              message,
+              raw_data
+            )
+            VALUES ($1, $2, 'skipped', 'Duplicate contact skipped', $3)
+            `,
+            [importId, rowNumber, raw],
+          );
+
+          continue;
+        }
+
+        if (existingContact && duplicateStrategy === "update") {
+          await this.db.query(
+            `
+            UPDATE contacts
+            SET
+              name = $1,
+              type = COALESCE($2, type),
+              email = NULLIF($3, ''),
+              phone = NULLIF($4, ''),
+              status = $5,
+              source = NULLIF($6, ''),
+              interest = NULLIF($7, ''),
+              notes = NULLIF($8, ''),
+              tags = $9,
+              last_contact_at = COALESCE($10::timestamptz, last_contact_at),
+              updated_at = NOW()
+            WHERE id = $11
+              AND team_id = $12
+            `,
+            [
+              name,
+              type,
+              email,
+              phone,
+              status,
+              String(sourceValue || "").trim(),
+              String(interestValue || "").trim(),
+              String(notesValue || "").trim(),
+              tags,
+              lastContactValue
+                ? String(lastContactValue).trim()
+                : null,
+              existingContact.id,
+              teamId,
+            ],
+          );
+
+          updated++;
+        } else {
+          await this.db.query(
+            `
+            INSERT INTO contacts (
+              team_id,
+              created_by,
+              name,
+              type,
+              email,
+              phone,
+              interest,
+              status,
+              source,
+              notes,
+              tags,
+              last_contact_at,
+              updated_at
+            )
+            VALUES (
+              $1,$2,$3,$4,NULLIF($5,''),NULLIF($6,''),NULLIF($7,''),
+              $8,NULLIF($9,''),NULLIF($10,''),$11,$12::timestamptz,NOW()
+            )
+            `,
+            [
+              teamId,
+              userId,
+              name,
+              type,
+              email,
+              phone,
+              String(interestValue || "").trim(),
+              status,
+              String(sourceValue || "").trim(),
+              String(notesValue || "").trim(),
+              tags,
+              lastContactValue
+                ? String(lastContactValue).trim()
+                : null,
+            ],
+          );
+
+          imported++;
+        }
+
+        await this.db.query(
+          `
+          INSERT INTO crm_import_logs (
+            import_id,
+            row_number,
+            status,
+            message,
+            raw_data
+          )
+          VALUES ($1, $2, 'success', $3, $4)
+          `,
+          [
+            importId,
+            rowNumber,
+            existingContact ? "Contact updated" : "Contact imported",
+            raw,
+          ],
+        );
+      } catch (error: any) {
+        failed++;
+
+        const message =
+          error?.message ||
+          "Unable to import this contact row";
+
+        batchErrors.push({
+          rowNumber,
+          message,
+        });
+
+        await this.db.query(
+          `
+          INSERT INTO crm_import_logs (
+            import_id,
+            row_number,
+            status,
+            message,
+            raw_data
+          )
+          VALUES ($1, $2, 'failed', $3, $4)
+          `,
+          [importId, rowNumber, message, raw],
+        );
+      }
+    }
+
+    await this.db.query(
+      `
+      UPDATE crm_imports_integrations
+      SET
+        processed_rows = processed_rows + $1,
+        total_rows = total_rows + $1,
+        imported_rows = imported_rows + $2 + $3,
+        failed_rows = failed_rows + $4,
+        status = CASE WHEN $5 THEN 'completed' ELSE 'processing' END,
+        updated_at = NOW()
+      WHERE id = $6
+        AND team_id = $7
+      `,
+      [
+        rows.length,
+        imported,
+        updated,
+        failed,
+        Boolean(body.isLastBatch),
+        importId,
+        teamId,
+      ],
+    );
+
+    return {
+      success: true,
+      importId,
+      batch: {
+        processed: rows.length,
+        imported,
+        updated,
+        skipped,
+        failed,
+        errors: batchErrors.slice(0, 20),
+      },
+      completed: Boolean(body.isLastBatch),
+    };
   }
 
   async getAiInsights(userId: string, userTeamId: string | null, role: string) {
@@ -484,11 +1284,12 @@ export class ContactsService {
         status,
         source,
         notes,
+        tags,
         last_contact_at,
-        updated_at       
+        updated_at
       )
       VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW()
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW()
       )
       RETURNING ${this.returningColumns}
       `,
@@ -506,6 +1307,7 @@ export class ContactsService {
         dto.status || "Cold",
         dto.source || null,
         dto.notes || null,
+        this.normalizeTags(dto.tags),
         dto.lastContactAt || null,
       ],
     );
@@ -581,6 +1383,11 @@ export class ContactsService {
     if (dto.source !== undefined) {
       updates.push(`source = $${paramIndex++}`);
       values.push(dto.source?.trim() || null);
+    }
+
+    if (dto.tags !== undefined) {
+      updates.push(`tags = $${paramIndex++}`);
+      values.push(this.normalizeTags(dto.tags));
     }
 
     if (dto.linkedLeadName !== undefined) {

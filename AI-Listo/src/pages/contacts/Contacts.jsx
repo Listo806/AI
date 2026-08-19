@@ -60,6 +60,22 @@ export default function ContactsRelationshipsPage() {
 
   const [contacts, setContacts] = useState([]);
   const [stats, setStats] = useState([]);
+  const [rawStats, setRawStats] = useState(null);
+  const [filterOptions, setFilterOptions] = useState({
+    statuses: [],
+    sources: [],
+    owners: [],
+    types: [],
+    tags: [],
+  });
+  const [desktopFilters, setDesktopFilters] = useState({
+    status: "",
+    source: "",
+    assignedTo: "",
+    lastActivity: "",
+    type: "",
+    tag: "",
+  });
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -91,6 +107,13 @@ export default function ContactsRelationshipsPage() {
   const [desktopDetailTab, setDesktopDetailTab] = useState("overview");
   const [desktopPage, setDesktopPage] = useState(1);
   const [desktopPerPage, setDesktopPerPage] = useState(25);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importRows, setImportRows] = useState([]);
+  const [importFileName, setImportFileName] = useState("");
+  const [importDuplicateStrategy, setImportDuplicateStrategy] = useState("skip");
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+
 
 
   const [contactMessages, setContactMessages] = useState([]);
@@ -281,53 +304,75 @@ export default function ContactsRelationshipsPage() {
     }
   };
 
+  const formatTrend = (value) => {
+    const number = Number(value || 0);
+    if (!Number.isFinite(number) || number === 0) return "0%";
+    return `${number > 0 ? "+" : ""}${number}%`;
+  };
+
   const fetchStats = async () => {
     try {
       const response = await apiClient.request("/contacts/stats", {
         method: "GET",
       });
       const data = response?.data || response || {};
+
+      setRawStats(data);
+
       setStats([
         {
           label: t("contacts.statTotalContacts"),
-          value: data.totalContacts || 0,
-          sub: t("contacts.statAllRelationships"),
+          value: Number(data.totalContacts || 0),
+          sub: t("contacts.last30Days"),
           icon: Users,
+          variant: "total",
+          trend: formatTrend(data.totalContactsTrend),
+          series: data?.series?.totalContacts || [],
         },
         {
-          label: t("contacts.statActiveBuyers"),
-          value: data.activeBuyers || 0,
-          sub: t("contacts.statLookingNow"),
+          label: t("contacts.statNewContacts"),
+          value: Number(data.newContacts || 0),
+          sub: t("contacts.last30Days"),
+          icon: UserPlus,
+          variant: "new",
+          trend: formatTrend(data.newContactsTrend),
+          series: data?.series?.newContacts || [],
+        },
+        {
+          label: t("contacts.statActiveCustomers"),
+          value: Number(data.activeCustomers || 0),
+          sub: t("contacts.last30Days"),
           icon: UserCheck,
-          variant: "buyers",
+          variant: "active",
+          trend: formatTrend(data.activeCustomersTrend),
+          series: data?.series?.activeCustomers || [],
         },
         {
-          label: t("contacts.statActiveSellers"),
-          value: data.activeSellers || 0,
-          sub: t("contacts.statSellingProperties"),
-          icon: Home,
-          variant: "sellers",
+          label: t("contacts.statOpenOpportunities"),
+          value: Number(data.openOpportunities || 0),
+          sub: t("contacts.last30Days"),
+          icon: Target,
+          variant: "opportunities",
+          trend: formatTrend(data.openOpportunitiesTrend),
+          series: data?.series?.openOpportunities || [],
         },
         {
-          label: t("contacts.statActiveRenters"),
-          value: data.activeRenters || 0,
-          sub: t("contacts.statRentalDemand"),
-          icon: Handshake,
-          variant: "renters",
+          label: t("contacts.statNeedsFollowUp"),
+          value: Number(data.needsFollowUp || 0),
+          sub: t("contacts.last30Days"),
+          icon: Bell,
+          variant: "followup",
+          trend: formatTrend(data.needsFollowUpTrend),
+          series: data?.series?.needsFollowUp || [],
         },
         {
-          label: t("contacts.statActiveDevelopers"),
-          value: data.activeDevelopers || 0,
-          sub: t("contacts.statDeveloperNetwork"),
-          icon: Building2,
-          variant: "developers",
-        },
-        {
-          label: t("contacts.statAiScore"),
-          value: `${data.aiEngagement || 0}%`,
-          sub: t("contacts.statAiRelationshipScore"),
-          icon: Bot,
+          label: t("contacts.statAiEngagement"),
+          value: `${Math.round(Number(data.aiEngagement || 0))}%`,
+          sub: t("contacts.last30Days"),
+          icon: Star,
           variant: "ai",
+          trend: formatTrend(data.aiEngagementTrend),
+          series: data?.series?.aiEngagement || [],
         },
       ]);
     } catch (err) {
@@ -335,9 +380,74 @@ export default function ContactsRelationshipsPage() {
     }
   };
 
+  const fetchFilterOptions = async () => {
+    try {
+      const response = await apiClient.request("/contacts/filter-options", {
+        method: "GET",
+      });
+      const data = response?.data || response || {};
+
+      setFilterOptions({
+        statuses: Array.isArray(data.statuses) ? data.statuses : [],
+        sources: Array.isArray(data.sources) ? data.sources : [],
+        owners: Array.isArray(data.owners) ? data.owners : [],
+        types: Array.isArray(data.types) ? data.types : [],
+        tags: Array.isArray(data.tags) ? data.tags : [],
+      });
+    } catch (err) {
+      console.error("Fetch contact filter options error:", err);
+    }
+  };
+
+  const buildContactQuery = (overrides = {}) => {
+    const next = {
+      ...desktopFilters,
+      ...overrides,
+    };
+
+    const params = new URLSearchParams();
+
+    if (search.trim()) params.set("search", search.trim());
+    if (next.status) params.set("status", next.status);
+    if (next.source) params.set("source", next.source);
+    if (next.assignedTo) params.set("assignedTo", next.assignedTo);
+    if (next.lastActivity) params.set("lastActivity", next.lastActivity);
+    if (next.type) params.set("type", next.type);
+    if (next.tag) params.set("tag", next.tag);
+
+    return params.toString() ? `?${params.toString()}` : "";
+  };
+
+  const updateDesktopFilter = (key, value) => {
+    const next = {
+      ...desktopFilters,
+      [key]: value,
+    };
+
+    setDesktopFilters(next);
+    setDesktopPage(1);
+    fetchContacts(buildContactQuery(next));
+  };
+
+  const resetDesktopFilters = () => {
+    const reset = {
+      status: "",
+      source: "",
+      assignedTo: "",
+      lastActivity: "",
+      type: "",
+      tag: "",
+    };
+
+    setDesktopFilters(reset);
+    setDesktopPage(1);
+    fetchContacts(search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "");
+  };
+
   useEffect(() => {
     fetchContacts();
     fetchStats();
+    fetchFilterOptions();
   }, []);
 
   useEffect(() => {
@@ -360,11 +470,18 @@ export default function ContactsRelationshipsPage() {
     const value = e.target.value;
     setDesktopPage(1);
     setSearch(value);
-    if (!value) {
-      fetchContacts();
-      return;
-    }
-    fetchContacts(`?search=${encodeURIComponent(value)}`);
+
+    const params = new URLSearchParams();
+
+    if (value.trim()) params.set("search", value.trim());
+    if (desktopFilters.status) params.set("status", desktopFilters.status);
+    if (desktopFilters.source) params.set("source", desktopFilters.source);
+    if (desktopFilters.assignedTo) params.set("assignedTo", desktopFilters.assignedTo);
+    if (desktopFilters.lastActivity) params.set("lastActivity", desktopFilters.lastActivity);
+    if (desktopFilters.type) params.set("type", desktopFilters.type);
+    if (desktopFilters.tag) params.set("tag", desktopFilters.tag);
+
+    fetchContacts(params.toString() ? `?${params.toString()}` : "");
   };
 
   const applyFilter = (query) => {
@@ -1132,6 +1249,176 @@ export default function ContactsRelationshipsPage() {
     </>
   );
 
+
+
+  const parseCsvText = (text) => {
+    const rows = [];
+    let row = [];
+    let value = "";
+    let quoted = false;
+
+    for (let index = 0; index < text.length; index++) {
+      const char = text[index];
+      const next = text[index + 1];
+
+      if (char === '"') {
+        if (quoted && next === '"') {
+          value += '"';
+          index++;
+        } else {
+          quoted = !quoted;
+        }
+        continue;
+      }
+
+      if (char === "," && !quoted) {
+        row.push(value);
+        value = "";
+        continue;
+      }
+
+      if ((char === "\n" || char === "\r") && !quoted) {
+        if (char === "\r" && next === "\n") index++;
+        row.push(value);
+        value = "";
+
+        if (row.some((cell) => String(cell || "").trim() !== "")) {
+          rows.push(row);
+        }
+
+        row = [];
+        continue;
+      }
+
+      value += char;
+    }
+
+    row.push(value);
+    if (row.some((cell) => String(cell || "").trim() !== "")) {
+      rows.push(row);
+    }
+
+    if (rows.length < 2) return [];
+
+    const headers = rows[0].map((header) =>
+      String(header || "").replace(/^\uFEFF/, "").trim(),
+    );
+
+    return rows.slice(1).map((cells, index) => {
+      const item = {
+        __rowNumber: index + 2,
+      };
+
+      headers.forEach((header, cellIndex) => {
+        if (!header) return;
+        item[header] = String(cells[cellIndex] ?? "").trim();
+      });
+
+      return item;
+    });
+  };
+
+  const handleImportFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      showToast(t("contacts.importCsvOnly"), "error");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(t("contacts.importFileTooLarge"), "error");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const parsed = parseCsvText(text);
+
+      if (!parsed.length) {
+        showToast(t("contacts.importNoRows"), "error");
+        event.target.value = "";
+        return;
+      }
+
+      setImportFileName(file.name);
+      setImportRows(parsed);
+      setImportResult(null);
+    } catch (error) {
+      console.error("Read contacts CSV error:", error);
+      showToast(t("contacts.importReadFailed"), "error");
+    }
+  };
+
+  const runContactsImport = async () => {
+    if (!importRows.length || importLoading) return;
+
+    setImportLoading(true);
+    setImportResult(null);
+
+    try {
+      const batchSize = 100;
+      const totals = {
+        processed: 0,
+        imported: 0,
+        updated: 0,
+        skipped: 0,
+        failed: 0,
+        errors: [],
+      };
+
+      let importId = null;
+
+      for (let start = 0; start < importRows.length; start += batchSize) {
+        const rows = importRows.slice(start, start + batchSize);
+        const isFirstBatch = start === 0;
+        const isLastBatch = start + batchSize >= importRows.length;
+
+        const response = await apiClient.request("/contacts/import/batch", {
+          method: "POST",
+          body: JSON.stringify({
+            importId,
+            fileName: importFileName,
+            rows,
+            duplicateStrategy: importDuplicateStrategy,
+            isFirstBatch,
+            isLastBatch,
+          }),
+        });
+
+        const data = response?.data || response || {};
+        importId = data.importId || importId;
+
+        totals.processed += Number(data?.batch?.processed || 0);
+        totals.imported += Number(data?.batch?.imported || 0);
+        totals.updated += Number(data?.batch?.updated || 0);
+        totals.skipped += Number(data?.batch?.skipped || 0);
+        totals.failed += Number(data?.batch?.failed || 0);
+
+        if (Array.isArray(data?.batch?.errors)) {
+          totals.errors.push(...data.batch.errors);
+        }
+      }
+
+      setImportResult(totals);
+
+      await Promise.all([
+        fetchContacts(buildContactQuery()),
+        fetchStats(),
+        fetchFilterOptions(),
+      ]);
+
+      showToast(t("contacts.importCompleted"), "success");
+    } catch (error) {
+      console.error("Contacts import error:", error);
+      showToast(error?.message || t("contacts.importFailed"), "error");
+    } finally {
+      setImportLoading(false);
+    }
+  };
 
   const desktopTotalContacts = contacts.length;
   const desktopTotalPages = Math.max(
@@ -2469,11 +2756,12 @@ export default function ContactsRelationshipsPage() {
                 return (
                   <KPIBox
                     key={index}
-                    icon={<Icon size={26} />}
+                    icon={<Icon size={24} />}
                     title={stat.label}
                     value={stat.value}
                     sub={stat.sub}
-                    trend={stat.variant === "sellers" ? "0%" : "+12%"}
+                    trend={stat.trend}
+                    series={stat.series}
                     variant={stat.variant}
                   />
                 );
@@ -2481,7 +2769,7 @@ export default function ContactsRelationshipsPage() {
             </div>
 
             {/* FILTER BAR */}
-            <div className="filter-bar">
+            <div className="filter-bar contacts-desktop-filter-bar">
               <div className="filter-left">
                 <div className="search-box">
                   <Search size={18} />
@@ -2492,38 +2780,146 @@ export default function ContactsRelationshipsPage() {
                   />
                 </div>
 
-                {[
-                  { label: t("contacts.filterAll"), query: "" },
-                  { label: t("contacts.filterBuyers"), query: "?type=Buyer" },
-                  { label: t("contacts.filterSellers"), query: "?type=Seller" },
-                  { label: t("contacts.filterDevelopers"), query: "?type=Developer" },
-                  { label: t("contacts.filterRenters"), query: "?type=Renter" },
-                ].map((item) => (
-                  <button
-                    key={item.label}
-                    className="filter-btn"
-                    onClick={() => applyFilter(item.query)}
+                <button
+                  type="button"
+                  className={`filter-btn ${
+                    !Object.values(desktopFilters).some(Boolean) ? "selected" : ""
+                  }`}
+                  onClick={resetDesktopFilters}
+                >
+                  {t("contacts.filterAll")}
+                </button>
+
+                <label className="filter-select">
+                  <select
+                    value={desktopFilters.status}
+                    onChange={(event) =>
+                      updateDesktopFilter("status", event.target.value)
+                    }
                   >
-                    {item.label}
-                  </button>
-                ))}
-                <div>
+                    <option value="">{t("contacts.filterStatus")}</option>
+                    {filterOptions.statuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown />
+                </label>
+
+                <label className="filter-select">
+                  <select
+                    value={desktopFilters.source}
+                    onChange={(event) =>
+                      updateDesktopFilter("source", event.target.value)
+                    }
+                  >
+                    <option value="">{t("contacts.filterSource")}</option>
+                    {filterOptions.sources.map((source) => (
+                      <option key={source} value={source}>
+                        {source}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown />
+                </label>
+
+                <label className="filter-select">
+                  <select
+                    value={desktopFilters.assignedTo}
+                    onChange={(event) =>
+                      updateDesktopFilter("assignedTo", event.target.value)
+                    }
+                  >
+                    <option value="">{t("contacts.filterOwner")}</option>
+                    {filterOptions.owners.map((owner) => (
+                      <option key={owner.id} value={owner.id}>
+                        {owner.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown />
+                </label>
+
+                <label className="filter-select">
+                  <select
+                    value={desktopFilters.tag}
+                    onChange={(event) =>
+                      updateDesktopFilter("tag", event.target.value)
+                    }
+                  >
+                    <option value="">{t("contacts.filterTags")}</option>
+                    {filterOptions.tags.map((tag) => (
+                      <option key={tag} value={tag}>
+                        {tag}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown />
+                </label>
+
+                <label className="filter-select filter-last-activity">
+                  <select
+                    value={desktopFilters.lastActivity}
+                    onChange={(event) =>
+                      updateDesktopFilter("lastActivity", event.target.value)
+                    }
+                  >
+                    <option value="">{t("contacts.filterLastActivity")}</option>
+                    <option value="today">{t("common.today")}</option>
+                    <option value="7d">{t("contacts.filterLast7Days")}</option>
+                    <option value="30d">{t("contacts.last30Days")}</option>
+                  </select>
+                  <ChevronDown />
+                </label>
+
+                <label className="filter-select more-filters">
+                  <Filter size={14} />
+                  <select
+                    value={desktopFilters.type}
+                    onChange={(event) =>
+                      updateDesktopFilter("type", event.target.value)
+                    }
+                  >
+                    <option value="">{t("contacts.moreFilters")}</option>
+                    {filterOptions.types.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown />
+                </label>
+
+                <div className="filter-actions">
                   <button
                     className="action-btn insights"
                     onClick={loadAiInsights}
                   >
                     <Sparkles /> {t("contacts.aiInsights")}
                   </button>
-                  <button className="action-btn runai" onClick={runAiReview}>
+
+                  <button
+                    className="action-btn runai"
+                    onClick={runAiReview}
+                  >
                     <Bot /> {t("contacts.runAiReview")}
                   </button>
+
                   <button
                     type="button"
                     className="action-btn import"
-                    onClick={() => showToast(t("contacts.importReady"), "success")}
+                    onClick={() => {
+                      setImportRows([]);
+                      setImportFileName("");
+                      setImportResult(null);
+                      setImportDuplicateStrategy("skip");
+                      setShowImportModal(true);
+                    }}
                   >
                     <Download /> {t("contacts.import")}
                   </button>
+
                   <button
                     className="primary-btn"
                     onClick={() => setShowCreateModal(true)}
@@ -3332,6 +3728,168 @@ export default function ContactsRelationshipsPage() {
           )}
           <Modals />
           {/* TOAST */}
+
+          {showImportModal && (
+            <div className="modal-overlay contacts-import-overlay">
+              <div
+                className="modal-content contacts-import-modal"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="contacts-import-head">
+                  <div>
+                    <h3>{t("contacts.importContactsTitle")}</h3>
+                    <p>{t("contacts.importContactsSubtitle")}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="contacts-import-close"
+                    onClick={() => setShowImportModal(false)}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="contacts-import-upload">
+                  <Download />
+                  <div>
+                    <strong>
+                      {importFileName || t("contacts.importChooseCsv")}
+                    </strong>
+                    <span>{t("contacts.importSupportedColumns")}</span>
+                  </div>
+
+                  <label>
+                    {t("contacts.importBrowse")}
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      onChange={handleImportFile}
+                    />
+                  </label>
+                </div>
+
+                <div className="contacts-import-options">
+                  <label>
+                    <span>{t("contacts.importDuplicateHandling")}</span>
+                    <select
+                      value={importDuplicateStrategy}
+                      onChange={(event) =>
+                        setImportDuplicateStrategy(event.target.value)
+                      }
+                    >
+                      <option value="skip">
+                        {t("contacts.importSkipDuplicates")}
+                      </option>
+                      <option value="update">
+                        {t("contacts.importUpdateDuplicates")}
+                      </option>
+                    </select>
+                  </label>
+
+                  <div className="contacts-import-count">
+                    <strong>{importRows.length}</strong>
+                    <span>{t("contacts.importRowsReady")}</span>
+                  </div>
+                </div>
+
+                {importRows.length > 0 && (
+                  <div className="contacts-import-preview">
+                    <div className="contacts-import-preview-title">
+                      <strong>{t("contacts.importPreview")}</strong>
+                      <span>{t("contacts.importPreviewHint")}</span>
+                    </div>
+
+                    <div className="contacts-import-preview-scroll">
+                      <table>
+                        <thead>
+                          <tr>
+                            {Object.keys(importRows[0])
+                              .filter((key) => key !== "__rowNumber")
+                              .slice(0, 6)
+                              .map((key) => (
+                                <th key={key}>{key}</th>
+                              ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importRows.slice(0, 5).map((row) => (
+                            <tr key={row.__rowNumber}>
+                              {Object.keys(importRows[0])
+                                .filter((key) => key !== "__rowNumber")
+                                .slice(0, 6)
+                                .map((key) => (
+                                  <td key={key}>{row[key] || "—"}</td>
+                                ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {importResult && (
+                  <div className="contacts-import-result">
+                    <div>
+                      <strong>{importResult.imported}</strong>
+                      <span>{t("contacts.importImported")}</span>
+                    </div>
+                    <div>
+                      <strong>{importResult.updated}</strong>
+                      <span>{t("contacts.importUpdated")}</span>
+                    </div>
+                    <div>
+                      <strong>{importResult.skipped}</strong>
+                      <span>{t("contacts.importSkipped")}</span>
+                    </div>
+                    <div>
+                      <strong>{importResult.failed}</strong>
+                      <span>{t("contacts.importFailedRows")}</span>
+                    </div>
+                  </div>
+                )}
+
+                {importResult?.errors?.length > 0 && (
+                  <div className="contacts-import-errors">
+                    {importResult.errors.slice(0, 8).map((item) => (
+                      <div key={`${item.rowNumber}-${item.message}`}>
+                        <strong>
+                          {t("contacts.importRow", {
+                            row: item.rowNumber,
+                          })}
+                        </strong>
+                        <span>{item.message}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="contacts-import-actions">
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={() => setShowImportModal(false)}
+                    disabled={importLoading}
+                  >
+                    {t("common.cancel")}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="primary-btn"
+                    onClick={runContactsImport}
+                    disabled={!importRows.length || importLoading}
+                  >
+                    {importLoading
+                      ? t("contacts.importing")
+                      : t("contacts.importContactsAction")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {toast && (
             <div
               style={{
@@ -3359,46 +3917,77 @@ export default function ContactsRelationshipsPage() {
   );
 }
 
-function KPIBox({ icon, title, value, sub, trend, variant }) {
+function KPIBox({ icon, title, value, sub, trend, series = [], variant }) {
   const { t } = useTranslation();
+
+  const buildSparklinePath = (values = []) => {
+    const clean = (Array.isArray(values) ? values : [])
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value));
+
+    if (!clean.length) return "M0 24 L180 24";
+
+    const min = Math.min(...clean);
+    const max = Math.max(...clean);
+    const range = Math.max(1, max - min);
+    const width = 180;
+    const height = 34;
+    const top = 4;
+
+    if (clean.length === 1) {
+      const y = top + height / 2;
+      return `M0 ${y} L180 ${y}`;
+    }
+
+    return clean
+      .map((number, index) => {
+        const x = (index / (clean.length - 1)) * width;
+        const y = top + height - ((number - min) / range) * height;
+        return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+      })
+      .join(" ");
+  };
+
+  const trendNumber = Number(String(trend || "0").replace("%", ""));
+  const trendClass =
+    trendNumber > 0 ? "positive" : trendNumber < 0 ? "negative" : "neutral";
+
   return (
     <div className={`kpi-box ${variant}`}>
       <div className="kpi-top">
         <div className="kpi-left">
           <div className="kpi-icon">{icon}</div>
+
           <div className="kpi-content">
             <div className="kpi-title">{title}</div>
+
             <div className="kpi-value-row">
               <div className="kpi-value">{value}</div>
-              <div className={`kpi-trend ${trend === "0%" ? "neutral" : ""}`}>
-                {trend}
+              <div className={`kpi-trend ${trendClass}`}>
+                {trendNumber > 0 ? "↑ " : trendNumber < 0 ? "↓ " : ""}
+                {trend || "0%"}
               </div>
             </div>
           </div>
         </div>
       </div>
+
       <div className="kpi-chart_wrap">
         <div className="kpi-chart">
           <svg viewBox="0 0 180 42" preserveAspectRatio="none">
             <path
-              d={
-                variant === "sellers"
-                  ? "M0 24 L20 24 L40 24 L60 24 L80 24 L100 24 L120 24 L140 24 L160 24 L180 24"
-                  : variant === "ai"
-                    ? "M0 32 L20 28 L40 26 L60 18 L80 24 L100 16 L120 12 L140 20 L160 10 L180 6"
-                    : variant === "buyers"
-                      ? "M0 30 L20 24 L40 26 L60 18 L80 22 L100 16 L120 8 L140 14 L160 10 L180 4"
-                      : "M0 34 L20 30 L40 32 L60 24 L80 28 L100 18 L120 8 L140 14 L160 10 L180 4"
-              }
+              d={buildSparklinePath(series)}
               fill="none"
               stroke="currentColor"
               strokeWidth="3"
               strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
         </div>
+
         <div className="kpi-bottom">
-          <span>{t("contacts.last30Days")}</span>
+          <span>{t("contacts.vsLast30Days")}</span>
         </div>
       </div>
     </div>

@@ -55,6 +55,16 @@ export class ContactsController {
     );
   }
 
+
+  @Get("filter-options")
+  async getFilterOptions(@CurrentUser() user: any) {
+    return this.contactsService.getFilterOptions(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? "owner",
+    );
+  }
+
   // ======================================================
   // AI INSIGHTS
   // ======================================================
@@ -79,6 +89,28 @@ export class ContactsController {
   @RequireFeature("advancedAiAgent")
   async runAiReview(@CurrentUser() user: any) {
     return this.contactsService.runAiReview(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? "owner",
+    );
+  }
+
+
+  @Post("import/batch")
+  async importBatch(
+    @Body()
+    body: {
+      importId?: string;
+      fileName?: string;
+      rows: Record<string, any>[];
+      duplicateStrategy?: "skip" | "update";
+      isFirstBatch?: boolean;
+      isLastBatch?: boolean;
+    },
+    @CurrentUser() user: any,
+  ) {
+    return this.contactsService.importBatch(
+      body,
       user.id,
       user.teamId ?? null,
       user.role ?? "owner",
@@ -123,6 +155,10 @@ export class ContactsController {
     @Query("search") search?: string,
     @Query("type") type?: string,
     @Query("status") status?: string,
+    @Query("source") source?: string,
+    @Query("assignedTo") assignedTo?: string,
+    @Query("lastActivity") lastActivity?: string,
+    @Query("tag") tag?: string,
 
     @Query("page") page?: string,
     @Query("limit") limit?: string,
@@ -135,6 +171,10 @@ export class ContactsController {
         search,
         type,
         status,
+        source,
+        assignedTo,
+        lastActivity,
+        tag,
         page: Number(page || 1),
         limit: Number(limit || 20),
       },
