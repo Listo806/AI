@@ -37,6 +37,9 @@ export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
   { name: 'free_team', label: 'Free Plan — Invite Your Team', category: 'Free plan', description: 'Invite teammates to collaborate.' },
   { name: 'free_upgrade', label: 'Free Plan — Ready to Upgrade', category: 'Free plan', description: 'Upgrade path from the Free plan.' },
 
+  // ── Checkout recovery ──
+  { name: 'checkout_recovery', label: 'Checkout — Complete Your Setup', category: 'Checkout', description: 'Paid plan selected but not paid — resume checkout for their plan.' },
+
   // ── Billing ──
   { name: 'payment_failed', label: 'Payment Failed', category: 'Billing', description: 'A payment or renewal attempt failed (retry link).' },
   { name: 'subscription_canceled', label: 'Subscription Canceled', category: 'Billing', description: 'Subscription canceled (reactivate link).' },

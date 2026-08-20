@@ -62,6 +62,16 @@ export class SignupLifecycleService {
     );
   }
 
+  // Checkout-pending recovery email (paid plan selected, unpaid) behind its own
+  // flag (default OFF).
+  private checkoutRecoveryEnabled(): boolean {
+    return (
+      String(this.config.get('CHECKOUT_RECOVERY_EMAILS_ENABLED') || '')
+        .trim()
+        .toLowerCase() === 'true'
+    );
+  }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async sweepAbandonedSignups(): Promise<void> {
     if (!this.enabled()) return; // hard off by default
@@ -105,6 +115,18 @@ export class SignupLifecycleService {
       await this.mailer.sendOnboardingDue();
     } catch (err: any) {
       this.logger.error(`onboarding sweep failed: ${err?.message}`);
+    }
+  }
+
+  // Checkout-recovery: send due emails, re-checking payment per row (paid users
+  // are canceled, never sent). Hard off unless CHECKOUT_RECOVERY_EMAILS_ENABLED.
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async sweepCheckoutRecovery(): Promise<void> {
+    if (!this.checkoutRecoveryEnabled()) return; // hard off by default
+    try {
+      await this.mailer.sendCheckoutRecoveryDue();
+    } catch (err: any) {
+      this.logger.error(`checkout-recovery sweep failed: ${err?.message}`);
     }
   }
 }

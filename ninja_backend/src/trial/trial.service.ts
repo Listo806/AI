@@ -257,6 +257,13 @@ export class TrialService {
         } catch (_e) {
           /* non-fatal */
         }
+        // Paid plan selected at signup but not yet paid -> checkout-pending
+        // recovery (re-checked before sending; canceled the moment they pay).
+        try {
+          await this.mailer.scheduleCheckoutRecovery(newUserId, email, lang);
+        } catch (_e) {
+          /* non-fatal */
+        }
       } else if (noPlan) {
         try {
           await this.mailer.scheduleRecoveryEmail(newUserId, email, lang);
@@ -350,6 +357,24 @@ export class TrialService {
         WHERE id = $1`,
       [userId, legacyKey, billingCycle],
     );
+    // Paid plan selected (checkout pending) -> schedule the checkout-recovery
+    // email. The worker re-checks payment before sending, and a successful
+    // payment cancels the queued row, so a paying customer never receives it.
+    try {
+      const { rows: u } = await this.db.query(
+        `SELECT email, preferred_language FROM users WHERE id = $1`,
+        [userId],
+      );
+      if (u[0]?.email) {
+        await this.mailer.scheduleCheckoutRecovery(
+          userId,
+          u[0].email,
+          u[0].preferred_language || 'en',
+        );
+      }
+    } catch (_e) {
+      /* non-fatal */
+    }
     return { success: true, plan: legacyKey, billingCycle, free: false };
   }
 

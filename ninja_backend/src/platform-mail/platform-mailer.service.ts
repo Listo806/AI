@@ -988,6 +988,182 @@ export class PlatformMailerService {
     }
   }
 
+  // ---- Checkout-pending recovery (paid plan selected, payment not completed) ----
+  // A dedicated recovery email for customers who start a paid-plan checkout but
+  // leave without paying. Scheduled a short delay after the paid plan is selected;
+  // the worker ALWAYS re-checks payment and cancels if the account has since paid,
+  // so we never tell a paying customer to "finish checkout". Behind
+  // CHECKOUT_RECOVERY_EMAILS_ENABLED (default OFF).
+
+  // Resume-checkout link for the customer's selected plan (matches the frontend
+  // /checkout?plan=&billing=&source= route), so the CTA drops them straight back
+  // into the right checkout with minimal friction.
+  private checkoutUrl(plan?: string | null, billing?: string | null): string {
+    const base =
+      this.config.get('CHECKOUT_RECOVERY_CTA_URL') || `${this.appUrl()}/checkout`;
+    const p = String(plan || '').trim();
+    const b = ['monthly', 'annual'].includes(String(billing || ''))
+      ? String(billing)
+      : 'monthly';
+    const qs: string[] = [];
+    if (p) qs.push(`plan=${encodeURIComponent(p)}`);
+    qs.push(`billing=${encodeURIComponent(b)}`);
+    qs.push('source=recovery');
+    return `${base}?${qs.join('&')}`;
+  }
+
+  private async checkoutRecoveryVars(user: {
+    id: string;
+    email: string;
+    lang: string;
+    name: string;
+  }): Promise<TemplateVars> {
+    const first = user.name ? String(user.name).trim().split(/\s+/)[0] : null;
+    let plan: string | null = null;
+    let billing: string | null = null;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT selected_plan, billing_cycle FROM users WHERE id = $1`,
+        [user.id],
+      );
+      plan = rows[0]?.selected_plan || null;
+      billing = rows[0]?.billing_cycle || null;
+    } catch {
+      /* best-effort: fall back to a plan-less checkout link */
+    }
+    const url = this.checkoutUrl(plan, billing);
+    const tok = await this.getOrCreateUnsubToken(user.id);
+    const vars: TemplateVars = {
+      name: first,
+      ctaUrl: url,
+      checkoutUrl: url,
+      appUrl: `${this.appUrl()}/dashboard/home`,
+      supportEmail: this.supportEmail(),
+    };
+    if (tok) vars.unsubscribeUrl = this.unsubUrl(tok);
+    return vars;
+  }
+
+  // Queue ONE checkout-recovery email ~30 min after a paid plan is selected.
+  // Idempotent per user (auto rows only), so re-selecting a plan won't duplicate.
+  async scheduleCheckoutRecovery(
+    userId: string,
+    email: string,
+    lang?: string,
+  ): Promise<void> {
+    if (!userId || !email) return;
+    await this.ensureSchema();
+    try {
+      await this.db.query(
+        `INSERT INTO email_log
+           (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
+         SELECT $1, $2, 'checkout_recovery', $3, 'scheduled', NOW() + INTERVAL '30 minutes', gen_random_uuid(), NOW()
+          WHERE NOT EXISTS (
+            SELECT 1 FROM email_log
+             WHERE user_id = $1 AND template = 'checkout_recovery'
+               AND send_type = 'auto' AND status IN ('scheduled','sending','sent'))`,
+        [userId, email, String(lang || 'en').slice(0, 5)],
+      );
+    } catch (err: any) {
+      this.logger.error(`scheduleCheckoutRecovery failed: ${err?.message}`);
+    }
+  }
+
+  // Cron worker: send due checkout-recovery emails, re-checking payment per row.
+  // A customer who has since paid (or hard-bounced) is canceled, never sent.
+  async sendCheckoutRecoveryDue(): Promise<void> {
+    await this.ensureSchema();
+    let due: any[] = [];
+    try {
+      const { rows } = await this.db.query(
+        `SELECT el.id, el.track_token, el.language, el.to_email, el.user_id,
+                u.name, u.payment_status, u.checkout_status, u.selected_plan,
+                u.billing_cycle, u.welcome_email_sent_at, u.email_bounced_at
+           FROM email_log el
+           JOIN users u ON u.id = el.user_id
+          WHERE el.template = 'checkout_recovery' AND el.send_type = 'auto'
+            AND el.status = 'scheduled' AND el.scheduled_at <= NOW()
+          ORDER BY el.scheduled_at ASC
+          LIMIT 200`,
+      );
+      due = rows;
+    } catch (err: any) {
+      this.logger.error(`sendCheckoutRecoveryDue query failed: ${err?.message}`);
+      return;
+    }
+
+    for (const r of due) {
+      const ps = String(r.payment_status || '').toLowerCase();
+      const cs = String(r.checkout_status || '').toLowerCase();
+      // ALWAYS re-check: never send "finish your checkout" to someone who paid.
+      const paid =
+        ps === 'active' ||
+        ps === 'paid' ||
+        cs === 'paid' ||
+        !!r.welcome_email_sent_at;
+      if (paid || r.email_bounced_at) {
+        await this.db.query(
+          `UPDATE email_log SET status = 'canceled' WHERE id = $1`,
+          [r.id],
+        );
+        continue;
+      }
+      const claim = await this.db.query(
+        `UPDATE email_log SET status = 'sending'
+          WHERE id = $1 AND status = 'scheduled' RETURNING id`,
+        [r.id],
+      );
+      if (!claim.rows.length) continue;
+
+      const first = r.name ? String(r.name).trim().split(/\s+/)[0] : null;
+      const url = this.checkoutUrl(r.selected_plan, r.billing_cycle);
+      const tok = await this.getOrCreateUnsubToken(r.user_id);
+      const vars: TemplateVars = {
+        name: first,
+        ctaUrl: url,
+        checkoutUrl: url,
+        appUrl: `${this.appUrl()}/dashboard/home`,
+        supportEmail: this.supportEmail(),
+      };
+      if (tok) vars.unsubscribeUrl = this.unsubUrl(tok);
+      const rendered = renderTemplate('checkout_recovery', r.language, vars);
+      const token = r.track_token || crypto.randomUUID();
+      const html = this.htmlFor(rendered.html, token);
+      const result = await this.deliver({
+        to: r.to_email,
+        subject: rendered.subject,
+        html,
+        text: rendered.text,
+        token,
+      });
+      const status = result.ok
+        ? 'sent'
+        : result.error === 'smtp_not_configured'
+          ? 'skipped'
+          : 'error';
+      await this.db.query(
+        `UPDATE email_log
+            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+          WHERE id = $1`,
+        [
+          r.id,
+          status,
+          rendered.subject,
+          result.provider,
+          result.ok ? null : result.error?.slice(0, 500),
+          token,
+        ],
+      );
+      if (status === 'skipped') {
+        await this.db.query(
+          `UPDATE email_log SET status = 'scheduled' WHERE id = $1`,
+          [r.id],
+        );
+      }
+    }
+  }
+
   // ---- New client-approved onboarding sequence (Day 0/1/2/4/6/9/12) ----
   // The 7 approved designs (onb_* templates). Replaces the older Free-onboarding
   // sequence for new Free signups (so there is exactly one welcome), reuses the
@@ -1598,6 +1774,9 @@ export class PlatformMailerService {
   ): Promise<TemplateVars> {
     const name = user.name;
     const first = name ? String(name).trim().split(/\s+/)[0] : null;
+    if (template === 'checkout_recovery') {
+      return this.checkoutRecoveryVars(user);
+    }
     if (template.startsWith('onb_')) {
       const tok = await this.getOrCreateUnsubToken(user.id);
       return this.onboardingVars(first, tok ? this.unsubUrl(tok) : null);
