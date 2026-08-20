@@ -43,6 +43,9 @@ import {
   createCustomer,
   updateCustomerInfo,
   sendCustomerEmail,
+  getEmailTemplateCatalog,
+  previewCustomerTemplateEmail,
+  sendCustomerTemplateEmail,
   getCustomerTeam,
   addCustomerTeamMember,
   changeCustomerMemberRole,
@@ -373,6 +376,7 @@ export default function AdminCustomers() {
   const [showAdd, setShowAdd] = useState(false);
   const [changePlanFor, setChangePlanFor] = useState(null);
   const [sendEmailFor, setSendEmailFor] = useState(null);
+  const [templateEmailFor, setTemplateEmailFor] = useState(null);
   const [showPlans, setShowPlans] = useState(false);
   const [importing, setImporting] = useState(false);
   const [bulkMenu, setBulkMenu] = useState(false);
@@ -841,11 +845,13 @@ export default function AdminCustomers() {
           onChanged={load}
           onChangePlan={(c) => setChangePlanFor(c)}
           onSendEmail={(c) => setSendEmailFor(c)}
+          onSendTemplateEmail={(c) => setTemplateEmailFor(c)}
         />
       )}
 
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />}
       {sendEmailFor && <SendEmailModal customer={sendEmailFor} onClose={() => setSendEmailFor(null)} />}
+      {templateEmailFor && <SendTemplateEmailModal customer={templateEmailFor} onClose={() => setTemplateEmailFor(null)} />}
       {changePlanFor && <ChangePlanModal customer={changePlanFor} onClose={() => setChangePlanFor(null)} onSuccess={load} />}
       {showPlans && <ManagePlansModal onClose={() => setShowPlans(false)} />}
     </div>
@@ -883,7 +889,7 @@ function PayStatusBadge({ status }) {
   return <span className={`cxc-badge ${ok ? "active" : "registered"}`}>{ok ? "Payment succeeded" : (status || "—")}</span>;
 }
 
-function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan, onSendEmail }) {
+function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan, onSendEmail, onSendTemplateEmail }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState("");
@@ -1049,6 +1055,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                           <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}><CreditCard size={12} /> Update Payment Method</button>
                           <button className="cxc-btn cxc-btn-sm" onClick={addSeat}><Users size={12} /> Add Seat / User</button>
                           <button className="cxc-btn cxc-btn-sm" onClick={() => onSendEmail && onSendEmail(c)}><Mail size={13} /> Send Email</button>
+                          <button className="cxc-btn cxc-btn-sm" onClick={() => onSendTemplateEmail && onSendTemplateEmail(c)}><Mail size={13} /> Send Template Email</button>
                         </div>
                         <button className="cxc-btn cxc-btn-danger cxc-qa-deact" onClick={doDeactivate}>Deactivate Customer</button>
                       </section>
@@ -1432,6 +1439,143 @@ function SendEmailModal({ customer, onClose }) {
         <div className="cxc-modal-foot">
           <button className="cxc-btn" onClick={onClose}>Cancel</button>
           <button className="cxc-btn cxc-btn-primary" onClick={submit} disabled={sending || sent}>{sending ? "Sending…" : "Send Email"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LANG_LABEL = { en: "English", es: "Spanish", pt: "Portuguese" };
+const newIdemKey = () =>
+  (typeof window !== "undefined" && window.crypto?.randomUUID?.()) ||
+  `k-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+// Manual per-customer template sender: pick an approved template, auto-selects the
+// customer's language + first name, preview, then send ONE email through the same
+// production SendGrid pipeline. Guards against accidental double sends.
+function SendTemplateEmailModal({ customer, onClose }) {
+  const [catalog, setCatalog] = useState([]);
+  const [template, setTemplate] = useState("");
+  const [preview, setPreview] = useState(null);
+  const [loadingCat, setLoadingCat] = useState(true);
+  const [loadingPrev, setLoadingPrev] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null); // { ok, status, reason }
+  const [error, setError] = useState("");
+  const [idemKey, setIdemKey] = useState(newIdemKey());
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await getEmailTemplateCatalog();
+        if (alive) setCatalog(Array.isArray(data) ? data : []);
+      } catch {
+        if (alive) setError("Could not load the template list.");
+      } finally {
+        if (alive) setLoadingCat(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  // Fetch the preview whenever a template is chosen. A new template = a fresh
+  // idempotency key (so re-choosing is an intentional new send), while a double
+  // click on Send reuses the same key and is deduped.
+  useEffect(() => {
+    if (!template) { setPreview(null); return; }
+    let alive = true;
+    setLoadingPrev(true); setError(""); setResult(null); setIdemKey(newIdemKey());
+    (async () => {
+      try {
+        const res = await previewCustomerTemplateEmail(customer.id, template);
+        if (!alive) return;
+        if (res?.ok) setPreview(res);
+        else { setPreview(null); setError(res?.error || "Could not render this template."); }
+      } catch (e) {
+        if (alive) { setPreview(null); setError(e?.message || "Could not render this template."); }
+      } finally {
+        if (alive) setLoadingPrev(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [template, customer.id]);
+
+  const groups = catalog.reduce((acc, t) => {
+    (acc[t.category] = acc[t.category] || []).push(t);
+    return acc;
+  }, {});
+
+  const submit = async () => {
+    if (!template || !preview?.ok || sending || result?.ok) return;
+    setSending(true); setError("");
+    try {
+      const res = await sendCustomerTemplateEmail(customer.id, { template, idempotencyKey: idemKey });
+      setResult(res);
+      if (!res?.ok && res?.status !== "duplicate") {
+        setError(res?.reason || res?.error || "The email could not be sent.");
+      }
+    } catch (e) {
+      setError(e?.message || "The email could not be sent.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const sentOk = result?.ok;
+  const isDup = result?.status === "duplicate";
+
+  return (
+    <div className="cxc-modal-overlay" onClick={onClose}>
+      <div className="cxc-modal" onClick={(e) => e.stopPropagation()} style={{ width: "min(680px, 94vw)", maxWidth: "94vw" }}>
+        <div className="cxc-modal-head">
+          <h3 className="cxc-modal-title">Send Template Email</h3>
+          <button className="cxc-drawer-close" onClick={onClose}>×</button>
+        </div>
+
+        <div className="cxc-field"><label>To</label><input className="cxc-input" value={customer.email || ""} disabled /></div>
+
+        <div className="cxc-field">
+          <label>Email Template</label>
+          <select className="cxc-select" value={template} onChange={(e) => setTemplate(e.target.value)} disabled={loadingCat}>
+            <option value="">{loadingCat ? "Loading templates…" : "Select a template…"}</option>
+            {Object.keys(groups).map((cat) => (
+              <optgroup key={cat} label={cat}>
+                {groups[cat].map((t) => (<option key={t.name} value={t.name}>{t.label}</option>))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+
+        {loadingPrev && <div className="cxc-note">Rendering preview…</div>}
+
+        {preview?.ok && (
+          <div className="cxc-field">
+            <label>Preview</label>
+            <div style={{ border: "1px solid var(--cxc-line,#e6e8f0)", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ padding: "10px 12px", fontSize: 12, lineHeight: 1.6, background: "#f8fafc", borderBottom: "1px solid #eef0f4" }}>
+                <div><b>Customer:</b> {preview.customerName || "—"}</div>
+                <div><b>Email:</b> {preview.email}</div>
+                <div><b>Template:</b> {catalog.find((t) => t.name === template)?.label || template}</div>
+                <div><b>Language:</b> {LANG_LABEL[preview.language] || preview.language} <span style={{ color: "#8a90a0" }}>(from the customer's language)</span></div>
+                <div><b>Subject:</b> {preview.subject}</div>
+              </div>
+              <iframe title="Email preview" srcDoc={preview.html} style={{ width: "100%", height: 380, border: 0, background: "#fff" }} sandbox="" />
+            </div>
+          </div>
+        )}
+
+        {error && <div className="cxc-error">{error}</div>}
+        {sentOk && <div style={{ color: "#15803d", fontSize: 13, fontWeight: 600 }}>Email sent to {result.to} in {LANG_LABEL[result.language] || result.language}.</div>}
+        {isDup && <div style={{ color: "#b45309", fontSize: 13, fontWeight: 600 }}>{result.reason || "Already sent — duplicate ignored."}</div>}
+
+        <div className="cxc-note">Sends one email in the customer's language using the same production templates and SendGrid sender. It is logged as a manual send and does not affect the customer's automatic onboarding emails.</div>
+
+        <div className="cxc-modal-foot">
+          <button className="cxc-btn" onClick={onClose}>{sentOk ? "Close" : "Cancel"}</button>
+          <button className="cxc-btn cxc-btn-primary" onClick={submit} disabled={!template || !preview?.ok || loadingPrev || sending || sentOk}>
+            {sending ? "Sending…" : sentOk ? "Sent" : "Send Email"}
+          </button>
         </div>
       </div>
     </div>

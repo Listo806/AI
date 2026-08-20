@@ -100,6 +100,11 @@ export class PlatformMailerService {
         `delivered_at TIMESTAMPTZ`,
         `opened_at TIMESTAMPTZ`,
         `clicked_at TIMESTAMPTZ`,
+        // Manual (admin-triggered) single-customer sends: 'auto' vs 'manual',
+        // which admin sent it, and a dedupe key for accidental double sends.
+        `send_type VARCHAR(16) NOT NULL DEFAULT 'auto'`,
+        `sent_by_admin_id UUID`,
+        `manual_idempotency_key TEXT`,
       ];
       for (const c of logCols) {
         await this.db.query(
@@ -120,17 +125,30 @@ export class PlatformMailerService {
       );
       // One row per (user, Free-onboarding template) ever, so concurrent
       // enrollments (e.g. a double-clicked "Select Free") can never duplicate.
+      // The sequence-uniqueness indexes must apply to AUTOMATIC rows only, so a
+      // manual admin send of the same template to the same customer does not
+      // collide with their queued/sent sequence row. Recreate them scoped to
+      // send_type='auto' (drop first so an older, unscoped index is replaced).
+      await this.db.query(`DROP INDEX IF EXISTS idx_email_log_free_uniq`);
       await this.db.query(
         `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_free_uniq
            ON email_log(user_id, template)
-          WHERE template IN ('free_welcome','free_plan_value','free_ai','free_team','free_upgrade')`,
+          WHERE template IN ('free_welcome','free_plan_value','free_ai','free_team','free_upgrade')
+            AND send_type = 'auto'`,
       );
-      // Same guarantee for the new onboarding sequence: one row per (user,
-      // onboarding template) ever, so a double signup can never duplicate it.
+      await this.db.query(`DROP INDEX IF EXISTS idx_email_log_onb_uniq`);
       await this.db.query(
         `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_onb_uniq
            ON email_log(user_id, template)
-          WHERE template IN ('onb_welcome','onb_support','onb_ai','onb_connect','onb_system','onb_ready','onb_team')`,
+          WHERE template IN ('onb_welcome','onb_support','onb_ai','onb_connect','onb_system','onb_ready','onb_team')
+            AND send_type = 'auto'`,
+      );
+      // Dedupe key for manual admin sends: at most one row per idempotency key,
+      // so a double-clicked "Send Email" can never deliver twice.
+      await this.db.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_manual_idem
+           ON email_log(manual_idempotency_key)
+          WHERE manual_idempotency_key IS NOT NULL`,
       );
       this.schemaReady = true;
     } catch (err: any) {
@@ -1569,5 +1587,206 @@ export class PlatformMailerService {
     } catch {
       return [];
     }
+  }
+
+  // ---- manual (admin) single-customer send: dropdown of production templates ----
+  // Builds the right TemplateVars for ANY catalog template, reusing the exact
+  // same builders the automatic emails use (same copy, same personalization).
+  private async buildVarsForTemplate(
+    template: TemplateName,
+    user: { id: string; email: string; lang: string; name: string },
+  ): Promise<TemplateVars> {
+    const name = user.name;
+    const first = name ? String(name).trim().split(/\s+/)[0] : null;
+    if (template.startsWith('onb_')) {
+      const tok = await this.getOrCreateUnsubToken(user.id);
+      return this.onboardingVars(first, tok ? this.unsubUrl(tok) : null);
+    }
+    if (template.startsWith('free_')) {
+      const tok = await this.getOrCreateUnsubToken(user.id);
+      return this.freeOnboardingVars(
+        template,
+        name,
+        tok ? this.unsubUrl(tok) : null,
+      );
+    }
+    switch (template) {
+      case 'welcome':
+        return this.welcomeVars(name);
+      case 'getting_started':
+        return this.gettingStartedVars(name);
+      case 'payment_failed':
+      case 'subscription_canceled':
+        return this.billingEmailVars(name);
+      case 'abandoned_1':
+      case 'abandoned_2':
+      case 'abandoned_3': {
+        const vars: TemplateVars = { name, ctaUrl: this.continueUrl() };
+        if (template === 'abandoned_2') {
+          vars.editorialUrl = this.editorialUrl(user.lang);
+        }
+        return vars;
+      }
+      default:
+        return { name, ctaUrl: this.appUrl() };
+    }
+  }
+
+  // Render a template for one customer in THEIR language, using their real first
+  // name — for the admin preview. No send, no log, no state change.
+  async previewCustomerEmail(
+    userId: string,
+    template: TemplateName,
+  ): Promise<{
+    ok: boolean;
+    error?: string;
+    customerName?: string | null;
+    email?: string;
+    template?: TemplateName;
+    language?: string;
+    subject?: string;
+    html?: string;
+  }> {
+    await this.ensureSchema();
+    const user = await this.resolveRecipient({ userId });
+    if (!user || !user.email) {
+      return { ok: false, error: 'Customer not found or has no email address.' };
+    }
+    const vars = await this.buildVarsForTemplate(template, user);
+    const rendered = renderTemplate(template, user.lang, vars);
+    return {
+      ok: true,
+      customerName: user.name || null,
+      email: user.email,
+      template,
+      language: String(user.lang || 'en').slice(0, 2).toLowerCase(),
+      subject: rendered.subject,
+      html: rendered.html,
+    };
+  }
+
+  // Send ONE template email to ONE customer, in their language, through the same
+  // SendGrid pipeline. Logged as a MANUAL send (send_type='manual' + admin id).
+  // Never touches lifecycle columns or the scheduled sequence, so it cannot alter
+  // the customer's automatic onboarding. Guarded against accidental double sends.
+  async sendManualToCustomer(opts: {
+    userId: string;
+    template: TemplateName;
+    adminId?: string | null;
+    idempotencyKey?: string | null;
+  }): Promise<{
+    ok: boolean;
+    status: 'sent' | 'skipped' | 'error' | 'duplicate' | 'not_found';
+    reason?: string;
+    subject?: string;
+    to?: string;
+    language?: string;
+    template?: TemplateName;
+  }> {
+    await this.ensureSchema();
+    const user = await this.resolveRecipient({ userId: opts.userId });
+    if (!user || !user.email) {
+      return {
+        ok: false,
+        status: 'not_found',
+        reason: 'Customer not found or has no email address.',
+      };
+    }
+    // Double-send protection: same idempotency key already used, OR the same
+    // template was manually sent to this customer within the last 60 seconds.
+    if (opts.idempotencyKey) {
+      const dup = await this.db.query(
+        `SELECT 1 FROM email_log WHERE manual_idempotency_key = $1 LIMIT 1`,
+        [opts.idempotencyKey],
+      );
+      if (dup.rows.length) {
+        return {
+          ok: false,
+          status: 'duplicate',
+          reason: 'This email was already sent (duplicate request ignored).',
+        };
+      }
+    }
+    const recent = await this.db.query(
+      `SELECT 1 FROM email_log
+        WHERE user_id = $1 AND template = $2 AND send_type = 'manual' AND status = 'sent'
+          AND created_at > NOW() - INTERVAL '60 seconds' LIMIT 1`,
+      [user.id, opts.template],
+    );
+    if (recent.rows.length) {
+      return {
+        ok: false,
+        status: 'duplicate',
+        reason: 'The same email was just sent to this customer moments ago.',
+      };
+    }
+
+    const vars = await this.buildVarsForTemplate(opts.template, user);
+    const token = crypto.randomUUID();
+    const rendered = renderTemplate(opts.template, user.lang, vars);
+    const html = this.htmlFor(rendered.html, token);
+    const result = await this.deliver({
+      to: user.email,
+      subject: rendered.subject,
+      html,
+      text: rendered.text,
+      token,
+    });
+    const status: 'sent' | 'skipped' | 'error' = result.ok
+      ? 'sent'
+      : result.error === 'smtp_not_configured'
+        ? 'skipped'
+        : 'error';
+
+    try {
+      await this.db.query(
+        `INSERT INTO email_log
+           (user_id, to_email, template, language, subject, status, error, provider,
+            track_token, sent_at, send_type, sent_by_admin_id, manual_idempotency_key)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'manual',$11,$12)`,
+        [
+          user.id,
+          user.email,
+          opts.template,
+          String(user.lang || 'en').slice(0, 5),
+          rendered.subject,
+          status,
+          result.ok ? null : result.error?.slice(0, 500),
+          result.provider,
+          token,
+          status === 'sent' ? new Date() : null,
+          opts.adminId || null,
+          opts.idempotencyKey || null,
+        ],
+      );
+    } catch (err: any) {
+      // Unique idempotency-key violation = a concurrent duplicate; treat as such.
+      if (
+        String(err?.message || '')
+          .toLowerCase()
+          .includes('idx_email_log_manual_idem')
+      ) {
+        return {
+          ok: false,
+          status: 'duplicate',
+          reason: 'This email was already sent (duplicate request ignored).',
+        };
+      }
+      this.logger.error(`manual send log insert failed: ${err?.message}`);
+    }
+    if (status === 'error') {
+      this.logger.error(
+        `Manual email '${opts.template}' to ${user.email} failed: ${result.error}`,
+      );
+    }
+    return {
+      ok: result.ok,
+      status,
+      reason: result.ok ? undefined : result.error,
+      subject: rendered.subject,
+      to: user.email,
+      language: String(user.lang || 'en').slice(0, 2).toLowerCase(),
+      template: opts.template,
+    };
   }
 }
