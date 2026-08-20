@@ -70,6 +70,8 @@ export interface TemplateVars {
   upgradeUrl?: string;
   workspaceUrl?: string;
   teamWorkspaceUrl?: string;
+  // checkout_recovery only: resume-checkout link for the customer's selected plan.
+  checkoutUrl?: string;
 }
 
 const BRAND = 'Cortexa AI CRM';
@@ -570,6 +572,7 @@ const ONB_NAMES: OnbTemplate[] = [
   'onb_system',
   'onb_ready',
   'onb_team',
+  'checkout_recovery',
 ];
 function isOnb(name: TemplateName): name is OnbTemplate {
   return (ONB_NAMES as string[]).includes(name);
@@ -592,12 +595,16 @@ function renderOnboarding(
     '{{team_workspace_url}}': vars.teamWorkspaceUrl || app,
     '{{support_email}}': vars.supportEmail || 'support@cortexaaicrm.com',
     '{{unsubscribe_url}}': vars.unsubscribeUrl || app,
+    '{{checkout_url}}': vars.checkoutUrl || vars.upgradeUrl || app,
   };
   const sub = (s: string) => {
     for (const [k, v] of Object.entries(tokens)) s = s.split(k).join(v);
     return s;
   };
-  const html = sub(preheaderHtml(entry.preheader) + entry.html).split('{{first_name}}').join(first);
+  let html = sub(preheaderHtml(entry.preheader) + entry.html).split('{{first_name}}').join(first);
+  // When the first name is unknown, tidy a greeting like "Hi {{first_name}},"
+  // (now "Hi ,") down to a clean "Hi,".
+  if (!first) html = html.replace(/(Hi|Hola|Olá) ,/g, '$1,');
   // Subject: drop ", {{first_name}}" entirely when the recipient name is unknown,
   // otherwise substitute it, then collapse any doubled spaces.
   let subject = first
