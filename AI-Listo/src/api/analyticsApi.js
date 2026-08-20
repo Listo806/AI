@@ -83,8 +83,33 @@ export async function getActivityMetrics(dateRangeValue = '30d') {
 /**
  * Owner leads list – for source/agent aggregation (CRM access required)
  */
+/**
+ * Leads list for Dashboard / AI Command Center.
+ * Use the normal Leads endpoint instead of /crm/owner/leads
+ * because /crm/owner/leads only allows owner/agent roles.
+ */
 export async function getOwnerLeads(limit = 500) {
-  const res = await apiClient.request(`/crm/owner/leads?limit=${limit}`);
-  const items = res?.items ?? res?.data ?? (Array.isArray(res) ? res : []);
-  return Array.isArray(items) ? items : [];
+  const res = await apiClient.request("/leads");
+
+  console.log("[Dashboard] /leads response:", res);
+
+  let items = [];
+
+  if (Array.isArray(res)) {
+    items = res;
+  } else if (Array.isArray(res?.data)) {
+    items = res.data;
+  } else if (Array.isArray(res?.items)) {
+    items = res.items;
+  } else if (Array.isArray(res?.data?.items)) {
+    items = res.data.items;
+  } else if (Array.isArray(res?.leads)) {
+    items = res.leads;
+  } else if (Array.isArray(res?.data?.leads)) {
+    items = res.data.leads;
+  }
+
+  console.log("[Dashboard] parsed leads:", items);
+
+  return items.slice(0, Math.max(1, Number(limit) || 500));
 }

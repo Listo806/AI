@@ -62,6 +62,7 @@ import {
 } from "../../api/analyticsApi";
 import { fetchTeams, fetchTeamDashboard } from "../team/services/team.service";
 import { downloadCsv } from "../../utils/helpers";
+import apiClient from "../../api/apiClient";
 
 import "./dashboard.css";
 
@@ -138,6 +139,17 @@ export default function CortexaDashboard() {
   }, []);
 
   const [showFilters, setShowFilters] = useState(false);
+
+  // AI Command Center actions
+  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [followUpForm, setFollowUpForm] = useState({
+    date: "",
+    time: "",
+    note: "",
+  });
+  const [savingFollowUp, setSavingFollowUp] = useState(false);
+  const [commandActionMessage, setCommandActionMessage] = useState("");
+  const [selectedCommandLeadId, setSelectedCommandLeadId] = useState("");
 
   // ---- Data fetching (real backend) --------------------------------------
   // `range` is driven by the period selector in the header; changing it
@@ -490,6 +502,131 @@ export default function CortexaDashboard() {
   const bannerNewLeads =
     metrics?.leads_new ?? byStatus?.new ?? leads?.created ?? null;
 
+  // Command Center targets the newest NEW lead first. If there is no lead with
+  // status=new, fall back to the newest available lead.
+  const commandCenterLead =
+    [...(leadsList || [])]
+      .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0))
+      .sort(
+        (a, b) =>
+          Number(b?.status === "new") - Number(a?.status === "new"),
+      )[0] || null;
+
+  const selectedCommandLead =
+    (leadsList || []).find(
+      (lead) => String(lead?.id) === String(selectedCommandLeadId),
+    ) ||
+    commandCenterLead ||
+    null;
+
+  const handleCommandCall = async () => {
+    const phone = String(commandCenterLead?.phone || "").trim();
+
+    if (!phone) {
+      setCommandActionMessage("No phone number available.");
+      return;
+    }
+
+    setCommandActionMessage("");
+
+    // Log the call action without blocking the native phone action.
+    if (commandCenterLead?.id) {
+      apiClient
+        .request(`/leads/${commandCenterLead.id}/contact`, {
+          method: "POST",
+          body: JSON.stringify({ actionType: "call" }),
+        })
+        .catch((err) => console.error("Failed to log call action:", err));
+    }
+
+    window.location.href = `tel:${phone.replace(/[^+\d]/g, "")}`;
+  };
+
+  const openCommandFollowUp = () => {
+    // Always open the modal. Do not block the UI if the lead list is still
+    // loading or no automatic Command Center lead could be resolved.
+    setCommandActionMessage("");
+    setFollowUpForm({ date: "", time: "", note: "" });
+    setSelectedCommandLeadId(commandCenterLead?.id || "");
+    setShowFollowUpModal(true);
+  };
+
+  const saveCommandFollowUp = async (e) => {
+    e.preventDefault();
+
+    if (savingFollowUp) return;
+
+    if (!selectedCommandLead?.id) {
+      setCommandActionMessage("Please select a lead for this follow-up.");
+      return;
+    }
+
+    if (!followUpForm.date || !followUpForm.time) {
+      setCommandActionMessage("Please select a follow-up date and time.");
+      return;
+    }
+
+    try {
+      setSavingFollowUp(true);
+      setCommandActionMessage("");
+
+      const scheduledAt = `${followUpForm.date}T${followUpForm.time}`;
+      const note = String(followUpForm.note || "").trim();
+
+      // Keep the lead's CRM state in sync with the scheduled follow-up.
+      await apiClient.request(`/leads/${selectedCommandLead.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: "follow-up" }),
+      });
+
+      // Add a real lead timeline/activity record.
+      await apiClient.request(`/leads/${selectedCommandLead.id}/events`, {
+        method: "POST",
+        body: JSON.stringify({
+          eventType: "lead.follow_up_scheduled",
+          metadata: {
+            title: "Follow-up scheduled",
+            sub: `${followUpForm.date} at ${followUpForm.time}${note ? ` — ${note}` : ""}`,
+            date: followUpForm.date,
+            time: followUpForm.time,
+            scheduledAt,
+            note,
+          },
+        }),
+      });
+
+      // If this lead is linked to a Contact, also mirror the record to the
+      // Contact activity feed. Failure here must not undo the lead follow-up.
+      if (selectedCommandLead.contactId) {
+        try {
+          await apiClient.request(
+            `/contacts/${selectedCommandLead.contactId}/activities`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                type: "follow_up",
+                title: "Follow-up scheduled",
+                sub: `${followUpForm.date} at ${followUpForm.time}${note ? ` — ${note}` : ""}`,
+              }),
+            },
+          );
+        } catch (contactErr) {
+          console.error("Failed to mirror follow-up to contact:", contactErr);
+        }
+      }
+
+      setShowFollowUpModal(false);
+      setFollowUpForm({ date: "", time: "", note: "" });
+      setCommandActionMessage("Follow-up saved.");
+      refresh();
+    } catch (err) {
+      console.error("Save Command Center follow-up error:", err);
+      setCommandActionMessage(err?.message || "Failed to save follow-up.");
+    } finally {
+      setSavingFollowUp(false);
+    }
+  };
+
   // Export the real, loaded dashboard data to CSV (KPIs, lead-status
   // breakdown, lead sources, activity-by-day). No fabricated values.
   const exportData = () => {
@@ -751,7 +888,7 @@ export default function CortexaDashboard() {
           <div className="banner-action-row">
             <button
               className="banner-btn text-dark"
-              onClick={() => navigate("/dashboard/leads")}
+              onClick={handleCommandCall}
             >
               <Phone size={16} /> {t("dashboard.call")}
             </button>
@@ -769,13 +906,129 @@ export default function CortexaDashboard() {
             </button>
             <button
               className="banner-btn btn-followup-color"
-              onClick={() => navigate("/dashboard/leads")}
+              onClick={openCommandFollowUp}
             >
               <Calendar size={16} /> {t("dashboard.followUp")}
             </button>
           </div>
+          {commandActionMessage && (
+            <div className="command-action-message">{commandActionMessage}</div>
+          )}
         </div>
       </section>
+
+      {showFollowUpModal && (
+        <div
+          className="command-followup-overlay"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !savingFollowUp) {
+              setShowFollowUpModal(false);
+            }
+          }}
+        >
+          <div className="command-followup-modal" role="dialog" aria-modal="true">
+            <div className="command-followup-header">
+              <div>
+                <h3>Schedule Follow-Up</h3>
+                <p>
+                  {selectedCommandLead?.name ||
+                    "Select a lead/contact to schedule a follow-up"}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="command-followup-close"
+                onClick={() => setShowFollowUpModal(false)}
+                disabled={savingFollowUp}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={saveCommandFollowUp}>
+              <label className="command-followup-lead">
+                <span>Lead / Contact</span>
+                <select
+                  value={selectedCommandLeadId}
+                  onChange={(e) => setSelectedCommandLeadId(e.target.value)}
+                  required
+                >
+                  <option value="">Select lead/contact</option>
+                  {(leadsList || []).map((lead) => (
+                    <option key={lead.id} value={lead.id}>
+                      {lead.name || lead.email || lead.phone || "Unnamed lead"}
+                      {lead.phone ? ` — ${lead.phone}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {(leadsList || []).length === 0 && (
+                <div className="command-followup-empty">
+                  No lead available for follow-up.
+                </div>
+              )}
+
+              <div className="command-followup-grid">
+                <label>
+                  <span>Follow-up date</span>
+                  <input
+                    type="date"
+                    value={followUpForm.date}
+                    onChange={(e) =>
+                      setFollowUpForm((prev) => ({ ...prev, date: e.target.value }))
+                    }
+                    required
+                  />
+                </label>
+
+                <label>
+                  <span>Follow-up time</span>
+                  <input
+                    type="time"
+                    value={followUpForm.time}
+                    onChange={(e) =>
+                      setFollowUpForm((prev) => ({ ...prev, time: e.target.value }))
+                    }
+                    required
+                  />
+                </label>
+              </div>
+
+              <label className="command-followup-note">
+                <span>Note</span>
+                <textarea
+                  rows="4"
+                  placeholder="Add a follow-up note..."
+                  value={followUpForm.note}
+                  onChange={(e) =>
+                    setFollowUpForm((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                />
+              </label>
+
+              <div className="command-followup-actions">
+                <button
+                  type="button"
+                  className="command-followup-cancel"
+                  onClick={() => setShowFollowUpModal(false)}
+                  disabled={savingFollowUp}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="command-followup-save"
+                  disabled={savingFollowUp || !selectedCommandLead?.id}
+                >
+                  {savingFollowUp ? "Saving..." : "Save Follow-up"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* PRIMARY KPI CARDS */}
       <section className="kpi-row-grid kpi-row-primary grid-6-col">
