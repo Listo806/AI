@@ -1118,17 +1118,17 @@
     display: none !important;
   }
 
-  .fsw-mobile-view-actions .fsw-mobile-actions-hub {
+  .fsw-mobile-actions-hub {
     display: block;
   }
 
-  .fsw-mobile-view-assistant .fsw-mobile-ai-assistant {
+  .fsw-mobile-ai-assistant {
     display: block;
   }
 
   /* Mobile Financial Intelligence */
   .fsw-mobile-financial-intelligence {
-    padding: 22px 5px 10px;
+    padding-top: 10px!important;
   }
 
   .fsw-mobile-intelligence-title {
@@ -1140,7 +1140,7 @@
   .fsw-mobile-screen-title h2 {
     margin: 0 0 5px;
     color: var(--txt, #111827);
-    font-size: 23px;
+    font-size: 20px;
     line-height: 1.2;
   }
 
@@ -1160,12 +1160,14 @@
     overflow: hidden;
   }
 
-  .fsw-mobile-intel-donut-card:nth-of-type(2) {
+  .fsw-mobile-intel-donut-card:nth-of-type(1) {
     border-color: #1688ff;
   }
-
-  .fsw-mobile-intel-donut-card:nth-of-type(3) {
+  .fsw-mobile-intel-donut-card:nth-of-type(2) {
     border-color: #00b875;
+  }
+  .fsw-mobile-intel-donut-card:nth-of-type(3) {
+    border-color: #9b4dff;
   }
 
   .fsw-mobile-intel-card-head {
@@ -1181,10 +1183,10 @@
 
   .fsw-mobile-intel-donut-body {
     display:grid;
-    grid-template-columns:minmax(190px,.85fr) minmax(0,1.15fr);
-    gap:24px;
+    grid-template-columns:minmax(170px,.85fr) minmax(0,1.15fr);
+    gap:8px;
     align-items:center;
-    padding:14px 24px 22px;
+    padding:12px;
   }
 
   .fsw-mobile-real-donut {
@@ -1312,6 +1314,7 @@
     display:flex;
     flex-direction:column;
     gap:3px;
+    text-align: left;
   }
 
   .fsw-mobile-intel-list p strong {
@@ -1347,14 +1350,12 @@
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:16px;
-    padding:0 6px;
   }
 
   .fsw-mobile-action-card {
     --tone:#1688ff;
-    min-height:145px;
     display:grid;
-    grid-template-columns:76px minmax(0,1fr) 18px;
+    grid-template-columns:48px minmax(0,1fr) 18px;
     align-items:center;
     gap:13px;
     padding:17px;
@@ -1374,8 +1375,8 @@
   .fsw-mobile-action-card.tone-pink{--tone:#ec4899}
 
   .fsw-mobile-action-icon {
-    width:68px;
-    height:68px;
+    width:48px;
+    height:48px;
     display:grid;
     place-items:center;
     border-radius:13px;
@@ -1405,7 +1406,7 @@
     margin:20px 6px 10px;
     min-height:104px;
     display:grid;
-    grid-template-columns:68px minmax(0,1fr) auto;
+    grid-template-columns:40px 1fr auto;
     gap:14px;
     align-items:center;
     padding:16px 18px;
@@ -1430,19 +1431,19 @@
     padding:0 17px;
     display:flex;
     align-items:center;
-    gap:7px;
+    gap:4px;
     border:1px solid #00d768;
     border-radius:10px;
     background:transparent;
     color:#00d768;
-    font-weight:700;
+    font-weight:500;
+    font-size: 12px;
   }
 
   /* AI Financial Assistant */
   .fsw-mobile-ai-prompts {
     display:grid;
     gap:12px;
-    padding:0 6px;
   }
 
   .fsw-mobile-ai-prompt {
@@ -1495,8 +1496,8 @@
   }
 
   .fsw-mobile-ai-summary {
-    margin:18px 6px 20px;
-    padding:15px;
+    margin:18px 0 20px;
+    padding: 14px;
     border:1px solid var(--bd, #dbe3ef);
     border-radius:14px;
     background:var(--card, #fff);
@@ -1530,7 +1531,7 @@
 
   .fsw-mobile-ai-summary-grid button {
     min-width:0;
-    padding:4px 10px;
+    padding:4px;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -1570,7 +1571,8 @@
     margin:0 6px 10px;
     color:var(--txt, #111827);
     font-size:15px;
-    font-weight:700;
+    font-weight:600;
+    text-align: left;
   }
 
   .fsw-mobile-ai-quick-grid {
@@ -1582,8 +1584,7 @@
 
   .fsw-mobile-ai-quick-grid button {
     --tone:#1688ff;
-    min-height:127px;
-    padding:11px 8px;
+    padding:16px 8px;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -1707,10 +1708,6 @@
 }
 
 @media (max-width: 680px) {
-  .fsw-mobile-intel-donut-body {
-    grid-template-columns:1fr;
-    gap:18px;
-  }
 
   .fsw-mobile-real-donut {
     width:165px;
@@ -1722,55 +1719,63 @@
   }
 
   .fsw-mobile-action-card {
-    min-height:132px;
-    grid-template-columns:56px minmax(0,1fr) 15px;
-    gap:10px;
-    padding:13px;
+    grid-template-columns:34px minmax(0,1fr) 14px;
+    gap:4px;
+    padding: 10px 8px;
   }
 
   .fsw-mobile-action-icon {
-    width:54px;
-    height:54px;
+    width:34px;
+    height:34px;
   }
 
   .fsw-mobile-action-copy strong {
-    font-size:13px;
+    font-size:12px;
+    font-weight: 400;
   }
 
   .fsw-mobile-action-copy small {
     font-size:10.5px;
   }
-
   .fsw-mobile-support-card {
-    grid-template-columns:54px minmax(0,1fr);
+    gap: 8px;
+    padding: 10px;
+    text-align: left;
   }
-
-  .fsw-mobile-support-card button {
-    grid-column:1/-1;
-    width:100%;
-    justify-content:center;
+  .fsw-mobile-support-card button{
+    padding: 0 7px;
   }
 
   .fsw-mobile-ai-summary-grid {
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    row-gap:12px;
+    row-gap:6px;
   }
 
   .fsw-mobile-ai-summary-grid button:nth-child(2) {
     border-right:0;
   }
 
-  .fsw-mobile-ai-summary-grid button:nth-child(3),
-  .fsw-mobile-ai-summary-grid button:nth-child(4) {
-    padding-top:12px;
-    border-top:1px solid var(--bd, #dbe3ef);
+  .fsw-mobile-ai-prompt{padding: 10px;grid-template-columns: 52px minmax(0, 1fr) 20px;gap: 8px;}
+  .fsw-mobile-ai-prompt strong {
+    font-size: 13px;
+    font-weight: 400;
   }
-
-  .fsw-mobile-ai-quick-grid {
-    grid-template-columns:repeat(2,minmax(0,1fr));
+  .fsw-mobile-ai-summary {
+    padding: 10px;
   }
-
-  .fsw-mobile-ai-quick-grid button {
-    min-height:112px;
+  .fsw-mobile-ai-quick-grid button{
+    padding: 6px 2px;
   }
+  .fsw-mobile-ai-quick-grid strong {
+    font-size: 10px;
+  }
+  .fsw-mobile-ai-quick-grid small {
+    font-size: 9px;
+  }
+  .fsw-mobile-ai-summary-head{font-size: 15px; font-weight: 400;}
+  .fsw-mobile-ai-summary-head button{font-size: 12px;}
+  .fsw-mobile-ai-input button{
+    width: 32px;
+    height: 32px;
+  }
+  .fsw-mobile-ai-input{min-height: 48px;}
 }

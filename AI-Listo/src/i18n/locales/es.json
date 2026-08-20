@@ -4388,9 +4388,21 @@
       "moderate": "Moderado",
       "moderate_high": "Moderado alto",
       "high": "Alto"
-    }
-  },
-  "mobileActions": {
+    },
+    "mobileIntelligence": {
+      "title": "Inteligencia Financiera",
+      "subtitle": "Insights y actividades clave de un vistazo.",
+      "applicationsByStatus": "Solicitudes por Estado",
+      "portfolioAllocation": "Asignación de Cartera (registrada)",
+      "total": "Total",
+      "totalAum": "AUM Total",
+      "recentActivity": "Actividad Reciente",
+      "upcomingReviews": "Próximas Revisiones",
+      "portfolioReview": "Revisión de Cartera",
+      "noActivity": "Sin actividad reciente",
+      "noReviews": "Sin próximas revisiones"
+    },
+    "mobileActions": {
       "title": "Acciones Financieras",
       "subtitle": "Acciones rápidas para gestionar tu negocio de servicios financieros.",
       "items": {
@@ -4518,7 +4530,10 @@
       },
       "inputPlaceholder": "Pregunta a Cortexa IA sobre tu negocio financiero...",
       "disclaimer": "Las respuestas de IA se basan en tus datos y pueden no ser 100% precisas."
-    },
+    }
+  },
+  
+    
     "bottomNav": {
       "home": "Inicio",
       "clients": "Clientes",

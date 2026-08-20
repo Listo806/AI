@@ -633,8 +633,8 @@ export default function FinancialServicesWorkspace() {
               key={key}
               className={`fsw-mobile-action-card tone-${tone}`}
               onClick={onClick}
-            >
-              <span className="fsw-mobile-action-icon"><Icon name={icon} size={30}/></span>
+            > 
+              <span className="fsw-mobile-action-icon"><Icon name={icon} size={20}/></span>
               <span className="fsw-mobile-action-copy">
                 <strong>{t(`financialWorkspace.mobileActions.items.${key}.title`)}</strong>
                 <small>{t(`financialWorkspace.mobileActions.items.${key}.subtitle`)}</small>
@@ -645,7 +645,7 @@ export default function FinancialServicesWorkspace() {
         </div>
 
         <div className="fsw-mobile-support-card">
-          <span className="fsw-mobile-action-icon"><Icon name="headphones" size={28}/></span>
+          <span className="fsw-mobile-action-icon"><Icon name="headphones" size={20}/></span>
           <div>
             <strong>{t("financialWorkspace.mobileActions.support.title")}</strong>
             <small>{t("financialWorkspace.mobileActions.support.subtitle")}</small>

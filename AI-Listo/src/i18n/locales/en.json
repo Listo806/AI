@@ -4388,9 +4388,21 @@
       "moderate": "Moderate",
       "moderate_high": "Moderate High",
       "high": "High"
-    }
-  },
-  "mobileActions": {
+    },
+    "mobileIntelligence": {
+      "title": "Financial Intelligence",
+      "subtitle": "Key insights and activities at a glance.",
+      "applicationsByStatus": "Applications by Status",
+      "portfolioAllocation": "Portfolio Allocation (recorded)",
+      "total": "Total",
+      "totalAum": "Total AUM",
+      "recentActivity": "Recent Activity",
+      "upcomingReviews": "Upcoming Reviews",
+      "portfolioReview": "Portfolio Review",
+      "noActivity": "No recent activity",
+      "noReviews": "No upcoming reviews"
+    },
+    "mobileActions": {
       "title": "Financial Actions",
       "subtitle": "Quick actions to manage your financial services business.",
       "items": {
@@ -4518,7 +4530,10 @@
       },
       "inputPlaceholder": "Ask Cortexa AI anything about your financial business...",
       "disclaimer": "AI responses are based on your data and may not be 100% accurate."
-    },
+    }
+  },
+  
+    
     "bottomNav": {
       "home": "Home",
       "clients": "Clients",
