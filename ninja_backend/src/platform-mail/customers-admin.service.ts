@@ -369,8 +369,14 @@ export class CustomersAdminService {
       ps === 'expired'
     )
       return 'canceled';
+    // A real provider trial (Paddle status 'trialing') is distinct from an account
+    // that only selected a paid plan and never paid.
+    if (ps === 'trialing') return 'trialing';
     if (ps === 'active' || cs === 'paid') return 'active';
-    if (ps === 'trial' || ps === 'pending') return 'trialing';
+    // Selected a paid plan / opened checkout but no successful payment = checkout
+    // pending (NOT a trial). ps='trial' is the pre-checkout signup state, 'pending'
+    // is set when a checkout is opened.
+    if (ps === 'trial' || ps === 'pending') return 'checkout_pending';
     if (ps === 'free') return 'free';
     return 'registered';
   }
@@ -448,6 +454,8 @@ export class CustomersAdminService {
       case 'free':
         return `payment_status = 'free'`;
       case 'trialing':
+        return `payment_status = 'trialing'`;
+      case 'checkout_pending':
         return `payment_status IN ('trial', 'pending')`;
       case 'active':
         // checkout_status='paid' is sticky and never cleared on cancel, so exclude a
@@ -503,6 +511,9 @@ export class CustomersAdminService {
         clauses.push(
           `(COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')`,
         );
+      } else if (psv === 'checkout_pending') {
+        // Selected a paid plan but not yet paid.
+        clauses.push(`payment_status IN ('trial', 'pending')`);
       } else {
         params.push(psv);
         clauses.push(`LOWER(COALESCE(payment_status,'')) = $${params.length}`);
@@ -615,7 +626,8 @@ export class CustomersAdminService {
          COUNT(*)::int AS total_registered,
          COUNT(*) FILTER (WHERE payment_status = 'active' OR checkout_status = 'paid')::int AS active_paid,
          COUNT(*) FILTER (WHERE payment_status = 'free')::int AS free_accounts,
-         COUNT(*) FILTER (WHERE payment_status IN ('trial','pending'))::int AS trialing,
+         COUNT(*) FILTER (WHERE payment_status = 'trialing')::int AS trialing,
+         COUNT(*) FILTER (WHERE payment_status IN ('trial','pending'))::int AS checkout_pending,
          COUNT(*) FILTER (WHERE payment_status = 'past_due')::int AS past_due,
          COUNT(*) FILTER (WHERE payment_status IN ('canceled','suspended'))::int AS canceled,
          COUNT(*) FILTER (WHERE COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')::int AS registered,
@@ -723,6 +735,7 @@ export class CustomersAdminService {
         all: totalRegistered,
         registered: c.registered ?? 0,
         free: c.free_accounts ?? 0,
+        checkout_pending: c.checkout_pending ?? 0,
         trialing: c.trialing ?? 0,
         active: activePaid,
         past_due: c.past_due ?? 0,

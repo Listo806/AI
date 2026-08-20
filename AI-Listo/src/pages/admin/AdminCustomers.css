@@ -320,7 +320,8 @@
 .cxc-badge::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
 .cxc-badge.active { background: #dcfce7; color: #15803d; }
 .cxc-badge.free { background: #e0edff; color: #1d4ed8; }
-.cxc-badge.trialing { background: #fef3c7; color: #b45309; }
+.cxc-badge.trialing { background: #ede9fe; color: #6d28d9; }
+.cxc-badge.checkout_pending { background: #fef3c7; color: #b45309; }
 .cxc-badge.registered { background: #f1f5f9; color: #475569; }
 .cxc-badge.past_due { background: #fef3c7; color: #b45309; }
 .cxc-badge.failed { background: #fee2e2; color: #b91c1c; }

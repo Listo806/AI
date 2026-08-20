@@ -65,6 +65,7 @@ const TABS = [
   { key: "all", label: "All Customers" },
   { key: "registered", label: "Registered (Sign-ups)" },
   { key: "free", label: "Free" },
+  { key: "checkout_pending", label: "Checkout Pending" },
   { key: "trialing", label: "Trialing" },
   { key: "active", label: "Active Paid" },
   { key: "past_due", label: "Past Due" },
@@ -92,6 +93,7 @@ const AVATAR_COLORS = ["#2563eb", "#7c3aed", "#0d9488", "#ea580c", "#db2777", "#
 const STATUS_LABEL = {
   active: "Active",
   free: "Free",
+  checkout_pending: "Checkout Pending",
   trialing: "Trialing",
   registered: "Registered",
   past_due: "Past Due",
@@ -659,7 +661,8 @@ export default function AdminCustomers() {
             <option value="all">All Statuses</option>
             <option value="registered">Registered</option>
             <option value="free">Free</option>
-            <option value="trial">Trialing</option>
+            <option value="checkout_pending">Checkout Pending</option>
+            <option value="trialing">Trialing</option>
             <option value="active">Active</option>
             <option value="past_due">Past Due</option>
             <option value="canceled">Canceled</option>
