@@ -3,6 +3,8 @@
 // One entry per (template, language) with a fully rendered { subject, html,
 // text }. Unknown languages fall back to English so a bad/blank locale never
 // yields an empty email. Inline styles only (email clients strip <style>).
+
+import { ONBOARDING_EMAILS, OnbTemplate } from './onboarding-emails.data';
 //
 // Templates:
 //   welcome               - after a confirmed payment (account active)
@@ -27,7 +29,10 @@ export type TemplateName =
   | 'free_plan_value'
   | 'free_ai'
   | 'free_team'
-  | 'free_upgrade';
+  | 'free_upgrade'
+  // New client-approved onboarding sequence (Day 0/1/2/4/6/9/12). Rich designs
+  // pre-rendered in onboarding-emails.data.ts; rendered via token substitution.
+  | OnbTemplate;
 export type MailLang = 'en' | 'es' | 'pt';
 
 export interface RenderedEmail {
@@ -56,6 +61,15 @@ export interface TemplateVars {
   aiAllowance?: number | null;
   // Optional physical/business address line for the footer (CAN-SPAM).
   businessAddress?: string | null;
+  // Deep-link targets for the rich onboarding sequence (onb_* templates). Each
+  // maps to a {{token}} in the pre-rendered design HTML. All optional; any that
+  // is missing falls back to ctaUrl so a link is never blank.
+  appUrl?: string;
+  aiAgentUrl?: string;
+  aiUnitsUrl?: string;
+  upgradeUrl?: string;
+  workspaceUrl?: string;
+  teamWorkspaceUrl?: string;
 }
 
 const BRAND = 'Cortexa AI CRM';
@@ -145,7 +159,7 @@ interface Copy {
 
 // Partial per-locale so a template can ship English-only and fall back to it
 // (renderTemplate resolves the locale or English). Every template must have `en`.
-const COPY: Record<TemplateName, Partial<Record<MailLang, Copy>>> = {
+const COPY: Partial<Record<TemplateName, Partial<Record<MailLang, Copy>>>> = {
   welcome: {
     en: {
       subject: 'Welcome to Cortexa AI CRM — your account is active',
@@ -545,14 +559,69 @@ const COPY: Record<TemplateName, Partial<Record<MailLang, Copy>>> = {
   },
 };
 
+// The 7 rich onboarding designs render outside the simple `layout()` shell:
+// their approved HTML is pre-rendered in onboarding-emails.data.ts and only needs
+// runtime {{tokens}} substituted. Kept faithful to the client's designs.
+const ONB_NAMES: OnbTemplate[] = [
+  'onb_welcome',
+  'onb_support',
+  'onb_ai',
+  'onb_connect',
+  'onb_system',
+  'onb_ready',
+  'onb_team',
+];
+function isOnb(name: TemplateName): name is OnbTemplate {
+  return (ONB_NAMES as string[]).includes(name);
+}
+
+function renderOnboarding(
+  name: OnbTemplate,
+  l: MailLang,
+  vars: TemplateVars,
+): RenderedEmail {
+  const entry = ONBOARDING_EMAILS[name][l] || ONBOARDING_EMAILS[name].en;
+  const app = vars.appUrl || vars.ctaUrl || '';
+  const first = (vars.name || '').trim();
+  const tokens: Record<string, string> = {
+    '{{app_url}}': app,
+    '{{ai_agent_url}}': vars.aiAgentUrl || app,
+    '{{ai_units_url}}': vars.aiUnitsUrl || app,
+    '{{upgrade_url}}': vars.upgradeUrl || app,
+    '{{workspace_url}}': vars.workspaceUrl || app,
+    '{{team_workspace_url}}': vars.teamWorkspaceUrl || app,
+    '{{support_email}}': vars.supportEmail || 'support@cortexaaicrm.com',
+    '{{unsubscribe_url}}': vars.unsubscribeUrl || app,
+  };
+  const sub = (s: string) => {
+    for (const [k, v] of Object.entries(tokens)) s = s.split(k).join(v);
+    return s;
+  };
+  const html = sub(preheaderHtml(entry.preheader) + entry.html).split('{{first_name}}').join(first);
+  // Subject: drop ", {{first_name}}" entirely when the recipient name is unknown,
+  // otherwise substitute it, then collapse any doubled spaces.
+  let subject = first
+    ? entry.subject.split('{{first_name}}').join(first)
+    : entry.subject.replace(/,?\s*\{\{first_name\}\}/g, '');
+  subject = subject.replace(/\s{2,}/g, ' ').trim();
+  const text = html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return { subject, html, text };
+}
+
 export function renderTemplate(
   name: TemplateName,
   lang: string | undefined,
   vars: TemplateVars,
 ): RenderedEmail {
   const l = normalizeLang(lang);
-  // Locale copy with an English fallback (every template guarantees `en`).
-  const c = COPY[name][l] || (COPY[name].en as Copy);
+  if (isOnb(name)) return renderOnboarding(name, l, vars);
+  // Locale copy with an English fallback (every non-onboarding template has `en`).
+  const entry: Partial<Record<MailLang, Copy>> = COPY[name] || {};
+  const c = (entry[l] || entry.en) as Copy;
 
   const paras = c.intro.map((p) => `<p style="margin:0 0 12px">${p}</p>`).join('');
 

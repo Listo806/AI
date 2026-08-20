@@ -266,7 +266,7 @@ export class TrialService {
       } else if (isFree) {
         // New Free Forever account -> enroll in the Free-user onboarding sequence.
         try {
-          await this.mailer.scheduleFreeOnboardingSequence(
+          await this.mailer.scheduleOnboardingSequence(
             newUserId,
             email,
             lang,
@@ -326,7 +326,7 @@ export class TrialService {
           [userId],
         );
         if (u[0]?.email) {
-          await this.mailer.scheduleFreeOnboardingSequence(
+          await this.mailer.scheduleOnboardingSequence(
             userId,
             u[0].email,
             u[0].preferred_language || 'en',
@@ -426,7 +426,7 @@ export class TrialService {
           [user.id],
         );
         if (u[0]?.email) {
-          await this.mailer.scheduleFreeOnboardingSequence(
+          await this.mailer.scheduleOnboardingSequence(
             user.id,
             u[0].email,
             u[0].preferred_language || 'en',
