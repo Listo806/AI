@@ -705,7 +705,7 @@ export default function AdminCustomers() {
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setChangePlanFor(c); }}>Change Plan</button>
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "payments" }); }}>Update Payment</button>
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "subscription" }); }}>Add Seat / User</button>
-        <button className="cxc-btn" onClick={() => { if (selectedRows.length === 1) setSendEmailFor(selectedRows[0]); else bulkEmail(); }} disabled={!selected.size}>Send Email</button>
+        <button className="cxc-btn" onClick={() => { if (selectedRows.length === 1) setTemplateEmailFor(selectedRows[0]); else bulkEmail(); }} disabled={!selected.size}>Send Email</button>
         <button className="cxc-btn" onClick={onExport}>Export</button>
         <div className="cxc-menu-wrap">
           <button className="cxc-btn" onClick={() => setMoreMenu((v) => !v)}>More <ChevronDown size={14} /></button>
@@ -851,7 +851,7 @@ export default function AdminCustomers() {
 
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />}
       {sendEmailFor && <SendEmailModal customer={sendEmailFor} onClose={() => setSendEmailFor(null)} />}
-      {templateEmailFor && <SendTemplateEmailModal customer={templateEmailFor} onClose={() => setTemplateEmailFor(null)} />}
+      {templateEmailFor && <SendTemplateEmailModal customer={templateEmailFor} onClose={() => setTemplateEmailFor(null)} onCustomMessage={(c) => { setTemplateEmailFor(null); setSendEmailFor(c); }} />}
       {changePlanFor && <ChangePlanModal customer={changePlanFor} onClose={() => setChangePlanFor(null)} onSuccess={load} />}
       {showPlans && <ManagePlansModal onClose={() => setShowPlans(false)} />}
     </div>
@@ -1054,8 +1054,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                           <button className="cxc-btn cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}><RefreshCw size={12} /> Change Plan</button>
                           <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}><CreditCard size={12} /> Update Payment Method</button>
                           <button className="cxc-btn cxc-btn-sm" onClick={addSeat}><Users size={12} /> Add Seat / User</button>
-                          <button className="cxc-btn cxc-btn-sm" onClick={() => onSendEmail && onSendEmail(c)}><Mail size={13} /> Send Email</button>
-                          <button className="cxc-btn cxc-btn-sm" onClick={() => onSendTemplateEmail && onSendTemplateEmail(c)}><Mail size={13} /> Send Template Email</button>
+                          <button className="cxc-btn cxc-btn-sm" onClick={() => onSendTemplateEmail && onSendTemplateEmail(c)}><Mail size={13} /> Send Email</button>
                         </div>
                         <button className="cxc-btn cxc-btn-danger cxc-qa-deact" onClick={doDeactivate}>Deactivate Customer</button>
                       </section>
@@ -1453,7 +1452,7 @@ const newIdemKey = () =>
 // Manual per-customer template sender: pick an approved template, auto-selects the
 // customer's language + first name, preview, then send ONE email through the same
 // production SendGrid pipeline. Guards against accidental double sends.
-function SendTemplateEmailModal({ customer, onClose }) {
+function SendTemplateEmailModal({ customer, onClose, onCustomMessage }) {
   const [catalog, setCatalog] = useState([]);
   const [template, setTemplate] = useState("");
   const [preview, setPreview] = useState(null);
@@ -1569,7 +1568,9 @@ function SendTemplateEmailModal({ customer, onClose }) {
         {sentOk && <div style={{ color: "#15803d", fontSize: 13, fontWeight: 600 }}>Email sent to {result.to} in {LANG_LABEL[result.language] || result.language}.</div>}
         {isDup && <div style={{ color: "#b45309", fontSize: 13, fontWeight: 600 }}>{result.reason || "Already sent — duplicate ignored."}</div>}
 
-        <div className="cxc-note">Sends one email in the customer's language using the same production templates and SendGrid sender. It is logged as a manual send and does not affect the customer's automatic onboarding emails.</div>
+        <div className="cxc-note">Sends one email in the customer's language using the same production templates and SendGrid sender. It is logged as a manual send and does not affect the customer's automatic onboarding emails.
+          {onCustomMessage && (<> {" "}<a href="#" onClick={(e) => { e.preventDefault(); onCustomMessage(customer); }} style={{ color: "#3d3af5", fontWeight: 600 }}>Write a custom message instead →</a></>)}
+        </div>
 
         <div className="cxc-modal-foot">
           <button className="cxc-btn" onClick={onClose}>{sentOk ? "Close" : "Cancel"}</button>
