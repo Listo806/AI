@@ -145,12 +145,12 @@ export default function DocumentsSection() {
         </button>
       </div>
 
-      {error && <div style={ST.error}>{error}</div>}
+      {error && <div className="insurance-doc-mobile-error" style={ST.error}>{error}</div>}
 
       {/* Upload card */}
-      <div style={ST.uploadCard}>
-        <div style={ST.uploadRow}>
-          <label style={ST.fileLabel}>
+      <div className="insurance-doc-mobile-upload-card" style={ST.uploadCard}>
+        <div className="insurance-doc-mobile-upload-row" style={ST.uploadRow}>
+          <label className="insurance-doc-mobile-file-label" style={ST.fileLabel}>
             <UploadCloud size={16} />
             <span>{file ? file.name : "Choose file"}</span>
             <input
@@ -161,89 +161,89 @@ export default function DocumentsSection() {
             />
           </label>
           <input
-            style={ST.input}
+            className="insurance-doc-mobile-input" style={ST.input}
             placeholder="Title (optional)"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
-          <select style={ST.select} value={docType} onChange={(e) => setDocType(e.target.value)}>
+          <select className="insurance-doc-mobile-select" style={ST.select} value={docType} onChange={(e) => setDocType(e.target.value)}>
             {DOC_TYPES.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
         </div>
-        <div style={ST.uploadRow}>
-          <div style={{ flex: 1, minWidth: 220 }}>
+        <div className="insurance-doc-mobile-upload-row" style={ST.uploadRow}>
+          <div className="insurance-doc-mobile-policy-picker" style={{ flex: 1, minWidth: 220 }}>
             <PolicyPicker value={policy} onChange={setPolicy} />
           </div>
           <input
-            style={{ ...ST.input, flex: 1 }}
+            className="insurance-doc-mobile-input insurance-doc-mobile-notes" style={{ ...ST.input, flex: 1 }}
             placeholder="Notes (optional)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
-          <button style={ST.uploadBtn} disabled={uploading || !file} onClick={upload}>
+          <button className="insurance-doc-mobile-upload-btn" style={ST.uploadBtn} disabled={uploading || !file} onClick={upload}>
             {uploading ? "Uploading…" : "Upload"}
           </button>
         </div>
-        <small style={ST.hint}>PDF, Word, Excel, CSV, text or images. Up to 20MB.</small>
+        <small className="insurance-doc-mobile-hint" style={ST.hint}>PDF, Word, Excel, CSV, text or images. Up to 20MB.</small>
       </div>
 
       {/* Search */}
-      <div style={ST.searchWrap}>
+      <div className="insurance-doc-mobile-search" style={ST.searchWrap}>
         <Search size={14} style={{ color: "#94a3b8" }} />
         <input
-          style={ST.searchInput}
+          className="insurance-doc-mobile-search-input" style={ST.searchInput}
           placeholder="Search documents..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && load(search)}
         />
-        <button style={ST.searchBtn} onClick={() => load(search)}>Search</button>
+        <button className="insurance-doc-mobile-search-btn" style={ST.searchBtn} onClick={() => load(search)}>Search</button>
       </div>
 
       {/* List */}
       {loading ? (
         <p style={{ color: "#64748b", fontSize: 14 }}>Loading…</p>
       ) : docs.length === 0 ? (
-        <div style={ST.empty}>
+        <div className="insurance-doc-mobile-empty" style={ST.empty}>
           <FileText size={22} style={{ color: "#cbd5e1" }} />
           <p>No documents yet. Upload your first file above.</p>
         </div>
       ) : (
-        <div style={ST.tableWrap}>
-          <table style={ST.table}>
+        <div className="insurance-doc-mobile-table-wrap" style={ST.tableWrap}>
+          <table className="insurance-doc-mobile-table" style={ST.table}>
             <thead>
               <tr>
-                <th style={ST.th}>Document</th>
-                <th style={ST.th}>Type</th>
-                <th style={ST.th}>Policy</th>
-                <th style={ST.th}>Size</th>
-                <th style={ST.th}>Uploaded</th>
-                <th style={{ ...ST.th, textAlign: "right" }}>Actions</th>
+                <th className="insurance-doc-mobile-th" style={ST.th}>Document</th>
+                <th className="insurance-doc-mobile-th" style={ST.th}>Type</th>
+                <th className="insurance-doc-mobile-th" style={ST.th}>Policy</th>
+                <th className="insurance-doc-mobile-th" style={ST.th}>Size</th>
+                <th className="insurance-doc-mobile-th" style={ST.th}>Uploaded</th>
+                <th className="insurance-doc-mobile-th insurance-doc-mobile-actions-head" style={{ ...ST.th, textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {docs.map((d) => (
-                <tr key={d.id} style={ST.tr}>
-                  <td style={ST.td}>
+                <tr key={d.id} className="insurance-doc-mobile-tr" style={ST.tr}>
+                  <td className="insurance-doc-mobile-td" style={ST.td}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <FileText size={16} style={{ color: "#64748b", flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
-                        <div style={ST.docTitle}>{d.title || d.fileName}</div>
+                        <div className="insurance-doc-mobile-title" style={ST.docTitle}>{d.title || d.fileName}</div>
                         {d.fileName && d.title !== d.fileName && (
-                          <div style={ST.docFile}>{d.fileName}</div>
+                          <div className="insurance-doc-mobile-file" style={ST.docFile}>{d.fileName}</div>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td style={ST.td}>{d.docType || "-"}</td>
-                  <td style={ST.td}>{d.policyNumber || "-"}</td>
-                  <td style={ST.td}>{fmtSize(d.size)}</td>
-                  <td style={ST.td}>{fmtDate(d.createdAt)}</td>
-                  <td style={{ ...ST.td, textAlign: "right", whiteSpace: "nowrap" }}>
+                  <td className="insurance-doc-mobile-td" style={ST.td}>{d.docType || "-"}</td>
+                  <td className="insurance-doc-mobile-td" style={ST.td}>{d.policyNumber || "-"}</td>
+                  <td className="insurance-doc-mobile-td" style={ST.td}>{fmtSize(d.size)}</td>
+                  <td className="insurance-doc-mobile-td" style={ST.td}>{fmtDate(d.createdAt)}</td>
+                  <td className="insurance-doc-mobile-td insurance-doc-mobile-actions-cell" style={{ ...ST.td, textAlign: "right", whiteSpace: "nowrap" }}>
                     <button
-                      style={ST.iconAction}
+                      className="insurance-doc-mobile-icon-action" style={ST.iconAction}
                       title="Download"
                       disabled={busyId === d.id}
                       onClick={() => download(d)}
@@ -251,7 +251,7 @@ export default function DocumentsSection() {
                       <Download size={16} />
                     </button>
                     <button
-                      style={{ ...ST.iconAction, color: "#dc2626" }}
+                      className="insurance-doc-mobile-icon-action danger" style={{ ...ST.iconAction, color: "#dc2626" }}
                       title="Delete"
                       disabled={busyId === d.id}
                       onClick={() => remove(d)}

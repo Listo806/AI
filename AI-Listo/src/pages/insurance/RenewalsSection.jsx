@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Plus,
@@ -75,6 +76,7 @@ const EMPTY_CELL_STYLE = {
 };
 
 export default function RenewalsSection() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [renewals, setRenewals] = useState([]);
   const [total, setTotal] = useState(0);
@@ -181,6 +183,26 @@ export default function RenewalsSection() {
             placeholder="Search renewals..."
           />
         </label>
+      </div>
+
+      <div className="insurance-ws-mobile-record-list">
+        {loading ? (
+          <div className="insurance-ws-mobile-empty">{t("common.loading")}</div>
+        ) : error ? (
+          <div className="insurance-ws-mobile-empty error">{error}</div>
+        ) : renewals.length === 0 ? (
+          <div className="insurance-ws-mobile-empty">{t("insuranceWorkspace.noRecords")}</div>
+        ) : (
+          renewals.map((renewal, index) => (
+            <article className={`insurance-ws-mobile-record-card tone-${(index % 5) + 1}`} key={renewal.uuid} onClick={() => openView(renewal.uuid)}>
+              <div className="insurance-ws-mobile-record-icon"><span>R</span></div>
+              <div className="insurance-ws-mobile-record-main"><strong>{renewal.policy}</strong><b>{renewal.customer}</b><small>{renewal.currentExpiration}</small></div>
+              <div className="insurance-ws-mobile-record-mid"><small>{t("insuranceWorkspace.fields.currentPremium")}</small><strong>{renewal.currentPremium}</strong><small>{t("insuranceWorkspace.fields.renewalPremium")}</small><span>{renewal.renewalPremium}</span></div>
+              <div className="insurance-ws-mobile-record-side"><small>{t("insuranceWorkspace.fields.status")}</small><span className="iw-pill">{renewal.status}</span><small>{t("insuranceWorkspace.fields.renewal")}</small><b>{renewal.renewalDate}</b></div>
+              <ChevronRight size={20} className="insurance-ws-mobile-record-arrow" />
+            </article>
+          ))
+        )}
       </div>
 
       <div className="insurance-ws-table-wrap">

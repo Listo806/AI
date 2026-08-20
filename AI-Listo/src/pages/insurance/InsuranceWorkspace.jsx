@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Plus,
@@ -26,8 +27,26 @@ import {
   ReceiptText,
   Umbrella,
   ChevronDown,
+  ChevronRight as MobileChevronRight,
+  Filter,
+  Car,
+  House,
+  HeartPulse,
+  Store,
+  FolderOpen,
+  Mail,
+  CreditCard,
+  Phone,
+  UsersRound,
+  FilePlus2,
+  RefreshCcw,
+  UserPlus,
+  BarChart3,
+  SlidersHorizontal,
+  Headphones,
 } from "lucide-react";
 import "./InsuranceWorkspace.css";
+import "./InsuranceWorkspace.mobile.css";
 import insuranceApi from "../../api/insuranceApi";
 import PolicyModal from "./PolicyModal";
 import ClaimsSection from "./ClaimsSection";
@@ -197,6 +216,7 @@ const EMPTY_CELL_STYLE = {
 };
 
 export default function InsuranceWorkspace() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("Policies");
   const [search, setSearch] = useState("");
 
@@ -216,6 +236,7 @@ export default function InsuranceWorkspace() {
   const [modalNonce, setModalNonce] = useState(0);
 
   const [stats, setStats] = useState(null);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   useEffect(() => {
     if (activeTab !== "Policies") return undefined;
@@ -303,8 +324,47 @@ export default function InsuranceWorkspace() {
     };
   }, [refreshTick, activeTab]);
 
+  const mobilePrimaryTabs = [
+    "Overview",
+    "Policies",
+    "Claims",
+    "Quotes",
+    "Renewals",
+    "Carriers",
+  ];
+  const mobileMoreTabs = ["Commissions", "Documents", "Reports", "Connections", "Actions"];
+  const mobileTabLabel = (tab) => {
+    const key = String(tab || "").toLowerCase();
+    return t(`insuranceWorkspace.tabs.${key}`, { defaultValue: tab });
+  };
+
+  const getConnectionStatus = (key) => {
+    const source = stats?.connections || stats?.integrations || stats?.connectionHealth?.integrations || {};
+    const raw = source?.[key] ?? source?.[String(key).toLowerCase()] ?? null;
+    if (raw === true || raw?.connected === true || raw?.status === "connected" || raw?.active === true) return "connected";
+    if (raw === false || raw?.connected === false || raw?.status === "disconnected") return "disconnected";
+    return "unknown";
+  };
+
+  const getConnectionLabel = (key) => {
+    const state = getConnectionStatus(key);
+    if (state === "connected") return t("insuranceWorkspace.connections.connected", { defaultValue: "Connected" });
+    if (state === "disconnected") return t("insuranceWorkspace.connections.notConnected", { defaultValue: "Not connected" });
+    return t("insuranceWorkspace.connections.checkStatus", { defaultValue: "Check status" });
+  };
+
+  const getPolicyMobileIcon = (type = "") => {
+    const v = String(type).toLowerCase();
+    if (v.includes("auto") || v.includes("vehicle")) return Car;
+    if (v.includes("home") || v.includes("property")) return House;
+    if (v.includes("life") || v.includes("health")) return HeartPulse;
+    if (v.includes("business") || v.includes("commercial")) return Store;
+    if (v.includes("umbrella")) return Umbrella;
+    return ShieldCheck;
+  };
+
   return (
-    <div className="insurance-ws">
+    <div className={`insurance-ws ${activeTab === "Overview" ? "is-overview" : ""}`}>
       <div className="insurance-ws-header">
         <div>
           <h1>Insurance Workspace</h1>
@@ -329,7 +389,7 @@ export default function InsuranceWorkspace() {
           const { value, sub1 } = statCardValue(key, stats);
           return (
             <div className="insurance-ws-stat-card" key={key}>
-              <div className={`insurance-ws-stat-icon ${tone}`}>
+              <div className={`insurance-ws-stat-icon insurance-ws-stat-icon-mobile ${tone}`}>
                 <Icon size={18} />
               </div>
               <span>{label}</span>
@@ -341,7 +401,7 @@ export default function InsuranceWorkspace() {
         })}
       </div>
 
-      <nav className="insurance-ws-tabs">
+      <nav className="insurance-ws-tabs insurance-ws-tabs-desktop">
         {[
           "Overview",
           "Policies",
@@ -359,10 +419,63 @@ export default function InsuranceWorkspace() {
             className={activeTab === tab ? "active" : ""}
             onClick={() => setActiveTab(tab)}
           >
-            {tab}
+            {mobileTabLabel(tab)}
           </button>
         ))}
       </nav>
+
+      <div className="insurance-ws-tabs-mobile-wrap">
+        <nav className="insurance-ws-tabs-mobile">
+          {mobilePrimaryTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={activeTab === tab ? "active" : ""}
+              onClick={() => {
+                setActiveTab(tab);
+                setMobileMoreOpen(false);
+              }}
+            >
+              {mobileTabLabel(tab)}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            className={
+              mobileMoreOpen || mobileMoreTabs.includes(activeTab)
+                ? "more-open"
+                : ""
+            }
+            aria-expanded={mobileMoreOpen}
+            onClick={() => setMobileMoreOpen((open) => !open)}
+          >
+            {t("insuranceWorkspace.tabs.more", { defaultValue: "More" })}
+            <ChevronDown
+              size={15}
+              className={mobileMoreOpen ? "rotate" : ""}
+            />
+          </button>
+        </nav>
+
+        {mobileMoreOpen && (
+          <div className="insurance-ws-tabs-mobile-more-menu">
+            {mobileMoreTabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={activeTab === tab ? "active" : ""}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setMobileMoreOpen(false);
+                }}
+              >
+                {mobileTabLabel(tab)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {activeTab === "Policies" && (
       <section className="insurance-ws-policies">
@@ -383,6 +496,23 @@ export default function InsuranceWorkspace() {
             <button className="primary" onClick={openCreate}><Plus size={14} /> New Policy</button>
           </div>
         </div>
+        <div className="insurance-ws-mobile-policy-tools">
+          <label>
+            <Search size={19} />
+            <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search policies..."
+            />
+          </label>
+          <button type="button">
+            <Filter size={18} />
+            {t("insuranceWorkspace.actions.filters")}
+          </button>
+        </div>
 
         <div className="insurance-ws-filters">
           <label>
@@ -398,7 +528,7 @@ export default function InsuranceWorkspace() {
           </label>
 
           {[
-            "Status · All Statuses",
+            "Status · All",
             "Policy Type · All Types",
             "Carrier · All Carriers",
             "Agent · All Agents",
@@ -414,6 +544,62 @@ export default function InsuranceWorkspace() {
           <button><Table2 size={13} /> Table</button>
           <button><List size={13} /></button>
           <button><CalendarDays size={13} /></button>
+        </div>
+
+        <div className="insurance-ws-mobile-policy-list">
+          {loading ? (
+            <div className="insurance-ws-mobile-empty">Loading policies...</div>
+          ) : error ? (
+            <div className="insurance-ws-mobile-empty error">{error}</div>
+          ) : policies.length === 0 ? (
+            <div className="insurance-ws-mobile-empty">
+              {search.trim()
+                ? "No policies match your search."
+                : "No policies yet. Create your first policy to get started."}
+            </div>
+          ) : (
+            policies.map((policy, index) => {
+              const PolicyIcon = getPolicyMobileIcon(policy.type);
+              return (
+                <article
+                  className={`insurance-ws-mobile-policy-card tone-${(index % 5) + 1}`}
+                  key={policy.uuid}
+                  onClick={() => openView(policy.uuid)}
+                >
+                  <div className="insurance-ws-mobile-policy-icon">
+                    <PolicyIcon size={24} />
+                  </div>
+
+                  <div className="insurance-ws-mobile-policy-primary">
+                    <strong>{policy.id}</strong>
+                    <b>{policy.holder}</b>
+                    <span><ShieldCheck size={12} /> {policy.type}</span>
+                    <span><Store size={12} /> {policy.carrier}</span>
+                  </div>
+
+                  <div className="insurance-ws-mobile-policy-money">
+                    <small>{t("insuranceWorkspace.fields.premium")}</small>
+                    <strong>${policy.premium.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong>
+                    <small>{t("insuranceWorkspace.fields.coverage")}</small>
+                    <span>{policy.period}</span>
+                  </div>
+
+                  <div className="insurance-ws-mobile-policy-status">
+                    <small>{t("insuranceWorkspace.fields.status")}</small>
+                    <strong className={`insurance-ws-status ${policy.status.toLowerCase()}`}>
+                      {policy.status}
+                    </strong>
+                    <small>{t("insuranceWorkspace.fields.nextBilling")}</small>
+                    <span>{policy.billing}</span>
+                    <small>{t("insuranceWorkspace.fields.agent")}</small>
+                    <b>{policy.agent}</b>
+                  </div>
+
+                  <MobileChevronRight className="insurance-ws-mobile-policy-arrow" size={22} />
+                </article>
+              );
+            })
+          )}
         </div>
 
         <div className="insurance-ws-table-wrap">
@@ -604,14 +790,166 @@ export default function InsuranceWorkspace() {
 
       {activeTab === "Documents" && <DocumentsSection />}
 
+      {(activeTab === "Connections" || activeTab === "Actions") && (
+        <>
+          {activeTab === "Connections" && (
+          <section className="insurance-ws-mobile-connections">
+            <div className="insurance-ws-mobile-block-heading">
+              <h2>{t("insuranceWorkspace.connections.title")}</h2>
+              <p>{t("insuranceWorkspace.connections.subtitle")}</p>
+            </div>
+
+            <div className="insurance-ws-mobile-connection-list">
+              <button type="button" className="purple" onClick={() => setActiveTab("Carriers")}>
+                <span><ShieldCheck /></span>
+                <div>
+                  <strong>{t("insuranceWorkspace.connections.carriers")}</strong>
+                  <small>{t("insuranceWorkspace.connections.carriersSub")}</small>
+                  <b>{t("insuranceWorkspace.connections.manage")}</b>
+                </div>
+                <em className="connection-status neutral">{t("insuranceWorkspace.connections.manage")}</em>
+                <MobileChevronRight />
+              </button>
+
+              <button type="button" className="green" onClick={() => setActiveTab("Documents")}>
+                <span><FolderOpen /></span>
+                <div>
+                  <strong>{t("insuranceWorkspace.connections.documents")}</strong>
+                  <small>{t("insuranceWorkspace.connections.documentsSub")}</small>
+                  <b>{t("insuranceWorkspace.connections.manage")}</b>
+                </div>
+                <em className="connection-status neutral">{t("insuranceWorkspace.connections.manage")}</em>
+                <MobileChevronRight />
+              </button>
+
+              <button type="button" className="amber" onClick={() => window.location.assign("/dashboard/integrations")}>
+                <span><Mail /></span>
+                <div>
+                  <strong>{t("insuranceWorkspace.connections.email")}</strong>
+                  <small>{t("insuranceWorkspace.connections.emailSub")}</small>
+                  <b>{t("insuranceWorkspace.connections.openIntegrations")}</b>
+                </div>
+                <em className={`connection-status ${getConnectionStatus("email")}`}>{getConnectionLabel("email")}</em>
+                <MobileChevronRight />
+              </button>
+
+              <button type="button" className="blue" onClick={() => window.location.assign("/dashboard/integrations")}>
+                <span><CreditCard /></span>
+                <div>
+                  <strong>{t("insuranceWorkspace.connections.payments")}</strong>
+                  <small>{t("insuranceWorkspace.connections.paymentsSub")}</small>
+                  <b>{t("insuranceWorkspace.connections.openIntegrations")}</b>
+                </div>
+                <em className={`connection-status ${getConnectionStatus("payments")}`}>{getConnectionLabel("payments")}</em>
+                <MobileChevronRight />
+              </button>
+
+              <button type="button" className="pink" onClick={() => window.location.assign("/dashboard/integrations")}>
+                <span><Phone /></span>
+                <div>
+                  <strong>{t("insuranceWorkspace.connections.messaging")}</strong>
+                  <small>{t("insuranceWorkspace.connections.messagingSub")}</small>
+                  <b>{t("insuranceWorkspace.connections.openIntegrations")}</b>
+                </div>
+                <em className={`connection-status ${getConnectionStatus("messaging")}`}>{getConnectionLabel("messaging")}</em>
+                <MobileChevronRight />
+              </button>
+
+              <button type="button" className="cyan" onClick={() => window.location.assign("/dashboard/integrations")}>
+                <span><UsersRound /></span>
+                <div>
+                  <strong>{t("insuranceWorkspace.connections.leads")}</strong>
+                  <small>{t("insuranceWorkspace.connections.leadsSub")}</small>
+                  <b>{t("insuranceWorkspace.connections.openIntegrations")}</b>
+                </div>
+                <em className={`connection-status ${getConnectionStatus("leads")}`}>{getConnectionLabel("leads")}</em>
+                <MobileChevronRight />
+              </button>
+            </div>
+
+            <div className="insurance-ws-mobile-connection-health">
+              <span><ShieldCheck /></span>
+              <div>
+                <strong>{t("insuranceWorkspace.connections.healthTitle", { defaultValue: "Connection Health" })}</strong>
+                <small>{t("insuranceWorkspace.connections.healthSubtitle", { defaultValue: "Review the live connection status for your workspace integrations." })}</small>
+              </div>
+              <button type="button" onClick={() => window.location.assign("/dashboard/integrations")}>
+                {t("insuranceWorkspace.connections.viewStatus", { defaultValue: "View Status" })}
+                <MobileChevronRight size={16} />
+              </button>
+            </div>
+          </section>
+          )}
+
+          {activeTab === "Actions" && (
+          <section className="insurance-ws-mobile-actions-hub">
+            <div className="insurance-ws-mobile-block-heading">
+              <h2>{t("insuranceWorkspace.quickActions.title")}</h2>
+              <p>{t("insuranceWorkspace.quickActions.subtitle")}</p>
+            </div>
+
+            <div className="insurance-ws-mobile-action-grid">
+              <button className="blue" type="button" onClick={openCreate}>
+                <span><FilePlus2 /></span><div><strong>{t("insuranceWorkspace.quickActions.newPolicy")}</strong><small>{t("insuranceWorkspace.quickActions.newPolicySub")}</small></div>
+              </button>
+              <button className="purple" type="button" onClick={() => setActiveTab("Claims")}>
+                <span><ClipboardList /></span><div><strong>{t("insuranceWorkspace.quickActions.newClaim")}</strong><small>{t("insuranceWorkspace.quickActions.newClaimSub")}</small></div>
+              </button>
+              <button className="green" type="button" onClick={() => setActiveTab("Quotes")}>
+                <span><FileCheck2 /></span><div><strong>{t("insuranceWorkspace.quickActions.newQuote")}</strong><small>{t("insuranceWorkspace.quickActions.newQuoteSub")}</small></div>
+              </button>
+              <button className="amber" type="button" onClick={() => setActiveTab("Renewals")}>
+                <span><RefreshCcw /></span><div><strong>{t("insuranceWorkspace.quickActions.newRenewal")}</strong><small>{t("insuranceWorkspace.quickActions.newRenewalSub")}</small></div>
+              </button>
+              <button className="pink" type="button" onClick={() => window.location.assign("/dashboard/contacts")}>
+                <span><UserPlus /></span><div><strong>{t("insuranceWorkspace.quickActions.addPolicyholder")}</strong><small>{t("insuranceWorkspace.quickActions.addPolicyholderSub")}</small></div>
+              </button>
+              <button className="cyan" type="button" onClick={() => window.location.assign("/dashboard/contacts")}>
+                <span><UsersRound /></span><div><strong>{t("insuranceWorkspace.quickActions.addClient")}</strong><small>{t("insuranceWorkspace.quickActions.addClientSub")}</small></div>
+              </button>
+              <button className="blue" type="button" onClick={() => setActiveTab("Documents")}>
+                <span><FolderOpen /></span><div><strong>{t("insuranceWorkspace.quickActions.documents")}</strong><small>{t("insuranceWorkspace.quickActions.documentsSub")}</small></div>
+              </button>
+              <button className="green" type="button" onClick={() => setActiveTab("Claims")}>
+                <span><ShieldCheck /></span><div><strong>{t("insuranceWorkspace.quickActions.manageClaims")}</strong><small>{t("insuranceWorkspace.quickActions.manageClaimsSub")}</small></div>
+              </button>
+              <button className="amber" type="button" onClick={() => setActiveTab("Renewals")}>
+                <span><CalendarClock /></span><div><strong>{t("insuranceWorkspace.quickActions.upcomingRenewals")}</strong><small>{t("insuranceWorkspace.quickActions.upcomingRenewalsSub")}</small></div>
+              </button>
+              <button className="purple" type="button" onClick={() => setActiveTab("Commissions")}>
+                <span><BadgeDollarSign /></span><div><strong>{t("insuranceWorkspace.quickActions.commissions")}</strong><small>{t("insuranceWorkspace.quickActions.commissionsSub")}</small></div>
+              </button>
+              <button className="pink" type="button" onClick={() => setActiveTab("Reports")}>
+                <span><BarChart3 /></span><div><strong>{t("insuranceWorkspace.quickActions.reports")}</strong><small>{t("insuranceWorkspace.quickActions.reportsSub")}</small></div>
+              </button>
+              <button className="blue" type="button" onClick={() => window.location.assign("/dashboard/setup")}>
+                <span><SlidersHorizontal /></span><div><strong>{t("insuranceWorkspace.quickActions.settings")}</strong><small>{t("insuranceWorkspace.quickActions.settingsSub")}</small></div>
+              </button>
+            </div>
+
+            <div className="insurance-ws-mobile-support">
+              <span><Headphones /></span>
+              <div><strong>{t("insuranceWorkspace.quickActions.needHelp")}</strong><small>{t("insuranceWorkspace.quickActions.needHelpSub")}</small></div>
+              <button type="button" onClick={() => window.location.assign("/dashboard/help-center")}>
+                {t("insuranceWorkspace.quickActions.contactSupport")} <MobileChevronRight size={16}/>
+              </button>
+            </div>
+          </section>
+          )}
+        </>
+      )}
+
       {/* Policies-by-Type / Activity / Renewals cards belong to the Policies and
           Overview views (both driven by the stats payload). */}
-      {(activeTab === "Policies" || activeTab === "Overview") && (
+      <div className="insurance-ws-mobile-intel-heading">
+        <h2>{t("insuranceWorkspace.insuranceIntelligence")}</h2>
+        <p>{t("insuranceWorkspace.intelligenceSubtitle")}</p>
+      </div>
       <div className="insurance-ws-bottom">
         <div className="insurance-ws-bottom-card type-card">
           <div className="insurance-ws-card-head">
             <strong>Policies by Type</strong>
-            <span>This Month⌄</span>
+            <span>This Month<ChevronDown size={12} /></span>
           </div>
 
           <div className="insurance-ws-type-layout">
@@ -645,7 +983,7 @@ export default function InsuranceWorkspace() {
         <div className="insurance-ws-bottom-card">
           <div className="insurance-ws-card-head">
             <strong>Recent Activity</strong>
-            <span>All Activity⌄</span>
+            <span>All Activity<ChevronDown size={12} /></span>
           </div>
 
           <div className="insurance-ws-activity-list">
@@ -656,14 +994,14 @@ export default function InsuranceWorkspace() {
                 </div>
               </div>
             ) : (
-              stats.recentActivity.map((a, i) => {
+              stats.recentActivity.slice(0, 4).map((a, i) => {
                 const Icon = ACTIVITY_ICON[a.kind] || ReceiptText;
                 return (
                   <div
                     className="insurance-ws-activity-row"
                     key={`${a.kind}-${a.when}-${i}`}
                   >
-                    <span>
+                    <span className={`insurance-ws-activity-icon activity-${String(a.kind || "other").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
                       <Icon size={13} />
                     </span>
                     <div>
@@ -683,7 +1021,7 @@ export default function InsuranceWorkspace() {
         <div className="insurance-ws-bottom-card">
           <div className="insurance-ws-card-head">
             <strong>Upcoming Renewals</strong>
-            <span>Next 30 Days⌄</span>
+            <span>Next 30 Days<ChevronDown size={12} /></span>
           </div>
 
           <div className="insurance-ws-renewals">
@@ -719,7 +1057,9 @@ export default function InsuranceWorkspace() {
           <button className="insurance-ws-link-btn">View all renewals →</button>
         </div>
       </div>
-      )}
+
+
+
 
       <PolicyModal
         key={modalNonce}

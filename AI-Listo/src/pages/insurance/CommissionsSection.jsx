@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Plus,
@@ -62,6 +63,7 @@ const EMPTY_CELL_STYLE = {
 };
 
 export default function CommissionsSection() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
@@ -168,6 +170,26 @@ export default function CommissionsSection() {
             placeholder="Search commissions..."
           />
         </label>
+      </div>
+
+      <div className="insurance-ws-mobile-record-list">
+        {loading ? (
+          <div className="insurance-ws-mobile-empty">{t("common.loading")}</div>
+        ) : error ? (
+          <div className="insurance-ws-mobile-empty error">{error}</div>
+        ) : rows.length === 0 ? (
+          <div className="insurance-ws-mobile-empty">{t("insuranceWorkspace.noRecords")}</div>
+        ) : (
+          rows.map((c, index) => (
+            <article className={`insurance-ws-mobile-record-card tone-${(index % 5) + 1}`} key={c.uuid} onClick={() => openView(c.uuid)}>
+              <div className="insurance-ws-mobile-record-icon"><span>$</span></div>
+              <div className="insurance-ws-mobile-record-main"><strong>{c.policy}</strong><b>{c.customer}</b><small>{c.agent}</small></div>
+              <div className="insurance-ws-mobile-record-mid"><small>{t("insuranceWorkspace.fields.rate")}</small><strong>{c.rate}</strong><small>{t("insuranceWorkspace.fields.amount")}</small><span>{c.amount}</span></div>
+              <div className="insurance-ws-mobile-record-side"><small>{t("insuranceWorkspace.fields.status")}</small><span className="iw-pill">{c.status}</span></div>
+              <ChevronRight size={20} className="insurance-ws-mobile-record-arrow" />
+            </article>
+          ))
+        )}
       </div>
 
       <div className="insurance-ws-table-wrap">

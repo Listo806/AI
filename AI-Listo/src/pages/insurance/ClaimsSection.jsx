@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Plus,
@@ -76,6 +77,7 @@ const EMPTY_CELL_STYLE = {
 };
 
 export default function ClaimsSection() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [claims, setClaims] = useState([]);
   const [total, setTotal] = useState(0);
@@ -182,6 +184,26 @@ export default function ClaimsSection() {
             placeholder="Search claims..."
           />
         </label>
+      </div>
+
+      <div className="insurance-ws-mobile-record-list">
+        {loading ? (
+          <div className="insurance-ws-mobile-empty">{t("common.loading")}</div>
+        ) : error ? (
+          <div className="insurance-ws-mobile-empty error">{error}</div>
+        ) : claims.length === 0 ? (
+          <div className="insurance-ws-mobile-empty">{t("insuranceWorkspace.noRecords")}</div>
+        ) : (
+          claims.map((claim, index) => (
+            <article className={`insurance-ws-mobile-record-card tone-${(index % 5) + 1}`} key={claim.uuid} onClick={() => openView(claim.uuid)}>
+              <div className="insurance-ws-mobile-record-icon"><span>CL</span></div>
+              <div className="insurance-ws-mobile-record-main"><strong>{claim.number}</strong><b>{claim.policy}</b>{claim.holder && <span>{claim.holder}</span>}<small>{claim.type}</small></div>
+              <div className="insurance-ws-mobile-record-mid"><small>{t("insuranceWorkspace.fields.claimed")}</small><strong>{claim.claimed}</strong><small>{t("insuranceWorkspace.fields.approved")}</small><span>{claim.approved}</span><small>{t("insuranceWorkspace.fields.paid")}</small><span>{claim.paid}</span></div>
+              <div className="insurance-ws-mobile-record-side"><small>{t("insuranceWorkspace.fields.status")}</small><span className="iw-pill">{claim.status}</span><small>{t("insuranceWorkspace.fields.filed")}</small><b>{claim.filed}</b></div>
+              <ChevronRight size={20} className="insurance-ws-mobile-record-arrow" />
+            </article>
+          ))
+        )}
       </div>
 
       <div className="insurance-ws-table-wrap">

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Plus,
@@ -43,6 +44,7 @@ const EMPTY_CELL_STYLE = {
 };
 
 export default function CarriersSection() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [carriers, setCarriers] = useState([]);
   const [total, setTotal] = useState(0);
@@ -149,6 +151,26 @@ export default function CarriersSection() {
             placeholder="Search carriers..."
           />
         </label>
+      </div>
+
+      <div className="insurance-ws-mobile-record-list">
+        {loading ? (
+          <div className="insurance-ws-mobile-empty">{t("common.loading")}</div>
+        ) : error ? (
+          <div className="insurance-ws-mobile-empty error">{error}</div>
+        ) : carriers.length === 0 ? (
+          <div className="insurance-ws-mobile-empty">{t("insuranceWorkspace.noRecords")}</div>
+        ) : (
+          carriers.map((c, index) => (
+            <article className={`insurance-ws-mobile-record-card tone-${(index % 5) + 1}`} key={c.id} onClick={() => openView(c.id)}>
+              <div className="insurance-ws-mobile-record-icon"><span>{c.carrierMark || (c.name || "?").charAt(0)}</span></div>
+              <div className="insurance-ws-mobile-record-main"><strong>{c.name || "-"}</strong><span>{c.contactEmail || "-"}</span><small>{c.contactPhone || "-"}</small></div>
+              <div className="insurance-ws-mobile-record-mid"><small>{t("insuranceWorkspace.fields.policies")}</small><strong>{c.policyCount ?? 0}</strong></div>
+              <div className="insurance-ws-mobile-record-side"><small>{t("insuranceWorkspace.fields.status")}</small><span className="iw-pill">{c.status || "active"}</span></div>
+              <ChevronRight size={20} className="insurance-ws-mobile-record-arrow" />
+            </article>
+          ))
+        )}
       </div>
 
       <div className="insurance-ws-table-wrap">

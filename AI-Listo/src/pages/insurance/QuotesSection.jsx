@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Plus,
@@ -74,6 +75,7 @@ const EMPTY_CELL_STYLE = {
 };
 
 export default function QuotesSection() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [quotes, setQuotes] = useState([]);
   const [total, setTotal] = useState(0);
@@ -180,6 +182,26 @@ export default function QuotesSection() {
             placeholder="Search quotes..."
           />
         </label>
+      </div>
+
+      <div className="insurance-ws-mobile-record-list">
+        {loading ? (
+          <div className="insurance-ws-mobile-empty">{t("common.loading")}</div>
+        ) : error ? (
+          <div className="insurance-ws-mobile-empty error">{error}</div>
+        ) : quotes.length === 0 ? (
+          <div className="insurance-ws-mobile-empty">{t("insuranceWorkspace.noRecords")}</div>
+        ) : (
+          quotes.map((quote, index) => (
+            <article className={`insurance-ws-mobile-record-card tone-${(index % 5) + 1}`} key={quote.uuid} onClick={() => openView(quote.uuid)}>
+              <div className="insurance-ws-mobile-record-icon"><span>Q</span></div>
+              <div className="insurance-ws-mobile-record-main"><strong>{quote.number}</strong><b>{quote.customer}</b><small>{quote.type}</small></div>
+              <div className="insurance-ws-mobile-record-mid"><small>{t("insuranceWorkspace.fields.premium")}</small><strong>{quote.premium}</strong><small>{t("insuranceWorkspace.fields.validUntil")}</small><span>{quote.validUntil}</span></div>
+              <div className="insurance-ws-mobile-record-side"><small>{t("insuranceWorkspace.fields.status")}</small><span className="iw-pill">{quote.status}</span>{quote.converted && <small>→ {quote.converted}</small>}</div>
+              <ChevronRight size={20} className="insurance-ws-mobile-record-arrow" />
+            </article>
+          ))
+        )}
       </div>
 
       <div className="insurance-ws-table-wrap">

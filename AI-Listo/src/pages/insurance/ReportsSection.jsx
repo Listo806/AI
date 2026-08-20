@@ -83,17 +83,17 @@ export default function ReportsSection() {
         </button>
       </div>
 
-      {error && <div style={ST.error}>{error}</div>}
+      {error && <div className="insurance-report-mobile-error" style={ST.error}>{error}</div>}
 
       {/* Headline metrics */}
-      <div style={ST.tiles}>
+      <div className="insurance-report insurance-report-mobile-tiles" style={ST.tiles}>
         <Tile label="In-force premium" value={money(d.totalActivePremium)} />
         <Tile label="Loss ratio" value={`${claims.lossRatio || 0}%`} note="Paid claims / in-force premium" />
         <Tile label="Renewal rate" value={`${ren.rate || 0}%`} note="Renewed vs closed" />
         <Tile label="Commissions paid" value={money(comm.paidAmount)} note={`${comm.paidCount || 0} paid`} />
       </div>
 
-      <div style={ST.cols}>
+      <div className="insurance-report-mobile-grid" style={ST.cols}>
         {/* Premium by type */}
         <Card title="Premium by policy type">
           {premiumByType.length === 0 ? (
@@ -130,7 +130,7 @@ export default function ReportsSection() {
 
         {/* Claims */}
         <Card title="Claims">
-          <div style={ST.miniRow}>
+          <div className="insurance-report-mobile-mini-row" style={ST.miniRow}>
             <Mini label="Open" value={claims.open || 0} />
             <Mini label="Paid" value={claims.paid || 0} />
             <Mini label="Denied" value={claims.denied || 0} />
@@ -149,7 +149,7 @@ export default function ReportsSection() {
 
         {/* Renewals funnel */}
         <Card title="Renewals">
-          <div style={ST.miniRow}>
+          <div className="insurance-report-mobile-mini-row" style={ST.miniRow}>
             <Mini label="Pending" value={ren.pending || 0} />
             <Mini label="Renewed" value={ren.renewed || 0} tone="green" />
             <Mini label="Lapsed" value={ren.lapsed || 0} tone="amber" />
@@ -181,31 +181,31 @@ export default function ReportsSection() {
 
 function Card({ title, children }) {
   return (
-    <div style={ST.card}>
-      <div style={ST.cardHead}>{title}</div>
-      <div style={ST.cardBody}>{children}</div>
+    <div className="insurance-report-mobile-card" style={ST.card}>
+      <div className="insurance-report-mobile-card-head" style={ST.cardHead}>{title}</div>
+      <div className="insurance-report-mobile-card-body" style={ST.cardBody}>{children}</div>
     </div>
   );
 }
 
 function Tile({ label, value, note }) {
   return (
-    <div style={ST.tile}>
-      <span style={ST.tileLabel}>{label}</span>
-      <strong style={ST.tileValue}>{value}</strong>
-      {note && <small style={ST.tileNote}>{note}</small>}
+    <div className="insurance-report-item insurance-report-mobile-tile" style={ST.tile}>
+      <span className="insurance-report-mobile-tile-label" style={ST.tileLabel}>{label}</span>
+      <strong className="insurance-report-mobile-tile-value" style={ST.tileValue}>{value}</strong>
+      {note && <small className="insurance-report-mobile-tile-note" style={ST.tileNote}>{note}</small>}
     </div>
   );
 }
 
 function BarRow({ label, right, pct, color }) {
   return (
-    <div style={ST.barRow}>
-      <div style={ST.barTop}>
-        <span style={ST.barLabel}>{label}</span>
-        <span style={ST.barRight}>{right}</span>
+    <div className="insurance-report-mobile-bar-row" style={ST.barRow}>
+      <div className="insurance-report-mobile-bar-top" style={ST.barTop}>
+        <span className="insurance-report-mobile-bar-label" style={ST.barLabel}>{label}</span>
+        <span className="insurance-report-mobile-bar-right" style={ST.barRight}>{right}</span>
       </div>
-      <div style={ST.barTrack}>
+      <div className="insurance-report-mobile-bar-track" style={ST.barTrack}>
         <div style={{ ...ST.barFill, width: `${Math.max(2, Math.min(100, pct))}%`, background: color }} />
       </div>
     </div>
@@ -214,26 +214,26 @@ function BarRow({ label, right, pct, color }) {
 
 function Mini({ label, value, tone = "default" }) {
   return (
-    <div style={ST.mini}>
-      <strong style={{ ...ST.miniValue, ...(tone === "green" ? { color: "#059669" } : tone === "amber" ? { color: "#d97706" } : null) }}>
+    <div className="insurance-report-mobile-mini" style={ST.mini}>
+      <strong className={`insurance-report-mobile-mini-value tone-${tone}`} style={{ ...ST.miniValue, ...(tone === "green" ? { color: "#059669" } : tone === "amber" ? { color: "#d97706" } : null) }}>
         {Number(value).toLocaleString("en-US")}
       </strong>
-      <small style={ST.miniLabel}>{label}</small>
+      <small className="insurance-report-mobile-mini-label" style={ST.miniLabel}>{label}</small>
     </div>
   );
 }
 
 function Line({ label, value, strong }) {
   return (
-    <div style={ST.line}>
-      <span style={ST.lineLabel}>{label}</span>
-      <span style={{ ...ST.lineValue, ...(strong ? { fontWeight: 700, color: "#0f172a" } : null) }}>{value}</span>
+    <div className="insurance-report-mobile-line" style={ST.line}>
+      <span className="insurance-report-mobile-line-label" style={ST.lineLabel}>{label}</span>
+      <span className="insurance-report-mobile-line-value" style={{ ...ST.lineValue, ...(strong ? { fontWeight: 700, color: "#0f172a" } : null) }}>{value}</span>
     </div>
   );
 }
 
 function Empty({ text }) {
-  return <p style={{ color: "#94a3b8", fontSize: 13, margin: "8px 0" }}>{text}</p>;
+  return <p className="insurance-report-mobile-empty" style={{ color: "#94a3b8", fontSize: 13, margin: "8px 0" }}>{text}</p>;
 }
 
 const ST = {
