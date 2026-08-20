@@ -282,9 +282,15 @@ export function resolveEffectivePlan(row: {
   // checkout_status='paid' is a sticky "has ever paid" flag set at purchase and
   // never cleared on cancellation, so a terminated payment_status must win over it —
   // otherwise a canceled account would read as still-paid and keep premium forever.
+  // 'trialing' = a real subscription in its 14-day trial: full plan access is
+  // granted during the trial (revenue/MRR, which key off payment_status='active'
+  // elsewhere, still does not count a trial until the first recurring payment).
   const paid =
     !terminated &&
-    (pay === 'active' || pay === 'paid' || checkout === 'paid');
+    (pay === 'active' ||
+      pay === 'paid' ||
+      pay === 'trialing' ||
+      checkout === 'paid');
   const planTier = normalizePlanId(row?.plan);
   const selectedTier = normalizePlanId(row?.selected_plan || row?.plan);
 

@@ -68,6 +68,11 @@ export class CustomersAdminService {
     await this.db.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_country VARCHAR(2)`,
     );
+    // Trial end / first recurring charge date (written by the Paddle webhook while
+    // a subscription is trialing); shown in the admin for trialing customers.
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ`,
+    );
     this.countryColReady = true;
   }
 
@@ -318,7 +323,7 @@ export class CustomersAdminService {
     offer_used, checkout_status, payment_status, plan, selected_plan,
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
     signup_source, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
-    gclid, landing_page, signup_country, created_at, registered_at, upgraded_at, last_seen_at,
+    gclid, landing_page, signup_country, trial_ends_at, created_at, registered_at, upgraded_at, last_seen_at,
     team_id,
     (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id) AS seat_count,
     (SELECT COALESCE(SUM(p.amount), 0)::float

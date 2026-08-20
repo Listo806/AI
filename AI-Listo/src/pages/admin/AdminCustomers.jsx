@@ -965,6 +965,9 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
     ["Status", <span className={`cxc-badge ${c.status}`}>{getCustomerStatusLabel({ ...c, plan_id: sub?.planId, plan_label: sub?.plan }, c.status)}</span>],
     ["Started", fmtDate(sub.startDate)],
     ["Next Billing Date", sub.nextBillingDate ? `${fmtDate(sub.nextBillingDate)} (${relDays(sub.nextBillingDate)})` : "—"],
+    ...(c.status === "trialing" && c.trial_ends_at
+      ? [["Trial Ends", `${fmtDate(c.trial_ends_at)} (${relDays(c.trial_ends_at)})`]]
+      : []),
     ["Source / Offer", `${c.source_label || "—"} / ${c.offer_used || "standard"}`],
   ] : [];
 

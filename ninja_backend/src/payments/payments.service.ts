@@ -176,6 +176,11 @@ export class PaymentsService {
     await this.db.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS paddle_subscription_id TEXT`,
     );
+    // Trial end / first recurring charge date, captured from the Paddle
+    // subscription (next_billed_at) while the subscription is trialing.
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ`,
+    );
     this.paddleColumnReady = true;
   }
 
@@ -186,6 +191,11 @@ export class PaymentsService {
     subscriptionId: string,
     plan: string,
     billingCycle?: string,
+    // Paddle subscription status ('trialing' | 'active' | ...) and the next
+    // billing date, so a real 14-day trial is recorded as trialing (with its
+    // trial-end date) rather than active. Optional: absent = treat as active.
+    subStatus?: string | null,
+    nextBilledAt?: string | null,
   ) {
     await this.ensurePaddleColumn();
     const { rows } = await this.db.query(`SELECT id FROM users WHERE id = $1`, [
@@ -197,16 +207,22 @@ export class PaymentsService {
     // Record the chosen billing cycle when the checkout reported one (annual vs
     // monthly), so the admin + account reflect what the customer actually bought.
     const cycle = billingCycle === 'annual' ? 'annual' : billingCycle === 'monthly' ? 'monthly' : null;
+    const isTrialing = String(subStatus || '').toLowerCase() === 'trialing';
+    // Trialing keeps full access (is_active=true) but revenue does not begin until
+    // the first recurring payment flips the subscription to 'active'.
+    const ps = isTrialing ? 'trialing' : 'active';
+    const trialEnd = isTrialing && nextBilledAt ? new Date(nextBilledAt) : null;
     await this.db.query(
       `UPDATE users
-       SET payment_status = 'active',
+       SET payment_status = $5,
            is_active = true,
            plan = $2,
            paddle_subscription_id = $3,
            billing_cycle = COALESCE($4, billing_cycle),
+           trial_ends_at = CASE WHEN $6::timestamptz IS NOT NULL THEN $6::timestamptz ELSE trial_ends_at END,
            updated_at = NOW()
        WHERE id = $1`,
-      [userId, plan || 'pro', subscriptionId, cycle],
+      [userId, plan || 'pro', subscriptionId, cycle, ps, trialEnd],
     );
     return { success: true };
   }
@@ -254,7 +270,7 @@ export class PaymentsService {
           SET purchase_conversion_reported = true,
               updated_at = NOW()
         WHERE id = $1
-          AND payment_status IN ('active', 'paid')
+          AND payment_status IN ('active', 'paid', 'trialing')
           AND purchase_conversion_reported = false
         RETURNING id, COALESCE(selected_plan, plan) AS plan,
                   paddle_subscription_id`,
@@ -286,7 +302,11 @@ export class PaymentsService {
 
   private async setUserStatusByPaddleSub(
     subscriptionId: string | null,
-    fields: { payment_status?: string; is_active?: boolean },
+    fields: {
+      payment_status?: string;
+      is_active?: boolean;
+      trial_ends_at?: string | null;
+    },
   ): Promise<boolean> {
     if (!subscriptionId) return false;
     await this.ensurePaddleColumn();
@@ -300,6 +320,10 @@ export class PaymentsService {
     if (fields.is_active !== undefined) {
       sets.push(`is_active = $${i++}`);
       vals.push(fields.is_active);
+    }
+    if (fields.trial_ends_at !== undefined) {
+      sets.push(`trial_ends_at = $${i++}`);
+      vals.push(fields.trial_ends_at ? new Date(fields.trial_ends_at) : null);
     }
     if (!sets.length) return false;
     sets.push(`updated_at = NOW()`);
@@ -433,24 +457,36 @@ export class PaymentsService {
 
     switch (eventType) {
       case 'subscription.activated':
-      case 'subscription.created':
+      case 'subscription.created': {
         handled = true;
-        isActivation = true;
+        // A real 14-day trial arrives as subscription.created with status
+        // 'trialing'; the trial->paid conversion arrives as subscription.activated
+        // with status 'active'. Only a genuine activation (not a trial start) is a
+        // "first payment", so the welcome/activation side-effects fire on active.
+        const subStatus = String(data?.status || '').toLowerCase();
+        const isTrialing = subStatus === 'trialing';
+        isActivation = !isTrialing;
+        const nextBilled =
+          data?.next_billed_at || data?.current_billing_period?.ends_at || null;
         if (customUserId && subId) {
           await this.activatePaddleSubscription(
             customUserId,
             subId,
             customPlan || 'pro',
             customCycle || undefined,
+            subStatus,
+            nextBilled,
           );
           matched = true;
         } else {
           matched = await this.setUserStatusByPaddleSub(subId, {
-            payment_status: 'active',
+            payment_status: isTrialing ? 'trialing' : 'active',
             is_active: true,
+            trial_ends_at: isTrialing ? nextBilled : undefined,
           });
         }
         break;
+      }
       case 'transaction.completed':
       case 'transaction.paid':
         handled = true;
@@ -461,29 +497,40 @@ export class PaymentsService {
         // with no subscription_id, or one arriving before subscription.created)
         // from failing and retrying. Never overwrite the plan (subscription
         // events own that) or an already-linked subscription id.
+        // A transaction records real money (the day-0 activation fee, and the
+        // recurring charges). It grants access, but it must NOT flip a trialing
+        // customer to 'active' — the day-0 $7 fee arrives while the subscription
+        // is still trialing, and revenue/active begins only when the subscription
+        // itself activates (subscription.activated). So preserve 'trialing'.
         if (customUserId) {
           await this.ensurePaddleColumn();
           const res = await this.db.query(
             subId
               ? `UPDATE users
-                    SET payment_status = 'active',
+                    SET payment_status = CASE WHEN payment_status = 'trialing' THEN 'trialing' ELSE 'active' END,
                         is_active = true,
                         paddle_subscription_id = COALESCE(paddle_subscription_id, $2),
                         updated_at = NOW()
                   WHERE id = $1`
               : `UPDATE users
-                    SET payment_status = 'active',
+                    SET payment_status = CASE WHEN payment_status = 'trialing' THEN 'trialing' ELSE 'active' END,
                         is_active = true,
                         updated_at = NOW()
                   WHERE id = $1`,
             subId ? [customUserId, subId] : [customUserId],
           );
           matched = (res.rowCount || 0) > 0;
-        } else {
-          matched = await this.setUserStatusByPaddleSub(subId, {
-            payment_status: 'active',
-            is_active: true,
-          });
+        } else if (subId) {
+          await this.ensurePaddleColumn();
+          const res = await this.db.query(
+            `UPDATE users
+                SET payment_status = CASE WHEN payment_status = 'trialing' THEN 'trialing' ELSE 'active' END,
+                    is_active = true,
+                    updated_at = NOW()
+              WHERE paddle_subscription_id = $1`,
+            [subId],
+          );
+          matched = (res.rowCount || 0) > 0;
         }
         break;
       case 'subscription.updated': {
@@ -493,6 +540,16 @@ export class PaymentsService {
           matched = await this.setUserStatusByPaddleSub(subId, {
             payment_status: 'active',
             is_active: true,
+          });
+        } else if (status === 'trialing') {
+          handled = true;
+          matched = await this.setUserStatusByPaddleSub(subId, {
+            payment_status: 'trialing',
+            is_active: true,
+            trial_ends_at:
+              data?.next_billed_at ||
+              data?.current_billing_period?.ends_at ||
+              null,
           });
         } else if (status === 'past_due') {
           handled = true;
