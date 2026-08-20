@@ -2421,6 +2421,7 @@ body .next-action-card svg {
   .dashboard-page .cx-free-ai-units__scale span:nth-child(5) {
     text-align: right;
   }
+  
 }
 
 @media (max-width: 640px) {
@@ -2908,7 +2909,7 @@ body .next-action-card svg {
 
 .command-followup-modal {
   width: min(520px, 100%);
-  max-height: calc(100vh - 40px);
+  max-height: calc(100vh - 130px);
   overflow-y: auto;
   background: #fff;
   border-radius: 16px;
@@ -3025,14 +3026,13 @@ body .next-action-card svg {
 
 @media (max-width: 640px) {
   .command-followup-overlay {
-    align-items: flex-end;
     padding: 0;
   }
 
   .command-followup-modal {
-    width: 100%;
+    width: 94%;
     max-height: 88vh;
-    border-radius: 18px 18px 0 0;
+    border-radius: 14px;
     padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
   }
 
@@ -3090,4 +3090,19 @@ body .next-action-card svg {
   background: #f8fafc;
   color: #64748b;
   font-size: 12px;
+}
+
+.crm-dark .command-followup-modal, .crm-dark .command-followup-lead select,
+.crm-dark .command-followup-grid input, .crm-dark .command-followup-note textarea,
+.crm-dark .command-followup-cancel{
+  background: #101827f2;
+  border: 1px solid #3d46527a;
+  color: #d4ddeb;
+}
+.crm-dark .command-followup-header h3{
+  color: #fff;
+}
+.crm-dark .command-followup-header p, .crm-dark .command-followup-lead,
+.crm-dark .command-followup-grid label, .crm-dark .command-followup-note {
+    color: #d4ddeb;
 }
