@@ -125,6 +125,13 @@ export class PlatformMailerService {
            ON email_log(user_id, template)
           WHERE template IN ('free_welcome','free_plan_value','free_ai','free_team','free_upgrade')`,
       );
+      // Same guarantee for the new onboarding sequence: one row per (user,
+      // onboarding template) ever, so a double signup can never duplicate it.
+      await this.db.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_onb_uniq
+           ON email_log(user_id, template)
+          WHERE template IN ('onb_welcome','onb_support','onb_ai','onb_connect','onb_system','onb_ready','onb_team')`,
+      );
       this.schemaReady = true;
     } catch (err: any) {
       this.logger.error(`email schema ensure failed: ${err?.message}`);
@@ -272,6 +279,9 @@ export class PlatformMailerService {
               { to: [{ email: opts.to }], custom_args: { token: opts.token } },
             ],
             from: sender,
+            // Replies (and the "Reply to this email" button) route to the real
+            // support inbox regardless of the verified From sender.
+            reply_to: { email: this.supportEmail() },
             subject: opts.subject,
             content: [{ type: 'text/html', value: opts.html }],
             custom_args: { token: opts.token },
@@ -300,6 +310,7 @@ export class PlatformMailerService {
       await tx.transporter.sendMail({
         from: tx.from,
         to: opts.to,
+        replyTo: this.supportEmail(),
         subject: opts.subject,
         text: opts.text,
         html: opts.html,
@@ -959,6 +970,221 @@ export class PlatformMailerService {
     }
   }
 
+  // ---- New client-approved onboarding sequence (Day 0/1/2/4/6/9/12) ----
+  // The 7 approved designs (onb_* templates). Replaces the older Free-onboarding
+  // sequence for new Free signups (so there is exactly one welcome), reuses the
+  // same provider/log/tracking pipeline, and is default OFF behind
+  // ONBOARDING_EMAILS_ENABLED. #6 (onb_team, Day 12) is suppressed for accounts
+  // that already hold an active Team workspace entitlement.
+  private readonly ONBOARDING_PLAN: Array<[TemplateName, string]> = [
+    ['onb_welcome', "INTERVAL '1 minute'"], // Day 0
+    ['onb_support', "INTERVAL '1 day'"], // Day 1
+    ['onb_ai', "INTERVAL '2 days'"], // Day 2
+    ['onb_connect', "INTERVAL '4 days'"], // Day 4
+    ['onb_system', "INTERVAL '6 days'"], // Day 6
+    ['onb_ready', "INTERVAL '9 days'"], // Day 9
+    ['onb_team', "INTERVAL '12 days'"], // Day 12
+  ];
+
+  // Deep-linked CTA targets + support/unsubscribe tokens for the onboarding
+  // designs. In-app links open the account's dashboard (locale handled by the
+  // app); /pricing is the public commercial page.
+  private onboardingVars(
+    first: string | null,
+    unsubscribeUrl: string | null,
+  ): TemplateVars {
+    const app = this.appUrl();
+    const vars: TemplateVars = {
+      name: first,
+      ctaUrl: `${app}/dashboard/home`,
+      appUrl: `${app}/dashboard/home`,
+      aiAgentUrl: `${app}/dashboard/ai-center`,
+      aiUnitsUrl: `${app}/dashboard/ai-center`,
+      upgradeUrl: `${app}/pricing`,
+      workspaceUrl: `${app}/pricing`,
+      teamWorkspaceUrl: `${app}/dashboard/team`,
+      supportEmail: this.supportEmail(),
+    };
+    if (unsubscribeUrl) vars.unsubscribeUrl = unsubscribeUrl;
+    return vars;
+  }
+
+  // Enqueue the 7 onboarding emails. Idempotent per (user, template) via the
+  // NOT EXISTS guard + unique index. Also cancels any still-scheduled OLD
+  // Free-onboarding rows for this user, so the two sequences never overlap.
+  async scheduleOnboardingSequence(
+    userId: string,
+    email: string,
+    lang?: string,
+  ): Promise<void> {
+    if (!userId || !email) return;
+    await this.ensureSchema();
+    try {
+      await this.db.query(
+        `UPDATE email_log SET status = 'canceled'
+          WHERE user_id = $1 AND status = 'scheduled'
+            AND template IN ('free_welcome','free_plan_value','free_ai','free_team','free_upgrade')`,
+        [userId],
+      );
+      for (const [template, iv] of this.ONBOARDING_PLAN) {
+        await this.db.query(
+          `INSERT INTO email_log
+             (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
+           SELECT $1, $2, $3, $4, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW()
+            WHERE NOT EXISTS (
+              SELECT 1 FROM email_log
+               WHERE user_id = $1 AND template = $3
+                 AND status IN ('scheduled', 'sending', 'sent'))
+           ON CONFLICT DO NOTHING`,
+          [userId, email, template, String(lang || 'en').slice(0, 5)],
+        );
+      }
+    } catch (err: any) {
+      this.logger.error(`scheduleOnboardingSequence failed: ${err?.message}`);
+    }
+  }
+
+  // Cron worker: send due onboarding emails. Stops on upgrade-to-paid, marketing
+  // opt-out, or a hard bounce; suppresses the Day-12 Team email when the account
+  // already owns the Team workspace; one email per user per sweep.
+  async sendOnboardingDue(): Promise<void> {
+    await this.ensureSchema();
+    let due: any[] = [];
+    try {
+      const { rows } = await this.db.query(
+        `SELECT el.id, el.track_token, el.template, el.language, el.to_email, el.user_id,
+                u.name, u.payment_status, u.checkout_status, u.email_opt_out,
+                u.email_bounced_at, u.email_unsub_token
+           FROM email_log el
+           JOIN users u ON u.id = el.user_id
+          WHERE el.status = 'scheduled'
+            AND el.scheduled_at <= NOW()
+            AND el.template IN ('onb_welcome','onb_support','onb_ai','onb_connect','onb_system','onb_ready','onb_team')
+          ORDER BY el.scheduled_at ASC
+          LIMIT 200`,
+      );
+      due = rows;
+    } catch (err: any) {
+      this.logger.error(`sendOnboardingDue query failed: ${err?.message}`);
+      return;
+    }
+
+    const seenUsers = new Set<string>();
+    for (const r of due) {
+      const paid =
+        r.payment_status === 'active' ||
+        r.payment_status === 'paid' ||
+        r.checkout_status === 'paid';
+      if (paid || r.email_opt_out || r.email_bounced_at) {
+        await this.db.query(
+          `UPDATE email_log SET status = 'canceled' WHERE id = $1`,
+          [r.id],
+        );
+        continue;
+      }
+      // Day-12 Team Workspace email: suppress if the account already holds an
+      // active 'team' workspace entitlement. Owners may have users.team_id NULL
+      // and own their team via teams.owner_id, so resolve both.
+      if (r.template === 'onb_team') {
+        try {
+          const { rows: ent } = await this.db.query(
+            `SELECT 1 FROM workspace_entitlements we
+              WHERE we.workspace_id = 'team' AND we.status = 'active'
+                AND we.team_id = COALESCE(
+                  (SELECT team_id FROM users WHERE id = $1),
+                  (SELECT id FROM teams WHERE owner_id = $1 LIMIT 1))
+              LIMIT 1`,
+            [r.user_id],
+          );
+          if (ent.length) {
+            await this.db.query(
+              `UPDATE email_log SET status = 'canceled' WHERE id = $1`,
+              [r.id],
+            );
+            continue;
+          }
+        } catch {
+          /* entitlement check failed — fall through and send (non-fatal) */
+        }
+      }
+      if (seenUsers.has(r.user_id)) continue;
+
+      const unsubTok =
+        r.email_unsub_token || (await this.getOrCreateUnsubToken(r.user_id));
+      if (!unsubTok) continue;
+
+      const claim = await this.db.query(
+        `UPDATE email_log SET status = 'sending'
+          WHERE id = $1 AND status = 'scheduled' RETURNING id`,
+        [r.id],
+      );
+      if (!claim.rows.length) continue;
+      seenUsers.add(r.user_id);
+
+      const first = r.name ? String(r.name).trim().split(/\s+/)[0] : null;
+      const vars = this.onboardingVars(first, this.unsubUrl(unsubTok));
+      const rendered = renderTemplate(r.template, r.language, vars);
+      const token = r.track_token || crypto.randomUUID();
+      const html = this.htmlFor(rendered.html, token);
+      const result = await this.deliver({
+        to: r.to_email,
+        subject: rendered.subject,
+        html,
+        text: rendered.text,
+        token,
+      });
+      const status = result.ok
+        ? 'sent'
+        : result.error === 'smtp_not_configured'
+          ? 'skipped'
+          : 'error';
+      await this.db.query(
+        `UPDATE email_log
+            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+          WHERE id = $1`,
+        [
+          r.id,
+          status,
+          rendered.subject,
+          result.provider,
+          result.ok ? null : result.error?.slice(0, 500),
+          token,
+        ],
+      );
+      if (status === 'skipped') {
+        await this.db.query(
+          `UPDATE email_log SET status = 'scheduled' WHERE id = $1`,
+          [r.id],
+        );
+      }
+    }
+  }
+
+  // Send all 7 onboarding emails to one address on demand, so the sequence can
+  // be reviewed in a real inbox before the automation is switched on. Independent
+  // of ONBOARDING_EMAILS_ENABLED and the scheduled queue.
+  async sendOnboardingTest(
+    to: string,
+    language = 'en',
+  ): Promise<Array<{ template: TemplateName; sent: boolean; status: string; reason?: string }>> {
+    const sequence: TemplateName[] = [
+      'onb_welcome',
+      'onb_support',
+      'onb_ai',
+      'onb_connect',
+      'onb_system',
+      'onb_ready',
+      'onb_team',
+    ];
+    const out: Array<{ template: TemplateName; sent: boolean; status: string; reason?: string }> = [];
+    for (const template of sequence) {
+      const r = await this.sendTestEmail({ to, template, language });
+      out.push({ template, sent: r.sent, status: r.status, reason: r.reason });
+    }
+    return out;
+  }
+
   // ---- welcome ----
   private welcomeVars(name?: string | null): TemplateVars {
     const app = this.appUrl();
@@ -1175,6 +1401,17 @@ export class PlatformMailerService {
           name,
           this.unsubUrl('test-sample'),
         );
+        break;
+      case 'onb_welcome':
+      case 'onb_support':
+      case 'onb_ai':
+      case 'onb_connect':
+      case 'onb_system':
+      case 'onb_ready':
+      case 'onb_team':
+        // Same vars the live sequence uses (deep-linked CTAs, first name, support
+        // + a sample unsubscribe token that reports an invalid link if clicked).
+        vars = this.onboardingVars(name, this.unsubUrl('test-sample'));
         break;
       default:
         // abandoned_1 / abandoned_2 / abandoned_3

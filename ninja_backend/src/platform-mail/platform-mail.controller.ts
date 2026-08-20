@@ -20,6 +20,13 @@ const TEST_TEMPLATES: TemplateName[] = [
   'free_ai',
   'free_team',
   'free_upgrade',
+  'onb_welcome',
+  'onb_support',
+  'onb_ai',
+  'onb_connect',
+  'onb_system',
+  'onb_ready',
+  'onb_team',
 ];
 
 // Admin-only visibility into platform lifecycle email delivery (welcome +
@@ -84,6 +91,25 @@ export class PlatformMailController {
     }
 
     const results = await this.mailer.sendFreeOnboardingTest(to, language);
+    return { ok: results.every((r) => r.sent), results };
+  }
+
+  @Post('test-onboarding')
+  @ApiOperation({
+    summary:
+      'Send all 7 onboarding-sequence emails (Day 0/1/2/4/6/9/12) to any address (admin)',
+  })
+  async testOnboarding(@Body() body: { to?: string; language?: string }) {
+    const to = String(body?.to || '').trim();
+    const language = String(body?.language || 'en')
+      .slice(0, 2)
+      .toLowerCase();
+
+    if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
+      return { ok: false, error: 'A valid recipient email is required.' };
+    }
+
+    const results = await this.mailer.sendOnboardingTest(to, language);
     return { ok: results.every((r) => r.sent), results };
   }
 }

@@ -52,6 +52,16 @@ export class SignupLifecycleService {
     );
   }
 
+  // New client-approved onboarding sequence (Day 0/1/2/4/6/9/12) behind its own
+  // flag (default OFF) so it can be tested and enabled on its own.
+  private onboardingEnabled(): boolean {
+    return (
+      String(this.config.get('ONBOARDING_EMAILS_ENABLED') || '')
+        .trim()
+        .toLowerCase() === 'true'
+    );
+  }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async sweepAbandonedSignups(): Promise<void> {
     if (!this.enabled()) return; // hard off by default
@@ -83,6 +93,18 @@ export class SignupLifecycleService {
       await this.mailer.sendFreeOnboardingDue();
     } catch (err: any) {
       this.logger.error(`free-onboarding sweep failed: ${err?.message}`);
+    }
+  }
+
+  // Every minute so email #1 lands near "immediately" after a new signup. Hard
+  // off unless ONBOARDING_EMAILS_ENABLED.
+  @Cron(CronExpression.EVERY_MINUTE)
+  async sweepOnboarding(): Promise<void> {
+    if (!this.onboardingEnabled()) return; // hard off by default
+    try {
+      await this.mailer.sendOnboardingDue();
+    } catch (err: any) {
+      this.logger.error(`onboarding sweep failed: ${err?.message}`);
     }
   }
 }
