@@ -394,6 +394,34 @@ export async function sendAdminTestEmail({ to, template, language } = {}) {
   });
 }
 
+// ── Manual single-customer template sender (customer detail "Send Email") ──
+
+// Catalog of production templates an admin can send to one customer.
+// Returns { data: [{ name, label, category, description }] }.
+export async function getEmailTemplateCatalog() {
+  const res = await apiClient.request(`/admin/email/templates`);
+  return Array.isArray(res?.data) ? res.data : [];
+}
+
+// Render a template for one customer in THEIR language (preview, no send).
+// Returns { ok, customerName, email, template, language, subject, html }.
+export async function previewCustomerTemplateEmail(userId, template) {
+  return apiClient.request(`/admin/email/preview-customer`, {
+    method: "POST",
+    body: JSON.stringify({ userId, template }),
+  });
+}
+
+// Send ONE template email to ONE customer, in their language, logged as manual.
+// idempotencyKey guards against accidental double sends. Returns
+// { ok, status, reason, subject, to, language, template }.
+export async function sendCustomerTemplateEmail(userId, { template, idempotencyKey } = {}) {
+  return apiClient.request(`/admin/email/send-customer`, {
+    method: "POST",
+    body: JSON.stringify({ userId, template, idempotencyKey }),
+  });
+}
+
 export async function createAdminUser(payload) {
   const res = await apiClient.request("/admin/users", {
     method: "POST",
