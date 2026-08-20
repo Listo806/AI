@@ -1095,10 +1095,13 @@ export class PlatformMailerService {
     for (const r of due) {
       const ps = String(r.payment_status || '').toLowerCase();
       const cs = String(r.checkout_status || '').toLowerCase();
-      // ALWAYS re-check: never send "finish your checkout" to someone who paid.
+      // ALWAYS re-check: never send "finish your checkout" to someone who has
+      // completed it — including a real trial ('trialing'), since they checked out
+      // successfully into the trial.
       const paid =
         ps === 'active' ||
         ps === 'paid' ||
+        ps === 'trialing' ||
         cs === 'paid' ||
         !!r.welcome_email_sent_at;
       if (paid || r.email_bounced_at) {
