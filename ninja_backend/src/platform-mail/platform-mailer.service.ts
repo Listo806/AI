@@ -1547,4 +1547,27 @@ export class PlatformMailerService {
     );
     return rows;
   }
+
+  // Scoped log read for the key-guarded onboarding test endpoint: returns ONLY
+  // the onboarding rows for one specific recipient, so the test tool never
+  // exposes any other customer's mail.
+  async onboardingTestLog(toEmail: string, limit = 20): Promise<any[]> {
+    await this.ensureSchema();
+    const n = Math.min(Math.max(Number(limit) || 20, 1), 50);
+    try {
+      const { rows } = await this.db.query(
+        `SELECT template, language, subject, status, error, provider,
+                sent_at, created_at
+           FROM email_log
+          WHERE to_email = $1
+            AND template IN ('onb_welcome','onb_support','onb_ai','onb_connect','onb_system','onb_ready','onb_team')
+          ORDER BY created_at DESC
+          LIMIT $2`,
+        [toEmail, n],
+      );
+      return rows;
+    } catch {
+      return [];
+    }
+  }
 }
