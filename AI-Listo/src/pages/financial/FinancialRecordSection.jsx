@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Plus,
@@ -25,6 +26,7 @@ export default function FinancialRecordSection({
   ModalComponent,
   statusOptions,
 }) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [status, setStatus] = useState("");
@@ -63,7 +65,7 @@ export default function FinancialRecordSection({
       })
       .catch(() => {
         if (!alive) return;
-        setError(`Could not load ${title.toLowerCase()}.`);
+        setError(t("financialWorkspace.record.loadError", { title: title.toLowerCase() }));
         setLoading(false);
       });
     return () => {
@@ -91,8 +93,8 @@ export default function FinancialRecordSection({
           <p>{subtitle}</p>
         </div>
         <div className="fsw-section-actions">
-          <button><Upload size={14} />Import</button>
-          <button><Download size={14} />Export</button>
+          <button><Upload size={14} />{t("financialWorkspace.actions.import")}</button>
+          <button><Download size={14} />{t("financialWorkspace.actions.export")}</button>
           <button><Settings2 size={14} /></button>
           <button className="primary" onClick={() => openModal("create")}>
             <Plus size={14} />{newLabel}
@@ -106,20 +108,48 @@ export default function FinancialRecordSection({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={`Search ${title.toLowerCase()}...`}
+            placeholder={t("financialWorkspace.record.search", { title: title.toLowerCase() })}
           />
         </label>
         {statusOptions && (
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">Status</option>
+            <option value="">{t("financialWorkspace.filters.status")}</option>
             {statusOptions.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
         )}
         <button className="fsw-reset" onClick={() => { setSearch(""); setStatus(""); }}>
-          <RotateCcw size={14} />Reset
+          <RotateCcw size={14} />{t("financialWorkspace.actions.reset")}
         </button>
+      </div>
+
+      <div className="fsw-mobile-record-list">
+        {loading ? (
+          <div className="fsw-mobile-state">{t("common.loading")}</div>
+        ) : error ? (
+          <div className="fsw-mobile-state error">{error}</div>
+        ) : rows.length === 0 ? (
+          <div className="fsw-mobile-state">{t("financialWorkspace.record.empty", { title: title.toLowerCase() })}</div>
+        ) : (
+          rows.map((row, rowIndex) => (
+            <article className={`fsw-mobile-record-card tone-${rowIndex % 5}`} key={row.id}>
+              <div className="fsw-mobile-record-grid">
+                {columns.map((c, colIndex) => (
+                  <div className={colIndex === 0 ? "primary" : ""} key={c.header}>
+                    <small>{c.header}</small>
+                    <div>{c.render(row)}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="fsw-mobile-record-actions">
+                <button onClick={() => openModal("view", row.id)}><Eye size={16} />{t("common.view")}</button>
+                <button onClick={() => openModal("edit", row.id)}><Pencil size={16} />{t("common.edit")}</button>
+                <button onClick={() => openModal("view", row.id)}><MoreVertical size={16} />{t("financialWorkspace.actions.more")}</button>
+              </div>
+            </article>
+          ))
+        )}
       </div>
 
       <div className="fsw-table-wrap">
@@ -130,16 +160,16 @@ export default function FinancialRecordSection({
               {columns.map((c) => (
                 <th key={c.header}>{c.header}</th>
               ))}
-              <th>Actions</th>
+              <th>{t("financialWorkspace.table.actions")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={colSpan} style={{ textAlign: "center", padding: 24, color: "#64748b" }}>Loading…</td></tr>
+              <tr><td colSpan={colSpan} style={{ textAlign: "center", padding: 24, color: "#64748b" }}>{t("common.loading")}</td></tr>
             ) : error ? (
               <tr><td colSpan={colSpan} style={{ textAlign: "center", padding: 24, color: "#b91c1c" }}>{error}</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={colSpan} style={{ textAlign: "center", padding: 24, color: "#64748b" }}>No {title.toLowerCase()} yet.</td></tr>
+              <tr><td colSpan={colSpan} style={{ textAlign: "center", padding: 24, color: "#64748b" }}>{t("financialWorkspace.record.empty", { title: title.toLowerCase() })}</td></tr>
             ) : (
               rows.map((row) => (
                 <tr key={row.id}>
@@ -160,7 +190,7 @@ export default function FinancialRecordSection({
           </tbody>
         </table>
         <div className="fsw-pagination">
-          <span>Showing {from} to {to} of {total.toLocaleString("en-US")} {title.toLowerCase()}</span>
+          <span>{t("financialWorkspace.pagination.showingGeneric", { from, to, total: total.toLocaleString(), title: title.toLowerCase() })}</span>
           <div>
             <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>‹</button>
             <button className="active">{page}</button>

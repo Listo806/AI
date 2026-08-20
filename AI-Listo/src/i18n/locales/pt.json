@@ -4213,5 +4213,317 @@
       "needHelpSub": "Nossa equipe de suporte está aqui para ajudar.",
       "contactSupport": "Falar com suporte"
     }
-  }
+  },
+  "financialWorkspace": {
+    "title": "Workspace de Serviços Financeiros",
+    "subtitle": "Gerencie toda a jornada do cliente, da solicitação à gestão de portfólio.",
+    "searchGlobal": "Buscar clientes, contas, solicitações, documentos...",
+    "new": "Novo",
+    "placeholder": "O workspace de {{tab}} está pronto para a próxima etapa de implementação.",
+    "tabs": {
+      "overview": "Visão geral",
+      "clients": "Clientes",
+      "applications": "Solicitações",
+      "accounts": "Contas",
+      "transactions": "Transações",
+      "investments": "Investimentos",
+      "documents": "Documentos",
+      "commissions": "Comissões",
+      "reports": "Relatórios"
+    },
+    "stats": {
+      "totalClients": "Total de Clientes",
+      "applicationsInProgress": "Solicitações em Andamento",
+      "accountsUnderManagement": "Contas Sob Gestão",
+      "assetsUnderManagement": "Ativos Sob Gestão",
+      "revenueThisMonth": "Receita (Este Mês)",
+      "conversionRate": "Taxa de Conversão",
+      "activeCount": "{{count}} Ativos",
+      "inProgress": "Em andamento",
+      "activeAccounts": "Contas ativas",
+      "totalAumRecorded": "AUM total (registrado)",
+      "approvedPaidThisMonth": "Aprovado + pago este mês",
+      "applicationsApproved": "Solicitações aprovadas"
+    },
+    "clients": {
+      "title": "Clientes",
+      "subtitle": "Veja e gerencie todos os seus clientes e prospects.",
+      "search": "Buscar clientes...",
+      "empty": "Ainda não há clientes. Adicione seu primeiro cliente para começar.",
+      "accounts": "Contas",
+      "loadError": "Não foi possível carregar os clientes."
+    },
+    "actions": {
+      "import": "Importar",
+      "export": "Exportar",
+      "newClient": "Novo Cliente",
+      "newTransaction": "Nova Transação",
+      "newInvestment": "Novo Investimento",
+      "reset": "Redefinir",
+      "more": "Mais",
+      "refresh": "Atualizar"
+    },
+    "filters": {
+      "clientType": "Tipo de Cliente",
+      "status": "Status",
+      "riskLevel": "Nível de Risco"
+    },
+    "clientTypes": {
+      "retail": "Cliente Varejo",
+      "corporate": "Cliente Corporativo"
+    },
+    "table": {
+      "clientId": "ID do Cliente",
+      "clientName": "Nome do Cliente",
+      "clientType": "Tipo de Cliente",
+      "primaryAdvisor": "Consultor Principal",
+      "accountType": "Tipo de Conta",
+      "aumBalance": "AUM / Saldo",
+      "riskLevel": "Nível de Risco",
+      "status": "Status",
+      "lastActivity": "Última Atividade",
+      "nextReview": "Próxima Revisão",
+      "actions": "Ações"
+    },
+    "pagination": {
+      "showingClients": "Mostrando {{from}} a {{to}} de {{total}} clientes",
+      "showingGeneric": "Mostrando {{from}} a {{to}} de {{total}} {{title}}",
+      "perPage": "{{count}} / página"
+    },
+    "record": {
+      "search": "Buscar {{title}}...",
+      "empty": "Ainda não há {{title}}.",
+      "loadError": "Não foi possível carregar {{title}}."
+    },
+    "transactions": {
+      "subtitle": "Registros de movimentação de dinheiro (a Cortexa não movimenta fundos)",
+      "columns": {
+        "id": "ID da Transação",
+        "client": "Cliente",
+        "account": "Conta",
+        "type": "Tipo",
+        "amount": "Valor",
+        "status": "Status",
+        "date": "Data"
+      }
+    },
+    "investments": {
+      "subtitle": "Posições de clientes com valores registrados (sem preços de mercado em tempo real)",
+      "columns": {
+        "id": "ID do Investimento",
+        "holding": "Ativo",
+        "client": "Cliente",
+        "category": "Categoria",
+        "value": "Valor",
+        "status": "Status",
+        "asOf": "Em"
+      }
+    },
+    "reports": {
+      "loading": "Carregando análises…",
+      "subtitle": "Clientes, solicitações, ativos, portfólio, fluxos e receita do seu negócio.",
+      "loadError": "Não foi possível carregar os relatórios.",
+      "assetsUnderManagement": "Ativos sob gestão",
+      "activeAccountsRecorded": "{{count}} contas ativas (registradas)",
+      "portfolioValue": "Valor do portfólio",
+      "activeHoldingsRecorded": "Posições ativas (registradas)",
+      "revenueThisMonth": "Receita este mês",
+      "approvedPaidCommissions": "Comissões aprovadas + pagas",
+      "netFlow": "Fluxo líquido",
+      "contributionsMinusWithdrawals": "Aportes menos retiradas",
+      "portfolioAllocation": "Alocação do portfólio (registrada)",
+      "noActiveHoldings": "Ainda não há posições ativas",
+      "aumByAccountType": "AUM por tipo de conta (registrado)",
+      "noActiveAccounts": "Ainda não há contas ativas",
+      "clientsByStatus": "Clientes por status",
+      "noClients": "Ainda não há clientes",
+      "clientsByRisk": "Clientes por nível de risco",
+      "applicationsByStatus": "Solicitações por status",
+      "noApplications": "Ainda não há solicitações",
+      "transactionsCompleted": "Transações (concluídas)",
+      "count": "Quantidade",
+      "in": "Entradas",
+      "out": "Saídas",
+      "net": "Líquido",
+      "commissionsRevenue": "Comissões (receita)",
+      "approved": "Aprovado",
+      "paid": "Pago",
+      "totalBooked": "Total registrado",
+      "thisMonthApprovedPaid": "Este mês (aprovado + pago)"
+    },
+    "documents": {
+      "subtitle": "Armazene e compartilhe arquivos de clientes e contas. Privados para sua conta.",
+      "chooseFile": "Escolher arquivo",
+      "titleOptional": "Título (opcional)",
+      "notesOptional": "Notas (opcional)",
+      "document": "Documento",
+      "type": "Tipo",
+      "size": "Tamanho",
+      "uploaded": "Enviado",
+      "loadError": "Não foi possível carregar os documentos.",
+      "chooseFileError": "Escolha um arquivo para enviar.",
+      "uploadFailed": "Falha no envio.",
+      "openFailed": "Não foi possível abrir o documento.",
+      "deleteFailed": "Falha ao excluir.",
+      "deleteConfirm": "Excluir “{{name}}”? Esta ação não pode ser desfeita.",
+      "uploading": "Enviando…",
+      "upload": "Enviar",
+      "hint": "PDF, Word, Excel, CSV, texto ou imagens. Até 20 MB.",
+      "search": "Buscar documentos...",
+      "empty": "Ainda não há documentos. Envie seu primeiro arquivo acima.",
+      "download": "Baixar",
+      "types": {
+        "statement": "Extrato",
+        "application": "Solicitação",
+        "agreement": "Contrato",
+        "kyc_id": "KYC / Identificação",
+        "tax": "Imposto",
+        "report": "Relatório",
+        "other": "Outro"
+      }
+    },
+    "risk": {
+      "conservative": "Conservador",
+      "moderate_low": "Moderado baixo",
+      "moderate": "Moderado",
+      "moderate_high": "Moderado alto",
+      "high": "Alto"
+    }
+  },
+  "mobileActions": {
+      "title": "Ações Financeiras",
+      "subtitle": "Ações rápidas para gerenciar seu negócio de serviços financeiros.",
+      "items": {
+        "newClient": {
+          "title": "Novo Cliente",
+          "subtitle": "Adicione um novo cliente ou prospect"
+        },
+        "newApplication": {
+          "title": "Nova Solicitação",
+          "subtitle": "Crie uma nova solicitação"
+        },
+        "newAccount": {
+          "title": "Nova Conta",
+          "subtitle": "Abra uma nova conta de investimento ou poupança"
+        },
+        "newTransaction": {
+          "title": "Nova Transação",
+          "subtitle": "Registre depósito, retirada ou transferência"
+        },
+        "newInvestment": {
+          "title": "Novo Investimento",
+          "subtitle": "Adicione um novo investimento ou ativo"
+        },
+        "portfolioAllocation": {
+          "title": "Alocação de Portfólio",
+          "subtitle": "Rebalanceie e aloque portfólios de clientes"
+        },
+        "uploadDocument": {
+          "title": "Enviar Documento",
+          "subtitle": "Envie ou gerencie documentos de clientes"
+        },
+        "recordCommission": {
+          "title": "Registrar Comissão",
+          "subtitle": "Adicione ou gerencie comissões"
+        },
+        "scheduleReview": {
+          "title": "Agendar Revisão",
+          "subtitle": "Agende uma revisão de portfólio ou cliente"
+        },
+        "taskFollowUp": {
+          "title": "Tarefa e Follow-Up",
+          "subtitle": "Crie tarefas e lembretes de acompanhamento"
+        },
+        "generateReport": {
+          "title": "Gerar Relatório",
+          "subtitle": "Gere relatórios financeiros personalizados"
+        },
+        "sendStatement": {
+          "title": "Enviar Extrato",
+          "subtitle": "Envie extratos aos clientes"
+        }
+      },
+      "support": {
+        "title": "Precisa de Ajuda?",
+        "subtitle": "Nossa equipe de suporte está aqui para ajudar.",
+        "button": "Contatar Suporte"
+      }
+    },
+    "aiAssistant": {
+      "title": "Assistente Financeiro IA da Cortexa",
+      "subtitle": "Pergunte sobre seu negócio. Obtenha insights instantâneos e tome ação.",
+      "prompts": {
+        "applications": {
+          "title": "Quais solicitações precisam da minha atenção?",
+          "subtitle": "Mostrar solicitações pendentes, vencidas ou em risco"
+        },
+        "reviews": {
+          "title": "Mostre as próximas revisões de clientes.",
+          "subtitle": "Quais revisões estão programadas em breve?"
+        },
+        "accounts": {
+          "title": "Quais contas precisam de follow-up?",
+          "subtitle": "Mostrar contas inativas ou com pouca atividade"
+        },
+        "portfolio": {
+          "title": "Como está o desempenho do meu portfólio?",
+          "subtitle": "Mostrar um resumo rápido do desempenho"
+        },
+        "revenue": {
+          "title": "Qual é minha receita este mês?",
+          "subtitle": "Mostrar receita, taxas e comissões recebidas"
+        }
+      },
+      "summary": {
+        "title": "Resumo IA (Hoje)",
+        "applications": "Solicitações Precisam de Atenção",
+        "reviews": "Revisões Esta Semana",
+        "accounts": "Contas com Baixa Atividade",
+        "revenue": "Receita Este Mês"
+      },
+      "quickActions": "Ações Rápidas de IA",
+      "quick": {
+        "generateReport": {
+          "title": "Gerar Relatório",
+          "subtitle": "Criar relatórios financeiros personalizados"
+        },
+        "exportData": {
+          "title": "Exportar Dados",
+          "subtitle": "Exportar clientes, contas ou relatórios"
+        },
+        "sendSummary": {
+          "title": "Enviar Resumo",
+          "subtitle": "Enviar resumo por e-mail"
+        },
+        "setReminder": {
+          "title": "Criar Lembrete",
+          "subtitle": "Adicionar lembretes de follow-up"
+        },
+        "portfolioReview": {
+          "title": "Revisão de Portfólio",
+          "subtitle": "Análise de portfólio com IA"
+        },
+        "performanceTrends": {
+          "title": "Tendências",
+          "subtitle": "Ver tendências de desempenho"
+        },
+        "aiInsights": {
+          "title": "Insights de IA",
+          "subtitle": "Descobrir oportunidades"
+        },
+        "askAnything": {
+          "title": "Perguntar",
+          "subtitle": "Converse com seu assistente IA"
+        }
+      },
+      "inputPlaceholder": "Pergunte à Cortexa IA sobre seu negócio financeiro...",
+      "disclaimer": "As respostas de IA são baseadas nos seus dados e podem não ser 100% precisas."
+    },
+    "bottomNav": {
+      "home": "Início",
+      "clients": "Clientes",
+      "add": "Adicionar",
+      "reports": "Relatórios",
+      "more": "Mais"
+    }
 }

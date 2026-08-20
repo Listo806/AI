@@ -1,0 +1,613 @@
+/* Insurance Workspace tablet/mobile responsive layer */
+.insurance-ws-tabs-mobile-wrap,
+.insurance-ws-tabs-mobile,
+.insurance-ws-tabs-mobile-more-menu,
+.insurance-ws-mobile-policy-tools,
+.insurance-ws-mobile-policy-list,
+.insurance-ws-mobile-record-list,
+.insurance-ws-mobile-intel-heading,
+.insurance-ws-mobile-connections,
+.insurance-ws-mobile-actions-hub { display:none; }
+
+@media (max-width:1024px){
+  body.crm-dark .insurance-ws{
+    --bg:#0b0f19;--card:#0b0f19;--card2:#0b0f19;--txt:#f8fafc;--mut:#adb5c1;--bd:#3d46527a;
+    background:#0b0f19;color:var(--txt);
+  }
+  body:not(.crm-dark) .insurance-ws{
+    --bg:#f8fafc;--card:#fff;--card2:#f8fafc;--txt:#0f172a;--mut:#64748b;--bd:#cbd5e180;
+    background:var(--bg);color:var(--txt);
+  }
+  .insurance-ws{min-height:100vh;padding:0}
+  .insurance-ws-header{display:block;margin:0 0 20px}
+  .insurance-ws-header h1{margin:0;color:var(--txt);font-size:clamp(28px,4vw,38px);line-height:1.1}
+  .insurance-ws-header p{margin:8px 0 0;color:var(--mut);font-size:15px}
+  .insurance-ws-header-actions{display:none!important}
+
+  /* Mobile/tablet uses the EXISTING filter bar. Desktop base CSS is untouched. */
+  .insurance-ws-policies>.insurance-ws-filters{
+    display:flex!important;
+    align-items:center;
+    gap:8px;
+    overflow-x:auto;
+    margin:0 0 16px;
+    padding:0 0 4px;
+    scrollbar-width:none;
+  }
+  .insurance-ws-policies>.insurance-ws-filters::-webkit-scrollbar{display:none}
+  .insurance-ws-policies>.insurance-ws-filters>label,
+  .insurance-ws-policies>.insurance-ws-filters>button{flex:0 0 auto}
+  .insurance-ws-policies>.insurance-ws-filters>label{min-width:250px}
+  .insurance-ws-policies>.insurance-ws-filters>span{display:none}
+
+  .insurance-ws-stat-grid{display:none!important}
+  .insurance-ws-stat-grid{display:grid!important;grid-template-columns:1fr;gap:14px;margin:22px 0 26px}
+  .insurance-ws-stat-card{
+    --tone:#2388ff;--tone-rgb:35,136,255;
+    min-height:138px;position:relative;display:grid;grid-template-columns:82px 1fr 30px;grid-template-rows:auto auto auto;
+    align-items:center;gap:2px 18px;padding:22px 26px 22px 20px;border:1px solid var(--tone);border-radius:14px;
+    background:var(--card)!important;box-shadow:inset 0 0 34px rgba(var(--tone-rgb),.055)
+  }
+  .insurance-ws-stat-card:nth-child(2){--tone:#ff9a08;--tone-rgb:255,154,8}
+  .insurance-ws-stat-card:nth-child(3){--tone:#a83cff;--tone-rgb:168,60,255}
+  .insurance-ws-stat-card:nth-child(4){--tone:#22d665;--tone-rgb:34,214,101}
+  .insurance-ws-stat-card:nth-child(5){--tone:#f04494;--tone-rgb:240,68,148}
+  .insurance-ws-stat-card:nth-child(6){--tone:#20d7b0;--tone-rgb:32,215,176}
+  .insurance-ws-stat-card::after{content:"›";grid-column:3;grid-row:1/4;color:var(--txt);font-size:38px;font-weight:200}
+  .insurance-ws-stat-icon-mobile{
+    grid-column:1;grid-row:1/4;width:74px!important;height:74px!important;display:grid!important;place-items:center;
+    border:1px solid rgba(var(--tone-rgb),.35);border-radius:16px!important;color:var(--tone)!important;position: initial;
+  }
+  body #root .insurance-ws-stat-card .insurance-ws-stat-icon-mobile{background:rgba(var(--tone-rgb),.12)!important;}
+  .insurance-ws-stat-icon-mobile svg{width:34px;height:34px}
+  .insurance-ws-stat-card>span{grid-column:2;grid-row:1;color:var(--txt)!important;font-size:16px;font-weight:700}
+  .insurance-ws-stat-card>strong{grid-column:2;grid-row:2;color:var(--tone)!important;font-size:34px!important;line-height:1}
+  .insurance-ws-stat-card>small{grid-column:2;color:var(--mut)!important;font-size:14px}
+  .insurance-ws-stat-card > small:nth-of-type(1) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .insurance-ws-stat-card > small:nth-of-type(2) {
+      grid-column: 2;
+      grid-row: 4;
+  }
+
+  .insurance-ws-tabs-desktop{display:none!important}
+
+  .insurance-ws-tabs-mobile-wrap{
+    display:block;
+    position:relative;
+    margin:6px -22px 26px;
+    border-bottom:1px solid var(--bd);
+  }
+
+  .insurance-ws-tabs-mobile-wrap .insurance-ws-tabs-mobile{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin:0;
+    padding:0 22px;
+    border-bottom:0;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scrollbar-width:none;
+  }
+
+  .insurance-ws-tabs-mobile::-webkit-scrollbar{display:none}
+
+  .insurance-ws-tabs-mobile>button{
+    flex:0 0 auto;
+    min-height:54px;
+    padding:0 2px 3px;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    border:0;
+    border-bottom:2px solid transparent;
+    background:transparent;
+    color:var(--txt);
+    font-size:15px;
+    white-space:nowrap;
+  }
+
+  .insurance-ws-tabs-mobile>button.active{
+    color:#1789ff!important;
+    border:0!important;
+    border-bottom:2px solid #1789ff!important;
+    background:none!important;
+  }
+
+  .insurance-ws-tabs-mobile>button.more-open{
+    color:#1789ff!important;
+  }
+
+  .insurance-ws-tabs-mobile>button svg{
+    transition:transform .18s ease;
+  }
+
+  .insurance-ws-tabs-mobile>button svg.rotate{
+    transform:rotate(180deg);
+  }
+
+  .insurance-ws-tabs-mobile-more-menu{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    padding:8px 22px 12px;
+    background:var(--bg);
+  }
+
+  .insurance-ws-tabs-mobile-more-menu button{
+    min-height:36px;
+    padding:7px 10px;
+    border:1px solid var(--bd);
+    border-radius:8px;
+    background:var(--card);
+    color:var(--mut);
+    font-size:11px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+
+  .insurance-ws-tabs-mobile-more-menu button.active{
+    border-color:#1789ff;
+    color:#1789ff;
+    background:rgba(23,137,255,.08);
+  }
+
+  .insurance-ws-policies>.insurance-ws-table-wrap{display:none!important}
+  .insurance-ws-section-head{display:flex;flex-direction: row;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:18px}
+  .insurance-ws-section-head h2{margin:0;color:var(--txt);font-size:20px}
+  .insurance-ws-section-head p{margin:6px 0 0;color:var(--mut);font-size:12px;text-align: left;}
+  .insurance-ws-section-actions{display:flex;gap:6px;}
+  .insurance-ws-section-actions button{min-height:36px;border:1px solid var(--bd);border-radius:9px;background:var(--card);color:var(--txt);padding:0 7px}
+  .insurance-ws-section-actions button.primary{border-color:#1976ff;background:#1769ff;color:#fff}
+
+  .insurance-ws-mobile-policy-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin:0 0 16px}
+  .insurance-ws-mobile-policy-tools label,.insurance-ws-mobile-policy-tools button{
+    min-height:42px;display:flex;align-items:center;gap:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--txt)
+  }
+  .insurance-ws-mobile-policy-tools label{padding:0 15px}
+  .insurance-ws-mobile-policy-tools input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:var(--txt);font-size:15px}
+  .insurance-ws-mobile-policy-tools button{padding:0 18px; color: #1789ff;}
+
+  .insurance-ws-mobile-policy-list,.insurance-ws-mobile-record-list{display:grid;gap:12px}
+  .insurance-ws-mobile-policy-card,.insurance-ws-mobile-record-card{
+    --tone:#2388ff;--tone-rgb:35,136,255;position:relative;display:grid;
+    grid-template-columns:70px minmax(190px,1.3fr) minmax(130px,.9fr) minmax(130px,.9fr) 24px;gap:16px;text-align: left;
+    padding:18px;border:1px solid var(--tone);border-radius:13px;background:var(--card)!important;color:var(--txt);
+    box-shadow:inset 0 0 30px rgba(var(--tone-rgb),.045);cursor:pointer
+  }
+  .tone-2{--tone:#ff9a08;--tone-rgb:255,154,8}.tone-3{--tone:#a83cff;--tone-rgb:168,60,255}.tone-4{--tone:#22d665;--tone-rgb:34,214,101}.tone-5{--tone:#f04494;--tone-rgb:240,68,148}
+  .insurance-ws-mobile-policy-icon,.insurance-ws-mobile-record-icon{
+    width:62px;height:62px;display:grid;place-items:center;border-radius:50%;background:rgba(var(--tone-rgb),.12);color:var(--tone);border:1px solid rgba(var(--tone-rgb),.18)
+  }
+  .insurance-ws-mobile-record-icon span{font-size:18px;font-weight:800}
+  .insurance-ws-mobile-policy-primary,.insurance-ws-mobile-record-main,.insurance-ws-mobile-record-mid,.insurance-ws-mobile-record-side,.insurance-ws-mobile-policy-money,.insurance-ws-mobile-policy-status{
+    min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px
+  }
+  .insurance-ws-mobile-policy-primary strong,.insurance-ws-mobile-record-main strong{font-size:15px;color:var(--txt)}
+  .insurance-ws-mobile-policy-primary b,.insurance-ws-mobile-record-main b{font-size:15px;color:var(--txt)}
+  .insurance-ws-mobile-policy-primary span,.insurance-ws-mobile-record-main span,.insurance-ws-mobile-record-main small,.insurance-ws-mobile-policy-money small,.insurance-ws-mobile-policy-status small,.insurance-ws-mobile-record-mid small,.insurance-ws-mobile-record-side small{color:var(--mut);font-size:11px}
+  .insurance-ws-mobile-policy-primary span{display:flex;align-items:center;gap:5px}
+  .insurance-ws-mobile-policy-money strong,.insurance-ws-mobile-record-mid strong{color:var(--tone);font-size:17px}
+  .insurance-ws-mobile-policy-money span,.insurance-ws-mobile-policy-status span,.insurance-ws-mobile-record-mid span,.insurance-ws-mobile-record-side b{color:var(--txt);font-size:13px;line-height:1.35}
+  .insurance-ws-mobile-policy-arrow,.insurance-ws-mobile-record-arrow{color:var(--txt);opacity:.9}
+  .insurance-ws-mobile-empty{padding:34px 18px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--mut);text-align:center}
+  .insurance-ws-mobile-empty.error{color:#ef4444;border-color:#ef4444}
+
+  .insurance-ws-pagination{display:grid!important;grid-template-columns:1fr auto auto;align-items:center;gap:12px;margin-top:18px;color:var(--mut)}
+  .insurance-ws-pagination>div{display:flex;gap:7px}
+  .insurance-ws-pagination button,.insurance-ws-pagination select{min-width:38px;height:40px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--txt)}
+  .insurance-ws-pagination button.active{border-color:#1789ff;color:#1789ff}
+
+  .insurance-ws.is-overview>.insurance-ws-policies{display:none}
+  .insurance-ws-mobile-intel-heading{display:none}
+  .insurance-ws.is-overview .insurance-ws-mobile-intel-heading{display:block;margin:30px 0 14px}
+  .insurance-ws-mobile-intel-heading h2{margin:0;color:var(--txt);font-size:24px}
+  .insurance-ws-mobile-intel-heading p{margin:6px 0 0;color:var(--mut);font-size:14px}
+  .insurance-ws>.insurance-ws-bottom{display:grid!important;grid-template-columns:1fr;gap:16px;margin-top:26px}
+  .insurance-ws-bottom-card{border:1px solid var(--bd);border-radius:12px;background:var(--card)!important;color:var(--txt);padding:12px}
+  .insurance-ws-donut:after, .insurance-ws-activity-row>span{background: var(--card);}
+  .insurance-ws-bottom-card.type-card{border-color:#2388ff}.insurance-ws-bottom-card:nth-child(2){border-color:#a83cff}.insurance-ws-bottom-card:nth-child(3){border-color:#22d665}
+  .insurance-ws-card-head strong{color:var(--txt);font-size:18px}.insurance-ws-card-head span{color:#2388ff;display: flex;}
+  .insurance-ws-type-layout{display:grid!important;grid-template-columns:220px 1fr;gap:20px;align-items:center}
+  .insurance-ws-donut{margin:auto}.insurance-ws-legend p{color:var(--txt)}
+  .insurance-ws-activity-row,.insurance-ws-renewals>div{border-bottom:1px solid var(--bd);color:var(--txt);padding-bottom: 4px;margin: 7px 0;}
+  .insurance-ws-activity-row small,.insurance-ws-activity-row time,.insurance-ws-renewals small{color:var(--mut)}
+  .insurance-ws-link-btn{color:#2388ff!important}
+  .insurance-ws-bottom-card:nth-child(2) .insurance-ws-card-head span{color:#a83cff}
+  .insurance-ws-bottom-card:nth-child(3) .insurance-ws-card-head span{color:#22d665}
+
+  body.crm-dark .iw-modal{background:#0b0f19;color:#f8fafc;border:1px solid #3d46527a}
+  body.crm-dark .iw-modal-head,body.crm-dark .iw-modal-foot{border-color:#3d46527a;background:#0b0f19}
+  body.crm-dark .iw-modal-head p,body.crm-dark .iw-field label,body.crm-dark .iw-hint{color:#adb5c1}
+  body.crm-dark .iw-field input,body.crm-dark .iw-field select,body.crm-dark .iw-field textarea,body.crm-dark .iw-btn{background:#0b0f19;color:#f8fafc;border-color:#3d46527a}
+  .insurance-ws-status.pending {
+    background: #d9770626;
+  }
+  .insurance-ws-mobile-policy-status b{ font-weight: 400;font-size: 12px;}
+  .insurance-ws-mobile-record-side .iw-pill{
+    background: rgba(var(--tone-rgb), .12);
+    color: var(--tone);
+    border: 1px solid rgba(var(--tone-rgb), .18);
+  }
+  .insurance-ws-bottom-card{min-height: auto;}
+  .iw-modal {
+      max-width: 93%;
+      min-height: 65vh;
+      max-height: 80vh;
+  }
+  .insurance-report-item{
+    background: var(--card)!important;
+    color: var(--txt)!important;
+    border: 1px solid var(--bd)!important;
+  }
+  .insurance-report-item strong{
+    color: var(--txt)!important;
+  }
+}
+
+@media (max-width:680px){
+  .insurance-ws-tabs-mobile-wrap{
+    margin-left:-14px;
+    margin-right:-14px;
+  }
+
+  .insurance-ws-tabs-mobile-wrap .insurance-ws-tabs-mobile{
+    padding-left:14px;
+    padding-right:14px;
+    gap:8px;
+  }
+
+  .insurance-ws-tabs-mobile-more-menu{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    padding-left:14px;
+    padding-right:14px;
+  }
+
+  .insurance-ws-type-layout{grid-template-columns:136px 1fr;gap:10px;}
+  .insurance-ws-card-head strong{font-size: 15px;}
+  .insurance-ws-mobile-intel-heading h2{font-size: 20px;}
+  .insurance-ws-tabs-mobile>button, .insurance-ws-mobile-more-wrap>button{font-size: 12px;}
+  .insurance-ws-header h1{font-size:27px}
+  .insurance-ws-tabs-mobile{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px;gap:12px}
+  .insurance-ws-stat-card{min-height:126px;grid-template-columns:68px 1fr 22px;padding:18px 17px}
+  .insurance-ws-stat-icon-mobile{width:60px!important;height:60px!important}
+  .insurance-ws-stat-card>strong{font-size:30px!important}
+  .insurance-ws-section-actions button:nth-child(3), .insurance-ws-section-actions button:nth-child(2){display:none}
+  
+  .insurance-ws-mobile-policy-card,.insurance-ws-mobile-record-card{
+    grid-template-columns:48px minmax(auto,1.2fr) minmax(auto,.8fr) minmax(auto,.8fr) 18px;gap:10px;padding:10px
+  }
+  .insurance-ws-mobile-policy-icon,.insurance-ws-mobile-record-icon{width:48px;height:48px}
+  .insurance-ws-mobile-policy-primary strong,.insurance-ws-mobile-record-main strong,.insurance-ws-mobile-policy-primary b,.insurance-ws-mobile-record-main b{font-size:13px;font-weight: 500;}
+  .insurance-ws-mobile-policy-money strong,.insurance-ws-mobile-record-mid strong{font-size:15px}
+  .insurance-ws-mobile-policy-money span,.insurance-ws-mobile-policy-status span,.insurance-ws-mobile-record-mid span,.insurance-ws-mobile-record-side b{font-size:11px}
+  .insurance-ws-pagination{justify-items:center;text-align:center}
+  
+}
+
+@media (max-width:1024px){
+  .insurance-ws-mobile-connections,
+  .insurance-ws-mobile-actions-hub{margin-top:28px;display: block;}
+  .insurance-ws-mobile-block-heading h2{margin:0;color:var(--txt);font-size:24px}
+  .insurance-ws-mobile-block-heading p{margin:7px 0 18px;color:var(--mut);font-size:14px}
+  .insurance-ws-mobile-block-heading{text-align: left;}
+  .insurance-ws-mobile-connection-list{display:grid;gap:12px}
+  .insurance-ws-mobile-connection-list>button{
+    --tone:#2388ff;--tone-rgb:35,136,255;
+    min-height:108px;display:grid;grid-template-columns:70px 1fr 24px;align-items:center;gap:16px;
+    padding:16px;border:1px solid var(--tone);border-radius:13px;color:var(--txt);text-align:left;
+    box-shadow:inset 0 0 28px rgba(var(--tone-rgb),.04)
+  }
+  body #root .insurance-ws .insurance-ws-mobile-connection-list>button{background:var(--card)!important;}
+  .insurance-ws-mobile-connection-list>button.purple{--tone:#a83cff;--tone-rgb:168,60,255}
+  .insurance-ws-mobile-connection-list>button.green{--tone:#22d665;--tone-rgb:34,214,101}
+  .insurance-ws-mobile-connection-list>button.amber{--tone:#ff9a08;--tone-rgb:255,154,8}
+  .insurance-ws-mobile-connection-list>button.pink{--tone:#f04494;--tone-rgb:240,68,148}
+  .insurance-ws-mobile-connection-list>button.cyan{--tone:#25d8db;--tone-rgb:37,216,219}
+  .insurance-ws-mobile-connection-list>button>span,
+  .insurance-ws-mobile-action-grid>button>span{
+    width:58px;height:58px;display:grid;place-items:center;border:1px solid rgba(var(--tone-rgb),.24);
+    border-radius:50%;background:rgba(var(--tone-rgb),.11);color:var(--tone)
+  }
+  .insurance-ws-mobile-connection-list strong{display:block;color:var(--txt);font-size:17px}
+  .insurance-ws-mobile-connection-list small{display:block;margin-top:5px;color:var(--mut);font-size:13px}
+  .insurance-ws-mobile-connection-list b{display:block;margin-top:6px;color:var(--tone);font-size:12px}
+
+  .insurance-ws-mobile-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .insurance-ws-mobile-action-grid>button{
+    --tone:#2388ff;--tone-rgb:35,136,255;
+    display:grid;grid-template-columns:68px 1fr;align-items:center;gap:14px;padding:20px 16px;
+    border:1px solid var(--tone);border-radius:13px;color:var(--txt);text-align:left;
+    box-shadow:inset 0 0 28px rgba(var(--tone-rgb),.04)
+  }
+  body #root .insurance-ws .insurance-ws-mobile-action-grid>button{background:var(--card)!important;}
+  .insurance-ws-mobile-action-grid>button.purple{--tone:#a83cff;--tone-rgb:168,60,255}
+  .insurance-ws-mobile-action-grid>button.green{--tone:#22d665;--tone-rgb:34,214,101}
+  .insurance-ws-mobile-action-grid>button.amber{--tone:#ff9a08;--tone-rgb:255,154,8}
+  .insurance-ws-mobile-action-grid>button.pink{--tone:#f04494;--tone-rgb:240,68,148}
+  .insurance-ws-mobile-action-grid>button.cyan{--tone:#25d8db;--tone-rgb:37,216,219}
+  .insurance-ws-mobile-action-grid strong{display:block;color:var(--txt);font-size:16px}
+  .insurance-ws-mobile-action-grid small{display:block;margin-top:7px;color:var(--mut);font-size:13px;line-height:1.35}
+
+  .insurance-ws-mobile-support{
+    --tone:#f0c400;--tone-rgb:240,196,0;
+    margin-top:18px;display:grid;grid-template-columns:62px 1fr auto;align-items:center;gap:14px;
+    padding:18px;border:1px solid var(--tone);border-radius:13px;background:var(--card)
+  }
+  .insurance-ws-mobile-support>span{
+    width:54px;height:54px;display:grid;place-items:center;border-radius:50%;
+    background:rgba(var(--tone-rgb),.12);color:var(--tone)
+  }
+  .insurance-ws-mobile-support strong{display:block;color:var(--txt);font-size:17px}
+  .insurance-ws-mobile-support small{display:block;margin-top:4px;color:var(--mut);font-size:13px}
+  .insurance-ws-mobile-support button{
+    min-height:44px;padding:0 16px;border:1px solid rgba(var(--tone-rgb),.5);border-radius:9px;background:transparent;color:var(--tone);font-weight:700
+  }
+}
+@media (max-width:680px){
+  .insurance-ws-mobile-action-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .insurance-ws-mobile-action-grid>button{grid-template-columns:52px 1fr;padding:18px 10px;gap:10px}
+  .insurance-ws-mobile-action-grid>button>span{width:46px;height:46px}
+  .insurance-ws-mobile-action-grid strong{font-size:14px}
+  .insurance-ws-mobile-action-grid small{font-size:11px}
+  .insurance-ws-mobile-connection-list>button{grid-template-columns:56px 1fr 20px;min-height:98px;padding:10px;gap:10px}
+  .insurance-ws-mobile-connection-list>button>span{width:50px;height:50px}
+  .insurance-ws-mobile-support{gap:8px;padding: 10px;text-align: left;}
+  .insurance-ws-mobile-block-heading h2{font-size: 20px;}
+  .insurance-ws-mobile-support button{padding: 0 7px;}
+}
+/* ===== Insurance mobile v4 safe fixes ===== */
+.insurance-ws-activity-icon{  --activity:#2388ff;--activity-rgb:35,136,255;  display:grid!important;place-items:center;  color:var(--activity)!important;  background:rgba(var(--activity-rgb),.11)!important;}
+.insurance-ws-activity-icon.activity-policy{--activity:#2388ff;--activity-rgb:35,136,255}
+.insurance-ws-activity-icon.activity-claim{--activity:#22d665;--activity-rgb:34,214,101}
+.insurance-ws-activity-icon.activity-quote{--activity:#ff9a08;--activity-rgb:255,154,8}
+.insurance-ws-activity-icon.activity-renewal{--activity:#a83cff;--activity-rgb:168,60,255}
+.insurance-ws-activity-icon.activity-document{--activity:#ec4899;--activity-rgb:236,72,153}
+.insurance-ws-activity-icon.activity-payment,.insurance-ws-activity-icon.activity-commission{--activity:#20d7b0;--activity-rgb:32,215,176}
+@media (max-width:1024px){  
+  .insurance-ws-mobile-connection-list>button{    grid-template-columns:70px minmax(0,1fr) auto 24px!important;  }  
+  .connection-status{    font-style:normal;font-size:11px;font-weight:700;white-space:nowrap;    padding:7px 9px;border-radius:8px;border:1px solid var(--bd);  }  
+  .connection-status.connected{color:#22d665;background:rgba(34,214,101,.10);border-color:rgba(34,214,101,.28)}  
+  .connection-status.disconnected{color:#f04494;background:rgba(240,68,148,.10);border-color:rgba(240,68,148,.28)}  
+  .connection-status.unknown,.connection-status.neutral{color:var(--mut);background:rgba(148,163,184,.06)}  
+  .insurance-ws-mobile-connection-health{  text-align: left;  margin-top:16px;display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:10px;    padding:12px;border:1px solid var(--bd);border-radius:13px;background:var(--card);  }  
+  .insurance-ws-mobile-connection-health>span{    width:52px;height:52px;display:grid;place-items:center;border-radius:50%;    color:#22d665;background:rgba(34,214,101,.10);border:1px solid rgba(34,214,101,.22);  } 
+  .insurance-ws-mobile-connection-health strong{display:block;color:var(--txt);font-size:16px}  
+  .insurance-ws-mobile-connection-health small{display:block;margin-top:4px;color:var(--mut);font-size:12px;line-height:1.4}  
+  .insurance-ws-mobile-connection-health button{    min-height:40px;padding:0 6px;display:flex;align-items:center;gap:5px;    border:1px solid rgba(34,214,101,.3);border-radius:8px;background:transparent;color:#22d665;font-weight:700;  }  
+  /* Shared content shell for Policies + other insurance tabs */  
+  .insurance-ws .insurance-ws-policies{background:transparent!important;color:var(--txt)}  
+  .insurance-ws .insurance-ws-section-head{padding:0;margin-bottom:16px}
+}
+@media (max-width:680px){  
+  .insurance-ws-policies>.insurance-ws-filters{gap:7px}  
+  .insurance-ws-policies>.insurance-ws-filters>label{min-width:220px}  
+  .insurance-ws-policies>.insurance-ws-filters>button{font-size:11px;min-height:38px;padding:0 8px}  
+  .insurance-ws-mobile-connection-list>button{grid-template-columns:52px minmax(0,1fr) 18px!important}  
+  .insurance-ws-mobile-connection-list .connection-status{grid-column:2;justify-self:start;margin-top:4px} 
+}
+/* Exact mobile Policies filter composition from the supplied layout:
+   Search/Filters stay in insurance-ws-mobile-policy-tools;
+   the original desktop insurance-ws-filters is reused only for its first
+   three real filter controls. Desktop remains governed by InsuranceWorkspace.css. */
+@media (max-width:1024px){
+  .insurance-ws-policies>.insurance-ws-filters>label{display:none!important}
+  .insurance-ws-policies>.insurance-ws-filters>button:nth-of-type(n+4){display:none!important}
+  .insurance-ws-policies>.insurance-ws-filters>.reset{display:none!important}
+  .insurance-ws-policies>.insurance-ws-filters>span{display:none!important}
+  .insurance-ws-policies>.insurance-ws-filters{
+    justify-content:flex-start;
+    overflow-x:auto;
+  }
+  .insurance-ws-policies>.insurance-ws-filters>button{
+    min-height:42px;
+    border:1px solid var(--bd);
+    border-radius:9px;
+    background:var(--card);
+    color:var(--txt);
+  }
+}
+
+
+
+/* ==========================================================
+   Reports + Documents — TABLET/MOBILE ONLY
+   Desktop keeps original inline/layout styles unchanged.
+   ========================================================== */
+@media (max-width:1024px){
+
+  /* ---------- Reports ---------- */
+  .insurance-ws .insurance-report-mobile-tiles{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+    margin-bottom:16px!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-tile,
+  .insurance-ws .insurance-report-mobile-card{
+    background:var(--card)!important;
+    color:var(--txt)!important;
+    border-color:var(--bd)!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-tile{
+    border:1px solid var(--bd)!important;
+    border-radius:12px!important;
+    padding:15px!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-grid{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-card{
+    border:1px solid var(--bd)!important;
+    border-radius:12px!important;
+    padding:15px!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-card-head,
+  .insurance-ws .insurance-report-mobile-tile-value,
+  .insurance-ws .insurance-report-mobile-bar-label,
+  .insurance-ws .insurance-report-mobile-line-value,
+  .insurance-ws .insurance-report-mobile-mini-value{
+    color:var(--txt)!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-tile-label,
+  .insurance-ws .insurance-report-mobile-tile-note,
+  .insurance-ws .insurance-report-mobile-bar-right,
+  .insurance-ws .insurance-report-mobile-line-label,
+  .insurance-ws .insurance-report-mobile-mini-label,
+  .insurance-ws .insurance-report-mobile-empty{
+    color:var(--mut)!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-bar-track{
+    background:var(--bd)!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-mini{
+    background:var(--card2)!important;
+    border-color:var(--bd)!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-line{
+    border-top-color:var(--bd)!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-mini-value.tone-green{
+    color:#22d665!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-mini-value.tone-amber{
+    color:#ff9a08!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-error{
+    background:rgba(239,68,68,.08)!important;
+    color:#ef4444!important;
+    border-color:rgba(239,68,68,.35)!important;
+  }
+
+  /* ---------- Documents ---------- */
+  .insurance-ws .insurance-doc-mobile-upload-card,
+  .insurance-ws .insurance-doc-mobile-search,
+  .insurance-ws .insurance-doc-mobile-table-wrap,
+  .insurance-ws .insurance-doc-mobile-empty{
+    background:var(--card)!important;
+    color:var(--txt)!important;
+    border-color:var(--bd)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-file-label,
+  .insurance-ws .insurance-doc-mobile-input,
+  .insurance-ws .insurance-doc-mobile-select,
+  .insurance-ws .insurance-doc-mobile-search-btn,
+  .insurance-ws .insurance-doc-mobile-icon-action{
+    background:var(--card)!important;
+    color:var(--txt)!important;
+    border-color:var(--bd)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-input,
+  .insurance-ws .insurance-doc-mobile-select{
+    box-sizing:border-box;
+  }
+
+  .insurance-ws .insurance-doc-mobile-input::placeholder,
+  .insurance-ws .insurance-doc-mobile-search-input::placeholder{
+    color:var(--mut)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-select option{
+    background:var(--card);
+    color:var(--txt);
+  }
+
+  .insurance-ws .insurance-doc-mobile-search-input{
+    color:var(--txt)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-hint,
+  .insurance-ws .insurance-doc-mobile-file{
+    color:var(--mut)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-table{
+    background:transparent!important;
+    color:var(--txt)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-th{
+    color:var(--mut)!important;
+    border-bottom-color:var(--bd)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-tr{
+    border-bottom-color:var(--bd)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-td,
+  .insurance-ws .insurance-doc-mobile-title{
+    color:var(--txt)!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-icon-action.danger{
+    color:#ef4444!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-error{
+    background:rgba(239,68,68,.08)!important;
+    color:#ef4444!important;
+    border-color:rgba(239,68,68,.35)!important;
+  }
+}
+
+@media (max-width:680px){
+
+  /* Reports become one clean vertical column like the other mobile tabs. */
+  .insurance-ws .insurance-report-mobile-tiles,
+  .insurance-ws .insurance-report-mobile-grid{
+    grid-template-columns:1fr!important;
+  }
+
+  .insurance-ws .insurance-report-mobile-mini-row{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  /* Documents form stacks only on phone. */
+  .insurance-ws .insurance-doc-mobile-upload-row{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    width:100%;
+  }
+
+  .insurance-ws .insurance-doc-mobile-file-label,
+  .insurance-ws .insurance-doc-mobile-input,
+  .insurance-ws .insurance-doc-mobile-select,
+  .insurance-ws .insurance-doc-mobile-policy-picker,
+  .insurance-ws .insurance-doc-mobile-notes,
+  .insurance-ws .insurance-doc-mobile-upload-btn,
+  .insurance-ws .insurance-doc-mobile-search{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-table-wrap{
+    overflow-x:auto!important;
+  }
+
+  .insurance-ws .insurance-doc-mobile-table{
+    min-width:720px!important;
+  }
+}

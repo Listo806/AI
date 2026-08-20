@@ -4213,5 +4213,318 @@
       "needHelpSub": "Our support team is here to help you succeed.",
       "contactSupport": "Contact Support"
     }
-  }
+  },
+  "financialWorkspace": {
+    "title": "Financial Services Workspace",
+    "subtitle": "Manage your entire client journey from application to portfolio management.",
+    "searchGlobal": "Search clients, accounts, applications, documents...",
+    "new": "New",
+    "placeholder": "{{tab}} workspace is ready for the next implementation step.",
+    "tabs": {
+      "overview": "Overview",
+      "clients": "Clients",
+      "applications": "Applications",
+      "accounts": "Accounts",
+      "transactions": "Transactions",
+      "investments": "Investments",
+      "documents": "Documents",
+      "commissions": "Commissions",
+      "reports": "Reports"
+    },
+    "stats": {
+      "totalClients": "Total Clients",
+      "applicationsInProgress": "Applications In Progress",
+      "accountsUnderManagement": "Accounts Under Management",
+      "assetsUnderManagement": "Assets Under Management",
+      "revenueThisMonth": "Revenue (This Month)",
+      "conversionRate": "Conversion Rate",
+      "activeCount": "{{count}} Active",
+      "inProgress": "In progress",
+      "activeAccounts": "Active accounts",
+      "totalAumRecorded": "Total AUM (recorded)",
+      "approvedPaidThisMonth": "Approved + paid this month",
+      "applicationsApproved": "Applications approved"
+    },
+    "clients": {
+      "title": "Clients",
+      "subtitle": "View and manage all your clients and prospects.",
+      "search": "Search clients...",
+      "empty": "No clients yet. Add your first client to get started.",
+      "accounts": "Accounts",
+      "loadError": "Could not load clients."
+    },
+    "actions": {
+      "import": "Import",
+      "export": "Export",
+      "newClient": "New Client",
+      "newTransaction": "New Transaction",
+      "newInvestment": "New Investment",
+      "reset": "Reset",
+      "more": "More",
+      "refresh": "Refresh"
+    },
+    "filters": {
+      "clientType": "Client Type",
+      "status": "Status",
+      "riskLevel": "Risk Level"
+    },
+    "clientTypes": {
+      "retail": "Retail Client",
+      "corporate": "Corporate Client"
+    },
+    "table": {
+      "clientId": "Client ID",
+      "clientName": "Client Name",
+      "clientType": "Client Type",
+      "primaryAdvisor": "Primary Advisor",
+      "accountType": "Account Type",
+      "aumBalance": "AUM / Balance",
+      "riskLevel": "Risk Level",
+      "status": "Status",
+      "lastActivity": "Last Activity",
+      "nextReview": "Next Review",
+      "actions": "Actions"
+    },
+    "pagination": {
+      "showingClients": "Showing {{from}} to {{to}} of {{total}} clients",
+      "showingGeneric": "Showing {{from}} to {{to}} of {{total}} {{title}}",
+      "perPage": "{{count}} / page"
+    },
+    "record": {
+      "search": "Search {{title}}...",
+      "empty": "No {{title}} yet.",
+      "loadError": "Could not load {{title}}."
+    },
+    "transactions": {
+      "subtitle": "Tracking records of money movement (no funds are moved by Cortexa)",
+      "columns": {
+        "id": "Transaction ID",
+        "client": "Client",
+        "account": "Account",
+        "type": "Type",
+        "amount": "Amount",
+        "status": "Status",
+        "date": "Date"
+      }
+    },
+    "investments": {
+      "subtitle": "Client holdings with recorded values (no live market prices)",
+      "columns": {
+        "id": "Investment ID",
+        "holding": "Holding",
+        "client": "Client",
+        "category": "Category",
+        "value": "Value",
+        "status": "Status",
+        "asOf": "As Of"
+      }
+    },
+    "reports": {
+      "loading": "Loading analytics…",
+      "subtitle": "Clients, applications, assets, portfolio, flows and revenue across your book.",
+      "loadError": "Could not load reports.",
+      "assetsUnderManagement": "Assets under management",
+      "activeAccountsRecorded": "{{count}} active accounts (recorded)",
+      "portfolioValue": "Portfolio value",
+      "activeHoldingsRecorded": "Active holdings (recorded)",
+      "revenueThisMonth": "Revenue this month",
+      "approvedPaidCommissions": "Approved + paid commissions",
+      "netFlow": "Net flow",
+      "contributionsMinusWithdrawals": "Contributions minus withdrawals",
+      "portfolioAllocation": "Portfolio allocation (recorded)",
+      "noActiveHoldings": "No active holdings yet",
+      "aumByAccountType": "AUM by account type (recorded)",
+      "noActiveAccounts": "No active accounts yet",
+      "clientsByStatus": "Clients by status",
+      "noClients": "No clients yet",
+      "clientsByRisk": "Clients by risk level",
+      "applicationsByStatus": "Applications by status",
+      "noApplications": "No applications yet",
+      "transactionsCompleted": "Transactions (completed)",
+      "count": "Count",
+      "in": "In",
+      "out": "Out",
+      "net": "Net",
+      "commissionsRevenue": "Commissions (revenue)",
+      "approved": "Approved",
+      "paid": "Paid",
+      "totalBooked": "Total booked",
+      "thisMonthApprovedPaid": "This month (approved + paid)"
+    },
+    "documents": {
+      "subtitle": "Store and share client and account files. Private to your account.",
+      "chooseFile": "Choose file",
+      "titleOptional": "Title (optional)",
+      "notesOptional": "Notes (optional)",
+      "document": "Document",
+      "type": "Type",
+      "size": "Size",
+      "uploaded": "Uploaded",
+      "loadError": "Could not load documents.",
+      "chooseFileError": "Choose a file to upload.",
+      "uploadFailed": "Upload failed.",
+      "openFailed": "Could not open document.",
+      "deleteFailed": "Delete failed.",
+      "deleteConfirm": "Delete “{{name}}”? This cannot be undone.",
+      "uploading": "Uploading…",
+      "upload": "Upload",
+      "hint": "PDF, Word, Excel, CSV, text or images. Up to 20MB.",
+      "search": "Search documents...",
+      "empty": "No documents yet. Upload your first file above.",
+      "download": "Download",
+      "types": {
+        "statement": "Statement",
+        "application": "Application",
+        "agreement": "Agreement",
+        "kyc_id": "KYC / ID",
+        "tax": "Tax",
+        "report": "Report",
+        "other": "Other"
+      }
+    },
+    "risk": {
+      "conservative": "Conservative",
+      "moderate_low": "Moderate Low",
+      "moderate": "Moderate",
+      "moderate_high": "Moderate High",
+      "high": "High"
+    }
+  },
+  "mobileActions": {
+      "title": "Financial Actions",
+      "subtitle": "Quick actions to manage your financial services business.",
+      "items": {
+        "newClient": {
+          "title": "New Client",
+          "subtitle": "Add a new client or prospect"
+        },
+        "newApplication": {
+          "title": "New Application",
+          "subtitle": "Create a new application"
+        },
+        "newAccount": {
+          "title": "New Account",
+          "subtitle": "Open a new investment or savings account"
+        },
+        "newTransaction": {
+          "title": "New Transaction",
+          "subtitle": "Record a deposit, withdrawal or transfer"
+        },
+        "newInvestment": {
+          "title": "New Investment",
+          "subtitle": "Add a new investment or asset"
+        },
+        "portfolioAllocation": {
+          "title": "Portfolio Allocation",
+          "subtitle": "Rebalance and allocate client portfolios"
+        },
+        "uploadDocument": {
+          "title": "Upload Document",
+          "subtitle": "Upload or manage client documents"
+        },
+        "recordCommission": {
+          "title": "Record Commission",
+          "subtitle": "Add or manage commissions"
+        },
+        "scheduleReview": {
+          "title": "Schedule Review",
+          "subtitle": "Schedule a portfolio or client review"
+        },
+        "taskFollowUp": {
+          "title": "Task & Follow-Up",
+          "subtitle": "Create tasks and set follow-up reminders"
+        },
+        "generateReport": {
+          "title": "Generate Report",
+          "subtitle": "Generate custom financial reports"
+        },
+        "sendStatement": {
+          "title": "Send Statement",
+          "subtitle": "Send statements to clients"
+        }
+      },
+      "support": {
+        "title": "Need Help?",
+        "subtitle": "Our support team is here to help you succeed.",
+        "button": "Contact Support"
+      }
+    },
+    "aiAssistant": {
+      "title": "Cortexa AI Financial Assistant",
+      "subtitle": "Ask anything about your business. Get instant insights and take action.",
+      "prompts": {
+        "applications": {
+          "title": "Which applications need my attention?",
+          "subtitle": "Show pending, expired or at-risk applications"
+        },
+        "reviews": {
+          "title": "Show me upcoming client reviews.",
+          "subtitle": "What reviews are scheduled in the next 30 days?"
+        },
+        "accounts": {
+          "title": "Which accounts need follow-up?",
+          "subtitle": "Show inactive or low-activity accounts"
+        },
+        "portfolio": {
+          "title": "How is my portfolio performing?",
+          "subtitle": "Give me a quick portfolio performance summary"
+        },
+        "revenue": {
+          "title": "What's my revenue this month?",
+          "subtitle": "Show revenue, fees and commissions collected"
+        }
+      },
+      "summary": {
+        "title": "AI Summary (Today)",
+        "applications": "Applications Need Attention",
+        "reviews": "Reviews This Week",
+        "accounts": "Accounts Low Activity",
+        "revenue": "Revenue This Month"
+      },
+      "quickActions": "AI Quick Actions",
+      "quick": {
+        "generateReport": {
+          "title": "Generate Report",
+          "subtitle": "Create custom financial reports"
+        },
+        "exportData": {
+          "title": "Export Data",
+          "subtitle": "Export clients, accounts or reports"
+        },
+        "sendSummary": {
+          "title": "Send Summary",
+          "subtitle": "Email summary to clients"
+        },
+        "setReminder": {
+          "title": "Set Reminder",
+          "subtitle": "Add follow-up reminders"
+        },
+        "portfolioReview": {
+          "title": "Portfolio Review",
+          "subtitle": "AI portfolio analysis"
+        },
+        "performanceTrends": {
+          "title": "Performance Trends",
+          "subtitle": "View performance trends"
+        },
+        "aiInsights": {
+          "title": "AI Insights",
+          "subtitle": "Discover insights & opportunities"
+        },
+        "askAnything": {
+          "title": "Ask Anything",
+          "subtitle": "Chat with your AI assistant"
+        }
+      },
+      "inputPlaceholder": "Ask Cortexa AI anything about your financial business...",
+      "disclaimer": "AI responses are based on your data and may not be 100% accurate."
+    },
+    "bottomNav": {
+      "home": "Home",
+      "clients": "Clients",
+      "add": "Add",
+      "reports": "Reports",
+      "more": "More"
+    }
+  
 }

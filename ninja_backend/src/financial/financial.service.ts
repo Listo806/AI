@@ -1975,6 +1975,73 @@ export class FinancialService {
     };
   }
 
+
+  /**
+   * Tablet/mobile Financial Actions + AI Assistant summary.
+   * All metrics are computed from the current account's real financial records.
+   * No placeholder/demo values are returned.
+   */
+  async getMobileHub(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    const empty = {
+      applicationsNeedAttention: 0,
+      reviewsThisWeek: 0,
+      accountsLowActivity: 0,
+      revenueThisMonth: 0,
+    };
+    if (!accessible.length) return empty;
+
+    const num = (v: any) => Number(v) || 0;
+
+    const [applications, reviews, accounts, revenue] = await Promise.all([
+      this.db.query(
+        `SELECT COUNT(*)::int AS count
+           FROM financial_applications
+          WHERE team_id = ANY($1)
+            AND status IN ('Draft','In Progress','Under Review','Pending Documents')`,
+        [accessible],
+      ),
+      this.db.query(
+        `SELECT COUNT(*)::int AS count
+           FROM financial_clients
+          WHERE team_id = ANY($1)
+            AND next_review_date >= CURRENT_DATE
+            AND next_review_date < CURRENT_DATE + INTERVAL '7 days'`,
+        [accessible],
+      ),
+      this.db.query(
+        `SELECT COUNT(*)::int AS count
+           FROM financial_accounts
+          WHERE team_id = ANY($1)
+            AND status = 'Active'
+            AND COALESCE(updated_at, created_at) < NOW() - INTERVAL '30 days'`,
+        [accessible],
+      ),
+      this.db.query(
+        `SELECT COALESCE(SUM(amount),0) AS amount
+           FROM financial_commissions
+          WHERE team_id = ANY($1)
+            AND status IN ('Approved','Paid')
+            AND commission_date >= date_trunc('month', CURRENT_DATE)
+            AND commission_date < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'`,
+        [accessible],
+      ),
+    ]);
+
+    return {
+      applicationsNeedAttention: num(applications.rows[0]?.count),
+      reviewsThisWeek: num(reviews.rows[0]?.count),
+      accountsLowActivity: num(accounts.rows[0]?.count),
+      revenueThisMonth: num(revenue.rows[0]?.amount),
+    };
+  }
+
   // Reports tab analytics, all team-scoped and computed server-side. Each money
   // figure keeps its own meaning and is never blended: AUM (recorded account
   // balances), Portfolio (recorded holding values), Revenue (commission fees),

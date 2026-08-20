@@ -2,7 +2,6 @@
    Light/white theme, self-contained, namespaced cxc- to avoid collisions. */
 
 .cxc-page {
-  padding: 24px 20px 96px;
   min-height: 100vh;
   color: #0f172a;
   font-size: 14px;

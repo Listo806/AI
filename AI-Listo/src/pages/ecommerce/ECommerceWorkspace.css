@@ -1604,6 +1604,10 @@
    also scoped under .crm-dark to keep desktop light untouched.
    ========================================================= */
 @media (max-width: 1024px) {
+  .cxc-scale .cxc-panel{
+    border: 0;
+    border-radius: 0;
+  }
   .cxc-uss {
     grid-column: span 2;
   }
@@ -1993,11 +1997,9 @@
   .cxc-table tbody tr {
     min-height: 88px;
     display: grid;
-    grid-template-columns: 42px minmax(0, 1.6fr) minmax(86px, .62fr) minmax(84px, .64fr) 72px 42px;
     align-items: center;
     gap: 10px;
     padding: 11px 12px;
-    border-radius: 13px;
     box-shadow: 0 9px 24px rgba(0,0,0,.15);
   }
   .crm-dark .cxc-table tbody tr {
@@ -2014,8 +2016,8 @@
   .cxc-table tbody td {
     display: block;
     min-width: 0;
-    padding: 0;
-    border: 0;
+    padding: 10px 4px;
+    border: 0!important;
   }
 
   .cxc-table tbody td:nth-child(1) {
@@ -2054,6 +2056,7 @@
     grid-column: 7;
   }
 
+  .cxc-table tbody td:nth-child(5),
   .cxc-table tbody td:nth-child(6),
   .cxc-table tbody td:nth-child(7),
   .cxc-table tbody td:nth-child(8),
@@ -2212,9 +2215,8 @@
     width: 100%;
   }
   .cxc-table tbody tr {
-    grid-template-columns: 32px minmax(0, 1fr) 76px 68px 38px;
-    gap: 8px;
-    padding: 10px;
+    gap: 6px;
+    padding: 10px 4px;
   }
 
   .cxc-table tbody td:nth-child(4) {

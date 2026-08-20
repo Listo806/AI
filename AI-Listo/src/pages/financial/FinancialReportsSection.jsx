@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { RefreshCw } from "lucide-react";
 import financialApi from "../../api/financialApi";
 
@@ -15,6 +16,7 @@ function money(v, max = 0) {
 const TONES = ["#2563eb", "#7c3aed", "#059669", "#0891b2", "#d97706", "#db2777", "#64748b"];
 
 export default function FinancialReportsSection() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,7 +27,7 @@ export default function FinancialReportsSection() {
       setData(res);
       setError("");
     } catch {
-      setError("Could not load reports.");
+      setError(t("financialWorkspace.reports.loadError"));
     } finally {
       setLoading(false);
     }
@@ -38,7 +40,7 @@ export default function FinancialReportsSection() {
         const res = await financialApi.getReports();
         if (alive) setData(res);
       } catch {
-        if (alive) setError("Could not load reports.");
+        if (alive) setError(t("financialWorkspace.reports.loadError"));
       } finally {
         if (alive) setLoading(false);
       }
@@ -53,8 +55,8 @@ export default function FinancialReportsSection() {
       <section className="fsw-reports">
         <div className="fsw-section-title">
           <div>
-            <h2>Reports</h2>
-            <p>Loading analytics…</p>
+            <h2>{t("financialWorkspace.tabs.reports")}</h2>
+            <p>{t("financialWorkspace.reports.loading")}</p>
           </div>
         </div>
       </section>
@@ -80,10 +82,10 @@ export default function FinancialReportsSection() {
     <section className="fsw-reports">
       <div className="fsw-section-title">
         <div>
-          <h2>Reports</h2>
-          <p>Clients, applications, assets, portfolio, flows and revenue across your book.</p>
+          <h2>{t("financialWorkspace.tabs.reports")}</h2>
+          <p>{t("financialWorkspace.reports.subtitle")}</p>
         </div>
-        <button className="fsw-reset" onClick={load} title="Refresh">
+        <button className="fsw-reset" onClick={load} title={t("financialWorkspace.actions.refresh")}>
           <RefreshCw size={16} />
         </button>
       </div>
@@ -91,18 +93,18 @@ export default function FinancialReportsSection() {
       {error && <div style={ST.error}>{error}</div>}
 
       {/* Headline metrics — each money figure keeps its own meaning */}
-      <div style={ST.tiles}>
-        <Tile label="Assets under management" value={money(d.totalAum)} note={`${d.activeAccounts || 0} active accounts (recorded)`} />
-        <Tile label="Portfolio value" value={money(d.portfolioTotal)} note="Active holdings (recorded)" />
-        <Tile label="Revenue this month" value={money(comm.revenueThisMonth)} note="Approved + paid commissions" />
-        <Tile label="Net flow" value={money(txn.netFlow)} note="Contributions minus withdrawals" />
+      <div className="fsw-report-mobile-tiles" style={ST.tiles}>
+        <Tile label={t("financialWorkspace.reports.assetsUnderManagement")} value={money(d.totalAum)} note={t("financialWorkspace.reports.activeAccountsRecorded", { count: d.activeAccounts || 0 })} />
+        <Tile label={t("financialWorkspace.reports.portfolioValue")} value={money(d.portfolioTotal)} note={t("financialWorkspace.reports.activeHoldingsRecorded")} />
+        <Tile label={t("financialWorkspace.reports.revenueThisMonth")} value={money(comm.revenueThisMonth)} note={t("financialWorkspace.reports.approvedPaidCommissions")} />
+        <Tile label={t("financialWorkspace.reports.netFlow")} value={money(txn.netFlow)} note={t("financialWorkspace.reports.contributionsMinusWithdrawals")} />
       </div>
 
-      <div style={ST.cols}>
+      <div className="fsw-report-mobile-grid" style={ST.cols}>
         {/* Portfolio allocation */}
-        <Card title="Portfolio allocation (recorded)">
+        <Card title={t("financialWorkspace.reports.portfolioAllocation")}>
           {portfolio.length === 0 ? (
-            <Empty text="No active holdings yet" />
+            <Empty text={t("financialWorkspace.reports.noActiveHoldings")} />
           ) : (
             portfolio.map((r, i) => (
               <BarRow
@@ -117,9 +119,9 @@ export default function FinancialReportsSection() {
         </Card>
 
         {/* Accounts by type */}
-        <Card title="AUM by account type (recorded)">
+        <Card title={t("financialWorkspace.reports.aumByAccountType")}>
           {accountsByType.length === 0 ? (
-            <Empty text="No active accounts yet" />
+            <Empty text={t("financialWorkspace.reports.noActiveAccounts")} />
           ) : (
             accountsByType.map((r, i) => (
               <BarRow
@@ -134,9 +136,9 @@ export default function FinancialReportsSection() {
         </Card>
 
         {/* Clients by status */}
-        <Card title="Clients by status">
+        <Card title={t("financialWorkspace.reports.clientsByStatus")}>
           {byClientStatus.length === 0 ? (
-            <Empty text="No clients yet" />
+            <Empty text={t("financialWorkspace.reports.noClients")} />
           ) : (
             byClientStatus.map((r, i) => (
               <BarRow
@@ -151,9 +153,9 @@ export default function FinancialReportsSection() {
         </Card>
 
         {/* Clients by risk */}
-        <Card title="Clients by risk level">
+        <Card title={t("financialWorkspace.reports.clientsByRisk")}>
           {byClientRisk.length === 0 ? (
-            <Empty text="No clients yet" />
+            <Empty text={t("financialWorkspace.reports.noClients")} />
           ) : (
             byClientRisk.map((r, i) => (
               <BarRow
@@ -168,9 +170,9 @@ export default function FinancialReportsSection() {
         </Card>
 
         {/* Applications by status */}
-        <Card title="Applications by status">
+        <Card title={t("financialWorkspace.reports.applicationsByStatus")}>
           {byAppStatus.length === 0 ? (
-            <Empty text="No applications yet" />
+            <Empty text={t("financialWorkspace.reports.noApplications")} />
           ) : (
             byAppStatus.map((r, i) => (
               <BarRow
@@ -185,22 +187,22 @@ export default function FinancialReportsSection() {
         </Card>
 
         {/* Transactions */}
-        <Card title="Transactions (completed)">
-          <div style={ST.miniRow}>
-            <Mini label="Count" value={txn.total || 0} />
-            <Mini label="In" value={money(txn.contributions)} tone="green" />
-            <Mini label="Out" value={money(txn.withdrawals)} tone="amber" />
-            <Mini label="Net" value={money(txn.netFlow)} />
+        <Card title={t("financialWorkspace.reports.transactionsCompleted")}>
+          <div className="fsw-report-mobile-mini-row" style={ST.miniRow}>
+            <Mini label={t("financialWorkspace.reports.count")} value={txn.total || 0} />
+            <Mini label={t("financialWorkspace.reports.in")} value={money(txn.contributions)} tone="green" />
+            <Mini label={t("financialWorkspace.reports.out")} value={money(txn.withdrawals)} tone="amber" />
+            <Mini label={t("financialWorkspace.reports.net")} value={money(txn.netFlow)} />
           </div>
         </Card>
 
         {/* Commissions */}
-        <Card title="Commissions (revenue)">
-          <Line label="Pending" value={`${money(comm.pendingAmount)} (${comm.pendingCount || 0})`} />
-          <Line label="Approved" value={money(comm.approvedAmount)} />
-          <Line label="Paid" value={`${money(comm.paidAmount)} (${comm.paidCount || 0})`} />
-          <Line label="Total booked" value={money(comm.totalAmount)} strong />
-          <Line label="This month (approved + paid)" value={money(comm.revenueThisMonth)} strong />
+        <Card title={t("financialWorkspace.reports.commissionsRevenue")}>
+          <Line label={t("common.pending")} value={`${money(comm.pendingAmount)} (${comm.pendingCount || 0})`} />
+          <Line label={t("financialWorkspace.reports.approved")} value={money(comm.approvedAmount)} />
+          <Line label={t("financialWorkspace.reports.paid")} value={`${money(comm.paidAmount)} (${comm.paidCount || 0})`} />
+          <Line label={t("financialWorkspace.reports.totalBooked")} value={money(comm.totalAmount)} strong />
+          <Line label={t("financialWorkspace.reports.thisMonthApprovedPaid")} value={money(comm.revenueThisMonth)} strong />
         </Card>
       </div>
     </section>
@@ -209,31 +211,31 @@ export default function FinancialReportsSection() {
 
 function Card({ title, children }) {
   return (
-    <div style={ST.card}>
-      <div style={ST.cardHead}>{title}</div>
-      <div style={ST.cardBody}>{children}</div>
+    <div className="fsw-report-mobile-card" style={ST.card}>
+      <div className="fsw-report-mobile-card-head" style={ST.cardHead}>{title}</div>
+      <div className="fsw-report-mobile-card-body" style={ST.cardBody}>{children}</div>
     </div>
   );
 }
 
 function Tile({ label, value, note }) {
   return (
-    <div style={ST.tile}>
-      <span style={ST.tileLabel}>{label}</span>
-      <strong style={ST.tileValue}>{value}</strong>
-      {note && <small style={ST.tileNote}>{note}</small>}
+    <div className="fsw-report-mobile-tile" style={ST.tile}>
+      <span className="fsw-report-mobile-tile-label" style={ST.tileLabel}>{label}</span>
+      <strong className="fsw-report-mobile-tile-value" style={ST.tileValue}>{value}</strong>
+      {note && <small className="fsw-report-mobile-tile-note" style={ST.tileNote}>{note}</small>}
     </div>
   );
 }
 
 function BarRow({ label, right, pct, color }) {
   return (
-    <div style={ST.barRow}>
-      <div style={ST.barTop}>
-        <span style={ST.barLabel}>{label}</span>
-        <span style={ST.barRight}>{right}</span>
+    <div className="fsw-report-mobile-bar-row" style={ST.barRow}>
+      <div className="fsw-report-mobile-bar-top" style={ST.barTop}>
+        <span className="fsw-report-mobile-bar-label" style={ST.barLabel}>{label}</span>
+        <span className="fsw-report-mobile-bar-right" style={ST.barRight}>{right}</span>
       </div>
-      <div style={ST.barTrack}>
+      <div className="fsw-report-mobile-bar-track" style={ST.barTrack}>
         <div style={{ ...ST.barFill, width: `${Math.max(2, Math.min(100, pct))}%`, background: color }} />
       </div>
     </div>
@@ -242,19 +244,19 @@ function BarRow({ label, right, pct, color }) {
 
 function Mini({ label, value, tone = "default" }) {
   return (
-    <div style={ST.mini}>
+    <div className="fsw-report-mobile-mini" style={ST.mini}>
       <strong style={{ ...ST.miniValue, ...(tone === "green" ? { color: "#059669" } : tone === "amber" ? { color: "#d97706" } : null) }}>
         {typeof value === "number" ? value.toLocaleString("en-US") : value}
       </strong>
-      <small style={ST.miniLabel}>{label}</small>
+      <small className="fsw-report-mobile-mini-label" style={ST.miniLabel}>{label}</small>
     </div>
   );
 }
 
 function Line({ label, value, strong }) {
   return (
-    <div style={ST.line}>
-      <span style={ST.lineLabel}>{label}</span>
+    <div className="fsw-report-mobile-line" style={ST.line}>
+      <span className="fsw-report-mobile-line-label" style={ST.lineLabel}>{label}</span>
       <span style={{ ...ST.lineValue, ...(strong ? { fontWeight: 700, color: "#0f172a" } : null) }}>{value}</span>
     </div>
   );

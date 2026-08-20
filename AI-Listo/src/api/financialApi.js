@@ -14,6 +14,10 @@ const financialApi = {
   getStats() {
     return apiClient.request(`/financial/stats`, { method: "GET" });
   },
+
+  getMobileHub() {
+    return apiClient.request(`/financial/mobile-hub`, { method: "GET" });
+  },
   searchContacts(search) {
     return apiClient.request(`/financial/contacts${toQuery({ search })}`, { method: "GET" });
   },

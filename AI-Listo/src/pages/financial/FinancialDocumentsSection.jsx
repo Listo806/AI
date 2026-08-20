@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   RefreshCw,
   UploadCloud,
@@ -39,6 +40,7 @@ function fmtDate(v) {
 }
 
 export default function FinancialDocumentsSection() {
+  const { t } = useTranslation();
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,7 +65,7 @@ export default function FinancialDocumentsSection() {
       setDocs(res?.data || []);
       setError("");
     } catch {
-      setError("Could not load documents.");
+      setError(t("financialWorkspace.documents.loadError"));
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,7 @@ export default function FinancialDocumentsSection() {
 
   const upload = async () => {
     if (!file) {
-      setError("Choose a file to upload.");
+      setError(t("financialWorkspace.documents.chooseFileError"));
       return;
     }
     setUploading(true);
@@ -103,7 +105,7 @@ export default function FinancialDocumentsSection() {
       resetForm();
       await load();
     } catch (e) {
-      setError(e?.message || "Upload failed.");
+      setError(e?.message || t("financialWorkspace.documents.uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -124,14 +126,14 @@ export default function FinancialDocumentsSection() {
       }
     } catch (e) {
       if (win) win.close();
-      setError(e?.message || "Could not open document.");
+      setError(e?.message || t("financialWorkspace.documents.openFailed"));
     } finally {
       setBusyId(null);
     }
   };
 
   const remove = async (doc) => {
-    if (!window.confirm(`Delete "${doc.title || doc.fileName}"? This cannot be undone.`)) {
+    if (!window.confirm(t("financialWorkspace.documents.deleteConfirm", { name: doc.title || doc.fileName }))) {
       return;
     }
     setBusyId(doc.id);
@@ -139,7 +141,7 @@ export default function FinancialDocumentsSection() {
       await financialApi.deleteDocument(doc.id);
       await load();
     } catch (e) {
-      setError(e?.message || "Delete failed.");
+      setError(e?.message || t("financialWorkspace.documents.deleteFailed"));
     } finally {
       setBusyId(null);
     }
@@ -149,10 +151,10 @@ export default function FinancialDocumentsSection() {
     <section className="fsw-documents">
       <div className="fsw-section-title">
         <div>
-          <h2>Documents</h2>
-          <p>Store and share client and account files. Private to your account.</p>
+          <h2>{t("financialWorkspace.tabs.documents")}</h2>
+          <p>{t("financialWorkspace.documents.subtitle")}</p>
         </div>
-        <button className="fsw-reset" onClick={() => load()} title="Refresh">
+        <button className="fsw-reset" onClick={() => load()} title={t("financialWorkspace.actions.refresh")}>
           <RefreshCw size={16} />
         </button>
       </div>
@@ -160,11 +162,11 @@ export default function FinancialDocumentsSection() {
       {error && <div style={ST.error}>{error}</div>}
 
       {/* Upload card */}
-      <div style={ST.uploadCard}>
-        <div style={ST.uploadRow}>
-          <label style={ST.fileLabel}>
+      <div className="fsw-doc-mobile-upload-card" style={ST.uploadCard}>
+        <div className="fsw-doc-mobile-upload-row" style={ST.uploadRow}>
+          <label className="fsw-doc-mobile-file-label" style={ST.fileLabel}>
             <UploadCloud size={16} />
-            <span>{file ? file.name : "Choose file"}</span>
+            <span>{file ? file.name : t("financialWorkspace.documents.chooseFile")}</span>
             <input
               ref={fileInputRef}
               type="file"
@@ -173,105 +175,107 @@ export default function FinancialDocumentsSection() {
             />
           </label>
           <input
-            style={ST.input}
-            placeholder="Title (optional)"
+            className="fsw-doc-mobile-input" style={ST.input}
+            placeholder={t("financialWorkspace.documents.titleOptional")}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
-          <select style={ST.select} value={docType} onChange={(e) => setDocType(e.target.value)}>
-            {DOC_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
+          <select className="fsw-doc-mobile-select" style={ST.select} value={docType} onChange={(e) => setDocType(e.target.value)}>
+            {DOC_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {t(`financialWorkspace.documents.types.${type.toLowerCase().replaceAll(" / ", "_").replaceAll(" ", "_")}`, { defaultValue: type })}
+              </option>
             ))}
           </select>
         </div>
-        <div style={ST.uploadRow}>
-          <div style={{ flex: 1, minWidth: 200 }}>
+        <div className="fsw-doc-mobile-upload-row" style={ST.uploadRow}>
+          <div className="fsw-doc-mobile-picker" style={{ flex: 1, minWidth: 200 }}>
             <FinancialClientPicker value={client} onChange={setClient} />
           </div>
-          <div style={{ flex: 1, minWidth: 200 }}>
+          <div className="fsw-doc-mobile-picker" style={{ flex: 1, minWidth: 200 }}>
             <FinancialAccountPicker value={account} onChange={setAccount} />
           </div>
         </div>
-        <div style={ST.uploadRow}>
+        <div className="fsw-doc-mobile-upload-row" style={ST.uploadRow}>
           <input
-            style={{ ...ST.input, flex: 1 }}
-            placeholder="Notes (optional)"
+            className="fsw-doc-mobile-input fsw-doc-mobile-notes" style={{ ...ST.input, flex: 1 }}
+            placeholder={t("financialWorkspace.documents.notesOptional")}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
-          <button style={ST.uploadBtn} disabled={uploading || !file} onClick={upload}>
-            {uploading ? "Uploading…" : "Upload"}
+          <button className="fsw-doc-mobile-upload-btn" style={ST.uploadBtn} disabled={uploading || !file} onClick={upload}>
+            {uploading ? t("financialWorkspace.documents.uploading") : t("financialWorkspace.documents.upload")}
           </button>
         </div>
-        <small style={ST.hint}>PDF, Word, Excel, CSV, text or images. Up to 20MB.</small>
+        <small className="fsw-doc-mobile-hint" style={ST.hint}>{t("financialWorkspace.documents.hint")}</small>
       </div>
 
       {/* Search */}
-      <div style={ST.searchWrap}>
+      <div className="fsw-doc-mobile-search" style={ST.searchWrap}>
         <Search size={14} style={{ color: "#94a3b8" }} />
         <input
-          style={ST.searchInput}
-          placeholder="Search documents..."
+          className="fsw-doc-mobile-search-input" style={ST.searchInput}
+          placeholder={t("financialWorkspace.documents.search")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && load(search)}
         />
-        <button style={ST.searchBtn} onClick={() => load(search)}>Search</button>
+        <button className="fsw-doc-mobile-search-btn" style={ST.searchBtn} onClick={() => load(search)}>{t("common.search")}</button>
       </div>
 
       {/* List */}
       {loading ? (
-        <p style={{ color: "#64748b", fontSize: 14 }}>Loading…</p>
+        <p style={{ color: "#64748b", fontSize: 14 }}>{t("common.loading")}</p>
       ) : docs.length === 0 ? (
-        <div style={ST.empty}>
+        <div className="fsw-doc-mobile-empty" style={ST.empty}>
           <FileText size={22} style={{ color: "#cbd5e1" }} />
-          <p>No documents yet. Upload your first file above.</p>
+          <p>{t("financialWorkspace.documents.empty")}</p>
         </div>
       ) : (
-        <div style={ST.tableWrap}>
-          <table style={ST.table}>
+        <div className="fsw-doc-mobile-table-wrap" style={ST.tableWrap}>
+          <table className="fsw-doc-mobile-table" style={ST.table}>
             <thead>
               <tr>
-                <th style={ST.th}>Document</th>
-                <th style={ST.th}>Type</th>
-                <th style={ST.th}>Client</th>
-                <th style={ST.th}>Account</th>
-                <th style={ST.th}>Size</th>
-                <th style={ST.th}>Uploaded</th>
-                <th style={{ ...ST.th, textAlign: "right" }}>Actions</th>
+                <th className="fsw-doc-mobile-th" style={ST.th}>{t("financialWorkspace.documents.document")}</th>
+                <th className="fsw-doc-mobile-th" style={ST.th}>{t("financialWorkspace.documents.type")}</th>
+                <th className="fsw-doc-mobile-th" style={ST.th}>{t("financialWorkspace.tabs.clients")}</th>
+                <th className="fsw-doc-mobile-th" style={ST.th}>{t("financialWorkspace.tabs.accounts")}</th>
+                <th className="fsw-doc-mobile-th" style={ST.th}>{t("financialWorkspace.documents.size")}</th>
+                <th className="fsw-doc-mobile-th" style={ST.th}>{t("financialWorkspace.documents.uploaded")}</th>
+                <th style={{ ...ST.th, textAlign: "right" }}>{t("financialWorkspace.table.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {docs.map((d) => (
-                <tr key={d.id} style={ST.tr}>
-                  <td style={ST.td}>
+                <tr key={d.id} className="fsw-doc-mobile-tr" style={ST.tr}>
+                  <td className="fsw-doc-mobile-td" style={ST.td}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <FileText size={16} style={{ color: "#64748b", flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
-                        <div style={ST.docTitle}>{d.title || d.fileName}</div>
+                        <div className="fsw-doc-mobile-title" style={ST.docTitle}>{d.title || d.fileName}</div>
                         {d.fileName && d.title !== d.fileName && (
-                          <div style={ST.docFile}>{d.fileName}</div>
+                          <div className="fsw-doc-mobile-file" style={ST.docFile}>{d.fileName}</div>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td style={ST.td}>{d.docType || "-"}</td>
-                  <td style={ST.td}>{d.clientName || "-"}</td>
-                  <td style={ST.td}>{d.accountNumber || "-"}</td>
-                  <td style={ST.td}>{fmtSize(d.size)}</td>
-                  <td style={ST.td}>{fmtDate(d.createdAt)}</td>
+                  <td className="fsw-doc-mobile-td" style={ST.td}>{d.docType || "-"}</td>
+                  <td className="fsw-doc-mobile-td" style={ST.td}>{d.clientName || "-"}</td>
+                  <td className="fsw-doc-mobile-td" style={ST.td}>{d.accountNumber || "-"}</td>
+                  <td className="fsw-doc-mobile-td" style={ST.td}>{fmtSize(d.size)}</td>
+                  <td className="fsw-doc-mobile-td" style={ST.td}>{fmtDate(d.createdAt)}</td>
                   <td style={{ ...ST.td, textAlign: "right", whiteSpace: "nowrap" }}>
                     <button
-                      style={ST.iconAction}
-                      title="Download"
+                      className="fsw-doc-mobile-icon-action" style={ST.iconAction}
+                      title={t("financialWorkspace.documents.download")}
                       disabled={busyId === d.id}
                       onClick={() => download(d)}
                     >
                       <Download size={16} />
                     </button>
                     <button
-                      style={{ ...ST.iconAction, color: "#dc2626" }}
-                      title="Delete"
+                      className="fsw-doc-mobile-icon-action danger" style={{ ...ST.iconAction, color: "#dc2626" }}
+                      title={t("common.delete")}
                       disabled={busyId === d.id}
                       onClick={() => remove(d)}
                     >

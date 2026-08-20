@@ -54,6 +54,16 @@ export class FinancialController {
     return this.financial.getStats(user.id, user.teamId ?? null, user.role ?? 'owner');
   }
 
+  @Get('mobile-hub')
+  @ApiOperation({ summary: 'Financial mobile action/assistant summary (real team-scoped data)' })
+  async mobileHub(@CurrentUser() user: any) {
+    return this.financial.getMobileHub(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
   @Get('contacts')
   @ApiOperation({ summary: "Search the account's existing contacts for a client" })
   async searchContacts(@CurrentUser() user: any, @Query('search') search?: string) {
