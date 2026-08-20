@@ -32,6 +32,13 @@ import {
   CircleHelp,
   Activity,
   Filter,
+  Send,
+  ReceiptText,
+  FileSignature,
+  Undo2,
+  CircleDollarSign,
+  MessageSquareText,
+  CheckCircle2,
 } from "lucide-react";
 import "./SalesWorkspace.css";
 import salesApi from "../../api/salesApi";
@@ -53,12 +60,46 @@ import { useNavigate } from "react-router-dom";
 // their tabs are wired — no invented numbers, and no fake "vs last month" trend
 // (comparisons appear only once real history exists).
 const STAT_CONFIG = [
-  { key: "openQuotes", labelKey: "kpi.openQuotes", nounKey: "kpi.quotes", Icon: FileText, tone: "blue" },
-  { key: "openProposals", labelKey: "kpi.openProposals", nounKey: "kpi.proposals", Icon: ClipboardList, tone: "purple" },
-  { key: "ordersThisMonth", labelKey: "kpi.ordersThisMonth", nounKey: "kpi.orders", Icon: PackageCheck, tone: "green" },
-  { key: "outstandingInvoices", labelKey: "kpi.outstandingInvoices", nounKey: "kpi.invoices", Icon: BadgeDollarSign, tone: "amber" },
-  { key: "commissionsDue", labelKey: "kpi.commissionsDue", Icon: ShoppingCart, tone: "cyan" },
-  { key: "conversionRate", labelKey: "kpi.conversionRate", Icon: Percent, tone: "pink" },
+  {
+    key: "openQuotes",
+    labelKey: "kpi.openQuotes",
+    nounKey: "kpi.quotes",
+    Icon: FileText,
+    tone: "blue",
+  },
+  {
+    key: "openProposals",
+    labelKey: "kpi.openProposals",
+    nounKey: "kpi.proposals",
+    Icon: ClipboardList,
+    tone: "purple",
+  },
+  {
+    key: "ordersThisMonth",
+    labelKey: "kpi.ordersThisMonth",
+    nounKey: "kpi.orders",
+    Icon: PackageCheck,
+    tone: "green",
+  },
+  {
+    key: "outstandingInvoices",
+    labelKey: "kpi.outstandingInvoices",
+    nounKey: "kpi.invoices",
+    Icon: BadgeDollarSign,
+    tone: "amber",
+  },
+  {
+    key: "commissionsDue",
+    labelKey: "kpi.commissionsDue",
+    Icon: ShoppingCart,
+    tone: "cyan",
+  },
+  {
+    key: "conversionRate",
+    labelKey: "kpi.conversionRate",
+    Icon: Percent,
+    tone: "pink",
+  },
 ];
 
 function money(value, locale = "en-US") {
@@ -92,7 +133,10 @@ function daysLeftNote(validUntil, t) {
   }
 
   if (diff === 0) {
-    return { text: t("salesWorkspace.validity.daysLeft", { count: 0 }), danger: true };
+    return {
+      text: t("salesWorkspace.validity.daysLeft", { count: 0 }),
+      danger: true,
+    };
   }
 
   return {
@@ -155,16 +199,106 @@ const TABS = [
   { key: "Commissions", labelKey: "tabs.commissions" },
   { key: "Returns", labelKey: "tabs.returns" },
 ];
+function getSalesActivityVisual(activity) {
+  const type = String(activity?.type || "").toLowerCase();
+  const title = String(activity?.title || "").toLowerCase();
 
+  // QUOTE
+  if (type === "quote" || title.includes("quote")) {
+    if (title.includes("sent") || title.includes("viewed")) {
+      return {
+        Icon: Eye,
+        tone: "amber",
+      };
+    }
+
+    return {
+      Icon: FileText,
+      tone: "green",
+    };
+  }
+
+  // PROPOSAL
+  if (type === "proposal" || title.includes("proposal")) {
+    return {
+      Icon: Send,
+      tone: "purple",
+    };
+  }
+
+  // ORDER
+  if (type === "order" || title.includes("order")) {
+    return {
+      Icon: ShoppingCart,
+      tone: "blue",
+    };
+  }
+
+  // INVOICE
+  if (type === "invoice" || title.includes("invoice")) {
+    return {
+      Icon: ReceiptText,
+      tone: "cyan",
+    };
+  }
+
+  // CONTRACT
+  if (type === "contract" || title.includes("contract")) {
+    return {
+      Icon: FileSignature,
+      tone: "purple",
+    };
+  }
+
+  // COMMISSION
+  if (type === "commission" || title.includes("commission")) {
+    return {
+      Icon: CircleDollarSign,
+      tone: "amber",
+    };
+  }
+
+  // RETURN
+  if (type === "return" || title.includes("return")) {
+    return {
+      Icon: Undo2,
+      tone: "pink",
+    };
+  }
+
+  // MANUAL ACTIVITY / NOTE
+  if (type === "note" || type === "activity") {
+    return {
+      Icon: MessageSquareText,
+      tone: "purple",
+    };
+  }
+
+  // COMPLETED / WON
+  if (
+    title.includes("completed") ||
+    title.includes("won") ||
+    title.includes("paid")
+  ) {
+    return {
+      Icon: CheckCircle2,
+      tone: "green",
+    };
+  }
+
+  return {
+    Icon: Activity,
+    tone: "blue",
+  };
+}
 export default function SalesWorkspace() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const locale =
-    i18n.language?.startsWith("es")
-      ? "es-ES"
-      : i18n.language?.startsWith("pt")
-        ? "pt-BR"
-        : "en-US";
+  const locale = i18n.language?.startsWith("es")
+    ? "es-ES"
+    : i18n.language?.startsWith("pt")
+      ? "pt-BR"
+      : "en-US";
   const [activeTab, setActiveTab] = useState("Quotes");
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
@@ -305,7 +439,10 @@ export default function SalesWorkspace() {
   const pipeline = stats?.pipeline || [];
   const activity = stats?.recentActivity || [];
   const reps = stats?.topReps || [];
-  const pipelineTotal = pipeline.reduce((sum, p) => sum + (Number(p.value) || 0), 0);
+  const pipelineTotal = pipeline.reduce(
+    (sum, p) => sum + (Number(p.value) || 0),
+    0,
+  );
   const openDeals = pipeline.reduce(
     (sum, item) => sum + (Number(item.dealCount) || 0),
     0,
@@ -321,7 +458,9 @@ export default function SalesWorkspace() {
   const to = Math.min(page * limit, total);
 
   const statusLabel = (status) => {
-    const key = String(status || "").trim().toLowerCase();
+    const key = String(status || "")
+      .trim()
+      .toLowerCase();
     const known = {
       pending: "pending",
       sent: "sent",
@@ -352,7 +491,10 @@ export default function SalesWorkspace() {
             <input placeholder={t("salesWorkspace.searchAnything")} />
             <kbd>⌘ K</kbd>
           </label>
-          <button className="sales-ws-quick-create" onClick={() => openModal("create")}>
+          <button
+            className="sales-ws-quick-create"
+            onClick={() => openModal("create")}
+          >
             <Plus size={15} />
             {t("salesWorkspace.quickCreate")}
           </button>
@@ -407,7 +549,8 @@ export default function SalesWorkspace() {
           <button
             type="button"
             className={
-              mobileMoreOpen || TABS.slice(6).some((tab) => tab.key === activeTab)
+              mobileMoreOpen ||
+              TABS.slice(6).some((tab) => tab.key === activeTab)
                 ? "more-open"
                 : ""
             }
@@ -415,10 +558,7 @@ export default function SalesWorkspace() {
             onClick={() => setMobileMoreOpen((open) => !open)}
           >
             {t("salesWorkspace.tabs.more")}
-            <ChevronDown
-              size={15}
-              className={mobileMoreOpen ? "rotate" : ""}
-            />
+            <ChevronDown size={15} className={mobileMoreOpen ? "rotate" : ""} />
           </button>
         </nav>
 
@@ -508,7 +648,6 @@ export default function SalesWorkspace() {
             </button>
           </div>
 
-
           <div className="sales-ws-mobile-toolbar">
             <button className="primary" onClick={() => openModal("create")}>
               <Plus size={20} />
@@ -585,7 +724,9 @@ export default function SalesWorkspace() {
                       </div>
 
                       <div className="sales-ws-mobile-quote-status">
-                        <strong className={`status-pill ${status || "pending"}`}>
+                        <strong
+                          className={`status-pill ${status || "pending"}`}
+                        >
                           {statusLabel(quote.status)}
                         </strong>
                         <span>{t("salesWorkspace.table.status")}</span>
@@ -703,7 +844,9 @@ export default function SalesWorkspace() {
                         <td>
                           <div className="sales-ws-two-line">
                             <strong>{quote.contactName || "-"}</strong>
-                            {quote.contactRole && <span>{quote.contactRole}</span>}
+                            {quote.contactRole && (
+                              <span>{quote.contactRole}</span>
+                            )}
                           </div>
                         </td>
 
@@ -715,7 +858,9 @@ export default function SalesWorkspace() {
                         </td>
 
                         <td className="sales-ws-money">
-                          {quote.value != null ? money(quote.value, locale) : "-"}
+                          {quote.value != null
+                            ? money(quote.value, locale)
+                            : "-"}
                         </td>
 
                         <td>
@@ -728,9 +873,13 @@ export default function SalesWorkspace() {
 
                         <td>
                           <div className="sales-ws-valid">
-                            <strong>{formatDate(quote.validUntil, locale)}</strong>
+                            <strong>
+                              {formatDate(quote.validUntil, locale)}
+                            </strong>
                             {valid.text && (
-                              <span className={valid.danger ? "danger" : ""}>{valid.text}</span>
+                              <span className={valid.danger ? "danger" : ""}>
+                                {valid.text}
+                              </span>
                             )}
                           </div>
                         </td>
@@ -748,7 +897,9 @@ export default function SalesWorkspace() {
 
                         <td>
                           <div className="sales-ws-two-line">
-                            <strong>{formatDate(quote.createdAt, locale)}</strong>
+                            <strong>
+                              {formatDate(quote.createdAt, locale)}
+                            </strong>
                           </div>
                         </td>
 
@@ -757,7 +908,9 @@ export default function SalesWorkspace() {
                             <button
                               type="button"
                               onClick={() => convertToProposal(quote.id)}
-                              aria-label={t("salesWorkspace.actions.createProposal")}
+                              aria-label={t(
+                                "salesWorkspace.actions.createProposal",
+                              )}
                               title={t("salesWorkspace.actions.createProposal")}
                             >
                               <ClipboardList size={14} />
@@ -802,11 +955,17 @@ export default function SalesWorkspace() {
               })}
             </span>
             <div>
-              <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
                 <ChevronLeft size={14} />
               </button>
               <button className="active">{page}</button>
-              <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
                 <ChevronRight size={14} />
               </button>
             </div>
@@ -814,9 +973,15 @@ export default function SalesWorkspace() {
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
             >
-              <option value="20">{t("salesWorkspace.pagination.perPage", { count: 20 })}</option>
-              <option value="50">{t("salesWorkspace.pagination.perPage", { count: 50 })}</option>
-              <option value="100">{t("salesWorkspace.pagination.perPage", { count: 100 })}</option>
+              <option value="20">
+                {t("salesWorkspace.pagination.perPage", { count: 20 })}
+              </option>
+              <option value="50">
+                {t("salesWorkspace.pagination.perPage", { count: 50 })}
+              </option>
+              <option value="100">
+                {t("salesWorkspace.pagination.perPage", { count: 100 })}
+              </option>
             </select>
           </div>
         </section>
@@ -836,8 +1001,16 @@ export default function SalesWorkspace() {
         <section className="sales-ws-quotes">
           <div className="sales-ws-section-head">
             <div>
-              <h2>{t(`salesWorkspace.tabs.${String(activeTab).toLowerCase()}`)}</h2>
-              <p>{t("salesWorkspace.workspaceReady", { workspace: t(`salesWorkspace.tabs.${String(activeTab).toLowerCase()}`) })}</p>
+              <h2>
+                {t(`salesWorkspace.tabs.${String(activeTab).toLowerCase()}`)}
+              </h2>
+              <p>
+                {t("salesWorkspace.workspaceReady", {
+                  workspace: t(
+                    `salesWorkspace.tabs.${String(activeTab).toLowerCase()}`,
+                  ),
+                })}
+              </p>
             </div>
           </div>
         </section>
@@ -853,15 +1026,21 @@ export default function SalesWorkspace() {
           <div className="sales-ws-mobile-intel-card blue">
             <div className="sales-ws-mobile-intel-head">
               <div>
-                <span className="intel-icon"><BarChart3 /></span>
+                <span className="intel-icon">
+                  <BarChart3 />
+                </span>
                 <strong>{t("salesWorkspace.pipelineSummary")}</strong>
               </div>
-              <button>{t("common.thisMonth")} <ChevronDown /></button>
+              <button>
+                {t("common.thisMonth")} <ChevronDown />
+              </button>
             </div>
 
             <div className="sales-ws-mobile-pipeline-summary">
               <div>
-                <span>{t("salesWorkspace.intelligence.totalPipelineValue")}</span>
+                <span>
+                  {t("salesWorkspace.intelligence.totalPipelineValue")}
+                </span>
                 <strong>{money(pipelineTotal, locale)}</strong>
               </div>
               <div>
@@ -885,23 +1064,43 @@ export default function SalesWorkspace() {
           <div className="sales-ws-mobile-intel-card green">
             <div className="sales-ws-mobile-intel-head">
               <div>
-                <span className="intel-icon"><Activity /></span>
+                <span className="intel-icon">
+                  <Activity />
+                </span>
                 <strong>{t("salesWorkspace.recentActivity")}</strong>
               </div>
-              <button>{t("salesWorkspace.intelligence.allActivity")} <ChevronDown /></button>
+              <button>
+                {t("salesWorkspace.intelligence.allActivity")} <ChevronDown />
+              </button>
             </div>
 
             <div className="sales-ws-mobile-intel-activity">
               {activity.length === 0 ? (
                 <p>{t("salesWorkspace.noRecentActivity")}</p>
               ) : (
-                activity.slice(0, 4).map((item, index) => (
-                  <div key={`${item.title}-${index}`}>
-                    <span><FileText /></span>
-                    <strong>{item.title}</strong>
-                    <time>{relativeTime(item.at)}</time>
-                  </div>
-                ))
+                
+
+                activity.map((a, i) => {
+                  const {
+                    Icon,
+                    tone,
+                  } = getSalesActivityVisual(a);
+
+                  return (
+                    <div
+                      className={`sales-ws-mobile-activity-row ${tone}`}
+                      key={`${a.id || a.title}-${i}`}
+                    >
+                      <span className="sales-ws-activity-icon">
+                        <Icon size={15} />
+                      </span>
+                      <strong>{a.title}</strong>
+                      <time>
+                        {relativeTime(a.at)}
+                      </time>
+                    </div>
+                  );
+                })
               )}
             </div>
 
@@ -917,10 +1116,14 @@ export default function SalesWorkspace() {
           <div className="sales-ws-mobile-intel-card amber">
             <div className="sales-ws-mobile-intel-head">
               <div>
-                <span className="intel-icon"><UsersRound /></span>
+                <span className="intel-icon">
+                  <UsersRound />
+                </span>
                 <strong>{t("salesWorkspace.topPerformingReps")}</strong>
               </div>
-              <button>{t("common.thisMonth")} <ChevronDown /></button>
+              <button>
+                {t("common.thisMonth")} <ChevronDown />
+              </button>
             </div>
 
             <div className="sales-ws-mobile-reps">
@@ -948,7 +1151,6 @@ export default function SalesWorkspace() {
           </div>
         </section>
       )}
-
 
       {activeTab === "Overview" && (
         <section className="sales-ws-mobile-more">
@@ -1137,10 +1339,7 @@ export default function SalesWorkspace() {
                 {t("salesWorkspace.more.myPipeline")}
               </button>
 
-              <button
-                type="button"
-                onClick={() => goToSalesTab("Customers")}
-              >
+              <button type="button" onClick={() => goToSalesTab("Customers")}>
                 <UsersRound />
                 {t("salesWorkspace.more.topCustomers")}
               </button>
@@ -1201,19 +1400,31 @@ export default function SalesWorkspace() {
                 </div>
               </div>
             ) : (
-              activity.map((a, i) => (
-                <div className="sales-ws-activity-row" key={`${a.title}-${i}`}>
-                  <div>
-                    <strong>{a.title}</strong>
-                    {a.subtitle && <small>{a.subtitle}</small>}
+              activity.map((a, i) => {
+                const { Icon, tone } = getSalesActivityVisual(a);
+
+                return (
+                  <div
+                    className={`sales-ws-activity-row ${tone}`}
+                    key={`${a.id || a.title}-${i}`}
+                  >
+                    <span className="sales-ws-activity-icon">
+                      <Icon size={15} />
+                    </span>
+                    <div>
+                      <strong>{a.title}</strong>
+                      {a.subtitle && <small>{a.subtitle}</small>}
+                    </div>
+                    <time>{relativeTime(a.at)}</time>
                   </div>
-                  <time>{relativeTime(a.at)}</time>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
-          <button className="sales-ws-link-btn" onClick={openAllSalesActivity}>{t("salesWorkspace.viewAllActivity")} →</button>
+          <button className="sales-ws-link-btn" onClick={openAllSalesActivity}>
+            {t("salesWorkspace.viewAllActivity")} →
+          </button>
         </div>
 
         <div className="sales-ws-bottom-card">
@@ -1234,23 +1445,40 @@ export default function SalesWorkspace() {
                   <span className="avatar">{initials(r.name)}</span>
                   <strong>{r.name}</strong>
                   <span>{money(r.amount, locale)}</span>
-                  <small>{t("salesWorkspace.kpi.countLabel", { count: r.orders || 0, noun: t("salesWorkspace.kpi.orders") })}</small>
+                  <small>
+                    {t("salesWorkspace.kpi.countLabel", {
+                      count: r.orders || 0,
+                      noun: t("salesWorkspace.kpi.orders"),
+                    })}
+                  </small>
                 </div>
               ))
             )}
           </div>
 
-          <button className="sales-ws-link-btn" onClick={() => navigate("/dashboard/analytics")}>{t("salesWorkspace.viewFullLeaderboard")} →</button>
+          <button
+            className="sales-ws-link-btn"
+            onClick={() => navigate("/dashboard/analytics")}
+          >
+            {t("salesWorkspace.viewFullLeaderboard")} →
+          </button>
         </div>
       </div>
 
-
       {activityModalOpen && (
-        <div className="sales-ws-activity-modal-backdrop" onClick={() => setActivityModalOpen(false)}>
-          <div className="sales-ws-activity-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="sales-ws-activity-modal-backdrop"
+          onClick={() => setActivityModalOpen(false)}
+        >
+          <div
+            className="sales-ws-activity-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="sales-ws-activity-modal-head">
               <h3>{t("salesWorkspace.recentActivity")}</h3>
-              <button type="button" onClick={() => setActivityModalOpen(false)}>×</button>
+              <button type="button" onClick={() => setActivityModalOpen(false)}>
+                ×
+              </button>
             </div>
 
             <div className="sales-ws-activity-modal-list">
@@ -1276,11 +1504,19 @@ export default function SalesWorkspace() {
       )}
 
       {activityLogOpen && (
-        <div className="sales-ws-activity-modal-backdrop" onClick={() => setActivityLogOpen(false)}>
-          <div className="sales-ws-activity-modal sales-ws-log-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="sales-ws-activity-modal-backdrop"
+          onClick={() => setActivityLogOpen(false)}
+        >
+          <div
+            className="sales-ws-activity-modal sales-ws-log-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="sales-ws-activity-modal-head">
               <h3>{t("salesWorkspace.more.logActivity")}</h3>
-              <button type="button" onClick={() => setActivityLogOpen(false)}>×</button>
+              <button type="button" onClick={() => setActivityLogOpen(false)}>
+                ×
+              </button>
             </div>
 
             <label>
@@ -1297,7 +1533,9 @@ export default function SalesWorkspace() {
               <textarea
                 value={activityDetails}
                 onChange={(e) => setActivityDetails(e.target.value)}
-                placeholder={t("salesWorkspace.more.activityDetailsPlaceholder")}
+                placeholder={t(
+                  "salesWorkspace.more.activityDetailsPlaceholder",
+                )}
                 rows={4}
               />
             </label>

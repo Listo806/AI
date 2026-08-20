@@ -2272,7 +2272,7 @@ export class SalesService {
             UNION ALL SELECT 'Return', return_number, customer_name, status, updated_at FROM sales_returns WHERE team_id = ANY($1)
             UNION ALL SELECT 'Commission', commission_number, customer_name, status, updated_at FROM sales_commissions WHERE team_id = ANY($1)
             UNION ALL SELECT 'Activity', title, details, type, created_at FROM sales_activity WHERE team_id = ANY($1)
-         ) t ORDER BY updated_at DESC LIMIT 6`,
+         ) t ORDER BY updated_at DESC LIMIT 4`,
         [accessible],
       ),
     ]);

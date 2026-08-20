@@ -566,14 +566,44 @@ body .sales-ws-section-actions button.primary {
     display: grid;
     place-items: center
 }
-
+.pink .sales-ws-activity-icon svg{
+    stroke: #db2777;
+}
+.pink.sales-ws-activity-row>span, .pink .sales-ws-activity-icon{
+    background: #db27781c;
+}
+.blue .sales-ws-activity-icon svg{
+    stroke: #2563eb;
+}
+.blue.sales-ws-activity-row>span, .blue .sales-ws-activity-icon{
+    background: #2564eb21;
+}
+.purple .sales-ws-activity-icon svg{
+    stroke: #9333ea;
+}
+.purple.sales-ws-activity-row>span, .purple .sales-ws-activity-icon{
+    background: #9233ea25;
+}
+.cyan .sales-ws-activity-icon svg{
+    stroke: #9af326;
+}
+.cyan.sales-ws-activity-row>span, .cyan .sales-ws-activity-icon{
+    background: #9af32621;
+}
+.amber .sales-ws-activity-icon svg{
+    stroke: #830c26;
+}
+.amber.sales-ws-activity-row>span, .amber .sales-ws-activity-icon{
+    background: #690a1f18;
+}
 .sales-ws-activity-row strong,
 .sales-ws-activity-row small {
     display: block
 }
 
 .sales-ws-activity-row strong {
-    font-size: 11px
+    font-size: 11px;
+    color: #111827;
 }
 
 .sales-ws-activity-row small,
@@ -1302,7 +1332,6 @@ body .sales-ws-section-actions button.primary {
         width: 100%;
         min-height: 54px;
         border: 0;
-        border-top: 1px solid var(--bd);
         background: transparent;
         color: var(--tone);
         font-size: 13px;
@@ -1313,13 +1342,14 @@ body .sales-ws-section-actions button.primary {
         padding: 4px 22px 10px;
     }
 
-    .sales-ws-mobile-intel-activity>div {
+    body #root .sales-ws-mobile-intel-card .sales-ws-mobile-intel-activity>div {
         min-height: 54px;
         display: grid;
         grid-template-columns: 34px minmax(0, 1fr) auto;
         gap: 10px;
         align-items: center;
         border-bottom: 1px solid var(--bd);
+        background: none!important;
     }
 
     .sales-ws-mobile-intel-activity>div:last-child {
@@ -1610,7 +1640,8 @@ body .sales-ws-section-actions button.primary {
 
     .sales-ws-mobile-more-activity strong {
         color: var(--txt);
-        font-size: 16px;
+        font-size: 15px;
+        font-weight: 100;
     }
 
     .sales-ws-mobile-more-activity small,
