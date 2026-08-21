@@ -433,9 +433,9 @@ export class AiUnitsService {
    */
   async getCheckout(user: any, packageId: string): Promise<any> {
     const packs: Record<string, { units: number; env: string }> = {
-      boost: { units: 500, env: 'PADDLE_PRICE_AI_UNITS_500' },
-      plus: { units: 1000, env: 'PADDLE_PRICE_AI_UNITS_1000' },
-      max: { units: 2000, env: 'PADDLE_PRICE_AI_UNITS_2000' },
+      boost: { units: 100, env: 'PADDLE_PRICE_AI_UNITS_100' },
+      plus: { units: 200, env: 'PADDLE_PRICE_AI_UNITS_200' },
+      max: { units: 400, env: 'PADDLE_PRICE_AI_UNITS_400' },
     };
     const pack = packs[packageId];
     if (!pack) return { configured: false, message: 'Unknown package.' };

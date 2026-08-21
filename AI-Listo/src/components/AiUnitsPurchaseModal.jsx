@@ -6,9 +6,9 @@ import { fetchPaddleConfig } from "../api/paddleApi";
 import "./AiUnitsPurchaseModal.css";
 
 const FALLBACK_PACKAGES = [
-  { id: "boost", units: 500, price: 27 },
-  { id: "plus", units: 1000, price: 47 },
-  { id: "max", units: 2000, price: 77 },
+  { id: "boost", units: 100, price: 47 },
+  { id: "plus", units: 200, price: 67 },
+  { id: "max", units: 400, price: 97 },
 ];
 
 /**

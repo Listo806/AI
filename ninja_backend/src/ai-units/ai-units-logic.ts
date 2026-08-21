@@ -6,15 +6,30 @@
  * UTC to keep the monthly cycle stable regardless of server timezone.
  */
 
+// Client-defined metered AI actions (credit values in DEFAULT_AI_UNITS_CONFIG).
+// Legacy keys ('writing','pipeline_summary','deal_intel','automation',
+// 'detailed_report','heavy') are kept as aliases so existing call sites keep
+// working; actionCost() falls back to the 'simple' cost for anything unknown.
 export type AiActionType =
-  | 'simple'
-  | 'writing'
-  | 'lead_analysis'
-  | 'pipeline_summary'
-  | 'deal_intel'
-  | 'automation'
-  | 'detailed_report'
-  | 'heavy';
+  | 'simple' // simple question / short answer
+  | 'reply' // writes/replies to a lead
+  | 'writing' // legacy alias for reply
+  | 'summarize' // summarizes a contact/conversation
+  | 'next_action' // recommends next action
+  | 'follow_up' // drafts a follow-up
+  | 'lead_analysis' // qualifies/analyzes a lead
+  | 'pipeline_analysis' // analyzes a pipeline/deal
+  | 'pipeline_summary' // legacy alias for pipeline_analysis
+  | 'deal_intel' // legacy alias for pipeline_analysis
+  | 'booking' // appointment conversation / booking assistance
+  | 'content' // longer sales/email content
+  | 'deep_analysis' // deeper CRM analysis
+  | 'insights' // business/dashboard insights
+  | 'detailed_report' // legacy alias for insights
+  | 'workflow' // substantial multi-step workflow
+  | 'automation' // legacy alias for workflow
+  | 'research' // advanced research / large analysis
+  | 'heavy'; // legacy alias for research
 
 export interface AiUnitsConfig {
   /** Free units granted each monthly cycle. Backend-configurable. */
@@ -33,20 +48,33 @@ export interface AiUnitsConfig {
 
 export const DEFAULT_AI_UNITS_CONFIG: AiUnitsConfig = {
   freeAllowance: 50,
+  // Client credit-deduction table (2026-08-20).
   actionCosts: {
-    simple: 3,
-    writing: 5,
-    lead_analysis: 7,
-    pipeline_summary: 10,
-    deal_intel: 12,
-    automation: 15,
-    detailed_report: 20,
-    heavy: 25,
+    simple: 2, // simple question / short answer
+    reply: 3, // writes/replies to a lead
+    writing: 3, // legacy alias for reply
+    summarize: 3, // summarizes a contact/conversation
+    next_action: 3, // recommends next action
+    follow_up: 4, // drafts a follow-up
+    lead_analysis: 5, // qualifies/analyzes a lead
+    pipeline_analysis: 5, // analyzes a pipeline/deal
+    pipeline_summary: 5, // legacy alias
+    deal_intel: 5, // legacy alias
+    booking: 5, // appointment conversation / booking assistance
+    content: 6, // longer sales/email content
+    deep_analysis: 8, // deeper CRM analysis
+    insights: 10, // business/dashboard insights
+    detailed_report: 10, // legacy alias for insights
+    workflow: 12, // substantial multi-step workflow
+    automation: 12, // legacy alias for workflow
+    research: 20, // advanced research / large analysis
+    heavy: 20, // legacy alias for research
   },
+  // Client credit packs (2026-08-20): 100/$47, 200/$67, 400/$97.
   packages: [
-    { id: 'boost', units: 500, price: 27 },
-    { id: 'plus', units: 1000, price: 47 },
-    { id: 'max', units: 2000, price: 77 },
+    { id: 'boost', units: 100, price: 47 },
+    { id: 'plus', units: 200, price: 67 },
+    { id: 'max', units: 400, price: 97 },
   ],
   thresholds: { green: 50, yellow: 20 },
   lowThreshold: 20,

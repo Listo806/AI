@@ -680,9 +680,11 @@ export class PaymentsService {
       const v = (process.env[env] || '').trim();
       if (v) map[v] = { units, packageId };
     };
-    reg('PADDLE_PRICE_AI_UNITS_500', 500, 'boost');
-    reg('PADDLE_PRICE_AI_UNITS_1000', 1000, 'plus');
-    reg('PADDLE_PRICE_AI_UNITS_2000', 2000, 'max');
+    // Client credit packs (2026-08-20): 100/$47, 200/$67, 400/$97. Unit counts
+    // are server-authoritative (never trusted from the client checkout payload).
+    reg('PADDLE_PRICE_AI_UNITS_100', 100, 'boost');
+    reg('PADDLE_PRICE_AI_UNITS_200', 200, 'plus');
+    reg('PADDLE_PRICE_AI_UNITS_400', 400, 'max');
     if (!Object.keys(map).length) return null;
     for (const id of this.extractPaddlePriceIds(data)) {
       if (map[id]) return { ...map[id], priceId: id };
