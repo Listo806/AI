@@ -16,8 +16,8 @@ import { OnbEmail } from './onboarding-emails.data';
 // Shared, email-safe body. `t` carries the localized strings.
 // Brand hexagon mark (same inline-SVG approach as the onboarding designs).
 const LOGO = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7L12 2z" fill="#5b45f6"/><path d="M12 7.5l4.5 2.6v5.2L12 17.9l-4.5-2.6V10.1L12 7.5z" fill="#ffffff"/><circle cx="12" cy="12" r="2.1" fill="#5b45f6"/></svg>`;
-// Battery-with-alert mark, matching the approved design.
-const BATTERY = `<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="7" y="13" width="21" height="14" rx="3" stroke="#e5484d" stroke-width="2"/><rect x="30" y="17.5" width="3.6" height="5" rx="1.5" fill="#e5484d"/><rect x="16.9" y="16.5" width="2.3" height="5.6" rx="1.15" fill="#e5484d"/><circle cx="18.05" cy="24.4" r="1.2" fill="#e5484d"/></svg>`;
+// Battery-with-alert mark, matching the approved design (centered + clear).
+const BATTERY = `<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="16" width="26" height="16" rx="3.5" stroke="#e5484d" stroke-width="2.6"/><rect x="36" y="20.5" width="3.8" height="7" rx="1.6" fill="#e5484d"/><rect x="19.8" y="19.6" width="2.6" height="6" rx="1.3" fill="#e5484d"/><circle cx="21.1" cy="28.3" r="1.35" fill="#e5484d"/></svg>`;
 // Footer social marks (white glyph on a purple circle).
 const soc = (glyph: string) =>
   `<td style="padding:0 5px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" valign="middle" width="30" height="30" style="width:30px;height:30px;background:#5b45f6;border-radius:50%;">${glyph}</td></tr></table></td>`;
