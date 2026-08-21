@@ -25,6 +25,10 @@ import {
   Coffee,
   BriefcaseBusiness,
   SlidersHorizontal,
+  MessageCircle,
+  Phone,
+  MoreHorizontal,
+  ChevronDown
 } from "lucide-react";
 import "./CalendarPage.css";
 import { useAuth } from "../../context/AuthContext";
@@ -122,6 +126,13 @@ export default function CalendarPage() {
   const [mobileSearch, setMobileSearch] = useState("");
   const [mobileOnlyMine, setMobileOnlyMine] = useState(true);
   const [mobileShowCanceled, setMobileShowCanceled] = useState(false);
+
+  // Desktop filters mirror the approved desktop Calendar layout while
+  // continuing to operate on the real appointments returned by calendarApi.
+  const [desktopSearch, setDesktopSearch] = useState("");
+  const [desktopOnlyMine, setDesktopOnlyMine] = useState(true);
+  const [desktopShowCanceled, setDesktopShowCanceled] = useState(false);
+  const [desktopType, setDesktopType] = useState("all");
 
   // CRM picker state (type-ahead over leads + contacts).
   const [crmQuery, setCrmQuery] = useState("");
@@ -446,6 +457,104 @@ export default function CalendarPage() {
       .slice(0, 4);
   }, [upcoming, mobileSearch, mobileOnlyMine, mobileShowCanceled, user?.id]);
 
+
+  const desktopItems = useMemo(() => {
+    const q = desktopSearch.trim().toLowerCase();
+    return items.filter((a) => {
+      if (desktopType !== "all" && a.type !== desktopType) return false;
+      if (!desktopShowCanceled && a.status === "canceled") return false;
+      if (desktopOnlyMine && user?.id && a.assignedTo && a.assignedTo !== user.id) return false;
+      if (!q) return true;
+      return [
+        a.title,
+        a.attendeeName,
+        a.attendeeEmail,
+        a.location,
+        a.leadName,
+        a.contactName,
+        typeLabel(a.type),
+      ]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q));
+    });
+  }, [
+    items,
+    desktopType,
+    desktopShowCanceled,
+    desktopOnlyMine,
+    desktopSearch,
+    user?.id,
+    t,
+  ]);
+
+  const desktopUpcoming = useMemo(() => {
+    const now = new Date();
+    return desktopItems
+      .filter((a) => a.end >= now)
+      .sort((a, b) => a.start - b.start)
+      .slice(0, 3);
+  }, [desktopItems]);
+
+  const desktopInsights = useMemo(() => {
+    const now = new Date();
+    const future = desktopItems.filter((a) => a.end >= now);
+    const pending = future.filter((a) => a.status === "pending");
+    const followUps = future.filter((a) => a.type === "call");
+
+    // Use only real loaded calendar data. "Needs confirmation" maps to pending
+    // appointments; follow-up recommendations map to real follow-up calls.
+    const noResponse = future.filter(
+      (a) =>
+        a.status === "pending" &&
+        Boolean(a.attendeeName || a.attendeeEmail || a.leadName || a.contactName),
+    );
+
+    const hourBuckets = new Map();
+    future.forEach((a) => {
+      const key = `${a.start.getDay()}-${a.start.getHours()}`;
+      hourBuckets.set(key, (hourBuckets.get(key) || 0) + 1);
+    });
+    const busiest = [...hourBuckets.entries()].sort((a, b) => b[1] - a[1])[0];
+
+    return [
+      pending.length
+        ? {
+            tone: "purple",
+            icon: <CalendarCheck2 size={15} />,
+            title: t("calendar.desktop.needsConfirmation", { count: pending.length }),
+            sub: t("calendar.desktop.sendReminders"),
+          }
+        : null,
+      noResponse.length
+        ? {
+            tone: "blue",
+            icon: <MessageCircle size={15} />,
+            title: t("calendar.desktop.awaitingResponse", { count: noResponse.length }),
+            sub: t("calendar.desktop.followUpRecommended"),
+          }
+        : null,
+      busiest && busiest[1] > 1
+        ? {
+            tone: "green",
+            icon: <Clock3 size={15} />,
+            title: t("calendar.desktop.busyTimeSlot"),
+            sub: t("calendar.desktop.highDemandTime"),
+          }
+        : null,
+      followUps.length
+        ? {
+            tone: "orange",
+            icon: <Phone size={15} />,
+            title: t("calendar.desktop.followUpsScheduled", { count: followUps.length }),
+            sub: t("calendar.desktop.openFollowUps"),
+          }
+        : null,
+    ].filter(Boolean);
+  }, [desktopItems, t]);
+
+  const desktopMonthCells = monthCells;
+  const desktopNow = new Date();
+
   return (
     <div className="cal-page">
       <section className="cal-mobile-shell">
@@ -739,150 +848,529 @@ export default function CalendarPage() {
         </section>
       </section>
 
-      <div className="cal-desktop-layout">
-      <div className="cal-header">
-        <h1>{t("calendar.title")}</h1>
-        <p className="cal-sub">{t("calendar.subtitle")}</p>
-      </div>
+      <div className="cal-desktop-layout cal-desktop-reference">
+        <div className="cal-desktop-topline">
+          <div className="cal-header">
+            <h1>{t("calendar.title")}</h1>
+            <p className="cal-sub">{t("calendar.subtitle")}</p>
+          </div>
 
-      <div className="cal-toolbar">
-        <button className="cal-btn" onClick={() => setAnchor(new Date())}>{t("calendar.today")}</button>
-        <button className="cal-btn" onClick={() => move(-1)}>&#8249;</button>
-        <button className="cal-btn" onClick={() => move(1)}>&#8250;</button>
-        <div className="cal-range">{rangeLabel}</div>
-        <div className="cal-spacer" />
-        <div className="cal-views">
-          {VIEWS.map((v) => (
-            <button key={v} className={view === v ? "active" : ""} onClick={() => setView(v)}>
-              {t(`calendar.view.${v}`)}
+          <div className="cal-desktop-head-actions">
+            <button
+              type="button"
+              className="cal-btn cal-ai-btn"
+              onClick={() => navigate("/dashboard/ai-cortexa")}
+            >
+              <Sparkles size={16} />
+              {t("calendar.desktop.aiAssistant")}
             </button>
-          ))}
+            <button type="button" className="cal-btn">
+              <Settings size={16} />
+              {t("calendar.desktop.settings")}
+            </button>
+          </div>
         </div>
-        <button className="cal-btn cal-btn-primary" onClick={() => openNew()}>+ {t("calendar.newAppointment")}</button>
-      </div>
 
-      <div className="cal-kpis">
-        <div className="cal-kpi"><div className="n">{kpi.total}</div><div className="l">{t("calendar.kpiTotal")}</div></div>
-        <div className="cal-kpi"><div className="n" style={{ color: "#16a34a" }}>{kpi.confirmed}</div><div className="l">{t("calendar.status.confirmed")}</div></div>
-        <div className="cal-kpi"><div className="n" style={{ color: "#d97706" }}>{kpi.pending}</div><div className="l">{t("calendar.status.pending")}</div></div>
-        <div className="cal-kpi"><div className="n" style={{ color: "#2563eb" }}>{kpi.completed}</div><div className="l">{t("calendar.status.completed")}</div></div>
-        <div className="cal-kpi"><div className="n" style={{ color: "#dc2626" }}>{kpi.canceled}</div><div className="l">{t("calendar.status.canceled")}</div></div>
-      </div>
+        <div className="cal-desktop-navrow">
+          <div className="cal-desktop-navleft">
+            <button className="cal-btn" onClick={() => setAnchor(new Date())}>
+              {t("calendar.today")}
+            </button>
+            <button className="cal-btn cal-square-btn" onClick={() => move(-1)}>
+              <ChevronLeft size={16} />
+            </button>
+            <button className="cal-btn cal-square-btn" onClick={() => move(1)}>
+              <ChevronRight size={16} />
+            </button>
+            <div className="cal-range">
+              {rangeLabel}
+              <ChevronDown size={15} />
+            </div>
+          </div>
 
-      <div className="cal-body">
-        <div>
-          {view === "agenda" ? (
-            <div className="cal-agenda">
-              {agendaGroups.length === 0 && <div className="cal-empty">{t("calendar.emptyRange")}</div>}
-              {agendaGroups.map(([key, evs]) => (
-                <div key={key} className="cal-agenda-day">
-                  <h4>{new Date(key).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}</h4>
-                  {evs.map((a) => (
-                    <div key={a.id} className="cal-agenda-item" style={{ borderLeftColor: typeInfo(a.type).color }} onClick={() => openView(a)}>
-                      <div className="time">{fmtTime(a.start)} - {fmtTime(a.end)}</div>
-                      <div><strong>{a.title}</strong>{a.attendeeName ? ` · ${a.attendeeName}` : ""}</div>
-                    </div>
-                  ))}
-                </div>
+          <div className="cal-desktop-navright">
+            <div className="cal-views">
+              {VIEWS.map((v) => (
+                <button
+                  key={v}
+                  className={view === v ? "active" : ""}
+                  onClick={() => setView(v)}
+                >
+                  {t(`calendar.view.${v}`)}
+                </button>
               ))}
             </div>
-          ) : view === "month" ? (
-            <div className="cal-month">
-              {WEEKDAYS.map((w, i) => <div key={w} className="mh">{weekdayShort(i)}</div>)}
-              {monthCells.map((d, i) => {
-                const dayEvents = items.filter((a) => sameDay(a.start, d));
-                return (
-                  <div key={i} className={`cal-month-cell ${d.getMonth() === anchor.getMonth() ? "" : "muted"} ${isToday(d) ? "today" : ""}`}>
-                    <div className="dn">{d.getDate()}</div>
-                    {dayEvents.slice(0, 3).map((a) => {
-                      const info = typeInfo(a.type);
-                      return (
-                        <div key={a.id} className="cal-chip" style={{ background: info.bg, borderLeftColor: info.color }} onClick={() => openView(a)}>
-                          {fmtTime(a.start)} {a.title}
-                        </div>
-                      );
-                    })}
-                    {dayEvents.length > 3 && (
-                      <div className="cal-chip" style={{ background: "#f1f5f9", borderLeftColor: "#94a3b8" }}>{t("calendar.moreCount", { count: dayEvents.length - 3 })}</div>
-                    )}
-                  </div>
-                );
-              })}
+
+            <button className="cal-btn cal-btn-primary cal-new-appointment" onClick={() => openNew()}>
+              <Plus size={16} />
+              {t("calendar.newAppointment")}
+              <ChevronDown size={15} className="cal-new-chevron" />
+            </button>
+          </div>
+        </div>
+
+        <div className="cal-kpis cal-kpis-reference">
+          {[
+            {
+              tone: "blue",
+              icon: <CalendarDays size={21} />,
+              value: kpi.total,
+              label: t("calendar.kpiTotal"),
+              sub: t("calendar.desktop.loadedRange"),
+            },
+            {
+              tone: "green",
+              icon: <CheckCircle2 size={21} />,
+              value: kpi.confirmed,
+              label: t("calendar.status.confirmed"),
+              sub: t("calendar.desktop.confirmedInRange"),
+            },
+            {
+              tone: "orange",
+              icon: <Clock3 size={21} />,
+              value: kpi.pending,
+              label: t("calendar.status.pending"),
+              sub: kpi.pending
+                ? t("calendar.desktop.needsAttention")
+                : t("calendar.desktop.nonePending"),
+            },
+            {
+              tone: "blue",
+              icon: <CalendarCheck2 size={21} />,
+              value: kpi.completed,
+              label: t("calendar.status.completed"),
+              sub: t("calendar.desktop.completedInRange"),
+            },
+            {
+              tone: "red",
+              icon: <XCircle size={21} />,
+              value: kpi.canceled,
+              label: t("calendar.status.canceled"),
+              sub: t("calendar.desktop.canceledInRange"),
+            },
+          ].map((card) => (
+            <div key={card.label} className={`cal-kpi cal-kpi-${card.tone}`}>
+              <div className="cal-kpi-icon">{card.icon}</div>
+              <div className="cal-kpi-copy">
+                <div className="n">{card.value}</div>
+                <div className="l">{card.label}</div>
+                <div className="s">{card.sub}</div>
+              </div>
             </div>
-          ) : (
-            <div className="cal-grid-wrap">
-              <div className={`cal-grid ${view === "day" ? "day" : ""}`}>
-                <div className="cal-corner" />
-                {gridDays.map((d, i) => (
-                  <div key={i} className={`cal-daycol-head ${isToday(d) ? "today" : ""}`}>{fmtDayLabel(d)}</div>
-                ))}
-                <div>
-                  {hours.map((h) => <div key={h} className="cal-hourlabel">{formatHour(h)}</div>)}
-                </div>
-                {gridDays.map((d, i) => (
-                  <div key={i} className="cal-daycol">
-                    {hours.map((h) => (
-                      <div key={h} className="cal-hourcell" onClick={() => { const at = new Date(d); at.setHours(h, 0, 0, 0); openNew({ at }); }} />
+          ))}
+        </div>
+
+        <div className="cal-desktop-content-grid">
+          <main className="cal-desktop-main">
+            <div className="cal-desktop-filterbar">
+              <div className="cal-filter-left">
+                <label className="cal-type-select">
+                  <select value={desktopType} onChange={(e) => setDesktopType(e.target.value)}>
+                    <option value="all">{t("calendar.desktop.allTypes")}</option>
+                    {TYPES.map((ty) => (
+                      <option key={ty.key} value={ty.key}>
+                        {typeLabel(ty.key)}
+                      </option>
                     ))}
-                    {items.filter((a) => sameDay(a.start, d)).map((a) => (
-                      <div key={a.id} className="cal-event" style={eventStyle(a)} onClick={(e) => { e.stopPropagation(); openView(a); }}>
-                        <div className="t">{fmtTime(a.start)} {a.title}</div>
-                        {a.attendeeName && <div className="m">{a.attendeeName}</div>}
+                  </select>
+                  <ChevronDown size={14} />
+                </label>
+
+                <label className="cal-check-control">
+                  <input
+                    type="checkbox"
+                    checked={desktopOnlyMine}
+                    onChange={(e) => setDesktopOnlyMine(e.target.checked)}
+                  />
+                  <span>{t("calendar.desktop.myAppointments")}</span>
+                </label>
+
+                <label className="cal-check-control">
+                  <input
+                    type="checkbox"
+                    checked={desktopShowCanceled}
+                    onChange={(e) => setDesktopShowCanceled(e.target.checked)}
+                  />
+                  <span>{t("calendar.desktop.showCanceled")}</span>
+                </label>
+              </div>
+
+              <div className="cal-filter-right">
+                <label className="cal-searchbox">
+                  <input
+                    value={desktopSearch}
+                    onChange={(e) => setDesktopSearch(e.target.value)}
+                    placeholder={t("calendar.desktop.searchPlaceholder")}
+                  />
+                  <Search size={16} />
+                </label>
+                <button className="cal-btn">
+                  <Filter size={15} />
+                  {t("calendar.desktop.filters")}
+                </button>
+                <button className="cal-btn cal-square-btn" aria-label={t("calendar.desktop.more")}>
+                  <MoreHorizontal size={17} />
+                </button>
+              </div>
+            </div>
+
+            <div className="cal-calendar-stage">
+              {view === "agenda" ? (
+                <div className="cal-agenda">
+                  {agendaGroups.length === 0 && (
+                    <div className="cal-empty">{t("calendar.emptyRange")}</div>
+                  )}
+                  {agendaGroups.map(([key]) => {
+                    const evs = desktopItems
+                      .filter((a) => startOfDay(a.start).toDateString() === key)
+                      .sort((a, b) => a.start - b.start);
+                    if (!evs.length) return null;
+                    return (
+                      <div key={key} className="cal-agenda-day">
+                        <h4>
+                          {new Date(key).toLocaleDateString([], {
+                            weekday: "long",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </h4>
+                        {evs.map((a) => (
+                          <div
+                            key={a.id}
+                            className="cal-agenda-item"
+                            style={{ borderLeftColor: typeInfo(a.type).color }}
+                            onClick={() => openView(a)}
+                          >
+                            <div className="time">
+                              {fmtTime(a.start)} - {fmtTime(a.end)}
+                            </div>
+                            <div>
+                              <strong>{a.title}</strong>
+                              {a.attendeeName ? ` · ${a.attendeeName}` : ""}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : view === "month" ? (
+                <div className="cal-month">
+                  {WEEKDAYS.map((w, i) => (
+                    <div key={w} className="mh">{weekdayShort(i)}</div>
+                  ))}
+                  {desktopMonthCells.map((d, i) => {
+                    const dayEvents = desktopItems.filter((a) => sameDay(a.start, d));
+                    return (
+                      <div
+                        key={i}
+                        className={`cal-month-cell ${
+                          d.getMonth() === anchor.getMonth() ? "" : "muted"
+                        } ${isToday(d) ? "today" : ""}`}
+                      >
+                        <div className="dn">{d.getDate()}</div>
+                        {dayEvents.slice(0, 3).map((a) => {
+                          const info = typeInfo(a.type);
+                          return (
+                            <div
+                              key={a.id}
+                              className="cal-chip"
+                              style={{
+                                background: info.bg,
+                                borderLeftColor: info.color,
+                              }}
+                              onClick={() => openView(a)}
+                            >
+                              {fmtTime(a.start)} {a.title}
+                            </div>
+                          );
+                        })}
+                        {dayEvents.length > 3 && (
+                          <div
+                            className="cal-chip"
+                            style={{
+                              background: "#f1f5f9",
+                              borderLeftColor: "#94a3b8",
+                            }}
+                          >
+                            {t("calendar.moreCount", { count: dayEvents.length - 3 })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="cal-grid-wrap cal-grid-reference">
+                  <div className={`cal-grid ${view === "day" ? "day" : ""}`}>
+                    <div className="cal-corner">
+                      <span>{Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
+                    </div>
+                    {gridDays.map((d, i) => (
+                      <div
+                        key={i}
+                        className={`cal-daycol-head ${isToday(d) ? "today" : ""}`}
+                      >
+                        <strong>{weekdayShort(d.getDay())}</strong>
+                        <span>{d.getDate()}</span>
+                      </div>
+                    ))}
+
+                    <div className="cal-time-column">
+                      {hours.map((h) => (
+                        <div key={h} className="cal-hourlabel">
+                          {formatHour(h)}
+                        </div>
+                      ))}
+                    </div>
+
+                    {gridDays.map((d, i) => (
+                      <div key={i} className="cal-daycol">
+                        {hours.map((h) => (
+                          <div
+                            key={h}
+                            className="cal-hourcell"
+                            onClick={() => {
+                              const at = new Date(d);
+                              at.setHours(h, 0, 0, 0);
+                              openNew({ at });
+                            }}
+                          />
+                        ))}
+
+                        {isToday(d) && desktopNow.getHours() >= START_HOUR && desktopNow.getHours() < END_HOUR && (
+                          <div
+                            className="cal-now-line"
+                            style={{
+                              top:
+                                ((desktopNow.getHours() * 60 +
+                                  desktopNow.getMinutes() -
+                                  START_HOUR * 60) /
+                                  60) *
+                                HOUR_H,
+                            }}
+                          >
+                            <span>{fmtTime(desktopNow)}</span>
+                          </div>
+                        )}
+
+                        {desktopItems
+                          .filter((a) => sameDay(a.start, d))
+                          .map((a) => {
+                            const info = typeInfo(a.type);
+                            return (
+                              <button
+                                type="button"
+                                key={a.id}
+                                className={`cal-event cal-event-${a.type}`}
+                                style={{
+                                  ...eventStyle(a),
+                                  "--event-color": info.color,
+                                  "--event-bg": info.bg,
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openView(a);
+                                }}
+                              >
+                                <div className="cal-event-top">
+                                  <strong>{fmtTime(a.start)}</strong>
+                                  {a.status === "confirmed" && <CheckCircle2 size={12} />}
+                                  {a.status === "pending" && <Clock3 size={12} />}
+                                </div>
+                                <div className="t">{a.title}</div>
+                                {a.location && <div className="m">{a.location}</div>}
+                                <div className="cal-event-person">
+                                  <UserRound size={11} />
+                                  {a.attendeeName ||
+                                    a.assignedToName ||
+                                    memberName(a.assignedTo) ||
+                                    typeLabel(a.type)}
+                                </div>
+                              </button>
+                            );
+                          })}
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              <div className="cal-legend cal-reference-legend">
+                {TYPES.map((ty) => (
+                  <span key={ty.key}>
+                    <span className="dot" style={{ background: ty.color }} />
+                    {typeLabel(ty.key)}
+                  </span>
                 ))}
               </div>
             </div>
-          )}
+          </main>
 
-          <div className="cal-legend">
-            {TYPES.map((ty) => (
-              <span key={ty.key}><span className="dot" style={{ background: ty.color }} />{typeLabel(ty.key)}</span>
-            ))}
-          </div>
-        </div>
+          <aside className="cal-desktop-sidebar">
+            <section className="cal-side-card cal-insights-card">
+              <div className="cal-side-title">
+                <span>
+                  <Sparkles size={16} />
+                  {t("calendar.desktop.aiInsights")}
+                </span>
+                <Sparkles size={14} />
+              </div>
 
-        <div className="cal-panel">
-          <div className="cal-card">
-            <h3>{anchor.toLocaleDateString([], { month: "long", year: "numeric" })}</h3>
-            <div className="cal-mini">
-              {WEEKDAYS.map((w, i) => <div key={w} className="cell head">{weekdayShort(i)[0]}</div>)}
-              {monthCells.map((d, i) => (
-                <div key={i} className={`cell ${d.getMonth() !== anchor.getMonth() ? "muted" : ""} ${isToday(d) ? "today" : ""}`}
-                  onClick={() => { setAnchor(new Date(d)); setView("day"); }}>
-                  {d.getDate()}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="cal-card">
-            <h3>{t("calendar.upcoming", { count: upcoming.length })}</h3>
-            <div className="cal-up">
-              {upcoming.length === 0 ? (
-                <div className="cal-empty">{t("calendar.nothingUpcoming")}</div>
-              ) : (
-                upcoming.map((a) => (
-                  <div key={a.id} className="cal-up-item" style={{ borderLeftColor: typeInfo(a.type).color }} onClick={() => openView(a)}>
-                    <div className="t">{a.title}</div>
-                    <div>{fmtTime(a.start)} · {a.attendeeName || typeLabel(a.type)}</div>
+              <div className="cal-insight-list">
+                {desktopInsights.length ? (
+                  desktopInsights.map((insight, index) => (
+                    <button
+                      type="button"
+                      key={`${insight.tone}-${index}`}
+                      className={`cal-insight-row ${insight.tone}`}
+                    >
+                      <span className="cal-insight-icon">{insight.icon}</span>
+                      <span>
+                        <strong>{insight.title}</strong>
+                        <small>{insight.sub}</small>
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="cal-side-empty">
+                    {t("calendar.desktop.noInsights")}
                   </div>
-                ))
-              )}
-            </div>
-          </div>
+                )}
+              </div>
 
-          <div className="cal-card cal-qa">
-            <h3>{t("calendar.quickActions")}</h3>
-            <button onClick={() => openNew({ type: "showing" })}>📅 {t("calendar.qaShowing")}</button>
-            <button onClick={() => openNew({ type: "consultation" })}>👥 {t("calendar.qaConsultation")}</button>
-            <button onClick={() => openNew({ type: "call" })}>📞 {t("calendar.qaCall")}</button>
-            <button onClick={() => openNew({ type: "meeting" })}>🤝 {t("calendar.qaMeeting")}</button>
-          </div>
+              <button type="button" className="cal-side-link">
+                {t("calendar.desktop.viewAllInsights")}
+                <ChevronRight size={14} />
+              </button>
+            </section>
+
+            <section className="cal-side-card cal-mini-card">
+              <div className="cal-side-title">
+                <span>{t("calendar.desktop.miniCalendar")}</span>
+              </div>
+              <div className="cal-mini-month-head">
+                <button type="button" onClick={() => move(-1)}>
+                  <ChevronLeft size={14} />
+                </button>
+                <strong>
+                  {anchor.toLocaleDateString([], {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </strong>
+                <button type="button" onClick={() => move(1)}>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+              <div className="cal-mini cal-mini-reference">
+                {WEEKDAYS.map((w, i) => (
+                  <div key={w} className="cell head">{weekdayShort(i)[0]}</div>
+                ))}
+                {desktopMonthCells.map((d, i) => {
+                  const hasEvents = desktopItems.some((a) => sameDay(a.start, d));
+                  return (
+                    <button
+                      type="button"
+                      key={i}
+                      className={`cell ${
+                        d.getMonth() !== anchor.getMonth() ? "muted" : ""
+                      } ${isToday(d) ? "today" : ""} ${hasEvents ? "has-events" : ""}`}
+                      onClick={() => {
+                        setAnchor(new Date(d));
+                        setView("day");
+                      }}
+                    >
+                      {d.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="cal-side-card cal-upcoming-card">
+              <div className="cal-side-title">
+                <span>
+                  {t("calendar.desktop.upcomingCount", {
+                    count: desktopUpcoming.length,
+                  })}
+                </span>
+              </div>
+
+              <div className="cal-side-upcoming">
+                {desktopUpcoming.length ? (
+                  desktopUpcoming.map((a) => (
+                    <button
+                      type="button"
+                      key={a.id}
+                      className="cal-side-upcoming-row"
+                      onClick={() => openView(a)}
+                    >
+                      <span className="cal-side-upcoming-date">
+                        {sameDay(a.start, new Date())
+                          ? t("calendar.today")
+                          : a.start.toLocaleDateString([], {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                        <small>{fmtTime(a.start)}</small>
+                      </span>
+                      <span className="cal-side-upcoming-title">{a.title}</span>
+                      <span
+                        className="cal-side-upcoming-dot"
+                        style={{ background: typeInfo(a.type).color }}
+                      />
+                      <span className="cal-side-upcoming-person">
+                        {a.attendeeName ||
+                          a.assignedToName ||
+                          memberName(a.assignedTo) ||
+                          typeLabel(a.type)}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="cal-side-empty">
+                    {t("calendar.nothingUpcoming")}
+                  </div>
+                )}
+              </div>
+
+              <button type="button" className="cal-side-link" onClick={() => setView("agenda")}>
+                {t("calendar.desktop.viewAllUpcoming")}
+                <ChevronRight size={14} />
+              </button>
+            </section>
+
+            <section className="cal-side-card cal-quick-create-card">
+              <div className="cal-side-title">
+                <span>{t("calendar.desktop.quickCreate")}</span>
+              </div>
+              <div className="cal-quick-create-grid">
+                {[
+                  ["showing", <MapPin size={16} />, "green"],
+                  ["consultation", <Users size={16} />, "purple"],
+                  ["call", <Phone size={16} />, "orange"],
+                  ["meeting", <Users size={16} />, "blue"],
+                ].map(([type, icon, tone]) => (
+                  <button
+                    key={type}
+                    type="button"
+                    className={tone}
+                    onClick={() => openNew({ type })}
+                  >
+                    <span>{icon}</span>
+                    <small>{typeLabel(type)}</small>
+                  </button>
+                ))}
+                <button type="button" className="gray" onClick={() => openNew()}>
+                  <span><Plus size={16} /></span>
+                  <small>{t("calendar.desktop.custom")}</small>
+                </button>
+              </div>
+            </section>
+          </aside>
         </div>
-      </div>
-
       </div>
 
       {modalOpen && mode === "view" && editing && (

@@ -2651,7 +2651,39 @@
     "errEndAfterStart": "La hora de fin debe ser posterior a la de inicio",
     "errSave": "No se pudo guardar la cita",
     "errDelete": "No se pudo eliminar",
-    "confirmDelete": "¿Eliminar esta cita?"
+    "confirmDelete": "¿Eliminar esta cita?",
+    "desktop": {
+      "aiAssistant": "Asistente de IA",
+      "settings": "Configuración del calendario",
+      "loadedRange": "Rango de calendario cargado",
+      "confirmedInRange": "Confirmadas en el rango",
+      "needsAttention": "Requiere atención",
+      "nonePending": "No hay citas pendientes",
+      "completedInRange": "Completadas en el rango",
+      "canceledInRange": "Canceladas en el rango",
+      "allTypes": "Todos los tipos",
+      "myAppointments": "Mis citas",
+      "showCanceled": "Mostrar canceladas",
+      "searchPlaceholder": "Buscar citas...",
+      "filters": "Filtros",
+      "more": "Más",
+      "aiInsights": "Insights de calendario con IA",
+      "needsConfirmation": "{{count}} citas necesitan confirmación",
+      "sendReminders": "Enviar recordatorios",
+      "awaitingResponse": "{{count}} contactos esperan respuesta",
+      "followUpRecommended": "Seguimiento recomendado",
+      "busyTimeSlot": "Se detectó un horario ocupado",
+      "highDemandTime": "Horario de alta demanda",
+      "followUpsScheduled": "{{count}} seguimientos están programados",
+      "openFollowUps": "Abrir seguimientos",
+      "noInsights": "No hay insights para este rango cargado.",
+      "viewAllInsights": "Ver todos los insights",
+      "miniCalendar": "Mini calendario",
+      "upcomingCount": "Próximas ({{count}})",
+      "viewAllUpcoming": "Ver todas las próximas",
+      "quickCreate": "Creación rápida",
+      "custom": "Personalizado"
+    }
   },
   "auth": {
     "resetTitle": "Restablece tu contraseña",
@@ -4532,13 +4564,11 @@
       "disclaimer": "Las respuestas de IA se basan en tus datos y pueden no ser 100% precisas."
     }
   },
-  
-    
-    "bottomNav": {
-      "home": "Inicio",
-      "clients": "Clientes",
-      "add": "Agregar",
-      "reports": "Informes",
-      "more": "Más"
-    }
+  "bottomNav": {
+    "home": "Inicio",
+    "clients": "Clientes",
+    "add": "Agregar",
+    "reports": "Informes",
+    "more": "Más"
+  }
 }

@@ -2651,7 +2651,39 @@
     "errEndAfterStart": "End time must be after the start time",
     "errSave": "Could not save the appointment",
     "errDelete": "Could not delete",
-    "confirmDelete": "Delete this appointment?"
+    "confirmDelete": "Delete this appointment?",
+    "desktop": {
+      "aiAssistant": "AI Assistant",
+      "settings": "Calendar Settings",
+      "loadedRange": "Loaded calendar range",
+      "confirmedInRange": "Confirmed in range",
+      "needsAttention": "Needs attention",
+      "nonePending": "No pending appointments",
+      "completedInRange": "Completed in range",
+      "canceledInRange": "Canceled in range",
+      "allTypes": "All Types",
+      "myAppointments": "My Appointments",
+      "showCanceled": "Show Canceled",
+      "searchPlaceholder": "Search appointments...",
+      "filters": "Filters",
+      "more": "More",
+      "aiInsights": "AI Calendar Insights",
+      "needsConfirmation": "{{count}} appointments need confirmation",
+      "sendReminders": "Send reminders",
+      "awaitingResponse": "{{count}} contacts are awaiting a response",
+      "followUpRecommended": "Follow up recommended",
+      "busyTimeSlot": "A busy time slot was detected",
+      "highDemandTime": "High demand time slot",
+      "followUpsScheduled": "{{count}} follow-ups are scheduled",
+      "openFollowUps": "Open follow-ups",
+      "noInsights": "No calendar insights for this loaded range.",
+      "viewAllInsights": "View All Insights",
+      "miniCalendar": "Mini Calendar",
+      "upcomingCount": "Upcoming ({{count}})",
+      "viewAllUpcoming": "View All Upcoming",
+      "quickCreate": "Quick Create",
+      "custom": "Custom"
+    }
   },
   "auth": {
     "resetTitle": "Reset your password",
@@ -4532,14 +4564,11 @@
       "disclaimer": "AI responses are based on your data and may not be 100% accurate."
     }
   },
-  
-    
-    "bottomNav": {
-      "home": "Home",
-      "clients": "Clients",
-      "add": "Add",
-      "reports": "Reports",
-      "more": "More"
-    }
-  
+  "bottomNav": {
+    "home": "Home",
+    "clients": "Clients",
+    "add": "Add",
+    "reports": "Reports",
+    "more": "More"
+  }
 }

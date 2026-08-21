@@ -2651,7 +2651,39 @@
     "errEndAfterStart": "O horário de término deve ser posterior ao de início",
     "errSave": "Não foi possível salvar o compromisso",
     "errDelete": "Não foi possível excluir",
-    "confirmDelete": "Excluir este compromisso?"
+    "confirmDelete": "Excluir este compromisso?",
+    "desktop": {
+      "aiAssistant": "Assistente de IA",
+      "settings": "Configurações do calendário",
+      "loadedRange": "Período carregado do calendário",
+      "confirmedInRange": "Confirmados no período",
+      "needsAttention": "Requer atenção",
+      "nonePending": "Nenhum compromisso pendente",
+      "completedInRange": "Concluídos no período",
+      "canceledInRange": "Cancelados no período",
+      "allTypes": "Todos os tipos",
+      "myAppointments": "Meus compromissos",
+      "showCanceled": "Mostrar cancelados",
+      "searchPlaceholder": "Buscar compromissos...",
+      "filters": "Filtros",
+      "more": "Mais",
+      "aiInsights": "Insights de calendário com IA",
+      "needsConfirmation": "{{count}} compromissos precisam de confirmação",
+      "sendReminders": "Enviar lembretes",
+      "awaitingResponse": "{{count}} contatos aguardam resposta",
+      "followUpRecommended": "Acompanhamento recomendado",
+      "busyTimeSlot": "Um horário movimentado foi detectado",
+      "highDemandTime": "Horário de alta demanda",
+      "followUpsScheduled": "{{count}} acompanhamentos estão agendados",
+      "openFollowUps": "Abrir acompanhamentos",
+      "noInsights": "Nenhum insight para este período carregado.",
+      "viewAllInsights": "Ver todos os insights",
+      "miniCalendar": "Mini calendário",
+      "upcomingCount": "Próximos ({{count}})",
+      "viewAllUpcoming": "Ver todos os próximos",
+      "quickCreate": "Criação rápida",
+      "custom": "Personalizado"
+    }
   },
   "auth": {
     "resetTitle": "Redefina sua senha",
@@ -4532,14 +4564,11 @@
       "disclaimer": "As respostas de IA são baseadas nos seus dados e podem não ser 100% precisas."
     }
   },
-  
-    
-    "bottomNav": {
-      "home": "Início",
-      "clients": "Clientes",
-      "add": "Adicionar",
-      "reports": "Relatórios",
-      "more": "Mais"
-    }
-    
+  "bottomNav": {
+    "home": "Início",
+    "clients": "Clientes",
+    "add": "Adicionar",
+    "reports": "Relatórios",
+    "more": "Mais"
+  }
 }
