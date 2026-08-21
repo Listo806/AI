@@ -43,6 +43,15 @@ export class PaddleController {
     return this.paddleService.getPublicConfig();
   }
 
+  // AI purchase options for the "Add AI Credits" popup: the 100/200/400 one-time
+  // packs (priced/mapped by each price's REAL Paddle amount, never guessed) plus
+  // the recurring Unlimited AI subscription.
+  @Get('ai-purchase-options')
+  @UseGuards(JwtAuthGuard)
+  async aiPurchaseOptions(@CurrentUser() user: any) {
+    return this.paddleService.getAiPurchaseOptions(user);
+  }
+
   // One-time (admin) setup: create the product + prices for our billing model.
   // Returns the price ids to store as env vars. Guarded to admins/owners.
   @Post('setup-plans')

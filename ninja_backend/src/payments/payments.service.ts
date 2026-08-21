@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PayPalService } from './paypal.service';
+import { PaddleService } from './paddle.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import { normalizePlanId, getPlan } from '../plans/plan-config';
 import { WorkspaceEntitlementsService } from '../workspaces/workspace-entitlements.service';
@@ -27,6 +28,7 @@ export class PaymentsService {
     private readonly mailer: PlatformMailerService,
     private readonly workspaceEntitlements: WorkspaceEntitlementsService,
     private readonly aiUnits: AiUnitsService,
+    private readonly paddle: PaddleService,
   ) {}
 
   // Fire the once-only welcome email after a confirmed payment. Best-effort:
@@ -379,7 +381,7 @@ export class PaymentsService {
     // (idempotent on the Paddle transaction id). Never throws, so it cannot
     // trigger a base-plan retry. Dormant until the three price ids are set.
     if (eventType === 'transaction.completed' || eventType === 'transaction.paid') {
-      const pack = this.resolveAiUnitsPack(data);
+      const pack = await this.resolveAiUnitsPack(data);
       if (pack && customUserId) {
         let credited = false;
         try {
@@ -445,6 +447,33 @@ export class PaymentsService {
         [eventId, eventType, JSON.stringify(body)],
       );
       return { status: 'success', matched: wsMatched, eventType };
+    }
+
+    // --- Unlimited AI add-on ($147/month, its OWN separate Paddle subscription) ---
+    // Handled fully here, BEFORE the base-plan switch, so it never activates or
+    // relabels the base plan. It only grants/renews (or lets lapse) the account's
+    // Unlimited-AI window on ai_unit_accounts. Isolated + never throws.
+    if (await this.isUnlimitedAiEvent(data, subId)) {
+      let uaMatched = false;
+      try {
+        uaMatched = await this.handleUnlimitedAiEvent(
+          eventType,
+          data,
+          subId,
+          customUserId,
+        );
+      } catch (err: any) {
+        this.logger.error(
+          `unlimited-AI ${eventType} for ${subId || 'unknown'} failed (recorded, no retry): ${err?.message}`,
+        );
+      }
+      await this.db.query(
+        `INSERT INTO webhook_events (provider, event_id, event_type, payload)
+         VALUES ('paddle', $1, $2, $3::jsonb)
+         ON CONFLICT (provider, event_id) DO NOTHING`,
+        [eventId, eventType, JSON.stringify(body)],
+      );
+      return { status: 'success', matched: uaMatched, eventType };
     }
 
     let handled = false;
@@ -672,24 +701,51 @@ export class PaymentsService {
 
   // Match a webhook's purchased price ids against the configured AI-Unit packs.
   // Units are derived from the price id (server authority), not client data.
-  private resolveAiUnitsPack(
+  private async resolveAiUnitsPack(
     data: any,
-  ): { units: number; packageId: string; priceId: string } | null {
-    const map: Record<string, { units: number; packageId: string }> = {};
-    const reg = (env: string, units: number, packageId: string) => {
-      const v = (process.env[env] || '').trim();
-      if (v) map[v] = { units, packageId };
-    };
-    // Client credit packs (2026-08-20): 100/$47, 200/$67, 400/$97. Unit counts
-    // are server-authoritative (never trusted from the client checkout payload).
-    reg('PADDLE_PRICE_AI_UNITS_100', 100, 'boost');
-    reg('PADDLE_PRICE_AI_UNITS_200', 200, 'plus');
-    reg('PADDLE_PRICE_AI_UNITS_400', 400, 'max');
-    if (!Object.keys(map).length) return null;
-    for (const id of this.extractPaddlePriceIds(data)) {
-      if (map[id]) return { ...map[id], priceId: id };
+  ): Promise<{ units: number; packageId: string; priceId: string } | null> {
+    // The three configured one-time AI-credit price ids (any env slot).
+    const configured = [
+      process.env.PADDLE_PRICE_AI_UNITS_100,
+      process.env.PADDLE_PRICE_AI_UNITS_200,
+      process.env.PADDLE_PRICE_AI_UNITS_400,
+    ]
+      .map((v) => (v || '').trim())
+      .filter(Boolean);
+    if (!configured.length) return null;
+    const purchased = this.extractPaddlePriceIds(data).find((id) =>
+      configured.includes(id),
+    );
+    if (!purchased) return null;
+
+    // Credit count from the price's REAL Paddle amount (VERIFIED, never guessed
+    // from env order): $47->100, $67->200, $97->400. Server-authoritative — never
+    // trusts client-supplied unit counts.
+    const AMOUNT_UNITS: Array<[number, number]> = [
+      [47, 100],
+      [67, 200],
+      [97, 400],
+    ];
+    const amount = await this.paddle.getPriceAmount(purchased);
+    let units = 0;
+    if (amount != null) {
+      const m = AMOUNT_UNITS.find(([p]) => Math.abs(p - amount) < 0.5);
+      if (m) units = m[1];
     }
-    return null;
+    if (!units) {
+      // Fallback to the env-slot mapping if Paddle couldn't confirm the amount.
+      const slot: Record<string, number> = {};
+      const put = (env: string, u: number) => {
+        const v = (process.env[env] || '').trim();
+        if (v) slot[v] = u;
+      };
+      put('PADDLE_PRICE_AI_UNITS_100', 100);
+      put('PADDLE_PRICE_AI_UNITS_200', 200);
+      put('PADDLE_PRICE_AI_UNITS_400', 400);
+      units = slot[purchased] || 0;
+    }
+    if (!units) return null;
+    return { units, packageId: `p${units}`, priceId: purchased };
   }
 
   // Is this Paddle event about a Workspace add-on subscription? True when the
@@ -827,6 +883,108 @@ export class PaymentsService {
 
     // Any other event for a known workspace subscription is acknowledged (recorded
     // by the caller) but needs no state change.
+    return false;
+  }
+
+  // Is this Paddle event about the Unlimited AI add-on subscription? True when the
+  // checkout tagged it (custom_data.product === 'unlimited_ai'), it carries the
+  // configured $147 Unlimited price id, or its subscription id is one we already
+  // recorded as an Unlimited-AI subscription (so later lifecycle events match).
+  private async isUnlimitedAiEvent(
+    data: any,
+    subId: string | null,
+  ): Promise<boolean> {
+    const product = String(data?.custom_data?.product || '').toLowerCase();
+    if (product === 'unlimited_ai') return true;
+    const priceId = (process.env.PADDLE_PRICE_AI_UNLIMITED || '').trim();
+    if (priceId && this.extractPaddlePriceIds(data).includes(priceId)) return true;
+    if (subId) {
+      try {
+        if (await this.aiUnits.isKnownUnlimitedSub(subId)) return true;
+      } catch (err: any) {
+        this.logger.warn(
+          `unlimited-AI lookup failed for ${subId}: ${err?.message}`,
+        );
+      }
+    }
+    return false;
+  }
+
+  // Apply an Unlimited-AI event. Grants/renews the account's unlimited window to
+  // the current period end on each successful payment; a cancel simply stops the
+  // renewal so it lapses at the paid-through date (purchased credits are always
+  // preserved). Returns whether a row was affected. Never throws for control flow.
+  private async handleUnlimitedAiEvent(
+    eventType: string,
+    data: any,
+    subId: string | null,
+    customUserId: string | null,
+  ): Promise<boolean> {
+    if (!subId) return false;
+    const status = String(data?.status || '').toLowerCase();
+    const isGrant =
+      eventType === 'subscription.activated' ||
+      eventType === 'subscription.created' ||
+      eventType === 'transaction.completed' ||
+      eventType === 'transaction.paid' ||
+      (eventType === 'subscription.updated' && status === 'active');
+    const isRefund =
+      (eventType === 'adjustment.created' ||
+        eventType === 'adjustment.updated') &&
+      data?.action === 'refund';
+
+    if (isGrant) {
+      // Resolve the team authoritatively from the paying user (owner-aware), or
+      // from a subscription we already know.
+      let teamId: string | null = null;
+      if (customUserId) {
+        try {
+          const u = await this.db.query(
+            `SELECT COALESCE(u.team_id, t.id) AS team_id
+               FROM users u LEFT JOIN teams t ON t.owner_id = u.id
+              WHERE u.id = $1 LIMIT 1`,
+            [customUserId],
+          );
+          teamId = u.rows[0]?.team_id || null;
+        } catch {
+          /* fall through to sub lookup */
+        }
+      }
+      if (!teamId) {
+        try {
+          const r = await this.db.query(
+            `SELECT team_id FROM ai_unit_accounts WHERE unlimited_ai_sub_id = $1 LIMIT 1`,
+            [subId],
+          );
+          teamId = r.rows[0]?.team_id || null;
+        } catch {
+          /* ignore */
+        }
+      }
+      if (!teamId) {
+        this.logger.warn(
+          `unlimited-AI ${eventType} for ${subId}: could not resolve team; skipping grant`,
+        );
+        return false;
+      }
+      // Unlimited stays active until the current period end; each renewal pushes
+      // it forward. If Paddle gives no period end, hold a safe 35-day buffer so a
+      // renewal event can extend it before it lapses.
+      const until =
+        data?.next_billed_at ||
+        data?.current_billing_period?.ends_at ||
+        new Date(Date.now() + 35 * 86400000).toISOString();
+      await this.aiUnits.setUnlimitedAi(teamId, until, subId);
+      return true;
+    }
+
+    if (isRefund) {
+      await this.aiUnits.revokeUnlimitedAiBySub(subId);
+      return true;
+    }
+
+    // cancel / past_due / paused / anything else: no extension — the unlimited
+    // window lapses on its own at the paid-through date. Purchased credits remain.
     return false;
   }
 
