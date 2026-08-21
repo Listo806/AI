@@ -1983,6 +1983,12 @@ export class PlatformMailerService {
     if (template === 'checkout_recovery') {
       return this.checkoutRecoveryVars(user);
     }
+    if (template === 'ai_credits_out') {
+      // Reuse the exact vars the automatic sequence uses: CTA deep-links to the
+      // in-app AI-Unit purchase popup, real support email, per-user unsubscribe.
+      const tok = await this.getOrCreateUnsubToken(user.id);
+      return this.aiCreditsVars(first, tok ? this.unsubUrl(tok) : null);
+    }
     if (template.startsWith('onb_')) {
       const tok = await this.getOrCreateUnsubToken(user.id);
       return this.onboardingVars(first, tok ? this.unsubUrl(tok) : null);

@@ -30,6 +30,12 @@ export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
   { name: 'welcome', label: 'Welcome (payment confirmed)', category: 'Account', description: 'Account active after a confirmed payment.' },
   { name: 'getting_started', label: 'Getting Started Setup', category: 'Account', description: 'How to set up the AI agent, step by step.' },
 
+  // ── AI credits ──
+  // Same email as the automatic Day 0/2/5 out-of-credits sequence. Sending it here
+  // is a one-off manual send (send_type='manual'); it does NOT start, duplicate, or
+  // alter the automatic scheduled sequence.
+  { name: 'ai_credits_out', label: "You're Out of AI Credits", category: 'AI credits', description: 'Out-of-credits nudge — Add AI Credits (same design as the automatic sequence).' },
+
   // ── Free plan nurture ──
   { name: 'free_welcome', label: 'Free Plan — Welcome', category: 'Free plan', description: 'Welcome to the Free Forever plan.' },
   { name: 'free_plan_value', label: 'Free Plan — What You Can Do', category: 'Free plan', description: 'The value available on the Free plan.' },
