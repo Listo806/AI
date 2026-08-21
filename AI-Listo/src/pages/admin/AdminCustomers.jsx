@@ -854,7 +854,7 @@ export default function AdminCustomers() {
 
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />}
       {sendEmailFor && <SendEmailModal customer={sendEmailFor} onClose={() => setSendEmailFor(null)} />}
-      {templateEmailFor && <SendTemplateEmailModal customer={templateEmailFor} onClose={() => setTemplateEmailFor(null)} onCustomMessage={(c) => { setTemplateEmailFor(null); setSendEmailFor(c); }} />}
+      {templateEmailFor && <SendTemplateEmailModal customer={templateEmailFor} onClose={() => setTemplateEmailFor(null)} />}
       {changePlanFor && <ChangePlanModal customer={changePlanFor} onClose={() => setChangePlanFor(null)} onSuccess={load} />}
       {showPlans && <ManagePlansModal onClose={() => setShowPlans(false)} />}
     </div>
@@ -1458,16 +1458,25 @@ const newIdemKey = () =>
 // Manual per-customer template sender: pick an approved template, auto-selects the
 // customer's language + first name, preview, then send ONE email through the same
 // production SendGrid pipeline. Guards against accidental double sends.
-function SendTemplateEmailModal({ customer, onClose, onCustomMessage }) {
+// Unified Send Email composer: the admin picks EITHER an approved template
+// (auto language + first name + live preview) OR "Write my own email" (a
+// free-form subject + message). Both send through the same SendGrid pipeline
+// and are logged as a manual send that never affects the automatic onboarding.
+const CUSTOM_EMAIL = "__custom__";
+function SendTemplateEmailModal({ customer, onClose }) {
   const [catalog, setCatalog] = useState([]);
   const [template, setTemplate] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
   const [preview, setPreview] = useState(null);
   const [loadingCat, setLoadingCat] = useState(true);
   const [loadingPrev, setLoadingPrev] = useState(false);
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState(null); // { ok, status, reason }
+  const [result, setResult] = useState(null); // { ok, status, reason, custom }
   const [error, setError] = useState("");
   const [idemKey, setIdemKey] = useState(newIdemKey());
+
+  const isCustom = template === CUSTOM_EMAIL;
 
   useEffect(() => {
     let alive = true;
@@ -1484,13 +1493,15 @@ function SendTemplateEmailModal({ customer, onClose, onCustomMessage }) {
     return () => { alive = false; };
   }, []);
 
-  // Fetch the preview whenever a template is chosen. A new template = a fresh
-  // idempotency key (so re-choosing is an intentional new send), while a double
-  // click on Send reuses the same key and is deduped.
+  // Fetch the preview whenever a TEMPLATE is chosen. Selecting "Write my own
+  // email" clears the preview and shows the free-form fields instead. A new
+  // choice = a fresh idempotency key (so re-choosing is an intentional new
+  // send), while a double click on Send reuses the same key and is deduped.
   useEffect(() => {
-    if (!template) { setPreview(null); return; }
+    setResult(null); setError("");
+    if (!template || isCustom) { setPreview(null); return; }
     let alive = true;
-    setLoadingPrev(true); setError(""); setResult(null); setIdemKey(newIdemKey());
+    setLoadingPrev(true); setIdemKey(newIdemKey());
     (async () => {
       try {
         const res = await previewCustomerTemplateEmail(customer.id, template);
@@ -1504,7 +1515,7 @@ function SendTemplateEmailModal({ customer, onClose, onCustomMessage }) {
       }
     })();
     return () => { alive = false; };
-  }, [template, customer.id]);
+  }, [template, isCustom, customer.id]);
 
   const groups = catalog.reduce((acc, t) => {
     (acc[t.category] = acc[t.category] || []).push(t);
@@ -1512,8 +1523,26 @@ function SendTemplateEmailModal({ customer, onClose, onCustomMessage }) {
   }, {});
 
   const submit = async () => {
-    if (!template || !preview?.ok || sending || result?.ok) return;
-    setSending(true); setError("");
+    if (sending || result?.ok) return;
+    setError("");
+    // Free-form "write my own email".
+    if (isCustom) {
+      if (!subject.trim()) { setError("Please enter a subject."); return; }
+      if (!message.trim()) { setError("Please enter a message."); return; }
+      setSending(true);
+      try {
+        await sendCustomerEmail(customer.id, { subject, message });
+        setResult({ ok: true, to: customer.email, custom: true });
+      } catch (e) {
+        setError(e?.message || "The email could not be sent.");
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+    // Approved template.
+    if (!template || !preview?.ok) return;
+    setSending(true);
     try {
       const res = await sendCustomerTemplateEmail(customer.id, { template, idempotencyKey: idemKey });
       setResult(res);
@@ -1529,21 +1558,25 @@ function SendTemplateEmailModal({ customer, onClose, onCustomMessage }) {
 
   const sentOk = result?.ok;
   const isDup = result?.status === "duplicate";
+  const canSend = isCustom
+    ? Boolean(subject.trim() && message.trim())
+    : Boolean(template && preview?.ok && !loadingPrev);
 
   return (
     <div className="cxc-modal-overlay" onClick={onClose}>
       <div className="cxc-modal" onClick={(e) => e.stopPropagation()} style={{ width: "min(680px, 94vw)", maxWidth: "94vw" }}>
         <div className="cxc-modal-head">
-          <h3 className="cxc-modal-title">Send Template Email</h3>
+          <h3 className="cxc-modal-title">Send Email</h3>
           <button className="cxc-drawer-close" onClick={onClose}>×</button>
         </div>
 
         <div className="cxc-field"><label>To</label><input className="cxc-input" value={customer.email || ""} disabled /></div>
 
         <div className="cxc-field">
-          <label>Email Template</label>
+          <label>Template — or write your own</label>
           <select className="cxc-select" value={template} onChange={(e) => setTemplate(e.target.value)} disabled={loadingCat}>
-            <option value="">{loadingCat ? "Loading templates…" : "Select a template…"}</option>
+            <option value="">{loadingCat ? "Loading templates…" : "Choose…"}</option>
+            <option value={CUSTOM_EMAIL}>✍️ Write my own email</option>
             {Object.keys(groups).map((cat) => (
               <optgroup key={cat} label={cat}>
                 {groups[cat].map((t) => (<option key={t.name} value={t.name}>{t.label}</option>))}
@@ -1552,9 +1585,17 @@ function SendTemplateEmailModal({ customer, onClose, onCustomMessage }) {
           </select>
         </div>
 
+        {isCustom && (
+          <>
+            <div className="cxc-field"><label>Subject</label><input className="cxc-input" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" /></div>
+            <div className="cxc-field"><label>Message</label>
+              <textarea className="cxc-input" rows={8} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Write your message…" style={{ resize: "vertical" }} /></div>
+          </>
+        )}
+
         {loadingPrev && <div className="cxc-note">Rendering preview…</div>}
 
-        {preview?.ok && (
+        {!isCustom && preview?.ok && (
           <div className="cxc-field">
             <label>Preview</label>
             <div style={{ border: "1px solid var(--cxc-line,#e6e8f0)", borderRadius: 8, overflow: "hidden" }}>
@@ -1571,16 +1612,17 @@ function SendTemplateEmailModal({ customer, onClose, onCustomMessage }) {
         )}
 
         {error && <div className="cxc-error">{error}</div>}
-        {sentOk && <div style={{ color: "#15803d", fontSize: 13, fontWeight: 600 }}>Email sent to {result.to} in {LANG_LABEL[result.language] || result.language}.</div>}
+        {sentOk && <div style={{ color: "#15803d", fontSize: 13, fontWeight: 600 }}>{result.custom ? `Email sent to ${result.to}.` : `Email sent to ${result.to} in ${LANG_LABEL[result.language] || result.language}.`}</div>}
         {isDup && <div style={{ color: "#b45309", fontSize: 13, fontWeight: 600 }}>{result.reason || "Already sent — duplicate ignored."}</div>}
 
-        <div className="cxc-note">Sends one email in the customer's language using the same production templates and SendGrid sender. It is logged as a manual send and does not affect the customer's automatic onboarding emails.
-          {onCustomMessage && (<> {" "}<a href="#" onClick={(e) => { e.preventDefault(); onCustomMessage(customer); }} style={{ color: "#3d3af5", fontWeight: 600 }}>Write a custom message instead →</a></>)}
+        <div className="cxc-note">{isCustom
+          ? "Sends your own subject and message to this customer through the SendGrid sender. Logged as a manual send; it does not affect the automatic onboarding emails."
+          : "Sends one email in the customer's language using the same production templates and SendGrid sender. Logged as a manual send; it does not affect the automatic onboarding emails."}
         </div>
 
         <div className="cxc-modal-foot">
           <button className="cxc-btn" onClick={onClose}>{sentOk ? "Close" : "Cancel"}</button>
-          <button className="cxc-btn cxc-btn-primary" onClick={submit} disabled={!template || !preview?.ok || loadingPrev || sending || sentOk}>
+          <button className="cxc-btn cxc-btn-primary" onClick={submit} disabled={!canSend || sending || sentOk}>
             {sending ? "Sending…" : sentOk ? "Sent" : "Send Email"}
           </button>
         </div>
