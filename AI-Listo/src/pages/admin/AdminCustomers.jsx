@@ -708,7 +708,7 @@ export default function AdminCustomers() {
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setChangePlanFor(c); }}>Change Plan</button>
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "payments" }); }}>Update Payment</button>
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "subscription" }); }}>Add Seat / User</button>
-        <button className="cxc-btn" onClick={() => { if (selectedRows.length === 1) setTemplateEmailFor(selectedRows[0]); else bulkEmail(); }} disabled={!selected.size}>Send Email</button>
+        <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setTemplateEmailFor(c); }} disabled={!selected.size}>Send Email</button>
         <button className="cxc-btn" onClick={onExport}>Export</button>
         <div className="cxc-menu-wrap">
           <button className="cxc-btn" onClick={() => setMoreMenu((v) => !v)}>More <ChevronDown size={14} /></button>
