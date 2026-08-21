@@ -30,6 +30,24 @@ export default function AiUnitsPurchaseModal() {
       setOpen(true);
     };
     window.addEventListener("cortexa:open-ai-units", onOpen);
+    // Deep link from the "out of AI credits" email CTA (/dashboard/...?buy=ai-credits):
+    // open the purchase selector on arrival, then strip the param so a refresh
+    // doesn't reopen it.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("buy") === "ai-credits") {
+        setOpen(true);
+        params.delete("buy");
+        const qs = params.toString();
+        window.history.replaceState(
+          {},
+          "",
+          window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash,
+        );
+      }
+    } catch {
+      /* no-op */
+    }
     return () => window.removeEventListener("cortexa:open-ai-units", onOpen);
   }, []);
 

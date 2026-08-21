@@ -947,10 +947,11 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                 const remaining = b?.totalRemaining ?? 0;
                 const pct = Math.max(0, Math.min(100, b?.percentRemaining ?? 0));
                 const color = COLORS[b?.color] || "#16a34a";
+                const isOut = remaining <= 0;
                 return (
                   <div className="crm-workspaces-expand-card crm-workspaces-ai-usage">
                     <div className="crm-workspaces-ai-usage-head">
-                      <span>AI Units Remaining</span>
+                      <span>{isOut ? "AI Credits" : "AI Units Remaining"}</span>
                       <strong style={{ color }}>{remaining}</strong>
                     </div>
                     <div
@@ -963,22 +964,31 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                     >
                       <span className="crm-workspaces-ai-usage-fill" style={{ width: `${pct}%`, background: color }} />
                     </div>
+                    {isOut && (
+                      <div style={{ marginTop: 8, fontSize: 12, lineHeight: 1.5 }}>
+                        <strong style={{ display: "block", color: "#dc2626" }}>You're out of AI credits.</strong>
+                        <span style={{ color: "#6b7280" }}>To add more credits and continue using your AI Agent, click here.</span>
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => window.dispatchEvent(new Event("cortexa:open-ai-units"))}
                       style={{
                         display: "block",
                         marginTop: 8,
-                        background: "none",
+                        background: isOut ? "#5b45f6" : "none",
                         border: "none",
-                        padding: 0,
+                        borderRadius: isOut ? 8 : 0,
+                        padding: isOut ? "9px 12px" : 0,
                         cursor: "pointer",
-                        color: "#14b8a6",
+                        color: isOut ? "#ffffff" : "#14b8a6",
                         fontSize: 12,
-                        fontWeight: 600,
+                        fontWeight: 700,
+                        width: isOut ? "100%" : "auto",
+                        textAlign: isOut ? "center" : "left",
                       }}
                     >
-                      Get More AI →
+                      {isOut ? "Add AI Credits" : "Get More AI →"}
                     </button>
                   </div>
                 );
