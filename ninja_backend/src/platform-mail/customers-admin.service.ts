@@ -386,6 +386,111 @@ export class CustomersAdminService {
     return 'registered';
   }
 
+  // Read-only billing lifecycle trace for ONE customer, so the Paddle
+  // checkout/trial flow can be verified end-to-end (sandbox or production)
+  // WITHOUT an admin login. It surfaces the exact evidence behind each
+  // checkpoint: the derived admin status, the effective entitlement, the trial
+  // end date, every Paddle webhook we received for this customer, all recorded
+  // payments (revenue), and the lifecycle emails sent (esp. checkout recovery).
+  // It performs no writes and triggers no charges.
+  async billingTrace(email: string): Promise<any> {
+    await this.ready();
+    const emailNorm = String(email || '').trim().toLowerCase();
+    if (!emailNorm) return { ok: false, error: 'A customer email is required.' };
+
+    const userRes = await this.db.query(
+      `SELECT ${this.cols} FROM users WHERE LOWER(email) = $1 ORDER BY created_at ASC LIMIT 1`,
+      [emailNorm],
+    );
+    const row = userRes.rows[0];
+    if (!row) return { ok: false, error: 'No customer found with that email.' };
+
+    const adminStatus = this.deriveStatus(row);
+    const eff = resolveEffectivePlan(row);
+
+    // Payments = revenue evidence (team-scoped, same join the LTV column uses).
+    const payRes = await this.db.query(
+      `SELECT p.amount::float AS amount, p.currency, p.status,
+              p.payment_date, p.created_at, p.paddle_transaction_id
+         FROM payments p JOIN subscriptions s ON s.id = p.subscription_id
+        WHERE s.team_id = $1
+        ORDER BY p.created_at DESC
+        LIMIT 25`,
+      [row.team_id],
+    );
+    const succeeded = payRes.rows.filter((p: any) => p.status === 'succeeded');
+    const totalSucceeded = succeeded.reduce(
+      (a: number, p: any) => a + (Number(p.amount) || 0),
+      0,
+    );
+
+    // Every Paddle webhook we received that references this customer. The
+    // subscription_id column is a Stripe-era UUID FK and is not populated for
+    // Paddle, so we match by subscription id / customer id / email inside the
+    // JSON payload. Empty ids are guarded so they never match every row.
+    const subId = String(row.paddle_subscription_id || '');
+    const custId = String(row.paddle_customer_id || '');
+    const evRes = await this.db.query(
+      `SELECT event_type,
+              COALESCE(processed_at, created_at) AS at,
+              payload#>>'{data,id}'              AS data_id,
+              payload#>>'{data,status}'          AS data_status,
+              payload#>>'{data,subscription_id}' AS data_subscription_id,
+              COALESCE(payload#>>'{data,next_billed_at}',
+                       payload#>>'{data,current_billing_period,ends_at}') AS next_billed_at
+         FROM webhook_events
+        WHERE provider = 'paddle'
+          AND ( ($1 <> '' AND payload::text ILIKE '%' || $1 || '%')
+             OR ($2 <> '' AND payload::text ILIKE '%' || $2 || '%')
+             OR payload::text ILIKE '%' || $3 || '%' )
+        ORDER BY COALESCE(processed_at, created_at) DESC
+        LIMIT 40`,
+      [subId, custId, emailNorm],
+    );
+
+    // Lifecycle emails (esp. checkout_recovery + onboarding), auto vs manual.
+    const mailRes = await this.db.query(
+      `SELECT template, language, status, send_type,
+              COALESCE(sent_at, created_at) AS at
+         FROM email_log
+        WHERE user_id = $1 OR LOWER(to_email) = $2
+        ORDER BY COALESCE(sent_at, created_at) DESC
+        LIMIT 40`,
+      [row.id, emailNorm],
+    );
+
+    return {
+      ok: true,
+      email: row.email,
+      as_of: new Date().toISOString(),
+      customer: {
+        name: row.name,
+        language: row.language,
+        selected_plan: row.selected_plan,
+        plan: row.plan,
+        billing_cycle: row.billing_cycle,
+        payment_status: row.payment_status,
+        checkout_status: row.checkout_status,
+        admin_status: adminStatus,
+        effective_plan: eff.planId,
+        has_plan_access: eff.paid,
+        trial_ends_at: row.trial_ends_at,
+        paddle_customer_id: row.paddle_customer_id || null,
+        paddle_subscription_id: row.paddle_subscription_id || null,
+        created_at: row.created_at,
+        next_billing: row.next_billing,
+      },
+      revenue: {
+        succeeded_payment_count: succeeded.length,
+        total_succeeded: totalSucceeded,
+        ltv: row.ltv,
+      },
+      payments: payRes.rows,
+      paddle_webhooks: evRes.rows,
+      emails: mailRes.rows,
+    };
+  }
+
   private enrich(row: any) {
     if (!row) return row;
     const status = this.deriveStatus(row);
