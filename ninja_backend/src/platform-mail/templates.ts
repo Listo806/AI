@@ -4,7 +4,8 @@
 // text }. Unknown languages fall back to English so a bad/blank locale never
 // yields an empty email. Inline styles only (email clients strip <style>).
 
-import { ONBOARDING_EMAILS, OnbTemplate } from './onboarding-emails.data';
+import { ONBOARDING_EMAILS, OnbTemplate, OnbEmail } from './onboarding-emails.data';
+import { AI_CREDITS_EMAIL } from './ai-credits-email.data';
 //
 // Templates:
 //   welcome               - after a confirmed payment (account active)
@@ -32,7 +33,9 @@ export type TemplateName =
   | 'free_upgrade'
   // New client-approved onboarding sequence (Day 0/1/2/4/6/9/12). Rich designs
   // pre-rendered in onboarding-emails.data.ts; rendered via token substitution.
-  | OnbTemplate;
+  | OnbTemplate
+  // "Out of AI credits" email — same rich-render path, own data file.
+  | 'ai_credits_out';
 export type MailLang = 'en' | 'es' | 'pt';
 
 export interface RenderedEmail {
@@ -564,26 +567,24 @@ const COPY: Partial<Record<TemplateName, Partial<Record<MailLang, Copy>>>> = {
 // The 7 rich onboarding designs render outside the simple `layout()` shell:
 // their approved HTML is pre-rendered in onboarding-emails.data.ts and only needs
 // runtime {{tokens}} substituted. Kept faithful to the client's designs.
-const ONB_NAMES: OnbTemplate[] = [
-  'onb_welcome',
-  'onb_support',
-  'onb_ai',
-  'onb_connect',
-  'onb_system',
-  'onb_ready',
-  'onb_team',
-  'checkout_recovery',
-];
-function isOnb(name: TemplateName): name is OnbTemplate {
-  return (ONB_NAMES as string[]).includes(name);
+// All templates that render outside the simple `layout()` shell: the 7
+// onboarding designs + checkout_recovery (onboarding-emails.data.ts) plus the
+// out-of-credits email (ai-credits-email.data.ts). Same token-substitution path.
+const RICH_EMAILS: Record<string, Record<MailLang, OnbEmail>> = {
+  ...ONBOARDING_EMAILS,
+  ai_credits_out: AI_CREDITS_EMAIL,
+};
+const ONB_NAMES: string[] = Object.keys(RICH_EMAILS);
+function isOnb(name: TemplateName): boolean {
+  return ONB_NAMES.includes(name as string);
 }
 
 function renderOnboarding(
-  name: OnbTemplate,
+  name: string,
   l: MailLang,
   vars: TemplateVars,
 ): RenderedEmail {
-  const entry = ONBOARDING_EMAILS[name][l] || ONBOARDING_EMAILS[name].en;
+  const entry = RICH_EMAILS[name][l] || RICH_EMAILS[name].en;
   const app = vars.appUrl || vars.ctaUrl || '';
   const first = (vars.name || '').trim();
   const tokens: Record<string, string> = {

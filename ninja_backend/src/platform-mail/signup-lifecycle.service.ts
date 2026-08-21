@@ -129,4 +129,25 @@ export class SignupLifecycleService {
       this.logger.error(`checkout-recovery sweep failed: ${err?.message}`);
     }
   }
+
+  // Out-of-AI-credits sequence (Day 0/2/5): a Free account reached 0 AI credits.
+  // Every minute so Day 0 lands near "immediately". Each send re-checks the live
+  // balance/plan and stops on purchase/upgrade. Hard off unless the flag is set.
+  private aiCreditsEnabled(): boolean {
+    return (
+      String(this.config.get('AI_CREDITS_EMAILS_ENABLED') || '')
+        .trim()
+        .toLowerCase() === 'true'
+    );
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async sweepAiCredits(): Promise<void> {
+    if (!this.aiCreditsEnabled()) return; // hard off by default
+    try {
+      await this.mailer.sendAiCreditsDue();
+    } catch (err: any) {
+      this.logger.error(`ai-credits sweep failed: ${err?.message}`);
+    }
+  }
 }

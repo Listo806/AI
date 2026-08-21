@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { UsageService } from '../plans/usage.service';
+import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import {
   DEFAULT_AI_UNITS_CONFIG,
   mergeAiUnitsConfig,
@@ -17,6 +18,7 @@ export class AiUnitsService {
   constructor(
     private readonly db: DatabaseService,
     private readonly usage: UsageService,
+    private readonly mailer: PlatformMailerService,
   ) {}
 
   private schemaReady = false;
@@ -193,35 +195,29 @@ export class AiUnitsService {
     );
   }
 
-  /** Read the account, rolling the monthly Free cycle if the reset has passed. */
+  /**
+   * Read the account. IMPORTANT (client rule, 2026-08-20): the Free 50-unit
+   * allowance is a ONE-TIME grant. It does NOT reset monthly and is never
+   * replenished automatically — once `free_used` reaches the allowance the
+   * account has 0 free units until it buys more or upgrades. `cycle_start` /
+   * `cycle_reset` are retained for historical/compat only and `free_used` is
+   * never zeroed here.
+   */
   private async rollCycleIfNeeded(teamId: string): Promise<any> {
     await this.ensureAccount(teamId);
     const sel = `SELECT team_id, free_used, purchased_balance,
                         to_char(cycle_start,'YYYY-MM-DD') AS cycle_start,
-                        to_char(cycle_reset,'YYYY-MM-DD') AS cycle_reset,
-                        (cycle_reset <= CURRENT_DATE) AS rolled
+                        to_char(cycle_reset,'YYYY-MM-DD') AS cycle_reset
                  FROM ai_unit_accounts WHERE team_id = $1`;
-    let { rows } = await this.db.query(sel, [teamId]);
-    let acct = rows[0];
-    if (!acct) return { free_used: 0, purchased_balance: 0, cycle_start: null, cycle_reset: null };
-
-    if (acct.rolled) {
-      const signup = await this.getTeamSignup(teamId);
-      const { cycleStart, cycleReset } = computeCycleReset(signup, new Date());
-      await this.db.query(
-        `UPDATE ai_unit_accounts
-           SET free_used = 0, cycle_start = $2, cycle_reset = $3, updated_at = NOW()
-         WHERE team_id = $1`,
-        [teamId, toYMD(cycleStart), toYMD(cycleReset)],
-      );
-      acct = {
-        ...acct,
+    const { rows } = await this.db.query(sel, [teamId]);
+    return (
+      rows[0] || {
         free_used: 0,
-        cycle_start: toYMD(cycleStart),
-        cycle_reset: toYMD(cycleReset),
-      };
-    }
-    return acct;
+        purchased_balance: 0,
+        cycle_start: null,
+        cycle_reset: null,
+      }
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -255,9 +251,11 @@ export class AiUnitsService {
       unlimited: false,
       plan: plan.planId,
       ...view,
-      cycleStart: acct.cycle_start,
-      cycleReset: acct.cycle_reset,
-      resetDate: acct.cycle_reset,
+      // The Free 50 is a one-time grant — there is no monthly reset date.
+      oneTime: true,
+      cycleStart: null,
+      cycleReset: null,
+      resetDate: null,
       lowThreshold: config.lowThreshold,
     };
   }
@@ -340,6 +338,12 @@ export class AiUnitsService {
         ],
       );
       await client.query('COMMIT');
+      // The moment a Free account's balance hits 0, start the Day 0/2/5
+      // out-of-credits email sequence (best-effort — never breaks a successful
+      // charge, and startAiCreditsSequence is idempotent per user).
+      if (beforeView.totalRemaining > 0 && afterView.totalRemaining === 0) {
+        this.mailer.startAiCreditsSequence(teamId).catch(() => {});
+      }
       return { ok: true, charged: plan2.charged, totalRemaining: afterView.totalRemaining };
     } catch (e) {
       await client.query('ROLLBACK');
@@ -382,6 +386,9 @@ export class AiUnitsService {
         [teamId, Math.max(0, Math.floor(units))],
       );
       await client.query('COMMIT');
+      // Balance is positive again → AI unblocks automatically; stop any pending
+      // out-of-credits email sequence immediately (best-effort).
+      this.mailer.cancelAiCreditsSequence(teamId).catch(() => {});
       return { credited: true, duplicate: false };
     } catch (e) {
       await client.query('ROLLBACK');

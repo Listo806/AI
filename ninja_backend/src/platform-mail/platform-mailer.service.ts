@@ -1167,6 +1167,209 @@ export class PlatformMailerService {
     }
   }
 
+  // ---- "Out of AI credits" sequence (Day 0 / Day 2 / Day 5) ----
+  // Triggered by AiUnitsService the moment a Free account's AI balance hits 0.
+  // Emails the account OWNER. Rows are queued here; sending is gated by the cron
+  // behind AI_CREDITS_EMAILS_ENABLED (default OFF). Every send re-checks the live
+  // balance/plan and cancels the rest the moment they buy credits or upgrade.
+
+  // Deep-link the CTA to the in-app AI-Unit purchase; support/unsubscribe tokens.
+  private aiCreditsVars(
+    first: string | null,
+    unsubscribeUrl: string | null,
+  ): TemplateVars {
+    const app = this.appUrl();
+    const vars: TemplateVars = {
+      name: first,
+      ctaUrl: `${app}/dashboard/ai-center?buy=ai-credits`,
+      appUrl: `${app}/dashboard/home`,
+      aiUnitsUrl: `${app}/dashboard/ai-center?buy=ai-credits`,
+      supportEmail: this.supportEmail(),
+    };
+    if (unsubscribeUrl) vars.unsubscribeUrl = unsubscribeUrl;
+    return vars;
+  }
+
+  // Queue the Day 0/2/5 sequence for the owner of `teamId`. Idempotent: never
+  // opens a second concurrent sequence for the same user.
+  async startAiCreditsSequence(teamId: string): Promise<void> {
+    if (!teamId) return;
+    await this.ensureSchema();
+    try {
+      const { rows } = await this.db.query(
+        `SELECT u.id, u.email, COALESCE(u.preferred_language,'en') AS lang
+           FROM teams t JOIN users u ON u.id = t.owner_id
+          WHERE t.id = $1 LIMIT 1`,
+        [teamId],
+      );
+      const owner = rows[0];
+      if (!owner?.id || !owner?.email) return;
+
+      const active = await this.db.query(
+        `SELECT 1 FROM email_log
+          WHERE user_id = $1 AND template = 'ai_credits_out' AND send_type = 'auto'
+            AND status IN ('scheduled','sending') LIMIT 1`,
+        [owner.id],
+      );
+      if (active.rows.length) return;
+
+      const plan: Array<string> = [
+        "INTERVAL '1 minute'", // Day 0 — near-immediate
+        "INTERVAL '2 days'", // Day 2
+        "INTERVAL '5 days'", // Day 5 — final
+      ];
+      for (const iv of plan) {
+        await this.db.query(
+          `INSERT INTO email_log
+             (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
+           VALUES ($1, $2, 'ai_credits_out', $3, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW())`,
+          [owner.id, owner.email, String(owner.lang || 'en').slice(0, 5)],
+        );
+      }
+      this.logger.log(`AI-credits sequence queued for team ${teamId} (user ${owner.id})`);
+    } catch (err: any) {
+      this.logger.error(`startAiCreditsSequence failed: ${err?.message}`);
+    }
+  }
+
+  // Cancel any still-scheduled out-of-credits emails for the owner of `teamId`
+  // (called the moment they buy credits, so the sequence stops immediately).
+  async cancelAiCreditsSequence(teamId: string): Promise<void> {
+    if (!teamId) return;
+    await this.ensureSchema();
+    try {
+      await this.db.query(
+        `UPDATE email_log SET status = 'canceled'
+          WHERE template = 'ai_credits_out' AND status = 'scheduled'
+            AND user_id IN (SELECT owner_id FROM teams WHERE id = $1)`,
+        [teamId],
+      );
+    } catch (err: any) {
+      this.logger.error(`cancelAiCreditsSequence failed: ${err?.message}`);
+    }
+  }
+
+  // Cron worker: send due out-of-credits emails. Re-checks the live balance/plan
+  // per row — a customer who has since bought credits or upgraded is canceled,
+  // never sent. One email per user per sweep. Hard off unless the cron flag is on.
+  async sendAiCreditsDue(): Promise<void> {
+    await this.ensureSchema();
+    let due: any[] = [];
+    try {
+      const { rows } = await this.db.query(
+        `SELECT el.id, el.track_token, el.language, el.to_email, el.user_id,
+                u.name, u.payment_status, u.checkout_status,
+                u.email_opt_out, u.email_bounced_at, u.email_unsub_token,
+                COALESCE(u.team_id, (SELECT id FROM teams WHERE owner_id = u.id LIMIT 1)) AS team_id
+           FROM email_log el
+           JOIN users u ON u.id = el.user_id
+          WHERE el.template = 'ai_credits_out' AND el.send_type = 'auto'
+            AND el.status = 'scheduled' AND el.scheduled_at <= NOW()
+          ORDER BY el.scheduled_at ASC
+          LIMIT 200`,
+      );
+      due = rows;
+    } catch (err: any) {
+      this.logger.error(`sendAiCreditsDue query failed: ${err?.message}`);
+      return;
+    }
+
+    const seenUsers = new Set<string>();
+    for (const r of due) {
+      // A paid/unlimited plan is never out of AI, so it never gets this email.
+      const paid =
+        r.payment_status === 'active' ||
+        r.payment_status === 'paid' ||
+        r.payment_status === 'trialing' ||
+        r.checkout_status === 'paid';
+      // Re-check the LIVE balance: any remaining credits (a purchase) stops it.
+      let hasCredits = false;
+      if (!paid && r.team_id) {
+        try {
+          const bal = await this.db.query(
+            `SELECT a.free_used, a.purchased_balance,
+                    COALESCE((c.config->>'freeAllowance')::int, 50) AS allowance
+               FROM ai_unit_accounts a
+               LEFT JOIN ai_unit_config c ON c.id = 1
+              WHERE a.team_id = $1`,
+            [r.team_id],
+          );
+          const a = bal.rows[0];
+          if (a) {
+            const remaining =
+              Math.max(0, (a.allowance || 50) - (a.free_used || 0)) +
+              Math.max(0, a.purchased_balance || 0);
+            hasCredits = remaining > 0;
+          }
+        } catch {
+          // If the balance can't be read, do NOT send (fail safe).
+          hasCredits = true;
+        }
+      }
+      if (paid || hasCredits || r.email_opt_out || r.email_bounced_at) {
+        await this.db.query(
+          `UPDATE email_log SET status = 'canceled'
+            WHERE user_id = $1 AND template = 'ai_credits_out' AND status = 'scheduled'`,
+          [r.user_id],
+        );
+        continue;
+      }
+      if (seenUsers.has(r.user_id)) continue;
+
+      const unsubTok =
+        r.email_unsub_token || (await this.getOrCreateUnsubToken(r.user_id));
+
+      const claim = await this.db.query(
+        `UPDATE email_log SET status = 'sending'
+          WHERE id = $1 AND status = 'scheduled' RETURNING id`,
+        [r.id],
+      );
+      if (!claim.rows.length) continue;
+      seenUsers.add(r.user_id);
+
+      const first = r.name ? String(r.name).trim().split(/\s+/)[0] : null;
+      const vars = this.aiCreditsVars(
+        first,
+        unsubTok ? this.unsubUrl(unsubTok) : null,
+      );
+      const rendered = renderTemplate('ai_credits_out', r.language, vars);
+      const token = r.track_token || crypto.randomUUID();
+      const html = this.htmlFor(rendered.html, token);
+      const result = await this.deliver({
+        to: r.to_email,
+        subject: rendered.subject,
+        html,
+        text: rendered.text,
+        token,
+      });
+      const status = result.ok
+        ? 'sent'
+        : result.error === 'smtp_not_configured'
+          ? 'skipped'
+          : 'error';
+      await this.db.query(
+        `UPDATE email_log
+            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+          WHERE id = $1`,
+        [
+          r.id,
+          status,
+          rendered.subject,
+          result.provider,
+          result.ok ? null : result.error?.slice(0, 500),
+          token,
+        ],
+      );
+      if (status === 'skipped') {
+        await this.db.query(
+          `UPDATE email_log SET status = 'scheduled' WHERE id = $1`,
+          [r.id],
+        );
+      }
+    }
+  }
+
   // ---- New client-approved onboarding sequence (Day 0/1/2/4/6/9/12) ----
   // The 7 approved designs (onb_* templates). Replaces the older Free-onboarding
   // sequence for new Free signups (so there is exactly one welcome), reuses the
