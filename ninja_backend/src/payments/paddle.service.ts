@@ -842,6 +842,92 @@ export class PaddleService {
     };
   }
 
+  // ---- AI-credit purchase options (amount-verified, never guessed) ----
+  private priceAmountCache = new Map<string, { v: number | null; at: number }>();
+
+  // Fetch a Paddle price's real unit amount in DOLLARS. Cached 10 min. Returns
+  // null if Paddle is unconfigured or the price can't be read.
+  async getPriceAmount(priceId: string): Promise<number | null> {
+    const id = String(priceId || '').trim();
+    if (!id || !this.paddle) return null;
+    const hit = this.priceAmountCache.get(id);
+    if (hit && Date.now() - hit.at < 600000) return hit.v;
+    let v: number | null = null;
+    try {
+      const p: any = await (this.paddle as any).prices.get(id);
+      const raw =
+        p?.unitPrice?.amount ??
+        p?.unit_price?.amount ??
+        p?.data?.unitPrice?.amount ??
+        p?.data?.unit_price?.amount;
+      if (raw != null && !Number.isNaN(Number(raw))) v = Number(raw) / 100;
+    } catch (e: any) {
+      this.logger.warn(`getPriceAmount(${id}) failed: ${e?.message}`);
+      v = null;
+    }
+    this.priceAmountCache.set(id, { v, at: Date.now() });
+    return v;
+  }
+
+  // AI purchase options for the popup, mapped by each price's REAL Paddle amount
+  // (so the $47/$67/$97 mapping is VERIFIED against Paddle, never guessed from
+  // env order) plus the recurring Unlimited AI subscription. Falls back to the
+  // env-slot values only if Paddle can't confirm the amount.
+  async getAiPurchaseOptions(user: any): Promise<any> {
+    const AMOUNT_UNITS: Array<[number, number]> = [
+      [47, 100],
+      [67, 200],
+      [97, 400],
+    ];
+    const slots = [
+      { env: 'PADDLE_PRICE_AI_UNITS_100', price: 47, units: 100 },
+      { env: 'PADDLE_PRICE_AI_UNITS_200', price: 67, units: 200 },
+      { env: 'PADDLE_PRICE_AI_UNITS_400', price: 97, units: 400 },
+    ];
+    const packs: any[] = [];
+    const seen = new Set<string>();
+    for (const s of slots) {
+      const id = String(process.env[s.env] || '').trim();
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const amt = await this.getPriceAmount(id);
+      const m = amt != null ? AMOUNT_UNITS.find(([p]) => Math.abs(p - amt) < 0.5) : null;
+      const price = m ? m[0] : s.price;
+      const units = m ? m[1] : s.units;
+      packs.push({
+        id: `p${units}`,
+        priceId: id,
+        units,
+        price,
+        recurring: false,
+        verified: !!m,
+        customData: { userId: user?.id, product: 'ai_units', packageId: `p${units}` },
+      });
+    }
+    packs.sort((a, b) => a.price - b.price);
+
+    const unlimitedId = String(process.env.PADDLE_PRICE_AI_UNLIMITED || '').trim();
+    let unlimited: any = null;
+    if (unlimitedId) {
+      const amt = await this.getPriceAmount(unlimitedId);
+      unlimited = {
+        id: 'unlimited',
+        priceId: unlimitedId,
+        price: amt ?? 147,
+        recurring: true,
+        verified: amt != null,
+        customData: { userId: user?.id, product: 'unlimited_ai' },
+      };
+    }
+
+    return {
+      configured: packs.length > 0 || !!unlimited,
+      packs,
+      unlimited,
+      email: user?.email || null,
+    };
+  }
+
   /**
    * Get client token for Paddle.js initialization
    * This is used by the frontend to initialize Paddle.js

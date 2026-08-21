@@ -20,6 +20,8 @@ const FALLBACK_PACKAGES = [
 export default function AiUnitsPurchaseModal() {
   const [open, setOpen] = useState(false);
   const [packages, setPackages] = useState(FALLBACK_PACKAGES);
+  const [unlimited, setUnlimited] = useState(null);
+  const [email, setEmail] = useState(null);
   const [busy, setBusy] = useState(null);
   const [msg, setMsg] = useState(null);
   const paddleReady = useRef(false);
@@ -54,9 +56,11 @@ export default function AiUnitsPurchaseModal() {
   useEffect(() => {
     if (!open) return;
     aiUnitsApi
-      .getConfig()
-      .then((c) => {
-        if (c?.packages?.length) setPackages(c.packages);
+      .getPurchaseOptions()
+      .then((o) => {
+        if (o?.packs?.length) setPackages(o.packs);
+        setUnlimited(o?.unlimited || null);
+        setEmail(o?.email || null);
       })
       .catch(() => {});
   }, [open]);
@@ -79,28 +83,38 @@ export default function AiUnitsPurchaseModal() {
   }, []);
 
   const buy = useCallback(
-    async (packageId) => {
-      setBusy(packageId);
+    async (option) => {
+      const key = option?.id;
+      setBusy(key);
       setMsg(null);
       try {
-        const co = await aiUnitsApi.getCheckout(packageId);
-        if (!co?.configured) {
-          setMsg(co?.message || "Purchases are not available yet.");
-          return;
+        let priceId = option?.priceId;
+        let customData = option?.customData;
+        let em = email;
+        // Fallback (e.g. options endpoint unavailable): resolve via getCheckout.
+        if (!priceId) {
+          const co = await aiUnitsApi.getCheckout(key);
+          if (!co?.configured) {
+            setMsg(co?.message || "Purchases are not available yet.");
+            return;
+          }
+          priceId = co.priceId;
+          customData = co.customData;
+          em = co.email || email;
         }
         const ok = await ensurePaddle();
         if (!ok) {
           setMsg("Checkout is not available right now. Please try again shortly.");
           return;
         }
-        openWorkspaceCheckout({ priceId: co.priceId, customData: co.customData, email: co.email });
+        openWorkspaceCheckout({ priceId, customData, email: em });
       } catch (e) {
         setMsg(e?.message || "Could not open checkout.");
       } finally {
         setBusy(null);
       }
     },
-    [ensurePaddle],
+    [ensurePaddle, email],
   );
 
   if (!open) return null;
@@ -130,18 +144,47 @@ export default function AiUnitsPurchaseModal() {
               key={p.id}
               className="aiu-pack"
               disabled={busy === p.id}
-              onClick={() => buy(p.id)}
+              onClick={() => buy(p)}
             >
               <span className="aiu-pack-ico">
                 <Box size={22} />
               </span>
-              <span className="aiu-pack-units">{Number(p.units).toLocaleString()} Units</span>
+              <span className="aiu-pack-units">
+                {Number(p.units).toLocaleString()} AI Credits
+                <span style={{ display: "block", fontSize: 11, fontWeight: 500, opacity: 0.7 }}>
+                  One-time purchase
+                </span>
+              </span>
               <span className="aiu-pack-right">
                 <span className="aiu-pack-price">${p.price}</span>
                 <ChevronRight size={22} className="aiu-pack-chev" />
               </span>
             </button>
           ))}
+
+          {unlimited && (
+            <button
+              key="unlimited"
+              className="aiu-pack"
+              disabled={busy === "unlimited"}
+              onClick={() => buy(unlimited)}
+              style={{ borderColor: "#5b45f6", background: "rgba(91,69,246,0.06)" }}
+            >
+              <span className="aiu-pack-ico" style={{ color: "#5b45f6" }}>
+                <Sparkles size={22} />
+              </span>
+              <span className="aiu-pack-units">
+                Unlimited AI
+                <span style={{ display: "block", fontSize: 11, fontWeight: 500, opacity: 0.7 }}>
+                  Monthly subscription
+                </span>
+              </span>
+              <span className="aiu-pack-right">
+                <span className="aiu-pack-price">${unlimited.price}/mo</span>
+                <ChevronRight size={22} className="aiu-pack-chev" />
+              </span>
+            </button>
+          )}
         </div>
 
         {msg && <div className="aiu-msg">{msg}</div>}
