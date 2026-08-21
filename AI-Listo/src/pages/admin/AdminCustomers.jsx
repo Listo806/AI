@@ -825,7 +825,7 @@ export default function AdminCustomers() {
         {/* Header */}
         <div className="cxc-header">
           <div>
-            <h1 className="cxc-title">Customers</h1>
+            <h1 className="cxc-title">E-commerce Subscriptions</h1>
             <p className="cxc-sub">
               All registered accounts, subscriptions, and plans — everything in
               one place.
