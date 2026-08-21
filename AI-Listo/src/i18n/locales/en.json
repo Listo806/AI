@@ -421,7 +421,7 @@
     "convertToContactTitle": "Convert this lead to a contact",
     "converting": "Converting...",
     "openContact": "Open Contact",
-    "convertToContact": "Convert to Contact",
+    "convertToContact": "Convert",
     "viewScoreDetailsTitle": "View AI lead score details",
     "scoreLabel": "Score",
     "temperatureLead": "{{temperature}} Lead",
@@ -503,7 +503,18 @@
     "date": "Date",
     "time": "Time",
     "note": "Note",
-    "message": "Message"
+    "message": "Message",
+    "desktop": {
+      "title": "Leads & Conversations",
+      "subtitle": "Focus on the right leads. AI helps you win more.",
+      "leadPulse": "Lead Pulse",
+      "leadInbox": "Lead Inbox",
+      "aiBrief": "AI Brief",
+      "recentSignals": "Recent Signals",
+      "viewAll": "View All",
+      "viewFullTimeline": "View Full Timeline",
+      "more": "More"
+    }
   },
   "pipeline": {
     "title": "Pipeline",

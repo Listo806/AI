@@ -1910,9 +1910,15 @@ export default function LeadsPage() {
     <div className="leads-page">
       <div className="heading_page">
         <Users className="header-icon" size={20} />
-        <h1>{t("leads.pageTitle")}</h1>
+        <h1>
+          <span className="leads-title-mobile">{t("leads.pageTitle")}</span>
+          <span className="leads-title-desktop">{t("leads.desktop.title")}</span>
+        </h1>
       </div>
-      <p className="sub_head">{t("leads.subheading")}</p>
+      <p className="sub_head">
+        <span className="leads-sub-mobile">{t("leads.subheading")}</span>
+        <span className="leads-sub-desktop">{t("leads.desktop.subtitle")}</span>
+      </p>
       <div className="leads-header">
         <div className="header-actions">
           {isMobile ? (
@@ -1982,7 +1988,7 @@ export default function LeadsPage() {
               </button>
 
               <button
-                className={`secondary-btn ai-btn ${aiView ? "active" : ""}`}
+                className={`secondary-btn ai-btn desktop-ai-view-btn ${aiView ? "active" : ""}`}
                 onClick={toggleAiView}
               >
                 <Sparkles size={16} />
@@ -2254,6 +2260,10 @@ export default function LeadsPage() {
       </div>
 
       <div className="stats-grid">
+        <div className="desktop-lead-pulse-label">
+          <strong>{t("leads.desktop.leadPulse")}</strong>
+          <ChevronDown size={15} />
+        </div>
         {stats.map((item, index) => (
           <div className={`stats-card stats-card-${item.className}`} key={index}>
             <div className={`stats-icon ${item.className}`}>{item.icon}</div>
@@ -2426,7 +2436,7 @@ export default function LeadsPage() {
               <h3>
                 <Inbox className="lead-inbox-title-icon" size={28} />
                 <span className="lead-inbox-mobile-title">Lead Inbox</span>
-                <span className="lead-inbox-desktop-title">{t("leads.aiLeadInbox")}</span>
+                <span className="lead-inbox-desktop-title">{t("leads.desktop.leadInbox")}</span>
               </h3>
               <p className="lead-inbox-mobile-subtitle">
                 Your leads, organized by priority and AI score.
@@ -2742,23 +2752,36 @@ export default function LeadsPage() {
                 </p>
 
                 <div className="mobile-lead-profile-actions">
-                  <button type="button" onClick={callSelectedLead} aria-label="Call lead">
-                    <Phone size={21} />
+                  <button
+                    type="button"
+                    className="lead-profile-action lead-profile-action-call"
+                    onClick={callSelectedLead}
+                    aria-label="Call lead"
+                  >
+                    <Phone size={18} />
                   </button>
 
                   <button
                     type="button"
+                    className="lead-profile-action lead-profile-action-whatsapp"
                     onClick={() => {
                       const phone = normalizeWhatsAppPhone(selectedLead?.phone);
-                      if (phone) window.open(`https://wa.me/${phone}`, "_blank", "noopener,noreferrer");
+                      if (phone) {
+                        window.open(
+                          `https://wa.me/${phone}`,
+                          "_blank",
+                          "noopener,noreferrer",
+                        );
+                      }
                     }}
                     aria-label="Open WhatsApp"
                   >
-                    <MessageCircle size={22} />
+                    <MessageCircle size={18} />
                   </button>
 
                   <button
                     type="button"
+                    className="lead-profile-action lead-profile-action-email"
                     onClick={() => {
                       if (selectedLead?.email) {
                         window.location.href = `mailto:${selectedLead.email}`;
@@ -2766,18 +2789,40 @@ export default function LeadsPage() {
                     }}
                     aria-label="Email lead"
                   >
-                    <Mail size={21} />
-                  </button>
-
-                  <button type="button" onClick={openBookShowing} aria-label="Schedule">
-                    <Calendar size={21} />
+                    <Mail size={18} />
                   </button>
 
                   <button
                     type="button"
+                    className="lead-profile-action lead-profile-action-calendar"
+                    onClick={openBookShowing}
+                    aria-label="Schedule"
+                  >
+                    <Calendar size={18} />
+                  </button>
+
+                  <button
+                    type="button"
+                    className="lead-profile-action lead-profile-action-more"
                     aria-label="More lead details"
                   >
-                    <MoreHorizontal size={23} />
+                    <MoreHorizontal size={18} />
+                  </button>
+
+                  <button
+                    type="button"
+                    className="mobile-lead-convert-btn"
+                    onClick={handleLeadContactAction}
+                    disabled={!selectedLead?.id || convertingLead}
+                  >
+                    <span>
+                      {selectedLead?.contactId
+                        ? t("leads.openContact")
+                        : convertingLead
+                          ? t("leads.converting")
+                          : t("leads.convertToContact")}
+                    </span>
+                    <ChevronDown size={16} />
                   </button>
                 </div>
               </div>
@@ -2806,8 +2851,15 @@ export default function LeadsPage() {
 
             <section className="mobile-lead-performance-card">
               <div className="mobile-performance-cell mobile-performance-score">
-                <span>Close Probability</span>
-                <div className="mobile-score-gauge">
+                <div
+                  className="mobile-score-gauge"
+                  style={{
+                    "--lead-score": `${Math.max(
+                      0,
+                      Math.min(100, Number(leadIntelligence.score) || 0),
+                    ) * 1.8}deg`,
+                  }}
+                >
                   <div className="mobile-score-gauge-value">
                     {leadIntelligence.score}
                   </div>
@@ -2815,8 +2867,8 @@ export default function LeadsPage() {
                 <strong>{translateTemperature(leadIntelligence.temperature)}</strong>
               </div>
 
-              <div className="mobile-performance-cell">
-                <span>Potential Value</span>
+              <div className="mobile-performance-cell mobile-performance-probability">
+                <span>Close Probability</span>
                 <strong className="mobile-performance-main">
                   {leadIntelligence.closeProbability &&
                   String(leadIntelligence.closeProbability).toLowerCase() !== "unknown"
@@ -2826,15 +2878,19 @@ export default function LeadsPage() {
                 <small>↑ {translateTemperature(leadIntelligence.temperature)}</small>
               </div>
 
-              <div className="mobile-performance-cell">
-                <span>Estimated Value</span>
+              <div className="mobile-performance-cell mobile-performance-value">
+                <span>Potential Value</span>
                 <strong className="mobile-performance-main">
                   {leadIntelligence.expectedRevenue &&
                   String(leadIntelligence.expectedRevenue).toLowerCase() !== "unknown"
                     ? leadIntelligence.expectedRevenue
                     : "-"}
                 </strong>
-                <small>USD<br />Estimated</small>
+                <small>
+                  USD
+                  <br />
+                  Estimated
+                </small>
               </div>
 
               <div className="mobile-performance-cell mobile-performance-intent">
@@ -2852,13 +2908,14 @@ export default function LeadsPage() {
                     stroke="currentColor"
                     strokeWidth="2"
                   />
+                  <circle cx="116" cy="5" r="2.8" fill="currentColor" />
                 </svg>
               </div>
             </section>
 
             <section className="mobile-next-best-action-card">
               <div className="mobile-next-best-action-icon">
-                <Zap size={34} />
+                <Zap size={24} />
               </div>
 
               <div className="mobile-next-best-action-copy">
@@ -2867,7 +2924,7 @@ export default function LeadsPage() {
               </div>
 
               <button type="button" onClick={callSelectedLead}>
-                <Phone size={21} />
+                <Phone size={14} />
                 <span>Call Now</span>
               </button>
             </section>
@@ -3107,67 +3164,77 @@ export default function LeadsPage() {
                       }
                     }}
                   />
-
-                  <button
-                    type="button"
-                    className="mobile-ai-assist-btn"
-                    onClick={generateAiAssistMessage}
-                    disabled={!selectedLead}
-                  >
-                    <Sparkles size={20} />
-                    <span>AI Assist</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="mobile-send-message-btn"
-                    onClick={sendLeadMessage}
-                    disabled={!chatMessage.trim() || sendingLeadMessage}
-                  >
-                    <Send size={20} />
-                  </button>
                 </div>
 
-                <div className="mobile-lead-composer-tools">
-                  <button
-                    type="button"
-                    onClick={() => setShowEmojiPicker((prev) => !prev)}
-                    disabled={!selectedLead}
-                  >
-                    <Smile size={19} />
-                  </button>
+                <div className="mobile-lead-composer-bottom">
+                  <div className="mobile-lead-composer-tools">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker((prev) => !prev)}
+                      disabled={!selectedLead}
+                      aria-label="Emoji"
+                    >
+                      <Smile size={19} />
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={!selectedLead || uploadingChatFile}
-                  >
-                    <Paperclip size={19} />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={!selectedLead || uploadingChatFile}
+                      aria-label="Attach file"
+                    >
+                      <Paperclip size={19} />
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={!selectedLead || uploadingChatFile}
-                  >
-                    <ImageIcon size={19} />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={!selectedLead || uploadingChatFile}
+                      aria-label="Attach image"
+                    >
+                      <ImageIcon size={19} />
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={!selectedLead || uploadingChatFile}
-                  >
-                    <FileText size={19} />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={!selectedLead || uploadingChatFile}
+                      aria-label="Attach document"
+                    >
+                      <FileText size={19} />
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={toggleVoiceRecording}
-                    disabled={!selectedLead || uploadingChatFile}
-                  >
-                    <Mic size={19} />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={toggleVoiceRecording}
+                      disabled={!selectedLead || uploadingChatFile}
+                      aria-label="Voice message"
+                    >
+                      <Mic size={19} />
+                    </button>
+                  </div>
+
+                  <div className="mobile-lead-composer-actions">
+                    <button
+                      type="button"
+                      className="mobile-ai-assist-btn"
+                      onClick={generateAiAssistMessage}
+                      disabled={!selectedLead}
+                    >
+                      <Sparkles size={20} />
+                      <span>AI Assist</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="mobile-send-message-btn"
+                      onClick={sendLeadMessage}
+                      disabled={!chatMessage.trim() || sendingLeadMessage}
+                      aria-label="Send message"
+                    >
+                      <Send size={20} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -3995,6 +4062,156 @@ export default function LeadsPage() {
         {/* RIGHT PANEL - INSIGHTS & CONTROLS */}
         <div className="insights-panel">
 
+          <div className="desktop-reference-insights">
+            <section className="desktop-ai-brief-card">
+              <div className="desktop-reference-card-head">
+                <h3>
+                  <Sparkles size={17} />
+                  {t("leads.desktop.aiBrief")}
+                </h3>
+                <button type="button" aria-label={t("leads.desktop.more")}>
+                  <MoreHorizontal size={17} />
+                </button>
+              </div>
+
+              <p className="desktop-ai-brief-copy">
+                {conversationIntelligenceLoading
+                  ? t("leads.analyzingConversation")
+                  : leadIntelligence.summary || leadIntelligence.recommendedAction}
+              </p>
+
+              <div className="desktop-ai-brief-tags">
+                {[
+                  leadIntelligence.interestLevel,
+                  translateTemperature(leadIntelligence.temperature),
+                  selectedLead?.priority
+                    ? `${selectedLead.priority} ${t("leads.priority")}`
+                    : null,
+                ]
+                  .filter((value) => value && String(value).toLowerCase() !== "unknown")
+                  .slice(0, 3)
+                  .map((value, index) => (
+                    <span key={`${value}-${index}`}>{value}</span>
+                  ))}
+              </div>
+            </section>
+
+            <section className="desktop-signals-card">
+              <div className="desktop-reference-card-head">
+                <h3>{t("leads.desktop.recentSignals")}</h3>
+                <button type="button" className="desktop-view-link" onClick={openFullTimeline}>
+                  {t("leads.desktop.viewAll")}
+                </button>
+              </div>
+
+              <div className="desktop-signals-list">
+                {leadEventsLoading ? (
+                  <div className="desktop-reference-empty">{t("leads.loadingTimeline")}</div>
+                ) : leadEvents.length ? (
+                  leadEvents.slice(0, 4).map((event, index) => {
+                    const eventType = String(event?.eventType || "").toLowerCase();
+
+                    const signalConfig = eventType.includes("email")
+                      ? { Icon: Mail, tone: "purple" }
+                      : eventType.includes("whatsapp") ||
+                          eventType.includes("message") ||
+                          eventType.includes("reply")
+                        ? { Icon: MessageCircle, tone: "green" }
+                        : eventType.includes("call")
+                          ? { Icon: Phone, tone: "orange" }
+                          : eventType.includes("appointment") ||
+                              eventType.includes("showing") ||
+                              eventType.includes("schedule")
+                            ? { Icon: Calendar, tone: "blue" }
+                            : eventType.includes("download") ||
+                                eventType.includes("file") ||
+                                eventType.includes("property")
+                              ? { Icon: FileText, tone: "violet" }
+                              : eventType.includes("view") ||
+                                  eventType.includes("visit") ||
+                                  eventType.includes("open")
+                                ? { Icon: Eye, tone: "blue" }
+                                : eventType.includes("created") ||
+                                    eventType.includes("contact")
+                                  ? { Icon: Users, tone: "green" }
+                                  : { Icon: Sparkles, tone: "purple" };
+
+                    const EventIcon = signalConfig.Icon;
+
+                    return (
+                      <button
+                        type="button"
+                        className={`desktop-signal-row desktop-signal-${signalConfig.tone}`}
+                        key={event.id || `${event.eventType}-${event.createdAt}-${index}`}
+                        onClick={openFullTimeline}
+                      >
+                        <span className="desktop-signal-icon">
+                          <EventIcon size={16} />
+                        </span>
+                        <span className="desktop-signal-copy">
+                          <strong>
+                            {event.metadata?.title ||
+                              event.eventType?.replaceAll("_", " ") ||
+                              t("leads.leadActivity")}
+                          </strong>
+                          <small>
+                            {event.metadata?.sub ||
+                              event.metadata?.description ||
+                              t("leads.leadUpdated")}
+                          </small>
+                        </span>
+                        <time>{formatTimeAgo(event.createdAt)}</time>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="desktop-reference-empty">{t("leads.noEventYet")}</div>
+                )}
+              </div>
+            </section>
+
+            <section className="desktop-timeline-card">
+              <div className="desktop-reference-card-head">
+                <h3>{t("leads.timeline")}</h3>
+                <button type="button" className="desktop-view-link" onClick={openFullTimeline}>
+                  {t("leads.desktop.viewFullTimeline")}
+                </button>
+              </div>
+
+              <div className="desktop-reference-timeline">
+                {leadEventsLoading ? (
+                  <div className="desktop-reference-empty">{t("leads.loadingTimeline")}</div>
+                ) : leadEvents.length ? (
+                  leadEvents.slice(0, 4).map((event, index) => (
+                    <button
+                      type="button"
+                      className="desktop-reference-timeline-row"
+                      key={event.id || `${event.eventType}-${event.createdAt}-${index}`}
+                      onClick={openFullTimeline}
+                    >
+                      <span className={`desktop-reference-timeline-dot tone-${(index % 4) + 1}`} />
+                      <span>
+                        <strong>
+                          {event.metadata?.title ||
+                            event.eventType?.replaceAll("_", " ") ||
+                            t("leads.leadActivity")}
+                        </strong>
+                        <small>{formatLeadEventDate(event.createdAt)}</small>
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="desktop-reference-timeline-row is-empty">
+                    <span className="desktop-reference-timeline-dot tone-1" />
+                    <span>
+                      <strong>{t("leads.leadCreated")}</strong>
+                      <small>{t("leads.noEventYet")}</small>
+                    </span>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
 
           <div className="desktop-insights-stack">
           {/* BOX 1: LEAD INTELLIGENCE */}

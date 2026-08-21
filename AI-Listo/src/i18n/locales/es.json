@@ -421,7 +421,7 @@
     "convertToContactTitle": "Convertir este lead en contacto",
     "converting": "Convirtiendo...",
     "openContact": "Abrir contacto",
-    "convertToContact": "Convertir en contacto",
+    "convertToContact": "Convertir",
     "viewScoreDetailsTitle": "Ver detalles de la puntuación de IA del lead",
     "scoreLabel": "Puntuación",
     "temperatureLead": "Lead {{temperature}}",
@@ -503,7 +503,18 @@
     "date": "Fecha",
     "time": "Hora",
     "note": "Nota",
-    "message": "Mensaje"
+    "message": "Mensaje",
+    "desktop": {
+      "title": "Leads y Conversaciones",
+      "subtitle": "Concéntrate en los leads correctos. La IA te ayuda a ganar más.",
+      "leadPulse": "Pulso de Leads",
+      "leadInbox": "Bandeja de Leads",
+      "aiBrief": "Resumen de IA",
+      "recentSignals": "Señales Recientes",
+      "viewAll": "Ver Todo",
+      "viewFullTimeline": "Ver Timeline Completo",
+      "more": "Más"
+    }
   },
   "pipeline": {
     "title": "Embudo",
