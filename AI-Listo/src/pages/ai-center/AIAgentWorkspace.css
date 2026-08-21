@@ -1163,4 +1163,423 @@
     border: 1px solid var(--aiw-border);
   }
 }
-
+/* =========================================================
+   AI AGENT — DESKTOP REFERENCE LAYOUT
+   Light default; dark theme only via .crm-dark.
+   Existing tablet/mobile rules remain unchanged.
+   ========================================================= */
+.aiw-desktop-empty-after-composer {
+  display: none;
+}
+@media (min-width: 1025px) {
+  .aiw-root.aiw-root-empty {
+    display: block;
+    min-height: calc(100vh - 86px);
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: #fff;
+  }
+  .aiw-root-empty > .aiw-history,
+  .aiw-root-empty > .aiw-history-backdrop {
+    display: none !important;
+  }
+  .aiw-root-empty .aiw-main {
+    width: 100%;
+    min-height: calc(100vh - 86px);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+  }
+  .aiw-root-empty .aiw-topbar {
+    display: none;
+  }
+  .aiw-root-empty .aiw-scroll {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+  .aiw-root-empty .aiw-empty-desktop {
+    display: flex;
+  }
+  .aiw-desktop-home {
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    align-items: center;
+    text-align: center;
+  }
+  .aiw-desktop-brand-block {
+    width: 100%;
+  }
+  .aiw-desktop-brand-title {
+    margin: 0;
+    color: #050505;
+    font-size: clamp(28px, 2vw, 36px);
+    line-height: 1.08;
+    font-weight: 700;
+    letter-spacing: -.035em;
+  }
+  .aiw-desktop-brand-sub {
+    margin: 8px 0 0;
+    color: #596275;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .aiw-desktop-brand-line {
+    display: block;
+    width: 78px;
+    height: 1px;
+    margin: 22px auto 27px;
+    background: #d9dde4;
+  }
+  .aiw-desktop-agent-mark {
+    width: 55px;
+    height: 55px;
+    display: grid;
+    place-items: center;
+    border-radius: 15px;
+    color: #fff;
+    background: #050505;
+    box-shadow: 0 8px 18px rgba(0,0,0,.08);
+  }
+  .aiw-desktop-agent-mark svg {
+    width: 30px;
+    height: 30px;
+  }
+  .aiw-desktop-question {
+    margin: 18px 0 0;
+    color: #050505;
+    font-size: clamp(25px, 1.8vw, 34px);
+    line-height: 1.1;
+    font-weight: 780;
+    letter-spacing: -.035em;
+  }
+  .aiw-desktop-question-sub {
+    max-width: 650px;
+    margin: 9px auto 0;
+    color: #626b7d;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .aiw-desktop-contexts {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 14px;
+    margin: 31px auto 0;
+    padding-bottom: 26px;
+    border-bottom: 1px solid #dfe3e8;
+  }
+  .aiw-desktop-context-pill {
+    min-height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    padding: 0 24px;
+    border: 1px solid #dfe3e8;
+    border-radius: 18px;
+    background: #fff;
+    color: #101217;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+  }
+  .aiw-desktop-context-pill:hover {
+    border-color: #b9c0ca;
+    box-shadow: 0 6px 16px rgba(15,23,42,.06);
+    transform: translateY(-1px);
+  }
+  .aiw-desktop-context-icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+  }
+  .aiw-desktop-context-icon svg {
+    width: 23px;
+    height: 23px;
+  }
+  /* Large composer under context pills */
+  .aiw-root-empty .aiw-composer {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 28px;
+    border-top: 0;
+    background: transparent;
+  }
+  .aiw-root-empty .aiw-composer-attachments {
+    max-width: 920px;
+    margin: 10px auto 8px;
+  }
+  .aiw-root-empty .aiw-inputrow {
+    position: relative;
+    max-width: 920px;
+    min-height: 130px;
+    margin: 0 auto;
+    padding: 17px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border: 1px solid #dfe3e8;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 10px 26px rgba(15,23,42,.06);
+  }
+  .aiw-root-empty .aiw-textarea {
+    width: 100%;
+    min-height: 53px;
+    max-height: 110px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    resize: none;
+    background: transparent;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .aiw-root-empty .aiw-textarea::placeholder {
+    color: #929aaa;
+  }
+  .aiw-root-empty .aiw-actions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+  }
+  .aiw-root-empty .aiw-tool-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 1px solid #dfe3e8;
+    border-radius: 12px;
+    background: #fff;
+    color: #101217;
+  }
+  .aiw-root-empty .aiw-tool-btn + .aiw-tool-btn {
+    margin-left: auto;
+  }
+  .aiw-root-empty .aiw-tool-btn span {
+    display: none;
+  }
+  .aiw-root-empty .aiw-send {
+    width: 45px;
+    height: 45px;
+    margin-left: 12px;
+    border: 0;
+    border-radius: 50%;
+    background: #050505;
+    color: #fff;
+  }
+  .aiw-root-empty .aiw-send:disabled {
+    background: #050505;
+    color: #fff;
+  }
+  .aiw-root-empty .aiw-disclaimer-inline {
+    display: none;
+  }
+  .aiw-root-empty .aiw-mobile-privacy {
+    display: none !important;
+  }
+  .aiw-root-empty .aiw-desktop-empty-after-composer {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 28px 22px;
+    display: block;
+  }
+  .aiw-desktop-privacy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px 0 24px;
+    color: #687386;
+    font-size: 12px;
+  }
+  .aiw-desktop-privacy-lock {
+    width: 14px;
+    height: 14px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid #7b8494;
+    border-radius: 3px;
+    font-size: 0;
+  }
+  .aiw-desktop-privacy-lock::before {
+    content: "";
+    width: 6px;
+    height: 5px;
+    border: 1px solid currentColor;
+    border-bottom: 0;
+    border-radius: 5px 5px 0 0;
+    transform: translateY(-5px);
+  }
+  .aiw-desktop-privacy button {
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .aiw-desktop-try {
+    width: 100%;
+  }
+  .aiw-desktop-try h3 {
+    margin: 0 0 12px;
+    color: #20242b;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    text-align: left;
+  }
+  .aiw-desktop-try-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 18px;
+  }
+  .aiw-desktop-try-card {
+    min-width: 0;
+    min-height: 66px;
+    display: grid;
+    grid-template-columns: 34px minmax(0,1fr) 20px;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 13px;
+    border: 1px solid #dfe3e8;
+    border-radius: 9px;
+    background: #fff;
+    color: #111827;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .aiw-desktop-try-card:hover {
+    border-color: #b9c0ca;
+    box-shadow: 0 5px 14px rgba(15,23,42,.05);
+  }
+  .aiw-desktop-try-icon {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    color: #101217;
+  }
+  .aiw-desktop-try-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  .aiw-desktop-try-copy {
+    min-width: 0;
+  }
+  .aiw-desktop-try-copy strong,
+  .aiw-desktop-try-copy small {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .aiw-desktop-try-copy strong {
+    color: #16191f;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .aiw-desktop-try-copy small {
+    margin-top: 3px;
+    color: #737d8e;
+    font-size: 10px;
+  }
+  .aiw-desktop-try-chevron {
+    color: #697386;
+  }
+  .aiw-desktop-try-chevron svg {
+    width: 15px;
+    height: 15px;
+  }
+  .aiw-desktop-bottom-disclaimer {
+    margin-top: 54px;
+    color: #7c8594;
+    font-size: 12px;
+    text-align: center;
+  }
+  /* Chat state keeps the existing real conversation/history experience. */
+  .aiw-root-chat {
+    min-height: calc(100vh - 140px);
+  }
+  /* ---------------- Dark theme: project key is .crm-dark ---------------- */
+  .crm-dark .aiw-root.aiw-root-empty,
+  .crm-dark .aiw-root-empty .aiw-main {
+    background: #0b0f19;
+    color: #f8fafc;
+  }
+  .crm-dark .aiw-desktop-brand-title,
+  .crm-dark .aiw-desktop-question,
+  .crm-dark .aiw-desktop-try h3,
+  .crm-dark .aiw-desktop-try-copy strong {
+    color: #f8fafc;
+  }
+  .crm-dark .aiw-desktop-brand-sub,
+  .crm-dark .aiw-desktop-question-sub,
+  .crm-dark .aiw-desktop-privacy,
+  .crm-dark .aiw-desktop-try-copy small,
+  .crm-dark .aiw-desktop-bottom-disclaimer {
+    color: #9aa6b7;
+  }
+  .crm-dark .aiw-desktop-brand-line,
+  .crm-dark .aiw-desktop-contexts {
+    border-color: #263142;
+    background-color: transparent;
+  }
+  .crm-dark .aiw-desktop-brand-line {
+    background: #263142;
+  }
+  .crm-dark .aiw-desktop-context-pill,
+  .crm-dark .aiw-root-empty .aiw-inputrow,
+  .crm-dark .aiw-root-empty .aiw-tool-btn,
+  .crm-dark .aiw-desktop-try-card {
+    background: #0d131d;
+    border-color: #263142;
+    color: #e5e7eb;
+  }
+  .crm-dark .aiw-desktop-context-pill:hover,
+  .crm-dark .aiw-desktop-try-card:hover {
+    border-color: #48566a;
+  }
+  body.crm-dark #root .aiw-root-empty .aiw-textarea {
+    color: #f8fafc;
+    background: #0d131d;
+  }
+  .crm-dark .aiw-root-empty .aiw-textarea::placeholder {
+    color: #64748b;
+  }
+  .crm-dark .aiw-desktop-agent-mark,
+  .crm-dark .aiw-root-empty .aiw-send {
+    background: #f8fafc;
+    color: #05080d;
+  }
+  .crm-dark .aiw-desktop-try-icon,
+  .crm-dark .aiw-desktop-try-chevron {
+    color: #cbd5e1;
+  }
+}
+@media (min-width: 861px) and (max-width: 1180px) {
+  .aiw-desktop-context-pill {
+    padding-inline: 17px;
+  }
+  .aiw-desktop-try-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

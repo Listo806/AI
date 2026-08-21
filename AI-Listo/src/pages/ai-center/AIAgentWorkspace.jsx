@@ -202,6 +202,34 @@ export default function AIAgentWorkspace() {
     return String(name).trim().split(" ")[0] || t("aiCenter.defaultName");
   }, [user, t]);
 
+  const desktopContexts = useMemo(
+    () => [
+      { id: "leads", label: t("aiCenter.desktop.contextLeads"), prompt: t("aiCenter.desktop.contextPromptLeads") },
+      { id: "pipeline", label: t("aiCenter.desktop.contextPipeline"), prompt: t("aiCenter.desktop.contextPromptPipeline") },
+      { id: "contacts", label: t("aiCenter.desktop.contextContacts"), prompt: t("aiCenter.desktop.contextPromptContacts") },
+      { id: "analytics", label: t("aiCenter.desktop.contextAnalytics"), prompt: t("aiCenter.desktop.contextPromptAnalytics") },
+      { id: "appointments", label: t("aiCenter.desktop.contextAppointments"), prompt: t("aiCenter.desktop.contextPromptAppointments") },
+      { id: "whatsapp", label: t("aiCenter.desktop.contextWhatsApp"), prompt: t("aiCenter.desktop.contextPromptWhatsApp") },
+      { id: "tasks", label: t("aiCenter.desktop.contextTasks"), prompt: t("aiCenter.desktop.contextPromptTasks") },
+      { id: "revenue", label: t("aiCenter.desktop.contextRevenue"), prompt: t("aiCenter.desktop.contextPromptRevenue") },
+      { id: "automations", label: t("aiCenter.desktop.contextAutomations"), prompt: t("aiCenter.desktop.contextPromptAutomations") },
+      { id: "more", label: t("aiCenter.desktop.contextMore"), prompt: t("aiCenter.desktop.contextPromptMore") },
+    ],
+    [t],
+  );
+
+  const desktopTryCards = useMemo(
+    () => [
+      { icon: "pipeline", title: t("aiCenter.desktop.tryPipelineTitle"), sub: t("aiCenter.desktop.tryPipelineSub"), prompt: t("aiCenter.suggestSummarizePipeline") },
+      { icon: "revenue", title: t("aiCenter.desktop.tryRevenueTitle"), sub: t("aiCenter.desktop.tryRevenueSub"), prompt: t("aiCenter.suggestHottestOpportunities") },
+      { icon: "appointments", title: t("aiCenter.desktop.tryAppointmentTitle"), sub: t("aiCenter.desktop.tryAppointmentSub"), prompt: t("aiCenter.suggestAppointmentsToday") },
+      { icon: "tasks", title: t("aiCenter.desktop.tryFollowUpTitle"), sub: t("aiCenter.desktop.tryFollowUpSub"), prompt: t("aiCenter.suggestLeadsFollowUpToday") },
+      { icon: "whatsapp", title: t("aiCenter.desktop.tryConversationsTitle"), sub: t("aiCenter.desktop.tryConversationsSub"), prompt: t("aiCenter.suggestSummarizeConversations") },
+      { icon: "analytics", title: t("aiCenter.desktop.tryRiskTitle"), sub: t("aiCenter.desktop.tryRiskSub"), prompt: t("aiCenter.suggestInactiveDeals") },
+    ],
+    [t],
+  );
+
   /* ---------------- Conversation history ---------------- */
   const loadSessions = useCallback(async () => {
     setLoadingSessions(true);
@@ -526,28 +554,42 @@ export default function AIAgentWorkspace() {
         <div className="aiw-scroll" ref={scrollRef}>
           {isEmpty ? (
             <>
-              <div className="aiw-empty aiw-empty-desktop">
-                <div className="aiw-empty-mark">
+              <div className="aiw-empty aiw-empty-desktop aiw-desktop-home">
+                <div className="aiw-desktop-brand-block">
+                  <h1 className="aiw-desktop-brand-title">
+                    {t("aiCenter.desktop.agentTitle")}
+                  </h1>
+                  <p className="aiw-desktop-brand-sub">
+                    {t("aiCenter.desktop.agentSubtitle")}
+                  </p>
+                  <span className="aiw-desktop-brand-line" />
+                </div>
+
+                <div className="aiw-desktop-agent-mark">
                   <IconSpark />
                 </div>
-                <h1 className="aiw-empty-title">
-                  {t("aiCenter.greeting", { name: firstName })}
-                </h1>
-                <p className="aiw-empty-sub">{t("aiCenter.emptySubtitle")}</p>
-                <div className="aiw-suggestions">
-                  {SUGGESTED_COMMANDS.map((key) => {
-                    const cmd = t(`aiCenter.${key}`);
-                    return (
-                      <button
-                        type="button"
-                        key={key}
-                        className="aiw-suggestion"
-                        onClick={() => handleSend(cmd)}
-                      >
-                        {cmd}
-                      </button>
-                    );
-                  })}
+
+                <h2 className="aiw-desktop-question">
+                  {t("aiCenter.desktop.question")}
+                </h2>
+                <p className="aiw-desktop-question-sub">
+                  {t("aiCenter.desktop.questionSubtitle")}
+                </p>
+
+                <div className="aiw-desktop-contexts">
+                  {desktopContexts.map((context) => (
+                    <button
+                      type="button"
+                      key={context.id}
+                      className="aiw-desktop-context-pill"
+                      onClick={() => handleSend(context.prompt)}
+                    >
+                      <span className="aiw-desktop-context-icon">
+                        <IconContext type={context.id} />
+                      </span>
+                      <span>{context.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -714,7 +756,7 @@ export default function AIAgentWorkspace() {
               </button>
             </div>
           </div>
-          <div className="aiw-disclaimer">{t("aiCenter.disclaimer")}</div>
+          <div className="aiw-disclaimer aiw-disclaimer-inline">{t("aiCenter.disclaimer")}</div>
           {isEmpty && (
             <div className="aiw-mobile-privacy">
               <span aria-hidden="true">♙</span>
@@ -723,6 +765,45 @@ export default function AIAgentWorkspace() {
             </div>
           )}
         </div>
+
+        {isEmpty && (
+          <div className="aiw-desktop-empty-after-composer">
+            <div className="aiw-desktop-privacy">
+              <span className="aiw-desktop-privacy-lock" aria-hidden="true">▢</span>
+              <span>{t("aiCenter.desktop.privacyText")}</span>
+              <button type="button">{t("aiCenter.desktop.learnMore")}</button>
+            </div>
+
+            <section className="aiw-desktop-try">
+              <h3>{t("aiCenter.desktop.tryAsking")}</h3>
+              <div className="aiw-desktop-try-grid">
+                {desktopTryCards.map((card) => (
+                  <button
+                    type="button"
+                    key={card.title}
+                    className="aiw-desktop-try-card"
+                    onClick={() => handleSend(card.prompt)}
+                  >
+                    <span className="aiw-desktop-try-icon">
+                      <IconContext type={card.icon} />
+                    </span>
+                    <span className="aiw-desktop-try-copy">
+                      <strong>{card.title}</strong>
+                      <small>{card.sub}</small>
+                    </span>
+                    <span className="aiw-desktop-try-chevron">
+                      <IconChevronRight />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <div className="aiw-desktop-bottom-disclaimer">
+              {t("aiCenter.disclaimer")}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
