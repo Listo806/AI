@@ -10,6 +10,7 @@ import { SignupsAdminController } from './signups-admin.controller';
 import { CustomersAdminController } from './customers-admin.controller';
 import { SendgridEventsController } from './sendgrid-events.controller';
 import { OnboardingTestController } from './onboarding-test.controller';
+import { BillingTraceController } from './billing-trace.controller';
 import { PlansModule } from '../plans/plans.module';
 
 // Platform lifecycle email + the admin Sign-ups / Customers sections. The new
@@ -26,6 +27,7 @@ import { PlansModule } from '../plans/plans.module';
     CustomersAdminController,
     SendgridEventsController,
     OnboardingTestController,
+    BillingTraceController,
   ],
   providers: [
     PlatformMailerService,
