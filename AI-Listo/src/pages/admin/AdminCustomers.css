@@ -1280,6 +1280,11 @@
 
 /* Tablet/mobile LIGHT default */
 @media (max-width: 1024px) {
+  .cxc-tab-count{
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 5px;
+  }
   .cxc-detail-overlay {
     background: rgba(15, 23, 42, .35);
   }
