@@ -93,10 +93,10 @@ describe('AI Units — config', () => {
     const cfg = mergeAiUnitsConfig({ freeAllowance: 100, actionCosts: { simple: 4 } });
     expect(cfg.freeAllowance).toBe(100);
     expect(cfg.actionCosts.simple).toBe(4);
-    expect(cfg.actionCosts.heavy).toBe(25); // untouched default
+    expect(cfg.actionCosts.research).toBe(20); // untouched default
   });
   it('falls back to the simple cost for unknown actions', () => {
-    expect(actionCost(DEFAULT_AI_UNITS_CONFIG, 'nonexistent')).toBe(3);
-    expect(actionCost(DEFAULT_AI_UNITS_CONFIG, 'pipeline_summary')).toBe(10);
+    expect(actionCost(DEFAULT_AI_UNITS_CONFIG, 'nonexistent')).toBe(2);
+    expect(actionCost(DEFAULT_AI_UNITS_CONFIG, 'pipeline_analysis')).toBe(5);
   });
 });
