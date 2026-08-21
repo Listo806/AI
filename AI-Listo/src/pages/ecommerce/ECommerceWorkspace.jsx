@@ -38,6 +38,14 @@ import {
   Bookmark,
   Send,
   Languages,
+  ChevronLeft,
+  Zap,
+  Plug,
+  Copy,
+  MapPin,
+  MessageCircle,
+  Gauge,
+  ShoppingCart,
 } from "lucide-react";
 import AdminPlans from "../admin/AdminPlans";
 import { useAuth } from "../../context/AuthContext";
@@ -941,28 +949,64 @@ function ECommerceSubscriptionsUI() {
 
 /* ---------------- Centered Customer Details modal (matches reference) ---------------- */
 
-function UsageBar({ label, used, limit, display }) {
+function UsageBar({
+  label,
+  used,
+  limit,
+  display,
+  icon,
+  tone = "purple",
+  showIcon = true,
+}) {
   const unlimited = limit == null;
-  const pct = unlimited ? 8 : Math.min(100, Math.round((used / Math.max(1, limit)) * 100));
-  const cls = unlimited ? "" : pct >= 100 ? "full" : pct >= 80 ? "warn" : "";
+  const safeUsed = Number(used || 0);
+  const safeLimit = Number(limit || 0);
+  const pct = unlimited
+    ? 0
+    : Math.min(100, Math.round((safeUsed / Math.max(1, safeLimit)) * 100));
+
   return (
-    <div className="cxc-usage-item">
-      <div className="cxc-usage-top">
-        <span className="lbl">{label}</span>
-        <span className="val">{display || `${used} of ${unlimited ? "unlimited" : limit}`}</span>
+    <div
+      className={`cxc-usage-item cxc-usage-item--${tone}`}
+      style={
+        !showIcon
+          ? { gridTemplateColumns: "minmax(0, 1fr) auto" }
+          : undefined
+      }
+    >
+      {showIcon && <div className="cxc-usage-icon">{icon}</div>}
+
+      <div className="cxc-usage-main">
+        <div className="cxc-usage-top">
+          <span className="lbl">{label}</span>
+          <span className="val">
+            {display || `${safeUsed} of ${unlimited ? "unlimited" : safeLimit}`}
+          </span>
+        </div>
+
+        <div className="cxc-usage-track">
+          <div className="cxc-usage-fill" style={{ width: `${pct}%` }} />
+        </div>
       </div>
-      <div className="cxc-usage-track"><div className={`cxc-usage-fill ${cls}`} style={{ width: `${pct}%` }} /></div>
+
+      <span className="cxc-usage-pct">{unlimited ? "—" : `${pct}%`}</span>
     </div>
   );
 }
 
 const CUST_TABS = [
   { key: "overview", label: "Overview", icon: <Info size={15} /> },
-  { key: "subscription", label: "Subscription", icon: <CreditCard size={15} /> },
+  {
+    key: "subscription",
+    label: "Subscription",
+    icon: <CreditCard size={15} />,
+  },
   { key: "payments", label: "Payments", icon: <Receipt size={15} /> },
   { key: "activity", label: "Activity", icon: <ActivityIcon size={15} /> },
   { key: "notes", label: "Notes", icon: <StickyNote size={15} /> },
   { key: "team", label: "Team & Seats", icon: <Users size={15} /> },
+  { key: "ai", label: "AI Usage", icon: <Zap size={15} /> },
+  { key: "integrations", label: "Integrations", icon: <Plug size={15} /> },
 ];
 
 function PayStatusBadge({ status }) {
@@ -970,7 +1014,16 @@ function PayStatusBadge({ status }) {
   return <span className={`cxc-badge ${ok ? "active" : "registered"}`}>{ok ? "Payment succeeded" : (status || "—")}</span>;
 }
 
-function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan, onSendEmail }) {
+function CustomerModal({
+  id,
+  tab,
+  onClose,
+  onSelectTab,
+  onChanged,
+  onChangePlan,
+  onSendEmail,
+  onSendTemplateEmail,
+}) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState("");
@@ -978,342 +1031,1158 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", language: "en" });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [mobileStep, setMobileStep] = useState(1);
+  const [mobileAddingNote, setMobileAddingNote] = useState(false);
   const activeTab = tab || "overview";
 
   const reload = useCallback(() => {
-    if (!id) { setData(null); setLoading(false); return; }
+    if (!id) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-    getCustomerDetail(id).then((d) => setData(d)).catch(() => setData(null)).finally(() => setLoading(false));
+    getCustomerDetail(id)
+      .then((d) => setData(d))
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
   }, [id]);
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const setTab = (t) => onSelectTab && onSelectTab(t);
   const c = data?.customer;
   const sub = data?.subscription;
   const usage = data?.usage;
+  const payments = data?.payments || [];
+  const activity = data?.activity || [];
+  const notes = data?.notes || [];
+  const aiUnits = data?.aiUnits || data?.ai_units || null;
 
-  // Keep the inline edit form in sync with the loaded customer.
   useEffect(() => {
-    if (c) setForm({ name: c.name || "", phone: c.phone || "", language: c.language || "en" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (c)
+      setForm({
+        name: c.name || "",
+        phone: c.phone || "",
+        language: c.language || "en",
+      });
   }, [c?.id]);
 
-  const startEdit = () => { setTab("overview"); setEditing(true); };
+  const startEdit = () => {
+    setTab("overview");
+    setEditing(true);
+  };
   const cancelEdit = () => {
     setEditing(false);
-    if (c) setForm({ name: c.name || "", phone: c.phone || "", language: c.language || "en" });
+    if (c)
+      setForm({
+        name: c.name || "",
+        phone: c.phone || "",
+        language: c.language || "en",
+      });
   };
   const saveEdit = async () => {
     setSavingEdit(true);
-    try { await updateCustomerInfo(id, form); setEditing(false); onChanged && onChanged(); reload(); }
-    catch (e) { alert(e?.message || "Could not save the changes."); }
-    finally { setSavingEdit(false); }
+    try {
+      await updateCustomerInfo(id, form);
+      setEditing(false);
+      onChanged && onChanged();
+      reload();
+    } catch (e) {
+      alert(e?.message || "Could not save the changes.");
+    } finally {
+      setSavingEdit(false);
+    }
   };
 
   const submitNote = async () => {
     const t = noteText.trim();
     if (!t) return;
-    try { await addCustomerNote(id, t); setNoteText(""); reload(); } catch { alert("Could not add note."); }
+    try {
+      await addCustomerNote(id, t);
+      setNoteText("");
+      reload();
+    } catch {
+      alert("Could not add note.");
+    }
   };
-  const removeNote = async (nid) => { try { await deleteCustomerNote(id, nid); reload(); } catch { /* ignore */ } };
-  const doDeactivate = async () => { if (!window.confirm("Deactivate this customer?")) return; await deactivateCustomer(id); onChanged && onChanged(); reload(); setMoreOpen(false); };
-  const doDelete = async () => { if (!window.confirm("Delete this customer? Payment records are kept.")) return; await deleteCustomerHub(id); setMoreOpen(false); onChanged && onChanged(); onClose(); };
-  const updatePayment = () => alert("The card is held securely by Paddle. Send the customer their billing link to update it, or change it in the Paddle dashboard.");
-  const addSeat = () => alert("Seats are set by the plan. Use Change Plan to adjust the seat allowance, or invite members from the Team page.");
+  const removeNote = async (nid) => {
+    try {
+      await deleteCustomerNote(id, nid);
+      reload();
+    } catch {
+      /* ignore */
+    }
+  };
+  const doDeactivate = async () => {
+    if (!window.confirm("Deactivate this customer?")) return;
+    await deactivateCustomer(id);
+    onChanged && onChanged();
+    reload();
+    setMoreOpen(false);
+  };
+  const doDelete = async () => {
+    if (!window.confirm("Delete this customer? Payment records are kept."))
+      return;
+    await deleteCustomerHub(id);
+    setMoreOpen(false);
+    onChanged && onChanged();
+    onClose();
+  };
+  const updatePayment = () =>
+    alert(
+      "The card is held securely by Paddle. Send the customer their billing link to update it, or change it in the Paddle dashboard.",
+    );
+  const addSeat = () => setTab("team");
+  const copyCustomerId = () => {
+    if (c?.id && navigator?.clipboard)
+      navigator.clipboard.writeText(c.id).catch(() => {});
+  };
 
-  const paymentMethod = c?.paddle_customer_id
-    ? <span>Card on file · Paddle <button className="cxc-linkbtn" onClick={updatePayment}>Update</button></span>
+  const paymentMethod = c?.paddle_customer_id ? "Card on file · Paddle" : "—";
+  const statusLabel = c
+    ? getCustomerStatusLabel(
+        { ...c, plan_id: sub?.planId, plan_label: sub?.plan },
+        c.status,
+      )
     : "—";
+  const planPrice = !sub
+    ? "—"
+    : sub.isFree
+      ? "$0"
+      : `${usd(sub.recurringAmount)} / ${sub.billingCycle === "annual" ? "year" : "month"}`;
+  const planUsageRows = [
+    {
+      label: "Users / Seats",
+      used: c?.seat_count ?? 0,
+      limit: sub?.seatsLimit ?? 0,
+      tone: "purple",
+      icon: <Users size={20} />,
+    },
+    {
+      label: "AI conversations",
+      used: usage?.usage?.aiConversationsThisMonth ?? 0,
+      limit: usage?.limits?.aiConversationsPerMonth ?? null,
+      tone: "blue",
+      icon: <MessageCircle size={20} />,
+    },
+    {
+      label: "Integrations",
+      used: usage?.usage?.integrationsConnected ?? 0,
+      limit: usage?.limits?.integrations ?? null,
+      tone: "green",
+      icon: <Plug size={20} />,
+    },
+  ];
 
-  const overviewRows = sub ? [
-    ["Plan", <span className="cxc-plan-badge">{sub.plan}{sub.planId === "business" && <span className="cxc-pop">POPULAR</span>}</span>],
-    ["Price", sub.isFree ? "$0" : `${usd(sub.recurringAmount)} / ${sub.billingCycle === "annual" ? "year" : "month"}`],
-    ["Billing Cycle", sub.isFree ? "—" : (sub.billingCycle === "annual" ? "Annual" : "Monthly")],
-    ["Seats / Users", `${c.seat_count ?? 0} / ${sub.seatsLimit}`],
-    ["Payment Method", paymentMethod],
-    ["Status", <span className={`cxc-badge ${c.status}`}>{getCustomerStatusLabel({ ...c, plan_id: sub?.planId, plan_label: sub?.plan }, c.status)}</span>],
-    ["Started", fmtDate(sub.startDate)],
-    ["Next Billing Date", sub.nextBillingDate ? `${fmtDate(sub.nextBillingDate)} (${relDays(sub.nextBillingDate)})` : "—"],
-    ["Source / Offer", `${c.source_label || "—"} / ${c.offer_used || "standard"}`],
-  ] : [];
+  const PlanUsage = ({ mobile = false }) => (
+    <div className={mobile ? "cxc-new-usage-list" : ""}>
+      {planUsageRows.map((r) => (
+        <UsageBar
+          key={r.label}
+          label={r.label}
+          used={r.used}
+          limit={r.limit}
+          tone={r.tone}
+          icon={r.icon}
+          showIcon={mobile}
+        />
+      ))}
+    </div>
+  );
 
-  const payments = data?.payments || [];
-  const activity = data?.activity || [];
-  const notes = data?.notes || [];
+  const AiUnitsCard = ({ mobile = false }) => (
+    <div className={mobile ? "cxc-mobile-ai-grid" : "cxc-ai-summary-grid"}>
+      {!aiUnits ? (
+        <div className="cxc-muted">—</div>
+      ) : aiUnits.noTeam ? (
+        <div className="cxc-muted">No workspace yet.</div>
+      ) : aiUnits.unlimited ? (
+        <div className="cxc-ai-metric">
+          <span>Total remaining</span>
+          <strong>Unlimited</strong>
+          <small>{aiUnits.plan}</small>
+        </div>
+      ) : (
+        <>
+          <div className="cxc-ai-metric cxc-ai-metric--remaining">
+            <span>Total remaining</span>
 
-  const PlanUsage = () => (
-    <>
-      <UsageBar label="Users / Seats" used={c.seat_count ?? 0} limit={sub?.seatsLimit} />
-      <UsageBar label="AI conversations" used={usage?.usage?.aiConversationsThisMonth ?? 0} limit={usage?.limits?.aiConversationsPerMonth ?? null} />
-      <UsageBar label="Integrations" used={usage?.usage?.integrationsConnected ?? 0} limit={usage?.limits?.integrations ?? null} />
-    </>
+            <strong>{aiUnits.totalRemaining ?? 0}</strong>
+
+            {mobile && (
+              <div className="cxc-ai-metric-icon">
+                <Gauge size={24} strokeWidth={2} />
+              </div>
+            )}
+          </div>
+
+          <div className="cxc-ai-metric cxc-ai-metric--free">
+            <span>Free</span>
+
+            <strong>
+              {aiUnits.freeRemaining ?? 0} / {aiUnits.freeAllowance ?? 0}
+            </strong>
+
+            {mobile && (
+              <div className="cxc-ai-metric-icon">
+                <Gift size={24} strokeWidth={2} />
+              </div>
+            )}
+          </div>
+
+          <div className="cxc-ai-metric cxc-ai-metric--purchased">
+            <span>Purchased</span>
+
+            <strong>{aiUnits.purchased ?? 0}</strong>
+
+            {mobile && (
+              <div className="cxc-ai-metric-icon">
+                <ShoppingCart size={24} strokeWidth={2} />
+              </div>
+            )}
+          </div>
+
+          <div className="cxc-ai-metric cxc-ai-metric--reset">
+            <span>Resets</span>
+
+            <strong>{aiUnits.cycleReset || "—"}</strong>
+
+            {mobile && (
+              <div className="cxc-ai-metric-icon">
+                <CalendarDays size={24} strokeWidth={2} />
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const MoreActionsMenu = ({ mobile = false }) => (
+    <div className={`cxc-menu-wrap ${mobile ? "cxc-mobile-more-wrap" : ""}`}>
+      <button
+        className={mobile ? "cxc-mobile-more-btn" : "cxc-new-action-btn"}
+        onClick={() => setMoreOpen((v) => !v)}
+        disabled={!c}
+      >
+        <MoreHorizontal size={16} /> More Actions <ChevronDown size={14} />
+      </button>
+      <Menu
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        className="up-right down"
+      >
+        <button
+          className="cxc-menu-item"
+          onClick={() => {
+            setMoreOpen(false);
+            onChangePlan && onChangePlan(c);
+          }}
+        >
+          Change plan
+        </button>
+        <button className="cxc-menu-item" onClick={doDeactivate}>
+          Deactivate
+        </button>
+        <button className="cxc-menu-item danger" onClick={doDelete}>
+          Delete
+        </button>
+      </Menu>
+    </div>
+  );
+
+  const OverviewFallback = () => (
+    <div className="cxc-muted" style={{ padding: 24 }}>
+      No subscription details.
+    </div>
   );
 
   return (
-    <div className="cxc-modal-overlay" onClick={onClose}>
-      <div className="cxc-cust-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="cxc-drawer-head">
-          <strong style={{ fontSize: 16 }}>Customer Details</strong>
-          <button className="cxc-drawer-close" onClick={onClose}>×</button>
-        </div>
-
-        {loading && <div className="cxc-cust-modal-body"><div className="cxc-muted" style={{ padding: 24 }}>Loading…</div></div>}
-        {!loading && !c && <div className="cxc-cust-modal-body"><div className="cxc-muted" style={{ padding: 24 }}>Customer not found.</div></div>}
-
-        {!loading && c && (
-          <div className="cxc-cust-modal-body">
-            {/* Left rail: identity + vertical tabs */}
-            <aside className="cxc-cust-rail">
-              <div className="cxc-cust-idcard">
-                <div className="cxc-avatar" style={{ width: 40, height: 40, fontSize: 15, background: avatarColor(c.email) }}>{initials(c.name, c.email)}</div>
-                <div className="cxc-cust-idmeta">
-                  <div className="cxc-cust-idname">
-                    {editing
-                      ? <input className="cxc-rail-input cxc-rail-input--name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Full name" />
-                      : <span className="nm">{c.name || "—"}</span>}
-                    <span className={`cxc-badge ${c.status}`}>{getCustomerStatusLabel({ ...c, plan_id: sub?.planId, plan_label: sub?.plan }, c.status)}</span>
-                  </div>
-                  {sub?.plan && <span className="cxc-cust-plantag">{sub.plan}</span>}
-                </div>
-              </div>
-              <div className="cxc-cust-contacts">
-                <div className="cxc-id-line"><Mail size={13} /> {c.email}</div>
-                {editing ? (
-                  <>
-                    <div className="cxc-id-line"><Phone size={13} /> <input className="cxc-rail-input" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} placeholder="Phone" /></div>
-                    <div className="cxc-id-line"><Globe size={13} />
-                      <select className="cxc-rail-input" value={form.language} onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))}>
-                        <option value="en">English</option><option value="es">Spanish</option><option value="pt">Portuguese</option>
-                      </select>
-                    </div>
-                  </>
-                ) : (
-                  c.phone && <div className="cxc-id-line"><Phone size={13} /> {c.phone}</div>
-                )}
-                <div className="cxc-id-line"><Globe size={13} /> <CountryCell code={c.country} /></div>
-                <div className="cxc-id-line cxc-mono">Customer ID: {c.id}</div>
-              </div>
-              <nav className="cxc-cust-nav">
-                {CUST_TABS.map((t) => (
-                  <button key={t.key} className={`cxc-cust-navitem ${activeTab === t.key ? "active" : ""}`} onClick={() => setTab(t.key)}>
-                    {t.icon} {t.label}
-                  </button>
-                ))}
-              </nav>
-            </aside>
-
-            {/* Main content */}
-            <div className="cxc-cust-content">
-              {editing && (
-                <div className="cxc-edit-banner">Editing customer — update the name, phone or language on the left, then Save.</div>
-              )}
-              {activeTab === "overview" && (
-                <>
-                  <div className="cxc-cust-grid2">
-                    <section className="cxc-cust-block">
-                      <div className="cxc-block-title">Account Overview</div>
-                      {sub
-                        ? overviewRows.map(([k, v], i) => (
-                            <div key={i} className="cxc-ov-row"><span className="k">{k}</span><span className="v">{v}</span></div>
-                          ))
-                        : <div className="cxc-muted" style={{ fontSize: 13 }}>No subscription details.</div>}
-                    </section>
-
-                    <div className="cxc-cust-rcol">
-                      <section className="cxc-cust-block">
-                        <div className="cxc-block-title">Quick Actions</div>
-                        <div className="cxc-qa-grid">
-                          <button className="cxc-btn cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}><RefreshCw size={12} /> Change Plan</button>
-                          <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}><CreditCard size={12} /> Update Payment Method</button>
-                          <button className="cxc-btn cxc-btn-sm" onClick={addSeat}><Users size={12} /> Add Seat / User</button>
-                          <button className="cxc-btn cxc-btn-sm" onClick={() => onSendEmail && onSendEmail(c)}><Mail size={13} /> Send Email</button>
-                        </div>
-                        <button className="cxc-btn cxc-btn-danger cxc-qa-deact" onClick={doDeactivate}>Deactivate Customer</button>
-                      </section>
-
-                      <section className="cxc-cust-block cxc-cust-notes">
-                        <div className="cxc-block-title cxc-block-title--link">Customer Notes <button className="cxc-linkbtn" onClick={() => setTab("notes")}>+ Add Note</button></div>
-                        {notes.length === 0
-                          ? <div className="cxc-muted" style={{ fontSize: 12 }}>No notes yet for this customer.</div>
-                          : <div className="cxc-qa-notes-list">
-                              {notes.slice(0, 3).map((n) => (
-                                <div key={n.id} className="cxc-qa-note">
-                                  <div>{n.note}</div>
-                                  <div className="cxc-sub-date">{n.author_name || "Admin"} · {fmtDate(n.created_at)}</div>
-                                </div>
-                              ))}
-                            </div>}
-                      </section>
-                    </div>
-                  </div>
-
-                  <div className="cxc-cust-grid3">
-                    <section className="cxc-cust-block">
-                      <div className="cxc-block-title">Plan Usage</div>
-                      <PlanUsage />
-                    </section>
-
-                    <section className="cxc-cust-block">
-                      <div className="cxc-block-title cxc-block-title--link">Recent Payments <button className="cxc-linkbtn" onClick={() => setTab("payments")}>View All</button></div>
-                      {payments.length === 0
-                        ? <div className="cxc-muted" style={{ fontSize: 12 }}>No payments yet.</div>
-                        : payments.slice(0, 4).map((p) => (
-                            <div key={p.id} className="cxc-mini-row">
-                              <span className="cxc-sub-date">{fmtDate(p.payment_date || p.created_at)}</span>
-                              <strong>{usd(p.amount)}</strong>
-                              <PayStatusBadge status={p.status} />
-                            </div>
-                          ))}
-                    </section>
-
-                    <section className="cxc-cust-block">
-                      <div className="cxc-block-title cxc-block-title--link">Customer Activity <button className="cxc-linkbtn" onClick={() => setTab("activity")}>View All</button></div>
-                      {activity.length === 0
-                        ? <div className="cxc-muted" style={{ fontSize: 12 }}>No activity yet.</div>
-                        : activity.slice(0, 5).map((a, i) => (
-                            <div key={i} className="cxc-mini-row cxc-mini-row--act">
-                              <span className="cxc-sub-date">{fmtDateTime(a.at)}</span>
-                              <span>{a.label}</span>
-                            </div>
-                          ))}
-                    </section>
-                  </div>
-                </>
-              )}
-
-              {activeTab === "subscription" && (
-                <div className="cxc-cust-grid2">
-                  <section className="cxc-cust-block">
-                    <div className="cxc-block-title">Subscription</div>
-                    {sub
-                      ? overviewRows.map(([k, v], i) => (
-                          <div key={i} className="cxc-ov-row"><span className="k">{k}</span><span className="v">{v}</span></div>
-                        ))
-                      : <div className="cxc-muted" style={{ fontSize: 13 }}>No subscription details.</div>}
-                    <div style={{ marginTop: 12 }}>
-                      <button className="cxc-btn cxc-btn-primary cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
-                    </div>
-                  </section>
-                  <section className="cxc-cust-block">
-                    <div className="cxc-block-title">Plan Usage</div>
-                    <PlanUsage />
-                  </section>
-                </div>
-              )}
-
-              {activeTab === "payments" && (
-                <section className="cxc-cust-block">
-                  <div className="cxc-block-title">Payments</div>
-                  {payments.length === 0 && <div className="cxc-muted" style={{ fontSize: 13 }}>No recorded payments.</div>}
-                  {payments.map((p) => (
-                    <div key={p.id} className="cxc-mini-row cxc-mini-row--pay">
-                      <span className="cxc-sub-date">{fmtDateTime(p.payment_date || p.created_at)}</span>
-                      <strong>{usd(p.amount)} {p.currency || "USD"}</strong>
-                      <PayStatusBadge status={p.status} />
-                    </div>
-                  ))}
-                </section>
-              )}
-
-              {activeTab === "activity" && (
-                <section className="cxc-cust-block">
-                  <div className="cxc-block-title">Customer Activity</div>
-                  {activity.length === 0 && <div className="cxc-muted" style={{ fontSize: 13 }}>No activity yet.</div>}
-                  {activity.map((a, i) => (
-                    <div key={i} className="cxc-mini-row cxc-mini-row--act">
-                      <span className="cxc-sub-date">{fmtDateTime(a.at)}</span>
-                      <span>{a.label}</span>
-                    </div>
-                  ))}
-                </section>
-              )}
-
-              {activeTab === "notes" && (
-                <section className="cxc-cust-block">
-                  <div className="cxc-block-title">Customer Notes</div>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                    <input className="cxc-input" value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Add an internal note" />
-                    <button className="cxc-btn cxc-btn-primary" onClick={submitNote}>Add</button>
-                  </div>
-                  {notes.length === 0 && <div className="cxc-muted" style={{ fontSize: 13 }}>No notes yet.</div>}
-                  {notes.map((n) => (
-                    <div key={n.id} className="cxc-note-row">
-                      <div>{n.note}</div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span className="cxc-sub-date">{n.author_name || "Admin"} · {fmtDateTime(n.created_at)}</span>
-                        <button className="cxc-btn cxc-btn-ghost cxc-btn-sm" onClick={() => removeNote(n.id)}>Delete</button>
-                      </div>
-                    </div>
-                  ))}
-                </section>
-              )}
-
-              {activeTab === "team" && <TeamSeatsPanel customerId={id} />}
-            </div>
-          </div>
+    <div className="cxc-modal-overlay cxc-detail-overlay" onClick={onClose}>
+      <div
+        className="cxc-cust-modal cxc-cust-modal-new"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {loading && <div className="cxc-detail-loading">Loading…</div>}
+        {!loading && !c && (
+          <div className="cxc-detail-loading">Customer not found.</div>
         )}
 
-        <div className="cxc-drawer-foot cxc-cust-foot">
-          {editing ? (
-            <>
-              <button className="cxc-btn" onClick={cancelEdit} disabled={savingEdit}>Cancel</button>
-              <div className="cxc-toolbar-spacer" />
-              <button className="cxc-btn cxc-btn-primary" onClick={saveEdit} disabled={savingEdit || !c}>{savingEdit ? "Saving…" : "Save Changes"}</button>
-            </>
-          ) : (
-            <>
-              <button className="cxc-btn" onClick={onClose}>Close</button>
-              <div className="cxc-toolbar-spacer" />
-              <button className="cxc-btn btn-edit" onClick={startEdit} disabled={!c}><Pencil size={14} /> Edit Customer</button>
-              <div className="cxc-menu-wrap">
-                <button className="cxc-btn cxc-btn-primary" onClick={() => setMoreOpen((v) => !v)} disabled={!c}>More Actions <ChevronDown size={14} /></button>
-                <Menu open={moreOpen} onClose={() => setMoreOpen(false)} className="up-right">
-                  <button className="cxc-menu-item" onClick={() => { setMoreOpen(false); onChangePlan && onChangePlan(c); }}>Change plan</button>
-                  <button className="cxc-menu-item" onClick={doDeactivate}>Deactivate</button>
-                  <button className="cxc-menu-item danger" onClick={doDelete}>Delete</button>
-                </Menu>
+        {!loading && c && (
+          <>
+            {/* DESKTOP */}
+            <div className="cxc-detail-desktop">
+              <div className="cxc-detail-titlebar">
+                <div className="cxc-detail-title">
+                  <Users size={18} /> Customer Details
+                </div>
+                <button className="cxc-detail-close" onClick={onClose}>
+                  <X size={22} />
+                </button>
               </div>
-            </>
-          )}
-        </div>
+
+              <div className="cxc-detail-hero">
+                <div
+                  className="cxc-detail-avatar"
+                  style={{ background: avatarColor(c.email) }}
+                >
+                  {initials(c.name, c.email)}
+                </div>
+                <div className="cxc-detail-identity">
+                  <div className="cxc-detail-name-line">
+                    <h2>{c.name || "—"}</h2>
+                    <span className="cxc-verified">✓</span>
+                  </div>
+                  <div className="cxc-detail-badges">
+                    <span className={`cxc-badge ${c.status}`}>
+                      {statusLabel}
+                    </span>
+                    <span className="cxc-detail-plan-pill">
+                      {sub?.plan || getCustomerPlanLabel(c)}
+                    </span>
+                  </div>
+                  <div className="cxc-detail-contact-line">
+                    <span>
+                      <Mail size={14} /> {c.email}
+                    </span>
+                    {c.phone && (
+                      <span>
+                        <Phone size={14} /> {c.phone}
+                      </span>
+                    )}
+                    <span>
+                      <Globe size={14} /> <CountryCell code={c.country} />
+                    </span>
+                  </div>
+                  <button className="cxc-detail-id" onClick={copyCustomerId}>
+                    Customer ID: {c.id} <Copy size={13} />
+                  </button>
+                </div>
+                <div className="cxc-detail-actions">
+                  <button
+                    className="cxc-detail-send"
+                    onClick={() =>
+                      onSendTemplateEmail
+                        ? onSendTemplateEmail(c)
+                        : onSendEmail && onSendEmail(c)
+                    }
+                  >
+                    <Mail size={15} /> Send Email
+                  </button>
+                  <button
+                    className="cxc-new-action-btn"
+                    onClick={() => onChangePlan && onChangePlan(c)}
+                  >
+                    <RefreshCw size={15} /> Change Plan
+                  </button>
+                  <button className="cxc-new-action-btn" onClick={startEdit}>
+                    <Pencil size={15} /> Edit Customer
+                  </button>
+                  <MoreActionsMenu />
+                </div>
+              </div>
+
+              <div className="cxc-detail-tabs">
+                {CUST_TABS.map((t) => (
+                  <button
+                    key={t.key}
+                    className={activeTab === t.key ? "active" : ""}
+                    onClick={() => setTab(t.key)}
+                  >
+                    {t.icon}
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="cxc-detail-body">
+                {editing && (
+                  <div className="cxc-new-edit-panel">
+                    <input
+                      className="cxc-input"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, name: e.target.value }))
+                      }
+                      placeholder="Full name"
+                    />
+                    <input
+                      className="cxc-input"
+                      value={form.phone}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, phone: e.target.value }))
+                      }
+                      placeholder="Phone"
+                    />
+                    <select
+                      className="cxc-input"
+                      value={form.language}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, language: e.target.value }))
+                      }
+                    >
+                      <option value="en">English</option>
+                      <option value="es">Spanish</option>
+                      <option value="pt">Portuguese</option>
+                    </select>
+                    <button className="cxc-btn" onClick={cancelEdit}>
+                      Cancel
+                    </button>
+                    <button
+                      className="cxc-btn cxc-btn-primary"
+                      onClick={saveEdit}
+                      disabled={savingEdit}
+                    >
+                      {savingEdit ? "Saving…" : "Save Changes"}
+                    </button>
+                  </div>
+                )}
+
+                {activeTab === "overview" && (
+                  <>
+                    <div className="cxc-overview-cards">
+                      <section className="cxc-overview-card tone-blue">
+                        <div className="cxc-overview-card-title">
+                          <LayersIcon /> PLAN & BILLING
+                        </div>
+                        <div className="cxc-overview-main-label">Plan</div>
+                        <div className="cxc-overview-main-value">
+                          {sub?.plan || "—"} <span>{planPrice}</span>
+                        </div>
+                        <div className="cxc-overview-main-label">
+                          Billing Cycle
+                        </div>
+                        <strong>
+                          {sub?.isFree
+                            ? "—"
+                            : sub?.billingCycle === "annual"
+                              ? "Annual"
+                              : "Monthly"}
+                        </strong>
+                        <div className="cxc-overview-main-label">
+                          Seats / Users
+                        </div>
+                        <strong>
+                          {c.seat_count ?? 0} / {sub?.seatsLimit ?? "—"}
+                        </strong>
+                        <button onClick={() => onChangePlan && onChangePlan(c)}>
+                          Change Plan <ChevronRight size={14} />
+                        </button>
+                      </section>
+                      <section className="cxc-overview-card tone-green">
+                        <div className="cxc-overview-card-title">
+                          <CreditCard size={17} /> PAYMENT STATUS
+                        </div>
+                        <div className="cxc-overview-main-label">Status</div>
+                        <span className={`cxc-badge ${c.status}`}>
+                          {statusLabel}
+                        </span>
+                        <div className="cxc-overview-main-label">
+                          Payment Method
+                        </div>
+                        <strong>{paymentMethod}</strong>
+                        <div className="cxc-overview-main-label">
+                          Source / Offer
+                        </div>
+                        <strong>
+                          {c.source_label || "—"} / {c.offer_used || "standard"}
+                        </strong>
+                        <button onClick={updatePayment}>
+                          Update Payment Method <ChevronRight size={14} />
+                        </button>
+                      </section>
+                      <section className="cxc-overview-card tone-purple">
+                        <div className="cxc-overview-card-title">
+                          <CalendarIcon /> NEXT BILLING
+                        </div>
+                        <div className="cxc-overview-main-label">
+                          Next Billing Date
+                        </div>
+                        <strong className="cxc-big-date">
+                          {sub?.nextBillingDate
+                            ? fmtDate(sub.nextBillingDate)
+                            : "—"}
+                        </strong>
+                        <div className="cxc-overview-main-label">Started</div>
+                        <strong>
+                          {fmtDate(sub?.startDate)}
+                          <small>{fmtTime(sub?.startDate)}</small>
+                        </strong>
+                        <button onClick={() => setTab("subscription")}>
+                          View Subscription <ChevronRight size={14} />
+                        </button>
+                      </section>
+                      <section className="cxc-overview-card tone-orange">
+                        <div className="cxc-overview-card-title">
+                          <Zap size={17} /> AI UNITS
+                        </div>
+                        <AiUnitsCard />
+                        <button onClick={() => setTab("ai")}>
+                          Manage AI Units <ChevronRight size={14} />
+                        </button>
+                      </section>
+                      <section className="cxc-overview-card tone-teal">
+                        <div className="cxc-overview-card-title">
+                          <Users size={17} /> USAGE & SEATS
+                        </div>
+                        <PlanUsage />
+                        <button onClick={() => setTab("team")}>
+                          View Usage <ChevronRight size={14} />
+                        </button>
+                      </section>
+                    </div>
+
+                    <div className="cxc-overview-bottom">
+                      <section className="cxc-wide-panel cxc-activity-panel">
+                        <div className="cxc-new-panel-head">
+                          <span>
+                            <ActivityIcon size={17} /> RECENT ACTIVITY
+                          </span>
+                          <button onClick={() => setTab("activity")}>
+                            View All Activity
+                          </button>
+                        </div>
+                        <div className="cxc-new-activity-list">
+                          {activity.length === 0 ? (
+                            <div className="cxc-new-empty">
+                              No activity yet.
+                            </div>
+                          ) : (
+                            activity.slice(0, 4).map((a, i) => (
+                              <div className="cxc-new-activity-row" key={i}>
+                                <span className="cxc-activity-dot">
+                                  <ActivityIcon size={14} />
+                                </span>
+                                <div>
+                                  <strong>{a.label}</strong>
+                                  <small>{fmtDateTime(a.at)}</small>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <button
+                          className="cxc-full-log"
+                          onClick={() => setTab("activity")}
+                        >
+                          View Full Activity Log <ChevronRight size={14} />
+                        </button>
+                      </section>
+                      <div className="cxc-overview-right-stack">
+                        <section className="cxc-wide-panel cxc-payments-panel">
+                          <div className="cxc-new-panel-head">
+                            <span>
+                              <CreditCard size={17} /> PAYMENT HISTORY
+                            </span>
+                            <button onClick={() => setTab("payments")}>
+                              View All Payments
+                            </button>
+                          </div>
+                          {payments.length === 0 ? (
+                            <div className="cxc-new-payment-empty">
+                              <DollarSign size={22} />
+                              <div>
+                                <strong>No payments yet.</strong>
+                                <small>
+                                  This customer has not made any payments.
+                                </small>
+                              </div>
+                            </div>
+                          ) : (
+                            payments.slice(0, 3).map((p) => (
+                              <div key={p.id} className="cxc-new-payment-row">
+                                <span>
+                                  {fmtDate(p.payment_date || p.created_at)}
+                                </span>
+                                <strong>{usd(p.amount)}</strong>
+                                <PayStatusBadge status={p.status} />
+                              </div>
+                            ))
+                          )}
+                        </section>
+                        <section className="cxc-wide-panel cxc-notes-panel">
+                          <div className="cxc-new-panel-head">
+                            <span>
+                              <StickyNote size={17} /> NOTES
+                            </span>
+                            <button onClick={() => setTab("notes")}>
+                              + Add Note
+                            </button>
+                          </div>
+                          {notes.length === 0 ? (
+                            <div className="cxc-new-note-empty">
+                              <StickyNote size={20} />
+                              <div>
+                                <strong>No notes yet.</strong>
+                                <small>
+                                  Add notes to keep track of important customer
+                                  details.
+                                </small>
+                              </div>
+                            </div>
+                          ) : (
+                            notes.slice(0, 2).map((n) => (
+                              <div className="cxc-qa-note" key={n.id}>
+                                {n.note}
+                                <small>
+                                  {n.author_name || "Admin"} ·{" "}
+                                  {fmtDate(n.created_at)}
+                                </small>
+                              </div>
+                            ))
+                          )}
+                        </section>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeTab === "subscription" && (
+                  <div className="cxc-new-tab-panel">
+                    {sub ? (
+                      <>
+                        <h3>Subscription</h3>
+                        <div className="cxc-new-kv">
+                          <span>Plan</span>
+                          <strong>{sub.plan}</strong>
+                          <span>Price</span>
+                          <strong>{planPrice}</strong>
+                          <span>Billing Cycle</span>
+                          <strong>{sub.isFree ? "—" : sub.billingCycle}</strong>
+                          <span>Started</span>
+                          <strong>{fmtDateTime(sub.startDate)}</strong>
+                          <span>Next Billing</span>
+                          <strong>{fmtDateTime(sub.nextBillingDate)}</strong>
+                        </div>
+                        <button
+                          className="cxc-btn cxc-btn-primary"
+                          onClick={() => onChangePlan && onChangePlan(c)}
+                        >
+                          Change Plan
+                        </button>
+                      </>
+                    ) : (
+                      <OverviewFallback />
+                    )}
+                  </div>
+                )}
+                {activeTab === "payments" && (
+                  <div className="cxc-new-tab-panel">
+                    <h3>Payments</h3>
+                    {payments.length === 0 ? (
+                      <div className="cxc-new-empty">No recorded payments.</div>
+                    ) : (
+                      payments.map((p) => (
+                        <div className="cxc-new-payment-row" key={p.id}>
+                          <span>
+                            {fmtDateTime(p.payment_date || p.created_at)}
+                          </span>
+                          <strong>
+                            {usd(p.amount)} {p.currency || "USD"}
+                          </strong>
+                          <PayStatusBadge status={p.status} />
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+                {activeTab === "activity" && (
+                  <div className="cxc-new-tab-panel">
+                    <h3>Customer Activity</h3>
+                    {activity.length === 0 ? (
+                      <div className="cxc-new-empty">No activity yet.</div>
+                    ) : (
+                      activity.map((a, i) => (
+                        <div className="cxc-new-activity-row" key={i}>
+                          <span className="cxc-activity-dot">
+                            <ActivityIcon size={14} />
+                          </span>
+                          <div>
+                            <strong>{a.label}</strong>
+                            <small>{fmtDateTime(a.at)}</small>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+                {activeTab === "notes" && (
+                  <div className="cxc-new-tab-panel">
+                    <h3>Customer Notes</h3>
+                    <div className="cxc-new-note-form">
+                      <input
+                        className="cxc-input"
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Add an internal note"
+                      />
+                      <button
+                        className="cxc-btn cxc-btn-primary"
+                        onClick={submitNote}
+                      >
+                        Add
+                      </button>
+                    </div>
+                    {notes.length === 0 ? (
+                      <div className="cxc-new-empty">No notes yet.</div>
+                    ) : (
+                      notes.map((n) => (
+                        <div className="cxc-note-row" key={n.id}>
+                          <div>{n.note}</div>
+                          <small>
+                            {n.author_name || "Admin"} ·{" "}
+                            {fmtDateTime(n.created_at)}
+                          </small>
+                          <button
+                            className="cxc-linkbtn"
+                            onClick={() => removeNote(n.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+                {activeTab === "team" && <TeamSeatsPanel customerId={id} />}
+                {activeTab === "ai" && (
+                  <div className="cxc-new-tab-panel">
+                    <h3>AI Usage</h3>
+                    <AiUnitsCard />
+                    <div style={{ marginTop: 20 }}>
+                      <PlanUsage />
+                    </div>
+                  </div>
+                )}
+                {activeTab === "integrations" && (
+                  <div className="cxc-new-tab-panel">
+                    <h3>Integrations</h3>
+                    <PlanUsage />
+                    <p className="cxc-muted">
+                      Integration usage is shown from the customer usage
+                      summary.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="cxc-detail-footer">
+                <button className="cxc-btn" onClick={onClose}>
+                  Close
+                </button>
+                <div />
+                <MoreActionsMenu />
+              </div>
+            </div>
+
+            {/* TABLET + MOBILE : 2-step layout */}
+            <div className="cxc-detail-mobile">
+              <div className="cxc-mobile-detail-head">
+                <button
+                  onClick={mobileStep === 1 ? onClose : () => setMobileStep(1)}
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <strong>Customer Details</strong>
+                <span>
+                  {mobileStep === 2 ? "2 of 2" : <MoreHorizontal size={22} />}
+                </span>
+              </div>
+
+              {mobileStep === 1 ? (
+                <div className="cxc-mobile-step">
+                  <section className="cxc-mobile-profile-card">
+                    <div className="cxc-mobile-profile-top">
+                      <div
+                        className="cxc-mobile-avatar"
+                        style={{ background: avatarColor(c.email) }}
+                      >
+                        {initials(c.name, c.email)}
+                      </div>
+                      <div>
+                        <h2>{c.name || "—"}</h2>
+                        <div className="cxc-detail-badges">
+                          <span className={`cxc-badge ${c.status}`}>
+                            {statusLabel}
+                          </span>
+                          <span className="cxc-detail-plan-pill">
+                            {sub?.plan || getCustomerPlanLabel(c)}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        className="cxc-mobile-send"
+                        onClick={() =>
+                          onSendTemplateEmail
+                            ? onSendTemplateEmail(c)
+                            : onSendEmail && onSendEmail(c)
+                        }
+                      >
+                        <Mail size={16} /> Send Email
+                      </button>
+                    </div>
+                    <div className="cxc-mobile-contact">
+                      <span>
+                        <Mail size={16} />
+                        {c.email}
+                      </span>
+                      {c.phone && (
+                        <span>
+                          <Phone size={16} />
+                          {c.phone}
+                        </span>
+                      )}
+                      <span>
+                        <MapPin size={16} />
+                        {countryName(c.country) || "Unknown"}
+                      </span>
+                      <button onClick={copyCustomerId}>
+                        <CreditCard size={15} /> Customer ID: {c.id}
+                      </button>
+                    </div>
+                  </section>
+
+                  <section className="cxc-mobile-dark-card">
+                    <h3>
+                      <span className="cxc-mobile-card-icon purple">
+                        <Info size={18} />
+                      </span>
+                      Account Overview
+                    </h3>
+                    <div className="cxc-mobile-kv">
+                      <span>Plan</span>
+                      <strong className="blue">{sub?.plan || "—"}</strong>
+                      <span>Price</span>
+                      <strong className="green">{planPrice}</strong>
+                      <span>Seats / Users</span>
+                      <strong>
+                        {c.seat_count ?? 0} / {sub?.seatsLimit ?? "—"}
+                      </strong>
+                      <span>Status</span>
+                      <strong>
+                        <span className={`cxc-badge ${c.status}`}>
+                          {statusLabel}
+                        </span>
+                      </strong>
+                      <span>Started</span>
+                      <strong>{fmtDate(sub?.startDate)}</strong>
+                      <span>Next Billing Date</span>
+                      <strong>
+                        {sub?.nextBillingDate
+                          ? fmtDate(sub.nextBillingDate)
+                          : "—"}
+                      </strong>
+                      <span>Payment Method</span>
+                      <strong>{paymentMethod}</strong>
+                      <span>Source / Offer</span>
+                      <strong>
+                        {c.source_label || "—"} / {c.offer_used || "standard"}
+                      </strong>
+                    </div>
+                  </section>
+
+                  <section className="cxc-mobile-dark-card">
+                    <h3>
+                      <span className="cxc-mobile-card-icon purple">
+                        <Zap size={18} />
+                      </span>
+                      Quick Actions
+                    </h3>
+                    <div className="cxc-mobile-action-list">
+                      <button onClick={() => onChangePlan && onChangePlan(c)}>
+                        <RefreshCw size={20} />
+                        Change Plan
+                        <ChevronRight size={20} />
+                      </button>
+                      <button onClick={updatePayment}>
+                        <CreditCard size={20} />
+                        Update Payment Method
+                        <ChevronRight size={20} />
+                      </button>
+                      <button onClick={addSeat}>
+                        <Users size={20} />
+                        Add Seat / User
+                        <ChevronRight size={20} />
+                      </button>
+                      <button
+                        onClick={() =>
+                          onSendTemplateEmail
+                            ? onSendTemplateEmail(c)
+                            : onSendEmail && onSendEmail(c)
+                        }
+                      >
+                        <Mail size={20} />
+                        Send Email
+                        <ChevronRight size={20} />
+                      </button>
+                      <button className="danger" onClick={doDeactivate}>
+                        <Users size={20} />
+                        Deactivate Customer
+                        <ChevronRight size={20} />
+                      </button>
+                    </div>
+                  </section>
+
+                  <section className="cxc-mobile-dark-card">
+                    <div className="cxc-mobile-section-head">
+                      <h3>
+                        <span className="cxc-mobile-card-icon purple">
+                          <StickyNote size={18} />
+                        </span>
+                        Customer Notes
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setMobileAddingNote((v) => !v)}
+                      >
+                        {mobileAddingNote ? "Cancel" : "+ Add Note"}
+                      </button>
+                    </div>
+
+                    {mobileAddingNote && (
+                      <div className="cxc-mobile-note-form">
+                        <textarea
+                          className="cxc-input"
+                          rows={3}
+                          value={noteText}
+                          onChange={(e) => setNoteText(e.target.value)}
+                          placeholder="Add an internal note"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          className="cxc-btn cxc-btn-primary"
+                          disabled={!noteText.trim()}
+                          onClick={async () => {
+                            await submitNote();
+                            if (noteText.trim()) setMobileAddingNote(false);
+                          }}
+                        >
+                          Save Note
+                        </button>
+                      </div>
+                    )}
+
+                    {notes.length === 0 ? (
+                      <p className="cxc-mobile-muted">
+                        No notes yet for this customer.
+                      </p>
+                    ) : (
+                      notes.slice(0, 2).map((n) => (
+                        <div className="cxc-mobile-note" key={n.id}>
+                          <strong>{n.note}</strong>
+                          <small>
+                            {n.author_name || "Admin"} ·{" "}
+                            {fmtDateTime(n.created_at)}
+                          </small>
+                        </div>
+                      ))
+                    )}
+                  </section>
+
+                  <button
+                    className="cxc-mobile-next"
+                    onClick={() => setMobileStep(2)}
+                  >
+                    Next: Usage, Payments & Activity <ChevronRight size={22} />
+                  </button>
+                </div>
+              ) : (
+                <div className="cxc-mobile-step">
+                  <section className="cxc-mobile-dark-card cxc-mobile-outline purple">
+                    <div className="cxc-mobile-section-head">
+                      <h3>
+                        <span className="cxc-mobile-card-icon purple">
+                          <Users size={18} />
+                        </span>
+                        Plan Usage
+                      </h3>
+                      <button onClick={() => setTab("team")}>
+                        View All <ChevronRight size={16} />
+                      </button>
+                    </div>
+                    <PlanUsage mobile />
+                  </section>
+                  <section className="cxc-mobile-dark-card cxc-mobile-outline green">
+                    <h3>
+                      <span className="cxc-mobile-card-icon green">
+                        <Zap size={18} />
+                      </span>
+                      AI Units
+                    </h3>
+                    <AiUnitsCard mobile />
+                  </section>
+                  <section className="cxc-mobile-dark-card cxc-mobile-outline amber">
+                    <div className="cxc-mobile-section-head">
+                      <h3>
+                        <span className="cxc-mobile-card-icon amber">
+                          <CreditCard size={18} />
+                        </span>
+                        Recent Payments
+                      </h3>
+                      <button onClick={() => setTab("payments")}>
+                        View All <ChevronRight size={16} />
+                      </button>
+                    </div>
+                    {payments.length === 0 ? (
+                      <div className="cxc-mobile-empty-pay">
+                        <DollarSign size={28} />
+                        <strong>No payments yet.</strong>
+                        <span>This customer has no payment history.</span>
+                      </div>
+                    ) : (
+                      payments.slice(0, 3).map((p) => (
+                        <div className="cxc-mobile-payment" key={p.id}>
+                          <span>{fmtDate(p.payment_date || p.created_at)}</span>
+                          <strong>{usd(p.amount)}</strong>
+                        </div>
+                      ))
+                    )}
+                  </section>
+                  <section className="cxc-mobile-dark-card cxc-mobile-outline pink">
+                    <div className="cxc-mobile-section-head">
+                      <h3>
+                        <span className="cxc-mobile-card-icon pink">
+                          <ActivityIcon size={18} />
+                        </span>
+                        Customer Activity
+                      </h3>
+                      <button onClick={() => setTab("activity")}>
+                        View All <ChevronRight size={16} />
+                      </button>
+                    </div>
+                    {activity.length === 0 ? (
+                      <p className="cxc-mobile-muted">No activity yet.</p>
+                    ) : (
+                      activity.slice(0, 3).map((a, i) => (
+                        <div className="cxc-mobile-activity" key={i}>
+                          <span>
+                            <Mail size={17} />
+                          </span>
+                          <div>
+                            <strong>{a.label}</strong>
+                            <small>{fmtDateTime(a.at)}</small>
+                          </div>
+                          <ChevronRight size={18} />
+                        </div>
+                      ))
+                    )}
+                  </section>
+                  <button className="cxc-mobile-edit" onClick={startEdit}>
+                    <Pencil size={19} /> Edit Customer
+                  </button>
+                  <MoreActionsMenu mobile />
+                  <div className="cxc-mobile-bottom-nav">
+                    <button onClick={() => setMobileStep(1)}>
+                      <ChevronLeft size={18} /> Previous
+                    </button>
+                    <button onClick={onClose}>Done ✓</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
+function LayersIcon() {
+  return <BriefcaseBusiness size={17} />;
+}
+function CalendarIcon() {
+  return <CalendarGlyph />;
+}
+function CalendarGlyph() {
+  return <span className="cxc-calendar-glyph">▣</span>;
+}
+
 /* ---------------- Modals ---------------- */
 
 function ChangePlanModal({ customer, onClose, onSuccess }) {
-  const [plan, setPlan] = useState(customer?.plan_id && customer.plan_id !== "unselected" ? customer.plan_id : "free");
-  const [cycle, setCycle] = useState(customer?.billing === "annual" ? "annual" : "monthly");
+  const [plan, setPlan] = useState(
+    customer?.plan_id && customer.plan_id !== "unselected"
+      ? customer.plan_id
+      : "free",
+  );
+  const [cycle, setCycle] = useState(
+    customer?.billing === "annual" ? "annual" : "monthly",
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const submit = async () => {
-    setSaving(true); setError("");
-    try { await changeCustomerPlan(customer.id, { plan, billingCycle: cycle }); onSuccess && onSuccess(); onClose(); }
-    catch (e) { setError(e?.message || "Could not change plan."); }
-    finally { setSaving(false); }
+    setSaving(true);
+    setError("");
+    try {
+      await changeCustomerPlan(customer.id, { plan, billingCycle: cycle });
+      onSuccess && onSuccess();
+      onClose();
+    } catch (e) {
+      setError(e?.message || "Could not change plan.");
+    } finally {
+      setSaving(false);
+    }
   };
   return (
     <div className="cxc-modal-overlay" onClick={onClose}>
-      <div className="cxc-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="cxc-modal-head"><h3 className="cxc-modal-title">Change Plan</h3><button className="cxc-drawer-close" onClick={onClose}>×</button></div>
-        <div className="cxc-note" style={{ marginBottom: 12 }}>{customer.name || customer.email}</div>
-        <div className="cxc-field"><label>Plan</label>
-          <select className="cxc-input" value={plan} onChange={(e) => setPlan(e.target.value)}>
-            {PLAN_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+      <div
+        className="cxc-modal cxc-theme-modal cxc-change-plan-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="cxc-modal-head">
+          <h3 className="cxc-modal-title">Change Plan</h3>
+          <button className="cxc-drawer-close" onClick={onClose}>
+            ×
+          </button>
+        </div>
+        <div className="cxc-note" style={{ marginBottom: 12 }}>
+          {customer.name || customer.email}
+        </div>
+        <div className="cxc-field">
+          <label>Plan</label>
+          <select
+            className="cxc-input"
+            value={plan}
+            onChange={(e) => setPlan(e.target.value)}
+          >
+            {PLAN_OPTIONS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
           </select>
         </div>
-        <div className="cxc-field"><label>Billing cycle</label>
-          <select className="cxc-input" value={cycle} onChange={(e) => setCycle(e.target.value)} disabled={plan === "free"}>
-            <option value="monthly">Monthly</option><option value="annual">Annual</option>
+        <div className="cxc-field">
+          <label>Billing cycle</label>
+          <select
+            className="cxc-input"
+            value={cycle}
+            onChange={(e) => setCycle(e.target.value)}
+            disabled={plan === "free"}
+          >
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual</option>
           </select>
         </div>
         {error && <div className="cxc-error">{error}</div>}
-        <div className="cxc-note">Updates the account configuration. For a live Paddle subscriber the billing change in Paddle is a separate step.</div>
+        <div className="cxc-note">
+          Updates the account configuration. For a live Paddle subscriber the
+          billing change in Paddle is a separate step.
+        </div>
         <div className="cxc-modal-foot">
-          <button className="cxc-btn" onClick={onClose}>Cancel</button>
-          <button className="cxc-btn cxc-btn-primary" onClick={submit} disabled={saving}>{saving ? "Saving…" : "Change Plan"}</button>
+          <button className="cxc-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="cxc-btn cxc-btn-primary"
+            onClick={submit}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Change Plan"}
+          </button>
         </div>
       </div>
     </div>

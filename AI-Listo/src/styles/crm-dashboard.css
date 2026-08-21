@@ -4087,7 +4087,7 @@ body.crm-dark .crm-workspace-flyout {
 body.crm-dark .crm-workspace-detail-title h3,
 body.crm-dark .crm-workspace-detail-body h4,
 body.crm-dark .crm-workspace-capabilities span,
-body.crm-dark .crm-workspace-preview-price strong {
+body.crm-dark .crm-workspace-preview-price strong, body.crm-dark .cxc-plan-customer-count {
   color: #f8fafc;
 }
 
