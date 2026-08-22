@@ -225,6 +225,7 @@
     "liveAiTracking": "Seguimiento de IA en vivo",
     "noRecentActivity": "Sin actividad reciente",
     "activeDealsByStage": "Negocios activos por etapa",
+    "pipelineByStage": "Pipeline por etapa",
     "viewPipeline": "Ver pipeline",
     "pipelineFunnel": "Embudo del pipeline",
     "noLeadData": "Sin datos de leads",

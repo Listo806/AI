@@ -226,6 +226,7 @@
     "liveAiTracking": "Live AI Tracking",
     "noRecentActivity": "No recent activity",
     "activeDealsByStage": "Active Deals by Stage",
+    "pipelineByStage": "Pipeline by Stage",
     "viewPipeline": "View Pipeline",
     "pipelineFunnel": "Pipeline Funnel",
     "noLeadData": "No lead data",

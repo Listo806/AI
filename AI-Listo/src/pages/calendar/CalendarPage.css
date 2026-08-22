@@ -1409,6 +1409,11 @@
     overflow-x: auto;
     overflow-y: visible;
     max-height: 80vh;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .cal-grid-reference::-webkit-scrollbar {
+    display: none;
   }
 
   .cal-grid-reference .cal-grid {

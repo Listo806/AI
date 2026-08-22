@@ -13,6 +13,8 @@ import {
   BarChart,
   Bar,
   Cell,
+  PieChart,
+  Pie,
 } from "recharts";
 
 import {
@@ -50,6 +52,7 @@ import {
   Camera,
   Shuffle,
   RefreshCw,
+  Send 
 } from "lucide-react";
 
 import {
@@ -372,6 +375,82 @@ export default function CortexaDashboard() {
         icon: <Globe size={12} style={{ color }} />,
       };
     });
+
+
+  const leadSourceTotal = leadSources.reduce(
+    (sum, item) => sum + Number(item.leads || 0),
+    0,
+  );
+
+  const dashboardPipelineStages = [
+    {
+      key: "new",
+      label: t("dashboard.statusNew"),
+      count: byStatus?.new ?? NO_DATA,
+      color: "#2563eb",
+    },
+    {
+      key: "qualified",
+      label: t("dashboard.statusQualified"),
+      count: byStatus?.qualified ?? NO_DATA,
+      color: "#16a34a",
+    },
+    {
+      key: "showing",
+      label: t("dashboard.stageShowing"),
+      count: NO_DATA,
+      color: "#f59e0b",
+    },
+    {
+      key: "offer",
+      label: t("dashboard.stageOffer"),
+      count: NO_DATA,
+      color: "#f97316",
+    },
+    {
+      key: "closed",
+      label: t("dashboard.stageClosed"),
+      count: NO_DATA,
+      color: "#22c55e",
+    },
+  ];
+
+  const dashboardPipelineMax = Math.max(
+    1,
+    ...dashboardPipelineStages
+      .filter((item) => typeof item.count === "number")
+      .map((item) => Number(item.count || 0)),
+  );
+
+  const dashboardInsightRows = [
+    {
+      icon: <Target size={14} />,
+      tone: "purple",
+      label: t("dashboard.leadSourcePerformance"),
+      value: leadSources[0]?.source || t("dashboard.noLeadSourceData"),
+    },
+    {
+      icon: <Clock3 size={14} />,
+      tone: "blue",
+      label: t("dashboard.followUpCompletion"),
+      value: followUpPct,
+    },
+    {
+      icon: <MessageCircle size={14} />,
+      tone: "green",
+      label: t("dashboard.unansweredConversations"),
+      value:
+        metrics?.conversations_unread != null
+          ? String(metrics.conversations_unread)
+          : NO_DATA,
+    },
+    {
+      icon: <AlertTriangle size={14} />,
+      tone: "orange",
+      label: t("dashboard.leadsMarkedLost"),
+      value: byStatus?.lost != null ? String(byStatus.lost) : NO_DATA,
+    },
+  ];
 
   // AI Priority Queue => real owner leads (already sorted HOT-first by the API),
   // with their real AI score, label and name.
@@ -835,30 +914,48 @@ export default function CortexaDashboard() {
             <div className="ai-bot-icon">🤖</div>
           </div>
           <div className="ai-message-ctx">
-            <span>{t("dashboard.aiCommandCenter")}</span>
-            <h2>
-              {t("dashboard.bannerYouHave")}{" "}
-              <span className="highlight-blue">
-                {bannerNewLeads != null ? bannerNewLeads : NO_DATA}
-              </span>{" "}
-              {t("dashboard.bannerNewLeadsToReview")}
-            </h2>
-            <p>
-              {t("dashboard.nextBestActionLabel")}{" "}
-              <span
-                className="clickable-link"
-                style={{ cursor: "pointer" }}
-                onClick={() => navigate("/dashboard/leads")}
-              >
-                {t("dashboard.followUpNewestLeads")}
-              </span>
-            </p>
-            <div className="banner-alert-tag">
-              {!metrics
-                ? t("dashboard.livePipelineOverview")
-                : metrics.conversations_unread > 0
-                  ? t("dashboard.unreadConversationsNeedReply", { unread: metrics.conversations_unread })
-                  : t("dashboard.allCaughtUp")}
+            <span className="command-center-label">
+              {t("dashboard.aiCommandCenter")}
+            </span>
+
+            <div className="command-center-assistant">
+              <h2>Hi there! <span aria-hidden="true">👋</span></h2>
+              <p>I'm your AI assistant. Ask me anything about your business.</p>
+
+              <div className="command-center-prompts">
+                <button type="button" onClick={() => navigate("/dashboard/ai-cortexa")}>
+                  {t("dashboard.livePipelineOverview")}
+                </button>
+                <button type="button" onClick={() => navigate("/dashboard/leads")}>
+                  {t("dashboard.aiPriorityQueue")}
+                </button>
+                <button type="button" onClick={() => navigate("/dashboard/analytics")}>
+                  {t("dashboard.revenue")}
+                </button>
+                <button type="button" onClick={() => navigate("/dashboard/analytics")}>
+                  {t("dashboard.conversionRate")}
+                </button>
+              </div>
+
+              <div className="command-center-input-row">
+                <input
+                  type="text"
+                  placeholder="Ask AI anything..."
+                  aria-label="Ask AI anything"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") navigate("/dashboard/ai-cortexa");
+                  }}
+                />
+                <button
+                  type="button"
+                  aria-label="Open AI Agent"
+                  onClick={() => navigate("/dashboard/ai-cortexa")}
+                >
+                  <Send size={15} />
+                </button>
+              </div>
+
+              <small>{t("dashboard.nextBestActionLabel")} {t("dashboard.followUpNewestLeads")}</small>
             </div>
           </div>
         </div>
@@ -868,15 +965,19 @@ export default function CortexaDashboard() {
             <div className="mini-insight-card">
               <div className="card-lbl">{t("dashboard.aiConfidence")}</div>
               <div className="card-val-group">
-                <h3 className="text-green">{NO_DATA}</h3>
+                <span className="command-mini-accent accent-green" />
+                <h3>{NO_DATA}</h3>
               </div>
             </div>
+
             <div className="mini-insight-card">
               <div className="card-lbl">{t("dashboard.revenueAtRisk")}</div>
               <div className="card-val-group">
-                <h3 className="text-orange">{NO_DATA}</h3>
+                <span className="command-mini-accent accent-orange" />
+                <h3>{NO_DATA}</h3>
               </div>
             </div>
+
             <div className="mini-insight-card next-action-card">
               <Phone size={16} />
               <div>
@@ -885,6 +986,7 @@ export default function CortexaDashboard() {
               </div>
             </div>
           </div>
+
           <div className="banner-action-row">
             <button
               className="banner-btn text-dark"
@@ -892,18 +994,21 @@ export default function CortexaDashboard() {
             >
               <Phone size={16} /> {t("dashboard.call")}
             </button>
+
             <button
               className="banner-btn btn-whatsapp-color"
               onClick={() => navigate("/dashboard/whatsapp")}
             >
               <MessageCircle size={16} /> WhatsApp
             </button>
+
             <button
               className="banner-btn btn-assign-color"
               onClick={() => navigate("/dashboard/team")}
             >
               <Users size={16} /> {t("dashboard.assign")}
             </button>
+
             <button
               className="banner-btn btn-followup-color"
               onClick={openCommandFollowUp}
@@ -911,6 +1016,7 @@ export default function CortexaDashboard() {
               <Calendar size={16} /> {t("dashboard.followUp")}
             </button>
           </div>
+
           {commandActionMessage && (
             <div className="command-action-message">{commandActionMessage}</div>
           )}
@@ -1096,16 +1202,29 @@ export default function CortexaDashboard() {
         ))}
       </section>
 
-      {/* CHARTS AND QUEUE */}
-      <section className="dashboard-chart-row grid-3-col">
-        {/* Revenue & Lead Trend */}
-        <div className="content-card">
+      {/* DASHBOARD ANALYTICS */}
+      <section className="dashboard-chart-row dashboard-overview-analytics">
+        {/* Lead Activity Trend */}
+        <div className="content-card dashboard-overview-trend">
           <div className="card-top-header">
             <div className="title-left">
               <TrendingUp size={16} className="text-royal-blue" />
               <h3>{t("dashboard.leadActivityTrend")}</h3>
             </div>
+            <a
+              className="card-text-link"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/dashboard/analytics")}
+            >
+              {t("dashboard.viewAll")} →
+            </a>
           </div>
+
+          <div className="overview-chart-legend">
+            <span><i className="legend-new" />{t("dashboard.newLeads")}</span>
+            <span><i className="legend-converted" />{t("dashboard.statusConverted")}</span>
+          </div>
+
           <div className="chart-viewbox">
             {revenueTrendData.length === 0 ? (
               <div
@@ -1127,7 +1246,7 @@ export default function CortexaDashboard() {
                 >
                   <defs>
                     <linearGradient id="dashboardRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
+                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.16} />
                       <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                     </linearGradient>
                   </defs>
@@ -1164,7 +1283,7 @@ export default function CortexaDashboard() {
         </div>
 
         {/* Lead Source Performance */}
-        <div className="content-card">
+        <div className="content-card dashboard-overview-source">
           <div className="card-top-header">
             <div className="title-left">
               <Target size={16} className="text-royal-blue" />
@@ -1178,157 +1297,157 @@ export default function CortexaDashboard() {
               {t("dashboard.viewAllSources")} →
             </a>
           </div>
-          <div className="split-layout-grid">
-            <div className="chart-half">
-              {leadSources.length === 0 ? (
-                <div
-                  style={{
-                    ...emptyStyle,
-                    height: 195,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {t("dashboard.noLeadSourceData")}
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={195}>
-                  <BarChart
-                    data={leadSources}
-                    margin={{ top: 5, right: 5, left: -25, bottom: 10 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#f1f5f9"
-                    />
-                    <XAxis
-                      dataKey="source"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={<CustomXAxisTick />}
-                      interval={0}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 9 }}
-                    />
-                    <Bar dataKey="leads" radius={[4, 4, 0, 0]}>
+
+          {leadSources.length === 0 ? (
+            <div
+              style={{
+                ...emptyStyle,
+                height: 190,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {t("dashboard.noLeadSourceData")}
+            </div>
+          ) : (
+            <div className="overview-source-layout">
+              <div className="overview-source-chart">
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie
+                      data={leadSources}
+                      dataKey="leads"
+                      nameKey="source"
+                      innerRadius={49}
+                      outerRadius={70}
+                      paddingAngle={1}
+                      stroke="none"
+                    >
                       {leadSources.map((entry, idx) => (
-                        <Cell key={`cell-${idx}`} fill={entry.color} />
+                        <Cell key={`source-${idx}`} fill={entry.color} />
                       ))}
-                    </Bar>
-                  </BarChart>
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
                 </ResponsiveContainer>
-              )}
-            </div>
-            <div className="table-list-half">
-              <div className="list-tbl-header">
-                <span>{t("dashboard.sourceHeader")}</span>
-                <span className="text-right">{t("dashboard.convHeader")}</span>
-                <span className="text-right">{t("dashboard.revenue")}</span>
+
+                <div className="overview-source-total">
+                  <strong>{leadSourceTotal}</strong>
+                  <span>{t("dashboard.csvTotal")}</span>
+                </div>
               </div>
-              {leadSources.length === 0 ? (
-                <span style={emptyStyle}>{t("dashboard.noLeadSourceData")}</span>
-              ) : (
-                leadSources.map((item, idx) => (
-                  <div key={idx} className="list-tbl-row">
-                    <span className="src-label-dot">
-                      <span
-                        className="color-dot"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
-                      {item.source}
-                    </span>
-                    <span className="text-right text-gray">{NO_DATA}</span>
-                    <span className="text-right font-bold">{NO_DATA}</span>
-                  </div>
-                ))
-              )}
+
+              <div className="overview-source-list">
+                {leadSources.slice(0, 5).map((item) => {
+                  const percentage =
+                    leadSourceTotal > 0
+                      ? Math.round((Number(item.leads || 0) / leadSourceTotal) * 100)
+                      : 0;
+
+                  return (
+                    <div key={item.source} className="overview-source-row">
+                      <span>
+                        <i style={{ backgroundColor: item.color }} />
+                        {item.source}
+                      </span>
+                      <strong>{percentage}% ({item.leads})</strong>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* AI Priority Queue */}
-        <div className="content-card">
+        {/* Pipeline by Stage */}
+        <div className="content-card dashboard-overview-pipeline">
           <div className="card-top-header">
             <div className="title-left">
-              <Zap size={16} className="text-orange" />
-              <h3>{t("dashboard.aiPriorityQueue")}</h3>
+              <Briefcase size={16} className="text-royal-blue" />
+              <h3>{t("dashboard.pipelineByStage")}</h3>
             </div>
             <a
               className="card-text-link"
               style={{ cursor: "pointer" }}
-              onClick={() => navigate("/dashboard/leads")}
+              onClick={() => navigate("/dashboard/pipeline")}
+            >
+              {t("dashboard.viewPipeline")} →
+            </a>
+          </div>
+
+          <div className="overview-pipeline-list">
+            {dashboardPipelineStages.map((stage) => {
+              const hasCount = typeof stage.count === "number";
+              const width = hasCount
+                ? `${Math.max(
+                    8,
+                    Math.round(
+                      (Number(stage.count || 0) / dashboardPipelineMax) * 100,
+                    ),
+                  )}%`
+                : "0%";
+
+              return (
+                <div key={stage.key} className="overview-pipeline-row">
+                  <span className="overview-stage-name">{stage.label}</span>
+                  <strong>{stage.count}</strong>
+                  <div className="overview-stage-track">
+                    {hasCount && (
+                      <span
+                        style={{
+                          width,
+                          backgroundColor: stage.color,
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="overview-pipeline-total">
+            <span>{t("dashboard.activePipelineValue")}</span>
+            <strong>{teamStats ? money(teamStats.totalPipeline) : NO_DATA}</strong>
+          </div>
+        </div>
+
+        {/* AI Insights */}
+        <div className="content-card dashboard-overview-insights">
+          <div className="card-top-header">
+            <div className="title-left">
+              <Zap size={16} className="text-purple" />
+              <h3>{t("leads.aiInsights")}</h3>
+            </div>
+            <a
+              className="card-text-link"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/dashboard/ai-cortexa")}
             >
               {t("dashboard.viewAll")} →
             </a>
           </div>
-          <div className="queue-list-wrapper">
-            <div className="list-tbl-header">
-              <span>{t("dashboard.leadHeader")}</span>
-              <span className="text-left">{t("dashboard.intentHeader")}</span>
-              <span className="text-left">{t("dashboard.probabilityHeader")}</span>
-              <span>{t("dashboard.nextActionHeader")}</span>
-            </div>
-            {priorityQueue.length === 0 ? (
-              <span style={emptyStyle}>{t("dashboard.noLeadsAvailable")}</span>
-            ) : (
-              priorityQueue.map((lead, idx) => (
-                <div key={idx} className="queue-item-row">
-                  <div className="lead-meta-profile">
-                    <span
-                      className="mini-avatar"
-                      aria-label={lead.name}
-                      style={{
-                        backgroundColor: lead.color,
-                        color: "#fff",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 12,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {lead.initial}
-                    </span>
-                    <div className="meta-name">
-                      <h4>{lead.name}</h4>
-                    </div>
-                  </div>
-                  <span className="meta-intent">{lead.intent}</span>
-                  <span className="prob-badge">{lead.prob}</span>
-                  <div className="action-icon-shortcuts">
-                    <button
-                      className="shortcut-btn black-btn"
-                      onClick={() => navigate("/dashboard/leads")}
-                    >
-                      <Phone size={12} />
-                    </button>
-                    <button
-                      className="shortcut-btn green-btn"
-                      onClick={() => navigate("/dashboard/whatsapp")}
-                    >
-                      <MessageCircle size={12} />
-                    </button>
-                    <button
-                      className="shortcut-btn white-btn"
-                      onClick={() => navigate("/dashboard/team")}
-                    >
-                      <Users size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+
+          <div className="overview-insights-list">
+            {dashboardInsightRows.map((item, idx) => (
+              <div
+                key={`${item.label}-${idx}`}
+                className={`overview-insight-row tone-${item.tone}`}
+              >
+                <span className="overview-insight-icon">{item.icon}</span>
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.value}</small>
+                </span>
+              </div>
+            ))}
           </div>
         </div>
-      {/*</section>
+      </section>
 
-      <section className="dashboard-logs-row grid-3-col">*/}
+      {/* DASHBOARD OPERATIONS */}
+      <section className="dashboard-logs-row dashboard-overview-operations">
         {/* Today's Revenue Risk */}
         <div className="content-card">
           <div className="card-top-header">
@@ -1344,6 +1463,7 @@ export default function CortexaDashboard() {
               {t("dashboard.viewAll")} →
             </a>
           </div>
+
           <div className="risk-alerts-list">
             {riskRows.map((risk, idx) => (
               <div key={idx} className="risk-item-row">
@@ -1371,13 +1491,14 @@ export default function CortexaDashboard() {
               {t("dashboard.viewAll")} →
             </a>
           </div>
+
           <div className="tracking-timeline-list">
             {trackingLogs.length === 0 ? (
               <span style={emptyStyle}>{t("dashboard.noRecentActivity")}</span>
             ) : (
               trackingLogs.map((log, idx) => (
                 <div key={idx} className="timeline-item-row">
-                  <div className="timeline-marker-dot"></div>
+                  <div className="timeline-marker-dot" />
                   <span className="timeline-log-txt">{log.text}</span>
                   <span className="timeline-time-stamp">{log.time}</span>
                 </div>
@@ -1387,7 +1508,7 @@ export default function CortexaDashboard() {
         </div>
 
         {/* Active Deals by Stage */}
-        <div className="content-card">
+        <div className="content-card dashboard-overview-stage-summary">
           <div className="card-top-header">
             <div className="title-left">
               <Briefcase size={16} className="text-royal-blue" />
@@ -1401,33 +1522,20 @@ export default function CortexaDashboard() {
               {t("dashboard.viewPipeline")} →
             </a>
           </div>
+
           <div className="deals-by-stage-box">
             <div className="stage-stats-columns">
-              {[
-                { name: t("dashboard.statusNew") },
-                { name: t("dashboard.statusQualified") },
-                { name: t("dashboard.stageShowing") },
-                { name: t("dashboard.stageOffer") },
-                { name: t("dashboard.stageClosed") },
-              ].map((stage, idx) => (
-                <div key={idx} className="stage-column-item">
-                  <span className="stage-head-lbl">{stage.name}</span>
+              {dashboardPipelineStages.map((stage) => (
+                <div key={stage.key} className="stage-column-item">
+                  <span className="stage-head-lbl">{stage.label}</span>
                 </div>
               ))}
             </div>
-            {/* Deal-stage distribution bar removed: no per-stage deal data in
-                the backend yet, so fixed widths would misrepresent the pipeline. */}
+
             <div className="stage-stats-columns">
-              {[
-                { name: "New" },
-                { name: "Qualified" },
-                { name: "Showing" },
-                { name: "Offer" },
-                { name: "Closed" },
-              ].map((stage, idx) => (
-                <div key={idx} className="stage-column-item">
-                  {/* No deal-stage counts or deal values in the backend. */}
-                  <h4>{NO_DATA}</h4>
+              {dashboardPipelineStages.map((stage) => (
+                <div key={stage.key} className="stage-column-item">
+                  <h4>{stage.count}</h4>
                   <span>{NO_DATA}</span>
                 </div>
               ))}
