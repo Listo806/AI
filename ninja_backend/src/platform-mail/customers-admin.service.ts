@@ -16,6 +16,14 @@ import {
   publicPlansConfig,
   resolveEffectivePlan,
 } from '../plans/plan-config';
+// AI-credits display only: the SAME pure functions the dashboard balance uses
+// (AiUnitsService.getBalance), so the admin number can never drift from the
+// customer's own meter. Pure logic import — no service/DI, no module cycle.
+import {
+  DEFAULT_AI_UNITS_CONFIG,
+  mergeAiUnitsConfig,
+  computeBalanceView,
+} from '../ai-units/ai-units-logic';
 
 // The master Customers admin data layer. One record per account (a team OWNER
 // row on `users`), covering the whole lifecycle: registered, free, trialing,
@@ -685,6 +693,68 @@ export class CustomersAdminService {
     return { where: clauses.join(' AND '), params };
   }
 
+  // AI Credits column (admin visibility only). Read-only mirror of the customer's
+  // dashboard balance (AiUnitsService.getBalance), reusing the exact shared
+  // functions so the number always matches the customer's own meter. Never writes,
+  // batched (no per-row queries):
+  //  - Paid/entitled plan, or an active Unlimited AI add-on -> `credits_unlimited`.
+  //  - Free account -> credits_remaining / credits_total (default allowance 50).
+  private async attachAiCredits(rows: any[]): Promise<void> {
+    if (!Array.isArray(rows) || rows.length === 0) return;
+    const teamIds = Array.from(
+      new Set(rows.map((r) => r?.team_id).filter(Boolean)),
+    );
+
+    let config = DEFAULT_AI_UNITS_CONFIG;
+    try {
+      const cfg = await this.db.query(
+        `SELECT config FROM ai_unit_config WHERE id = 1`,
+      );
+      config = mergeAiUnitsConfig(cfg.rows[0]?.config);
+    } catch {
+      /* config table absent in this env -> default 50 allowance */
+    }
+
+    const accByTeam = new Map<string, any>();
+    if (teamIds.length) {
+      try {
+        const acc = await this.db.query(
+          `SELECT team_id, free_used, purchased_balance, unlimited_ai_until
+             FROM ai_unit_accounts WHERE team_id = ANY($1::uuid[])`,
+          [teamIds],
+        );
+        for (const a of acc.rows) accByTeam.set(String(a.team_id), a);
+      } catch {
+        /* ai-units not provisioned in this env -> Free rows show the allowance */
+      }
+    }
+
+    const now = Date.now();
+    for (const r of rows) {
+      if (!r) continue;
+      // Same entitlement rule the row's Plan column uses (owner row = dashboard).
+      const eff = resolveEffectivePlan(r);
+      const acct = r.team_id ? accByTeam.get(String(r.team_id)) : null;
+      const unlimitedAddon =
+        !!acct?.unlimited_ai_until &&
+        new Date(acct.unlimited_ai_until).getTime() > now;
+      if (!eff.isFree || unlimitedAddon) {
+        r.credits_unlimited = true;
+        r.credits_remaining = null;
+        r.credits_total = null;
+        continue;
+      }
+      const view = computeBalanceView(
+        acct?.free_used || 0,
+        acct?.purchased_balance || 0,
+        config,
+      );
+      r.credits_unlimited = false;
+      r.credits_remaining = view.totalRemaining;
+      r.credits_total = config.freeAllowance + view.purchased;
+    }
+  }
+
   async list(opts: any = {}) {
     await this.ready();
     // Admin can choose up to 1,000 rows per page from the Customers screen.
@@ -705,8 +775,10 @@ export class CustomersAdminService {
       `SELECT COUNT(*)::int AS n FROM users WHERE ${where}`,
       params,
     );
+    const data = rows.map((r) => this.enrich(r));
+    await this.attachAiCredits(data);
     return {
-      data: rows.map((r) => this.enrich(r)),
+      data,
       total: cnt[0]?.n ?? 0,
       limit: lim,
       offset: off,

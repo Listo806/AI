@@ -1307,6 +1307,7 @@ export default function AdminCustomers() {
                     Plan &amp; Pricing<small>Billing Cycle</small>
                   </th>
                   <th>Seats / Users</th>
+                  <th>AI Credits</th>
                   <th>Next Billing</th>
                   <th>Payment Status</th>
                   <th>Source</th>
@@ -1324,14 +1325,14 @@ export default function AdminCustomers() {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={12} style={{ padding: 20, color: "#64748b" }}>
+                    <td colSpan={13} style={{ padding: 20, color: "#64748b" }}>
                       Loading…
                     </td>
                   </tr>
                 )}
                 {!loading && rows.length === 0 && (
                   <tr>
-                    <td colSpan={12} style={{ padding: 20, color: "#64748b" }}>
+                    <td colSpan={13} style={{ padding: 20, color: "#64748b" }}>
                       No customers match these filters.
                     </td>
                   </tr>
@@ -1398,6 +1399,16 @@ export default function AdminCustomers() {
                         </td>
                         <td className="cxc-mono">
                           {r.seat_count ?? 0} / {r.seats_limit ?? "—"}
+                        </td>
+                        <td className="cxc-mono">
+                          {r.credits_unlimited ? (
+                            "Unlimited"
+                          ) : r.credits_remaining != null &&
+                            r.credits_total != null ? (
+                            `${r.credits_remaining} / ${r.credits_total}`
+                          ) : (
+                            <span className="cxc-muted">—</span>
+                          )}
                         </td>
                         <td>
                           {r.next_billing ? (
