@@ -422,6 +422,39 @@ export async function sendCustomerTemplateEmail(userId, { template, idempotencyK
   });
 }
 
+// ── Bulk email campaigns ──────────────────────────────────────────────────
+// Templates allowed for bulk sending (nurture/promo; excludes transactional).
+export async function getBulkEmailTemplates() {
+  const res = await apiClient.request(`/admin/email/bulk/templates`);
+  return Array.isArray(res?.data) ? res.data : [];
+}
+// Dry-run: eligible / suppressed / invalid + language breakdown, no send.
+export async function estimateBulkEmail({ template, userIds } = {}) {
+  return apiClient.request(`/admin/email/bulk/estimate`, {
+    method: "POST",
+    body: JSON.stringify({ template, userIds }),
+  });
+}
+// Create the campaign + queue eligible recipients. clientToken makes it
+// idempotent against double-clicks / retries.
+export async function sendBulkEmail({ template, userIds, clientToken } = {}) {
+  return apiClient.request(`/admin/email/bulk/send`, {
+    method: "POST",
+    body: JSON.stringify({ template, userIds, clientToken }),
+  });
+}
+// Campaign status + live sent/failed counts.
+export async function getBulkCampaign(id) {
+  return apiClient.request(`/admin/email/bulk/campaigns/${encodeURIComponent(id)}`);
+}
+// All customer ids matching the current table filters (for "select all matching").
+export async function getCustomerIds(params = {}) {
+  const qs = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v != null && v !== ""),
+  ).toString();
+  return apiClient.request(`/admin/customers-hub/ids${qs ? `?${qs}` : ""}`);
+}
+
 export async function createAdminUser(payload) {
   const res = await apiClient.request("/admin/users", {
     method: "POST",

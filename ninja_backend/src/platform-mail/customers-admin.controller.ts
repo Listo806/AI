@@ -74,6 +74,14 @@ export class CustomersAdminController {
     return this.customers.list(query);
   }
 
+  // All user ids matching the current filters (for "select all matching" bulk
+  // selection). Declared before any :id route so the literal wins. Capped.
+  @Get('ids')
+  @ApiOperation({ summary: 'All customer ids matching the current filters' })
+  async ids(@Query() query: any) {
+    return this.customers.listIds(query);
+  }
+
   @Post()
   @ApiOperation({ summary: 'Add a customer (creates a proper account)' })
   async create(@Body() body: any) {

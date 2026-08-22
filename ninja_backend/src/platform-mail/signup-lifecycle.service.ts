@@ -150,4 +150,26 @@ export class SignupLifecycleService {
       this.logger.error(`ai-credits sweep failed: ${err?.message}`);
     }
   }
+
+  // Bulk email campaigns (admin-triggered "Send Bulk Email"). Delivers queued
+  // recipients in safe batches. Enabled by default (each campaign is explicitly
+  // created by an admin, not automated); set BULK_EMAIL_ENABLED=false to pause
+  // delivery without dropping queued rows.
+  private bulkEnabled(): boolean {
+    return (
+      String(this.config.get('BULK_EMAIL_ENABLED') ?? 'true')
+        .trim()
+        .toLowerCase() !== 'false'
+    );
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async sweepBulk(): Promise<void> {
+    if (!this.bulkEnabled()) return;
+    try {
+      await this.mailer.sendBulkDue();
+    } catch (err: any) {
+      this.logger.error(`bulk email sweep failed: ${err?.message}`);
+    }
+  }
 }

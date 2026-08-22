@@ -182,6 +182,22 @@
 }
 .cxc-tab.active .cxc-tab-count { background: #e0edff; color: #2563eb; }
 
+/* Bulk-selection action bar (shown above the table when rows are selected). */
+.cxc-selbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 12px 4px;
+  border: 1px solid #dbe3ff;
+  background: #f5f7ff;
+  border-radius: 10px;
+}
+.cxc-selbar-count { font-size: 13px; font-weight: 700; color: #3730a3; margin-right: 4px; }
+.crm-dark .cxc-selbar { background: #16203a; border-color: #2a3a66; }
+.crm-dark .cxc-selbar-count { color: #b9c4ff; }
+
 /* Filters — two compact rows: Row 1 = search + dropdown filters, Row 2 =
    Users&Seats + actions. Kept dense so each stays on a single line on desktop. */
 .cxc-filters {
