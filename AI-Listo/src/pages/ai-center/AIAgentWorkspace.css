@@ -1214,7 +1214,7 @@
     letter-spacing: -.035em;
   }
   .aiw-desktop-brand-sub {
-    margin: 8px 0 0;
+    margin: 0;
     color: #596275;
     font-size: 14px;
     line-height: 1.45;
@@ -1263,23 +1263,17 @@
     justify-content: center;
     gap: 12px 14px;
     margin: 31px auto 0;
-    padding-bottom: 26px;
     border-bottom: 1px solid #dfe3e8;
   }
   .aiw-desktop-context-pill {
-    min-height: 50px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 11px;
-    padding: 0 24px;
     border: 1px solid #dfe3e8;
-    border-radius: 18px;
     background: #fff;
     color: #101217;
     font: inherit;
-    font-size: 14px;
-    font-weight: 600;
     cursor: pointer;
     transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
   }
@@ -1298,12 +1292,8 @@
     width: 23px;
     height: 23px;
   }
-  /* Large composer under context pills */
+  
   .aiw-root-empty .aiw-composer {
-    width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 0 28px;
     border-top: 0;
     background: transparent;
   }
@@ -1313,17 +1303,12 @@
   }
   .aiw-root-empty .aiw-inputrow {
     position: relative;
-    max-width: 920px;
-    min-height: 130px;
     margin: 0 auto;
-    padding: 17px 18px 16px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     border: 1px solid #dfe3e8;
-    border-radius: 18px;
     background: #fff;
-    box-shadow: 0 10px 26px rgba(15,23,42,.06);
   }
   .aiw-root-empty .aiw-textarea {
     width: 100%;
@@ -1385,8 +1370,8 @@
     display: none !important;
   }
   .aiw-root-empty .aiw-desktop-empty-after-composer {
-    width: 100%;
-    max-width: 1000px;
+    width: min(1228px, calc(100% - 60px));
+    max-width: 1228px;
     margin: 0 auto;
     padding: 0 28px 22px;
     display: block;
@@ -1396,7 +1381,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin: 12px 0 24px;
+    margin: 10px 0 5px;
     color: #687386;
     font-size: 12px;
   }
@@ -1447,7 +1432,7 @@
   }
   .aiw-desktop-try-card {
     min-width: 0;
-    min-height: 66px;
+    min-height: 58px;
     display: grid;
     grid-template-columns: 34px minmax(0,1fr) 20px;
     gap: 10px;
@@ -1504,7 +1489,7 @@
     height: 15px;
   }
   .aiw-desktop-bottom-disclaimer {
-    margin-top: 54px;
+    margin-top:20px;
     color: #7c8594;
     font-size: 12px;
     text-align: center;
@@ -1634,14 +1619,9 @@
   }
 
   .aiw-root-empty .aiw-desktop-brand-title {
-    font-size: clamp(30px, 2.25vw, 40px);
+    font-size: clamp(30px, 2.05vw, 40px);
     font-weight: 760;
     letter-spacing: -.04em;
-  }
-
-  .aiw-root-empty .aiw-desktop-brand-sub {
-    margin-top: 8px;
-    font-size: 15px;
   }
 
   .aiw-root-empty .aiw-desktop-brand-line,
@@ -1652,18 +1632,16 @@
   }
 
   .aiw-root-empty .aiw-desktop-contexts {
-    width: 100%;
     max-width: none;
     justify-content: flex-start;
-    gap: 13px 14px;
-    margin: 42px 0 28px;
-    padding: 0 8px 30px;
+    gap: 10px 14px;
+    margin: 20px 0 16px;
     border-bottom: 0;
   }
 
   .aiw-root-empty .aiw-desktop-context-pill {
     min-width: 176px;
-    min-height: 58px;
+    min-height: 40px;
     padding: 0 27px;
     border-radius: 18px;
     font-size: 15px;
@@ -1686,7 +1664,7 @@
   .aiw-root-empty .aiw-inputrow {
     max-width: none;
     min-height: 146px;
-    padding: 22px 22px 18px;
+    padding: 16px;
     border-radius: 18px;
     box-shadow: 0 9px 24px rgba(15, 23, 42, .045);
   }
@@ -1696,30 +1674,9 @@
     font-size: 15px;
   }
 
-  .aiw-root-empty .aiw-desktop-empty-after-composer {
-    width: min(1228px, calc(100% - 60px));
-    max-width: 1228px;
-    padding: 0 0 28px;
-  }
-
-  .aiw-desktop-privacy {
-    margin: 15px 0 34px;
-    font-size: 12.5px;
-  }
-
   .aiw-desktop-try h3 {
     margin-bottom: 16px;
     font-size: 12px;
-  }
-
-  .aiw-desktop-try-grid {
-    gap: 16px 20px;
-  }
-
-  .aiw-desktop-try-card {
-    min-height: 76px;
-    padding: 13px 18px;
-    border-radius: 10px;
   }
 
   .aiw-desktop-try-copy strong {
@@ -1728,10 +1685,6 @@
 
   .aiw-desktop-try-copy small {
     font-size: 10.5px;
-  }
-
-  .aiw-desktop-bottom-disclaimer {
-    margin-top: 55px;
   }
 
   /* -----------------------------------------------------------
