@@ -21,6 +21,7 @@ export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
   { name: 'onb_welcome', label: 'Welcome / Start Here', category: 'Onboarding', description: 'Day 0 welcome — your AI CRM is ready.' },
   { name: 'onb_support', label: "24/7 Support — We're Here for You", category: 'Onboarding', description: 'Trust email, no selling. Reply-to support.' },
   { name: 'onb_ai', label: 'Put Cortexa AI to Work', category: 'Onboarding', description: 'Get the AI agent working across the CRM.' },
+  { name: 'onb_invite_team', label: 'Invite Your Team (Day 3)', category: 'Onboarding', description: 'Nudge to invite teammates into the core CRM. CTA opens the Invite Team Member flow.' },
   { name: 'onb_connect', label: 'Connect Your Customer Flow', category: 'Onboarding', description: 'WhatsApp, leads and appointments together.' },
   { name: 'onb_system', label: 'Your Business, One Connected System', category: 'Onboarding', description: 'Everything working together with AI.' },
   { name: 'onb_ready', label: 'Ready for More? (AI, Plans & Workspace)', category: 'Onboarding', description: 'Upgrade options — AI Units, Solo, Workspace.' },

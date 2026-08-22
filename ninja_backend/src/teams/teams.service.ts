@@ -28,6 +28,22 @@ export class TeamsService {
   private static readonly SEAT_LIMIT_MESSAGE =
     "🔒 Seat limit reached for your plan. Upgrade to add more users.";
 
+  // Self-heals the team_invitations.source column (marks core-CRM growth invites
+  // vs paid Team Workspace invites). Runs once, best-effort. Core-CRM invites are
+  // NOT gated by the paid seat cap; workspace invites keep the existing behavior.
+  private inviteSchemaReady = false;
+  private async ensureInviteSchema(): Promise<void> {
+    if (this.inviteSchemaReady) return;
+    try {
+      await this.db.query(
+        `ALTER TABLE team_invitations ADD COLUMN IF NOT EXISTS source VARCHAR(30) NOT NULL DEFAULT 'workspace'`,
+      );
+    } catch {
+      /* best-effort; column may already exist */
+    }
+    this.inviteSchemaReady = true;
+  }
+
   constructor(
     private readonly db: DatabaseService,
     private readonly usersService: UsersService,
@@ -2041,7 +2057,10 @@ export class TeamsService {
     requestingUserId: string,
     role = "agent",
     name: string | null = null,
+    opts: { skipSeatLimit?: boolean; source?: string } = {},
   ) {
+    await this.ensureInviteSchema();
+    const inviteSource = opts.source === "core_crm" ? "core_crm" : "workspace";
     const normalizedEmail = String(email || "")
       .trim()
       .toLowerCase();
@@ -2110,7 +2129,10 @@ export class TeamsService {
     // Seat enforcement (Feature B). A brand-new invitation consumes a seat; a
     // re-invite to an address that already has a pending invite does not, so we
     // only enforce when there is no existing pending invitation for this email.
-    if (existingInvite.rows.length === 0) {
+    // Core-CRM growth invites (opts.skipSeatLimit) bypass the paid seat cap by
+    // design — the paid Team Workspace invite path never passes this flag, so its
+    // behavior is unchanged.
+    if (existingInvite.rows.length === 0 && !opts.skipSeatLimit) {
       const [limit, usage] = await Promise.all([
         this.getTeamSeatLimit(teamId),
         this.getTeamSeatUsage(teamId),
@@ -2135,6 +2157,7 @@ export class TeamsService {
         invited_by = $4,
         expires_at = $5,
         invitee_name = COALESCE($6, invitee_name),
+        source = $7,
         created_at = NOW()
       WHERE id = $1
       RETURNING
@@ -2148,7 +2171,7 @@ export class TeamsService {
         accepted_at as "acceptedAt",
         created_at as "createdAt"
       `,
-        [invitationId, normalizedRole, token, requestingUserId, expiresAt, inviteeName],
+        [invitationId, normalizedRole, token, requestingUserId, expiresAt, inviteeName, inviteSource],
       );
 
       invitation = result.rows[0];
@@ -2164,6 +2187,7 @@ export class TeamsService {
         status,
         expires_at,
         invitee_name,
+        source,
         created_at
       )
       VALUES (
@@ -2175,6 +2199,7 @@ export class TeamsService {
         'pending',
         $6,
         $7,
+        $8,
         NOW()
       )
       RETURNING
@@ -2196,6 +2221,7 @@ export class TeamsService {
           token,
           expiresAt,
           inviteeName,
+          inviteSource,
         ],
       );
 
@@ -2254,6 +2280,40 @@ export class TeamsService {
       message: "Team invitation created successfully",
       invitation,
     };
+  }
+
+  /**
+   * Core-CRM "Invite Team Member" growth flow. Invites a teammate into the
+   * caller's OWN account/team, reusing the exact token + email + accept/join
+   * mechanics as the paid Team Workspace invite, but WITHOUT the paid seat cap
+   * (so Free/Solo can build a team; monetization is via AI usage). The paid Team
+   * Workspace invite path is untouched. Marked source='core_crm' so accept also
+   * bypasses the seat re-check.
+   */
+  async inviteToOwnTeam(
+    requestingUserId: string,
+    email: string,
+    role: string | null = null,
+    name: string | null = null,
+  ) {
+    const { rows } = await this.db.query(
+      `SELECT id FROM teams WHERE owner_id = $1 ORDER BY created_at ASC LIMIT 1`,
+      [requestingUserId],
+    );
+    const teamId = rows[0]?.id;
+    if (!teamId) {
+      throw new BadRequestException(
+        "No workspace found for this account yet. Please try again in a moment.",
+      );
+    }
+    return this.inviteMemberByEmail(
+      teamId,
+      email,
+      requestingUserId,
+      role || "agent",
+      name || null,
+      { skipSeatLimit: true, source: "core_crm" },
+    );
   }
 
   async getPendingInvitations({
@@ -2670,6 +2730,8 @@ export class TeamsService {
       throw new BadRequestException("Invitation token is required");
     }
 
+    await this.ensureInviteSchema();
+
     const { rows } = await this.db.query(
       `SELECT
          id,
@@ -2679,6 +2741,7 @@ export class TeamsService {
          role,
          status,
          invitee_name AS "inviteeName",
+         source AS "source",
          expires_at AS "expiresAt"
        FROM team_invitations
        WHERE token = $1
@@ -2722,12 +2785,16 @@ export class TeamsService {
     if (!alreadyMember) {
       // Re-check the seat cap. Exclude THIS invitation from usage: accepting it
       // converts a held pending seat, so it must not count against the cap.
-      const [limit, usage] = await Promise.all([
-        this.getTeamSeatLimit(teamId),
-        this.getTeamSeatUsage(teamId, token),
-      ]);
-      if (usage >= limit) {
-        throw new ForbiddenException(TeamsService.SEAT_LIMIT_MESSAGE);
+      // Core-CRM growth invites bypass the paid seat cap (same policy as the
+      // invite-time check); paid Team Workspace invites are unaffected.
+      if (invitation.source !== "core_crm") {
+        const [limit, usage] = await Promise.all([
+          this.getTeamSeatLimit(teamId),
+          this.getTeamSeatUsage(teamId, token),
+        ]);
+        if (usage >= limit) {
+          throw new ForbiddenException(TeamsService.SEAT_LIMIT_MESSAGE);
+        }
       }
 
       await this.db.query(

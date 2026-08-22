@@ -140,7 +140,7 @@ export class PlatformMailerService {
       await this.db.query(
         `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_onb_uniq
            ON email_log(user_id, template)
-          WHERE template IN ('onb_welcome','onb_support','onb_ai','onb_connect','onb_system','onb_ready','onb_team')
+          WHERE template IN ('onb_welcome','onb_support','onb_ai','onb_invite_team','onb_connect','onb_system','onb_ready','onb_team')
             AND send_type = 'auto'`,
       );
       // Dedupe key for manual admin sends: at most one row per idempotency key,
@@ -1380,6 +1380,7 @@ export class PlatformMailerService {
     ['onb_welcome', "INTERVAL '1 minute'"], // Day 0
     ['onb_support', "INTERVAL '1 day'"], // Day 1
     ['onb_ai', "INTERVAL '2 days'"], // Day 2
+    ['onb_invite_team', "INTERVAL '3 days'"], // Day 3 — invite your team
     ['onb_connect', "INTERVAL '4 days'"], // Day 4
     ['onb_system', "INTERVAL '6 days'"], // Day 6
     ['onb_ready', "INTERVAL '9 days'"], // Day 9
@@ -1459,7 +1460,7 @@ export class PlatformMailerService {
            JOIN users u ON u.id = el.user_id
           WHERE el.status = 'scheduled'
             AND el.scheduled_at <= NOW()
-            AND el.template IN ('onb_welcome','onb_support','onb_ai','onb_connect','onb_system','onb_ready','onb_team')
+            AND el.template IN ('onb_welcome','onb_support','onb_ai','onb_invite_team','onb_connect','onb_system','onb_ready','onb_team')
           ORDER BY el.scheduled_at ASC
           LIMIT 200`,
       );
@@ -1572,6 +1573,7 @@ export class PlatformMailerService {
       'onb_welcome',
       'onb_support',
       'onb_ai',
+      'onb_invite_team',
       'onb_connect',
       'onb_system',
       'onb_ready',
@@ -1805,6 +1807,7 @@ export class PlatformMailerService {
       case 'onb_welcome':
       case 'onb_support':
       case 'onb_ai':
+      case 'onb_invite_team':
       case 'onb_connect':
       case 'onb_system':
       case 'onb_ready':
@@ -1960,7 +1963,7 @@ export class PlatformMailerService {
                 sent_at, created_at
            FROM email_log
           WHERE to_email = $1
-            AND template IN ('onb_welcome','onb_support','onb_ai','onb_connect','onb_system','onb_ready','onb_team')
+            AND template IN ('onb_welcome','onb_support','onb_ai','onb_invite_team','onb_connect','onb_system','onb_ready','onb_team')
           ORDER BY created_at DESC
           LIMIT $2`,
         [toEmail, n],
