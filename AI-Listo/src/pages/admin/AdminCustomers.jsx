@@ -1052,26 +1052,6 @@ export default function AdminCustomers() {
               </select>
             </div>
 
-            <div className="cxc-mobile-filter cxc-mobile-filter--source">
-              <Send
-                className="cxc-mobile-filter-icon"
-                size={18}
-                aria-hidden="true"
-              />
-              <select
-                className="cxc-select"
-                value={filters.source}
-                onChange={(e) => setFilter("source", e.target.value)}
-              >
-                <option value="all">All Sources</option>
-                {(summary?.breakdowns?.source || []).map((s) => (
-                  <option key={s.key} value={s.key}>
-                    {s.key}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             <div className="cxc-mobile-filter cxc-mobile-filter--language">
               <Languages
                 className="cxc-mobile-filter-icon"
@@ -1112,12 +1092,6 @@ export default function AdminCustomers() {
               </select>
             </div>
 
-            <UsersSeatsFilter
-              usersRole={filters.usersRole}
-              seatStatus={filters.seatStatus}
-              setFilter={setFilter}
-            />
-
             {moreFilters && (
               <>
                 <input
@@ -1139,19 +1113,18 @@ export default function AdminCustomers() {
           </div>
 
           <div className="cxc-filter-actions">
+            <UsersSeatsFilter
+              usersRole={filters.usersRole}
+              seatStatus={filters.seatStatus}
+              setFilter={setFilter}
+            />
+
             <button
               className="cxc-btn cxc-btn-sm"
               onClick={() => setMoreFilters((v) => !v)}
             >
               <Filter size={14} />{" "}
               {moreFilters ? "Fewer Filters" : "More Filters"}
-            </button>
-
-            <button
-              className="cxc-btn cxc-btn-ghost cxc-btn-sm"
-              onClick={clearFilters}
-            >
-              Clear Filters
             </button>
 
             <div className="cxc-menu-wrap">
@@ -1245,6 +1218,15 @@ export default function AdminCustomers() {
                 onClose={() => setMoreMenu(false)}
                 className="down"
               >
+                <button
+                  className="cxc-menu-item"
+                  onClick={() => {
+                    setMoreMenu(false);
+                    clearFilters();
+                  }}
+                >
+                  Clear filters
+                </button>
                 <label className="cxc-menu-item" style={{ cursor: "pointer" }}>
                   Import customers
                   <input
@@ -1347,12 +1329,6 @@ export default function AdminCustomers() {
                         </td>
                         <td>
                           <div className="cxc-cust-cell">
-                            <div
-                              className="cxc-avatar"
-                              style={{ background: avatarColor(r.email) }}
-                            >
-                              {initials(r.name, r.email)}
-                            </div>
                             <div>
                               <div className="cxc-cust-name">
                                 {r.name || "—"}

@@ -182,22 +182,30 @@
 }
 .cxc-tab.active .cxc-tab-count { background: #e0edff; color: #2563eb; }
 
-/* Filters */
+/* Filters — two compact rows: Row 1 = search + dropdown filters, Row 2 =
+   Users&Seats + actions. Kept dense so each stays on a single line on desktop. */
 .cxc-filters {
-  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-  padding: 14px 12px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 14px 12px 6px;
 }
+.cxc-filters .cxc-mobile-filter { display: inline-flex; align-items: center; gap: 6px; }
+.cxc-filters .cxc-mobile-filter-icon { color: #64748b; flex-shrink: 0; }
 .cxc-search {
   display: flex; align-items: center; gap: 8px;
   border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 10px;
-  min-width: 260px; flex: 1 1 260px; background: #fff;
+  min-width: 240px; flex: 1 1 240px; background: #fff;
 }
 .cxc-search input { border: none; outline: none; padding: 9px 0; width: 100%; font-size: 13px; background: transparent; }
 .cxc-select {
   padding: 9px 10px; border-radius: 9px; border: 1px solid #e2e8f0;
   font-size: 13px; background: #fff; color: #0f172a; cursor: pointer;
 }
-.cxc-filter-actions { display: flex; gap: 10px; align-items: center; padding: 0 12px 14px; }
+.cxc-filter-actions {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 0 12px 14px;
+}
+/* Compact action buttons so Row 2 (9 controls) fits on one line on desktop. */
+.cxc-filter-actions .cxc-btn { padding: 8px 11px; font-size: 12.5px; }
 
 /* Combined "Users & Seats" filter — trigger matches .cxc-select exactly */
 .cxc-uss { position: relative; display: inline-flex; }
@@ -262,32 +270,36 @@
    page, and hides nothing). table-layout:fixed + min-width:0 lets columns share
    the available width instead of forcing the table wider than the page. */
 
-.cxc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.cxc-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+/* Readable headings: larger, darker, single-line (never squeezed vertically). */
 .cxc-table thead th {
-  text-align: left; padding: 10px 8px; color: #64748b; font-weight: 600;
-  font-size: 10px; text-transform: uppercase; letter-spacing: 0.02em;
-  border-bottom: 1px solid #eef2f7; white-space: normal;
+  text-align: left; padding: 12px 10px; color: #1e293b; font-weight: 700;
+  font-size: 13px; text-transform: none; letter-spacing: 0;
+  border-bottom: 2px solid #e2e8f0; white-space: nowrap;
 }
-.cxc-table thead th small { display: block; font-weight: 500; text-transform: none; letter-spacing: 0; color: #b0bccd; }
-.cxc-table tbody td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-/* Wrap long values (emails, sources) instead of clipping them, so nothing is
-   cut off while the fixed column widths keep the table inside the page. */
-.cxc-table tbody td, .cxc-table thead th { word-break: break-word; overflow-wrap: anywhere; }
+.cxc-table thead th small { display: block; font-weight: 500; text-transform: none; letter-spacing: 0; color: #64748b; font-size: 11px; margin-top: 2px; }
+.cxc-table tbody td { padding: 11px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+/* Wrap long values (emails) instead of clipping them; headings stay single-line. */
+.cxc-table tbody td { word-break: break-word; overflow-wrap: anywhere; }
 .cxc-table tbody tr:hover { background: #fafcff; }
 
-/* Fixed column widths so 11 columns always share the content width (no page
-   scroll) and the Actions column is always visible. Percentages sum to ~100%. */
-.cxc-table thead th:nth-child(1)  { width: 30px; }  /* checkbox */
-.cxc-table thead th:nth-child(2)  { width: 19%; }   /* Customer */
-.cxc-table thead th:nth-child(3)  { width: 9%; }   /* Plan & Pricing */
-.cxc-table thead th:nth-child(4)  { width: 7%; }    /* Seats / Users */
-.cxc-table thead th:nth-child(5)  { width: 9%; }    /* Next Billing */
-.cxc-table thead th:nth-child(6)  { width: 9%; }    /* Payment Status */
-.cxc-table thead th:nth-child(7)  { width: 9%; }    /* Source */
-.cxc-table thead th:nth-child(8)  { width: 9%; }    /* Registered */
-.cxc-table thead th:nth-child(9)  { width: 8%; }    /* Last Active */
-.cxc-table thead th:nth-child(10) { width: 7%; }    /* LTV */
+/* Column widths for the 11 columns (Source + LTV removed). The freed width is
+   redistributed to Customer, Plan, Registered, Last Active and Actions so
+   nothing is squeezed and dates show cleanly. Percentages sum to ~100%. */
+.cxc-table thead th:nth-child(1)  { width: 32px; }  /* checkbox */
+.cxc-table thead th:nth-child(2)  { width: 17%; }   /* Customer */
+.cxc-table thead th:nth-child(3)  { width: 11%; }   /* Plan & Pricing */
+.cxc-table thead th:nth-child(4)  { width: 8%; }    /* Seats / Users */
+.cxc-table thead th:nth-child(5)  { width: 9%; }    /* AI Credits */
+.cxc-table thead th:nth-child(6)  { width: 10%; }   /* Next Billing */
+.cxc-table thead th:nth-child(7)  { width: 11%; }   /* Payment Status */
+.cxc-table thead th:nth-child(8)  { width: 9%; }    /* Country */
+.cxc-table thead th:nth-child(9)  { width: 10%; }   /* Registered */
+.cxc-table thead th:nth-child(10) { width: 10%; }   /* Last Active */
 .cxc-table thead th:nth-child(11) { width: 10%; }   /* Actions */
+/* Registered / Last Active: keep the main date on one line for a clean scan. */
+.cxc-table tbody td:nth-child(9),
+.cxc-table tbody td:nth-child(10) { white-space: nowrap; }
 .cxc-cust-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cxc-cust-cell > div { min-width: 0; }
 /* Keep the View button + ... menu at full size so Actions never compresses. */
