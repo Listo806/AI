@@ -191,8 +191,15 @@ export class PlatformMailController {
     if (!userIds.length) {
       return { ok: false, error: 'Select at least one customer.' };
     }
-    const est = await this.mailer.estimateBulkCampaign(userIds);
-    return { ok: true, ...est };
+    try {
+      const est = await this.mailer.estimateBulkCampaign(userIds);
+      return { ok: true, ...est };
+    } catch (err: any) {
+      return {
+        ok: false,
+        error: `Could not prepare the send: ${String(err?.message || 'unknown error').slice(0, 300)}`,
+      };
+    }
   }
 
   @Post('bulk/send')
@@ -214,12 +221,19 @@ export class PlatformMailController {
       return { ok: false, error: 'Select at least one customer.' };
     }
     const adminId = user?.id || user?.userId || user?.sub || null;
-    return this.mailer.createBulkCampaign({
-      template: template as TemplateName,
-      userIds,
-      adminId,
-      clientToken,
-    });
+    try {
+      return await this.mailer.createBulkCampaign({
+        template: template as TemplateName,
+        userIds,
+        adminId,
+        clientToken,
+      });
+    } catch (err: any) {
+      return {
+        ok: false,
+        error: `Could not start the campaign: ${String(err?.message || 'unknown error').slice(0, 300)}`,
+      };
+    }
   }
 
   @Get('bulk/campaigns')
