@@ -1,7 +1,6 @@
 
 .page {
   min-height: 100vh;
-  padding: 0 0 28px;
   background: #ffffff;
   color: #0f172a;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
@@ -10,15 +9,12 @@
 .contactShell {
   width: min(1500px, calc(100% - 28px));
   margin: 0 auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
   overflow: hidden;
   background: #fff;
-  margin-top: 10px;
 }
 
 .topSupportBar {
-  min-height: 72px;
+  min-height:54px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -46,7 +42,7 @@
 }
 
 .aiSupportTopLink {
-  min-height: 42px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -59,13 +55,13 @@
 }
 
 .hero {
-  padding: 28px 52px 22px!important;
+  padding: 12px 52px 12px!important;
   text-align: left;
 }
 
 .title {
   margin: 0;
-  font-size: clamp(32px, 3vw, 46px);
+  font-size: clamp(32px, 2vw, 46px);
   line-height: 1.05;
   letter-spacing: -0.04em;
   font-weight: 760;
@@ -76,7 +72,7 @@
 }
 
 .subtitle {
-  margin: 10px 0 0;
+  margin: 6px 0 0;
   color: #334155;
   font-size: 16px;
 }
@@ -100,14 +96,14 @@
 }
 
 .formBox {
-  padding: 28px 30px 26px;
+  padding: 16px 30px 16px;
 }
 
 .formGrid2Cols {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px 28px;
-  margin-bottom: 22px;
+  gap: 12px 28px;
+  margin-bottom: 10px;
 }
 
 .fieldGroup {
@@ -126,7 +122,7 @@
 
 .inputRow,
 .selectRow {
-  min-height: 44px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -207,11 +203,11 @@
 
 .messageBox {
   position: relative;
-  min-height: 146px;
+  min-height: 90px;
   display: flex;
   align-items: flex-start;
   gap: 11px;
-  padding: 14px 16px 30px;
+  padding: 10px 16px 10px;
   border: 1px solid #dbe1e9;
   border-radius: 8px;
   background: #fff;
@@ -225,7 +221,6 @@
 
 .textareaInput {
   width: 100%;
-  min-height: 95px;
   resize: none;
   border: 0;
   outline: 0;
@@ -248,7 +243,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  margin-top: 22px;
+  margin-top: 12px;
 }
 
 .secureNote {
@@ -261,7 +256,7 @@
 
 .sendButton {
   min-width: 220px;
-  min-height: 46px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -282,7 +277,7 @@
 
 .supportInfoCard {
   height: 100%;
-  padding: 24px 22px;
+  padding: 12px 22px;
 }
 
 .supportInfoItem {
@@ -335,7 +330,7 @@
 
 .supportInfoDivider {
   height: 1px;
-  margin: 24px 0;
+  margin: 10px 0;
   background: #e5e7eb;
 }
 
@@ -362,12 +357,12 @@
 .bottomBar {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 32px 52px 24px;
+  margin: 12px 52px 10px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #fff;
   overflow: hidden;
-  padding: 20px 0 !important;
+  padding: 10px 0 !important;
 }
 
 .trustItem,
@@ -376,7 +371,7 @@
   grid-template-columns: 52px minmax(0, 1fr);
   gap: 14px;
   align-items: center;
-  padding: 10px 22px;
+  padding: 6px 22px;
   text-align: left;
 }
 

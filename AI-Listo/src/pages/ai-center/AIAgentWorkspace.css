@@ -1373,7 +1373,7 @@
     width: min(1228px, calc(100% - 60px));
     max-width: 1228px;
     margin: 0 auto;
-    padding: 0 28px 22px;
+    padding: 0 0 22px;
     display: block;
   }
   .aiw-desktop-privacy {
