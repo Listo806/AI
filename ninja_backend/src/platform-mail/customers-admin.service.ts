@@ -785,6 +785,29 @@ export class CustomersAdminService {
     };
   }
 
+  // All user ids matching the current filters — for "select all matching" bulk
+  // selection. Returns explicit ids (never a silent server-side send), capped so
+  // one click can't select an unbounded set.
+  async listIds(opts: any = {}) {
+    await this.ready();
+    const cap = 5000;
+    const { where, params } = this.buildWhere(opts);
+    const { rows } = await this.db.query(
+      `SELECT id FROM users WHERE ${where} ORDER BY created_at DESC LIMIT ${cap}`,
+      params,
+    );
+    const { rows: cnt } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM users WHERE ${where}`,
+      params,
+    );
+    const total = cnt[0]?.n ?? 0;
+    return {
+      ids: rows.map((r) => r.id),
+      total,
+      capped: total > cap,
+    };
+  }
+
   async exportRows(opts: any = {}) {
     await this.ready();
     const { where, params } = this.buildWhere({ ...opts, tab: opts.tab });

@@ -14,6 +14,11 @@ export interface ManualTemplateEntry {
   label: string;
   category: string;
   description: string;
+  // Whether this template may be sent as a BULK campaign to many customers.
+  // Transactional/account emails (payment confirmed, checkout resume, billing,
+  // abandoned-activation) are single-recipient by nature and are marked false so
+  // they never get blasted. Undefined = allowed (nurture/promo templates).
+  bulkAllowed?: boolean;
 }
 
 export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
@@ -28,7 +33,7 @@ export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
   { name: 'onb_team', label: 'Team Workspace', category: 'Onboarding', description: 'Invite the team and collaborate.' },
 
   // ── Account / setup ──
-  { name: 'welcome', label: 'Welcome (payment confirmed)', category: 'Account', description: 'Account active after a confirmed payment.' },
+  { name: 'welcome', label: 'Welcome (payment confirmed)', category: 'Account', description: 'Account active after a confirmed payment.', bulkAllowed: false },
   { name: 'getting_started', label: 'Getting Started Setup', category: 'Account', description: 'How to set up the AI agent, step by step.' },
 
   // ── AI credits ──
@@ -45,20 +50,30 @@ export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
   { name: 'free_upgrade', label: 'Free Plan — Ready to Upgrade', category: 'Free plan', description: 'Upgrade path from the Free plan.' },
 
   // ── Checkout recovery ──
-  { name: 'checkout_recovery', label: 'Checkout — Complete Your Setup', category: 'Checkout', description: 'Paid plan selected but not paid — resume checkout for their plan.' },
+  { name: 'checkout_recovery', label: 'Checkout — Complete Your Setup', category: 'Checkout', description: 'Paid plan selected but not paid — resume checkout for their plan.', bulkAllowed: false },
 
   // ── Billing ──
-  { name: 'payment_failed', label: 'Payment Failed', category: 'Billing', description: 'A payment or renewal attempt failed (retry link).' },
-  { name: 'subscription_canceled', label: 'Subscription Canceled', category: 'Billing', description: 'Subscription canceled (reactivate link).' },
+  { name: 'payment_failed', label: 'Payment Failed', category: 'Billing', description: 'A payment or renewal attempt failed (retry link).', bulkAllowed: false },
+  { name: 'subscription_canceled', label: 'Subscription Canceled', category: 'Billing', description: 'Subscription canceled (reactivate link).', bulkAllowed: false },
 
   // ── Re-engagement ──
-  { name: 'abandoned_1', label: 'Abandoned Signup — Reminder 1', category: 'Re-engagement', description: 'Account ready, finish activation.' },
-  { name: 'abandoned_2', label: 'Abandoned Signup — Reminder 2 (Editorial)', category: 'Re-engagement', description: 'Follow-up with the Business Editorial.' },
-  { name: 'abandoned_3', label: 'Abandoned Signup — Reminder 3 (Final)', category: 'Re-engagement', description: 'Final activation reminder.' },
+  { name: 'abandoned_1', label: 'Abandoned Signup — Reminder 1', category: 'Re-engagement', description: 'Account ready, finish activation.', bulkAllowed: false },
+  { name: 'abandoned_2', label: 'Abandoned Signup — Reminder 2 (Editorial)', category: 'Re-engagement', description: 'Follow-up with the Business Editorial.', bulkAllowed: false },
+  { name: 'abandoned_3', label: 'Abandoned Signup — Reminder 3 (Final)', category: 'Re-engagement', description: 'Final activation reminder.', bulkAllowed: false },
 ];
 
 const MANUAL_SET = new Set<string>(MANUAL_EMAIL_CATALOG.map((e) => e.name));
 
 export function isManualTemplate(name: string): name is TemplateName {
   return MANUAL_SET.has(name);
+}
+
+// Templates allowed for BULK campaigns (nurture/promo). Excludes transactional
+// account/billing/abandoned templates (bulkAllowed === false).
+const BULK_SET = new Set<string>(
+  MANUAL_EMAIL_CATALOG.filter((e) => e.bulkAllowed !== false).map((e) => e.name),
+);
+
+export function isBulkTemplate(name: string): name is TemplateName {
+  return BULK_SET.has(name);
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -7,7 +7,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { PlatformMailerService } from './platform-mailer.service';
 import { TemplateName } from './templates';
-import { MANUAL_EMAIL_CATALOG, isManualTemplate } from './manual-email.catalog';
+import { MANUAL_EMAIL_CATALOG, isManualTemplate, isBulkTemplate } from './manual-email.catalog';
 
 const TEST_TEMPLATES: TemplateName[] = [
   'welcome',
@@ -166,5 +166,75 @@ export class PlatformMailController {
       adminId,
       idempotencyKey,
     });
+  }
+
+  // ── Bulk email campaigns (admin) ──────────────────────────────────────────
+
+  @Get('bulk/templates')
+  @ApiOperation({ summary: 'Templates allowed for BULK sending (dropdown)' })
+  bulkTemplates() {
+    return { data: MANUAL_EMAIL_CATALOG.filter((e) => e.bulkAllowed !== false) };
+  }
+
+  @Post('bulk/estimate')
+  @ApiOperation({
+    summary: 'Estimate a bulk send: eligible / suppressed / invalid + languages',
+  })
+  async bulkEstimate(
+    @Body() body: { userIds?: string[]; template?: string },
+  ) {
+    const template = String(body?.template || '');
+    const userIds = Array.isArray(body?.userIds) ? body.userIds : [];
+    if (!isBulkTemplate(template)) {
+      return { ok: false, error: 'Unknown or non-bulk template.' };
+    }
+    if (!userIds.length) {
+      return { ok: false, error: 'Select at least one customer.' };
+    }
+    const est = await this.mailer.estimateBulkCampaign(userIds);
+    return { ok: true, ...est };
+  }
+
+  @Post('bulk/send')
+  @ApiOperation({
+    summary: 'Create a bulk campaign and queue eligible recipients (idempotent)',
+  })
+  async bulkSend(
+    @CurrentUser() user: any,
+    @Body()
+    body: { userIds?: string[]; template?: string; clientToken?: string },
+  ) {
+    const template = String(body?.template || '');
+    const userIds = Array.isArray(body?.userIds) ? body.userIds : [];
+    const clientToken = String(body?.clientToken || '').trim() || null;
+    if (!isBulkTemplate(template)) {
+      return { ok: false, error: 'Unknown or non-bulk template.' };
+    }
+    if (!userIds.length) {
+      return { ok: false, error: 'Select at least one customer.' };
+    }
+    const adminId = user?.id || user?.userId || user?.sub || null;
+    return this.mailer.createBulkCampaign({
+      template: template as TemplateName,
+      userIds,
+      adminId,
+      clientToken,
+    });
+  }
+
+  @Get('bulk/campaigns')
+  @ApiOperation({ summary: 'Recent bulk campaigns (admin)' })
+  @ApiQuery({ name: 'limit', required: false })
+  async bulkCampaigns(@Query('limit') limit?: string) {
+    const data = await this.mailer.listBulkCampaigns(Number(limit) || 25);
+    return { data };
+  }
+
+  @Get('bulk/campaigns/:id')
+  @ApiOperation({ summary: 'Bulk campaign status + live sent/failed counts' })
+  async bulkCampaign(@Param('id') id: string) {
+    const data = await this.mailer.getBulkCampaign(String(id || '').trim());
+    if (!data) return { ok: false, error: 'Campaign not found.' };
+    return { ok: true, campaign: data };
   }
 }

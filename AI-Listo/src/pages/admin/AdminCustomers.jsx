@@ -73,9 +73,11 @@ import {
   getPlanConfig,
   setPlanConfig,
   resetPlanConfig,
+  getCustomerIds,
 } from "../../api/platformApi";
 import aiUnitsApi from "../../api/aiUnitsApi";
 import AdminPlans from "./AdminPlans";
+import BulkEmailModal from "../../components/BulkEmailModal";
 import "../platform/platform.css";
 import "./AdminCustomers.css";
 
@@ -529,6 +531,9 @@ export default function AdminCustomers() {
   const [bulkMenu, setBulkMenu] = useState(false);
   const [moreMenu, setMoreMenu] = useState(false);
   const [rowMenu, setRowMenu] = useState(null);
+  // Recipients for the bulk-email campaign modal (array of { id }), or null.
+  const [bulkEmailFor, setBulkEmailFor] = useState(null);
+  const [selectingAll, setSelectingAll] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -657,12 +662,37 @@ export default function AdminCustomers() {
     }
   };
 
-  const bulkEmail = () => {
-    const emails = selectedRows.map((r) => r.email).filter(Boolean);
-    if (!emails.length) return;
-    window.location.href = `mailto:?bcc=${encodeURIComponent(emails.join(","))}`;
+  // Open the real bulk-email campaign modal for ALL selected customers (across
+  // pages, not just the visible page). Sends through Cortexa/SendGrid — no BCC,
+  // no local mail app.
+  const openBulkEmail = () => {
+    if (!selected.size) return;
     setBulkMenu(false);
+    setBulkEmailFor(Array.from(selected).map((id) => ({ id })));
   };
+  // Kept name for the Bulk Actions menu item; now opens the campaign modal.
+  const bulkEmail = openBulkEmail;
+
+  // "Select all matching this filter": fetch every matching id (explicit, capped)
+  // and select them, so the admin always approves exactly who is included.
+  const selectAllMatching = async () => {
+    setSelectingAll(true);
+    try {
+      const res = await getCustomerIds({ ...filters, tab });
+      const ids = res?.ids || [];
+      setSelected(new Set(ids));
+      if (res?.capped) {
+        alert(
+          `Selection capped at ${ids.length} customers. Narrow the filter to include the rest.`,
+        );
+      }
+    } catch {
+      alert("Could not select all matching customers.");
+    } finally {
+      setSelectingAll(false);
+    }
+  };
+  const clearSelection = () => setSelected(new Set());
   const bulkExportSelected = () => {
     if (!selectedRows.length) return;
     const fields = [
@@ -1194,12 +1224,18 @@ export default function AdminCustomers() {
             <button
               className="cxc-btn"
               onClick={() => {
-                const c = oneSelected();
-                if (c) setTemplateEmailFor(c);
+                if (selected.size > 1) {
+                  openBulkEmail();
+                } else {
+                  const c = oneSelected();
+                  if (c) setTemplateEmailFor(c);
+                }
               }}
               disabled={!selected.size}
             >
-              Send Email
+              {selected.size > 1
+                ? `Send Email — ${selected.size} recipients`
+                : "Send Email"}
             </button>
 
             <button className="cxc-btn" onClick={onExport}>
@@ -1273,6 +1309,39 @@ export default function AdminCustomers() {
 
         {/* Table (full width) */}
         <div className="cxc-panel">
+          {selected.size > 0 && (
+            <div className="cxc-selbar">
+              <span className="cxc-selbar-count">
+                {selected.size} selected
+                {selected.size >= total && total > 0
+                  ? " (all matching this filter)"
+                  : ""}
+              </span>
+              {allChecked && selected.size < total && (
+                <button
+                  className="cxc-btn cxc-btn-sm"
+                  onClick={selectAllMatching}
+                  disabled={selectingAll}
+                >
+                  {selectingAll
+                    ? "Selecting…"
+                    : `Select all ${total} matching this filter`}
+                </button>
+              )}
+              <button
+                className="cxc-btn cxc-btn-sm"
+                onClick={openBulkEmail}
+              >
+                Send Email to {selected.size}
+              </button>
+              <button
+                className="cxc-btn cxc-btn-ghost cxc-btn-sm"
+                onClick={clearSelection}
+              >
+                Clear selection
+              </button>
+            </div>
+          )}
           <div className="cxc-table-wrap">
             <table className="cxc-table">
               <thead>
@@ -1601,6 +1670,12 @@ export default function AdminCustomers() {
         />
       )}
       {showPlans && <ManagePlansModal onClose={() => setShowPlans(false)} />}
+      {bulkEmailFor && (
+        <BulkEmailModal
+          recipients={bulkEmailFor}
+          onClose={() => setBulkEmailFor(null)}
+        />
+      )}
     </div>
   );
 }

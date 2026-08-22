@@ -105,6 +105,10 @@ export class PlatformMailerService {
         `send_type VARCHAR(16) NOT NULL DEFAULT 'auto'`,
         `sent_by_admin_id UUID`,
         `manual_idempotency_key TEXT`,
+        // Bulk campaigns: link each recipient row to its campaign + the provider
+        // message id (SendGrid x-message-id) for delivery reconciliation.
+        `campaign_id UUID`,
+        `message_id TEXT`,
       ];
       for (const c of logCols) {
         await this.db.query(
@@ -149,6 +153,37 @@ export class PlatformMailerService {
         `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_manual_idem
            ON email_log(manual_idempotency_key)
           WHERE manual_idempotency_key IS NOT NULL`,
+      );
+      // Bulk email campaigns (admin-triggered "Send Bulk Email"). One row per
+      // campaign; recipient rows live in email_log (send_type='bulk', campaign_id).
+      await this.db.query(`
+        CREATE TABLE IF NOT EXISTS email_campaigns (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          template VARCHAR(64) NOT NULL,
+          subject TEXT,
+          created_by UUID,
+          client_token TEXT,
+          status VARCHAR(16) NOT NULL DEFAULT 'queued',
+          total_selected INT NOT NULL DEFAULT 0,
+          total_eligible INT NOT NULL DEFAULT 0,
+          total_suppressed INT NOT NULL DEFAULT 0,
+          total_invalid INT NOT NULL DEFAULT 0,
+          total_queued INT NOT NULL DEFAULT 0,
+          lang_en INT NOT NULL DEFAULT 0,
+          lang_es INT NOT NULL DEFAULT 0,
+          lang_pt INT NOT NULL DEFAULT 0,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`);
+      // Idempotent double-click protection at the campaign level.
+      await this.db.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_campaigns_client_token
+           ON email_campaigns(client_token) WHERE client_token IS NOT NULL`,
+      );
+      // One recipient row per (campaign, user): a retry/re-run can never send the
+      // same campaign email twice to the same customer.
+      await this.db.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_campaign_uniq
+           ON email_log(campaign_id, user_id) WHERE campaign_id IS NOT NULL`,
       );
       this.schemaReady = true;
     } catch (err: any) {
@@ -271,7 +306,7 @@ export class PlatformMailerService {
     html: string;
     text: string;
     token: string;
-  }): Promise<{ ok: boolean; provider: string; error?: string }> {
+  }): Promise<{ ok: boolean; provider: string; error?: string; messageId?: string }> {
     const sg = this.sendgridConfig();
     if (sg) {
       const sender = this.parseSender(sg.from, sg.name || 'Cortexa AI CRM');
@@ -317,7 +352,11 @@ export class PlatformMailerService {
             error: `sendgrid ${res.status}: ${t.slice(0, 300)}`,
           };
         }
-        return { ok: true, provider: 'sendgrid' };
+        return {
+          ok: true,
+          provider: 'sendgrid',
+          messageId: res.headers.get('x-message-id') || undefined,
+        };
       } catch (err: any) {
         return { ok: false, provider: 'sendgrid', error: err?.message };
       }
@@ -1972,6 +2011,347 @@ export class PlatformMailerService {
     } catch {
       return [];
     }
+  }
+
+  // ---- bulk email campaigns (admin-triggered "Send Bulk Email") ----
+  // Reuses the SAME engine as single/auto sends: per-recipient language routing
+  // + English fallback (renderTemplate), personalization (buildVarsForTemplate),
+  // suppression (email_opt_out/email_bounced_at), unsubscribe footer, tracking
+  // and email_log logging. Recipients are queued as `status='queued'` rows with
+  // send_type='bulk' and delivered by a cron worker in safe batches, so the admin
+  // request never waits. `status='queued'` is intentionally NOT 'scheduled', so
+  // none of the automated-sequence sweeps (which select status='scheduled') can
+  // ever pick up a bulk row — the two systems stay fully isolated.
+
+  private normalizeLangCode(lang: any): 'en' | 'es' | 'pt' {
+    const l = String(lang || 'en').slice(0, 2).toLowerCase();
+    return l === 'es' || l === 'pt' ? l : 'en';
+  }
+
+  // Fetch + categorize selected recipients WITHOUT sending (powers the confirm
+  // screen). eligible = deliverable; suppressed = opted-out/bounced; invalid =
+  // missing/invalid email or no account.
+  async estimateBulkCampaign(
+    userIds: string[],
+  ): Promise<{
+    selected: number;
+    eligible: number;
+    suppressed: number;
+    invalid: number;
+    languages: { en: number; es: number; pt: number };
+  }> {
+    await this.ensureSchema();
+    const ids = Array.from(
+      new Set((userIds || []).map((s) => String(s || '').trim()).filter(Boolean)),
+    ).slice(0, 5000);
+    const summary = {
+      selected: ids.length,
+      eligible: 0,
+      suppressed: 0,
+      invalid: 0,
+      languages: { en: 0, es: 0, pt: 0 },
+    };
+    if (!ids.length) return summary;
+    const { rows } = await this.db.query(
+      `SELECT id, email, COALESCE(preferred_language,'en') AS lang,
+              email_opt_out, email_bounced_at, deleted_at
+         FROM users WHERE id = ANY($1::uuid[])`,
+      [ids],
+    );
+    const byId = new Map<string, any>(rows.map((r: any) => [String(r.id), r]));
+    const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    for (const id of ids) {
+      const u = byId.get(id);
+      if (!u || u.deleted_at || !u.email || !emailRe.test(String(u.email))) {
+        summary.invalid += 1;
+        continue;
+      }
+      if (u.email_opt_out || u.email_bounced_at) {
+        summary.suppressed += 1;
+        continue;
+      }
+      summary.eligible += 1;
+      summary.languages[this.normalizeLangCode(u.lang)] += 1;
+    }
+    return summary;
+  }
+
+  // Create the campaign + queue eligible recipients. Idempotent on clientToken
+  // (a double-click / retry returns the existing campaign, never re-queues).
+  async createBulkCampaign(opts: {
+    template: TemplateName;
+    userIds: string[];
+    adminId?: string | null;
+    clientToken?: string | null;
+  }): Promise<{
+    ok: boolean;
+    campaignId?: string;
+    duplicate?: boolean;
+    selected: number;
+    eligible: number;
+    suppressed: number;
+    invalid: number;
+    queued: number;
+    languages: { en: number; es: number; pt: number };
+  }> {
+    await this.ensureSchema();
+    const clientToken = String(opts.clientToken || '').trim() || null;
+
+    const existingByToken = async () => {
+      const dup = await this.db.query(
+        `SELECT id, total_selected, total_eligible, total_suppressed,
+                total_invalid, total_queued, lang_en, lang_es, lang_pt
+           FROM email_campaigns WHERE client_token = $1 LIMIT 1`,
+        [clientToken],
+      );
+      if (!dup.rows.length) return null;
+      const c = dup.rows[0];
+      return {
+        ok: true as const,
+        duplicate: true,
+        campaignId: c.id,
+        selected: c.total_selected,
+        eligible: c.total_eligible,
+        suppressed: c.total_suppressed,
+        invalid: c.total_invalid,
+        queued: c.total_queued,
+        languages: { en: c.lang_en, es: c.lang_es, pt: c.lang_pt },
+      };
+    };
+
+    if (clientToken) {
+      const dup = await existingByToken();
+      if (dup) return dup;
+    }
+
+    const ids = Array.from(
+      new Set((opts.userIds || []).map((s) => String(s || '').trim()).filter(Boolean)),
+    ).slice(0, 5000);
+    const { rows } = await this.db.query(
+      `SELECT id, email, COALESCE(preferred_language,'en') AS lang,
+              email_opt_out, email_bounced_at, deleted_at
+         FROM users WHERE id = ANY($1::uuid[])`,
+      [ids],
+    );
+    const byId = new Map<string, any>(rows.map((r: any) => [String(r.id), r]));
+    const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    const eligible: Array<{ id: string; email: string; lang: 'en' | 'es' | 'pt' }> = [];
+    const langs = { en: 0, es: 0, pt: 0 };
+    let suppressed = 0;
+    let invalid = 0;
+    for (const id of ids) {
+      const u = byId.get(id);
+      if (!u || u.deleted_at || !u.email || !emailRe.test(String(u.email))) {
+        invalid += 1;
+        continue;
+      }
+      if (u.email_opt_out || u.email_bounced_at) {
+        suppressed += 1;
+        continue;
+      }
+      const lang = this.normalizeLangCode(u.lang);
+      langs[lang] += 1;
+      eligible.push({ id, email: String(u.email), lang });
+    }
+
+    let campaignId: string;
+    try {
+      const ins = await this.db.query(
+        `INSERT INTO email_campaigns
+           (template, created_by, client_token, status,
+            total_selected, total_eligible, total_suppressed, total_invalid,
+            total_queued, lang_en, lang_es, lang_pt)
+         VALUES ($1,$2,$3,'queued',$4,$5,$6,$7,$8,$9,$10,$11)
+         RETURNING id`,
+        [
+          opts.template,
+          opts.adminId || null,
+          clientToken,
+          ids.length,
+          eligible.length,
+          suppressed,
+          invalid,
+          eligible.length,
+          langs.en,
+          langs.es,
+          langs.pt,
+        ],
+      );
+      campaignId = ins.rows[0].id;
+    } catch (e: any) {
+      // Unique client_token race: another request created it first — return it.
+      if (clientToken) {
+        const dup = await existingByToken();
+        if (dup) return dup;
+      }
+      throw e;
+    }
+
+    // Queue eligible recipients as 'queued' bulk rows (idempotent per campaign+user).
+    for (const r of eligible) {
+      await this.db.query(
+        `INSERT INTO email_log
+           (user_id, to_email, template, language, status, send_type,
+            campaign_id, sent_by_admin_id, scheduled_at, track_token, created_at)
+         VALUES ($1,$2,$3,$4,'queued','bulk',$5,$6,NOW(),gen_random_uuid(),NOW())
+         ON CONFLICT (campaign_id, user_id) DO NOTHING`,
+        [r.id, r.email, opts.template, r.lang, campaignId, opts.adminId || null],
+      );
+    }
+
+    return {
+      ok: true,
+      campaignId,
+      selected: ids.length,
+      eligible: eligible.length,
+      suppressed,
+      invalid,
+      queued: eligible.length,
+      languages: langs,
+    };
+  }
+
+  // Cron worker: deliver due bulk recipients in safe batches. Re-checks live
+  // suppression before each send; a failed recipient never affects the others,
+  // and an already-sent row is never resent (status transitions guard it).
+  async sendBulkDue(): Promise<void> {
+    await this.ensureSchema();
+    const BATCH = 150;
+    let rows: any[];
+    try {
+      const res = await this.db.query(
+        `SELECT el.id, el.track_token, el.template, el.language, el.to_email,
+                el.user_id, el.campaign_id, u.name, u.email_opt_out, u.email_bounced_at
+           FROM email_log el
+           JOIN users u ON u.id = el.user_id
+          WHERE el.status = 'queued' AND el.send_type = 'bulk'
+            AND el.scheduled_at <= NOW()
+          ORDER BY el.scheduled_at ASC
+          LIMIT ${BATCH}`,
+      );
+      rows = res.rows;
+    } catch (err: any) {
+      this.logger.error(`bulk sweep query failed: ${err?.message}`);
+      return;
+    }
+    if (!rows.length) return;
+
+    for (const r of rows) {
+      // Suppression re-check at send time (opt-out/bounce may have changed).
+      if (r.email_opt_out || r.email_bounced_at) {
+        await this.db.query(
+          `UPDATE email_log SET status = 'canceled', error = 'suppressed'
+            WHERE id = $1 AND status = 'queued'`,
+          [r.id],
+        );
+        continue;
+      }
+      // Claim the row so a concurrent tick can't double-send.
+      const claim = await this.db.query(
+        `UPDATE email_log SET status = 'sending'
+          WHERE id = $1 AND status = 'queued' RETURNING id`,
+        [r.id],
+      );
+      if (!claim.rows.length) continue;
+
+      try {
+        const user = {
+          id: r.user_id,
+          email: r.to_email,
+          lang: r.language,
+          name: r.name,
+        };
+        const vars = await this.buildVarsForTemplate(r.template, user);
+        const token = r.track_token || crypto.randomUUID();
+        const rendered = renderTemplate(r.template, r.language, vars);
+        const html = this.htmlFor(rendered.html, token);
+        const result = await this.deliver({
+          to: r.to_email,
+          subject: rendered.subject,
+          html,
+          text: rendered.text,
+          token,
+        });
+        const status = result.ok
+          ? 'sent'
+          : result.error === 'smtp_not_configured'
+            ? 'skipped'
+            : 'error';
+        await this.db.query(
+          `UPDATE email_log
+              SET status = $2, subject = $3, provider = $4, error = $5,
+                  message_id = $6, track_token = $7,
+                  sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+            WHERE id = $1`,
+          [
+            r.id,
+            status,
+            rendered.subject,
+            result.provider,
+            result.ok ? null : String(result.error || '').slice(0, 500),
+            result.messageId || null,
+            token,
+          ],
+        );
+      } catch (err: any) {
+        await this.db.query(
+          `UPDATE email_log SET status = 'error', error = $2 WHERE id = $1`,
+          [r.id, String(err?.message || 'send failed').slice(0, 500)],
+        );
+      }
+    }
+
+    // Mark campaigns complete once no queued/sending rows remain.
+    try {
+      await this.db.query(
+        `UPDATE email_campaigns c SET status = 'completed'
+          WHERE c.status <> 'completed'
+            AND NOT EXISTS (
+              SELECT 1 FROM email_log el
+               WHERE el.campaign_id = c.id
+                 AND el.status IN ('queued','sending')
+            )`,
+      );
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  // Campaign status + live sent/failed counts for the admin result view.
+  async getBulkCampaign(id: string): Promise<any> {
+    await this.ensureSchema();
+    const { rows } = await this.db.query(
+      `SELECT id, template, subject, created_by, status, created_at,
+              total_selected, total_eligible, total_suppressed, total_invalid,
+              total_queued, lang_en, lang_es, lang_pt
+         FROM email_campaigns WHERE id = $1 LIMIT 1`,
+      [id],
+    );
+    if (!rows.length) return null;
+    const c = rows[0];
+    const { rows: agg } = await this.db.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE status = 'sent')::int AS sent,
+         COUNT(*) FILTER (WHERE status = 'error')::int AS failed,
+         COUNT(*) FILTER (WHERE status = 'skipped')::int AS skipped,
+         COUNT(*) FILTER (WHERE status IN ('queued','sending'))::int AS pending,
+         COUNT(*) FILTER (WHERE status = 'canceled')::int AS canceled
+       FROM email_log WHERE campaign_id = $1`,
+      [id],
+    );
+    return { ...c, progress: agg[0] };
+  }
+
+  async listBulkCampaigns(limit = 25): Promise<any[]> {
+    await this.ensureSchema();
+    const n = Math.min(Math.max(Number(limit) || 25, 1), 100);
+    const { rows } = await this.db.query(
+      `SELECT id, template, subject, created_by, status, created_at,
+              total_selected, total_eligible, total_suppressed, total_invalid, total_queued
+         FROM email_campaigns ORDER BY created_at DESC LIMIT $1`,
+      [n],
+    );
+    return rows;
   }
 
   // ---- manual (admin) single-customer send: dropdown of production templates ----
