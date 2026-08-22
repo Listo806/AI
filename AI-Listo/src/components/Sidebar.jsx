@@ -857,6 +857,32 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
           ))}
           
 
+          {/* Core-CRM growth action: invite a teammate. Persistent, above the
+              Workspaces section, visible on every core CRM page (desktop) and in
+              the mobile drawer. Opens the global Invite Team Member modal. */}
+          <button
+            type="button"
+            className="crm-nav-link crm-invite-team-link"
+            onClick={() => {
+              window.dispatchEvent(new Event("cortexa:open-invite-team"));
+              if (onClose) onClose();
+            }}
+            title={isCollapsed ? "Invite Team Member" : undefined}
+            style={{
+              width: "100%",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              textAlign: "left",
+              font: "inherit",
+            }}
+          >
+            <SidebarIcon name="user-plus" className="crm-nav-icon" />
+            {!isCollapsed && (
+              <span className="crm-nav-label">Invite Team Member</span>
+            )}
+          </button>
+
           {!isCollapsed && (
             <section
               className="crm-workspaces-section"

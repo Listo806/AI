@@ -11,6 +11,7 @@ import "../styles/crm-dashboard.css";
 import BottomNav from "../components/BottomNav";
 import FeatureAddOns from "../components/FeatureAddOns";
 import AiUnitsPurchaseModal from "../components/AiUnitsPurchaseModal";
+import InviteTeamModal from "../components/InviteTeamModal";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 
@@ -386,6 +387,7 @@ export default function DashboardLayout() {
     </div>
     <FeatureAddOns />
     <AiUnitsPurchaseModal />
+    <InviteTeamModal />
     </AiUnitsProvider>
     </PlanProvider>
   );

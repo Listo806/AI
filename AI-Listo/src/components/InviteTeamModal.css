@@ -1,0 +1,229 @@
+.itm-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  background: rgba(15, 21, 34, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+.itm-modal {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(16, 21, 34, 0.28);
+  padding: 26px 26px 22px;
+  font-family: inherit;
+}
+.itm-x {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  line-height: 0;
+}
+.itm-x:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+.itm-head {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-right: 24px;
+}
+.itm-badge {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(91, 69, 246, 0.1);
+  color: #5b45f6;
+  display: grid;
+  place-items: center;
+}
+.itm-head h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f1522;
+}
+.itm-head p {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+}
+.itm-form {
+  display: flex;
+  flex-direction: column;
+}
+.itm-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+  margin: 12px 0 6px;
+}
+.itm-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 11px;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.itm-field:focus-within {
+  border-color: #5b45f6;
+  box-shadow: 0 0 0 3px rgba(91, 69, 246, 0.12);
+}
+.itm-field-ico {
+  color: #94a3b8;
+  flex: 0 0 auto;
+}
+.itm-field input,
+.itm-field select {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  padding: 11px 0;
+  font-size: 14px;
+  color: #0f1522;
+  font-family: inherit;
+}
+.itm-field select {
+  cursor: pointer;
+}
+.itm-hint {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+.itm-error {
+  margin-top: 12px;
+  background: rgba(229, 72, 77, 0.08);
+  border: 1px solid rgba(229, 72, 77, 0.3);
+  color: #c0392b;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+}
+.itm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+.itm-btn {
+  border-radius: 9px;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+}
+.itm-btn-ghost {
+  background: #fff;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+.itm-btn-ghost:hover {
+  background: #f8fafc;
+}
+.itm-btn-primary {
+  background: #5b45f6;
+  color: #fff;
+}
+.itm-btn-primary:hover {
+  background: #4a37d4;
+}
+.itm-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.itm-success {
+  text-align: center;
+  padding: 8px 4px 4px;
+}
+.itm-success-ico {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: rgba(31, 157, 85, 0.12);
+  color: #1f9d55;
+  display: grid;
+  place-items: center;
+  margin: 6px auto 14px;
+}
+.itm-success-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f1522;
+}
+.itm-success-sub {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.itm-success-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Dark CRM shell */
+.crm-dark .itm-modal {
+  background: #141b2b;
+}
+.crm-dark .itm-head h3 {
+  color: #e8ebf3;
+}
+.crm-dark .itm-head p,
+.crm-dark .itm-success-sub {
+  color: #97a1bb;
+}
+.crm-dark .itm-label {
+  color: #cbd5e1;
+}
+.crm-dark .itm-field {
+  background: #0f1626;
+  border-color: #2a3450;
+}
+.crm-dark .itm-field input,
+.crm-dark .itm-field select {
+  color: #e8ebf3;
+}
+.crm-dark .itm-field select option {
+  background: #141b2b;
+  color: #e8ebf3;
+}
+.crm-dark .itm-btn-ghost {
+  background: #141b2b;
+  border-color: #2a3450;
+  color: #cbd5e1;
+}
+.crm-dark .itm-btn-ghost:hover {
+  background: #1b2436;
+}
+.crm-dark .itm-x:hover {
+  background: #1b2436;
+  color: #cbd5e1;
+}
+.crm-dark .itm-success-title {
+  color: #e8ebf3;
+}

@@ -25,6 +25,7 @@ const TEST_TEMPLATES: TemplateName[] = [
   'onb_welcome',
   'onb_support',
   'onb_ai',
+  'onb_invite_team',
   'onb_connect',
   'onb_system',
   'onb_ready',

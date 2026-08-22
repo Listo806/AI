@@ -604,6 +604,25 @@ export async function inviteTeamMemberByEmail(teamId, payload) {
   return res?.data ?? res;
 }
 
+// Core-CRM "Invite Team Member" growth flow: invites into the caller's OWN
+// account/team (no teamId needed) and is NOT gated by paid seat limits. Reuses
+// the same invite email + accept/join backend. Separate from the paid Team
+// Workspace invite (inviteTeamMemberByEmail).
+export async function coreInviteTeamMember(payload) {
+  const body = {
+    email: payload?.email?.trim?.() || "",
+    role: payload?.role || "agent",
+    name: payload?.name?.trim?.() || undefined,
+  };
+
+  const res = await apiClient.request(`/teams/core-invite`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+  return res?.data ?? res;
+}
+
 export async function addTeamMember(teamId, userId) {
   const res = await apiClient.request(`/teams/${teamId}/members/${userId}`, {
     method: "POST",
