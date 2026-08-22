@@ -1310,29 +1310,25 @@ export default function AdminCustomers() {
                   <th>AI Credits</th>
                   <th>Next Billing</th>
                   <th>Payment Status</th>
-                  <th>Source</th>
                   <th>Country</th>
                   <th>
                     Registered<small>Date &amp; Time</small>
                   </th>
                   <th>Last Active</th>
-                  <th>
-                    LTV<small>Total Revenue</small>
-                  </th>
                   <th style={{ textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={13} style={{ padding: 20, color: "#64748b" }}>
+                    <td colSpan={11} style={{ padding: 20, color: "#64748b" }}>
                       Loading…
                     </td>
                   </tr>
                 )}
                 {!loading && rows.length === 0 && (
                   <tr>
-                    <td colSpan={13} style={{ padding: 20, color: "#64748b" }}>
+                    <td colSpan={11} style={{ padding: 20, color: "#64748b" }}>
                       No customers match these filters.
                     </td>
                   </tr>
@@ -1427,7 +1423,6 @@ export default function AdminCustomers() {
                             {getCustomerStatusLabel(r, st)}
                           </span>
                         </td>
-                        <td>{r.source_label || "—"}</td>
                         <td>
                           <CountryCell code={r.country} />
                         </td>
@@ -1449,7 +1444,6 @@ export default function AdminCustomers() {
                             <span className="cxc-muted">—</span>
                           )}
                         </td>
-                        <td className="cxc-ltv">{usd(r.ltv)}</td>
                         <td>
                           <div className="cxc-row-actions">
                             <button
@@ -2196,11 +2190,9 @@ function CustomerModal({
                         </div>
                         <strong>{paymentMethod}</strong>
                         <div className="cxc-overview-main-label">
-                          Source / Offer
+                          Lifetime Value / Total Revenue
                         </div>
-                        <strong>
-                          {c.source_label || "—"} / {c.offer_used || "standard"}
-                        </strong>
+                        <strong>{usd(c.ltv)}</strong>
                         <button onClick={updatePayment}>
                           Update Payment Method <ChevronRight size={14} />
                         </button>
@@ -2225,6 +2217,37 @@ function CustomerModal({
                         <button onClick={() => setTab("subscription")}>
                           View Subscription <ChevronRight size={14} />
                         </button>
+                      </section>
+                      <section className="cxc-overview-card tone-blue">
+                        <div className="cxc-overview-card-title">
+                          <Info size={17} /> ACCOUNT / REGISTRATION
+                        </div>
+                        <div className="cxc-overview-main-label">
+                          Acquisition Source
+                        </div>
+                        <strong>{c.source_label || "Unknown"}</strong>
+                        <div className="cxc-overview-main-label">Country</div>
+                        <strong>
+                          <CountryCell code={c.country} />
+                        </strong>
+                        <div className="cxc-overview-main-label">Registered</div>
+                        <strong>
+                          {fmtDate(c.registered_at || c.created_at)}
+                          <small>
+                            {fmtTime(c.registered_at || c.created_at)}
+                          </small>
+                        </strong>
+                        <div className="cxc-overview-main-label">Last Active</div>
+                        <strong>
+                          {c.last_seen_at ? (
+                            <>
+                              {fmtDate(c.last_seen_at)}
+                              <small>{fmtTime(c.last_seen_at)}</small>
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </strong>
                       </section>
                       <section className="cxc-overview-card tone-orange">
                         <div className="cxc-overview-card-title">
@@ -2588,9 +2611,17 @@ function CustomerModal({
                       </strong>
                       <span>Payment Method</span>
                       <strong>{paymentMethod}</strong>
-                      <span>Source / Offer</span>
+                      <span>Acquisition Source</span>
+                      <strong>{c.source_label || "Unknown"}</strong>
+                      <span>Lifetime Value</span>
+                      <strong className="green">{usd(c.ltv)}</strong>
+                      <span>Registered</span>
                       <strong>
-                        {c.source_label || "—"} / {c.offer_used || "standard"}
+                        {fmtDate(c.registered_at || c.created_at)}
+                      </strong>
+                      <span>Last Active</span>
+                      <strong>
+                        {c.last_seen_at ? fmtDate(c.last_seen_at) : "—"}
                       </strong>
                     </div>
                   </section>
