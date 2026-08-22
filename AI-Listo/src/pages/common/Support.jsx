@@ -20,19 +20,21 @@ import {
   Paperclip,
   Mic,
   ChevronRight,
+  ShieldCheck,
+  Search
 } from "lucide-react";
 
 export default function SupportHub() {
   const [query, setQuery] = useState("");
   const issueChips = [
-    ["Login & Access", Lock, "#2563EB", "#EEF5FF"],
-    ["Billing Issue", CreditCard, "#F97316", "#FFF3EA"],
-    ["WhatsApp Support", MessageCircle, "#059669", "#EAFBF2"],
-    ["Import Leads Problem", CloudUpload, "#DC2626", "#FEE2E2"],
-    ["Listings Not Showing", Home, "#6D5BFF", "#F1EDFF"],
-    ["Apps & Integrations", Link2, "#0891B2", "#ECFEFF"],
-    ["Invite Team Member", Users, "#DB2777", "#FCE7F3"],
-    ["Report a Bug", Bug, "#4B5563", "#F3F4F6"],
+    ["Login & Access", Lock, "#111827"],
+    ["Billing Issues", CreditCard, "#111827"],
+    ["WhatsApp Support", MessageCircle, "#111827"],
+    ["Import Leads Problem", CloudUpload, "#111827"],
+    ["Listings Not Showing", Home, "#111827"],
+    ["Apps & Integrations", Link2, "#111827"],
+    ["Invite Team Member", Users, "#111827"],
+    ["Report a Bug", Bug, "#111827"],
   ];
   
   const supportCards = [
@@ -40,29 +42,21 @@ export default function SupportHub() {
       title: "Troubleshoot a Problem",
       text: "Get step-by-step help to solve issues fast.",
       icon: Wrench,
-      bg: "#EEF5FF",
-      color: "#2563EB",
     },
     {
       title: "Escalate to Support",
       text: "Connect with a real human when you need expert help.",
       icon: Headphones,
-      bg: "#F1EDFF",
-      color: "#6D5BFF",
     },
     {
       title: "Track a Request",
       text: "Check the status of your open requests and past tickets.",
       icon: ClipboardCheck,
-      bg: "#EAFBF2",
-      color: "#059669",
     },
     {
       title: "Account & Billing",
       text: "Get help with billing, plans, payments, and account access.",
       icon: CreditCard,
-      bg: "#FFF3EA",
-      color: "#F97316",
     },
   ];
 
@@ -82,7 +76,7 @@ export default function SupportHub() {
         </div>
         <div className={styles.supportAiBox}>
           <form className={styles.supportAskBox} onSubmit={handleSend}>
-            <MessageCircle className={styles.aiChatIcon} size={20} />
+            <Search className={styles.aiChatIcon} size={20} />
 
             <input
               type="text"
@@ -109,7 +103,7 @@ export default function SupportHub() {
 
       <section className={styles.supportIssueSection}>
         <div className={styles.supportChipGrid}>
-          {issueChips.map(([label, Icon, color, bg]) => (
+          {issueChips.map(([label, Icon, color]) => (
             <button key={label} className={styles.supportIssueChip}>
               <div className={styles.chipIconWrap} style={{ color: color }}>
                 <Icon size={18} />
@@ -128,10 +122,7 @@ export default function SupportHub() {
 
             return (
               <div key={card.title} className={styles.supportCard}>
-                <div
-                  className={styles.supportCardIcon}
-                  style={{ background: card.bg, color: card.color }}
-                >
+                <div className={styles.supportCardIcon}>
                   <Icon size={34} />
                 </div>
 
@@ -164,6 +155,11 @@ export default function SupportHub() {
           text="Guides, tutorials and resources."
         />
       </section>
+
+      <div className={styles.supportSecurityFooter}>
+        <ShieldCheck size={17} />
+        <span>Your data is secure with enterprise-grade protection.</span>
+      </div>
     </main>
   );
 }

@@ -1,7 +1,6 @@
 
 .supportPage {
     min-height: 100vh !important;
-    background: radial-gradient(circle at 15% 35%, rgba(37, 99, 235, 0.08), transparent 22%), radial-gradient(circle at 85% 25%, rgba(124, 58, 237, 0.10), transparent 24%), #FFFFFF !important;
     color: #08142B !important;
     font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
     padding-bottom: 4px !important;
@@ -22,9 +21,10 @@
     border: 1px solid #A5B4FC !important;
     border-radius: 999px !important;
     color: #2563EB !important;
-    font-weight: 900 !important;
+    font-weight: 700 !important;
     margin-bottom: 24px !important;
     text-transform: uppercase;
+    font-size: 18px;
 }
 
 .supportTitle {
@@ -167,7 +167,7 @@
   color: #ffffff;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -210,7 +210,7 @@
 
 .supportIssueSection {
     max-width: 1500px !important;
-    margin: 18px auto 0 !important;
+    margin: 10px auto 0 !important;
     padding: 0 36px !important;
     text-align: center !important;
 }
@@ -241,9 +241,9 @@
 
 .supportHelpSection {
     max-width: 1300px !important;
-    margin: 30px auto !important;
+    margin: 20px auto !important;
     text-align: center !important;
-    padding-top: 30px!important;
+    padding-top: 20px!important;
     border-top: 1px solid #DDE3EF !important;
 }
 
@@ -302,7 +302,7 @@
 
 .supportBottomBar {
     max-width: 1268px !important;
-    margin: 24px auto 0 !important;
+    margin: 22px auto 0 !important;
     border: 1px solid #E5EAF1 !important;
     border-radius: 14px !important;
     background: #FFFFFF !important;
@@ -375,4 +375,106 @@
 .openAiSupportLink:hover {
     color: #1D4ED8;
     text-decoration: underline;
+}
+
+/* Reference screenshot refinements */
+.chipIconWrap {
+    color: #111827 !important;
+}
+
+.supportCardIcon {
+    background: #F8F7FC !important;
+    color: #111827 !important;
+}
+
+.bottomIcon {
+    background: #F8F7FC !important;
+    color: #111827 !important;
+}
+
+.supportBadge {
+    color: #111827 !important;
+    border-color: #D8DEE8 !important;
+}
+
+.aiChatIcon {
+    color: #64748B !important;
+}
+
+.sendButtonActive {
+    background-color: #0F2A68 !important;
+}
+
+.sendButtonActive:hover {
+    background-color: #0B2156 !important;
+}
+
+.supportAskActions .sendButtonActive svg {
+    fill: none !important;
+    stroke: #fff !important;
+}
+
+.supportSecurityFooter {
+    max-width: 1268px;
+    margin: 18px auto 0;
+    padding: 0 20px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    color: #64748B;
+    font-size: 12px;
+    text-align: center;
+}
+
+.supportSecurityFooter svg {
+    flex: 0 0 auto;
+    color: #111827;
+}
+
+/* Project dark theme */
+:global(.crm-dark) .supportPage {
+    background: #070B12 !important;
+    color: #F8FAFC !important;
+}
+
+:global(.crm-dark) .supportIssueChip,
+:global(.crm-dark) .supportCard,
+:global(.crm-dark) .supportBottomBar,
+:global(.crm-dark) .supportAskBox {
+    background: #0D131D !important;
+    border-color: #263142 !important;
+    color: #F8FAFC !important;
+}
+
+:global(.crm-dark) .supportCard h3,
+:global(.crm-dark) .bottomActionTextWrap h3 {
+    color: #F8FAFC !important;
+}
+
+:global(.crm-dark) .supportCard p,
+:global(.crm-dark) .bottomActionTextWrap p,
+:global(.crm-dark) .supportSecurityFooter {
+    color: #94A3B8 !important;
+}
+
+:global(.crm-dark) .chipIconWrap,
+:global(.crm-dark) .supportCardIcon,
+:global(.crm-dark) .bottomIcon,
+:global(.crm-dark) .supportSecurityFooter svg,
+:global(.crm-dark) .supportBadge {
+    color: #E2E8F0 !important;
+}
+
+:global(.crm-dark) .supportCardIcon,
+:global(.crm-dark) .bottomIcon {
+    background: #111923 !important;
+}
+
+:global(.crm-dark) .supportBadge {
+    border-color: #334155 !important;
+}
+
+:global(.crm-dark) .aiInput {
+    color: #F8FAFC !important;
 }
