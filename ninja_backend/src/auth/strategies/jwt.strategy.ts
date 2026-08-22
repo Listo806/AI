@@ -19,11 +19,38 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  // "Last Active" heartbeat. This strategy runs on EVERY authenticated request,
+  // so it captures a customer returning to a valid session and actively using
+  // Cortexa (not just an explicit login). Throttled in-memory to at most one DB
+  // write per user per window, and fire-and-forget so it never blocks or fails
+  // a request. Registered (registered_at/created_at) is set once at signup and
+  // is never touched here.
+  private static readonly lastSeenWrites = new Map<string, number>();
+  private static readonly LAST_SEEN_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
+
+  private touchLastSeen(userId: string): void {
+    if (!userId) return;
+    const now = Date.now();
+    const prev = JwtStrategy.lastSeenWrites.get(userId) || 0;
+    if (now - prev < JwtStrategy.LAST_SEEN_THROTTLE_MS) return;
+    // Bound memory: the throttle map only needs recent writers.
+    if (JwtStrategy.lastSeenWrites.size > 50000) {
+      JwtStrategy.lastSeenWrites.clear();
+    }
+    JwtStrategy.lastSeenWrites.set(userId, now);
+    this.db
+      .query(`UPDATE users SET last_seen_at = NOW() WHERE id = $1`, [userId])
+      .catch(() => {});
+  }
+
   async validate(payload: any) {
     const user = await this.authService.validateUser(payload.id);
     if (!user) {
       throw new UnauthorizedException();
     }
+
+    // Record real authenticated activity for the admin "Last Active" column.
+    this.touchLastSeen(user.id);
 
     // Token version validation: check if token version matches current user/team version
     // This invalidates tokens when role/subscription changes occur
