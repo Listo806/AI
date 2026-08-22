@@ -12,6 +12,10 @@ import {
   Headphones,
   Globe,
   ChevronRight,
+  ShieldCheck,
+  Bot,
+  Zap,
+  Users
 } from "lucide-react";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import styles from "./Contact.module.css";
@@ -57,167 +61,246 @@ export default function Contact() {
 
   return (
     <main className={styles.page}>
-      
-      <section className={styles.hero}>
-        <div className={styles.badge}>
-          <Mail size={18} />
-          CONTACT CORTEXA
-        </div>
-      </section>
+      <section className={styles.contactShell}>
+        <div className={styles.topSupportBar}>
+          <div className={styles.topSupportSpacer} />
 
-      <section className={styles.contactGrid}>
-        <form className={styles.formBox} onSubmit={handleSubmit}>
-          
-          <div className={styles.formGrid2Cols}>
-            <Field
-              label="Full Name"
-              icon={<User size={19} />}
-              placeholder="Enter your full name"
-              type="text"
-              value={formData.fullName}
-              onChange={(val) => handleInputChange("fullName", val)}
-            />
-            <Field
-              label="Email"
-              icon={<Mail size={19} />}
-              placeholder="Enter your email address"
-              type="email"
-              value={formData.email}
-              onChange={(val) => handleInputChange("email", val)}
-            />
-            <Field
-              label="Company (Optional)"
-              icon={<Briefcase size={19} />}
-              placeholder="Enter your company name"
-              type="text"
-              value={formData.company}
-              onChange={(val) => handleInputChange("company", val)}
-            />
+          <div className={styles.topSupportActions}>
+            <div className={styles.supportAvailability}>
+              <Headphones size={19} />
+              <span>24/7 Support</span>
+            </div>
+
+            <a href="/support" className={styles.aiSupportTopLink}>
+              <Bot size={18} />
+              <span>AI Support Assistant</span>
+              <ChevronRight size={18} />
+            </a>
+          </div>
+        </div>
+
+        <section className={styles.hero}>
+          <h1 className={styles.title}>
+            We’re here to <span>help</span>
+          </h1>
+          <p className={styles.subtitle}>
+            Our team is available <strong>24/7</strong> to support your success.
+          </p>
+        </section>
+
+        <section className={styles.contactGrid}>
+          <form className={styles.formBox} onSubmit={handleSubmit}>
+            <div className={styles.formGrid2Cols}>
+              <Field
+                label="Full Name"
+                icon={<User size={19} />}
+                placeholder="Enter your full name"
+                type="text"
+                value={formData.fullName}
+                onChange={(val) => handleInputChange("fullName", val)}
+              />
+
+              <Field
+                label="Email"
+                icon={<Mail size={19} />}
+                placeholder="Enter your email address"
+                type="email"
+                value={formData.email}
+                onChange={(val) => handleInputChange("email", val)}
+              />
+
+              <Field
+                label="Company (Optional)"
+                icon={<Briefcase size={19} />}
+                placeholder="Enter your company name"
+                type="text"
+                value={formData.company}
+                onChange={(val) => handleInputChange("company", val)}
+              />
+
+              <div className={styles.fieldGroup}>
+                <label>Reason for Contact</label>
+
+                <div
+                  className={`${styles.selectRow} ${
+                    isOpen ? styles.selectRowActive : ""
+                  }`}
+                  onClick={() => setIsOpen(!isOpen)}
+                >
+                  <MessageCircle className={styles.blue} size={19} />
+                  <span className={formData.reason ? styles.selectedText : ""}>
+                    {formData.reason || "Select a reason"}
+                  </span>
+                  <ChevronDown
+                    size={18}
+                    className={`${styles.arrowIcon} ${
+                      isOpen ? styles.arrowRotate : ""
+                    }`}
+                  />
+                </div>
+
+                {isOpen && (
+                  <div className={styles.reasonMenu}>
+                    {reasons.map((reason) => (
+                      <button
+                        type="button"
+                        key={reason}
+                        className={styles.menuItem}
+                        onClick={() => {
+                          handleInputChange("reason", reason);
+                          setIsOpen(false);
+                        }}
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className={styles.fieldGroup}>
-              <label>Reason for Contact</label>
-              <div
-                className={`${styles.selectRow} ${isOpen ? styles.selectRowActive : ""}`}
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                <MessageCircle className={styles.blue} size={19} />
-                <span className={formData.reason ? styles.selectedText : ""}>
-                  {formData.reason || "Select a reason"}
-                </span>
-                <ChevronDown
-                  size={18}
-                  className={`${styles.arrowIcon} ${isOpen ? styles.arrowRotate : ""}`}
+              <label>Message</label>
+
+              <div className={styles.messageBox}>
+                <Paperclip size={19} className={styles.messageIcon} />
+
+                <textarea
+                  className={styles.textareaInput}
+                  placeholder="Tell us how we can help you..."
+                  value={formData.message}
+                  onChange={(e) => handleInputChange("message", e.target.value)}
+                  rows={5}
+                  maxLength={1000}
                 />
+
+                <span className={styles.messageCounter}>
+                  {formData.message.length} / 1000
+                </span>
+              </div>
+            </div>
+
+            <div className={styles.formFooter}>
+              <div className={styles.secureNote}>
+                <LockIcon />
+                <span>Your information is secure and confidential.</span>
               </div>
 
-              {isOpen && (
-                <div className={styles.reasonMenu}>
-                  {reasons.map((reason) => (
-                    <div
-                      key={reason}
-                      className={styles.menuItem}
-                      onClick={() => {
-                        handleInputChange("reason", reason);
-                        setIsOpen(false);
-                      }}
-                    >
-                      {reason}
-                    </div>
-                  ))}
+              <button type="submit" className={styles.sendButton}>
+                <Send size={20} />
+                Send Message
+              </button>
+            </div>
+          </form>
+
+          <aside className={styles.sideColumn}>
+            <div className={styles.supportInfoCard}>
+              <div className={styles.supportInfoItem}>
+                <div className={`${styles.infoIcon} ${styles.infoIconBlue}`}>
+                  <Mail size={27} />
                 </div>
-              )}
-            </div>
-          </div>
 
-          <div className={styles.fieldGroup}>
-            <label>Message</label>
-            <div className={styles.messageBox}>
-              <Paperclip size={19} className={styles.messageIcon} />
-              <textarea
-                className={styles.textareaInput}
-                placeholder="Tell us how we can help you..."
-                value={formData.message}
-                onChange={(e) => handleInputChange("message", e.target.value)}
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <button type="submit" className={styles.sendButton}>
-            <Send size={20} />
-            Send Message
-          </button>
-        </form>
-
-        <aside className={styles.sideColumn}>
-          <InfoCard
-            icon={<Mail size={24} />}
-            title="Support Email"
-            text="support@cortexaaicrm.com"
-            color="#2563EB"
-            bg="#EEF5FF"
-          />
-          <InfoCard
-            icon={<Clock size={24} />}
-            title="Response Time"
-            text="Usually within 24 hours"
-            color="#6D5BFF"
-            bg="#F1EDFF"
-          />
-          <div className={styles.helpCard}>
-            <div className={styles.helpCardHead}>
-              <div className={styles.helpIcon}>
-                <Headphones size={24} />
+                <div>
+                  <h3>Support Email</h3>
+                  <a href="mailto:support@cortexaaicrm.com">
+                    support@cortexaaicrm.com
+                  </a>
+                </div>
               </div>
-              <h3>What can we help with?</h3>
-            </div>
-            {helpItems.map((item) => (
-              <div key={item} className={styles.helpItem}>
-                <CheckCircle size={18} />
-                {item}
-              </div>
-            ))}
-          </div>
-        </aside>
-      </section>
 
-      <section className={styles.bottomBar}>
-        <div className={styles.bottomAction}>
-          <div className={styles.bottomIcon}>
-            <Mail size={30} />
-          </div>
-          <div>
-            <h3>Support Email</h3>
-            <p className={styles.blue}>support@cortexaaicrm.com</p>
-          </div>
-          <ChevronRight size={24} />
-        </div>
-        <div className={styles.bottomAction}>
-          <div
-            className={styles.bottomIcon}
-            style={{ background: "#f1edff", color: "#6d5bff" }}
-          >
-            <Clock size={30} />
-          </div>
-          <div>
-            <h3>Response Time</h3>
-            <p>Usually within 24 hours</p>
-          </div>
-          <ChevronRight size={24} />
-        </div>
-        <div className={styles.bottomAction}>
-          <div
-            className={styles.bottomIcon}
-            style={{ background: "#EAFBF2", color: "#059669" }}
-          >
-            <Headphones size={30} />
-          </div>
-          <h3>Need instant help?</h3>
-          <a href="/support" className={styles.support}>
-            <p>Open 24-7 AI Support</p>
-            <ChevronRight size={24} />
+              <div className={styles.supportInfoDivider} />
+
+              <div className={styles.supportInfoItem}>
+                <div className={`${styles.infoIcon} ${styles.infoIconGreen}`}>
+                  <Clock size={27} />
+                </div>
+
+                <div>
+                  <h3>Response Time</h3>
+                  <p className={styles.greenText}>Usually within 24 hours</p>
+                </div>
+              </div>
+
+              <div className={styles.supportInfoDivider} />
+
+              <div className={styles.supportHelpBlock}>
+                <div className={styles.supportInfoItem}>
+                  <div className={`${styles.infoIcon} ${styles.infoIconPurple}`}>
+                    <Headphones size={27} />
+                  </div>
+
+                  <div>
+                    <h3>What can we help with?</h3>
+
+                    <div className={styles.helpList}>
+                      {helpItems.map((item) => (
+                        <div key={item} className={styles.helpItem}>
+                          <CheckCircle size={18} />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section className={styles.bottomBar}>
+          <TrustItem
+            icon={<ShieldCheck size={30} />}
+            tone="blue"
+            title="Secure & Private"
+            text={
+              <>
+                Your data is protected with{" "}
+                <strong>enterprise-grade security.</strong>
+              </>
+            }
+          />
+
+          <TrustItem
+            icon={<Zap size={30} />}
+            tone="green"
+            title="Fast Response"
+            text={
+              <>
+                We typically respond <strong>within 24 hours.</strong>
+              </>
+            }
+          />
+
+          <TrustItem
+            icon={<Users size={30} />}
+            tone="purple"
+            title="Real People, Real Support"
+            text={
+              <>
+                Talk to our team.
+                <br />
+                No bots, just real humans.
+              </>
+            }
+          />
+
+          <a href="/support" className={styles.instantHelpCard}>
+            <div className={`${styles.trustIcon} ${styles.trustIconBlue}`}>
+              <Bot size={30} />
+            </div>
+
+            <div className={styles.instantHelpCopy}>
+              <h3>Need instant help?</h3>
+              <p>
+                Chat with our AI Support
+                <br />
+                available 24/7.
+              </p>
+            </div>
+
+            <ChevronRight size={22} />
           </a>
-        </div>
+        </section>
       </section>
     </main>
   );
@@ -241,17 +324,55 @@ function Field({ label, icon, placeholder, type = "text", value, onChange }) {
   );
 }
 
-function InfoCard({ icon, title, text, color, bg }) {
+
+function TrustItem({ icon, tone, title, text }) {
   return (
-    <div className={styles.infoCard}>
-      <div className={styles.infoIcon} style={{ background: bg, color: color }}>
+    <div className={styles.trustItem}>
+      <div
+        className={`${styles.trustIcon} ${
+          tone === "green"
+            ? styles.trustIconGreen
+            : tone === "purple"
+              ? styles.trustIconPurple
+              : styles.trustIconBlue
+        }`}
+      >
         {icon}
       </div>
+
       <div>
         <h3>{title}</h3>
-        <p style={{ color: color }}>{text}</p>
+        <p>{text}</p>
       </div>
     </div>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M7 10V8a5 5 0 0 1 10 0v2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <rect
+        x="5"
+        y="10"
+        width="14"
+        height="10"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+    </svg>
   );
 }
 
