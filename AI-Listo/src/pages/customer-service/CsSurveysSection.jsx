@@ -51,9 +51,58 @@ export default function CsSurveysSection() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const from = total === 0 ? 0 : (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
+  const ratedRows = rows.filter((s) => Number.isFinite(Number(s?.rating)));
+  const avgRating = ratedRows.length
+    ? (ratedRows.reduce((sum, s) => sum + Number(s.rating || 0), 0) / ratedRows.length).toFixed(1)
+    : "—";
 
   return (
     <>
+      <section className="csw-mobile-only csw-mobile-feature-panel tone-purple">
+        <div className="csw-mobile-feature-head">
+          <span className="csw-mobile-feature-title"><i data-lucide="clipboard-list" />Surveys</span>
+          <button type="button" onClick={() => setStatus("")}>View All <i data-lucide="chevron-right" /></button>
+        </div>
+
+        <div className="csw-mobile-survey-summary">
+          <div className="score">
+            <strong>{avgRating}</strong>
+            <div className="stars">★★★★★</div>
+          </div>
+          <div className="copy">
+            <b>Customer Satisfaction Survey</b>
+            <span>Overall Satisfaction Score</span>
+          </div>
+          <div className="responses">
+            <strong>{total}</strong>
+            <span>Responses</span>
+          </div>
+        </div>
+
+        <div className="csw-mobile-feature-list">
+          {loading ? (
+            <div className="csw-mobile-empty">Loading…</div>
+          ) : rows.length === 0 ? (
+            <div className="csw-mobile-empty">No surveys yet.</div>
+          ) : (
+            rows.slice(0, 3).map((s, idx) => (
+              <button type="button" key={s.id} className="csw-mobile-feature-row" onClick={() => open("view", s.id)}>
+                <span className={`row-icon survey-${idx % 3}`}><i data-lucide={idx === 0 ? "smile" : idx === 1 ? "thumbs-up" : "message-square-more"} /></span>
+                <span className="row-copy"><b>{s.customerName || "Customer Survey"}</b><small>{s.comment || s.ticketNumber || "Survey response"}</small></span>
+                <em className={s.status === "Responded" ? "is-active" : ""}>{s.status || "Sent"}</em>
+                <span className="survey-count">{s.rating != null ? `${s.rating}/5` : "—"}</span>
+                <i data-lucide="chevron-right" />
+              </button>
+            ))
+          )}
+        </div>
+
+        <button type="button" className="csw-mobile-outline-action" onClick={() => open("create")}>
+          <i data-lucide="circle-plus" />Create New Survey
+        </button>
+      </section>
+
+      <div className="csw-desktop-only">
       <div className="csw-section-head">
         <div>
           <h2>Surveys</h2>
@@ -117,6 +166,8 @@ export default function CsSurveysSection() {
             <option value="100">100 / page</option>
           </select>
         </div>
+      </div>
+
       </div>
 
       <CsRuleModal

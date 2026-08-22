@@ -68,6 +68,32 @@ export default function CsReportsSection() {
 
   return (
     <section>
+      <section className="csw-mobile-only csw-mobile-feature-panel tone-blue">
+        <div className="csw-mobile-feature-head">
+          <span className="csw-mobile-feature-title"><i data-lucide="chart-no-axes-column" />Reports</span>
+          <button type="button" onClick={load}>View All <i data-lucide="chevron-right" /></button>
+        </div>
+        <div className="csw-mobile-report-list">
+          {[
+            ["chart-no-axes-combined", "Ticket Volume Report", "Track ticket trends and volume over time", "blue"],
+            ["clock-3", "Response Time Report", "Analyze agent response performance", "purple"],
+            ["circle-check-big", "Resolution Time Report", "Track ticket resolution efficiency", "green"],
+            ["star", "Customer Satisfaction Report", "Review CSAT scores and feedback", "amber"],
+            ["user-round", "Agent Performance Report", "Evaluate agent productivity and quality", "pink"],
+          ].map(([icon, title, sub, tone]) => (
+            <button type="button" key={title} className="csw-mobile-report-row" onClick={load}>
+              <span className={`row-icon ${tone}`}><i data-lucide={icon} /></span>
+              <span><b>{title}</b><small>{sub}</small></span>
+              <i data-lucide="chevron-right" />
+            </button>
+          ))}
+        </div>
+        <button type="button" className="csw-mobile-outline-action" onClick={exportCsv} disabled={!data}>
+          <i data-lucide="file-text" />Explore All Reports
+        </button>
+      </section>
+
+      <div className="csw-desktop-only">
       <div className="csw-section-head">
         <div>
           <h2>Reports</h2>
@@ -127,6 +153,7 @@ export default function CsReportsSection() {
           </div>
         </>
       )}
+      </div>
     </section>
   );
 }

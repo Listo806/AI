@@ -52,6 +52,36 @@ export default function CsAutomationSection() {
 
   return (
     <>
+      <section className="csw-mobile-only csw-mobile-feature-panel tone-green">
+        <div className="csw-mobile-feature-head">
+          <span className="csw-mobile-feature-title"><i data-lucide="bot" />Automation</span>
+          <button type="button" onClick={() => open("create")}>View All <i data-lucide="chevron-right" /></button>
+        </div>
+        <div className="csw-mobile-feature-list">
+          {loading ? (
+            <div className="csw-mobile-empty">Loading…</div>
+          ) : error ? (
+            <div className="csw-mobile-empty error">{error}</div>
+          ) : rows.length === 0 ? (
+            <div className="csw-mobile-empty">No automations yet. Create a rule to get started.</div>
+          ) : (
+            rows.slice(0, 4).map((a, idx) => (
+              <button type="button" key={a.id} className="csw-mobile-feature-row automation-row" onClick={() => open("edit", a.id)}>
+                <span className={`row-icon auto-${idx % 4}`}><i data-lucide={idx % 3 === 0 ? "zap" : idx % 3 === 1 ? "mail" : "bell"} /></span>
+                <span className="row-copy"><b>{a.name || "-"}</b><small>{a.trigger || "Automation rule"}</small></span>
+                <em className={a.active ? "is-active" : "is-paused"}>{a.active ? "Active" : "Paused"}</em>
+                <span className={`fake-switch ${a.active ? "on" : ""}`}><i /></span>
+                <i data-lucide="chevron-right" />
+              </button>
+            ))
+          )}
+        </div>
+        <button type="button" className="csw-mobile-outline-action" onClick={() => open("create")}>
+          <i data-lucide="circle-plus" />Create New Automation
+        </button>
+      </section>
+
+      <div className="csw-desktop-only">
       <div className="csw-section-head">
         <div>
           <h2>Automation</h2>
@@ -92,6 +122,8 @@ export default function CsAutomationSection() {
             )}
           </tbody>
         </table>
+      </div>
+
       </div>
 
       <CsRuleModal

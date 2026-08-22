@@ -58,6 +58,35 @@ export default function CsKnowledgeBaseSection() {
 
   return (
     <>
+      <section className="csw-mobile-only csw-mobile-feature-panel tone-purple">
+        <div className="csw-mobile-feature-head">
+          <span className="csw-mobile-feature-title"><i data-lucide="library" />Knowledge Base</span>
+          <button type="button" onClick={() => { setSearch(""); setStatus(""); }}>View All <i data-lucide="chevron-right" /></button>
+        </div>
+        <div className="csw-mobile-feature-list">
+          {loading ? (
+            <div className="csw-mobile-empty">Loading…</div>
+          ) : error ? (
+            <div className="csw-mobile-empty error">{error}</div>
+          ) : rows.length === 0 ? (
+            <div className="csw-mobile-empty">No articles yet. Create your first article.</div>
+          ) : (
+            rows.slice(0, 4).map((a) => (
+              <button type="button" key={a.id} className="csw-mobile-feature-row" onClick={() => openModal("view", a.id)}>
+                <span className="row-icon"><i data-lucide="file-text" /></span>
+                <span className="row-copy"><b>{a.title || "-"}</b><small>{a.category || "General"}</small></span>
+                {a.status && <em>{a.status}</em>}
+                <i data-lucide="chevron-right" />
+              </button>
+            ))
+          )}
+        </div>
+        <button type="button" className="csw-mobile-outline-action" onClick={() => setSearch((v) => v)}>
+          <i data-lucide="search" />Search Knowledge Base
+        </button>
+      </section>
+
+      <div className="csw-desktop-only">
       <div className="csw-section-head">
         <div>
           <h2>Knowledge Base</h2>
@@ -131,6 +160,8 @@ export default function CsKnowledgeBaseSection() {
             <option value="100">100 / page</option>
           </select>
         </div>
+      </div>
+
       </div>
 
       <CsArticleModal

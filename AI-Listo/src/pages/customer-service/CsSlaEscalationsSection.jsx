@@ -87,9 +87,28 @@ export default function CsSlaEscalationsSection() {
   };
 
   const isPolicy = modal.kind === "policy";
+  const activePolicies = policies.filter((p) => p?.active).length;
+  const activeEscalations = escalations.filter((e) => e?.active).length;
 
   return (
     <>
+      <section className="csw-mobile-only csw-mobile-feature-panel tone-amber">
+        <div className="csw-mobile-feature-head">
+          <span className="csw-mobile-feature-title"><i data-lucide="shield-check" />SLA &amp; Escalations</span>
+          <button type="button" onClick={recompute} disabled={recomputing}>View All <i data-lucide="chevron-right" /></button>
+        </div>
+        <div className="csw-mobile-sla-metrics">
+          <div><i data-lucide="clock-3" /><strong>{policies.length}</strong><span>SLA Policies</span><small>{activePolicies} active</small></div>
+          <div><i data-lucide="alarm-clock" /><strong>{escalations.length}</strong><span>Escalation Rules</span><small>{activeEscalations} active</small></div>
+          <div><i data-lucide="circle-check-big" /><strong>{activePolicies}</strong><span>Active Policies</span><small>Configured</small></div>
+          <div><i data-lucide="arrow-up-circle" /><strong>{activeEscalations}</strong><span>Active Rules</span><small>Configured</small></div>
+        </div>
+        <button type="button" className="csw-mobile-outline-action" onClick={recompute} disabled={recomputing}>
+          <i data-lucide="refresh-cw" />{recomputing ? "Recomputing…" : "Recompute SLA"}
+        </button>
+      </section>
+
+      <div className="csw-desktop-only">
       <div className="csw-section-head">
         <div>
           <h2>SLA &amp; Escalations</h2>
@@ -179,6 +198,8 @@ export default function CsSlaEscalationsSection() {
             )}
           </tbody>
         </table>
+      </div>
+
       </div>
 
       <CsRuleModal

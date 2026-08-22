@@ -242,6 +242,7 @@ function CsDashboard({ stats }) {
 
 export default function CustomerServiceWorkspace() {
   const [tab, setTab] = useState("Overview");
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [status, setStatus] = useState("");
@@ -328,6 +329,12 @@ export default function CustomerServiceWorkspace() {
   };
   const handleSaved = () => setRefreshTick((t) => t + 1);
 
+  const goToWorkspaceTab = (nextTab) => {
+    setTab(nextTab);
+    setMobileMoreOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Export the currently-filtered tickets to CSV. Data comes only from the
   // account-scoped list endpoint and respects the active filters. Paged up to a
   // safety cap; the user is told if the export was capped (no silent truncation).
@@ -401,8 +408,48 @@ export default function CustomerServiceWorkspace() {
     return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
   };
 
+  const mobileDescription = {
+    Overview: "Deliver amazing support experiences and resolve issues faster.",
+    Tickets: "Manage and respond to customer inquiries.",
+    Customers: "Manage customer support relationships and history.",
+    "Knowledge Base": "Manage support knowledge, guides and help content.",
+    "SLA & Escalations": "Manage SLA targets, breaches and escalation rules.",
+    Automation: "Automate ticket routing, alerts and support workflows.",
+    Reports: "Analyze support performance and operational trends.",
+    Surveys: "Gather customer feedback and satisfaction insights.",
+  }[tab] || "Deliver amazing support experiences and resolve issues faster.";
+
+  const ticketStatusCount = (label) => {
+    const row = (stats?.ticketsByStatus || []).find(
+      (item) => String(item?.label || "").toLowerCase() === String(label).toLowerCase(),
+    );
+    return Number(row?.count || 0);
+  };
+
+  const mobileChannelIcon = (value) => {
+    const key = String(value || "").toLowerCase();
+    if (key === "whatsapp") return "message-circle";
+    if (key === "email") return "mail";
+    if (key === "phone") return "phone";
+    if (key === "chat") return "message-circle-more";
+    if (key === "web") return "globe-2";
+    return "ticket";
+  };
+
   return (
     <div className="csw-page">
+      <div className="csw-mobile-page-head">
+        <div>
+          <h1>Customer Service Workspace</h1>
+          <p>{mobileDescription}</p>
+        </div>
+        <button type="button" className="csw-mobile-period">
+          <I name="calendar-days" size={18} />
+          <span>This Month</span>
+          <I name="chevron-down" size={16} />
+        </button>
+      </div>
+
       <div className="csw-header">
         <div>
           <h1>Customer Service Workspace</h1>
@@ -422,6 +469,7 @@ export default function CustomerServiceWorkspace() {
         </div>
       </div>
 
+      <h2 className="csw-mobile-overview-title">Overview</h2>
       <div className="csw-stats">
         {STAT_CONFIG.map(([icon, label, key], i) => {
           const { value, sub } = statValue(key, stats);
@@ -451,7 +499,97 @@ export default function CustomerServiceWorkspace() {
         <CsDashboard stats={stats} />
       ) : tab === "Tickets" ? (
         <>
-          <div className="csw-section-head">
+          <div className="csw-mobile-ticket-toolbar">
+            <h2>Tickets</h2>
+            <div className="csw-mobile-ticket-search-row">
+              <label>
+                <I name="search" size={18} />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search tickets, customers, agents..."
+                />
+              </label>
+              <button type="button" onClick={() => setStatus(status ? "" : "Open")}>
+                <I name="list-filter" size={18} />
+                <span>Filter</span>
+                {(status || priority || channel || category || slaStatus) && <b>1</b>}
+              </button>
+            </div>
+
+            <div className="csw-mobile-ticket-statuses">
+              <button className={!status ? "active" : ""} onClick={() => setStatus("")}>All</button>
+              <button className={status === "Open" ? "active" : ""} onClick={() => setStatus("Open")}>
+                Open <span className="blue">{ticketStatusCount("Open")}</span>
+              </button>
+              <button className={status === "In Progress" ? "active" : ""} onClick={() => setStatus("In Progress")}>
+                In Progress <span className="amber">{ticketStatusCount("In Progress")}</span>
+              </button>
+              <button className={status === "On Hold" ? "active" : ""} onClick={() => setStatus("On Hold")}>
+                On Hold <span className="orange">{ticketStatusCount("On Hold")}</span>
+              </button>
+              <button className={status === "Closed" ? "active" : ""} onClick={() => setStatus("Closed")}>
+                Closed <span className="green">{ticketStatusCount("Closed")}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="csw-mobile-ticket-list">
+            {loading ? (
+              <div className="csw-mobile-empty">Loading…</div>
+            ) : error ? (
+              <div className="csw-mobile-empty error">{error}</div>
+            ) : tickets.length === 0 ? (
+              <div className="csw-mobile-empty">No tickets yet.</div>
+            ) : (
+              tickets.map((ticket) => (
+                <button
+                  type="button"
+                  key={ticket.id}
+                  className={`csw-mobile-ticket-card priority-${String(ticket.priority || "medium").toLowerCase()}`}
+                  onClick={() => openDetail(ticket.id)}
+                >
+                  <span className={`csw-mobile-ticket-icon channel-${String(ticket.channel || "web").toLowerCase()}`}>
+                    <I name={mobileChannelIcon(ticket.channel)} size={26} />
+                  </span>
+                  <span className="csw-mobile-ticket-copy">
+                    <span className="csw-mobile-ticket-meta">
+                      <b>{ticket.ticketNumber || "Ticket"}</b>
+                      <i>•</i>
+                      <em>{ticket.status || "Open"}</em>
+                    </span>
+                    <strong>{ticket.subject || "-"}</strong>
+                    <small>{ticket.customerName || "-"} {ticket.customerEmail ? ` · ${ticket.customerEmail}` : ""}</small>
+                    <small className="muted">
+                      <I name="clock-3" size={13} />
+                      {relativeTime(ticket.lastActivityAt || ticket.createdAt) || "-"}
+                      <I name="tag" size={13} />
+                      {ticket.category || ticket.channel || "-"}
+                    </small>
+                  </span>
+                  <span className={`csw-mobile-priority priority-${String(ticket.priority || "medium").toLowerCase()}`}>
+                    {ticket.priority || "Medium"}
+                  </span>
+                  <I name="chevron-right" size={22} />
+                </button>
+              ))
+            )}
+          </div>
+
+          <div className="csw-mobile-ticket-pagination">
+            <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}><I name="chevron-left" /></button>
+            <span>{page} of {totalPages}</span>
+            <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}><I name="chevron-right" /></button>
+          </div>
+
+          <div className="csw-mobile-ticket-quick">
+            <button onClick={() => openModal("create")}><I name="file-plus-2" /><span><b>New Ticket</b><small>Create a new ticket</small></span></button>
+            <button onClick={() => setStatus("Open")}><I name="user-round" /><span><b>My Tickets</b><small>View assigned to me</small></span></button>
+            <button onClick={() => setSlaStatus("At Risk")}><I name="clock-3" /><span><b>SLA Alerts</b><small>{ticketStatusCount("At Risk")} tickets breaching</small></span></button>
+            <button onClick={() => setStatus("Open")}><I name="circle-check-big" /><span><b>Unassigned</b><small>Open tickets</small></span></button>
+          </div>
+
+          <div className="csw-section-head csw-desktop-only">
             <div>
               <h2>Tickets</h2>
               <p>View, manage and resolve customer tickets</p>
@@ -465,7 +603,7 @@ export default function CustomerServiceWorkspace() {
               </button>
             </div>
           </div>
-          <div className="csw-filters">
+          <div className="csw-filters csw-desktop-only">
             <label>
               <I name="search" />
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tickets..." />
@@ -492,7 +630,7 @@ export default function CustomerServiceWorkspace() {
             </select>
             <button className="reset" onClick={reset}>↻ Reset</button>
           </div>
-          <div className="csw-table-wrap">
+          <div className="csw-table-wrap csw-desktop-only">
             <table>
               <thead>
                 <tr>
@@ -578,7 +716,7 @@ export default function CustomerServiceWorkspace() {
               </select>
             </div>
           </div>
-          <CsDashboard stats={stats} />
+          <div className="csw-desktop-only"><CsDashboard stats={stats} /></div>
         </>
       ) : tab === "Customers" ? (
         <CsCustomersSection />
@@ -599,6 +737,96 @@ export default function CustomerServiceWorkspace() {
           <p>{tab} workspace is ready for the next implementation step.</p>
         </div>
       )}
+
+      <div className="csw-mobile-workspace-label">Workspaces</div>
+
+      <div className="csw-mobile-workspace-tabs-wrap">
+        <nav className="csw-mobile-workspace-nav">
+          <button
+            className={tab === "Overview" ? "active blue" : ""}
+            onClick={() => goToWorkspaceTab("Overview")}
+          >
+            <I name="layout-grid" />
+            <span>Overview</span>
+          </button>
+
+          <button
+            className={tab === "Tickets" ? "active blue" : ""}
+            onClick={() => goToWorkspaceTab("Tickets")}
+          >
+            <I name="ticket" />
+            <span>Tickets</span>
+          </button>
+
+          <button
+            className={tab === "Customers" ? "active blue" : ""}
+            onClick={() => goToWorkspaceTab("Customers")}
+          >
+            <I name="users" />
+            <span>Customers</span>
+          </button>
+
+          <button
+            className={tab === "Knowledge Base" ? "active green" : ""}
+            onClick={() => goToWorkspaceTab("Knowledge Base")}
+          >
+            <I name="library" />
+            <span>Knowledge Base</span>
+          </button>
+
+          <button
+            type="button"
+            className={
+              mobileMoreOpen ||
+              ["SLA & Escalations", "Automation", "Reports", "Surveys"].includes(tab)
+                ? "more-open"
+                : ""
+            }
+            aria-expanded={mobileMoreOpen}
+            onClick={() => setMobileMoreOpen((open) => !open)}
+          >
+            <I name="ellipsis" />
+            <span>More</span>
+            <I name="chevron-down" size={14} />
+          </button>
+        </nav>
+
+        {mobileMoreOpen && (
+          <div className="csw-mobile-workspace-more-menu">
+            <button
+              className={tab === "SLA & Escalations" ? "active" : ""}
+              onClick={() => goToWorkspaceTab("SLA & Escalations")}
+            >
+              <I name="alarm-clock" />
+              <span>SLA & Escalations</span>
+            </button>
+
+            <button
+              className={tab === "Automation" ? "active" : ""}
+              onClick={() => goToWorkspaceTab("Automation")}
+            >
+              <I name="network" />
+              <span>Automation</span>
+            </button>
+
+            <button
+              className={tab === "Reports" ? "active" : ""}
+              onClick={() => goToWorkspaceTab("Reports")}
+            >
+              <I name="file-chart-column" />
+              <span>Reports</span>
+            </button>
+
+            <button
+              className={tab === "Surveys" ? "active" : ""}
+              onClick={() => goToWorkspaceTab("Surveys")}
+            >
+              <I name="clipboard-check" />
+              <span>Surveys</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       <CsTicketModal
         key={nonce}
