@@ -116,6 +116,25 @@ export default function LeadGeneratorPage() {
     limit: "50",
     minScore: "0",
     aiInstructions: "",
+
+    // Advanced-search presentation fields.
+    // These stay local until the discovery backend supports the corresponding
+    // criteria; existing real API payload below remains unchanged.
+    companySize: "all",
+    stateProvince: "all",
+    postalCode: "",
+    revenue: "all",
+    technologies: "",
+    jobTitle: "all",
+    department: "all",
+    seniority: "all",
+    excludeKeywords: "",
+    contactLinkedIn: true,
+    contactWebsite: true,
+    contactGoogle: true,
+    contactCrunchbase: false,
+    findEmails: true,
+
     saveSearch: false,
     saveName: "",
   });
@@ -391,124 +410,137 @@ export default function LeadGeneratorPage() {
     .filter((l) => l.status === "qualified" || l.aiBand === "hot" || l.aiBand === "warm")
     .map((l) => l.id);
 
+  const matchCounts = useMemo(
+    () => ({
+      high: leads.filter((l) => l.aiBand === "hot").length,
+      medium: leads.filter((l) => l.aiBand === "warm").length,
+      low: leads.filter((l) => !l.aiBand || l.aiBand === "cold").length,
+    }),
+    [leads],
+  );
+
+  const searchCriteria = search?.criteria || {};
+  const currentLocation =
+    form.city ||
+    searchCriteria.location ||
+    (form.country !== "all" ? COUNTRY_NAMES[form.country] || form.country : "");
+
+  const generatedCount = counts.found || leads.length || 0;
+  const qualifiedCount = counts.qualified || kpis.leadsQualified || 0;
+
+  const selectAllVisible = () => {
+    setSelectedLeads((prev) =>
+      prev.length === leads.length ? [] : leads.map((lead) => lead.id),
+    );
+  };
+
+  const saveCurrentSearch = async () => {
+    const fallbackName =
+      form.saveName.trim() ||
+      form.keywords.trim() ||
+      form.industry.trim() ||
+      `${t("generator.savedSearches")} ${new Date().toLocaleDateString()}`;
+
+    try {
+      await leadgenApi.createSavedSearch({
+        name: fallbackName,
+        mode: "advanced",
+        keywords: form.keywords || form.industry || form.city,
+        industry: form.industry,
+        location: form.city,
+        countries: form.country === "all" ? [] : [form.country],
+        limit: Number(form.limit) || 50,
+      });
+      loadSaved();
+      setMsg(t("generator.billingNote"));
+    } catch (e) {
+      setMsg(e?.message || t("generator.purchaseError"));
+    }
+  };
+
   if (loading) {
     return (
-      <div className="generator-page">
-        <div className="heading_page">
-          <Sparkles className="header-icon" size={20} />
-          <h1>{t("generator.pageTitle")}</h1>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#64748b", padding: "40px 0" }}>
-          <Loader2 size={18} className="spin" /> Loading the Lead Generator…
-        </div>
+      <div className="generator-page generator-page-loading">
+        <Loader2 size={20} className="spin" />
+        <span>{t("common.loading")}</span>
       </div>
     );
   }
 
   return (
     <div className="generator-page">
-      <div className="heading_page">
-        <Sparkles className="header-icon" size={20} />
-        <h1>{t("generator.pageTitle")}</h1>
-      </div>
-      <p className="sub_head">{t("generator.subheading")}</p>
-
-      {/* Honest provider-connection banner */}
-      {notConnected && (
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "flex-start",
-            background: "#fff8ec",
-            border: "1px solid #f5d9a8",
-            borderRadius: 12,
-            padding: "14px 16px",
-            margin: "6px 0 4px",
-          }}
-        >
-          <PlugZap size={20} color="#b45309" style={{ flex: "none", marginTop: 2 }} />
-          <div style={{ fontSize: 13.5, color: "#7c5307", lineHeight: 1.5 }}>
-            <b style={{ color: "#7c2d12" }}>No data provider is connected yet.</b>{" "}
-            {context?.providerNotice ||
-              "Lead generation returns no results until a discovery provider is configured. No sample or placeholder leads are shown."}
+      <header className="generator-header">
+        <div className="generator-title-wrap">
+          <div className="generator-title-icon">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h1>{t("generator.pageTitle")}</h1>
+            <p>{t("generator.subheading")}</p>
           </div>
         </div>
-      )}
 
-      {msg && (
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            alignItems: "center",
-            background: "#eef2ff",
-            border: "1px solid #c7d2fe",
-            borderRadius: 10,
-            padding: "10px 14px",
-            margin: "6px 0",
-            fontSize: 13,
-            color: "#3730a3",
-          }}
-        >
-          <AlertTriangle size={15} /> {msg}
+        <div className="generator-header-actions">
           <button
-            onClick={() => setMsg(null)}
-            style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#3730a3" }}
+            type="button"
+            className="generator-btn generator-btn-ghost"
+            onClick={() => setShowSaved((value) => !value)}
           >
-            ✕
+            <Save size={15} />
+            {t("generator.savedSearches")}
           </button>
-        </div>
-      )}
 
-      <div className="page-header">
-        <div className="header-actions" style={{ position: "relative" }}>
-          <button className="btn-icon-text" onClick={exportCsv}>
-            <Download size={15} /> {t("generator.export")}
+          <button
+            type="button"
+            className="generator-btn generator-btn-ghost"
+            onClick={() => setMsg(search ? `${search.status}` : t("generator.searchProgressTitle"))}
+          >
+            <Activity size={15} />
+            {t("generator.campaignDrafts")}
           </button>
-          <button className="btn-icon-text" onClick={() => setShowSaved((v) => !v)}>
-            <Eye size={15} /> {t("generator.savedSearches")}
+
+          <button
+            type="button"
+            className="generator-btn generator-btn-ghost"
+            onClick={exportCsv}
+          >
+            <Download size={15} />
+            {t("generator.export")}
+            <ChevronDown size={13} />
           </button>
-          <button className="btn-icon-text" onClick={() => setMsg("Campaign drafts arrive with the outreach slice.")}>
-            <Activity size={15} /> {t("generator.campaignDrafts")}
-          </button>
-          <button className="btn-primary" onClick={generate} disabled={generating || isRunning}>
-            {generating || isRunning ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} fill="white" />}{" "}
+
+          <button
+            type="button"
+            className="generator-btn generator-btn-primary"
+            onClick={generate}
+            disabled={generating || isRunning}
+          >
+            {generating || isRunning ? (
+              <Loader2 size={15} className="spin" />
+            ) : (
+              <Sparkles size={15} />
+            )}
             {t("generator.generateNewLeads")}
           </button>
 
           {showSaved && (
-            <div
-              style={{
-                position: "absolute",
-                top: "110%",
-                right: 0,
-                zIndex: 20,
-                background: "#fff",
-                border: "1px solid #e2e8f0",
-                borderRadius: 10,
-                boxShadow: "0 8px 24px rgba(15,23,42,.12)",
-                width: 300,
-                padding: 8,
-              }}
-            >
+            <div className="generator-saved-popover">
+              <div className="generator-popover-title">{t("generator.savedSearches")}</div>
+
               {savedSearches.length === 0 ? (
-                <div style={{ padding: 12, fontSize: 13, color: "#64748b" }}>No saved searches yet.</div>
+                <div className="generator-empty-small">{t("common.noData")}</div>
               ) : (
-                savedSearches.map((s) => (
-                  <div
-                    key={s.id}
-                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8 }}
-                  >
-                    <button
-                      onClick={() => applySaved(s)}
-                      style={{ flex: 1, textAlign: "left", background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#0f172a" }}
-                    >
-                      {s.name}
+                savedSearches.slice(0, 8).map((saved) => (
+                  <div className="generator-saved-popover-row" key={saved.id}>
+                    <button type="button" onClick={() => applySaved(saved)}>
+                      <strong>{saved.name}</strong>
+                      <span>{saved.criteria?.keywords || saved.criteria?.industry || "—"}</span>
                     </button>
                     <button
-                      onClick={() => removeSavedSearch(s.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626" }}
+                      type="button"
+                      className="generator-delete-saved"
+                      onClick={() => removeSavedSearch(saved.id)}
+                      aria-label={t("common.delete")}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -518,542 +550,698 @@ export default function LeadGeneratorPage() {
             </div>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* METRICS ROW (real KPIs) */}
-      <div className="metrics-summary-grid">
-        {metrics.map((m, idx) => (
-          <div className={`metric-mini-card ${m.type}`} key={idx}>
-            <div className={`metric-mini-icon ${m.type}`}>{m.icon}</div>
-            <div className="metric-mini-info">
-              <span>{m.title}</span>
-              <div className="metric-num-wrapper">
-                <h2>{m.value}</h2>
-              </div>
-            </div>
+      {notConnected && (
+        <div className="generator-notice generator-notice-warning">
+          <PlugZap size={19} />
+          <div>
+            <strong>{t("generator.sourceFocusTitle")}</strong>
+            <span>
+              {context?.providerNotice ||
+                "Lead generation requires a connected discovery provider. No sample or placeholder leads are shown."}
+            </span>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* CONFIGURATION BLOCK (industry-neutral, controlled) */}
-      <div className="config-section-container">
-        <h3 className="section-block-title">{t("generator.configTitle")}</h3>
-        <div className="inputs-form-grid">
-          <div className="form-field-group">
-            <label>What are you looking for?</label>
-            <div className="input-select-wrapper">
-              <input
-                placeholder="e.g. dental clinics, law firms, real estate agencies"
+      {msg && (
+        <div className="generator-notice generator-notice-info">
+          <AlertTriangle size={16} />
+          <span>{msg}</span>
+          <button type="button" onClick={() => setMsg(null)}>×</button>
+        </div>
+      )}
+
+      <div className="generator-workspace">
+        <main className="generator-main-column">
+          <section className="generator-card generator-search-card">
+            <div className="generator-step-head">
+              <h2>{t("generator.configTitle")}</h2>
+              <p>{t("generator.labelAiSearchInstructions")}</p>
+              <small>{t("generator.aiInstructionsPlaceholder")}</small>
+            </div>
+
+            <div className="generator-natural-search">
+              <textarea
                 value={form.keywords}
                 onChange={(e) => setField("keywords", e.target.value)}
+                placeholder={t("generator.aiInstructionsPlaceholder")}
+                rows={2}
               />
+              <Sparkles size={18} />
+              <span>{Math.min(500, form.keywords.length)}/500</span>
             </div>
-          </div>
 
-          <div className="form-field-group">
-            <label>{t("generator.labelCountry")}</label>
-            <div className="input-select-wrapper">
-              <select value={form.country} onChange={(e) => setField("country", e.target.value)}>
-                <option value="all">All launch markets</option>
-                {(context?.launchCountries || Object.keys(COUNTRY_NAMES)).map((c) => (
-                  <option key={c} value={c}>
-                    {COUNTRY_NAMES[c] || c}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="select-chevron-icon" />
+            <div className="generator-search-actions">
+              <button
+                type="button"
+                className="generator-btn generator-btn-compact"
+                onClick={() => {
+                  const el = document.querySelector(".generator-advanced-card");
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                <Filter size={14} />
+                {t("generator.advancedOptions")}
+                <ChevronDown size={13} />
+              </button>
+
+              <button
+                type="button"
+                className="generator-search-submit"
+                onClick={generate}
+                disabled={generating || isRunning}
+              >
+                {generating || isRunning ? (
+                  <Loader2 size={15} className="spin" />
+                ) : (
+                  <Search size={15} />
+                )}
+                {t("generator.addOnTitle")}
+              </button>
             </div>
-          </div>
+          </section>
 
-          <div className="form-field-group">
-            <label>{t("generator.labelCity")}</label>
-            <div className="input-select-wrapper">
-              <input
-                placeholder="Optional"
-                value={form.city}
-                onChange={(e) => setField("city", e.target.value)}
-              />
+          <section className="generator-card generator-advanced-card">
+            <div className="generator-section-title">
+              <h2>{t("generator.searchProgressTitle")}</h2>
             </div>
-          </div>
 
-          <div className="form-field-group">
-            <label>{t("generator.labelIndustry")}</label>
-            <div className="input-select-wrapper">
-              <input
-                placeholder="Optional"
-                value={form.industry}
-                onChange={(e) => setField("industry", e.target.value)}
-              />
+            <div className="generator-advanced-grid generator-advanced-grid-reference">
+              <label className="generator-field">
+                <span>{t("generator.labelIndustry")}</span>
+                <select
+                  value={form.industry}
+                  onChange={(e) => setField("industry", e.target.value)}
+                >
+                  <option value="">{t("common.all")}</option>
+                  <option value="Marketing & Advertising">Marketing & Advertising</option>
+                  <option value="Real Estate">Real Estate</option>
+                  <option value="SaaS">SaaS</option>
+                  <option value="Financial Services">Financial Services</option>
+                </select>
+                <ChevronDown size={13} />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.benefitQualified")}</span>
+                <select
+                  value={form.companySize}
+                  onChange={(e) => setField("companySize", e.target.value)}
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <option value="1-10">1 - 10</option>
+                  <option value="5-50">5 - 50</option>
+                  <option value="51-200">51 - 200</option>
+                  <option value="201-500">201 - 500</option>
+                  <option value="500+">500+</option>
+                </select>
+                <ChevronDown size={13} />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.labelCountry")}</span>
+                <select
+                  value={form.country}
+                  onChange={(e) => setField("country", e.target.value)}
+                >
+                  <option value="all">{t("common.all")}</option>
+                  {(context?.launchCountries || Object.keys(COUNTRY_NAMES)).map((country) => (
+                    <option key={country} value={country}>
+                      {COUNTRY_NAMES[country] || country}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={13} />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.benefitLocation")}</span>
+                <select
+                  value={form.stateProvince}
+                  onChange={(e) => setField("stateProvince", e.target.value)}
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <option value="Madrid">Madrid</option>
+                  <option value="Catalonia">Catalonia</option>
+                  <option value="Valencia">Valencia</option>
+                  <option value="Andalusia">Andalusia</option>
+                </select>
+                <ChevronDown size={13} />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.labelCity")}</span>
+                <input
+                  value={form.city}
+                  onChange={(e) => setField("city", e.target.value)}
+                  placeholder={t("common.all")}
+                />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.labelArea")}</span>
+                <input
+                  value={form.postalCode}
+                  onChange={(e) => setField("postalCode", e.target.value)}
+                  placeholder={t("common.all")}
+                />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.budget")}</span>
+                <select
+                  value={form.revenue}
+                  onChange={(e) => setField("revenue", e.target.value)}
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <option value="<1m">&lt; $1M</option>
+                  <option value="1m-10m">$1M - $10M</option>
+                  <option value="10m-50m">$10M - $50M</option>
+                  <option value="50m+">$50M+</option>
+                </select>
+                <ChevronDown size={13} />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.interestedIn")}</span>
+                <input
+                  value={form.technologies}
+                  onChange={(e) => setField("technologies", e.target.value)}
+                  placeholder="Google Ads"
+                />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.labelGoal")}</span>
+                <select
+                  value={form.jobTitle}
+                  onChange={(e) => setField("jobTitle", e.target.value)}
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <option value="Founder">Founder</option>
+                  <option value="Owner">Owner</option>
+                  <option value="Marketing Director">Marketing Director</option>
+                  <option value="Head of Sales">Head of Sales</option>
+                </select>
+                <ChevronDown size={13} />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.labelBusinessType")}</span>
+                <select
+                  value={form.department}
+                  onChange={(e) => setField("department", e.target.value)}
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Operations">Operations</option>
+                  <option value="Executive">Executive</option>
+                </select>
+                <ChevronDown size={13} />
+              </label>
+
+              <label className="generator-field">
+                <span>{t("generator.optFindInvestmentAgencies")}</span>
+                <select
+                  value={form.seniority}
+                  onChange={(e) => setField("seniority", e.target.value)}
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <option value="Owner">Owner</option>
+                  <option value="C-Level">C-Level</option>
+                  <option value="VP">VP</option>
+                  <option value="Director">Director</option>
+                  <option value="Manager">Manager</option>
+                </select>
+                <ChevronDown size={13} />
+              </label>
+
+              <label className="generator-field generator-field-keywords">
+                <span>{t("generator.labelProductOffer")}</span>
+                <input
+                  value={form.keywords}
+                  onChange={(e) => setField("keywords", e.target.value)}
+                  placeholder="Digital Marketing, PPC, Ads"
+                />
+              </label>
+
+              <label className="generator-field generator-field-exclude">
+                <span>{t("generator.metricCampaignReady")}</span>
+                <input
+                  value={form.excludeKeywords}
+                  onChange={(e) => setField("excludeKeywords", e.target.value)}
+                  placeholder="Freelancer, Consultant"
+                />
+              </label>
             </div>
-          </div>
 
-          <div className="form-field-group">
-            <label>{t("generator.labelNumberOfLeads")}</label>
-            <div className="input-select-wrapper">
-              <select value={form.limit} onChange={(e) => setField("limit", e.target.value)}>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
-              <ChevronDown size={14} className="select-chevron-icon" />
+            <div className="generator-contact-source-row">
+              <span className="generator-contact-source-label">
+                {t("generator.labelContactChannels")}
+              </span>
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.contactLinkedIn}
+                  onChange={(e) => setField("contactLinkedIn", e.target.checked)}
+                />
+                <span>LinkedIn</span>
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.contactWebsite}
+                  onChange={(e) => setField("contactWebsite", e.target.checked)}
+                />
+                <span>Company Website</span>
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.contactGoogle}
+                  onChange={(e) => setField("contactGoogle", e.target.checked)}
+                />
+                <span>Google</span>
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.contactCrunchbase}
+                  onChange={(e) => setField("contactCrunchbase", e.target.checked)}
+                />
+                <span>Crunchbase</span>
+              </label>
+
+              <label className="generator-find-emails">
+                <input
+                  type="checkbox"
+                  checked={form.findEmails}
+                  onChange={(e) => setField("findEmails", e.target.checked)}
+                />
+                <span>{t("generator.benefitFollowUp")}</span>
+              </label>
             </div>
-          </div>
+          </section>
 
-          <div className="form-field-group">
-            <label>
-              {t("generator.labelMinimumAiScore")} <span>{t("generator.optional")}</span>
-            </label>
-            <div className="input-select-wrapper">
-              <select value={form.minScore} onChange={(e) => setField("minScore", e.target.value)}>
-                <option value="0">Any</option>
-                <option value="40">40%+</option>
-                <option value="70">70%+</option>
-                <option value="85">85%+</option>
-              </select>
-              <ChevronDown size={14} className="select-chevron-icon" />
-            </div>
-          </div>
-        </div>
-
-        <div className="config-action-bottom-row">
-          <div className="right-action-cluster" style={{ marginLeft: 0 }}>
-            <div className="toggle-control-label">
-              <span>{t("generator.saveThisSearch")}</span>
-              <div
-                className={`switch-toggle-component ${form.saveSearch ? "active-green" : ""}`}
-                onClick={() => setField("saveSearch", !form.saveSearch)}
-              ></div>
-            </div>
-            {form.saveSearch && (
-              <input
-                placeholder="Name this search"
-                value={form.saveName}
-                onChange={(e) => setField("saveName", e.target.value)}
-                style={{ padding: "6px 10px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13 }}
-              />
-            )}
-          </div>
-          <button
-            className="btn-primary"
-            style={{ padding: "0 24px" }}
-            onClick={generate}
-            disabled={generating || isRunning}
-          >
-            {generating || isRunning ? <Loader2 size={14} className="spin" /> : <ToolCase size={14} />}{" "}
-            {t("generator.generateNewLeads")}
-          </button>
-          <button
-            className="btn-clear-form"
-            onClick={() =>
-              setForm({
-                keywords: "",
-                country: "all",
-                city: "",
-                industry: "",
-                limit: "50",
-                minScore: "0",
-                aiInstructions: "",
-                saveSearch: false,
-                saveName: "",
-              })
-            }
-          >
-            {t("generator.clear")}
-          </button>
-        </div>
-      </div>
-
-      {/* LOWER GRID */}
-      <div className="lower-split-dashboard-grid">
-        <div className="right-analytics">
-          <div className="process-management-row">
-            {/* SOURCE FOCUS — real connectors */}
-            <div className="inner-process-card">
-              <h3 className="section-block-title green-theme">{t("generator.sourceFocusTitle")}</h3>
-              <div className="sources-selection-flex-list">
-                {sources.map((s) => (
-                  <div className="source-checkbox-item-box" key={s.key} title={s.role}>
-                    <CheckCircle2
-                      size={18}
-                      fill={s.connected ? "#16a34a" : "#cbd5e1"}
-                      color="white"
-                      className="source-box-check-indicator"
-                    />
-                    <div className="source-box-icon-center">
-                      {s.kind === "discovery" ? (
-                        <Building2 size={18} />
-                      ) : s.kind === "enrichment" ? (
-                        <Layers size={18} />
-                      ) : s.kind === "verification" ? (
-                        <CheckCircle2 size={18} />
-                      ) : (
-                        <Globe size={18} />
-                      )}
-                    </div>
-                    <span>{s.name}</span>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        color: s.connected ? "#16a34a" : "#94a3b8",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {s.connected ? "Connected" : "Not connected"}
+          <section className="generator-card generator-results-card">
+            <div className="generator-results-head">
+              <div>
+                <div className="generator-section-title generator-section-title-inline">
+                  <h2>{t("generator.leadsFound")}</h2>
+                  {search && TERMINAL.includes(search.status) && search.status !== "failed" && (
+                    <span className="generator-completed-badge">
+                      {t("common.success")}
                     </span>
-                  </div>
-                ))}
-              </div>
-              <p className="sources-disclaimer-notice-text">{t("generator.sourcesDisclaimer")}</p>
-            </div>
-
-            {/* SEARCH PROGRESS — real status */}
-            <div className="inner-process-card">
-              <h3 className="section-block-title">{t("generator.searchProgressTitle")}</h3>
-              {!search ? (
-                <div style={{ padding: "18px 4px", color: "#64748b", fontSize: 13 }}>
-                  No search has run yet. Set your criteria above and generate leads.
+                  )}
                 </div>
-              ) : (
-                <div className="pipeline-progress-steps-line">
-                  <div className="pipeline-line-connector-back"></div>
-                  {PIPELINE.map((node, i) => {
-                    const failed = search.status === "failed" || search.status === "cancelled";
-                    let stateClass = "pending-orange-state";
-                    if (!failed) {
-                      if (i < activeNode) stateClass = "done-state";
-                      else if (i === activeNode) stateClass = isRunning ? "active-state" : "done-state";
-                    }
-                    const Icon = node.icon;
-                    const isReadyNode = i === PIPELINE.length - 1;
-                    return (
-                      <div className="pipeline-single-node-step" key={node.key}>
-                        <div className={`pipeline-node-circle-icon ${stateClass}`}>
-                          {isReadyNode && TERMINAL.includes(search.status) && !failed ? (
-                            leads.length
-                          ) : (
-                            <Icon size={15} />
-                          )}
-                        </div>
-                        <span className="pipeline-step-caption-text">{node.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {search?.statusDetail && (
-                <p style={{ marginTop: 10, fontSize: 12, color: "#64748b" }}>{search.statusDetail}</p>
-              )}
-            </div>
-          </div>
-        </div>
+                <p>
+                  <strong>{generatedCount}</strong> {t("generator.metricGeneratedLeads")}
+                  <span>•</span>
+                  <strong>{selectedLeads.length}</strong>{" "}
+                  {t("generator.selectedCount", { count: selectedLeads.length })}
+                </p>
+              </div>
 
-        {/* LIVE SUMMARY — real counts */}
-        <div className="right-analytics-sidebar-panel">
-          <div className="sidebar-analytics-card">
-            <h3 className="sidebar-card-headline-title">{t("generator.liveSummary")}</h3>
-            <div className="analytics-color-legend-list">
-              <div className="legend-row-item-align">
-                <span className="legend-label-left-side">{t("generator.sourcesChecked")}</span>
-                <span className="legend-count-value-number" style={{ color: "#16a34a" }}>
-                  {(search?.sourcesUsed || []).length}
-                </span>
-              </div>
-              <div className="legend-row-item-align">
-                <span className="legend-label-left-side">{t("generator.resultsFound")}</span>
-                <span className="legend-count-value-number" style={{ color: "#16a34a" }}>
-                  {counts.found || 0}
-                </span>
-              </div>
-              <div className="legend-row-item-align">
-                <span className="legend-label-left-side">{t("generator.qualifiedLeads")}</span>
-                <span className="legend-count-value-number" style={{ color: "#ea580c" }}>
-                  {counts.qualified || 0}
-                </span>
-              </div>
-              <div className="legend-row-item-align">
-                <span className="legend-label-left-side">{t("generator.duplicatesRemoved")}</span>
-                <span className="legend-count-value-number" style={{ color: "#dc2626" }}>
-                  {counts.deduped || 0}
-                </span>
-              </div>
-            </div>
-            {search && (
-              <div style={{ marginTop: 12, fontSize: 11, color: "#64748b", display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ color: isRunning ? "#ea580c" : "#16a34a" }}>●</span>{" "}
-                {isRunning ? "Running…" : `Status: ${search.status}`}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* LEADS TABLE + INSIGHTS */}
-      <div className="lower-split-dashboard-grid lower-split-dashboard-grid-1">
-        <div className="lower-split-dashboard-grid-1-left">
-          <div className="results-table-container-card">
-            <div className="table-top-controls-bar">
-              <h3 className="table-main-headline-title">
-                {t("generator.leadsFound", { count: leads.length })}{" "}
-                <Sparkles size={16} color="#ea580c" fill="#ea580c" />
-              </h3>
-              <div className="table-right-utilities-cluster">
-                <div className="layout-view-toggle-buttons-group">
-                  <button className="btn-layout-grid-list-toggle active-blue-view">
-                    <List size={14} />
-                  </button>
-                </div>
+              <div className="generator-results-tools">
+                <button
+                  type="button"
+                  className="generator-btn generator-btn-compact"
+                  onClick={selectAllVisible}
+                  disabled={!leads.length}
+                >
+                  <CheckCircle2 size={14} />
+                  {selectedLeads.length === leads.length && leads.length
+                    ? t("generator.clearSelection")
+                    : t("common.all")}
+                </button>
+                <button type="button" className="generator-icon-view active">
+                  <List size={15} />
+                </button>
+                <button type="button" className="generator-btn generator-btn-compact">
+                  <Filter size={14} />
+                  {t("generator.filters")}
+                </button>
               </div>
             </div>
 
             {leadsLoading ? (
-              <div style={{ padding: "40px 0", color: "#64748b", display: "flex", gap: 10, alignItems: "center", justifyContent: "center" }}>
-                <Loader2 size={18} className="spin" /> Loading leads…
+              <div className="generator-results-empty">
+                <Loader2 size={20} className="spin" />
+                <span>{t("common.loading")}</span>
               </div>
             ) : leads.length === 0 ? (
-              <div style={{ padding: "48px 20px", textAlign: "center", color: "#64748b" }}>
-                <Search size={26} style={{ opacity: 0.4 }} />
-                <p style={{ margin: "12px 0 4px", fontWeight: 600, color: "#334155" }}>No leads yet</p>
-                <p style={{ fontSize: 13 }}>
+              <div className="generator-results-empty">
+                <Search size={25} />
+                <strong>{t("common.noData")}</strong>
+                <span>
                   {notConnected
-                    ? "Connect a data provider to generate real leads. Nothing is shown until then — no sample data."
-                    : "Run a search with your criteria above to generate leads."}
-                </p>
+                    ? context?.providerNotice || t("generator.sourcesDisclaimer")
+                    : t("generator.aiInstructionsPlaceholder")}
+                </span>
               </div>
             ) : (
-              <div className="clean-line-list-wrapper">
+              <div className="generator-prospect-list">
                 {leads.map((lead) => {
-                  const name = lead.contactName || lead.businessName || "Unnamed lead";
-                  const imported = lead.status === "imported" || lead.status === "duplicate";
+                  const business = lead.businessName || lead.contactName || "—";
+                  const contact = lead.contactName || lead.title || "—";
+                  const imported = ["imported", "duplicate"].includes(lead.status);
+                  const score = Number(lead.aiScore || 0);
+
                   return (
-                    <div
-                      className={`lead-row-item-line ${selectedLeads.includes(lead.id) ? "row-selected-active" : ""}`}
+                    <article
+                      className={`generator-prospect-row ${
+                        selectedLeads.includes(lead.id) ? "is-selected" : ""
+                      }`}
                       key={lead.id}
                     >
-                      <div className="lead-profil-wrap">
-                        <div className="lead-profile-identity-block">
-                          <div>
-                            <input
-                              type="checkbox"
-                              className="row-selection-checkbox-input"
-                              checked={selectedLeads.includes(lead.id)}
-                              onChange={() => toggleLeadSelection(lead.id)}
-                            />
-                          </div>
-                          <div
-                            className="lead-photo-avatar-circle"
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: "#e0e7ff",
-                              color: "#4338ca",
-                              fontWeight: 700,
-                              fontSize: 13,
-                            }}
-                          >
-                            {initials(name)}
-                          </div>
-                          <div className="lead-text-details-stack">
-                            <h4>
-                              {name}{" "}
-                              {imported && (
-                                <span className="badge-new-arrival" style={{ background: "#dcfce7", color: "#166534" }}>
-                                  {lead.status === "duplicate" ? "In CRM" : "Saved"}
-                                </span>
-                              )}
-                            </h4>
-                            <p>{lead.email || "—"}</p>
-                            <div className="lead-communications-link-row">
-                              <Phone size={14} />
-                              {lead.phone || "—"}
-                            </div>
-                          </div>
-                        </div>
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.includes(lead.id)}
+                        onChange={() => toggleLeadSelection(lead.id)}
+                        aria-label={business}
+                      />
 
-                        <div className="text-center">
-                          {lead.title && <span className="agent-role-label-text">{lead.title}</span>}
-                          {lead.aiBand && (
-                            <div style={{ marginTop: "4px" }}>
-                              <span className={`temperature-badge-pill ${bandClass(lead.aiBand)}`}>
-                                {lead.aiBand}
-                              </span>
-                            </div>
-                          )}
-                          {lead.aiScore != null && (
-                            <div className="ai-score-percentage-capsule">
-                              <span>{t("generator.aiScore")}</span>
-                              <div className="ai-score-ring-mini mid-green">{lead.aiScore}%</div>
-                            </div>
-                          )}
-                        </div>
+                      <div className="generator-company-avatar">
+                        {initials(business)}
                       </div>
 
-                      <div className="lead-intent-interests-paragraph">
-                        {lead.businessName && lead.contactName ? lead.businessName : ""}
-                        {(lead.city || lead.country) && (
-                          <span>
-                            {[lead.city, lead.country].filter(Boolean).join(", ")}
-                          </span>
+                      <div className="generator-company">
+                        <div className="generator-company-title">
+                          <strong>{business}</strong>
+                          {imported && (
+                            <span className="generator-verified">
+                              <CheckCircle2 size={11} />
+                              {lead.status === "duplicate" ? "CRM" : t("generator.metricMovedToCrm")}
+                            </span>
+                          )}
+                        </div>
+                        <span>
+                          {[lead.city, lead.country].filter(Boolean).join(", ") || "—"}
+                        </span>
+                        <small>{lead.sourceProvider || lead.source || "—"}</small>
+                      </div>
+
+                      <div className="generator-company-description">
+                        <strong>{lead.title || form.industry || t("generator.labelIndustry")}</strong>
+                        <span>
+                          {lead.businessName && lead.contactName
+                            ? `${lead.contactName} · ${lead.businessName}`
+                            : lead.contactName || lead.businessName || "—"}
+                        </span>
+                      </div>
+
+                      <div className="generator-contact">
+                        <strong>{contact}</strong>
+                        <span>{lead.title || "—"}</span>
+                        {lead.email && <a href={`mailto:${lead.email}`}>{lead.email}</a>}
+                        {lead.phone && <a href={`tel:${lead.phone}`}>{lead.phone}</a>}
+                      </div>
+
+                      <div className={`generator-match ${bandClass(lead.aiBand)}`}>
+                        <strong>{score || "—"}</strong>
+                        <span>{t("generator.aiScore")}</span>
+                      </div>
+
+                      <div className="generator-row-actions">
+                        <button
+                          type="button"
+                          className="generator-add-list"
+                          onClick={() => importOne(lead.id)}
+                          disabled={imported}
+                        >
+                          <Save size={13} />
+                          {imported ? t("generator.metricMovedToCrm") : t("generator.saveSelected", { count: 1 })}
+                        </button>
+
+                        {lead.sourceUrl ? (
+                          <a
+                            className="generator-more-link"
+                            href={lead.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {t("common.view")}
+                            <ExternalLink size={12} />
+                          </a>
+                        ) : (
+                          <button type="button" className="generator-more-link" disabled>
+                            <MoreVertical size={14} />
+                          </button>
                         )}
                       </div>
-
-                      <div>
-                        <div className="lead-origin-source-routing-block">
-                          <span style={{ color: "#64748b", fontSize: "11px" }}>{t("generator.source")}</span>
-                          <div>{lead.sourceProvider || lead.source || "—"}</div>
-                          {lead.sourceUrl && (
-                            <a
-                              href={lead.sourceUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="source-external-link-anchor"
-                            >
-                              {lead.sourceUrl} <ExternalLink size={14} />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="table-row-actions-group">
-                          <button
-                            className="btn-save-row-lead"
-                            onClick={() => importOne(lead.id)}
-                            disabled={imported}
-                          >
-                            <Save size={12} />
-                            {imported ? "Saved" : t("common.save")}
-                          </button>
-                          <button className="btn-row-more-options">
-                            <MoreVertical size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    </article>
                   );
                 })}
               </div>
             )}
 
-            {leads.length > 0 && (
-              <div className="bulk-processing-footer-bar">
-                <div className="bulk-selection-count-indicator-text">
-                  {t("generator.selectedCount", { count: selectedLeads.length })}{" "}
-                  <button onClick={() => setSelectedLeads([])}>{t("generator.clearSelection")}</button>
-                </div>
-                <div className="bulk-action-buttons-cluster">
-                  <button
-                    className="btn-footer-action-blue-submit"
-                    onClick={() => importMany(selectedLeads)}
-                    disabled={!selectedLeads.length}
-                  >
-                    <Save size={14} /> {t("generator.saveSelected", { count: selectedLeads.length })}
-                  </button>
-                  <button
-                    className="btn-footer-action-green-submit"
-                    onClick={() => importMany(qualifiedIds)}
-                    disabled={!qualifiedIds.length}
-                  >
-                    <NotepadTextDashed size={14} /> {t("generator.saveAllQualified", { count: qualifiedIds.length })}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+            <div className="generator-results-footer">
+              
 
-        {/* INSIGHTS SIDEBAR — real distribution */}
-        <div className="right-analytics-sidebar-panel lower-split-dashboard-grid-1-right">
-          <div className="sidebar-analytics-card">
-            <h3 className="sidebar-card-headline-title">{t("generator.aiScoreInsights")}</h3>
-            <div className="ai-score-donut-chart-wrap">
-              <div className="ai-score-donut-chart-graphic-box">
-                <svg width="100" height="100" className="donut-svg-canvas-wrapper" viewBox="0 0 42 42">
-                  {donut.total === 0 ? (
-                    <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#e2e8f0" strokeWidth="4" />
-                  ) : (
-                    <>
-                      <circle
-                        cx="21"
-                        cy="21"
-                        r="15.91549430918954"
-                        fill="transparent"
-                        className="donut-segment hot-green-segment"
-                        strokeDasharray={`${donut.hotPct} ${100 - donut.hotPct}`}
-                        strokeDashoffset="0"
-                      />
-                      <circle
-                        cx="21"
-                        cy="21"
-                        r="15.91549430918954"
-                        fill="transparent"
-                        className="donut-segment warm-orange-segment"
-                        strokeDasharray={`${donut.warmPct} ${100 - donut.warmPct}`}
-                        strokeDashoffset={`${-donut.hotPct}`}
-                      />
-                      <circle
-                        cx="21"
-                        cy="21"
-                        r="15.91549430918954"
-                        fill="transparent"
-                        className="donut-segment cold-red-segment"
-                        strokeDasharray={`${donut.coldPct} ${100 - donut.coldPct}`}
-                        strokeDashoffset={`${-(donut.hotPct + donut.warmPct)}`}
-                      />
-                    </>
-                  )}
-                </svg>
-                <div className="donut-center-absolute-labels-stack">
-                  <h3>{kpis.leadsQualified || 0}</h3>
-                  <p>{t("generator.qualifiedLeads")}</p>
-                </div>
-              </div>
+              <div>
+                <span>
+                  {t("generator.selectedCount", { count: selectedLeads.length })}
+                </span>
+                <button
+                  type="button"
+                  className="generator-btn generator-btn-ghost"
+                  onClick={() => importMany(selectedLeads)}
+                  disabled={!selectedLeads.length}
+                >
+                  <Save size={14} />
+                  {t("generator.saveSelected", { count: selectedLeads.length })}
+                </button>
 
-              <div className="analytics-color-legend-list">
-                <div className="legend-row-item-align">
-                  <div className="legend-label-left-side">
-                    <div className="legend-color-dot-indicator hot-red"></div>
-                    <span>{t("generator.rangeHot")}</span>
-                  </div>
-                  <span className="legend-count-value-number">{donut.hot}</span>
-                </div>
-                <div className="legend-row-item-align">
-                  <div className="legend-label-left-side">
-                    <div className="legend-color-dot-indicator warm-orange"></div>
-                    <span>{t("generator.rangeWarm")}</span>
-                  </div>
-                  <span className="legend-count-value-number">{donut.warm}</span>
-                </div>
-                <div className="legend-row-item-align">
-                  <div className="legend-label-left-side">
-                    <div className="legend-color-dot-indicator cold-blue"></div>
-                    <span>{t("generator.rangeCold")}</span>
-                  </div>
-                  <span className="legend-count-value-number">{donut.cold}</span>
-                </div>
+                <button
+                  type="button"
+                  className="generator-btn generator-btn-ghost"
+                  onClick={exportCsv}
+                  disabled={!leads.length}
+                >
+                  <Download size={14} />
+                  {t("generator.export")}
+                </button>
+
+                <button
+                  type="button"
+                  className="generator-btn generator-btn-success"
+                  onClick={saveCurrentSearch}
+                >
+                  <Sparkles size={14} />
+                  {t("generator.saveThisSearch")}
+                </button>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="sidebar-analytics-card">
-            <h3 className="sidebar-card-headline-title">{t("generator.topCitiesFound")}</h3>
-            {topCities.length === 0 ? (
-              <div style={{ fontSize: 13, color: "#94a3b8", padding: "8px 0" }}>No location data yet.</div>
-            ) : (
-              <div className="cities-distribution-ranking-list">
-                {topCities.map((city, cIdx) => (
-                  <div className="city-ranking-row-item" key={cIdx}>
-                    <div className="city-name-left-group">
-                      <span className="city-bullet-icon-svg">○</span>
-                      {city.name}
-                    </div>
-                    <span className="city-leads-count-metric-num">{city.count}</span>
-                  </div>
-                ))}
+          <section className="generator-next">
+            <h2>{t("generator.sourcesDisclaimer")}</h2>
+
+            <div className="generator-next-grid">
+              <button type="button" onClick={saveCurrentSearch}>
+                <span><Save size={17} /></span>
+                <strong>{t("generator.sourcePublicWebSearch")}</strong>
+                <small>{t("generator.progressSearching")}</small>
+              </button>
+
+              <button type="button" onClick={exportCsv} disabled={!leads.length}>
+                <span><Download size={17} /></span>
+                <strong>{t("generator.sourceBusinessPlaces")}</strong>
+                <small>{t("generator.progressAnalyzing")}</small>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => importMany(selectedLeads.length ? selectedLeads : qualifiedIds)}
+                disabled={!selectedLeads.length && !qualifiedIds.length}
+              >
+                <span><Users size={17} /></span>
+                <strong>{t("generator.sourceRealEstatePages")}</strong>
+                <small>{t("generator.progressRemovingDuplicates")}</small>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMsg(t("generator.progressReady"))}
+              >
+                <span><Filter size={17} /></span>
+                <strong>{t("generator.sourceDeveloperWebsites")}</strong>
+                <small>{t("generator.progressScoring")}</small>
+              </button>
+            </div>
+          </section>
+        </main>
+
+        <aside className="generator-side-column">
+          <section className="generator-side-card generator-ai-powered">
+            <span className="generator-eyebrow">{t("generator.liveSummary")}</span>
+            <div className="generator-ai-count">
+              <strong>{generatedCount}</strong>
+              <span>{t("generator.metricGeneratedLeads")}</span>
+            </div>
+
+            <div className="generator-ai-progress">
+              <span
+                style={{
+                  width: `${Math.min(
+                    100,
+                    generatedCount
+                      ? Math.round((qualifiedCount / generatedCount) * 100)
+                      : 0,
+                  )}%`,
+                }}
+              />
+            </div>
+
+            <div className="generator-match-breakdown">
+              <div>
+                <span><i className="high" />{t("generator.metricHotOpportunities")}</span>
+                <strong>{matchCounts.high}</strong>
               </div>
-            )}
-          </div>
-        </div>
+              <div>
+                <span><i className="medium" />{t("generator.metricAiQualified")}</span>
+                <strong>{matchCounts.medium}</strong>
+              </div>
+              <div>
+                <span><i className="low" />{t("generator.metricEnrichedLeads")}</span>
+                <strong>{matchCounts.low}</strong>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="generator-side-link"
+              onClick={() =>
+                document
+                  .querySelector(".generator-results-card")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            >
+              {t("generator.metricGeneratedLeadsSub")}
+              <ArrowRight size={13} />
+            </button>
+          </section>
+
+          <section className="generator-side-card">
+            <h3>{t("generator.sourceFocusTitle")}</h3>
+
+            <dl className="generator-summary-list">
+              <div>
+                <dt><Building2 size={13} />{t("generator.labelIndustry")}</dt>
+                <dd>{form.industry || "—"}</dd>
+              </div>
+              <div>
+                <dt><MapPin size={13} />{t("generator.labelCountry")}</dt>
+                <dd>{currentLocation || "—"}</dd>
+              </div>
+              <div>
+                <dt><Users size={13} />{t("generator.benefitQualified")}</dt>
+                <dd>{form.companySize === "all" ? t("common.all") : form.companySize}</dd>
+              </div>
+              <div>
+                <dt><Sparkles size={13} />{t("generator.interestedIn")}</dt>
+                <dd>{form.technologies || "—"}</dd>
+              </div>
+              <div>
+                <dt><Search size={13} />{t("generator.labelProductOffer")}</dt>
+                <dd>{form.keywords || "—"}</dd>
+              </div>
+              <div>
+                <dt><Activity size={13} />{t("common.date")}</dt>
+                <dd>{search?.createdAt ? new Date(search.createdAt).toLocaleString() : "—"}</dd>
+              </div>
+            </dl>
+
+            <button
+              type="button"
+              className="generator-side-link"
+              onClick={() =>
+                document
+                  .querySelector(".generator-advanced-card")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            >
+              {t("generator.metricAiQualifiedSub")}
+              <ArrowRight size={13} />
+            </button>
+          </section>
+
+          <section className="generator-side-card">
+            <h3>{t("generator.aiScoreInsights")}</h3>
+
+            <div className="generator-side-search-list">
+              {search ? (
+                <button type="button">
+                  <Activity size={13} />
+                  <span>
+                    <strong>{form.keywords || form.industry || t("generator.pageTitle")}</strong>
+                    <small>
+                      {generatedCount} {t("generator.metricGeneratedLeads")}
+                    </small>
+                  </span>
+                  <em>{search.status}</em>
+                </button>
+              ) : (
+                <div className="generator-empty-small">{t("common.noData")}</div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="generator-side-link"
+              onClick={() =>
+                document
+                  .querySelector(".generator-search-card")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            >
+              {t("generator.metricHotOpportunitiesSub")}
+              <ArrowRight size={13} />
+            </button>
+          </section>
+
+          <section className="generator-side-card">
+            <h3>{t("generator.topCitiesFound")}</h3>
+
+            <div className="generator-side-search-list">
+              {savedSearches.length ? (
+                savedSearches.slice(0, 5).map((saved) => (
+                  <button type="button" key={saved.id} onClick={() => applySaved(saved)}>
+                    <Save size={13} />
+                    <span>
+                      <strong>{saved.name}</strong>
+                      <small>
+                        {saved.criteria?.keywords ||
+                          saved.criteria?.industry ||
+                          saved.criteria?.location ||
+                          "—"}
+                      </small>
+                    </span>
+                    <ArrowRight size={13} />
+                  </button>
+                ))
+              ) : (
+                <div className="generator-empty-small">{t("common.noData")}</div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="generator-side-link"
+              onClick={() => setShowSaved(true)}
+            >
+              {t("generator.viewAllCities")}
+              <ArrowRight size={13} />
+            </button>
+          </section>
+        </aside>
       </div>
     </div>
   );
