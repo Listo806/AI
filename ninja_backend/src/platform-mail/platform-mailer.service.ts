@@ -25,6 +25,7 @@ export interface SendResult {
 export class PlatformMailerService {
   private readonly logger = new Logger(PlatformMailerService.name);
   private schemaReady = false;
+  private bulkSchemaReady = false;
 
   constructor(
     private readonly db: DatabaseService,
@@ -2013,6 +2014,51 @@ export class PlatformMailerService {
     }
   }
 
+  // Bulk-specific schema, self-healing INDEPENDENTLY of the big shared
+  // ensureSchema() block (which can abort partway on an unrelated statement and
+  // never reach these — that is what 500'd the first live bulk send). Each
+  // statement is guarded so one failure can't block the rest. All idempotent.
+  private async ensureBulkSchema(): Promise<void> {
+    if (this.bulkSchemaReady) return;
+    const run = async (sql: string) => {
+      try {
+        await this.db.query(sql);
+      } catch (err: any) {
+        this.logger.error(`bulk schema stmt failed: ${err?.message}`);
+      }
+    };
+    await run(`ALTER TABLE email_log ADD COLUMN IF NOT EXISTS send_type VARCHAR(16) NOT NULL DEFAULT 'auto'`);
+    await run(`ALTER TABLE email_log ADD COLUMN IF NOT EXISTS campaign_id UUID`);
+    await run(`ALTER TABLE email_log ADD COLUMN IF NOT EXISTS message_id TEXT`);
+    await run(`
+      CREATE TABLE IF NOT EXISTS email_campaigns (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        template VARCHAR(64) NOT NULL,
+        subject TEXT,
+        created_by UUID,
+        client_token TEXT,
+        status VARCHAR(16) NOT NULL DEFAULT 'queued',
+        total_selected INT NOT NULL DEFAULT 0,
+        total_eligible INT NOT NULL DEFAULT 0,
+        total_suppressed INT NOT NULL DEFAULT 0,
+        total_invalid INT NOT NULL DEFAULT 0,
+        total_queued INT NOT NULL DEFAULT 0,
+        lang_en INT NOT NULL DEFAULT 0,
+        lang_es INT NOT NULL DEFAULT 0,
+        lang_pt INT NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await run(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_campaigns_client_token
+         ON email_campaigns(client_token) WHERE client_token IS NOT NULL`,
+    );
+    await run(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_campaign_uniq
+         ON email_log(campaign_id, user_id) WHERE campaign_id IS NOT NULL`,
+    );
+    this.bulkSchemaReady = true;
+  }
+
   // ---- bulk email campaigns (admin-triggered "Send Bulk Email") ----
   // Reuses the SAME engine as single/auto sends: per-recipient language routing
   // + English fallback (renderTemplate), personalization (buildVarsForTemplate),
@@ -2040,7 +2086,7 @@ export class PlatformMailerService {
     invalid: number;
     languages: { en: number; es: number; pt: number };
   }> {
-    await this.ensureSchema();
+    await this.ensureBulkSchema();
     const ids = Array.from(
       new Set((userIds || []).map((s) => String(s || '').trim()).filter(Boolean)),
     ).slice(0, 5000);
@@ -2094,7 +2140,7 @@ export class PlatformMailerService {
     queued: number;
     languages: { en: number; es: number; pt: number };
   }> {
-    await this.ensureSchema();
+    await this.ensureBulkSchema();
     const clientToken = String(opts.clientToken || '').trim() || null;
 
     const existingByToken = async () => {
@@ -2215,7 +2261,7 @@ export class PlatformMailerService {
   // suppression before each send; a failed recipient never affects the others,
   // and an already-sent row is never resent (status transitions guard it).
   async sendBulkDue(): Promise<void> {
-    await this.ensureSchema();
+    await this.ensureBulkSchema();
     const BATCH = 150;
     let rows: any[];
     try {
@@ -2319,7 +2365,7 @@ export class PlatformMailerService {
 
   // Campaign status + live sent/failed counts for the admin result view.
   async getBulkCampaign(id: string): Promise<any> {
-    await this.ensureSchema();
+    await this.ensureBulkSchema();
     const { rows } = await this.db.query(
       `SELECT id, template, subject, created_by, status, created_at,
               total_selected, total_eligible, total_suppressed, total_invalid,
@@ -2343,7 +2389,7 @@ export class PlatformMailerService {
   }
 
   async listBulkCampaigns(limit = 25): Promise<any[]> {
-    await this.ensureSchema();
+    await this.ensureBulkSchema();
     const n = Math.min(Math.max(Number(limit) || 25, 1), 100);
     const { rows } = await this.db.query(
       `SELECT id, template, subject, created_by, status, created_at,
