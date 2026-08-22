@@ -445,12 +445,29 @@ export default function AIAgentWorkspace() {
     setListening(true);
   }, [listening, t]);
 
+  const submitSuggestedPrompt = useCallback(
+    (prompt, options = {}) => {
+      const text = String(prompt || "").trim();
+      if (!text || sending) return;
+
+      // Keep the suggested prompt tied to the same composer/chat flow.
+      // The actual request still goes through handleSend(), so session,
+      // attachments and the real AI Agent backend remain unchanged.
+      setInput(text);
+
+      window.requestAnimationFrame(() => {
+        handleSend(text, options);
+      });
+    },
+    [handleSend, sending],
+  );
+
   const handleMobileContext = useCallback(
     (context) => {
       setSelectedMobileContext(context.id);
-      handleSend(context.prompt, { activeContext: context.id });
+      submitSuggestedPrompt(context.prompt, { activeContext: context.id });
     },
-    [handleSend],
+    [submitSuggestedPrompt],
   );
 
   const onKeyDown = (e) => {
@@ -464,7 +481,11 @@ export default function AIAgentWorkspace() {
   const isEmpty = messages.length === 0 && !loadingMessages;
 
   return (
-    <div className={`aiw-root ${isEmpty ? "aiw-root-empty" : "aiw-root-chat"}`}>
+    <div
+      className={`aiw-root aiw-root-unified ${
+        isEmpty ? "aiw-root-empty" : "aiw-root-chat"
+      }`}
+    >
       {historyOpen && (
         <button
           type="button"
@@ -582,7 +603,7 @@ export default function AIAgentWorkspace() {
                       type="button"
                       key={context.id}
                       className="aiw-desktop-context-pill"
-                      onClick={() => handleSend(context.prompt)}
+                      onClick={() => submitSuggestedPrompt(context.prompt, { activeContext: context.id })}
                     >
                       <span className="aiw-desktop-context-icon">
                         <IconContext type={context.id} />
@@ -641,45 +662,90 @@ export default function AIAgentWorkspace() {
               </div>
             </>
           ) : (
-            <div className="aiw-messages">
-              {loadingMessages && (
-                <div className="aiw-loading">
-                  {t("aiCenter.loadingConversation")}
+            <div className="aiw-active-conversation">
+              <div className="aiw-active-conversation-head">
+                <div className="aiw-active-conversation-title">
+                  <span className="aiw-active-conversation-mark">
+                    <IconSpark />
+                  </span>
+                  <span>
+                    <strong>{t("aiCenter.desktop.agentTitle")}</strong>
+                    <small>{t("aiCenter.desktop.activeConversationSubtitle")}</small>
+                  </span>
                 </div>
-              )}
-              {messages.map((m) => (
-                <div key={m.id} className={`aiw-msg aiw-msg-${m.role}`}>
-                  <div className="aiw-msg-avatar">
-                    {m.role === "user" ? t("aiCenter.avatarYou") : <IconSpark />}
-                  </div>
-                  <div
-                    className={`aiw-bubble ${
-                      m.error ? "aiw-bubble-error" : ""
-                    }`}
+
+                <button
+                  type="button"
+                  className="aiw-clear-conversation"
+                  onClick={startNewChat}
+                  title={t("aiCenter.desktop.clearConversation")}
+                >
+                  <IconPlus />
+                  <span>{t("aiCenter.desktop.newChat")}</span>
+                </button>
+              </div>
+
+              <div className="aiw-active-contexts" aria-label={t("aiCenter.desktop.contextsLabel")}>
+                {desktopContexts.slice(0, 6).map((context) => (
+                  <button
+                    type="button"
+                    key={context.id}
+                    onClick={() =>
+                      submitSuggestedPrompt(context.prompt, {
+                        activeContext: context.id,
+                      })
+                    }
                   >
-                    <div className="aiw-bubble-text">{m.content}</div>
-                    {m.attachments?.length > 0 && (
-                      <div className="aiw-msg-attachments">
-                        {m.attachments.map((a, i) => (
-                          <span key={i} className="aiw-attach-chip">
-                            {a.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    <IconContext type={context.id} />
+                    <span>{context.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="aiw-messages">
+                {loadingMessages && (
+                  <div className="aiw-loading">
+                    {t("aiCenter.loadingConversation")}
                   </div>
-                </div>
-              ))}
-              {sending && (
-                <div className="aiw-msg aiw-msg-assistant">
-                  <div className="aiw-msg-avatar"><IconSpark /></div>
-                  <div className="aiw-bubble aiw-typing">
-                    <span />
-                    <span />
-                    <span />
+                )}
+
+                {messages.map((m) => (
+                  <div key={m.id} className={`aiw-msg aiw-msg-${m.role}`}>
+                    <div className="aiw-msg-avatar">
+                      {m.role === "user" ? t("aiCenter.avatarYou") : <IconSpark />}
+                    </div>
+                    <div
+                      className={`aiw-bubble ${
+                        m.error ? "aiw-bubble-error" : ""
+                      }`}
+                    >
+                      <div className="aiw-bubble-text">{m.content}</div>
+                      {m.attachments?.length > 0 && (
+                        <div className="aiw-msg-attachments">
+                          {m.attachments.map((a, i) => (
+                            <span key={i} className="aiw-attach-chip">
+                              {a.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
+
+                {sending && (
+                  <div className="aiw-msg aiw-msg-assistant">
+                    <div className="aiw-msg-avatar">
+                      <IconSpark />
+                    </div>
+                    <div className="aiw-bubble aiw-typing">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -760,8 +826,8 @@ export default function AIAgentWorkspace() {
           {isEmpty && (
             <div className="aiw-mobile-privacy">
               <span aria-hidden="true">♙</span>
-              <span>I only use your data to give you answers.</span>
-              <button type="button">Learn more</button>
+              <span>{t("aiCenter.desktop.privacyText")}</span>
+              <button type="button">{t("aiCenter.desktop.learnMore")}</button>
             </div>
           )}
         </div>
@@ -782,7 +848,7 @@ export default function AIAgentWorkspace() {
                     type="button"
                     key={card.title}
                     className="aiw-desktop-try-card"
-                    onClick={() => handleSend(card.prompt)}
+                    onClick={() => submitSuggestedPrompt(card.prompt)}
                   >
                     <span className="aiw-desktop-try-icon">
                       <IconContext type={card.icon} />

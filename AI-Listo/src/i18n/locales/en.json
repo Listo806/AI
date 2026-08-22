@@ -3823,7 +3823,11 @@
       "tryConversationsTitle": "Summarize my conversations",
       "tryConversationsSub": "Latest WhatsApp and email activity",
       "tryRiskTitle": "What deals are at risk?",
-      "tryRiskSub": "Show me deals that may not close"
+      "tryRiskSub": "Show me deals that may not close",
+      "newChat": "New Chat",
+      "clearConversation": "Clear Conversation",
+      "activeConversationSubtitle": "Continue the conversation here",
+      "contextsLabel": "AI Agent contexts"
     }
   },
   "generator": {

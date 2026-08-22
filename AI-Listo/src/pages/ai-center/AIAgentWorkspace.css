@@ -1201,13 +1201,7 @@
   .aiw-root-empty .aiw-empty-desktop {
     display: flex;
   }
-  .aiw-desktop-home {
-    width: 100%;
-    max-width: 1040px;
-    margin: 0 auto;
-    align-items: center;
-    text-align: center;
-  }
+ 
   .aiw-desktop-brand-block {
     width: 100%;
   }
@@ -1581,5 +1575,481 @@
   }
   .aiw-desktop-try-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =================================================================
+   AI AGENT — UNIFIED ONE-SCREEN UX
+   Welcome + active conversation use the same page shell.
+   Desktop reference refinement based on latest approved screenshot.
+   ================================================================= */
+
+@media (min-width: 1025px) {
+  /* One desktop shell in both empty and active states. */
+  .aiw-root.aiw-root-unified {
+    display: block;
+    width: 100%;
+    min-height: calc(100vh - 86px);
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: #fff;
+  }
+
+  .aiw-root-unified > .aiw-history,
+  .aiw-root-unified > .aiw-history-backdrop {
+    display: none !important;
+  }
+
+  .aiw-root-unified .aiw-main {
+    width: 100%;
+    min-height: calc(100vh - 86px);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+  }
+
+  .aiw-root-unified .aiw-topbar {
+    display: none;
+  }
+
+  /* Latest reference: title aligned left, no central hero icon/question. */
+  .aiw-root-empty .aiw-scroll {
+    width: 100%;
+    flex: 0 0 auto;
+    padding: 0;
+  }
+
+  .aiw-root-empty .aiw-desktop-home {
+    width: min(1160px, calc(100% - 70px));
+    max-width: 1160px;
+    margin: 0 auto;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .aiw-root-empty .aiw-desktop-brand-block {
+    width: 100%;
+  }
+
+  .aiw-root-empty .aiw-desktop-brand-title {
+    font-size: clamp(30px, 2.25vw, 40px);
+    font-weight: 760;
+    letter-spacing: -.04em;
+  }
+
+  .aiw-root-empty .aiw-desktop-brand-sub {
+    margin-top: 8px;
+    font-size: 15px;
+  }
+
+  .aiw-root-empty .aiw-desktop-brand-line,
+  .aiw-root-empty .aiw-desktop-agent-mark,
+  .aiw-root-empty .aiw-desktop-question,
+  .aiw-root-empty .aiw-desktop-question-sub {
+    display: none;
+  }
+
+  .aiw-root-empty .aiw-desktop-contexts {
+    width: 100%;
+    max-width: none;
+    justify-content: flex-start;
+    gap: 13px 14px;
+    margin: 42px 0 28px;
+    padding: 0 8px 30px;
+    border-bottom: 0;
+  }
+
+  .aiw-root-empty .aiw-desktop-context-pill {
+    min-width: 176px;
+    min-height: 58px;
+    padding: 0 27px;
+    border-radius: 18px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .aiw-root-empty .aiw-desktop-context-icon svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  /* Match latest large composer placement/width. */
+  .aiw-root-empty .aiw-composer {
+    width: min(1200px, calc(100% - 60px));
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  .aiw-root-empty .aiw-inputrow {
+    max-width: none;
+    min-height: 146px;
+    padding: 22px 22px 18px;
+    border-radius: 18px;
+    box-shadow: 0 9px 24px rgba(15, 23, 42, .045);
+  }
+
+  .aiw-root-empty .aiw-textarea {
+    min-height: 62px;
+    font-size: 15px;
+  }
+
+  .aiw-root-empty .aiw-desktop-empty-after-composer {
+    width: min(1228px, calc(100% - 60px));
+    max-width: 1228px;
+    padding: 0 0 28px;
+  }
+
+  .aiw-desktop-privacy {
+    margin: 15px 0 34px;
+    font-size: 12.5px;
+  }
+
+  .aiw-desktop-try h3 {
+    margin-bottom: 16px;
+    font-size: 12px;
+  }
+
+  .aiw-desktop-try-grid {
+    gap: 16px 20px;
+  }
+
+  .aiw-desktop-try-card {
+    min-height: 76px;
+    padding: 13px 18px;
+    border-radius: 10px;
+  }
+
+  .aiw-desktop-try-copy strong {
+    font-size: 12.5px;
+  }
+
+  .aiw-desktop-try-copy small {
+    font-size: 10.5px;
+  }
+
+  .aiw-desktop-bottom-disclaimer {
+    margin-top: 55px;
+  }
+
+  /* -----------------------------------------------------------
+     Active conversation: SAME page shell, not a second layout.
+     ----------------------------------------------------------- */
+  .aiw-root-chat .aiw-scroll {
+    flex: 1 1 auto;
+    width: 100%;
+    padding: 30px 0 12px;
+    overflow: visible;
+  }
+
+  .aiw-active-conversation {
+    width: min(1040px, calc(100% - 70px));
+    min-height: 420px;
+    margin: 0 auto;
+  }
+
+  .aiw-active-conversation-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 0 0 18px;
+    border-bottom: 1px solid #e6e8ec;
+  }
+
+  .aiw-active-conversation-title {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+  }
+
+  .aiw-active-conversation-mark {
+    width: 39px;
+    height: 39px;
+    flex: 0 0 39px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: #111;
+    color: #fff;
+  }
+
+  .aiw-active-conversation-mark svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .aiw-active-conversation-title strong,
+  .aiw-active-conversation-title small {
+    display: block;
+  }
+
+  .aiw-active-conversation-title strong {
+    color: #101217;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .aiw-active-conversation-title small {
+    margin-top: 2px;
+    color: #6b7280;
+    font-size: 11px;
+  }
+
+  .aiw-clear-conversation {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 13px;
+    border: 1px solid #d7dbe0;
+    border-radius: 9px;
+    background: #fff;
+    color: #1f2937;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .aiw-clear-conversation:hover {
+    border-color: #9aa3b1;
+    background: #f8fafc;
+  }
+
+  .aiw-active-contexts {
+    display: flex;
+    gap: 7px;
+    padding: 12px 0 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .aiw-active-contexts::-webkit-scrollbar {
+    display: none;
+  }
+
+  .aiw-active-contexts button {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    padding: 0 10px;
+    border: 1px solid #e1e5eb;
+    border-radius: 999px;
+    background: #fff;
+    color: #4b5563;
+    font: inherit;
+    font-size: 10.5px;
+    cursor: pointer;
+  }
+
+  .aiw-active-contexts button:hover {
+    border-color: #b8c0cb;
+    color: #111827;
+  }
+
+  .aiw-active-contexts svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .aiw-root-chat .aiw-messages {
+    width: 100%;
+    max-width: none;
+    margin: 18px auto 0;
+    padding: 0 0 22px;
+    gap: 18px;
+  }
+
+  .aiw-root-chat .aiw-msg {
+    gap: 11px;
+  }
+
+  .aiw-root-chat .aiw-bubble {
+    max-width: min(78%, 760px);
+  }
+
+  /* Same composer visually stays anchored under the same conversation. */
+  .aiw-root-chat .aiw-composer {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    width: min(1040px, calc(100% - 70px));
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 8px 0 13px;
+    border-top: 0;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,.94) 24%,
+        #fff 44%
+      );
+  }
+
+  .aiw-root-chat .aiw-inputrow {
+    min-height: 88px;
+    padding: 14px 15px 12px;
+    border: 1px solid #dfe3e8;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .055);
+  }
+
+  .aiw-root-chat .aiw-textarea {
+    min-height: 38px;
+  }
+
+  .aiw-root-chat .aiw-disclaimer-inline {
+    display: block;
+    margin-top: 8px;
+    text-align: center;
+    color: #8a93a1;
+    font-size: 10px;
+  }
+
+  /* ---------------- .crm-dark only ---------------- */
+  .crm-dark .aiw-root.aiw-root-unified,
+  .crm-dark .aiw-root-unified .aiw-main {
+    background: #0b0f19;
+    color: #f8fafc;
+  }
+
+  .crm-dark .aiw-active-conversation-head {
+    border-color: #263142;
+  }
+
+  .crm-dark .aiw-active-conversation-title strong {
+    color: #f8fafc;
+  }
+
+  .crm-dark .aiw-active-conversation-title small {
+    color: #94a3b8;
+  }
+
+  .crm-dark .aiw-active-conversation-mark {
+    background: #f8fafc;
+    color: #0b0f19;
+  }
+
+  .crm-dark .aiw-clear-conversation,
+  .crm-dark .aiw-active-contexts button,
+  .crm-dark .aiw-root-chat .aiw-inputrow {
+    background: #0d131d;
+    border-color: #263142;
+    color: #e5e7eb;
+  }
+
+  .crm-dark .aiw-clear-conversation:hover,
+  .crm-dark .aiw-active-contexts button:hover {
+    background: #151d29;
+    border-color: #445268;
+  }
+
+  .crm-dark .aiw-root-chat .aiw-composer {
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(11,15,25,0),
+        rgba(11,15,25,.95) 24%,
+        #0b0f19 44%
+      );
+  }
+
+  .crm-dark .aiw-root-chat .aiw-textarea {
+    color: #f8fafc;
+  }
+}
+
+/* Mobile/tablet: welcome and chat are also one page.
+   No route/layout replacement; only the welcome block collapses. */
+@media (max-width: 1024px) {
+  .aiw-root-unified {
+    width: 100%;
+  }
+
+  .aiw-active-conversation {
+    width: 100%;
+  }
+
+  .aiw-active-conversation-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--aiw-border);
+  }
+
+  .aiw-active-conversation-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+  }
+
+  .aiw-active-conversation-mark {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: #111827;
+    color: #fff;
+  }
+
+  .aiw-active-conversation-title strong,
+  .aiw-active-conversation-title small {
+    display: block;
+  }
+
+  .aiw-active-conversation-title strong {
+    font-size: 13px;
+  }
+
+  .aiw-active-conversation-title small {
+    margin-top: 2px;
+    color: var(--aiw-text-soft);
+    font-size: 10px;
+  }
+
+  .aiw-clear-conversation {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 9px;
+    border: 1px solid var(--aiw-border-strong);
+    border-radius: 8px;
+    background: var(--aiw-bg);
+    color: var(--aiw-text);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .aiw-active-contexts {
+    display: none;
+  }
+
+  .aiw-root-chat .aiw-messages {
+    padding-top: 14px;
+  }
+
+  .crm-dark .aiw-active-conversation-head {
+    border-color: #263142;
+  }
+
+  .crm-dark .aiw-clear-conversation {
+    background: #111827;
+    border-color: #334155;
+    color: #f8fafc;
   }
 }
