@@ -267,7 +267,7 @@
 }
 
 .generator-card {
-  padding: 13px!important;
+  padding: 10px!important;
   text-align: left;
 }
 
@@ -393,7 +393,7 @@
 .generator-field input,
 .generator-field select {
   width: 100%;
-  height: 33px;
+  height: 30px;
   padding: 0 9px;
   outline: 0;
   border: 1px solid var(--gen-border);
@@ -680,13 +680,12 @@
 }
 
 .generator-results-empty {
-  min-height: 230px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 30px;
+  padding: 10px;
   color: #5d626a;
   text-align: center;
 }
