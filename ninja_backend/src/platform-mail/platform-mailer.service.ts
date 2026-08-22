@@ -2143,15 +2143,28 @@ export class PlatformMailerService {
     await this.ensureBulkSchema();
     const clientToken = String(opts.clientToken || '').trim() || null;
 
+    // Idempotency: an existing campaign for this token is a TRUE duplicate only if
+    // it already has recipient rows. A campaign row with ZERO recipients is a
+    // previous FAILED attempt (e.g. the earlier ON CONFLICT error created the
+    // campaign row before queuing threw) — remove it so this retry recreates and
+    // queues cleanly instead of returning a no-op empty duplicate.
     const existingByToken = async () => {
       const dup = await this.db.query(
-        `SELECT id, total_selected, total_eligible, total_suppressed,
-                total_invalid, total_queued, lang_en, lang_es, lang_pt
-           FROM email_campaigns WHERE client_token = $1 LIMIT 1`,
+        `SELECT ec.id, ec.total_selected, ec.total_eligible, ec.total_suppressed,
+                ec.total_invalid, ec.total_queued, ec.lang_en, ec.lang_es, ec.lang_pt,
+                (SELECT COUNT(*)::int FROM email_log el WHERE el.campaign_id = ec.id) AS recipients
+           FROM email_campaigns ec WHERE ec.client_token = $1 LIMIT 1`,
         [clientToken],
       );
       if (!dup.rows.length) return null;
       const c = dup.rows[0];
+      if (Number(c.recipients) === 0) {
+        // Empty/failed campaign — free the token so the insert below can proceed.
+        await this.db
+          .query(`DELETE FROM email_campaigns WHERE id = $1`, [c.id])
+          .catch(() => {});
+        return null;
+      }
       return {
         ok: true as const,
         duplicate: true,
@@ -2234,13 +2247,16 @@ export class PlatformMailerService {
     }
 
     // Queue eligible recipients as 'queued' bulk rows (idempotent per campaign+user).
+    // The uniqueness index is PARTIAL (WHERE campaign_id IS NOT NULL), so the
+    // ON CONFLICT target MUST restate that predicate or Postgres can't infer it
+    // ("no unique or exclusion constraint matching the ON CONFLICT specification").
     for (const r of eligible) {
       await this.db.query(
         `INSERT INTO email_log
            (user_id, to_email, template, language, status, send_type,
             campaign_id, sent_by_admin_id, scheduled_at, track_token, created_at)
          VALUES ($1,$2,$3,$4,'queued','bulk',$5,$6,NOW(),gen_random_uuid(),NOW())
-         ON CONFLICT (campaign_id, user_id) DO NOTHING`,
+         ON CONFLICT (campaign_id, user_id) WHERE campaign_id IS NOT NULL DO NOTHING`,
         [r.id, r.email, opts.template, r.lang, campaignId, opts.adminId || null],
       );
     }
