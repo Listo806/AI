@@ -3106,7 +3106,33 @@ body .next-action-card svg {
 .crm-dark .command-followup-grid label, .crm-dark .command-followup-note {
     color: #d4ddeb;
 }
+.dashboard-overview-source
+  .overview-source-layout.is-empty
+  .overview-source-chart {
+  opacity: 1;
+}
 
+.dashboard-overview-source
+  .overview-source-layout.is-empty
+  .overview-source-total
+  strong {
+  color: #0f172a;
+}
+
+.dashboard-overview-source
+  .overview-source-empty-copy {
+  color: #94a3b8;
+  font-size: 11px;
+  text-align: left;
+}
+
+.crm-dark
+  .dashboard-overview-source
+  .overview-source-layout.is-empty
+  .overview-source-total
+  strong {
+  color: #f8fafc;
+}
 /* === DASHBOARD SCREENSHOT DESKTOP FIX START === */
 @media (min-width: 1025px) {
   /* Keep the already-correct page header / AI usage / filter area untouched. */

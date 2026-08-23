@@ -1081,7 +1081,7 @@ body.crm-dark #root .csw-pagination select{
     .csw-stat strong {
         margin: 18px 0 9px;
         color: var(--csw-mobile-text);
-        font-size: 46px;
+        font-size: 40px;
         line-height: 1;
     }
 
@@ -1429,7 +1429,7 @@ body.crm-dark #root .csw-pagination select{
         margin-top: 3px;
     }
 
-    .csw-mobile-priority {
+    body .csw-mobile-priority {
         min-width: 80px;
         padding: 8px 12px;
         border: 1px solid #e4a900;
@@ -1481,9 +1481,9 @@ body.crm-dark #root .csw-pagination select{
     .csw-mobile-ticket-quick button {
         min-height: 104px;
         display: grid;
-        grid-template-columns: 48px minmax(0, 1fr);
+        grid-template-columns: 28px minmax(0, 1fr);
         align-items: center;
-        gap: 10px;
+        gap: 2px;
         padding: 14px;
         border: 0;
         border-right: 1px solid var(--csw-mobile-border);
@@ -1594,8 +1594,8 @@ body.crm-dark #root .csw-pagination select{
 
     .csw-mobile-feature-row .row-icon,
     .csw-mobile-report-row .row-icon {
-        width: 42px;
-        height: 42px;
+        width: 35px;
+        height: 35px;
         display: grid;
         place-items: center;
         border-radius: 50%;
@@ -1933,7 +1933,7 @@ body.crm-dark #root .csw-pagination select{
 
     .csw-stat strong {
         margin-top: 14px;
-        font-size: 36px;
+        font-size: 30px;
     }
 
     .csw-stat small {
@@ -1974,8 +1974,8 @@ body.crm-dark #root .csw-pagination select{
 
     .csw-mobile-ticket-quick {
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        margin-left: 18px;
-        margin-right: 18px;
+        margin-left: 0;
+        margin-right: 0;
     }
 
     .csw-mobile-feature-panel {
@@ -2013,8 +2013,8 @@ body.crm-dark #root .csw-pagination select{
     }
 
     .csw-mobile-workspace-label {
-        margin-left: 18px;
-        margin-right: 18px;
+        margin-left: 0;
+        margin-right: 0;
     }
 
     .csw-mobile-workspace-nav {
@@ -2042,10 +2042,8 @@ body.crm-dark #root .csw-pagination select{
 
     .csw-mobile-ticket-quick button {
         min-width: 0;
-        grid-template-columns: 1fr;
         justify-items: center;
-        gap: 6px;
-        padding: 9px 3px;
+        padding: 5px 3px;
         text-align: center;
     }
 
@@ -2113,20 +2111,35 @@ body.crm-dark #root .csw-pagination select{
     /* View All button border/text follows panel tone */
     .csw-mobile-feature-panel.tone-purple .csw-mobile-feature-head button {
         border-color: #6f2d98;
-        color: #c05aff;
     }
 
     .csw-mobile-feature-panel.tone-amber .csw-mobile-feature-head button {
         border-color: #8c6200;
-        color: #ffb000;
     }
 
     .csw-mobile-feature-panel.tone-green .csw-mobile-feature-head button {
         border-color: #176f36;
-        color: #32d96d;
     }
 
     .csw-mobile-feature-panel.tone-blue .csw-mobile-feature-head button {
+        border-color: #075f91;
+    }
+    .csw-mobile-feature-panel.tone-purple .csw-mobile-feature-head svg {
+        border-color: #6f2d98;
+        color: #c05aff;
+    }
+
+    .csw-mobile-feature-panel.tone-amber .csw-mobile-feature-head svg {
+        border-color: #8c6200;
+        color: #ffb000;
+    }
+
+    .csw-mobile-feature-panel.tone-green .csw-mobile-feature-head svg {
+        border-color: #176f36;
+        color: #32d96d;
+    }
+
+    .csw-mobile-feature-panel.tone-blue .csw-mobile-feature-head svg {
         border-color: #075f91;
         color: #0aa7ff;
     }
@@ -2227,22 +2240,24 @@ body.crm-dark #root .csw-pagination select{
     }
 
     /* Ticket quick actions: 4 different icon treatments */
-    .csw-mobile-ticket-quick button > i {
+    .csw-mobile-ticket-quick button div {
         background: rgba(0, 148, 255, .12);
         color: #0a9fff;
+        padding: 6px;
+        border-radius: 50%;
     }
 
-    .csw-mobile-ticket-quick button:nth-child(2) > i {
+    .csw-mobile-ticket-quick button:nth-child(2) div {
         background: rgba(168, 68, 255, .12);
         color: #b14cff;
     }
 
-    .csw-mobile-ticket-quick button:nth-child(3) > i {
+    .csw-mobile-ticket-quick button:nth-child(3) div {
         background: rgba(255, 174, 0, .13);
         color: #ffad00;
     }
 
-    .csw-mobile-ticket-quick button:nth-child(4) > i {
+    .csw-mobile-ticket-quick button:nth-child(4) div {
         background: rgba(36, 214, 95, .12);
         color: #28db68;
     }

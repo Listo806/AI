@@ -583,10 +583,10 @@ export default function CustomerServiceWorkspace() {
           </div>
 
           <div className="csw-mobile-ticket-quick">
-            <button onClick={() => openModal("create")}><I name="file-plus-2" /><span><b>New Ticket</b><small>Create a new ticket</small></span></button>
-            <button onClick={() => setStatus("Open")}><I name="user-round" /><span><b>My Tickets</b><small>View assigned to me</small></span></button>
-            <button onClick={() => setSlaStatus("At Risk")}><I name="clock-3" /><span><b>SLA Alerts</b><small>{ticketStatusCount("At Risk")} tickets breaching</small></span></button>
-            <button onClick={() => setStatus("Open")}><I name="circle-check-big" /><span><b>Unassigned</b><small>Open tickets</small></span></button>
+            <button onClick={() => openModal("create")}><div><I name="file-plus-2" /></div><span><b>New Ticket</b><small>Create a new ticket</small></span></button>
+            <button onClick={() => setStatus("Open")}><div><I name="user-round" /></div><span><b>My Tickets</b><small>View assigned to me</small></span></button>
+            <button onClick={() => setSlaStatus("At Risk")}><div><I name="clock-3" /></div><span><b>SLA Alerts</b><small>{ticketStatusCount("At Risk")} tickets breaching</small></span></button>
+            <button onClick={() => setStatus("Open")}><div><I name="circle-check-big" /></div><span><b>Unassigned</b><small>Open tickets</small></span></button>
           </div>
 
           <div className="csw-section-head csw-desktop-only">
