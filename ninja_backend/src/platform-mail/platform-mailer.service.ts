@@ -2339,10 +2339,13 @@ export class PlatformMailerService {
           : result.error === 'smtp_not_configured'
             ? 'skipped'
             : 'error';
+        // PRIMARY status write — deliberately WITHOUT message_id, so a logging
+        // column issue can never flip an email SendGrid actually accepted into a
+        // false 'error' (which would risk a duplicate on retry).
         await this.db.query(
           `UPDATE email_log
               SET status = $2, subject = $3, provider = $4, error = $5,
-                  message_id = $6, track_token = $7,
+                  track_token = $6,
                   sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
             WHERE id = $1`,
           [
@@ -2351,10 +2354,18 @@ export class PlatformMailerService {
             rendered.subject,
             result.provider,
             result.ok ? null : String(result.error || '').slice(0, 500),
-            result.messageId || null,
             token,
           ],
         );
+        // Best-effort message id (never affects the recorded status).
+        if (result.messageId) {
+          await this.db
+            .query(`UPDATE email_log SET message_id = $2 WHERE id = $1`, [
+              r.id,
+              result.messageId,
+            ])
+            .catch(() => {});
+        }
       } catch (err: any) {
         await this.db.query(
           `UPDATE email_log SET status = 'error', error = $2 WHERE id = $1`,
@@ -2401,7 +2412,20 @@ export class PlatformMailerService {
        FROM email_log WHERE campaign_id = $1`,
       [id],
     );
-    return { ...c, progress: agg[0] };
+    // Surface the actual per-recipient failure reasons (distinct, capped) so the
+    // exact provider error is visible in the UI without needing DB/log access.
+    const { rows: errs } = await this.db.query(
+      `SELECT error, COUNT(*)::int AS n
+         FROM email_log
+        WHERE campaign_id = $1 AND status = 'error' AND error IS NOT NULL
+        GROUP BY error ORDER BY n DESC LIMIT 5`,
+      [id],
+    );
+    return {
+      ...c,
+      progress: agg[0],
+      errors: errs.map((e: any) => ({ reason: e.error, count: e.n })),
+    };
   }
 
   async listBulkCampaigns(limit = 25): Promise<any[]> {
