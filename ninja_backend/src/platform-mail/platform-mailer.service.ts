@@ -671,7 +671,7 @@ export class PlatformMailerService {
       await this.db.query(
         `UPDATE email_log
             SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
-                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+                sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
           r.id,
@@ -785,7 +785,7 @@ export class PlatformMailerService {
                 provider = $4,
                 error = $5,
                 track_token = $6,
-                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+                sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
           r.id,
@@ -980,7 +980,7 @@ export class PlatformMailerService {
       await this.db.query(
         `UPDATE email_log
             SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
-                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+                sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
           r.id,
@@ -1187,7 +1187,7 @@ export class PlatformMailerService {
       await this.db.query(
         `UPDATE email_log
             SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
-                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+                sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
           r.id,
@@ -1390,7 +1390,7 @@ export class PlatformMailerService {
       await this.db.query(
         `UPDATE email_log
             SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
-                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+                sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
           r.id,
@@ -1582,7 +1582,7 @@ export class PlatformMailerService {
       await this.db.query(
         `UPDATE email_log
             SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
-                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+                sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
           r.id,
@@ -2341,12 +2341,16 @@ export class PlatformMailerService {
             : 'error';
         // PRIMARY status write — deliberately WITHOUT message_id, so a logging
         // column issue can never flip an email SendGrid actually accepted into a
-        // false 'error' (which would risk a duplicate on retry).
+        // false 'error' (which would risk a duplicate on retry). sent_at is
+        // precomputed and passed as its own parameter: reusing $2 in both
+        // `status = $2` and a `CASE WHEN $2 = 'sent'` made Postgres deduce
+        // inconsistent types for $2 and throw ("inconsistent types deduced for
+        // parameter $2"), which is exactly what failed the live delivery step.
+        const sentAt = result.ok ? new Date() : null;
         await this.db.query(
           `UPDATE email_log
               SET status = $2, subject = $3, provider = $4, error = $5,
-                  track_token = $6,
-                  sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+                  track_token = $6, sent_at = COALESCE($7::timestamptz, sent_at)
             WHERE id = $1`,
           [
             r.id,
@@ -2355,6 +2359,7 @@ export class PlatformMailerService {
             result.provider,
             result.ok ? null : String(result.error || '').slice(0, 500),
             token,
+            sentAt,
           ],
         );
         // Best-effort message id (never affects the recorded status).
