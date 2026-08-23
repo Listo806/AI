@@ -251,7 +251,14 @@ export class PlatformMailController {
   })
   @ApiQuery({ name: 'date', required: true })
   async audit(@Query('date') date?: string) {
-    return this.mailer.emailSendAudit(String(date || ''));
+    try {
+      return await this.mailer.emailSendAudit(String(date || ''));
+    } catch (err: any) {
+      return {
+        ok: false,
+        error: `Audit failed: ${String(err?.message || 'unknown error').slice(0, 300)}`,
+      };
+    }
   }
 
   @Get('bulk/campaigns')
