@@ -2547,11 +2547,14 @@ export class PlatformMailerService {
       .slice(0, 20);
     // Existing customers (registered BEFORE that day) who received >1 email that
     // day — the key "did onboarding backfill old customers" signal.
+    // NOTE: this query joins users, so the date filter MUST qualify the columns
+    // (email_log AND users both have created_at → unqualified is ambiguous).
     const oldMultiple = await this.db.query(
       `SELECT COUNT(*)::int AS n FROM (
          SELECT el.user_id
            FROM email_log el JOIN users u ON u.id = el.user_id
-          WHERE ${range}
+          WHERE COALESCE(el.sent_at, el.created_at) >= $1::date
+            AND COALESCE(el.sent_at, el.created_at) < ($1::date + INTERVAL '1 day')
             AND COALESCE(u.registered_at, u.created_at) < $1::date
           GROUP BY el.user_id HAVING COUNT(*) > 1
        ) t`,
