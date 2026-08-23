@@ -108,9 +108,16 @@ export default function StartTrial() {
     .trim()
     .toLowerCase();
 
-  const validPendingPlan = ["free", "solo", "business", "scale"].includes(
-    pendingPlanIntent,
-  )
+  // Accept both vocabularies the pricing page emits (Business=team, Scale=growth)
+  // so a pricing-first Business/Scale pick isn't dropped on the handoff.
+  const validPendingPlan = [
+    "free",
+    "solo",
+    "business",
+    "scale",
+    "team",
+    "growth",
+  ].includes(pendingPlanIntent)
     ? pendingPlanIntent
     : null;
 
@@ -161,11 +168,12 @@ export default function StartTrial() {
     try {
       const attribution = getAttribution();
 
-      const registrationPlan = isFreeAccessFlow
-        ? "free"
-        : cameFromPricing
-          ? validPendingPlan
-          : null;
+      // NEW FLOW: only bind a plan at registration if the visitor already chose
+      // one on the pricing page BEFORE signing up (reverse-order path). Otherwise
+      // create the account with NO plan and let them choose on the pricing step
+      // next — so the signup is captured (as a "registered / no plan" lead) even
+      // if they abandon before selecting anything.
+      const registrationPlan = cameFromPricing ? validPendingPlan : null;
 
       const registrationBilling =
         registrationPlan && registrationPlan !== "free"
@@ -173,18 +181,6 @@ export default function StartTrial() {
             ? pendingBillingCycle
             : "monthly"
           : null;
-
-      /*
-       * QUAN TRỌNG:
-       * Không cho phép customer-facing signup tạo user plan = NULL.
-       */
-      if (!registrationPlan) {
-        navigate("/pricing", {
-          replace: true,
-        });
-
-        return;
-      }
 
       const payload = {
         name: form.name,
@@ -195,7 +191,7 @@ export default function StartTrial() {
         plan: registrationPlan,
         billingCycle: registrationBilling,
 
-        source: isFreeAccessFlow ? "free_access" : "pricing_signup",
+        source: cameFromPricing ? "pricing_signup" : "free_access",
 
         language: lang,
 
@@ -244,52 +240,6 @@ export default function StartTrial() {
         }
       }
 
-      if (isFreeAccessFlow) {
-        if (!data.accessToken) {
-          throw new Error(
-            "Account was created but automatic login failed. Please log in and try again.",
-          );
-        }
-
-        const freeResult = await apiClient.request("/trial/select-plan", {
-          method: "POST",
-          body: JSON.stringify({
-            plan: "free",
-            billingCycle: null,
-          }),
-        });
-
-        if (!freeResult?.success) {
-          throw new Error(
-            freeResult?.message || "Unable to activate the Free plan.",
-          );
-        }
-
-        const authenticatedUser = freeResult?.user || data.user;
-
-        if (authenticatedUser) {
-          localStorage.setItem("listo_user", JSON.stringify(authenticatedUser));
-          setUser(authenticatedUser);
-        }
-
-        localStorage.setItem("trialPlan", "free");
-        localStorage.setItem("signupFlowStage", "free_active");
-        localStorage.setItem("signupSource", "free_access");
-        localStorage.removeItem("pendingPlanIntent");
-        localStorage.removeItem("pendingBillingCycle");
-
-        trackEvent("sign_up_completed", {
-          source: "free_access",
-          plan: "free",
-        });
-        trackSignupConversion();
-
-        navigate("/dashboard/ai-cortexa-setup", {
-          replace: true,
-        });
-        return;
-      }
-
       if (cameFromPricing && validPendingPlan) {
         localStorage.setItem("trialPlan", validPendingPlan);
 
@@ -330,10 +280,33 @@ export default function StartTrial() {
         return;
       }
 
+      // NEW default flow: the account is created and captured; the customer now
+      // chooses $0 / $7 / $14 / $21 on the pricing page BEFORE entering the CRM.
+      // If they abandon here, the account stays "registered / no plan" in admin —
+      // never falsely marked Free or paid.
+      if (!data.accessToken) {
+        throw new Error(
+          "Account was created but automatic login failed. Please log in and choose a plan.",
+        );
+      }
+      localStorage.setItem("signupFlowStage", "awaiting_plan");
+      localStorage.setItem(
+        "signupSource",
+        isFreeAccessFlow ? "free_access" : "organic",
+      );
+      localStorage.removeItem("pendingPlanIntent");
+      localStorage.removeItem("pendingBillingCycle");
+
+      trackEvent("sign_up_completed", {
+        source: isFreeAccessFlow ? "free_access" : "organic",
+        plan: "none",
+      });
+      trackSignupConversion();
+
       navigate("/pricing", {
         replace: true,
       });
-      
+      return;
     } catch (error) {
       console.error("CREATE ACCOUNT ERROR:", error);
       alert(error?.message || tr.errors.server);

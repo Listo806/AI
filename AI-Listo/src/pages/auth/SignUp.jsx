@@ -62,12 +62,13 @@ export default function SignUp() {
         localStorage.setItem('listo_user', JSON.stringify(res.user));
         // Funnel: account successfully created via the marketplace signup form.
         trackEvent('sign_up_completed');
-        // Google Ads sign-up conversion. Fire it, then hard-navigate only once
-        // the beacon has been sent, so the page unload does not cancel the
-        // request (which is what made Ads report "wasn't detected").
+        // NEW FLOW: send new signups to plan selection ($0 / $7 / $14 / $21)
+        // BEFORE the CRM — not straight into the dashboard. Google Ads sign-up
+        // conversion fires first; the hard-navigate waits for the beacon so the
+        // page unload does not cancel it (which made Ads report "wasn't detected").
         trackSignupConversion({
           onSent: () => {
-            window.location.href = '/dashboard';
+            window.location.href = '/pricing';
           },
         });
         return;
