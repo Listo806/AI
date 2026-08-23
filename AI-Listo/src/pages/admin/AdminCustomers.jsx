@@ -78,6 +78,7 @@ import {
 import aiUnitsApi from "../../api/aiUnitsApi";
 import AdminPlans from "./AdminPlans";
 import BulkEmailModal from "../../components/BulkEmailModal";
+import EmailAuditModal from "../../components/EmailAuditModal";
 import "../platform/platform.css";
 import "./AdminCustomers.css";
 
@@ -534,6 +535,7 @@ export default function AdminCustomers() {
   // Recipients for the bulk-email campaign modal (array of { id }), or null.
   const [bulkEmailFor, setBulkEmailFor] = useState(null);
   const [selectingAll, setSelectingAll] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1297,6 +1299,15 @@ export default function AdminCustomers() {
                   className="cxc-menu-item"
                   onClick={() => {
                     setMoreMenu(false);
+                    setShowAudit(true);
+                  }}
+                >
+                  Email send audit
+                </button>
+                <button
+                  className="cxc-menu-item"
+                  onClick={() => {
+                    setMoreMenu(false);
                     load();
                   }}
                 >
@@ -1676,6 +1687,7 @@ export default function AdminCustomers() {
           onClose={() => setBulkEmailFor(null)}
         />
       )}
+      {showAudit && <EmailAuditModal onClose={() => setShowAudit(false)} />}
     </div>
   );
 }

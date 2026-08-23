@@ -245,6 +245,15 @@ export class PlatformMailController {
     return this.mailer.emailHistoryForAddress(String(email || ''));
   }
 
+  @Get('audit')
+  @ApiOperation({
+    summary: 'Full send audit for one day (YYYY-MM-DD): totals, distribution, templates',
+  })
+  @ApiQuery({ name: 'date', required: true })
+  async audit(@Query('date') date?: string) {
+    return this.mailer.emailSendAudit(String(date || ''));
+  }
+
   @Get('bulk/campaigns')
   @ApiOperation({ summary: 'Recent bulk campaigns (admin)' })
   @ApiQuery({ name: 'limit', required: false })
