@@ -236,6 +236,15 @@ export class PlatformMailController {
     }
   }
 
+  @Get('history')
+  @ApiOperation({
+    summary: 'Every email Cortexa recorded for one address (auto/manual/bulk)',
+  })
+  @ApiQuery({ name: 'email', required: true })
+  async history(@Query('email') email?: string) {
+    return this.mailer.emailHistoryForAddress(String(email || ''));
+  }
+
   @Get('bulk/campaigns')
   @ApiOperation({ summary: 'Recent bulk campaigns (admin)' })
   @ApiQuery({ name: 'limit', required: false })

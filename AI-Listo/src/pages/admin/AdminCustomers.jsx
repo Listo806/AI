@@ -1816,6 +1816,7 @@ function CustomerModal({
   const payments = data?.payments || [];
   const activity = data?.activity || [];
   const notes = data?.notes || [];
+  const emailHistory = data?.emailHistory || null;
 
   useEffect(() => {
     if (c)
@@ -2418,6 +2419,41 @@ function CustomerModal({
                                 </small>
                               </div>
                             ))
+                          )}
+                        </section>
+                        <section className="cxc-wide-panel cxc-email-history-panel">
+                          <div className="cxc-new-panel-head">
+                            <span>
+                              <Mail size={17} /> EMAIL HISTORY
+                            </span>
+                            {emailHistory?.totals && (
+                              <span className="cxc-eh-tally">
+                                {emailHistory.totals.total} total ·{" "}
+                                {emailHistory.totals.bulk} bulk ·{" "}
+                                {emailHistory.totals.auto} auto ·{" "}
+                                {emailHistory.totals.manual} manual
+                              </span>
+                            )}
+                          </div>
+                          {!emailHistory?.recent?.length ? (
+                            <div className="cxc-new-empty">
+                              No emails recorded for this address.
+                            </div>
+                          ) : (
+                            <div className="cxc-eh-list">
+                              {emailHistory.recent.slice(0, 8).map((m, i) => (
+                                <div className="cxc-eh-row" key={i}>
+                                  <span className={`cxc-eh-type cxc-eh-${m.send_type}`}>
+                                    {m.send_type}
+                                  </span>
+                                  <span className="cxc-eh-tpl">{m.template}</span>
+                                  <span className={`cxc-eh-status cxc-eh-st-${m.status}`}>
+                                    {m.status}
+                                  </span>
+                                  <span className="cxc-eh-at">{fmtDateTime(m.at)}</span>
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </section>
                       </div>

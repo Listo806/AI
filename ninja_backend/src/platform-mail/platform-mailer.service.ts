@@ -2445,6 +2445,50 @@ export class PlatformMailerService {
     return rows;
   }
 
+  // Audit: EVERY email Cortexa recorded for one address — which template, which
+  // system (auto sequence / manual / bulk campaign), status, when, and campaign
+  // id. This is the source of truth for "why did this person get N emails": it
+  // separates the automated onboarding drip (send_type='auto') from bulk
+  // campaigns (send_type='bulk') so nothing is guessed. Read-only.
+  async emailHistoryForAddress(email: string): Promise<any> {
+    await this.ensureSchema();
+    const e = String(email || '').trim().toLowerCase();
+    if (!e) return { ok: false, error: 'An email address is required.' };
+    const { rows: tot } = await this.db.query(
+      `SELECT COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE status = 'sent')::int AS sent,
+              COUNT(*) FILTER (WHERE send_type = 'bulk')::int AS bulk,
+              COUNT(*) FILTER (WHERE send_type = 'auto')::int AS auto,
+              COUNT(*) FILTER (WHERE send_type = 'manual')::int AS manual
+         FROM email_log WHERE LOWER(to_email) = $1`,
+      [e],
+    );
+    const { rows: breakdown } = await this.db.query(
+      `SELECT send_type, template,
+              COUNT(*)::int AS n,
+              COUNT(*) FILTER (WHERE status = 'sent')::int AS sent,
+              MAX(COALESCE(sent_at, created_at)) AS last_at
+         FROM email_log WHERE LOWER(to_email) = $1
+         GROUP BY send_type, template
+         ORDER BY last_at DESC`,
+      [e],
+    );
+    const { rows: recent } = await this.db.query(
+      `SELECT template, send_type, status, campaign_id, provider,
+              COALESCE(sent_at, created_at) AS at
+         FROM email_log WHERE LOWER(to_email) = $1
+         ORDER BY COALESCE(sent_at, created_at) DESC LIMIT 80`,
+      [e],
+    );
+    return {
+      ok: true,
+      email: e,
+      totals: tot[0] || { total: 0, sent: 0, bulk: 0, auto: 0, manual: 0 },
+      breakdown,
+      recent,
+    };
+  }
+
   // ---- manual (admin) single-customer send: dropdown of production templates ----
   // Builds the right TemplateVars for ANY catalog template, reusing the exact
   // same builders the automatic emails use (same copy, same personalization).
