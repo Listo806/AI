@@ -29,6 +29,7 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
   const [estimate, setEstimate] = useState(null);
   const [result, setResult] = useState(null);
   const [progress, setProgress] = useState(null);
+  const [failReasons, setFailReasons] = useState([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [preview, setPreview] = useState(null); // {subject, html, language}
@@ -98,6 +99,7 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
         const res = await getBulkCampaign(id);
         if (res?.ok && res.campaign) {
           setProgress(res.campaign.progress);
+          if (Array.isArray(res.campaign.errors)) setFailReasons(res.campaign.errors);
           if (res.campaign.status === "completed" && pollRef.current) {
             clearInterval(pollRef.current);
             pollRef.current = null;
@@ -300,6 +302,21 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
                 </span>
               )}
             </div>
+            {failReasons.length > 0 && (
+              <div
+                className="bem-error"
+                style={{ flexDirection: "column", alignItems: "flex-start" }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                  <AlertTriangle size={13} /> Delivery failures — reason:
+                </div>
+                {failReasons.map((f, i) => (
+                  <div key={i} style={{ fontSize: 12 }}>
+                    {f.reason} <b>({f.count})</b>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="bem-note">
               Queued means accepted for delivery — not every message is delivered instantly. Track delivery in the email log.
             </div>
