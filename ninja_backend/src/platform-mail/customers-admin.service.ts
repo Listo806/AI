@@ -969,15 +969,20 @@ export class CustomersAdminService {
     if (!row) return { customer: null };
     const customer = { ...this.enrich(row), source_label: row.source_label };
 
-    const [subscription, payments, notes, activity, usage] = await Promise.all([
-      this.subscription(row),
-      this.payments(row.team_id),
-      this.listNotes(id),
-      this.activity(id, row),
-      this.usageFor(row.team_id),
-    ]);
+    const [subscription, payments, notes, activity, usage, emailHistory] =
+      await Promise.all([
+        this.subscription(row),
+        this.payments(row.team_id),
+        this.listNotes(id),
+        this.activity(id, row),
+        this.usageFor(row.team_id),
+        // Full email audit for this address (auto / manual / bulk). Best-effort.
+        row.email
+          ? this.mailer.emailHistoryForAddress(row.email).catch(() => null)
+          : Promise.resolve(null),
+      ]);
 
-    return { customer, subscription, payments, notes, activity, usage };
+    return { customer, subscription, payments, notes, activity, usage, emailHistory };
   }
 
   private async subscription(row: any) {
