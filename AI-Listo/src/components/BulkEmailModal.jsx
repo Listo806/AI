@@ -294,7 +294,19 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
             </div>
 
             <div className="bem-progress">
-              <Loader size={13} className="bem-spin" /> Sending in the background…
+              {progress && progress.pending === 0 ? (
+                <>
+                  <Check size={13} />{" "}
+                  {progress.failed
+                    ? "Finished — some deliveries failed"
+                    : "All emails sent"}
+                </>
+              ) : (
+                <>
+                  <Loader size={13} className="bem-spin" /> Sending in the
+                  background…
+                </>
+              )}
               {progress && (
                 <span className="bem-progress-counts">
                   Sent <b>{progress.sent}</b> · Pending <b>{progress.pending}</b>
