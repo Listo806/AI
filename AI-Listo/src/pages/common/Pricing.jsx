@@ -895,6 +895,7 @@ const pricingV3 = {
     then: "Then",
     perMonth: "/month",
     perYear: "/year",
+    workspaceIncluded: "✓ 1 Workspace Included",
     oneTimeActivation: "one-time activation",
     annualSavings: "20% savings vs.",
     atMonthlyPricing: "at monthly pricing",
@@ -1018,6 +1019,7 @@ const pricingV3 = {
     then: "Luego",
     perMonth: "/mes",
     perYear: "/año",
+    workspaceIncluded: "✓ 1 espacio de trabajo incluido",
     oneTimeActivation: "activación única",
     annualSavings: "20% de ahorro vs.",
     atMonthlyPricing: "con precio mensual",
@@ -1141,6 +1143,7 @@ const pricingV3 = {
     then: "Depois",
     perMonth: "/mês",
     perYear: "/ano",
+    workspaceIncluded: "✓ 1 espaço de trabalho incluído",
     oneTimeActivation: "ativação única",
     annualSavings: "20% de economia vs.",
     atMonthlyPricing: "com preço mensal",
@@ -1327,7 +1330,9 @@ export default function PricingPage() {
           <strong>{formatUsd(plan.activation)}</strong>
           <span>{pv3.toStart}</span>
         </div>
-
+        <div className="cx-pricing-v3-workspaceIncluded-label">
+          {pv3.workspaceIncluded}
+        </div>
         <div className="cx-pricing-v3-activation-label">
           {formatUsd(plan.activation)} {pv3.oneTimeActivation}
         </div>
