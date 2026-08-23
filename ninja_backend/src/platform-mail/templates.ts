@@ -579,6 +579,28 @@ function isOnb(name: TemplateName): boolean {
   return ONB_NAMES.includes(name as string);
 }
 
+// Full hosted Cortexa brand logo (brain/circuit icon + CORTEXA + AGENTIC AI
+// REVENUE OS). A hosted PNG so it renders in Gmail/Outlook — inline SVG does not.
+// Served from the frontend's public/ folder; override with EMAIL_LOGO_URL.
+export const BRAND_LOGO_URL =
+  process.env.EMAIL_LOGO_URL ||
+  'https://www.cortexaaicrm.com/cortexa-email-logo.png';
+
+// The rich email headers all use the same little "logo mini-table" (an icon cell
+// with the hexagon <svg> + a brand-text cell). Swap that whole mini-table for the
+// full hosted logo image, in ONE place, so every rich template (onboarding,
+// invite, out-of-credits, checkout, and anything sent in bulk) shows the real
+// brand. Non-global replace → only the header (first match) is swapped.
+const LOGO_MINI_TABLE =
+  /<table role="presentation" cellpadding="0" cellspacing="0"><tr>\s*<td style="padding-right:\d+px;[^"]*"><svg[\s\S]*?<\/svg><\/td>\s*<td style="vertical-align:middle;">[\s\S]*?<\/td>\s*<\/tr><\/table>/;
+function swapEmailLogo(html: string): string {
+  const img =
+    `<img src="${BRAND_LOGO_URL}" width="210" ` +
+    `alt="Cortexa — Agentic AI Revenue OS" ` +
+    `style="display:block;width:210px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />`;
+  return html.replace(LOGO_MINI_TABLE, img);
+}
+
 function renderOnboarding(
   name: string,
   l: MailLang,
@@ -612,6 +634,7 @@ function renderOnboarding(
     ? entry.subject.split('{{first_name}}').join(first)
     : entry.subject.replace(/,?\s*\{\{first_name\}\}/g, '');
   subject = subject.replace(/\s{2,}/g, ' ').trim();
+  html = swapEmailLogo(html);
   const text = html
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
