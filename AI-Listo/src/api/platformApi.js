@@ -447,6 +447,13 @@ export async function sendBulkEmail({ template, userIds, clientToken } = {}) {
 export async function getBulkCampaign(id) {
   return apiClient.request(`/admin/email/bulk/campaigns/${encodeURIComponent(id)}`);
 }
+// Full email send audit for one day (YYYY-MM-DD): totals, per-template,
+// distribution, heaviest recipients, and old-customers-with-multiple.
+export async function getEmailAudit(date) {
+  return apiClient.request(
+    `/admin/email/audit?date=${encodeURIComponent(date)}`,
+  );
+}
 // All customer ids matching the current table filters (for "select all matching").
 export async function getCustomerIds(params = {}) {
   const qs = new URLSearchParams(

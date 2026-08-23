@@ -2489,6 +2489,86 @@ export class PlatformMailerService {
     };
   }
 
+  // Full send audit for a single calendar day (UTC): totals, per-template,
+  // per-send_type, per-recipient distribution, the heaviest recipients, and how
+  // many EXISTING customers (registered before that day) received more than one
+  // email that day — the signature of a backfill/replay vs isolated test sends.
+  // Read-only; answers "what happened on Aug 20 across the whole customer base".
+  async emailSendAudit(dateStr: string): Promise<any> {
+    await this.ensureSchema();
+    const d = String(dateStr || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      return { ok: false, error: 'Provide the date as YYYY-MM-DD.' };
+    }
+    const range = `COALESCE(sent_at, created_at) >= $1::date
+                   AND COALESCE(sent_at, created_at) < ($1::date + INTERVAL '1 day')`;
+    const totals = await this.db.query(
+      `SELECT COUNT(*)::int AS total,
+              COUNT(DISTINCT LOWER(to_email))::int AS recipients,
+              COUNT(*) FILTER (WHERE send_type = 'auto')::int AS auto,
+              COUNT(*) FILTER (WHERE send_type = 'bulk')::int AS bulk,
+              COUNT(*) FILTER (WHERE send_type = 'manual')::int AS manual,
+              COUNT(*) FILTER (WHERE status = 'sent')::int AS sent,
+              COUNT(*) FILTER (WHERE status = 'error')::int AS error
+         FROM email_log WHERE ${range}`,
+      [d],
+    );
+    const perTemplate = await this.db.query(
+      `SELECT template, send_type, COUNT(*)::int AS n
+         FROM email_log WHERE ${range}
+         GROUP BY template, send_type ORDER BY n DESC`,
+      [d],
+    );
+    const perRecipient = await this.db.query(
+      `SELECT LOWER(to_email) AS email, COUNT(*)::int AS n
+         FROM email_log WHERE ${range}
+         GROUP BY LOWER(to_email)`,
+      [d],
+    );
+    const bucket: Record<string, number> = {
+      '1': 0,
+      '2-5': 0,
+      '6-10': 0,
+      '11-20': 0,
+      '20+': 0,
+    };
+    let maxPerRecipient = 0;
+    for (const r of perRecipient.rows) {
+      const n = r.n;
+      if (n > maxPerRecipient) maxPerRecipient = n;
+      if (n >= 21) bucket['20+'] += 1;
+      else if (n >= 11) bucket['11-20'] += 1;
+      else if (n >= 6) bucket['6-10'] += 1;
+      else if (n >= 2) bucket['2-5'] += 1;
+      else bucket['1'] += 1;
+    }
+    const topRecipients = [...perRecipient.rows]
+      .sort((a, b) => b.n - a.n)
+      .slice(0, 20);
+    // Existing customers (registered BEFORE that day) who received >1 email that
+    // day — the key "did onboarding backfill old customers" signal.
+    const oldMultiple = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM (
+         SELECT el.user_id
+           FROM email_log el JOIN users u ON u.id = el.user_id
+          WHERE ${range}
+            AND COALESCE(u.registered_at, u.created_at) < $1::date
+          GROUP BY el.user_id HAVING COUNT(*) > 1
+       ) t`,
+      [d],
+    );
+    return {
+      ok: true,
+      date: d,
+      totals: totals.rows[0],
+      maxPerRecipient,
+      distribution: bucket,
+      perTemplate: perTemplate.rows,
+      topRecipients,
+      oldCustomersWithMultiple: oldMultiple.rows[0]?.n ?? 0,
+    };
+  }
+
   // ---- manual (admin) single-customer send: dropdown of production templates ----
   // Builds the right TemplateVars for ANY catalog template, reusing the exact
   // same builders the automatic emails use (same copy, same personalization).
