@@ -16,38 +16,36 @@ body {
 
 .checkout-page {
   min-height: 100vh;
-  padding: 12px 16px;
+  padding: 8px 14px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .checkout-shell {
-  padding: 12px 16px !important;
+  padding: 10px 14px !important;
     border: 1px solid #e5e7ef;
     background: #fffffff5;
     box-shadow: 0 18px 55px #19225021;
     width: min(1000px, 100%);
     margin: 0 auto;
     min-height: auto;
-    border-radius: 16px;
+    border-radius: 14px;
 }
 .checkout-shell-grid{
    display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    align-items: stretch; /* both columns share the tallest column's height */
+    gap: 14px;
+    align-items: start; /* cards stay their natural height — never stretched */
 }
-/* Each column is a flex stack so its LAST card can grow to fill the column,
-   making both columns end at the same height (no white space below the left). */
+/* Each column is a compact flex stack; cards keep their natural height so there
+   is no empty space below the shorter column — the layout is just tight enough
+   that both columns end up naturally balanced. */
 .checkout-shell-1 {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
-}
-.checkout-shell-1 > .checkout-card:last-child {
-  flex: 1 1 auto;
 }
 .checkout-heading {
   margin-bottom: 0;
@@ -56,21 +54,21 @@ body {
 .checkout-heading h1 {
   margin: 0;
   color: #11162a;
-  font-size: clamp(19px, 2.4vw, 22px);
+  font-size: clamp(17px, 2vw, 19px);
   line-height: 1.1;
   letter-spacing: -0.03em;
 }
 
 .checkout-heading p {
-    margin: 3px 0 0;
+    margin: 2px 0 0;
     color: #667085;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .checkout-card {
-  padding: 11px 14px!important;
+  padding: 10px 12px!important;
   border: 1px solid #e3e5ee;
-  border-radius: 13px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 10px 28px rgba(36, 43, 79, 0.055);
   text-align: left;
@@ -80,12 +78,12 @@ body {
 }
 .checkout-card h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   color: #101426;
 }
 
 .checkout-summary-card > h2 {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .checkout-plan-row {
@@ -93,7 +91,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid #e4e6ee;
 }
 
@@ -116,11 +114,11 @@ body {
 
 .checkout-plan-icon {
   display: grid;
-  width: 50px;
-  height: 50px;
-  flex: 0 0 50px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 10px;
   color: #fff;
   background: linear-gradient(145deg, #6644ff, #3d18e4);
   box-shadow: 0 10px 24px rgba(79, 48, 235, 0.24);
@@ -133,7 +131,7 @@ body {
 
 .checkout-plan-copy h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: 15px;
 }
 
 .checkout-plan-copy p {
@@ -159,7 +157,7 @@ body {
 .checkout-plan-price strong {
   display: block;
   color: #111426;
-  font-size: 19px;
+  font-size: 17px;
 }
 
 .checkout-plan-price span {
@@ -178,7 +176,7 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 6px 0;
+  padding: 5px 0;
   border-bottom: 1px solid #e4e6ee;
   font-size: 14px;
 }
@@ -190,7 +188,7 @@ body {
 /* Secondary "future billing" line — deliberately quieter than the Due Today
    total so it never competes with today's charge. */
 .checkout-next-charge {
-  padding: 6px 0;
+  padding: 4px 0;
 }
 .checkout-next-charge > span:first-child {
   color: #7a8196;
@@ -210,7 +208,7 @@ body {
      column isn't padded out with empty space (this was the main cause of the
      page overflowing the viewport). */
   min-height: 0;
-  margin-top: 2px;
+  margin-top: 0;
 }
 
 /* Quiet, always-available fallback to the overlay checkout so the payment path
@@ -218,13 +216,13 @@ body {
 .checkout-inline-fallback {
   display: block;
   width: 100%;
-  margin-top: 10px;
-  padding: 8px;
+  margin-top: 4px;
+  padding: 4px;
   border: 0;
   background: transparent;
   color: #7a8196;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -234,7 +232,7 @@ body {
 }
 
 .checkout-summary-total {
-  padding-top: 8px;
+  padding-top: 6px;
 }
 
 .checkout-summary-total > strong {
@@ -258,15 +256,15 @@ body {
 }
 
 .checkout-section-heading {
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 9px;
+  margin-bottom: 6px;
 }
 
 .checkout-section-icon {
   display: grid;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
   place-items: center;
   border-radius: 50%;
   color: #5835e7;
@@ -274,19 +272,20 @@ body {
 }
 
 .checkout-section-heading h2 {
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .checkout-section-heading p {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   color: #697086;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .checkout-info-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .checkout-field {
@@ -299,18 +298,18 @@ body {
 
 .checkout-field > span {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 3px;
   color: #171b2c;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 760;
 }
 
 .checkout-input-wrap {
   display: flex;
-  height: 38px;
+  height: 34px;
   align-items: center;
-  gap: 12px;
-  padding: 0 13px;
+  gap: 10px;
+  padding: 0 12px;
   border: 1px solid #d8dce7;
   border-radius: 9px;
   background: #fff;
@@ -391,10 +390,10 @@ body {
 }
 
 .checkout-terms {
-  gap: 10px;
-  margin: 8px 2px;
+  gap: 9px;
+  margin: 6px 2px;
   color: #5f667c;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -470,10 +469,10 @@ body {
 
 .checkout-secure-footer {
   justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 7px;
+  margin-top: 5px;
   color: #8a90a1;
-  font-size: 12px;
+  font-size: 11px;
   margin-bottom: 0;
 }
 
@@ -533,7 +532,7 @@ body .checkout-page .selected-flag:focus, body .checkout-page .selected-flag:hov
 .checkout-page  .divider{
   height: 1px;
   background: #e3e5ee;
-  margin: 10px 0;
+  margin: 7px 0;
 }
 .checkout-stripe-input {
   display: flex;
