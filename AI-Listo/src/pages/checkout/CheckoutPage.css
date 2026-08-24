@@ -218,7 +218,9 @@ body {
   min-height: 0;
   margin-top: 0;
 }
-
+.checkout-paypal .checkout-inline-frame iframe{
+  max-height: 420px!important;
+}
 /* Quiet, always-available fallback to the overlay checkout so the payment path
    can never get stuck if the inline form fails to load. */
 .checkout-inline-fallback {
