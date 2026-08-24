@@ -1450,7 +1450,8 @@ export default function AdminCustomers() {
                           )}
                         </td>
                         <td className="cxc-mono">
-                          {r.seat_count ?? 0} / {r.seats_limit ?? "—"}
+                          {r.seats_used ?? r.seat_count ?? 0} /{" "}
+                          {r.seats_limit ?? "—"}
                         </td>
                         <td className="cxc-mono">
                           {r.credits_unlimited ? (
@@ -1925,8 +1926,8 @@ function CustomerModal({
   const planUsageRows = [
     {
       label: "Users / Seats",
-      used: c?.seat_count ?? 0,
-      limit: sub?.seatsLimit ?? 0,
+      used: c?.seats_used ?? c?.seat_count ?? 0,
+      limit: c?.seats_limit ?? sub?.seatsLimit ?? 0,
       tone: "purple",
       icon: <Users size={20} />,
     },
@@ -2235,7 +2236,8 @@ function CustomerModal({
                           Seats / Users
                         </div>
                         <strong>
-                          {c.seat_count ?? 0} / {sub?.seatsLimit ?? "—"}
+                          {c.seats_used ?? c.seat_count ?? 0} /{" "}
+                        {c.seats_limit ?? sub?.seatsLimit ?? "—"}
                         </strong>
                         <button onClick={() => onChangePlan && onChangePlan(c)}>
                           Change Plan <ChevronRight size={14} />
@@ -2692,7 +2694,8 @@ function CustomerModal({
                       <strong className="green">{planPrice}</strong>
                       <span>Seats / Users</span>
                       <strong>
-                        {c.seat_count ?? 0} / {sub?.seatsLimit ?? "—"}
+                        {c.seats_used ?? c.seat_count ?? 0} /{" "}
+                        {c.seats_limit ?? sub?.seatsLimit ?? "—"}
                       </strong>
                       <span>Status</span>
                       <strong>
