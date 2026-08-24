@@ -89,10 +89,72 @@ const t = {
     },
   },
 };
+function detectBrowserCountryCode() {
+  // Prefer an already-known checkout country.
+  const stored = String(
+    localStorage.getItem("countryCode") || ""
+  )
+    .trim()
+    .toUpperCase();
 
+  if (/^[A-Z]{2}$/.test(stored)) {
+    return stored;
+  }
+
+  // navigator.languages is usually more useful than navigator.language
+  // because it may contain values such as:
+  //
+  // en-US
+  // en-GB
+  // es-MX
+  // pt-BR
+  //
+  // Intl.Locale extracts the ISO country/region part safely.
+  try {
+    const languages =
+      Array.isArray(navigator.languages) &&
+      navigator.languages.length
+        ? navigator.languages
+        : [navigator.language];
+
+    for (const language of languages) {
+      if (!language) continue;
+
+      try {
+        const locale = new Intl.Locale(language);
+
+        const region = String(locale.region || "")
+          .trim()
+          .toUpperCase();
+
+        if (/^[A-Z]{2}$/.test(region)) {
+          return region;
+        }
+      } catch (_e) {
+        // Try simple BCP-47 fallback below.
+      }
+
+      const match = String(language).match(
+        /[-_]([A-Za-z]{2})$/
+      );
+
+      if (match?.[1]) {
+        return match[1].toUpperCase();
+      }
+    }
+  } catch (_e) {
+    // Ignore — Paddle can still ask for country when necessary.
+  }
+
+  return "";
+}
 export default function StartTrial() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
+
+  const [countryCode] = useState(() =>
+    detectBrowserCountryCode()
+  );
 
   const searchParams = new URLSearchParams(window.location.search);
 
@@ -227,7 +289,16 @@ export default function StartTrial() {
       localStorage.setItem("email", form.email);
       localStorage.setItem("name", form.name);
       localStorage.setItem("phone", form.phone);
-
+      // Save detected ISO-3166 country code for Paddle.
+      // Example:
+      // US
+      // GB
+      // CA
+      // AU
+      // BR
+      if (countryCode) {
+        localStorage.setItem("countryCode", countryCode);
+      }
       // Password must never be persisted in localStorage.
       localStorage.removeItem("password");
 

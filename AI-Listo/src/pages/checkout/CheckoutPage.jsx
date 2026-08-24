@@ -195,7 +195,55 @@ const loadPayPalSdk = (clientId) =>
     script.onerror = reject;
     document.body.appendChild(script);
   });
+const detectBrowserCountryCode = () => {
+  const stored = String(
+    localStorage.getItem("countryCode") || ""
+  )
+    .trim()
+    .toUpperCase();
 
+  if (/^[A-Z]{2}$/.test(stored)) {
+    return stored;
+  }
+
+  try {
+    const languages =
+      Array.isArray(navigator.languages) &&
+      navigator.languages.length
+        ? navigator.languages
+        : [navigator.language];
+
+    for (const language of languages) {
+      if (!language) continue;
+
+      try {
+        const locale = new Intl.Locale(language);
+
+        const region = String(locale.region || "")
+          .trim()
+          .toUpperCase();
+
+        if (/^[A-Z]{2}$/.test(region)) {
+          return region;
+        }
+      } catch (_e) {
+        // Continue to simple fallback.
+      }
+
+      const match = String(language).match(
+        /[-_]([A-Za-z]{2})$/
+      );
+
+      if (match?.[1]) {
+        return match[1].toUpperCase();
+      }
+    }
+  } catch (_e) {
+    // Safe fallback: leave country empty.
+  }
+
+  return "";
+};
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { setUser, refreshUser, user } = useAuth();
@@ -216,12 +264,55 @@ export default function CheckoutPage() {
       ? "annual"
       : "monthly";
 
-  const [customer] = useState(() => ({
-    name: localStorage.getItem("name") || "",
-    email: localStorage.getItem("email") || "",
-    phone: localStorage.getItem("phone") || "",
-    userId: localStorage.getItem("trialUserId") || "",
-  }));
+  const [customer] = useState(() => {
+      const countryCode =
+        String(
+          localStorage.getItem("countryCode") ||
+            detectBrowserCountryCode() ||
+            ""
+        )
+          .trim()
+          .toUpperCase();
+
+      const postalCode = String(
+        localStorage.getItem("postalCode") ||
+          localStorage.getItem("zipCode") ||
+          ""
+      ).trim();
+
+      const region = String(
+        localStorage.getItem("region") || ""
+      ).trim();
+
+      // Persist detected country so reload/resume checkout
+      // keeps the same Paddle prefill information.
+      if (/^[A-Z]{2}$/.test(countryCode)) {
+        localStorage.setItem(
+          "countryCode",
+          countryCode
+        );
+      }
+
+      return {
+        name: localStorage.getItem("name") || "",
+
+        email: localStorage.getItem("email") || "",
+
+        phone: localStorage.getItem("phone") || "",
+
+        countryCode:
+          /^[A-Z]{2}$/.test(countryCode)
+            ? countryCode
+            : "",
+
+        postalCode,
+
+        region,
+
+        userId:
+          localStorage.getItem("trialUserId") || "",
+      };
+    });
 
   // Resume-checkout robustness: when a signed-in user reaches checkout (e.g. they
   // logged back in on another device to finish paying), sync their account
@@ -462,6 +553,10 @@ export default function CheckoutPage() {
           plan: selectedPlan,
           userId,
           email: customer.email,
+          // Prefill Paddle customer information.
+          countryCode: customer.countryCode,
+          postalCode: customer.postalCode,
+          region: customer.region,
           startingCharge: setupFee,
           billingCycle,
           settings: paddleInlineSettings(),
@@ -510,6 +605,9 @@ export default function CheckoutPage() {
         plan: selectedPlan,
         userId,
         email: customer.email,
+        countryCode: customer.countryCode,
+        postalCode: customer.postalCode,
+        region: customer.region,
         startingCharge: setupFee,
         billingCycle,
       });
