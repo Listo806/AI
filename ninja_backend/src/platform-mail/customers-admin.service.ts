@@ -25,6 +25,28 @@ import {
   computeBalanceView,
 } from '../ai-units/ai-units-logic';
 
+// A paid tier was SELECTED (intent to buy), independent of whether payment
+// succeeded. Shared by the checkout-pending / registered predicates below so the
+// tabs, filters, KPI counts, and the row status all split the two states the
+// SAME way (single source of truth).
+const PAID_SELECTED_SQL = `LOWER(COALESCE(selected_plan,'')) IN ('solo','pro','team','business','growth','scale')`;
+
+// Checkout pending: a paid plan is in flight but no successful payment yet.
+// Covers the explicit checkout-open states (payment_status trial/pending) AND the
+// current signup flow, where the account is created 'registered' with a paid plan
+// chosen (Register -> Pricing -> Checkout). This is exactly what the main table
+// shows as "Checkout Pending", so the dedicated Checkout Pending view/tab uses it too.
+const CHECKOUT_PENDING_SQL = `(payment_status IN ('trial', 'pending') OR (COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid' AND ${PAID_SELECTED_SQL}))`;
+
+// Registered - No Plan: account created but no paid plan chosen and not on Free.
+// The complement of CHECKOUT_PENDING_SQL within the registered universe, so a
+// customer is counted in exactly one of the two.
+const REGISTERED_NO_PLAN_SQL = `(COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid' AND NOT (${PAID_SELECTED_SQL}))`;
+
+// The plans that count as a paid tier SELECTION, mirrored in JS for deriveStatus
+// so the row's status matches the SQL predicates above exactly.
+const PAID_SELECTED_PLANS = ['solo', 'pro', 'team', 'business', 'growth', 'scale'];
+
 // The master Customers admin data layer. One record per account (a team OWNER
 // row on `users`), covering the whole lifecycle: registered, free, trialing,
 // active paid, past due, canceled. Amounts come from the canonical plan-config;
@@ -334,6 +356,7 @@ export class CustomersAdminService {
     gclid, landing_page, signup_country, trial_ends_at, created_at, registered_at, upgraded_at, last_seen_at,
     team_id,
     (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id) AS seat_count,
+    (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id AND tm.status = 'active') AS seats_used,
     (SELECT COALESCE(SUM(p.amount), 0)::float
        FROM payments p JOIN subscriptions s ON s.id = p.subscription_id
       WHERE s.team_id = users.team_id AND p.status = 'succeeded') AS ltv,
@@ -391,6 +414,14 @@ export class CustomersAdminService {
     // is set when a checkout is opened.
     if (ps === 'trial' || ps === 'pending') return 'checkout_pending';
     if (ps === 'free') return 'free';
+    // Current signup flow (Register -> Pricing -> Checkout): the account is left
+    // 'registered' with a paid plan chosen until payment lands. That IS checkout
+    // pending — keep this in lock-step with CHECKOUT_PENDING_SQL so the row status,
+    // the tabs, and the dedicated Checkout Pending view never disagree.
+    const selected = String(row.selected_plan || '').toLowerCase();
+    if (PAID_SELECTED_PLANS.includes(selected) && cs !== 'paid') {
+      return 'checkout_pending';
+    }
     return 'registered';
   }
 
@@ -514,6 +545,16 @@ export class CustomersAdminService {
           ? 'monthly'
           : null;
 
+    // Seats "used / total": the denominator is the SELECTED plan's seat
+    // entitlement (Solo=1, Business=3, Scale=5) — driven by the plan, never by the
+    // number of users created and never gated down by payment status, so an
+    // unpaid/checkout-pending Business still reads /3. The numerator is the
+    // active/occupied users; the owner always holds a seat, so it is never below 1.
+    const seatsLimit = getPlan(
+      normalizePlanId(row.selected_plan || row.plan),
+    ).seats;
+    const seatsUsed = Math.max(Number(row.seats_used) || 0, 1);
+
     // A paid or grandfathered paid tier shows its real label and recurring price.
     // An account that only clicked Solo without paying is NOT shown as an assigned
     // "Solo $197/month" plan.
@@ -528,7 +569,8 @@ export class CustomersAdminService {
         billing: cycle || 'monthly',
         intro_amount: cfg.pricing.introCents / 100,
         recurring_amount: recurringCents / 100,
-        seats_limit: cfg.seats,
+        seats_limit: seatsLimit,
+        seats_used: seatsUsed,
         country: row.signup_country || null,
       };
     }
@@ -559,7 +601,8 @@ export class CustomersAdminService {
       billing: 'free',
       intro_amount: 0,
       recurring_amount: 0,
-      seats_limit: 1,
+      seats_limit: seatsLimit,
+      seats_used: seatsUsed,
       country: row.signup_country || null,
     };
   }
@@ -568,13 +611,13 @@ export class CustomersAdminService {
   private tabClause(tab?: string): string | null {
     switch ((tab || 'all').toLowerCase()) {
       case 'registered':
-        return `(COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')`;
+        return REGISTERED_NO_PLAN_SQL;
       case 'free':
         return `payment_status = 'free'`;
       case 'trialing':
         return `payment_status = 'trialing'`;
       case 'checkout_pending':
-        return `payment_status IN ('trial', 'pending')`;
+        return CHECKOUT_PENDING_SQL;
       case 'active':
         // checkout_status='paid' is sticky and never cleared on cancel, so exclude a
         // terminated payment_status from the paid-active set.
@@ -598,7 +641,7 @@ export class CustomersAdminService {
     // Registered - No Plan: account created but no plan activated. Same predicate
     // as the 'registered' tab so the plan filter and the tab agree.
     if (key === 'registered' || key === 'no_plan' || key === 'unselected')
-      return `(COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')`;
+      return REGISTERED_NO_PLAN_SQL;
     return null;
   }
 
@@ -624,14 +667,11 @@ export class CustomersAdminService {
     if (opts.paymentStatus && opts.paymentStatus !== 'all') {
       const psv = String(opts.paymentStatus).toLowerCase();
       if (psv === 'registered') {
-        // 'registered' must also catch NULL payment_status (matches the tab), which
-        // a bare equality on COALESCE(...,'') would silently drop.
-        clauses.push(
-          `(COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')`,
-        );
+        // Registered - No Plan (matches the 'registered' tab exactly).
+        clauses.push(REGISTERED_NO_PLAN_SQL);
       } else if (psv === 'checkout_pending') {
-        // Selected a paid plan but not yet paid.
-        clauses.push(`payment_status IN ('trial', 'pending')`);
+        // Selected a paid plan but not yet paid (matches the Checkout Pending tab).
+        clauses.push(CHECKOUT_PENDING_SQL);
       } else {
         params.push(psv);
         clauses.push(`LOWER(COALESCE(payment_status,'')) = $${params.length}`);
@@ -693,12 +733,16 @@ export class CustomersAdminService {
     return { where: clauses.join(' AND '), params };
   }
 
-  // AI Credits column (admin visibility only). Read-only mirror of the customer's
-  // dashboard balance (AiUnitsService.getBalance), reusing the exact shared
-  // functions so the number always matches the customer's own meter. Never writes,
-  // batched (no per-row queries):
-  //  - Paid/entitled plan, or an active Unlimited AI add-on -> `credits_unlimited`.
-  //  - Free account -> credits_remaining / credits_total (default allowance 50).
+  // AI Credits column (admin visibility only). Read-only, batched (no per-row
+  // queries), never writes. Driven by the customer's PLAN ENTITLEMENT so it stays
+  // correct automatically for every row:
+  //  - Free plan -> credits_remaining / credits_total (default allowance 50, plus
+  //    any purchased balance).
+  //  - Solo / Business / Scale (a paid tier selected), or an active Unlimited AI
+  //    add-on on a Free account -> `credits_unlimited` ("Unlimited").
+  // The tier comes from the SAME field the row's Plan column uses (selected_plan,
+  // falling back to plan), not the payment-gated effective plan, so a Business
+  // customer reads "Unlimited" even while their checkout is still pending.
   private async attachAiCredits(rows: any[]): Promise<void> {
     if (!Array.isArray(rows) || rows.length === 0) return;
     const teamIds = Array.from(
@@ -732,13 +776,15 @@ export class CustomersAdminService {
     const now = Date.now();
     for (const r of rows) {
       if (!r) continue;
-      // Same entitlement rule the row's Plan column uses (owner row = dashboard).
-      const eff = resolveEffectivePlan(r);
+      // Plan entitlement (same field the Plan column shows): Free = metered 50,
+      // every paid tier = Unlimited.
+      const isFreeTier =
+        normalizePlanId(r.selected_plan || r.plan) === 'free';
       const acct = r.team_id ? accByTeam.get(String(r.team_id)) : null;
       const unlimitedAddon =
         !!acct?.unlimited_ai_until &&
         new Date(acct.unlimited_ai_until).getTime() > now;
-      if (!eff.isFree || unlimitedAddon) {
+      if (!isFreeTier || unlimitedAddon) {
         r.credits_unlimited = true;
         r.credits_remaining = null;
         r.credits_total = null;
@@ -832,10 +878,10 @@ export class CustomersAdminService {
          COUNT(*) FILTER (WHERE payment_status = 'active' OR checkout_status = 'paid')::int AS active_paid,
          COUNT(*) FILTER (WHERE payment_status = 'free')::int AS free_accounts,
          COUNT(*) FILTER (WHERE payment_status = 'trialing')::int AS trialing,
-         COUNT(*) FILTER (WHERE payment_status IN ('trial','pending'))::int AS checkout_pending,
+         COUNT(*) FILTER (WHERE ${CHECKOUT_PENDING_SQL})::int AS checkout_pending,
          COUNT(*) FILTER (WHERE payment_status = 'past_due')::int AS past_due,
          COUNT(*) FILTER (WHERE payment_status IN ('canceled','suspended'))::int AS canceled,
-         COUNT(*) FILTER (WHERE COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')::int AS registered,
+         COUNT(*) FILTER (WHERE ${REGISTERED_NO_PLAN_SQL})::int AS registered,
          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS new_this_week
        FROM users WHERE ${where}`,
       params,
