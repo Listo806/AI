@@ -72,6 +72,19 @@ function recurringPriceFor(config, plan, billingCycle) {
   return config?.prices?.[plan] || null;
 }
 
+// Paddle NATIVE PAID-TRIAL price (single line item): its 14-day trial charges
+// the intro amount ($7/$14/$21) and then renews at the full monthly amount. This
+// is Paddle's native paid-trials feature (2026-06-11), so the checkout shows one
+// clean line ("$7 for 14 days, then $197/month") with the next billing date.
+//
+// Present only once the backend has PADDLE_PRICE_*_PAIDTRIAL provisioned; until
+// then this is null and the two-line-item (start + recurring) path is used.
+// Monthly only for now — annual keeps using start + recurring.
+function paidTrialPriceFor(config, plan, billingCycle) {
+  if (billingCycle === "annual") return null;
+  return config?.paidTrialPrices?.[plan] || null;
+}
+
 // Checkout is ready only when BOTH the one-time start price and the recurring
 // price (for the selected cycle) exist:
 //
@@ -79,10 +92,12 @@ function recurringPriceFor(config, plan, billingCycle) {
 // prices[plan]        -> $197 / $347 / $497 MONTHLY
 // annualPrices[plan]  -> $1,891.20 / $3,331.20 / $4,771.20 ANNUAL (when set)
 export function paddleReady(config, plan, billingCycle) {
+  if (!config?.clientToken) return false;
+  // Native paid trial is a single self-contained price — enough on its own.
+  if (paidTrialPriceFor(config, plan, billingCycle)) return true;
+  // Otherwise BOTH the one-time start price and the recurring price must exist.
   return Boolean(
-    config?.clientToken &&
-      config?.startPrices?.[plan] &&
-      recurringPriceFor(config, plan, billingCycle)
+    config?.startPrices?.[plan] && recurringPriceFor(config, plan, billingCycle)
   );
 }
 
@@ -94,6 +109,28 @@ export function openPaddleCheckout({
   startingCharge,
   billingCycle,
 }) {
+  // Preferred: Paddle NATIVE PAID TRIAL. A single price whose 14-day trial
+  // charges $7/$14/$21 and then renews at the monthly amount, so Paddle's
+  // checkout natively shows "$X for 14 days, then $Y/month" and the next
+  // billing date — no two-line-item workaround.
+  const paidTrialPriceId = paidTrialPriceFor(config, plan, billingCycle);
+  if (paidTrialPriceId) {
+    window.Paddle.Checkout.open({
+      items: [{ priceId: paidTrialPriceId, quantity: 1 }],
+      customer: email ? { email } : undefined,
+      customData: {
+        userId,
+        plan,
+        startingCharge,
+        billingCycle: "monthly",
+        pricingModel: "native_paid_trial",
+      },
+    });
+    return;
+  }
+
+  // Fallback (until paid-trial prices are provisioned, and for annual billing):
+  // two line items = one-time starting charge + recurring subscription.
   const startPriceId = config?.startPrices?.[plan];
   const recurringPriceId = recurringPriceFor(config, plan, billingCycle);
 

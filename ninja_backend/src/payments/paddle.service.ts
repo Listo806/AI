@@ -503,6 +503,133 @@ export class PaddleService {
   }
 
   /**
+   * One-time admin setup for Paddle's NATIVE PAID TRIALS (released 2026-06-11).
+   *
+   * Creates ONE monthly price per plan that carries a paid trial: the 14-day
+   * trial charges the intro amount ($7 / $14 / $21), then the price renews at the
+   * full monthly amount ($197 / $347 / $497). The trial charge and the recurring
+   * charge live on the SAME price, so the checkout shows a single clean line
+   * ("$7 for 14 days, then $197/month") instead of the two-line-item workaround.
+   *
+   * The existing product is derived from an existing recurring Price (prefer
+   * TEAM, then SOLO, then GROWTH) exactly like setupStartingPrices, so no
+   * PADDLE_PRODUCT_ID env is needed and existing prices are left untouched.
+   *
+   * Safety: each created price is verified to actually carry the paid-trial
+   * amount. If it doesn't (an SDK too old to serialize the new field, or paid
+   * trials not enabled on the account), this THROWS rather than silently creating
+   * a free trial that would give 14 days for $0.
+   *
+   * Store the three returned PADDLE_PRICE_*_PAIDTRIAL ids as env vars. Once set,
+   * the checkout switches to the single native paid-trial line item automatically.
+   */
+  async setupPaidTrialPrices(): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    const recurringPriceId =
+      this.configService.get('PADDLE_PRICE_TEAM') ||
+      this.configService.get('PADDLE_PRICE_SOLO') ||
+      this.configService.get('PADDLE_PRICE_GROWTH');
+
+    if (!recurringPriceId || !String(recurringPriceId).startsWith('pri_')) {
+      throw new BadRequestException(
+        'An existing recurring Paddle Price ID (PADDLE_PRICE_TEAM, PADDLE_PRICE_SOLO, or PADDLE_PRICE_GROWTH) is required to derive the product.',
+      );
+    }
+
+    const existingPrice: any = await (this.paddle as any).prices.get(
+      recurringPriceId,
+    );
+    const productId =
+      existingPrice?.productId ||
+      existingPrice?.product_id ||
+      existingPrice?.data?.productId ||
+      existingPrice?.data?.product_id;
+
+    if (!productId || !String(productId).startsWith('pro_')) {
+      throw new BadRequestException(
+        `Could not resolve the Paddle Product ID from recurring price '${recurringPriceId}'.`,
+      );
+    }
+
+    const idOf = (p: any) => p?.id || p?.data?.id;
+
+    // Create a monthly price with a native PAID trial, then read back the saved
+    // trial amount to be certain Paddle stored it (never a silent free trial).
+    const makePaidTrial = async (
+      label: string,
+      recurringAmount: string,
+      trialAmount: string,
+    ) => {
+      const payload: any = {
+        productId,
+        description: `CORTEXA ${label} plan (monthly, $${Number(trialAmount) / 100} 14-day paid trial)`,
+        unitPrice: { amount: recurringAmount, currencyCode: 'USD' },
+        billingCycle: { interval: 'month', frequency: 1 },
+        // Native paid trial: the trial period carries its OWN unit price (the
+        // amount charged today) and requires a payment method up front.
+        trialPeriod: {
+          interval: 'day',
+          frequency: 14,
+          requiresPaymentMethod: true,
+          unitPrice: { amount: trialAmount, currencyCode: 'USD' },
+        },
+      };
+      const created: any = await (this.paddle as any).prices.create(payload);
+
+      const tp =
+        created?.trialPeriod ||
+        created?.trial_period ||
+        created?.data?.trialPeriod ||
+        created?.data?.trial_period;
+      const savedTrial = tp?.unitPrice?.amount ?? tp?.unit_price?.amount;
+      if (String(savedTrial ?? '') !== String(trialAmount)) {
+        throw new BadRequestException(
+          `Paddle did not store the paid-trial charge for the ${label} price ` +
+            `(expected ${trialAmount}, got ${savedTrial ?? 'none'}). This usually means the ` +
+            `installed @paddle/paddle-node-sdk predates the June 2026 paid-trials release, or ` +
+            `paid trials are not enabled on this Paddle account. Upgrade the SDK / enable paid ` +
+            `trials, then re-run. (No usable price was stored.)`,
+        );
+      }
+      return created;
+    };
+
+    const solo = await makePaidTrial('Solo', '19700', '700');
+    const team = await makePaidTrial('Business', '34700', '1400');
+    const growth = await makePaidTrial('Scale', '49700', '2100');
+
+    return {
+      success: true,
+      environment: this.environment,
+      derivedFromRecurringPrice: recurringPriceId,
+      productId,
+      paidTrialPrices: {
+        solo: idOf(solo),
+        team: idOf(team),
+        growth: idOf(growth),
+      },
+      env: {
+        PADDLE_PRICE_SOLO_PAIDTRIAL: idOf(solo),
+        PADDLE_PRICE_TEAM_PAIDTRIAL: idOf(team),
+        PADDLE_PRICE_GROWTH_PAIDTRIAL: idOf(growth),
+      },
+      mapping: {
+        solo: '$7 for 14 days, then $197/month',
+        team: '$14 for 14 days, then $347/month',
+        growth: '$21 for 14 days, then $497/month',
+      },
+      note:
+        'Add the three PADDLE_PRICE_*_PAIDTRIAL values to Render and redeploy. Once set, ' +
+        'the checkout opens a SINGLE native paid-trial line item and stops using the ' +
+        'two-line-item (start + recurring) structure. Existing prices are untouched, so ' +
+        'you can roll back by clearing these env vars.',
+    };
+  }
+
+  /**
    * One-time admin setup for the NEW pricing model.
    *
    * Recurring prices stay exactly on the existing plans:
@@ -789,6 +916,18 @@ export class PaddleService {
         solo: this.configService.get('PADDLE_START_PRICE_SOLO') || null,
         team: this.configService.get('PADDLE_START_PRICE_TEAM') || null,
         growth: this.configService.get('PADDLE_START_PRICE_GROWTH') || null,
+      },
+
+      // Paddle NATIVE PAID-TRIAL prices (single line item: "$7 for 14 days, then
+      // $197/month"). Present only once PADDLE_PRICE_*_PAIDTRIAL are provisioned
+      // (via setup-paid-trial-prices); until then these are null and the checkout
+      // uses the two-line-item start + recurring structure. Monthly only for now;
+      // annual continues to use start + recurring until an annual paid-trial price
+      // exists.
+      paidTrialPrices: {
+        solo: this.configService.get('PADDLE_PRICE_SOLO_PAIDTRIAL') || null,
+        team: this.configService.get('PADDLE_PRICE_TEAM_PAIDTRIAL') || null,
+        growth: this.configService.get('PADDLE_PRICE_GROWTH_PAIDTRIAL') || null,
       },
 
       // Annual recurring prices. Present only once the *_ANNUAL env vars are set;
