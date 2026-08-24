@@ -755,202 +755,285 @@ export default function CheckoutPage() {
   }, [selectedPlan, usePaddle]);
 
   return (
-    <main className="checkout-page">
-      <div className="checkout-shell">
-        <header className="checkout-heading">
-            <h1>{tr.title}</h1>
-            <p>{tr.subtitle}</p>
-          </header>
-        <div className="checkout-shell-grid">
-          <div className="checkout-shell-1"> 
-            <div>        
-            <section className="checkout-card checkout-summary-card">
-              <h2>{tr.selectedPlan}</h2>
-              <div className="checkout-plan-row">
-                <div className="checkout-plan-main">
-                  <div className="checkout-plan-icon">
-                    <Users size={34} />
-                  </div>
-                  <div className="checkout-plan-copy">
-                    <div className="checkout-plan-name-row">
-                      <h3>{tr.planNames[selectedPlan]}</h3>
-                      {plan.popular && (
-                        <span className="checkout-popular-badge">
-                          {tr.mostPopular}
-                        </span>
-                      )}
-                    </div>
-                    <p>{usersText}</p>
-                    <small className="checkout-plan-after-trial">
-                      {tr.afterTrial}
-                    </small>
-                  </div>
-                </div>
-                <div className="checkout-plan-price">
-                  <small>{tr.monthlyAfterTrial}</small>
-                  <strong>${formatMoney(recurringPrice)}</strong>
-                  <span>{billingCycle === "annual" ? "/year" : tr.month}</span>
-                </div>
-              </div>
-              <div className="checkout-summary-line">
-                <span>{tr.setupFee}</span>
-                <strong>${formatMoney(setupFee)}</strong>
-              </div>
-              <div className="checkout-summary-line checkout-next-charge">
-                <span>{tr.nextCharge}</span>
-                <span className="checkout-next-charge-val">
-                  ${formatMoney(recurringPrice)} · {nextChargeStr}
-                </span>
-              </div>
-              <div className="checkout-summary-total">
-                <strong>{tr.dueToday}</strong>
-                <div>
-                  <span>USD</span>
-                  <strong>${formatMoney(setupFee)}</strong>
-                </div>
-              </div>
-            </section>
+  <main className="checkout-page">
+    <div className="checkout-shell">
+      {/* PAGE HEADER */}
+      <header className="checkout-heading">
+        <h1>{tr.title}</h1>
+        <p>{tr.subtitle}</p>
+      </header>
 
-            <section className="checkout-card">
-              <div className="checkout-section-heading">
-                <div className="checkout-section-icon">
-                  <User size={24} />
-                </div>
-                <div>
-                  <h2>{tr.informationTitle}</h2>
-                  <p>{tr.informationDesc}</p>
-                </div>
-              </div>
+      <div className="checkout-stack">
+        {/* =========================================================
+            STEP 1 — YOUR INFORMATION
+        ========================================================= */}
+        <section className="checkout-card checkout-step checkout-info-card">
+          <div className="checkout-section-heading">
+            <div className="checkout-section-icon">
+              <User size={22} />
+            </div>
 
-              <div className="checkout-info-grid">
-                <label className="checkout-field">
-                  <span>{tr.fullName}</span>
-                  <div className="checkout-input-wrap">
-                    <User size={19} />
-                    <input type="text" value={customer.name} readOnly />
-                  </div>
-                </label>
-
-                <label className="checkout-field">
-                  <span>{tr.email}</span>
-                  <div className="checkout-input-wrap">
-                    <Mail size={19} />
-                    <input type="email" value={customer.email} readOnly />
-                  </div>
-                </label>
-
-                <label className="checkout-field checkout-field-full">
-                  <span>{tr.phone}</span>
-                  <div className="checkout-input-wrap">
-                    <Phone size={19} />
-                    <input type="tel" value={customer.phone} readOnly />
-                  </div>
-                </label>
-              </div>
-            </section>
+            <div>
+              <h2>1. {tr.informationTitle}</h2>
+              <p>{tr.informationDesc}</p>
             </div>
           </div>
 
-          <div className="checkout-shell-1 shell-2">
-            <section className="checkout-card">
-              <div className="checkout-section-heading">
-                <div className="checkout-section-icon">
-                  <ShieldCheck size={24} />
-                </div>
-                <div>
-                  <h2>{tr.checkoutTitle}</h2>
-                  <p>{tr.checkoutDesc}</p>
-                </div>
-              </div>
+          <div className="checkout-info-grid checkout-info-grid-reference">
+            <label className="checkout-field">
+              <span>{tr.fullName}</span>
 
-              <label className="checkout-terms">
+              <div className="checkout-input-wrap">
+                <User size={16} />
+
+                <input
+                  type="text"
+                  value={customer.name}
+                  readOnly
+                />
+              </div>
+            </label>
+
+            <label className="checkout-field">
+              <span>{tr.email}</span>
+
+              <div className="checkout-input-wrap">
+                <Mail size={16} />
+
+                <input
+                  type="email"
+                  value={customer.email}
+                  readOnly
+                />
+              </div>
+            </label>
+
+            <label className="checkout-field checkout-field-full">
+              <span>{tr.phone}</span>
+
+              <div className="checkout-input-wrap">
+                <Phone size={16} />
+
+                <input
+                  type="tel"
+                  value={customer.phone}
+                  readOnly
+                />
+              </div>
+            </label>
+          </div>
+        </section>
+
+        {/* =========================================================
+            STEP 2 — SELECTED PLAN
+        ========================================================= */}
+        <section className="checkout-card checkout-step checkout-summary-card">
+          <div className="checkout-section-heading checkout-plan-heading">
+            <div className="checkout-section-icon">
+              <Users size={22} />
+            </div>
+
+            <div>
+              <h2>2. {tr.selectedPlan}</h2>
+
+              {plan.popular && (
+                <span className="checkout-popular-badge">
+                  {tr.mostPopular}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="checkout-plan-reference-row">
+            <div className="checkout-plan-reference-left">
+              <h3>{tr.planNames[selectedPlan]}</h3>
+
+              <p>{usersText}</p>
+
+              <small className="checkout-plan-after-trial">
+                {tr.afterTrial}
+              </small>
+            </div>
+
+            <div className="checkout-plan-price">
+              <small>{tr.monthlyAfterTrial}</small>
+
+              <strong>
+                ${formatMoney(recurringPrice)}
+              </strong>
+
+              <span>
+                {billingCycle === "annual"
+                  ? "/year"
+                  : tr.month}
+              </span>
+            </div>
+          </div>
+
+          <div className="checkout-plan-divider" />
+
+          <div className="checkout-summary-line">
+            <span>{tr.setupFee}</span>
+            <strong>${formatMoney(setupFee)}</strong>
+          </div>
+
+          <div className="checkout-summary-line checkout-next-charge">
+            <span>{tr.nextCharge}</span>
+
+            <span className="checkout-next-charge-val">
+              ${formatMoney(recurringPrice)} · {nextChargeStr}
+            </span>
+          </div>
+
+          <div className="checkout-summary-total">
+            <strong>{tr.dueToday}</strong>
+
+            <div>
+              <span>USD</span>
+
+              <strong>
+                ${formatMoney(setupFee)}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================
+            STEP 3 — SECURE PAYMENT
+        ========================================================= */}
+        <section className="checkout-card checkout-step checkout-payment-card">
+          <div className="checkout-section-heading checkout-payment-heading">
+            <div className="checkout-section-icon">
+              <ShieldCheck size={22} />
+            </div>
+
+            <div>
+              <h2>3. {tr.checkoutTitle}</h2>
+
+              <p>
+                Enter your payment details to start your
+                14-day trial.
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={`checkout-payment-body ${
+              acceptedTerms ? "is-open" : ""
+            }`}
+          >
+            {/* TERMS BEFORE PADDLE LOAD */}
+            {!acceptedTerms && (
+              <label className="checkout-terms checkout-terms-before-payment">
                 <input
                   type="checkbox"
                   checked={acceptedTerms}
-                  onChange={(event) => setAcceptedTerms(event.target.checked)}
+                  onChange={(event) =>
+                    setAcceptedTerms(event.target.checked)
+                  }
                 />
+
                 <span>
                   {tr.agreementPrefix}{" "}
-                  <a href="/terms" target="_blank" rel="noreferrer">
+
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     {tr.terms}
-                    <ExternalLink size={14} />
+
+                    <ExternalLink size={12} />
                   </a>
                 </span>
               </label>
+            )}
 
-              <div className="checkout-paypal">
-                {usePaddle ? (
-                  <>
-                    {!acceptedTerms && (
-                      <p className="checkout-paypal-status">{tr.acceptToLoad}</p>
-                    )}
-                    {/* Paddle injects the inline payment form into this element
-                        (matched by class). Our summary above stays the prominent
-                        price, so "Due today" is the final amount the customer sees. */}
-                    <div
-                      className={`${PADDLE_INLINE_FRAME_CLASS} checkout-inline-frame`}
-                      style={{ display: acceptedTerms ? "block" : "none" }}
-                    />
-                    {processing && (
-                      <p className="checkout-paypal-status">{tr.processing}</p>
-                    )}
-                    {errorMsg && (
-                      <>
-                        <p className="checkout-paypal-error">{errorMsg}</p>
-                        <button
-                          type="button"
-                          className="checkout-paddle-btn"
-                          onClick={startPaddleOverlayFallback}
-                          disabled={processing}
-                          style={{
-                            width: "100%",
-                            padding: "14px 16px",
-                            borderRadius: "8px",
-                            border: "none",
-                            background: "#111827",
-                            color: "#fff",
-                            fontSize: "16px",
-                            fontWeight: 600,
-                            cursor: "pointer",
-                          }}
-                        >
-                          {`Pay $${setupFee} and start your trial`}
-                        </button>
-                      </>
-                    )}
-                  </>
-                ) : annualUnavailable ? (
-                  <>
-                    <p className="checkout-paypal-error">
-                      Annual billing for this plan is being finalized and is not
-                      available yet. Please switch to monthly billing to continue.
+            <div className="checkout-paypal">
+              {usePaddle ? (
+                <>
+                  {!acceptedTerms && (
+                    <p className="checkout-paypal-status">
+                      {tr.acceptToLoad}
                     </p>
-                    {errorMsg && (
-                      <p className="checkout-paypal-error">{errorMsg}</p>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <p className="checkout-paypal-error">
-                      Pricing is not configured yet for this offer. The starting-price
-                      ID and recurring-price ID must both be configured before checkout
-                      can open.
-                    </p>
-                    {errorMsg && (
-                      <p className="checkout-paypal-error">{errorMsg}</p>
-                    )}
-                  </>
-                )}
-              </div>
+                  )}
 
-              <div className="checkout-secure-footer">
-                <ShieldCheck size={19} />
-                <span>{tr.footer}</span>
-              </div>
-            </section>
+                  <div
+                    className={`${PADDLE_INLINE_FRAME_CLASS} checkout-inline-frame`}
+                    style={{
+                      display: acceptedTerms
+                        ? "block"
+                        : "none",
+                    }}
+                  />
+
+                  {processing && (
+                    <p className="checkout-paypal-status">
+                      {tr.processing}
+                    </p>
+                  )}
+
+                  {errorMsg && (
+                    <>
+                      <p className="checkout-paypal-error">
+                        {errorMsg}
+                      </p>
+
+                      <button
+                        type="button"
+                        className="checkout-paddle-btn"
+                        onClick={
+                          startPaddleOverlayFallback
+                        }
+                        disabled={processing}
+                      >
+                        {`Pay $${setupFee} and start your trial`}
+                      </button>
+                    </>
+                  )}
+                </>
+              ) : annualUnavailable ? (
+                <>
+                  <p className="checkout-paypal-error">
+                    Annual billing for this plan is being
+                    finalized and is not available yet.
+                    Please switch to monthly billing to
+                    continue.
+                  </p>
+
+                  {errorMsg && (
+                    <p className="checkout-paypal-error">
+                      {errorMsg}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="checkout-paypal-error">
+                    Pricing is not configured yet for this
+                    offer. The starting-price ID and
+                    recurring-price ID must both be
+                    configured before checkout can open.
+                  </p>
+
+                  {errorMsg && (
+                    <p className="checkout-paypal-error">
+                      {errorMsg}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+
+          <div className="checkout-secure-footer">
+            <ShieldCheck size={15} />
+
+            <span>{tr.footer}</span>
+          </div>
+        </section>
       </div>
-    </main>
-  );
+    </div>
+  </main>
+);
 }
