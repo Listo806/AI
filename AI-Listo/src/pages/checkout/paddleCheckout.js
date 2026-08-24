@@ -201,7 +201,7 @@ export function paddleInlineSettings() {
     frameTarget: PADDLE_INLINE_FRAME_CLASS,
     // Paddle auto-resizes the frame to its content (the "Your details" step is
     // short); keep the initial height small so the column isn't over-tall.
-    frameInitialHeight: 300,
+    frameInitialHeight: 280,
     frameStyle:
       "width:100%;min-width:312px;background-color:transparent;border:none;",
     allowLogout: false,
