@@ -199,7 +199,7 @@ export function paddleInlineSettings() {
   return {
     displayMode: "inline",
     frameTarget: PADDLE_INLINE_FRAME_CLASS,
-    frameInitialHeight: 460,
+    frameInitialHeight: 430,
     frameStyle:
       "width:100%;min-width:312px;background-color:transparent;border:none;",
     allowLogout: false,
