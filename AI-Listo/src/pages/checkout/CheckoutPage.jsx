@@ -632,93 +632,154 @@ export default function CheckoutPage() {
         </header>
         <div className="checkout-shell-grid">
           
-          <div className="checkout-shell-1"> 
-            <div>        
-              <section className="checkout-card checkout-summary-card">
-                <h2>{tr.selectedPlan}</h2>
-                <div className="checkout-plan-row">
-                  <div className="checkout-plan-main">
-                    <div className="checkout-plan-icon">
-                      <Users size={34} />
-                    </div>
-                    <div className="checkout-plan-copy">
-                      <div className="checkout-plan-name-row">
-                        <h3>{tr.planNames[selectedPlan]}</h3>
-                        {plan.popular && (
-                          <span className="checkout-popular-badge">
-                            {tr.mostPopular}
-                          </span>
-                        )}
-                      </div>
-                      <p>{usersText}</p>
-                      <small className="checkout-plan-after-trial">
-                        {tr.afterTrial}
-                      </small>
-                    </div>
-                  </div>
-                  <div className="checkout-plan-price">
-                    <small>{tr.monthlyAfterTrial}</small>
-                    <strong>${formatMoney(recurringPrice)}</strong>
-                    <span>{billingCycle === "annual" ? "/year" : tr.month}</span>
-                  </div>
+          <div className="checkout-shell-1 checkout-left-column">
+            {/* =====================================================
+                1. YOUR INFORMATION
+            ====================================================== */}
+            <section className="checkout-card checkout-info-card">
+              <div className="checkout-left-card-heading">
+                <div className="checkout-left-heading-icon">
+                  <User size={28} strokeWidth={2} />
                 </div>
-                <div className="checkout-summary-line">
-                  <span>{tr.setupFee}</span>
-                  <strong>${formatMoney(setupFee)}</strong>
+
+                <div className="checkout-left-heading-copy">
+                  <h2>
+                    <span className="checkout-step-number">1.</span>{" "}
+                    {tr.informationTitle}
+                  </h2>
+
+                  <p>{tr.informationDesc}</p>
                 </div>
-                <div className="checkout-summary-line checkout-next-charge">
-                  <span>{tr.nextCharge}</span>
-                  <span className="checkout-next-charge-val">
-                    ${formatMoney(recurringPrice)} · {nextChargeStr}
+              </div>
+
+              <div className="checkout-info-grid checkout-info-grid-left">
+                <label className="checkout-field checkout-field-full">
+                  <span>{tr.fullName}</span>
+
+                  <div className="checkout-input-wrap checkout-left-input">
+                    <User size={18} strokeWidth={2} />
+
+                    <input
+                      type="text"
+                      value={customer.name}
+                      readOnly
+                    />
+                  </div>
+                </label>
+
+                <label className="checkout-field checkout-field-full">
+                  <span>{tr.email}</span>
+
+                  <div className="checkout-input-wrap checkout-left-input">
+                    <Mail size={18} strokeWidth={2} />
+
+                    <input
+                      type="email"
+                      value={customer.email}
+                      readOnly
+                    />
+                  </div>
+                </label>
+
+                <label className="checkout-field checkout-field-full">
+                  <span>{tr.phone}</span>
+
+                  <div className="checkout-input-wrap checkout-left-input">
+                    <Phone size={18} strokeWidth={2} />
+
+                    <input
+                      type="tel"
+                      value={customer.phone}
+                      readOnly
+                    />
+                  </div>
+                </label>
+              </div>
+            </section>
+
+            {/* =====================================================
+                2. YOUR SELECTED PLAN
+            ====================================================== */}
+            <section className="checkout-card checkout-summary-card checkout-plan-card">
+              <div className="checkout-left-card-heading checkout-plan-card-heading">
+                <div className="checkout-left-heading-icon">
+                  <Users size={28} strokeWidth={2} />
+                </div>
+
+                <div className="checkout-left-heading-copy">
+                  <h2>
+                    <span className="checkout-step-number">2.</span>{" "}
+                    {tr.selectedPlan}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="checkout-plan-content-row">
+                {/* LEFT PLAN DETAILS */}
+                <div className="checkout-plan-details">
+                  {plan.popular && (
+                    <span className="checkout-left-popular-badge">
+                      {tr.mostPopular}
+                    </span>
+                  )}
+
+                  <h3>{tr.planNames[selectedPlan]}</h3>
+
+                  <p className="checkout-plan-users">
+                    {usersText}
+                  </p>
+
+                  <small className="checkout-plan-after-trial">
+                    {tr.afterTrial}
+                  </small>
+                </div>
+
+                {/* RIGHT PLAN PRICE */}
+                <div className="checkout-plan-price checkout-left-plan-price">
+                  <small>{tr.monthlyAfterTrial}</small>
+
+                  <strong>
+                    ${formatMoney(recurringPrice)}
+                  </strong>
+
+                  <span>
+                    {billingCycle === "annual"
+                      ? "/year"
+                      : tr.month}
                   </span>
                 </div>
-                <div className="checkout-summary-total">
-                  <strong>{tr.dueToday}</strong>
-                  <div>
-                    <span>USD</span>
-                    <strong>${formatMoney(setupFee)}</strong>
-                  </div>
+              </div>
+
+              <div className="checkout-left-plan-divider" />
+
+              <div className="checkout-summary-line checkout-left-summary-line">
+                <span>{tr.setupFee}</span>
+
+                <strong>
+                  ${formatMoney(setupFee)}
+                </strong>
+              </div>
+
+              <div className="checkout-summary-line checkout-next-charge checkout-left-summary-line">
+                <span>{tr.nextCharge}</span>
+
+                <span className="checkout-next-charge-val">
+                  ${formatMoney(recurringPrice)} · {nextChargeStr}
+                </span>
+              </div>
+
+              <div className="checkout-summary-total checkout-left-summary-total">
+                <strong>{tr.dueToday}</strong>
+
+                <div>
+                  <span>USD</span>
+
+                  <strong>
+                    ${formatMoney(setupFee)}
+                  </strong>
                 </div>
-              </section>
-
-              <section className="checkout-card">
-                <div className="checkout-section-heading">
-                  <div className="checkout-section-icon">
-                    <User size={24} />
-                  </div>
-                  <div>
-                    <h2>{tr.informationTitle}</h2>
-                    <p>{tr.informationDesc}</p>
-                  </div>
-                </div>
-
-                <div className="checkout-info-grid">
-                  <label className="checkout-field">
-                    <span>{tr.fullName}</span>
-                    <div className="checkout-input-wrap">
-                      <User size={19} />
-                      <input type="text" value={customer.name} readOnly />
-                    </div>
-                  </label>
-
-                  <label className="checkout-field">
-                    <span>{tr.email}</span>
-                    <div className="checkout-input-wrap">
-                      <Mail size={19} />
-                      <input type="email" value={customer.email} readOnly />
-                    </div>
-                  </label>
-
-                  <label className="checkout-field checkout-field-full">
-                    <span>{tr.phone}</span>
-                    <div className="checkout-input-wrap">
-                      <Phone size={19} />
-                      <input type="tel" value={customer.phone} readOnly />
-                    </div>
-                  </label>
-                </div>
-              </section>
-            </div>
+              </div>
+            </section>
           </div>
 
           <div className="checkout-shell-1 shell-2">
@@ -728,7 +789,7 @@ export default function CheckoutPage() {
                   <ShieldCheck size={24} />
                 </div>
                 <div>
-                  <h2>{tr.checkoutTitle}</h2>
+                  <h2><span className="checkout-step-number">3.</span>{" "}{tr.checkoutTitle}</h2>
                   <p>{tr.checkoutDesc}</p>
                 </div>
               </div>
