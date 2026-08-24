@@ -4018,8 +4018,7 @@ body .next-action-card svg {
     border:
       1px solid rgba(148,163,184,.38);
     border-radius: 22px;
-    background:
-      rgba(15,23,42,.72);
+    background:none;
     color: #f8fafc;
     text-align: left;
   }
@@ -4057,8 +4056,6 @@ body .next-action-card svg {
     border:
       2px solid rgba(96,165,250,.68);
     border-radius: 22px;
-    background:
-      rgba(15,23,42,.50);
     display: grid;
   }
 
