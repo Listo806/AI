@@ -23,7 +23,7 @@ body {
 }
 
 .checkout-shell {
-  padding: 14px 20px !important;
+  padding: 12px 16px !important;
     border: 1px solid #e5e7ef;
     background: #fffffff5;
     box-shadow: 0 18px 55px #19225021;
@@ -36,10 +36,21 @@ body {
    display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
-    align-items: start;
+    align-items: stretch; /* both columns share the tallest column's height */
+}
+/* Each column is a flex stack so its LAST card can grow to fill the column,
+   making both columns end at the same height (no white space below the left). */
+.checkout-shell-1 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.checkout-shell-1 > .checkout-card:last-child {
+  flex: 1 1 auto;
 }
 .checkout-heading {
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .checkout-heading h1 {
@@ -57,7 +68,7 @@ body {
 }
 
 .checkout-card {
-  padding: 12px 14px!important;
+  padding: 11px 14px!important;
   border: 1px solid #e3e5ee;
   border-radius: 13px;
   background: rgba(255, 255, 255, 0.96);
@@ -65,7 +76,7 @@ body {
   text-align: left;
 }
 .checkout-summary-card{
-  margin-bottom: 12px;
+  margin-bottom: 0; /* column gap handles spacing between stacked cards */
 }
 .checkout-card h2 {
   margin: 0;
@@ -167,7 +178,7 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 7px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #e4e6ee;
   font-size: 14px;
 }

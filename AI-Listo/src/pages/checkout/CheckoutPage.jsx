@@ -659,13 +659,12 @@ export default function CheckoutPage() {
   return (
     <main className="checkout-page">
       <div className="checkout-shell">
-        <header className="checkout-heading">
-          <h1>{tr.title}</h1>
-          <p>{tr.subtitle}</p>
-        </header>
-
         <div className="checkout-shell-grid">
           <div className="checkout-shell-1">
+            <header className="checkout-heading">
+              <h1>{tr.title}</h1>
+              <p>{tr.subtitle}</p>
+            </header>
             <section className="checkout-card checkout-summary-card">
               <h2>{tr.selectedPlan}</h2>
               <div className="checkout-plan-row">
