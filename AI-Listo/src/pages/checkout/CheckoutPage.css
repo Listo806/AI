@@ -219,6 +219,49 @@ body {
 .checkout-paypal .checkout-inline-frame iframe{
   max-height: 420px!important;
 }
+.checkout-paypal .checkout-inline-frame iframe .dxmuBW{
+  padding:0!important;
+  height:auto!important;
+  min-height: unset!important;
+  margin-bottom: 0!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .dxmuBW > div {
+    display: flex!important;
+    gap: 10px!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .loMxxt {
+    margin-bottom: 0!important;
+    margin-top: 0!important;
+    padding: 0!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .loMxxt label {
+    padding: .2rem 0px!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .kEKBVs {
+    margin-top: .2rem!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .sc-hIUJlX + .sc-fxwrCY .sc-eFRcpv {
+    margin-top: 0!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .jIhBIM {
+    padding: 0 1rem!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .cNvseE {
+    min-height: 0!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .fFQCGD, .checkout-paypal .checkout-inline-frame iframe .dWJrqe {
+    grid-template-rows: auto minmax(2rem, auto)!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .fAsvnR{
+  min-height: unset!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .ipBIwy, .checkout-paypal .checkout-inline-frame iframe .dRZcAW, 
+.checkout-paypal .checkout-inline-frame iframe .ipBIwy, .checkout-paypal .checkout-inline-frame iframe .YqvtG{
+  font-size: 13px!important;
+}
+.checkout-paypal .checkout-inline-frame iframe .jjhcka{
+  font-size: 10px!important;
+}
 /* Quiet, always-available fallback to the overlay checkout so the payment path
    can never get stuck if the inline form fails to load. */
 .checkout-inline-fallback {
@@ -828,7 +871,7 @@ body .checkout-page .selected-flag:focus, body .checkout-page .selected-flag:hov
   display: flex;
   align-items: center;
   gap: 9px;
-  margin: 12px 2px 6px 2px;
+  margin: 0;
   color: #5f667c;
   font-size: 12px;
   cursor: pointer;
