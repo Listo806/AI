@@ -16,18 +16,21 @@ body {
 
 .checkout-page {
   min-height: 100vh;
-  padding: 26px 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .checkout-shell {
-  padding: 18px 22px !important;
+  padding: 14px 20px !important;
     border: 1px solid #e5e7ef;
     background: #fffffff5;
     box-shadow: 0 18px 55px #19225021;
-    width: min(1040px, 100%);
+    width: min(1000px, 100%);
     margin: 0 auto;
     min-height: auto;
-    border-radius: 18px;
+    border-radius: 16px;
 }
 .checkout-shell-grid{
    display: grid;
@@ -36,42 +39,42 @@ body {
     align-items: start;
 }
 .checkout-heading {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .checkout-heading h1 {
   margin: 0;
   color: #11162a;
-  font-size: clamp(23px, 3vw, 26px);
+  font-size: clamp(19px, 2.4vw, 22px);
   line-height: 1.1;
   letter-spacing: -0.03em;
 }
 
 .checkout-heading p {
-    margin: 6px 0 0;
+    margin: 3px 0 0;
     color: #667085;
-    font-size: 15px;
+    font-size: 13px;
 }
 
 .checkout-card {
-  padding: 15px 16px!important;
+  padding: 12px 14px!important;
   border: 1px solid #e3e5ee;
-  border-radius: 14px;
+  border-radius: 13px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 10px 28px rgba(36, 43, 79, 0.055);
   text-align: left;
 }
 .checkout-summary-card{
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 .checkout-card h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
   color: #101426;
 }
 
 .checkout-summary-card > h2 {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .checkout-plan-row {
@@ -79,7 +82,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #e4e6ee;
 }
 
@@ -164,7 +167,7 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 0;
+  padding: 7px 0;
   border-bottom: 1px solid #e4e6ee;
   font-size: 14px;
 }
@@ -176,7 +179,7 @@ body {
 /* Secondary "future billing" line — deliberately quieter than the Due Today
    total so it never competes with today's charge. */
 .checkout-next-charge {
-  padding: 8px 0;
+  padding: 6px 0;
 }
 .checkout-next-charge > span:first-child {
   color: #7a8196;
@@ -192,7 +195,10 @@ body {
    background is transparent so it blends into our secure-checkout card. */
 .checkout-inline-frame {
   width: 100%;
-  min-height: 420px;
+  /* No forced floor — let Paddle size the frame to its actual content so the
+     column isn't padded out with empty space (this was the main cause of the
+     page overflowing the viewport). */
+  min-height: 0;
   margin-top: 2px;
 }
 
@@ -217,7 +223,7 @@ body {
 }
 
 .checkout-summary-total {
-  padding-top: 10px;
+  padding-top: 8px;
 }
 
 .checkout-summary-total > strong {
@@ -242,14 +248,14 @@ body {
 
 .checkout-section-heading {
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .checkout-section-icon {
   display: grid;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
   place-items: center;
   border-radius: 50%;
   color: #5835e7;
@@ -269,7 +275,7 @@ body {
 .checkout-info-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .checkout-field {
@@ -374,10 +380,10 @@ body {
 }
 
 .checkout-terms {
-  gap: 12px;
-  margin: 12px 4px;
+  gap: 10px;
+  margin: 8px 2px;
   color: #5f667c;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
 }
 
@@ -453,11 +459,11 @@ body {
 
 .checkout-secure-footer {
   justify-content: center;
-  gap: 9px;
-  margin-top: 12px;
+  gap: 8px;
+  margin-top: 8px;
   color: #8a90a1;
-  font-size: 13px;
-  margin-bottom: 2px;
+  font-size: 12px;
+  margin-bottom: 0;
 }
 
 .checkout-loading {
@@ -516,7 +522,7 @@ body .checkout-page .selected-flag:focus, body .checkout-page .selected-flag:hov
 .checkout-page  .divider{
   height: 1px;
   background: #e3e5ee;
-  margin: 14px 0;
+  margin: 10px 0;
 }
 .checkout-stripe-input {
   display: flex;
