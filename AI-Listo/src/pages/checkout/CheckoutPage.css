@@ -169,6 +169,49 @@ body {
   font-size: 18px;
 }
 
+/* Secondary "future billing" line — deliberately quieter than the Due Today
+   total so it never competes with today's charge. */
+.checkout-next-charge {
+  padding: 12px 0;
+}
+.checkout-next-charge > span:first-child {
+  color: #7a8196;
+  font-size: 14px;
+}
+.checkout-next-charge .checkout-next-charge-val {
+  color: #55607a;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+/* Paddle inline payment form container. Paddle injects an iframe here; the
+   background is transparent so it blends into our secure-checkout card. */
+.checkout-inline-frame {
+  width: 100%;
+  min-height: 460px;
+  margin-top: 4px;
+}
+
+/* Quiet, always-available fallback to the overlay checkout so the payment path
+   can never get stuck if the inline form fails to load. */
+.checkout-inline-fallback {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: #7a8196;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.checkout-inline-fallback:hover {
+  color: #5430d8;
+}
+
 .checkout-summary-total {
   padding-top: 16px;
 }
