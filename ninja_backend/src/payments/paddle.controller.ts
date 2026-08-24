@@ -80,6 +80,20 @@ export class PaddleController {
     return this.paddleService.setupStartingPrices();
   }
 
+  // One-time (admin) setup for Paddle's NATIVE PAID TRIALS. Creates one monthly
+  // price per plan that charges $7/$14/$21 for a 14-day trial and then renews at
+  // $197/$347/$497 — a single clean checkout line. Returns the three
+  // PADDLE_PRICE_*_PAIDTRIAL ids to store as env vars. Existing prices untouched.
+  @Post('setup-paid-trial-prices')
+  @UseGuards(JwtAuthGuard)
+  async setupPaidTrialPrices(@CurrentUser() user: any) {
+    const role = String(user?.role || '').toLowerCase();
+    if (!['admin', 'super_admin', 'owner', 'developer'].includes(role)) {
+      throw new ForbiddenException('Admins only');
+    }
+    return this.paddleService.setupPaidTrialPrices();
+  }
+
   @Get('client-token')
   @UseGuards(JwtAuthGuard)
   async getClientToken() {
