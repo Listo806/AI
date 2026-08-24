@@ -55,7 +55,7 @@ const t = {
     dueToday: "Due today",
     checkoutTitle: "Secure checkout",
     checkoutDesc:
-      "You pay the amount due today for your 14-day trial. Your plan then renews at the monthly price shown, and you can cancel anytime.",
+      "Pay today for your 14-day trial, then the monthly price. Cancel anytime.",
     informationTitle: "Your information",
     informationDesc: "This is the account we created for your subscription.",
     fullName: "Full name",
@@ -91,7 +91,7 @@ const t = {
     dueToday: "A pagar hoy",
     checkoutTitle: "Pago seguro",
     checkoutDesc:
-      "Hoy pagas el importe correspondiente por tu prueba de 14 días. Después, tu plan se renueva al precio mensual indicado. Cancela cuando quieras.",
+      "Paga hoy tu prueba de 14 días; luego, el precio mensual. Cancela cuando quieras.",
     informationTitle: "Tu información",
     informationDesc: "Esta es la cuenta que creamos para tu suscripción.",
     fullName: "Nombre completo",
@@ -127,7 +127,7 @@ const t = {
     dueToday: "A pagar hoje",
     checkoutTitle: "Pagamento seguro",
     checkoutDesc:
-      "Hoje você paga o valor devido pelo seu teste de 14 dias. Depois, seu plano é renovado pelo preço mensal indicado. Cancele quando quiser.",
+      "Pague hoje seu teste de 14 dias; depois, o preço mensal. Cancele quando quiser.",
     informationTitle: "Suas informações",
     informationDesc: "Esta é a conta que criamos para sua assinatura.",
     fullName: "Nome completo",
@@ -763,8 +763,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="divider"></div>
-
               <label className="checkout-terms">
                 <input
                   type="checkbox"
@@ -793,15 +791,6 @@ export default function CheckoutPage() {
                       className={`${PADDLE_INLINE_FRAME_CLASS} checkout-inline-frame`}
                       style={{ display: acceptedTerms ? "block" : "none" }}
                     />
-                    {acceptedTerms && !processing && (
-                      <button
-                        type="button"
-                        className="checkout-inline-fallback"
-                        onClick={startPaddleOverlayFallback}
-                      >
-                        {tr.havingTrouble}
-                      </button>
-                    )}
                     {processing && (
                       <p className="checkout-paypal-status">{tr.processing}</p>
                     )}
