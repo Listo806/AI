@@ -194,7 +194,7 @@
     "csvDate": "Date",
     "csvActivityEvents": "Activity Events",
     "csvNoActivityInPeriod": "No activity in period",
-    "aiCommandCenter": "AI Command Center",
+    "aiCommandCenter": "Command Center",
     "bannerYouHave": "You have",
     "bannerNewLeadsToReview": "new leads to review.",
     "nextBestActionLabel": "Next best action:",
@@ -246,7 +246,13 @@
     "unreadConversations": "Unread Conversations",
     "totalActivitiesPeriod": "Total Activities (period)",
     "activeLeads": "Active Leads",
-    "followUpDue": "Follow-up due"
+    "followUpDue": "Follow-up due",
+    "commandCenterQuestion": "What can I help you with?",
+    "commandCenterPlaceholder": "Ask anything about your business...",
+    "livePipeline": "Live Pipeline",
+    "aiPriority": "AI Priority",
+    "commandOverview": "Overview",
+    "commandQueue": "Queue"
   },
   "leads": {
     "title": "Leads",

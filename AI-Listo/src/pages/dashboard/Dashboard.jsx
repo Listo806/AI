@@ -53,6 +53,7 @@ import {
   Shuffle,
   RefreshCw,
   Send,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -933,70 +934,96 @@ export default function CortexaDashboard() {
       {/* AI COMMAND CENTER */}
       <section className="ai-command-banner">
         <div className="banner-left">
-          <div className="ai-avatar-glow">
-            <div className="ai-bot-icon">🤖</div>
-          </div>
-          <div className="ai-message-ctx">
-            <span className="command-center-label">
-              {t("dashboard.aiCommandCenter")}
-            </span>
-
-            <div className="command-center-assistant">
-              <h2>
-                Hi there! <span aria-hidden="true">👋</span>
-              </h2>
-              <p>I'm your AI assistant. Ask me anything about your business.</p>
-
-              <div className="command-center-prompts">
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard/ai-cortexa")}
-                >
-                  {t("dashboard.livePipelineOverview")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard/leads")}
-                >
-                  {t("dashboard.aiPriorityQueue")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard/analytics")}
-                >
-                  {t("dashboard.revenue")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard/analytics")}
-                >
-                  {t("dashboard.conversionRate")}
-                </button>
-              </div>
-
-              <div className="command-center-input-row">
-                <input
-                  type="text"
-                  placeholder="Ask AI anything..."
-                  aria-label="Ask AI anything"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") navigate("/dashboard/ai-cortexa");
-                  }}
-                />
-                <button
-                  type="button"
-                  aria-label="Open AI Agent"
-                  onClick={() => navigate("/dashboard/ai-cortexa")}
-                >
-                  <Send size={15} />
-                </button>
-              </div>
-
-              <small>
-                {t("dashboard.nextBestActionLabel")}{" "}
-                {t("dashboard.followUpNewestLeads")}
-              </small>
+          <div className="command-center-heading-row">
+            <div className="ai-avatar-glow">
+              <div className="ai-bot-icon">🤖</div>
             </div>
+
+            <div className="ai-message-ctx">
+              <span className="command-center-label">
+                {t("dashboard.aiCommandCenter")}
+              </span>
+
+              <h2 className="command-center-question">
+                {t("dashboard.commandCenterQuestion")}
+              </h2>
+            </div>
+          </div>
+
+          <div className="command-center-assistant">
+            <div className="command-center-prompts">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/ai-cortexa")}
+              >
+                <TrendingUp size={15} />
+                <span className="command-prompt-copy">
+                  <strong>{t("dashboard.livePipeline")}</strong>
+                  <small>{t("dashboard.commandOverview")}</small>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/leads")}
+              >
+                <Layers size={15} />
+                <span className="command-prompt-copy">
+                  <strong>{t("dashboard.aiPriority")}</strong>
+                  <small>{t("dashboard.commandQueue")}</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/analytics")}
+              >
+                <DollarSign size={15} />
+                <span className="command-prompt-copy">
+                  <strong>{t("dashboard.revenue")}</strong>
+                  <small>{t("dashboard.commandOverview")}</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/analytics")}
+              >
+                <Percent size={15} />
+                <span className="command-prompt-copy">
+                  <strong>{t("dashboard.conversionRate")}</strong>
+                  <small>{t("dashboard.commandOverview")}</small>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="command-center-input-row">
+            <input
+              type="text"
+              placeholder={t("dashboard.commandCenterPlaceholder")}
+              aria-label={t("dashboard.commandCenterPlaceholder")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  navigate("/dashboard/ai-cortexa");
+                }
+              }}
+            />
+
+            <button
+              type="button"
+              aria-label="Open AI Agent"
+              onClick={() => navigate("/dashboard/ai-cortexa")}
+            >
+              <Send size={15} />
+            </button>
+          </div>
+
+          <div className="command-next-best-action">
+            <Sparkles size={18} />
+            <div>
+              <strong>{t("dashboard.nextBestAction")}</strong>
+              <span>{t("dashboard.followUpNewestLeads")}</span>
+            </div>
+            <ChevronRight size={22} className="command-next-chevron" />
           </div>
         </div>
 
@@ -1384,7 +1411,11 @@ export default function CortexaDashboard() {
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie
-                    data={leadSources}
+                    data={
+                      leadSources.length > 0
+                        ? leadSources
+                        : [{ source: "No data", leads: 1, color: "#e5e7eb" }]
+                    }
                     dataKey="leads"
                     nameKey="source"
                     innerRadius={49}
@@ -1392,7 +1423,10 @@ export default function CortexaDashboard() {
                     paddingAngle={1}
                     stroke="none"
                   >
-                    {leadSources.map((entry, idx) => (
+                    {(leadSources.length > 0
+                      ? leadSources
+                      : [{ source: "No data", leads: 1, color: "#e5e7eb" }]
+                    ).map((entry, idx) => (
                       <Cell key={`source-${idx}`} fill={entry.color} />
                     ))}
                   </Pie>

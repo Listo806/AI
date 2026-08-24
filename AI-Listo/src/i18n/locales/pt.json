@@ -193,7 +193,7 @@
     "csvDate": "Data",
     "csvActivityEvents": "Eventos de atividade",
     "csvNoActivityInPeriod": "Sem atividade no período",
-    "aiCommandCenter": "Central de comando de IA",
+    "aiCommandCenter": "Central de comando de",
     "bannerYouHave": "Você tem",
     "bannerNewLeadsToReview": "novos leads para revisar.",
     "nextBestActionLabel": "Próxima melhor ação:",
@@ -246,7 +246,13 @@
     "totalActivitiesPeriod": "Total de atividades (período)",
     "activeLeads": "Leads ativos",
     "followUpDue": "Acompanhamento pendente",
-    "recentActivity": "Atividade recente"
+    "recentActivity": "Atividade recente",
+    "commandCenterQuestion": "Como posso ajudar você?",
+    "commandCenterPlaceholder": "Pergunte qualquer coisa sobre o seu negócio...",
+    "livePipeline": "Pipeline ao vivo",
+    "aiPriority": "Prioridade IA",
+    "commandOverview": "Visão geral",
+    "commandQueue": "Fila"
   },
   "leads": {
     "title": "Leads",

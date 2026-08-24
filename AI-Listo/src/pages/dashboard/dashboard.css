@@ -1294,17 +1294,6 @@ body .next-action-card svg {
   color: #dbeafe;
 }
 
-.crm-dark .dashboard-container .ai-command-banner {
-  background:
-    radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.16), transparent 28%),
-    radial-gradient(circle at 88% 78%, rgba(249, 115, 22, 0.10), transparent 34%),
-    linear-gradient(145deg, rgba(5, 13, 25, 0.98), rgba(3, 8, 17, 0.98));
-  border: 1px solid rgba(123, 151, 185, 0.58);
-  box-shadow:
-    0 0 30px rgba(37, 99, 235, 0.09),
-    inset 0 0 36px rgba(59, 130, 246, 0.035);
-}
-
 .crm-dark .dashboard-container .ai-avatar-glow {
   border-color: #315efb;
   background: radial-gradient(circle, rgba(37, 99, 235, 0.22), rgba(17, 24, 39, 0.92));
@@ -1316,7 +1305,9 @@ body .next-action-card svg {
   border: 1px solid rgba(71, 85, 105, 0.62);
   box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.025);
 }
-
+.crm-dark .dashboard-container .ai-command-banner{
+  border: 0;
+}
 .crm-dark .dashboard-container .banner-right-top .mini-insight-card:first-child {
   border-color: rgba(74, 222, 128, 0.46);
   box-shadow: inset 0 -18px 30px rgba(34, 197, 94, 0.05);
@@ -3133,22 +3124,9 @@ body .next-action-card svg {
   strong {
   color: #f8fafc;
 }
-/* === DASHBOARD SCREENSHOT DESKTOP FIX START === */
+
 @media (min-width: 1025px) {
-  /* Keep the already-correct page header / AI usage / filter area untouched. */
-
-  .dashboard-page .ai-command-banner {
-    grid-template-columns: minmax(0, 1.08fr) minmax(510px, .92fr);
-    gap: 20px;
-    padding: 9px 18px !important;
-    border-radius: 14px;
-  }
-
-  .dashboard-page .banner-left {
-    align-items: center;
-    gap: 14px;
-  }
-
+ 
   .dashboard-page .ai-avatar-glow {
     width: 52px;
     height: 52px;
@@ -3214,14 +3192,20 @@ body .next-action-card svg {
   }
 
   .dashboard-page .command-center-input-row {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    width: 100%;
+    min-height: 40px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 32px;
-    gap: 7px;
+    grid-template-columns:
+      minmax(0, 1fr)
+      38px;
     align-items: center;
-    padding: 2px 5px 2px 10px;
-    border: 1px solid rgba(255,255,255,.16);
-    border-radius: 6px;
-    background: rgba(255,255,255,.08);
+    overflow: hidden;
+    padding-left: 12px;
+    border: 1px solid rgba(191,219,254,.66);
+    border-radius: 7px;
+    background: rgba(255,255,255,.035);
   }
 
   .dashboard-page .command-center-input-row input {
@@ -3629,4 +3613,780 @@ body .next-action-card svg {
     grid-column: 1 / -1;
   }
 }
-/* === DASHBOARD SCREENSHOT DESKTOP FIX END === */
+
+.dashboard-page .banner-left {
+  min-width: 0;
+}
+
+.dashboard-page .command-center-heading-row {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-page .ai-message-ctx {
+  min-width: 0;
+}
+
+.dashboard-page .command-center-question {
+  margin: 0;
+  color: #fff;
+}
+
+.dashboard-page .command-center-assistant {
+  min-width: 0;
+}
+
+.dashboard-page .command-center-prompts {
+  display: grid;
+}
+
+.dashboard-page .command-center-prompts button {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.dashboard-page .command-prompt-copy {
+  display: flex;
+  min-width: 0;
+}
+
+.dashboard-page .command-prompt-copy strong {
+  color: inherit;
+}
+
+.dashboard-page .command-prompt-copy small {
+  color: #d5dbea;
+}
+
+.dashboard-page .command-center-prompts button:nth-child(1) svg {
+  color: #3b82f6;
+}
+
+.dashboard-page .command-center-prompts button:nth-child(2) svg {
+  color: #a855f7;
+}
+
+.dashboard-page .command-center-prompts button:nth-child(3) svg {
+  color: #22c55e;
+}
+
+.dashboard-page .command-center-prompts button:nth-child(4) svg {
+  color: #f59e0b;
+}
+
+.dashboard-page .command-next-best-action {
+  display: grid;
+  align-items: center;
+  color: #fff;
+}
+
+.dashboard-page .command-next-best-action > svg:first-child {
+  color: #3b82f6;
+}
+
+.dashboard-page .command-next-best-action > div {
+  min-width: 0;
+  text-align: left;
+}
+
+.dashboard-page .command-next-best-action strong {
+  display: block;
+  color: #fff;
+}
+
+.dashboard-page .command-next-best-action span {
+  display: block;
+  color: #d7deea;
+}
+.dashboard-page .command-next-chevron {
+  color: #d4dae4;
+}
+
+@media (min-width: 1025px) {
+  
+  .dashboard-page .banner-left {
+    display: grid;
+    grid-template-columns:
+      64px
+      minmax(0, 1fr);
+    grid-template-rows:
+      auto
+      auto
+      auto
+      auto;
+    column-gap: 14px;
+    row-gap: 0;
+    align-items: start;
+  }
+
+  .dashboard-page .command-center-heading-row {
+    display: contents;
+  }
+
+  .dashboard-page .ai-avatar-glow {
+    grid-column: 1;
+    grid-row: 1;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    border-width: 2px;
+    font-size: 17px;
+    margin-top: 10px;
+  }
+
+  .dashboard-page .ai-bot-icon {
+    font-size: 20px;
+  }
+
+  .dashboard-page .ai-message-ctx {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .dashboard-page .command-center-label {
+    display: block;
+    margin: 0 0 7px;
+    color: #fff;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 650;
+  }
+
+  .dashboard-page .command-center-question {
+    font-size: 17px;
+    line-height: 1.15;
+    font-weight: 700;
+  }
+
+  .dashboard-page .command-center-assistant {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    margin-top: -18px;
+  }
+
+  .dashboard-page .command-center-prompts {
+    grid-template-columns:
+      repeat(4, minmax(0, auto));
+    justify-content: start;
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+
+  .dashboard-page .command-center-prompts button {
+    min-height: 34px;
+    gap: 6px;
+    padding: 0 11px;
+    border:
+      1px solid rgba(148,163,184,.30);
+    border-radius: 8px;
+    background:
+      rgba(255,255,255,.045);
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .dashboard-page .command-center-prompts button svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+  }
+
+  .dashboard-page .command-prompt-copy {
+    display: block;
+  }
+
+  .dashboard-page .command-prompt-copy strong {
+    display: block;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .dashboard-page .command-prompt-copy small {
+    display: none;
+  }
+
+  .dashboard-page .command-center-input-row {
+    min-height: 40px;
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1fr)
+      38px;
+    align-items: center;
+    overflow: hidden;
+    padding-left: 12px;
+    border:
+      1px solid rgba(191,219,254,.66);
+    border-radius: 7px;
+    background:
+      rgba(255,255,255,.035);
+  }
+
+  .dashboard-page .command-center-input-row input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 11px;
+  }
+
+  .dashboard-page
+  .command-center-input-row
+  input::placeholder {
+    color: #c4cbd7;
+  }
+
+  .dashboard-page .command-center-input-row button {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .dashboard-page .command-center-input-row button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+   .dashboard-page .command-next-best-action {
+    grid-column: 1 / 3;
+    grid-row: 4;
+    width: 100%;
+    grid-template-columns:
+      18px
+      minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 0;
+  }
+
+  .dashboard-page .command-next-best-action strong {
+    display: inline;
+    margin-right: 4px;
+    font-size: 10px;
+  }
+
+  .dashboard-page .command-next-best-action span {
+    display: inline;
+    font-size: 10px;
+  }
+
+  .dashboard-page .command-next-chevron {
+    display: none;
+  }
+
+  .dashboard-page .banner-right-top {
+    display: grid;
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .dashboard-page .mini-insight-card {
+    min-height: 96px;
+    padding: 13px 15px;
+    border:
+      1px solid rgba(148,163,184,.22);
+    border-radius: 12px;
+    background:
+      rgba(255,255,255,.055);
+    text-align: left;
+  }
+
+  .dashboard-page .mini-insight-card .card-lbl {
+    font-size: 10px;
+  }
+
+  .dashboard-page .mini-insight-card .card-val-group {
+    justify-content: flex-start;
+    gap: 9px;
+  }
+
+  .dashboard-page
+  .mini-insight-card
+  .card-val-group h3 {
+    color: #fff;
+    font-size: 15px;
+  }
+
+  .dashboard-page .next-action-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dashboard-page .next-action-card h4 {
+    font-size: 12px;
+  }
+
+  .dashboard-page .banner-action-row {
+    display: grid;
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+
+  .dashboard-page .banner-btn {
+    width: 100%;
+    min-height: 42px;
+    justify-content: center;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .dashboard-page .ai-command-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 30px 28px !important;
+    border-radius: 28px;
+  }
+  .crm-dark .dashboard-container .ai-command-banner{
+    border:
+      1px solid rgba(148,163,184,.35);
+    border-radius: 26px;
+  }
+  .dashboard-page .banner-left {
+    display: block;
+    padding: 30px 30px 32px;
+  }
+
+  .dashboard-page .command-center-heading-row {
+    display: grid;
+    grid-template-columns:
+      142px
+      minmax(0, 1fr);
+    align-items: center;
+    gap: 34px;
+    margin-bottom: 24px;
+  }
+
+  .dashboard-page .ai-avatar-glow {
+    width: 142px;
+    height: 142px;
+    min-width: 142px;
+    margin: 0;
+    border-width: 3px;
+    font-size: 44px;
+  }
+
+  .dashboard-page .ai-bot-icon {
+    font-size: 50px;
+  }
+
+  .dashboard-page .command-center-label {
+    display: block;
+    margin: 0 0 14px;
+    color: #fff;
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 750;
+  }
+
+  .dashboard-page .command-center-question {
+    color: #dfe6f1;
+    font-size: 25px;
+    line-height: 1.25;
+    font-weight: 450;
+  }
+
+  .dashboard-page .command-center-prompts {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .dashboard-page .command-center-prompts button {
+    min-height: 106px;
+    justify-content: flex-start;
+    gap: 20px;
+    padding: 18px 24px;
+    border:
+      1px solid rgba(148,163,184,.38);
+    border-radius: 22px;
+    background:
+      rgba(15,23,42,.72);
+    color: #f8fafc;
+    text-align: left;
+  }
+
+  .dashboard-page .command-center-prompts button svg {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+  }
+
+  .dashboard-page .command-prompt-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .dashboard-page .command-prompt-copy strong {
+    font-size: 16px;
+    line-height: 1.1;
+    font-weight: 600;
+  }
+
+  .dashboard-page .command-prompt-copy small {
+    display: block;
+    font-size: 20px;
+    line-height: 1.1;
+  }
+
+  .dashboard-page .command-center-input-row {
+    min-height: 86px;
+    grid-template-columns:
+      minmax(0, 1fr)
+      88px;
+    padding-left: 26px;
+    overflow: hidden;
+    border:
+      2px solid rgba(96,165,250,.68);
+    border-radius: 22px;
+    background:
+      rgba(15,23,42,.50);
+    display: grid;
+  }
+
+  .dashboard-page .command-center-input-row input {
+    font-size: 14px;
+    background: no-repeat;
+    border: 0;
+  }
+
+  .dashboard-page .command-center-input-row button {
+    width: 88px;
+    height: 100%;
+    min-height: 82px;
+    border: 0;
+    border-left:
+      1px solid rgba(148,163,184,.28);
+    border-radius: 0;
+    background:
+      rgba(30,41,59,.72);
+    color: #dbe4f0;
+  }
+
+  .dashboard-page .command-center-input-row button svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dashboard-page .command-next-best-action {
+    grid-template-columns:
+      42px
+      minmax(0, 1fr)
+      34px;
+    gap: 14px;
+    margin-top: 32px;
+  }
+
+  .dashboard-page
+  .command-next-best-action
+  > svg:first-child {
+    width: 36px;
+    height: 36px;
+    color: #4d7cff;
+  }
+
+  .dashboard-page .command-next-best-action strong {
+    margin-bottom: 5px;
+    font-size: 25px;
+    line-height: 1.1;
+  }
+
+  .dashboard-page .command-next-best-action span {
+    font-size: 21px;
+    line-height: 1.2;
+  }
+
+  .dashboard-page .command-next-chevron {
+    display: block;
+    width: 34px;
+    height: 34px;
+  }
+
+  .dashboard-page .next-action-card {
+    display: none !important;
+  }
+
+  .dashboard-page .banner-right {
+    gap: 0;
+  }
+
+  .dashboard-page .banner-right-top {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 22px;
+  }
+
+  .dashboard-page .mini-insight-card {
+    min-height: 160px;
+    padding: 25px;
+    border-radius: 22px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .dashboard-page .mini-insight-card:first-child {
+    border-color: rgba(34,197,94,.50);
+  }
+
+  .dashboard-page
+  .mini-insight-card:nth-child(2) {
+    border-color: rgba(239,68,68,.50);
+  }
+
+  .dashboard-page .mini-insight-card .card-lbl {
+    font-size: 22px;
+  }
+
+  .dashboard-page .mini-insight-card .card-val-group {
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .dashboard-page
+  .mini-insight-card
+  .card-val-group h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 32px;
+  }
+
+  .dashboard-page .command-mini-accent {
+    width: 72px;
+    height: 4px;
+  }
+
+  .dashboard-page .banner-action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 0;
+  }
+
+  .dashboard-page .banner-btn {
+    min-height: 92px;
+    padding: 0 24px;
+    border-radius: 20px;
+    font-size: 29px;
+    font-weight: 700;
+    border-width: 2px !important;
+  }
+
+  .dashboard-page .banner-btn svg {
+    width: 38px;
+    height: 38px;
+  }
+
+  .dashboard-page .banner-btn.text-dark {
+    color: #fff;
+    background:
+      rgba(92,15,23,.38);
+    border:
+      2px solid #ef4444;
+  }
+
+  .dashboard-page .banner-btn.btn-whatsapp-color {
+    background:
+      rgba(4,84,40,.38);
+    border:
+      2px solid #22c55e;
+  }
+
+  .dashboard-page .banner-btn.btn-assign-color {
+    background:
+      rgba(68,20,105,.34);
+    border:
+      2px solid #a855f7;
+  }
+
+  .dashboard-page .banner-btn.btn-followup-color {
+    background:
+      rgba(12,47,112,.40);
+    border:
+      2px solid #3b82f6;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .dashboard-page .ai-command-banner {
+    gap: 18px;
+    padding: 14px 0 18px !important;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .dashboard-page .banner-left, .dashboard-page .banner-right {
+    padding: 0 10px;
+  }
+
+  .dashboard-page .command-center-heading-row {
+    grid-template-columns:
+      88px
+      minmax(0, 1fr);
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .dashboard-page .ai-avatar-glow {
+    width: 88px;
+    height: 88px;
+    min-width: 88px;
+    border-width: 2px;
+  }
+
+  .dashboard-page .ai-bot-icon {
+    font-size: 32px;
+  }
+
+  .dashboard-page .command-center-label {
+    margin-bottom: 7px;
+    font-size: 20px;
+  }
+
+  .dashboard-page .command-center-question {
+    font-size: 16px;
+  }
+
+  .dashboard-page .command-center-prompts {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .dashboard-page .command-center-prompts button {
+    min-height: 66px;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .dashboard-page .command-center-prompts button svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .dashboard-page .command-prompt-copy strong {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .dashboard-page .command-prompt-copy small {
+    font-size: 12px;
+  }
+
+  .dashboard-page .command-center-input-row {
+    min-height: 58px;
+    grid-template-columns:
+      minmax(0, 1fr)
+      58px;
+
+    padding-left: 15px;
+    border-radius: 15px;
+  }
+
+  .dashboard-page .command-center-input-row input {
+    font-size: 14px;
+  }
+
+  .dashboard-page .command-center-input-row button {
+    width: 58px;
+    min-height: 54px;
+  }
+
+  .dashboard-page .command-center-input-row button svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .dashboard-page .command-next-best-action {
+    grid-template-columns:
+      28px
+      minmax(0, 1fr)
+      24px;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .dashboard-page
+  .command-next-best-action
+  > svg:first-child {
+    width: 26px;
+    height: 26px;
+  }
+
+  .dashboard-page .command-next-best-action strong {
+    margin-bottom: 3px;
+    font-size: 16px;
+  }
+
+  .dashboard-page .command-next-best-action span {
+    font-size: 14px;
+  }
+
+  .dashboard-page .command-next-chevron {
+    width: 23px;
+    height: 23px;
+  }
+
+  .dashboard-page .banner-right-top {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .dashboard-page .mini-insight-card {
+    min-height: 108px;
+    padding: 15px 8px;
+    border-radius: 15px;
+  }
+
+  .dashboard-page .mini-insight-card .card-lbl {
+    font-size: 13px;
+  }
+
+  .dashboard-page
+  .mini-insight-card
+  .card-val-group h3 {
+    font-size: 22px;
+  }
+
+  .dashboard-page .command-mini-accent {
+    width: 46px;
+    height: 3px;
+  }
+
+  .dashboard-page .banner-action-row {
+    gap: 10px;
+  }
+
+  .dashboard-page .banner-btn {
+    min-height: 62px;
+    border-radius: 14px;
+    font-size: 18px;
+  }
+
+  .dashboard-page .banner-btn svg {
+    width: 25px;
+    height: 25px;
+  }
+}
