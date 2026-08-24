@@ -444,10 +444,7 @@ export default function CheckoutPage() {
           region: customer.region,
           startingCharge: setupFee,
           billingCycle,
-          settings: {
-            ...paddleInlineSettings(),
-            allowFullPageScroll: true,
-          },
+          settings: paddleInlineSettings(),
         });
       } catch (error) {
         inlineMountedRef.current = false;
