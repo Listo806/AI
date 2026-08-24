@@ -12,7 +12,13 @@ import { trackEvent, trackPurchase, setUserData } from "../../utils/track";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { fetchPaddleConfig } from "../../api/paddleApi";
-import { paddleReady, initPaddle, openPaddleCheckout } from "./paddleCheckout";
+import {
+  paddleReady,
+  initPaddle,
+  openPaddleCheckout,
+  paddleInlineSettings,
+  PADDLE_INLINE_FRAME_CLASS,
+} from "./paddleCheckout";
 import { clearSetupOffer } from "../../utils/offer";
 import { buildLocalizedPath } from "../../i18n/locales";
 import "./CheckoutPage.css";
@@ -43,6 +49,9 @@ const t = {
     afterTrial: "Renews monthly after your 14-day trial",
     monthlyAfterTrial: "Monthly price after your 14-day trial",
     setupFee: "14-day trial (due today)",
+    nextCharge: "Next charge",
+    acceptToLoad: "Accept the Terms to load the secure payment form.",
+    havingTrouble: "Having trouble? Open secure checkout",
     dueToday: "Due today",
     checkoutTitle: "Secure checkout",
     checkoutDesc:
@@ -76,6 +85,9 @@ const t = {
     afterTrial: "Se renueva cada mes tras tu prueba de 14 días",
     monthlyAfterTrial: "Precio mensual tras tu prueba de 14 días",
     setupFee: "Prueba de 14 días (a pagar hoy)",
+    nextCharge: "Próximo cargo",
+    acceptToLoad: "Acepta los Términos para cargar el formulario de pago seguro.",
+    havingTrouble: "¿Problemas? Abre el pago seguro",
     dueToday: "A pagar hoy",
     checkoutTitle: "Pago seguro",
     checkoutDesc:
@@ -109,6 +121,9 @@ const t = {
     afterTrial: "Renova mensalmente após seu teste de 14 dias",
     monthlyAfterTrial: "Preço mensal após seu teste de 14 dias",
     setupFee: "Teste de 14 dias (a pagar hoje)",
+    nextCharge: "Próxima cobrança",
+    acceptToLoad: "Aceite os Termos para carregar o formulário de pagamento seguro.",
+    havingTrouble: "Problemas? Abra o pagamento seguro",
     dueToday: "A pagar hoje",
     checkoutTitle: "Pagamento seguro",
     checkoutDesc:
@@ -243,6 +258,8 @@ export default function CheckoutPage() {
   // this plan; until then the PayPal path below is used exactly as before.
   const [paddleConfig, setPaddleConfig] = useState(null);
   const paddleInitRef = useRef(false);
+  // Guards the one-time mount of the inline Paddle payment form into our page.
+  const inlineMountedRef = useRef(false);
 
   // Paddle is usable only when BOTH price IDs for this offer exist:
   // 1) the plan-specific starting charge ($7/$14/$21)
@@ -258,6 +275,13 @@ export default function CheckoutPage() {
   const setupFee = plan.startPrice;
   const recurringPrice =
     billingCycle === "annual" ? plan.annualPrice : plan.price;
+  // First recurring charge = end of the 14-day trial (today + 14 days), shown to
+  // the customer as future-billing info above the prominent "Due today" total.
+  const nextChargeStr = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+    .toLocaleDateString(
+      lang === "es" ? "es-ES" : lang === "pt" ? "pt-BR" : "en-US",
+      { year: "numeric", month: "short", day: "numeric" },
+    );
 
   useEffect(() => {
     acceptedTermsRef.current = acceptedTerms;
@@ -383,12 +407,80 @@ export default function CheckoutPage() {
     navigate("/dashboard/ai-cortexa-setup", { replace: true });
   };
 
-  // Paddle overlay checkout. Active only when usePaddle (client token + a price
-  // for this plan); otherwise the PayPal path below runs unchanged. On a
-  // completed checkout the account is activated server-side by the Paddle
-  // webhook; here we fire the same conversion/funnel events and log the user in.
-  const startPaddle = async () => {
-    // Never open a charge for a missing/unknown plan — go pick one first.
+  // Shared Paddle event handler (used by both the inline and the overlay-fallback
+  // paths). On a completed checkout the account is activated server-side by the
+  // signature-verified webhook; here we fire the conversion/funnel events and log
+  // the user in.
+  const handlePaddleEvent = (ev) => {
+    if (ev?.name !== "checkout.completed") return;
+    // Payment completed: this visitor did not abandon checkout.
+    purchaseDoneRef.current = true;
+    const uid = customer.userId || localStorage.getItem("trialUserId");
+    const paddleTxnId = ev?.data?.transaction_id || ev?.data?.id || undefined;
+    setUserData({ email: customer.email, phone: customer.phone });
+    trackEvent("trial_activated", {
+      plan: selectedPlan,
+      value: setupFee,
+      currency: "USD",
+    });
+    setProcessing(true);
+    // Do NOT fire the Purchase conversion here. checkout.completed is a browser
+    // event that arrives before the payment is confirmed. Poll the backend, which
+    // reports fire:true only after the signature-verified Paddle webhook activates
+    // the account, and only once per user, so a Thank You page refresh can never
+    // re-fire it.
+    reportPaddlePurchaseWhenConfirmed(paddleTxnId);
+    if (uid) finishAndLogin(uid);
+  };
+
+  // INLINE Paddle checkout: render the payment form inside our page (into the
+  // element carrying PADDLE_INLINE_FRAME_CLASS) once the customer accepts the
+  // Terms. This keeps OUR order summary — where "Due today" is the final and most
+  // prominent price — visible while they pay, so the recurring amount never
+  // visually overpowers today's charge (matches the approved layout). Mounts once.
+  useEffect(() => {
+    if (!usePaddle || !acceptedTerms || inlineMountedRef.current) return;
+    if (!paddleConfig || !planIsValid) return;
+    const userId = customer.userId || localStorage.getItem("trialUserId");
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!paddleInitRef.current) {
+          paddleInitRef.current = true;
+          await initPaddle(paddleConfig, handlePaddleEvent);
+        }
+        if (cancelled) return;
+        inlineMountedRef.current = true;
+        setErrorMsg("");
+        trackEvent("paddle_checkout_started", {
+          plan: selectedPlan,
+          startingCharge: setupFee,
+        });
+        openPaddleCheckout({
+          config: paddleConfig,
+          plan: selectedPlan,
+          userId,
+          email: customer.email,
+          startingCharge: setupFee,
+          billingCycle,
+          settings: paddleInlineSettings(),
+        });
+      } catch (error) {
+        inlineMountedRef.current = false;
+        console.error("PADDLE INLINE ERROR:", error);
+        setErrorMsg(tr.validation.server);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usePaddle, acceptedTerms, paddleConfig, selectedPlan, billingCycle]);
+
+  // Overlay fallback: only used if the inline form fails to load, so a customer
+  // is never left unable to pay. Opens Paddle's standard overlay checkout.
+  const startPaddleOverlayFallback = async () => {
     if (!planIsValid) {
       navigate(buildLocalizedPath("/pricing", lang), { replace: true });
       return;
@@ -407,31 +499,12 @@ export default function CheckoutPage() {
     try {
       if (!paddleInitRef.current) {
         paddleInitRef.current = true;
-        await initPaddle(paddleConfig, (ev) => {
-          if (ev?.name === "checkout.completed") {
-            // Payment completed: this visitor did not abandon checkout.
-            purchaseDoneRef.current = true;
-            const uid = customer.userId || localStorage.getItem("trialUserId");
-            const paddleTxnId =
-              ev?.data?.transaction_id || ev?.data?.id || undefined;
-            setUserData({ email: customer.email, phone: customer.phone });
-            trackEvent("trial_activated", {
-              plan: selectedPlan,
-              value: setupFee,
-              currency: "USD",
-            });
-            setProcessing(true);
-            // Do NOT fire the Purchase conversion here. checkout.completed is a
-            // browser event that arrives before the payment is confirmed. Poll
-            // the backend, which reports fire:true only after the signature-
-            // verified Paddle webhook activates the account, and only once per
-            // user, so a Thank You page refresh can never re-fire it.
-            reportPaddlePurchaseWhenConfirmed(paddleTxnId);
-            if (uid) finishAndLogin(uid);
-          }
-        });
+        await initPaddle(paddleConfig, handlePaddleEvent);
       }
-      trackEvent("paddle_checkout_started", { plan: selectedPlan, startingCharge: setupFee });
+      trackEvent("paddle_checkout_started", {
+        plan: selectedPlan,
+        startingCharge: setupFee,
+      });
       openPaddleCheckout({
         config: paddleConfig,
         plan: selectedPlan,
@@ -625,6 +698,12 @@ export default function CheckoutPage() {
                 <span>{tr.setupFee}</span>
                 <strong>${formatMoney(setupFee)}</strong>
               </div>
+              <div className="checkout-summary-line checkout-next-charge">
+                <span>{tr.nextCharge}</span>
+                <span className="checkout-next-charge-val">
+                  ${formatMoney(recurringPrice)} · {nextChargeStr}
+                </span>
+              </div>
               <div className="checkout-summary-total">
                 <strong>{tr.dueToday}</strong>
                 <div>
@@ -705,30 +784,51 @@ export default function CheckoutPage() {
               <div className="checkout-paypal">
                 {usePaddle ? (
                   <>
-                    <button
-                      type="button"
-                      className="checkout-paddle-btn"
-                      onClick={startPaddle}
-                      disabled={processing}
-                      style={{
-                        width: "100%",
-                        padding: "14px 16px",
-                        borderRadius: "8px",
-                        border: "none",
-                        background: "#111827",
-                        color: "#fff",
-                        fontSize: "16px",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {`Pay $${setupFee} and start your trial`}
-                    </button>
+                    {!acceptedTerms && (
+                      <p className="checkout-paypal-status">{tr.acceptToLoad}</p>
+                    )}
+                    {/* Paddle injects the inline payment form into this element
+                        (matched by class). Our summary above stays the prominent
+                        price, so "Due today" is the final amount the customer sees. */}
+                    <div
+                      className={`${PADDLE_INLINE_FRAME_CLASS} checkout-inline-frame`}
+                      style={{ display: acceptedTerms ? "block" : "none" }}
+                    />
+                    {acceptedTerms && !processing && (
+                      <button
+                        type="button"
+                        className="checkout-inline-fallback"
+                        onClick={startPaddleOverlayFallback}
+                      >
+                        {tr.havingTrouble}
+                      </button>
+                    )}
                     {processing && (
                       <p className="checkout-paypal-status">{tr.processing}</p>
                     )}
                     {errorMsg && (
-                      <p className="checkout-paypal-error">{errorMsg}</p>
+                      <>
+                        <p className="checkout-paypal-error">{errorMsg}</p>
+                        <button
+                          type="button"
+                          className="checkout-paddle-btn"
+                          onClick={startPaddleOverlayFallback}
+                          disabled={processing}
+                          style={{
+                            width: "100%",
+                            padding: "14px 16px",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "#111827",
+                            color: "#fff",
+                            fontSize: "16px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {`Pay $${setupFee} and start your trial`}
+                        </button>
+                      </>
                     )}
                   </>
                 ) : annualUnavailable ? (

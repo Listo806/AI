@@ -108,7 +108,12 @@ export function openPaddleCheckout({
   email,
   startingCharge,
   billingCycle,
+  settings,
 }) {
+  // Optional Paddle Checkout settings (e.g. inline display). Only attached when
+  // provided, so the default overlay behaviour is unchanged for other callers.
+  const settingsArg = settings ? { settings } : {};
+
   // Preferred: Paddle NATIVE PAID TRIAL. A single price whose 14-day trial
   // charges $7/$14/$21 and then renews at the monthly amount, so Paddle's
   // checkout natively shows "$X for 14 days, then $Y/month" and the next
@@ -116,6 +121,7 @@ export function openPaddleCheckout({
   const paidTrialPriceId = paidTrialPriceFor(config, plan, billingCycle);
   if (paidTrialPriceId) {
     window.Paddle.Checkout.open({
+      ...settingsArg,
       items: [{ priceId: paidTrialPriceId, quantity: 1 }],
       customer: email ? { email } : undefined,
       customData: {
@@ -150,6 +156,7 @@ export function openPaddleCheckout({
   }
 
   window.Paddle.Checkout.open({
+    ...settingsArg,
     items: [
       // ONE-TIME starting charge:
       // Solo $7 / Business $14 / Scale $21
@@ -180,6 +187,24 @@ export function openPaddleCheckout({
       pricingModel: "starter_plus_recurring",
     },
   });
+}
+
+// Inline checkout settings. Paddle renders ONLY the payment form inside the
+// frame (no order summary / totals — those are the merchant's responsibility),
+// so OUR summary card stays the single price display and "Due today" remains the
+// final, most-prominent amount. The frame background is transparent so it blends
+// into our secure-checkout card.
+export const PADDLE_INLINE_FRAME_CLASS = "cortexa-paddle-frame";
+export function paddleInlineSettings() {
+  return {
+    displayMode: "inline",
+    frameTarget: PADDLE_INLINE_FRAME_CLASS,
+    frameInitialHeight: 460,
+    frameStyle:
+      "width:100%;min-width:312px;background-color:transparent;border:none;",
+    allowLogout: false,
+    showAddDiscounts: false,
+  };
 }
 
 // Open the Paddle checkout for a paid Workspace add-on. This is its OWN $97/month
