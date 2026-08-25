@@ -55,7 +55,7 @@ body {
   border: 0;
 }
 .checkout-heading {
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .checkout-heading h1 {
@@ -860,7 +860,7 @@ body .checkout-page .selected-flag:focus, body .checkout-page .selected-flag:hov
   .checkout-summary-line,
   .checkout-next-charge { padding-top: 6px; padding-bottom: 6px; }
   .checkout-summary-total { padding-top: 10px; }
-  .checkout-section-heading { margin-bottom: 4px; }
+  .checkout-section-heading { margin-bottom: 6px; }
   .checkout-summary-card > h2 { margin-bottom: 14px; }
   .checkout-terms { margin: 4px 2px; }
   .checkout-secure-footer { margin-top: 0; }
@@ -903,6 +903,7 @@ body .checkout-page .selected-flag:focus, body .checkout-page .selected-flag:hov
     padding: 0;
     background: transparent;
     box-shadow: none;
+    grid-template-rows: 45px auto auto;
   }
  
   .checkout-left-card-heading {
