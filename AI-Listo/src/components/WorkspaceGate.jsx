@@ -79,6 +79,12 @@ export default function WorkspaceGate({ workspaceId, children }) {
         await refresh(true);
         return;
       }
+      // Included with the plan (e.g. the $257 Business promo's one free
+      // workspace): comped server-side with no charge — refresh, never open Paddle.
+      if (intent?.comped) {
+        await refresh(true);
+        return;
+      }
       const cfg = await fetchPaddleConfig();
       if (!cfg?.clientToken) {
         setError("Checkout is not available right now. Please try again shortly.");
