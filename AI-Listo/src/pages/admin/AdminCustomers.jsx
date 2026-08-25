@@ -262,6 +262,100 @@ function CountryCell({ code }) {
   );
 }
 
+// Multi-select country filter: a dropdown of checkboxes so several countries can be
+// selected at once (e.g. Chile + Argentina + Spain + Ecuador for one Spanish bulk
+// email). `value` is an array of country codes (and/or "Unknown"); onChange gets the
+// next array. Empty array = All Countries (no filter).
+function CountryMultiSelect({ options = [], value = [], onChange }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const ref = useRef(null);
+  const selected = new Set(value);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  const toggle = (code) => {
+    const next = new Set(selected);
+    if (next.has(code)) next.delete(code);
+    else next.add(code);
+    onChange(Array.from(next));
+  };
+
+  const label =
+    selected.size === 0
+      ? "All Countries"
+      : selected.size === 1
+        ? [...selected][0] === "Unknown"
+          ? "Unknown"
+          : `${flagEmoji([...selected][0])} ${countryName([...selected][0])}`
+        : `${selected.size} countries`;
+
+  const filtered = q.trim()
+    ? options.filter((o) => {
+        const nm = o.key === "Unknown" ? "unknown" : `${countryName(o.key)} ${o.key}`.toLowerCase();
+        return nm.includes(q.trim().toLowerCase());
+      })
+    : options;
+
+  return (
+    <div className="cxc-msel" ref={ref}>
+      <button
+        type="button"
+        className="cxc-select cxc-msel-btn"
+        onClick={() => setOpen((o) => !o)}
+        title="Filter by country"
+      >
+        <Globe size={16} className="cxc-msel-globe" />
+        <span className="cxc-msel-label">{label}</span>
+        <ChevronDown size={14} />
+      </button>
+      {open && (
+        <div className="cxc-msel-pop" role="listbox" aria-label="Countries">
+          <div className="cxc-msel-top">
+            <input
+              className="cxc-msel-search"
+              placeholder="Search country…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              autoFocus
+            />
+            {selected.size > 0 && (
+              <button type="button" className="cxc-msel-clear" onClick={() => onChange([])}>
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="cxc-msel-list">
+            {filtered.length === 0 && <div className="cxc-msel-empty">No matches</div>}
+            {filtered.map((cnt) => (
+              <label key={cnt.key} className="cxc-msel-item">
+                <input
+                  type="checkbox"
+                  checked={selected.has(cnt.key)}
+                  onChange={() => toggle(cnt.key)}
+                />
+                <span className="cxc-msel-name">
+                  {cnt.key === "Unknown"
+                    ? "Unknown"
+                    : `${flagEmoji(cnt.key)} ${countryName(cnt.key)}`}
+                </span>
+                {cnt.count != null && <span className="cxc-msel-count">{cnt.count}</span>}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // CSV parsing for import
 function parseCsv(text) {
   const rows = [];
@@ -1105,25 +1199,17 @@ export default function AdminCustomers() {
             </div>
 
             <div className="cxc-mobile-filter cxc-mobile-filter--country">
-              <Globe
-                className="cxc-mobile-filter-icon"
-                size={18}
-                aria-hidden="true"
+              <CountryMultiSelect
+                options={countryOpts}
+                value={
+                  filters.country && filters.country !== "all"
+                    ? filters.country.split(",").filter(Boolean)
+                    : []
+                }
+                onChange={(codes) =>
+                  setFilter("country", codes.length ? codes.join(",") : "all")
+                }
               />
-              <select
-                className="cxc-select"
-                value={filters.country}
-                onChange={(e) => setFilter("country", e.target.value)}
-              >
-                <option value="all">All Countries</option>
-                {countryOpts.map((cnt) => (
-                  <option key={cnt.key} value={cnt.key}>
-                    {cnt.key === "Unknown"
-                      ? "Unknown"
-                      : `${flagEmoji(cnt.key)} ${countryName(cnt.key)}`}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {moreFilters && (
