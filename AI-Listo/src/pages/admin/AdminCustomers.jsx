@@ -79,6 +79,8 @@ import aiUnitsApi from "../../api/aiUnitsApi";
 import AdminPlans from "./AdminPlans";
 import BulkEmailModal from "../../components/BulkEmailModal";
 import EmailAuditModal from "../../components/EmailAuditModal";
+import EmailComposer from "../../components/EmailComposer";
+import EmailPreview from "../../components/EmailPreview";
 import "../platform/platform.css";
 import "./AdminCustomers.css";
 
@@ -3546,6 +3548,8 @@ function SendTemplateEmailModal({ customer, onClose }) {
   const [template, setTemplate] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  // Composer state for "Write my own email" (own text + uploaded images + a CTA).
+  const [customCompose, setCustomCompose] = useState({ subject: "", html: "", previewHtml: "", valid: false });
   const [preview, setPreview] = useState(null);
   const [loadingCat, setLoadingCat] = useState(true);
   const [loadingPrev, setLoadingPrev] = useState(false);
@@ -3618,19 +3622,22 @@ function SendTemplateEmailModal({ customer, onClose }) {
   const submit = async () => {
     if (sending || result?.ok) return;
     setError("");
-    // Free-form "write my own email".
+    // Free-form "write my own email" (composer: text + images + CTA button).
     if (isCustom) {
-      if (!subject.trim()) {
+      if (!customCompose.subject.trim()) {
         setError("Please enter a subject.");
         return;
       }
-      if (!message.trim()) {
-        setError("Please enter a message.");
+      if (!customCompose.html.trim()) {
+        setError("Add some content (text, an image, or a button) first.");
         return;
       }
       setSending(true);
       try {
-        await sendCustomerEmail(customer.id, { subject, message });
+        await sendCustomerEmail(customer.id, {
+          subject: customCompose.subject,
+          html: customCompose.html,
+        });
         setResult({ ok: true, to: customer.email, custom: true });
       } catch (e) {
         setError(e?.message || "The email could not be sent.");
@@ -3661,7 +3668,7 @@ function SendTemplateEmailModal({ customer, onClose }) {
   const sentOk = result?.ok;
   const isDup = result?.status === "duplicate";
   const canSend = isCustom
-    ? Boolean(subject.trim() && message.trim())
+    ? Boolean(customCompose.valid)
     : Boolean(template && preview?.ok && !loadingPrev);
 
   return (
@@ -3708,28 +3715,9 @@ function SendTemplateEmailModal({ customer, onClose }) {
         </div>
 
         {isCustom && (
-          <>
-            <div className="cxc-field">
-              <label>Subject</label>
-              <input
-                className="cxc-input"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Subject"
-              />
-            </div>
-            <div className="cxc-field">
-              <label>Message</label>
-              <textarea
-                className="cxc-input"
-                rows={8}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Write your message…"
-                style={{ resize: "vertical" }}
-              />
-            </div>
-          </>
+          <div className="cxc-field">
+            <EmailComposer onChange={setCustomCompose} compact />
+          </div>
         )}
 
         {loadingPrev && <div className="cxc-note">Rendering preview…</div>}
@@ -3774,17 +3762,9 @@ function SendTemplateEmailModal({ customer, onClose }) {
                   <b>Subject:</b> {preview.subject}
                 </div>
               </div>
-              <iframe
-                title="Email preview"
-                srcDoc={preview.html}
-                style={{
-                  width: "100%",
-                  height: 380,
-                  border: 0,
-                  background: "#fff",
-                }}
-                sandbox=""
-              />
+              <div style={{ padding: 10 }}>
+                <EmailPreview html={preview.html} maxHeight={400} />
+              </div>
             </div>
           </div>
         )}

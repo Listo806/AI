@@ -174,9 +174,14 @@ export class CustomersAdminController {
   @ApiOperation({ summary: 'Send a free-form email to a customer via SendGrid' })
   async sendEmail(
     @Param('id') id: string,
-    @Body() body: { subject?: string; message?: string },
+    @Body() body: { subject?: string; message?: string; html?: string },
   ) {
-    return this.customers.sendCustomerEmail(id, body?.subject || '', body?.message || '');
+    return this.customers.sendCustomerEmail(
+      id,
+      body?.subject || '',
+      body?.message || '',
+      body?.html || null,
+    );
   }
 
   // ── Team & Seats ──────────────────────────────────────────────────────────
