@@ -836,6 +836,41 @@ export class PlatformMailerService {
     return `${this.backendUrl()}/api/email/unsubscribe?token=${encodeURIComponent(token)}`;
   }
 
+  // Public per-user unsubscribe URL (creates the token if missing). Used by the
+  // custom-email composers so a bulk blast still carries a working opt-out.
+  async unsubscribeUrlForUser(userId: string): Promise<string | null> {
+    if (!userId) return null;
+    const tok = await this.getOrCreateUnsubToken(userId);
+    return tok ? this.unsubUrl(tok) : null;
+  }
+
+  // Wrap admin-authored body HTML (from the custom-email composer) in a minimal,
+  // responsive email shell. Images inside the body already use max-width:100%;
+  // height:auto so they fit desktop + mobile. An unsubscribe footer is added when a
+  // link is supplied (bulk campaigns always supply one).
+  wrapCustomEmail(
+    bodyHtml: string,
+    opts?: { unsubscribeUrl?: string | null },
+  ): string {
+    const unsub = opts?.unsubscribeUrl
+      ? `<tr><td style="padding:16px 24px 26px;border-top:1px solid #eeeef2;font-family:Arial,Helvetica,sans-serif;font-size:11.5px;line-height:1.7;color:#98a0ae;text-align:center;">You are receiving this email from Cortexa.<br/><a href="${opts.unsubscribeUrl}" style="color:#7c6cf6;text-decoration:underline;">Unsubscribe</a></td></tr>`
+      : '';
+    // Responsive container: width:100% capped at 600px so it fills the screen on
+    // mobile (no horizontal scroll) and centers at 600px on desktop. An Outlook
+    // ghost table pins 600px there (Outlook ignores max-width).
+    return (
+      `<div style="background:#f4f4f7;margin:0;padding:0;">` +
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;"><tr><td align="center" style="padding:24px 12px;">` +
+      `<!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0"><tr><td><![endif]-->` +
+      `<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;">` +
+      `<tr><td style="padding:26px 26px 12px;">${bodyHtml}</td></tr>` +
+      unsub +
+      `</table>` +
+      `<!--[if mso]></td></tr></table><![endif]-->` +
+      `</td></tr></table></div>`
+    );
+  }
+
   // Enqueue the 5 Free-onboarding emails. Idempotent per (user, template) via the
   // NOT EXISTS guard, so the same signup can never enroll twice.
   async scheduleFreeOnboardingSequence(
@@ -2053,6 +2088,13 @@ export class PlatformMailerService {
     await run(
       `ALTER TABLE email_campaigns ADD COLUMN IF NOT EXISTS send_language VARCHAR(5)`,
     );
+    // Custom (admin-written) campaign: the subject + full HTML body are stored on
+    // the campaign itself (email_log has no body column), and the worker sends that
+    // instead of rendering a catalog template.
+    await run(
+      `ALTER TABLE email_campaigns ADD COLUMN IF NOT EXISTS is_custom BOOLEAN NOT NULL DEFAULT false`,
+    );
+    await run(`ALTER TABLE email_campaigns ADD COLUMN IF NOT EXISTS custom_html TEXT`);
     await run(
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_campaigns_client_token
          ON email_campaigns(client_token) WHERE client_token IS NOT NULL`,
@@ -2137,6 +2179,12 @@ export class PlatformMailerService {
     // Admin-selected campaign language. When set, ALL recipients receive this
     // language version (no per-recipient fallback). Required by the controller.
     language?: string | null;
+    // CUSTOM (admin-written) campaign: the exact subject + body HTML the admin
+    // composed. When present, the worker sends this to every recipient instead of
+    // rendering a catalog template (template is stored as '__custom__').
+    isCustom?: boolean;
+    customSubject?: string | null;
+    customHtml?: string | null;
   }): Promise<{
     ok: boolean;
     campaignId?: string;
@@ -2233,13 +2281,15 @@ export class PlatformMailerService {
     try {
       const ins = await this.db.query(
         `INSERT INTO email_campaigns
-           (template, created_by, client_token, status,
+           (template, subject, created_by, client_token, status,
             total_selected, total_eligible, total_suppressed, total_invalid,
-            total_queued, lang_en, lang_es, lang_pt, send_language)
-         VALUES ($1,$2,$3,'queued',$4,$5,$6,$7,$8,$9,$10,$11,$12)
+            total_queued, lang_en, lang_es, lang_pt, send_language,
+            is_custom, custom_html)
+         VALUES ($1,$2,$3,$4,'queued',$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
          RETURNING id`,
         [
           opts.template,
+          opts.isCustom ? String(opts.customSubject || '').slice(0, 998) : null,
           opts.adminId || null,
           clientToken,
           ids.length,
@@ -2251,6 +2301,8 @@ export class PlatformMailerService {
           langs.es,
           langs.pt,
           sendLanguage,
+          !!opts.isCustom,
+          opts.isCustom ? String(opts.customHtml || '') : null,
         ],
       );
       campaignId = ins.rows[0].id;
@@ -2304,9 +2356,11 @@ export class PlatformMailerService {
     try {
       const res = await this.db.query(
         `SELECT el.id, el.track_token, el.template, el.language, el.to_email,
-                el.user_id, el.campaign_id, u.name, u.email_opt_out, u.email_bounced_at
+                el.user_id, el.campaign_id, u.name, u.email_opt_out, u.email_bounced_at,
+                ec.is_custom, ec.subject AS campaign_subject, ec.custom_html
            FROM email_log el
            JOIN users u ON u.id = el.user_id
+           LEFT JOIN email_campaigns ec ON ec.id = el.campaign_id
           WHERE el.status = 'queued' AND el.send_type = 'bulk'
             AND el.scheduled_at <= NOW()
           ORDER BY el.scheduled_at ASC
@@ -2344,15 +2398,33 @@ export class PlatformMailerService {
           lang: r.language,
           name: r.name,
         };
-        const vars = await this.buildVarsForTemplate(r.template, user);
         const token = r.track_token || crypto.randomUUID();
-        const rendered = renderTemplate(r.template, r.language, vars);
-        const html = this.htmlFor(rendered.html, token);
+        let subject: string;
+        let bodyHtml: string;
+        let textFallback: string;
+        if (r.is_custom) {
+          // CUSTOM campaign: the admin wrote the exact subject + body. Send it as
+          // authored, wrapped in the responsive shell with this recipient's own
+          // unsubscribe link so the blast stays compliant.
+          const unsub = await this.unsubscribeUrlForUser(r.user_id);
+          subject = String(r.campaign_subject || '').trim() || 'A message from Cortexa';
+          bodyHtml = this.wrapCustomEmail(String(r.custom_html || ''), {
+            unsubscribeUrl: unsub,
+          });
+          textFallback = bodyHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        } else {
+          const vars = await this.buildVarsForTemplate(r.template, user);
+          const rendered = renderTemplate(r.template, r.language, vars);
+          subject = rendered.subject;
+          bodyHtml = rendered.html;
+          textFallback = rendered.text;
+        }
+        const html = this.htmlFor(bodyHtml, token);
         const result = await this.deliver({
           to: r.to_email,
-          subject: rendered.subject,
+          subject,
           html,
-          text: rendered.text,
+          text: textFallback,
           token,
         });
         const status = result.ok
@@ -2376,7 +2448,7 @@ export class PlatformMailerService {
           [
             r.id,
             status,
-            rendered.subject,
+            subject,
             result.provider,
             result.ok ? null : String(result.error || '').slice(0, 500),
             token,

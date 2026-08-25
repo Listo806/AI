@@ -11,6 +11,8 @@ import { CustomersAdminController } from './customers-admin.controller';
 import { SendgridEventsController } from './sendgrid-events.controller';
 import { OnboardingTestController } from './onboarding-test.controller';
 import { BillingTraceController } from './billing-trace.controller';
+import { EmailAssetController } from './email-asset.controller';
+import { EmailAssetService } from './email-asset.service';
 import { PlansModule } from '../plans/plans.module';
 
 // Platform lifecycle email + the admin Sign-ups / Customers sections. The new
@@ -28,12 +30,14 @@ import { PlansModule } from '../plans/plans.module';
     SendgridEventsController,
     OnboardingTestController,
     BillingTraceController,
+    EmailAssetController,
   ],
   providers: [
     PlatformMailerService,
     SignupLifecycleService,
     SignupsAdminService,
     CustomersAdminService,
+    EmailAssetService,
   ],
   exports: [PlatformMailerService],
 })

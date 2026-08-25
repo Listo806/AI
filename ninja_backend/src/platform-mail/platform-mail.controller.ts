@@ -226,11 +226,14 @@ export class PlatformMailController {
     summary: 'Estimate a bulk send: eligible / suppressed / invalid + languages',
   })
   async bulkEstimate(
-    @Body() body: { userIds?: string[]; template?: string },
+    @Body() body: { userIds?: string[]; template?: string; mode?: string },
   ) {
     const template = String(body?.template || '');
     const userIds = Array.isArray(body?.userIds) ? body.userIds : [];
-    if (!isBulkTemplate(template)) {
+    const isCustom = String(body?.mode || '') === 'custom' || template === '__custom__';
+    // Estimate only categorizes recipients (eligible/suppressed/invalid); it does
+    // not depend on the template, so a custom campaign skips the template check.
+    if (!isCustom && !isBulkTemplate(template)) {
       return { ok: false, error: 'Unknown or non-bulk template.' };
     }
     if (!userIds.length) {
@@ -259,19 +262,59 @@ export class PlatformMailController {
       template?: string;
       clientToken?: string;
       language?: string;
+      // Custom (admin-written) campaign: mode='custom' with an authored subject +
+      // body HTML (own text + uploaded images + a CTA button).
+      mode?: string;
+      subject?: string;
+      html?: string;
     },
   ) {
     const template = String(body?.template || '');
     const userIds = Array.isArray(body?.userIds) ? body.userIds : [];
     const clientToken = String(body?.clientToken || '').trim() || null;
-    // Language is REQUIRED for bulk — the whole campaign is sent in this one
-    // language. We never silently fall back to English.
+    const adminId = user?.id || user?.userId || user?.sub || null;
+    const isCustom = String(body?.mode || '') === 'custom' || template === '__custom__';
+
+    if (!userIds.length) {
+      return { ok: false, error: 'Select at least one customer.' };
+    }
+
+    // ── CUSTOM campaign: admin-authored subject + HTML, sent to everyone ──
+    if (isCustom) {
+      const subject = String(body?.subject || '').trim();
+      const html = String(body?.html || '').trim();
+      if (!subject) return { ok: false, error: 'Enter a subject for your email.' };
+      if (!html) {
+        return { ok: false, error: 'Add some content (text, an image, or a button) before sending.' };
+      }
+      // Language is just a label for a custom email (the content is fixed); default
+      // to English when not chosen.
+      const clang = normalizeBulkLang(body?.language) || 'en';
+      try {
+        return await this.mailer.createBulkCampaign({
+          template: '__custom__' as TemplateName,
+          userIds,
+          adminId,
+          clientToken,
+          language: clang,
+          isCustom: true,
+          customSubject: subject,
+          customHtml: html,
+        });
+      } catch (err: any) {
+        return {
+          ok: false,
+          error: `Could not start the campaign: ${String(err?.message || 'unknown error').slice(0, 300)}`,
+        };
+      }
+    }
+
+    // ── Template campaign (existing) ──
+    // Language is REQUIRED — the whole campaign is sent in this one language. We
+    // never silently fall back to English.
     const language = normalizeBulkLang(body?.language);
     if (!isBulkTemplate(template)) {
       return { ok: false, error: 'Unknown or non-bulk template.' };
-    }
-    if (!userIds.length) {
-      return { ok: false, error: 'Select at least one customer.' };
     }
     if (!language) {
       return {
@@ -279,7 +322,6 @@ export class PlatformMailController {
         error: 'Select the campaign language (English, Spanish or Portuguese) before sending.',
       };
     }
-    const adminId = user?.id || user?.userId || user?.sub || null;
     try {
       return await this.mailer.createBulkCampaign({
         template: template as TemplateName,

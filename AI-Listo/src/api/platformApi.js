@@ -262,11 +262,21 @@ export async function updateCustomerInfo(id, payload = {}) {
   });
 }
 
-export async function sendCustomerEmail(id, { subject, message } = {}) {
+// Free-form send. Pass `html` (from the composer: own text + images + CTA button)
+// to send authored HTML; otherwise `message` is sent as plain text.
+export async function sendCustomerEmail(id, { subject, message, html } = {}) {
   return apiClient.request(`/admin/customers-hub/${id}/email`, {
     method: "POST",
-    body: JSON.stringify({ subject, message }),
+    body: JSON.stringify({ subject, message, html }),
   });
+}
+
+// Upload an image for a custom email. Returns { ok, id, url } (a stable public URL
+// to embed). The backend stores the bytes so the image never breaks in an inbox.
+export async function uploadEmailImage(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  return apiClient.request(`/admin/email/asset`, { method: "POST", body: fd });
 }
 
 // ── Team & Seats ──────────────────────────────────────────────────────────
@@ -430,10 +440,10 @@ export async function getBulkEmailTemplates() {
   return Array.isArray(res?.data) ? res.data : [];
 }
 // Dry-run: eligible / suppressed / invalid + language breakdown, no send.
-export async function estimateBulkEmail({ template, userIds } = {}) {
+export async function estimateBulkEmail({ template, userIds, mode } = {}) {
   return apiClient.request(`/admin/email/bulk/estimate`, {
     method: "POST",
-    body: JSON.stringify({ template, userIds }),
+    body: JSON.stringify({ template, userIds, mode }),
   });
 }
 // Render a bulk template in the SELECTED language for review (no send).
@@ -447,10 +457,10 @@ export async function previewBulkTemplate({ template, language, userId } = {}) {
 // Create the campaign + queue eligible recipients. clientToken makes it
 // idempotent against double-clicks / retries. language (en/es/pt) is REQUIRED —
 // the whole campaign is sent in that one language.
-export async function sendBulkEmail({ template, userIds, clientToken, language } = {}) {
+export async function sendBulkEmail({ template, userIds, clientToken, language, mode, subject, html } = {}) {
   return apiClient.request(`/admin/email/bulk/send`, {
     method: "POST",
-    body: JSON.stringify({ template, userIds, clientToken, language }),
+    body: JSON.stringify({ template, userIds, clientToken, language, mode, subject, html }),
   });
 }
 // Campaign status + live sent/failed counts.

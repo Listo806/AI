@@ -12,7 +12,7 @@
 .bem-modal {
   position: relative;
   width: 100%;
-  max-width: 540px;
+  max-width: 620px;
   max-height: 92vh;
   overflow-y: auto;
   background: #fff;
@@ -74,6 +74,21 @@
 }
 .bem-select:focus { outline: none; border-color: #5b45f6; box-shadow: 0 0 0 3px rgba(91, 69, 246, 0.12); }
 .bem-hint { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+
+/* Template vs Write-my-own toggle */
+.bem-mode { display: flex; gap: 8px; margin-bottom: 14px; }
+.bem-mode-btn {
+  flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid #e2e8f0; background: #fff; color: #475569;
+  border-radius: 10px; padding: 11px 10px; font-size: 13.5px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.bem-mode-btn:hover { border-color: #c7cede; }
+.bem-mode-on {
+  border-color: #5b45f6; background: rgba(91, 69, 246, 0.08); color: #4a37d4;
+  box-shadow: 0 0 0 3px rgba(91, 69, 246, 0.1);
+}
 
 /* Language selector (required) */
 .bem-label-lang { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; }
@@ -280,6 +295,8 @@
 .crm-dark .bem-x:hover { background: #1b2436; color: #cbd5e1; }
 .crm-dark .bem-preview-box, .crm-dark .bem-select { border-color: #2a3450; }
 .crm-dark .bem-preview-meta { background: #0f1626; border-color: #2a3450; }
+.crm-dark .bem-mode-btn { background: #141b2b; border-color: #2a3450; color: #cbd5e1; }
+.crm-dark .bem-mode-on { background: rgba(91, 69, 246, 0.18); color: #c3b9ff; border-color: #5b45f6; }
 .crm-dark .bem-lang-btn { background: #0f1626; border-color: #2a3450; color: #cbd5e1; }
 .crm-dark .bem-lang-on { background: rgba(91, 69, 246, 0.18); color: #c3b9ff; border-color: #5b45f6; }
 .crm-dark .bem-review-card { background: #0f1626; border-color: #2a3450; }

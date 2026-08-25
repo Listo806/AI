@@ -116,12 +116,21 @@ export class CustomersAdminService {
   }
 
   // Send a free-form email to a single customer through the platform SendGrid
-  // integration (the "Send Email" action on the Customers page).
-  async sendCustomerEmail(customerId: string, subject: string, message: string) {
+  // integration (the "Send Email" action on the Customers page). When `html` is
+  // provided (the composer: own text + uploaded images + a CTA button), it is sent
+  // as authored, wrapped in the responsive email shell; otherwise `message` is
+  // treated as plain text and escaped.
+  async sendCustomerEmail(
+    customerId: string,
+    subject: string,
+    message: string,
+    html?: string | null,
+  ) {
     const subj = String(subject || '').trim();
     const msg = String(message || '').trim();
+    const bodyHtml = String(html || '').trim();
     if (!subj) throw new BadRequestException('A subject is required.');
-    if (!msg) throw new BadRequestException('A message is required.');
+    if (!bodyHtml && !msg) throw new BadRequestException('A message is required.');
 
     const { rows } = await this.db.query(
       `SELECT id, email, name FROM users WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
@@ -132,11 +141,14 @@ export class CustomersAdminService {
       throw new NotFoundException('Customer not found or has no email address.');
     }
 
+    const finalHtml = bodyHtml
+      ? this.mailer.wrapCustomEmail(bodyHtml)
+      : this.textToHtml(msg);
     const res = await this.mailer.sendCustomEmail({
       to: cust.email,
       userId: cust.id,
       subject: subj,
-      html: this.textToHtml(msg),
+      html: finalHtml,
     });
 
     if (res.status === 'skipped') {
