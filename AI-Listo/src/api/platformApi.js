@@ -276,7 +276,7 @@ export async function sendCustomerEmail(id, { subject, message, html } = {}) {
 export async function uploadEmailImage(file) {
   const fd = new FormData();
   fd.append("file", file);
-  return apiClient.request(`/admin/email/asset`, { method: "POST", body: fd });
+  return apiClient.request(`/email/asset`, { method: "POST", body: fd });
 }
 
 // ── Team & Seats ──────────────────────────────────────────────────────────
