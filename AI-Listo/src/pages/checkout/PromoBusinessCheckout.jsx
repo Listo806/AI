@@ -160,8 +160,8 @@ export default function PromoBusinessCheckout() {
 
   const openCheckout = () => {
     if (!identity.userId) {
-      localStorage.setItem("promoAfterLogin", "business257");
-      navigate("/sign-in");
+      // Return to this offer after signing in (SignIn honors a safe ?next=).
+      navigate("/sign-in?next=/checkout-business-offer");
       return;
     }
     if (!ready || !priceId) return;
