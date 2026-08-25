@@ -61,11 +61,14 @@ export class WorkspacesController {
   @ApiOperation({ summary: "The current team's Workspace entitlements" })
   async getEntitlements(@CurrentUser() user: any) {
     const teamId = await this.entitlements.resolveTeamId(user);
-    const [rows, activeWorkspaceIds] = await Promise.all([
+    const [rows, activeWorkspaceIds, includedWorkspaceCredits] = await Promise.all([
       this.entitlements.listForTeam(teamId),
       this.entitlements.listActiveWorkspaceIds(teamId),
+      this.entitlements.availableIncludedCredits(teamId),
     ]);
-    return { entitlements: rows, activeWorkspaceIds };
+    // includedWorkspaceCredits > 0 → the customer can activate ONE workspace of
+    // their choice for free (e.g. from the $257 Business promo).
+    return { entitlements: rows, activeWorkspaceIds, includedWorkspaceCredits };
   }
 
   @Get('access')
@@ -250,6 +253,36 @@ export class WorkspacesController {
       throw new BadRequestException('A team is required to purchase a workspace add-on.');
     }
 
+    // Idempotent: if the team already holds this workspace, say so instead of
+    // opening a second subscription (or spending an included credit) for the same
+    // access. Checked BEFORE the paid-price requirement so it also works for teams
+    // whose access came from an included/comped credit.
+    const already = await this.entitlements.hasActiveEntitlement(teamId, workspace.id);
+    if (already) {
+      return { alreadyEntitled: true, workspaceId: workspace.id };
+    }
+
+    // Promotional INCLUDED workspace: if the team holds an included-workspace credit
+    // (e.g. from the $257 Business promo), the customer's CHOICE of workspace is
+    // comped — activated with NO $97 charge — and the credit is consumed. Only the
+    // ONE workspace they pick is activated; any additional workspace falls through
+    // to the normal paid path below.
+    const includedCredits = await this.entitlements.availableIncludedCredits(teamId);
+    if (includedCredits > 0) {
+      const res = await this.entitlements.claimIncludedWorkspace({
+        teamId,
+        workspaceId: workspace.id,
+        userId: user?.id || null,
+      });
+      if (res.comped) {
+        return { comped: true, includedByPromo: true, workspaceId: workspace.id };
+      }
+      if (res.reason === 'already_entitled') {
+        return { alreadyEntitled: true, workspaceId: workspace.id };
+      }
+      // no_credit (race) / error → fall through to the normal paid path.
+    }
+
     // Per-workspace Paddle price so the checkout shows the SPECIFIC workspace name
     // (e.g. "Sales Workspace Add-On"). Set PADDLE_PRICE_WORKSPACE_<ID> (id upper-cased,
     // hyphens -> underscores, e.g. PADDLE_PRICE_WORKSPACE_SALES,
@@ -265,13 +298,6 @@ export class WorkspacesController {
       throw new BadRequestException(
         'PADDLE_PRICE_WORKSPACE is not configured yet. Add the $97 Workspace Paddle price id to enable purchases.',
       );
-    }
-
-    // Idempotent: if the team already holds this workspace, say so instead of
-    // opening a second $97 subscription for the same access.
-    const already = await this.entitlements.hasActiveEntitlement(teamId, workspace.id);
-    if (already) {
-      return { alreadyEntitled: true, workspaceId: workspace.id };
     }
 
     // The webhook re-derives team authoritatively from userId and re-validates the

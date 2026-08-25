@@ -524,6 +524,36 @@ export class PaymentsService {
             nextBilled,
           );
           matched = true;
+          // The $257 Business promo includes ONE Team Workspace of the customer's
+          // CHOICE. Grant a single included-workspace credit here (never auto-assign
+          // a workspace). Idempotent per this base subscription id, so a
+          // created + activated pair and later renewals can never stack credits.
+          // Best-effort: a failure is logged and never breaks activation or forces a
+          // Paddle retry. The customer chooses which workspace later, which comps ONE
+          // workspace (no $97 charge) and consumes this credit.
+          if (isBusinessPromo257) {
+            try {
+              const promoTeam = await this.db.query(
+                `SELECT COALESCE(u.team_id, t.id) AS team_id
+                   FROM users u LEFT JOIN teams t ON t.owner_id = u.id
+                  WHERE u.id = $1 LIMIT 1`,
+                [customUserId],
+              );
+              const promoTeamId = promoTeam.rows[0]?.team_id || null;
+              if (promoTeamId) {
+                await this.workspaceEntitlements.grantIncludedWorkspaceCredit({
+                  teamId: promoTeamId,
+                  source: 'promo_business_257',
+                  subscriptionId: subId,
+                  total: 1,
+                });
+              }
+            } catch (err: any) {
+              this.logger.error(
+                `included-workspace credit grant failed (recorded, no retry): ${err?.message}`,
+              );
+            }
+          }
         } else {
           matched = await this.setUserStatusByPaddleSub(subId, {
             payment_status: isTrialing ? 'trialing' : 'active',
