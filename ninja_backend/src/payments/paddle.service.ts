@@ -953,6 +953,19 @@ export class PaddleService {
         priceId: this.configService.get('PADDLE_PRICE_WORKSPACE') || null,
         monthly: 97,
       },
+
+      // Promotional Business offer ($257/month, 25% off $347): a single recurring
+      // Paddle price charged immediately, NO trial. Provisions the Business plan.
+      // Used ONLY by the bulk promo email CTA / /checkout-business-offer route.
+      // The env var overrides the client-provided default price id.
+      businessPromo257: {
+        priceId:
+          this.configService.get('PADDLE_PRICE_BUSINESS_PROMO257') ||
+          'pri_01m0v8vg783g3f1xfvdkeqb15w',
+        monthly: 257,
+        regular: 347,
+        plan: 'team',
+      },
     };
   }
 

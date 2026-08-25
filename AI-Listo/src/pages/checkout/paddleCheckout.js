@@ -415,3 +415,51 @@ export function openWorkspaceCheckout({
     customData: customData || {},
   });
 }
+
+// ---------------------------------------------------------
+// BUSINESS $257 PROMOTIONAL CHECKOUT
+// ---------------------------------------------------------
+
+// Open Paddle checkout for the promotional Business offer.
+//
+// IMPORTANT:
+// This uses ONLY the promo price id (pri_...PROMO257) — a SINGLE recurring
+// $257/month item, charged immediately, with NO trial and NO starting-charge
+// line. It provisions the Business plan (custom_data.plan = 'team'), which the
+// webhook grants (3 users, unlimited AI). The overlay shows "$257/month, billed
+// today" natively, so no custom summary is needed.
+export function openBusinessPromoCheckout({
+  priceId,
+  userId,
+  email,
+  countryCode,
+  postalCode,
+  region,
+  settings,
+}) {
+  if (!priceId) {
+    throw new Error("Business promo Paddle price is not configured");
+  }
+  if (!window.Paddle?.Checkout?.open) {
+    throw new Error("Paddle Checkout is not initialized");
+  }
+
+  const customer = buildPaddleCustomer({
+    email,
+    countryCode,
+    postalCode,
+    region,
+  });
+
+  window.Paddle.Checkout.open({
+    ...(settings ? { settings } : {}),
+    items: [{ priceId, quantity: 1 }],
+    customer,
+    customData: {
+      userId,
+      plan: "team",
+      billingCycle: "monthly",
+      pricingModel: "promo_business_257",
+    },
+  });
+}
