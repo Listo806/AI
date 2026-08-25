@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
+
+// Only allow redirecting back to an INTERNAL path (starts with a single "/"),
+// never to an external URL — prevents an open-redirect via ?next=.
+function safeNext(raw) {
+  const v = String(raw || '');
+  if (/^\/[A-Za-z0-9][A-Za-z0-9/_-]*$/.test(v)) return v;
+  return '/dashboard/home';
+}
 import './Auth.css';
 import { Eye, EyeOff } from 'lucide-react';
 import { trackEvent } from '../../utils/track';
@@ -15,11 +23,15 @@ export default function SignIn({ variant = 'crm' }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
+  const [searchParams] = useSearchParams();
+  // Where to land after login. Used by email CTAs (e.g. the $257 promo checkout)
+  // so a logged-out customer returns to the offer instead of the dashboard.
+  const nextPath = safeNext(searchParams.get('next'));
 
   if (loading) return null;
 
   if (isAuthenticated()) {
-    return <Navigate to="/dashboard/home" replace />;
+    return <Navigate to={nextPath} replace />;
   }
   // NOTE: Sign-in page ALWAYS shows the form, even if user is already authenticated
   // This is correct SaaS behavior - clicking "Sign In" should always show the form
