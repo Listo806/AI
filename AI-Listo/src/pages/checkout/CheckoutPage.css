@@ -216,9 +216,7 @@ body {
   min-height: 0;
   margin-top: 0;
 }
-.checkout-paypal .checkout-inline-frame iframe{
-  max-height: 420px!important;
-}
+
 .checkout-paypal .checkout-inline-frame iframe .dxmuBW{
   padding:0!important;
   height:auto!important;
