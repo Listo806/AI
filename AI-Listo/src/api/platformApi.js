@@ -196,6 +196,7 @@ function buildCustomersQuery(params = {}) {
     "paymentStatus",
     "source",
     "language",
+    "country",
     "usersRole",
     "seatStatus",
     "from",
