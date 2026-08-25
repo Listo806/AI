@@ -793,7 +793,20 @@ export default function CheckoutPage() {
                   <p>{tr.checkoutDesc}</p>
                 </div>
               </div>
-
+              <label className="checkout-terms">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(event) => setAcceptedTerms(event.target.checked)}
+                />
+                <span>
+                  {tr.agreementPrefix}{" "}
+                  <a href="/terms" target="_blank" rel="noreferrer">
+                    {tr.terms}
+                    <ExternalLink size={14} />
+                  </a>
+                </span>
+              </label>        
               <div className="checkout-paypal">
                 {usePaddle ? (
                   <>
@@ -852,21 +865,6 @@ export default function CheckoutPage() {
                   </>
                 )}
               </div>
-
-              <label className="checkout-terms">
-                <input
-                  type="checkbox"
-                  checked={acceptedTerms}
-                  onChange={(event) => setAcceptedTerms(event.target.checked)}
-                />
-                <span>
-                  {tr.agreementPrefix}{" "}
-                  <a href="/terms" target="_blank" rel="noreferrer">
-                    {tr.terms}
-                    <ExternalLink size={14} />
-                  </a>
-                </span>
-              </label>
 
               <div className="checkout-secure-footer">
                 <ShieldCheck size={19} />
