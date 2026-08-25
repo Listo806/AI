@@ -698,13 +698,30 @@ export class CustomersAdminService {
       clauses.push(`LOWER(COALESCE(preferred_language,'en')) = $${params.length}`);
     }
     if (opts.country && opts.country !== 'all') {
-      const cc = String(opts.country).trim();
-      if (cc.toLowerCase() === 'unknown') {
-        clauses.push(`COALESCE(signup_country,'') = ''`);
-      } else {
-        params.push(cc.toUpperCase());
-        clauses.push(`UPPER(COALESCE(signup_country,'')) = $${params.length}`);
+      // One OR MANY countries (comma-separated codes, e.g. "CL,AR,ES,EC"), plus the
+      // special "Unknown" bucket (no captured country). Multi-select = OR across all.
+      const parts = String(opts.country)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const codes: string[] = [];
+      let includeUnknown = false;
+      for (const p of parts) {
+        if (p.toLowerCase() === 'unknown') includeUnknown = true;
+        else if (p.toLowerCase() !== 'all') codes.push(p.toUpperCase());
       }
+      const ors: string[] = [];
+      if (codes.length) {
+        const ph = codes
+          .map((c) => {
+            params.push(c);
+            return `$${params.length}`;
+          })
+          .join(',');
+        ors.push(`UPPER(COALESCE(signup_country,'')) IN (${ph})`);
+      }
+      if (includeUnknown) ors.push(`COALESCE(signup_country,'') = ''`);
+      if (ors.length) clauses.push(`(${ors.join(' OR ')})`);
     }
     if (opts.usersRole && opts.usersRole !== 'all') {
       const r = String(opts.usersRole).toLowerCase();
