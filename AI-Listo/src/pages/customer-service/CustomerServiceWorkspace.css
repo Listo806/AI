@@ -1806,7 +1806,7 @@ body.crm-dark #root .csw-pagination select{
 
     .csw-mobile-workspace-nav {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, auto));
         align-items: stretch;
         width: 100%;
         margin: 0;
@@ -2018,9 +2018,9 @@ body.crm-dark #root .csw-pagination select{
     }
 
     .csw-mobile-workspace-nav {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        padding-left: 8px;
-        padding-right: 8px;
+        grid-template-columns: repeat(5, minmax(0, auto));
+        padding-left: 0;
+        padding-right: 0;
     }
 
     .csw-mobile-workspace-nav button {
@@ -2327,6 +2327,7 @@ body.crm-dark #root .csw-pagination select{
     body.crm-dark .csw-mobile-ticket-quick {
         background: #071019;
     }
+    .BookOpenText{min-width: 14px;}
 }
 
 /* Smaller phones keep the SAME grids; only sizing compresses. */

@@ -11,7 +11,9 @@ import CsSurveysSection from "./CsSurveysSection";
 import CsReportsSection from "./CsReportsSection";
 import CsImportModal from "./CsImportModal";
 import { relativeTime } from "../sales/salesFormat";
-
+import {
+  BookOpenText,
+} from "lucide-react";
 // Customer Service Workspace, wired to real /customer-service data. Only Tickets and
 // the Overview dashboard are live in this slice; the other tabs are placeholders for
 // the next slices. No hard-coded tickets, KPIs, charts or activity — every figure is
@@ -770,7 +772,7 @@ export default function CustomerServiceWorkspace() {
             className={tab === "Knowledge Base" ? "active green" : ""}
             onClick={() => goToWorkspaceTab("Knowledge Base")}
           >
-            <I name="library" />
+            <BookOpenText className="BookOpenText" size={16} />
             <span>Knowledge Base</span>
           </button>
 
@@ -787,7 +789,6 @@ export default function CustomerServiceWorkspace() {
           >
             <I name="ellipsis" />
             <span>More</span>
-            <I name="chevron-down" size={14} />
           </button>
         </nav>
 
