@@ -77,9 +77,15 @@ export class WorkspacesController {
   })
   async getAccess(@CurrentUser() user: any) {
     const teamId = await this.entitlements.resolveTeamId(user);
-    const activeIds = await this.entitlements.listActiveWorkspaceIds(teamId);
+    const [activeIds, includedWorkspaceCredits] = await Promise.all([
+      this.entitlements.listActiveWorkspaceIds(teamId),
+      this.entitlements.availableIncludedCredits(teamId),
+    ]);
     const isSupport = String(user?.role || '').toLowerCase() === 'super_admin';
     return {
+      // > 0 → the customer can activate ONE workspace of their choice for free
+      // (e.g. the $257 Business promo's included workspace).
+      includedWorkspaceCredits,
       workspaces: WORKSPACE_CATALOG.map((w) => {
         const locked = isWorkspaceLocked(w.id);
         const entitled = activeIds.includes(w.id);

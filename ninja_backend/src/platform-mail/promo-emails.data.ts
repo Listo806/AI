@@ -250,14 +250,14 @@ const EN: PromoCopy = {
 };
 
 const ES: PromoCopy = {
-  subject: 'Tu plan más popular, 25% de descuento — Business por $257/mes',
-  preheader: '25% de descuento por tiempo limitado en el plan Business: IA ilimitada, 1 workspace, hasta 3 usuarios.',
+  subject: 'Tu plan más popular, 25% de descuento — Negocios por $257/mes',
+  preheader: '25% de descuento por tiempo limitado en el plan Negocios: IA ilimitada, 1 workspace, hasta 3 usuarios.',
   topbar: 'Oferta por tiempo limitado para miembros registrados de Cortexa.',
   badge: 'Oferta por tiempo limitado',
   h1a: 'Lleva tu negocio al',
   h1b: 'siguiente nivel.',
-  sub: 'Por tiempo limitado, obtén nuestro plan más popular <b>Business</b> con <b>25% DE DESCUENTO</b>. IA ilimitada, 1 Workspace y hasta 3 usuarios — todo lo que necesitas para crecer más rápido.',
-  cardPlan: 'Plan Business',
+  sub: 'Por tiempo limitado, obtén nuestro plan más popular <b>Negocios</b> con <b>25% DE DESCUENTO</b>. IA ilimitada, 1 Workspace y hasta 3 usuarios — todo lo que necesitas para crecer más rápido.',
+  cardPlan: 'Plan Negocios',
   cardOffer: 'Oferta Especial',
   ribbon: '25%<br/>DTO',
   per: '/mes',
@@ -285,7 +285,7 @@ const ES: PromoCopy = {
     { t: 'Hecho para tu Negocio', d: 'Cada negocio es diferente. Te ayudamos a configurar Cortexa a tu forma de trabajar.' },
   ],
   ctaBandTag: 'Oferta por tiempo limitado',
-  ctaBandTitle: 'Obtén 25% de descuento en nuestro plan Business.',
+  ctaBandTitle: 'Obtén 25% de descuento en nuestro plan Negocios.',
   ctaBandBody: 'IA ilimitada + 1 Workspace + hasta 3 usuarios por solo $257/mes.',
   ctaBandBtn: 'Obtener 25% de descuento',
   helpTitle: '¿Tienes preguntas?',
