@@ -19,6 +19,10 @@ export interface ManualTemplateEntry {
   // abandoned-activation) are single-recipient by nature and are marked false so
   // they never get blasted. Undefined = allowed (nurture/promo templates).
   bulkAllowed?: boolean;
+  // BULK-ONLY templates appear ONLY in the bulk-campaign selector, never in the
+  // single-customer "Send Email" dropdown (and the individual send/preview
+  // endpoints reject them). Used for broadcast promotional offers.
+  bulkOnly?: boolean;
 }
 
 export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
@@ -60,13 +64,28 @@ export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
   { name: 'abandoned_1', label: 'Abandoned Signup — Reminder 1', category: 'Re-engagement', description: 'Account ready, finish activation.', bulkAllowed: false },
   { name: 'abandoned_2', label: 'Abandoned Signup — Reminder 2 (Editorial)', category: 'Re-engagement', description: 'Follow-up with the Business Editorial.', bulkAllowed: false },
   { name: 'abandoned_3', label: 'Abandoned Signup — Reminder 3 (Final)', category: 'Re-engagement', description: 'Final activation reminder.', bulkAllowed: false },
+
+  // ── Promotions (BULK ONLY) ──
+  // The "Business Plan — 25% off ($257/mo)" broadcast offer. Its CTA opens the
+  // $257 promotional checkout. Only offered in the bulk selector; deliberately
+  // kept out of the single-customer dropdown (bulkOnly).
+  { name: 'promo_business_257', label: 'Business Plan — 25% Off Promo ($257/mo)', category: 'Promotions', description: 'Limited-time 25% off Business ($257/mo, was $347). EN / ES / PT — choose the language before sending.', bulkOnly: true },
 ];
 
-const MANUAL_SET = new Set<string>(MANUAL_EMAIL_CATALOG.map((e) => e.name));
+// Single-customer ("Send Email") templates EXCLUDE bulk-only promotions, so a
+// broadcast offer can never be sent from the individual customer flow.
+const MANUAL_SET = new Set<string>(
+  MANUAL_EMAIL_CATALOG.filter((e) => !e.bulkOnly).map((e) => e.name),
+);
 
 export function isManualTemplate(name: string): name is TemplateName {
   return MANUAL_SET.has(name);
 }
+
+// The catalog an admin can pick from for a SINGLE customer (dropdown), excluding
+// bulk-only promotions.
+export const MANUAL_ONLY_CATALOG: ManualTemplateEntry[] =
+  MANUAL_EMAIL_CATALOG.filter((e) => !e.bulkOnly);
 
 // Templates allowed for BULK campaigns (nurture/promo). Excludes transactional
 // account/billing/abandoned templates (bulkAllowed === false).

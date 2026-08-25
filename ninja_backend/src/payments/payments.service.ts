@@ -375,6 +375,23 @@ export class PaymentsService {
     const customCycle: string | null =
       data?.custom_data?.billingCycle || data?.custom_data?.billing_cycle || null;
 
+    // --- Promotional Business $257/mo offer (recognized by its own price id) ---
+    // This one specific promo price ALWAYS provisions the Business plan (3 seats,
+    // unlimited AI), regardless of what custom_data.plan says — so the offer can
+    // never be mis-provisioned even if custom_data is missing or wrong. It is a
+    // normal recurring subscription (no trial, charged immediately), so it flows
+    // through the standard base-plan switch below with the plan forced to 'team'.
+    const promoBusiness257PriceId = (
+      process.env.PADDLE_PRICE_BUSINESS_PROMO257 ||
+      'pri_01m0v8vg783g3f1xfvdkeqb15w'
+    ).trim();
+    const isBusinessPromo257 =
+      !!promoBusiness257PriceId &&
+      this.extractPaddlePriceIds(data).includes(promoBusiness257PriceId);
+    // Plan used for activation: the promo price forces Business ('team'); otherwise
+    // the client-supplied plan is used as before.
+    const effectivePlan: string | null = isBusinessPromo257 ? 'team' : customPlan;
+
     // --- AI Unit refill packs (one-time purchase) ---
     // Detect by the ACTUAL purchased Paddle price id (server-side env), never
     // trusting client-supplied unit counts. Credits AI Units exactly once
@@ -501,8 +518,8 @@ export class PaymentsService {
           await this.activatePaddleSubscription(
             customUserId,
             subId,
-            customPlan || 'pro',
-            customCycle || undefined,
+            effectivePlan || 'pro',
+            customCycle || 'monthly',
             subStatus,
             nextBilled,
           );

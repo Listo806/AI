@@ -2048,6 +2048,11 @@ export class PlatformMailerService {
         lang_pt INT NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
+    // The admin-selected campaign language (en/es/pt). When set, EVERY recipient
+    // gets this language — the whole point of the language selector.
+    await run(
+      `ALTER TABLE email_campaigns ADD COLUMN IF NOT EXISTS send_language VARCHAR(5)`,
+    );
     await run(
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_campaigns_client_token
          ON email_campaigns(client_token) WHERE client_token IS NOT NULL`,
@@ -2129,6 +2134,9 @@ export class PlatformMailerService {
     userIds: string[];
     adminId?: string | null;
     clientToken?: string | null;
+    // Admin-selected campaign language. When set, ALL recipients receive this
+    // language version (no per-recipient fallback). Required by the controller.
+    language?: string | null;
   }): Promise<{
     ok: boolean;
     campaignId?: string;
@@ -2139,9 +2147,15 @@ export class PlatformMailerService {
     invalid: number;
     queued: number;
     languages: { en: number; es: number; pt: number };
+    sendLanguage?: 'en' | 'es' | 'pt' | null;
   }> {
     await this.ensureBulkSchema();
     const clientToken = String(opts.clientToken || '').trim() || null;
+    // The one language the whole campaign is sent in (null keeps the legacy
+    // per-recipient behavior, but the controller always supplies a value).
+    const sendLanguage: 'en' | 'es' | 'pt' | null = opts.language
+      ? this.normalizeLangCode(opts.language)
+      : null;
 
     // Idempotency: an existing campaign for this token is a TRUE duplicate only if
     // it already has recipient rows. A campaign row with ZERO recipients is a
@@ -2152,6 +2166,7 @@ export class PlatformMailerService {
       const dup = await this.db.query(
         `SELECT ec.id, ec.total_selected, ec.total_eligible, ec.total_suppressed,
                 ec.total_invalid, ec.total_queued, ec.lang_en, ec.lang_es, ec.lang_pt,
+                ec.send_language,
                 (SELECT COUNT(*)::int FROM email_log el WHERE el.campaign_id = ec.id) AS recipients
            FROM email_campaigns ec WHERE ec.client_token = $1 LIMIT 1`,
         [clientToken],
@@ -2175,6 +2190,7 @@ export class PlatformMailerService {
         invalid: c.total_invalid,
         queued: c.total_queued,
         languages: { en: c.lang_en, es: c.lang_es, pt: c.lang_pt },
+        sendLanguage: (c.send_language || null) as 'en' | 'es' | 'pt' | null,
       };
     };
 
@@ -2219,8 +2235,8 @@ export class PlatformMailerService {
         `INSERT INTO email_campaigns
            (template, created_by, client_token, status,
             total_selected, total_eligible, total_suppressed, total_invalid,
-            total_queued, lang_en, lang_es, lang_pt)
-         VALUES ($1,$2,$3,'queued',$4,$5,$6,$7,$8,$9,$10,$11)
+            total_queued, lang_en, lang_es, lang_pt, send_language)
+         VALUES ($1,$2,$3,'queued',$4,$5,$6,$7,$8,$9,$10,$11,$12)
          RETURNING id`,
         [
           opts.template,
@@ -2234,6 +2250,7 @@ export class PlatformMailerService {
           langs.en,
           langs.es,
           langs.pt,
+          sendLanguage,
         ],
       );
       campaignId = ins.rows[0].id;
@@ -2251,13 +2268,16 @@ export class PlatformMailerService {
     // ON CONFLICT target MUST restate that predicate or Postgres can't infer it
     // ("no unique or exclusion constraint matching the ON CONFLICT specification").
     for (const r of eligible) {
+      // Queue in the admin-selected campaign language (falls back to the
+      // recipient's own language only if no campaign language was supplied).
+      const queueLang = sendLanguage || r.lang;
       await this.db.query(
         `INSERT INTO email_log
            (user_id, to_email, template, language, status, send_type,
             campaign_id, sent_by_admin_id, scheduled_at, track_token, created_at)
          VALUES ($1,$2,$3,$4,'queued','bulk',$5,$6,NOW(),gen_random_uuid(),NOW())
          ON CONFLICT (campaign_id, user_id) WHERE campaign_id IS NOT NULL DO NOTHING`,
-        [r.id, r.email, opts.template, r.lang, campaignId, opts.adminId || null],
+        [r.id, r.email, opts.template, queueLang, campaignId, opts.adminId || null],
       );
     }
 
@@ -2270,6 +2290,7 @@ export class PlatformMailerService {
       invalid,
       queued: eligible.length,
       languages: langs,
+      sendLanguage,
     };
   }
 
@@ -2401,7 +2422,7 @@ export class PlatformMailerService {
     const { rows } = await this.db.query(
       `SELECT id, template, subject, created_by, status, created_at,
               total_selected, total_eligible, total_suppressed, total_invalid,
-              total_queued, lang_en, lang_es, lang_pt
+              total_queued, lang_en, lang_es, lang_pt, send_language
          FROM email_campaigns WHERE id = $1 LIMIT 1`,
       [id],
     );
@@ -2590,6 +2611,22 @@ export class PlatformMailerService {
       const tok = await this.getOrCreateUnsubToken(user.id);
       return this.aiCreditsVars(first, tok ? this.unsubUrl(tok) : null);
     }
+    if (template === 'promo_business_257') {
+      // Broadcast promo: the CTA opens the $257 Business promotional checkout.
+      // A real per-recipient unsubscribe token when we have a user id (send),
+      // a generic opt-out link for the no-recipient preview.
+      const tok = user.id ? await this.getOrCreateUnsubToken(user.id) : null;
+      const promoUrl =
+        this.config.get('PROMO_BUSINESS_257_CTA_URL') ||
+        `${this.appUrl()}/checkout-business-offer`;
+      return {
+        name,
+        ctaUrl: promoUrl,
+        promoCheckoutUrl: promoUrl,
+        supportEmail: this.supportEmail(),
+        unsubscribeUrl: tok ? this.unsubUrl(tok) : `${this.appUrl()}/unsubscribe`,
+      };
+    }
     if (template.startsWith('onb_')) {
       const tok = await this.getOrCreateUnsubToken(user.id);
       return this.onboardingVars(first, tok ? this.unsubUrl(tok) : null);
@@ -2652,6 +2689,45 @@ export class PlatformMailerService {
       email: user.email,
       template,
       language: String(user.lang || 'en').slice(0, 2).toLowerCase(),
+      subject: rendered.subject,
+      html: rendered.html,
+    };
+  }
+
+  // Render a BULK template in the ADMIN-SELECTED language (not the recipient's) so
+  // the preview is EXACTLY what every recipient will receive. Uses a real sample
+  // recipient's first name when a userId is given, otherwise a neutral sample —
+  // so the preview always works even before any recipient is resolved. No send,
+  // no log, no state change. This never touches the single-customer preview.
+  async previewBulkTemplate(opts: {
+    template: TemplateName;
+    language: 'en' | 'es' | 'pt';
+    userId?: string | null;
+  }): Promise<{
+    ok: boolean;
+    error?: string;
+    template?: TemplateName;
+    language?: string;
+    subject?: string;
+    html?: string;
+  }> {
+    await this.ensureSchema();
+    const lang = this.normalizeLangCode(opts.language);
+    let sample: { id: string; email: string; lang: string; name: string } | null =
+      null;
+    if (opts.userId) {
+      sample = await this.resolveRecipient({ userId: opts.userId });
+    }
+    // Force the SELECTED language regardless of the sample's own preference.
+    const user = sample
+      ? { ...sample, lang }
+      : { id: '', email: 'preview@cortexaaicrm.com', lang, name: '' };
+    const vars = await this.buildVarsForTemplate(opts.template, user);
+    const rendered = renderTemplate(opts.template, lang, vars);
+    return {
+      ok: true,
+      template: opts.template,
+      language: lang,
       subject: rendered.subject,
       html: rendered.html,
     };

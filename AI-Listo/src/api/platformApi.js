@@ -435,12 +435,21 @@ export async function estimateBulkEmail({ template, userIds } = {}) {
     body: JSON.stringify({ template, userIds }),
   });
 }
+// Render a bulk template in the SELECTED language for review (no send).
+// Returns { ok, template, language, subject, html }.
+export async function previewBulkTemplate({ template, language, userId } = {}) {
+  return apiClient.request(`/admin/email/bulk/preview`, {
+    method: "POST",
+    body: JSON.stringify({ template, language, userId }),
+  });
+}
 // Create the campaign + queue eligible recipients. clientToken makes it
-// idempotent against double-clicks / retries.
-export async function sendBulkEmail({ template, userIds, clientToken } = {}) {
+// idempotent against double-clicks / retries. language (en/es/pt) is REQUIRED —
+// the whole campaign is sent in that one language.
+export async function sendBulkEmail({ template, userIds, clientToken, language } = {}) {
   return apiClient.request(`/admin/email/bulk/send`, {
     method: "POST",
-    body: JSON.stringify({ template, userIds, clientToken }),
+    body: JSON.stringify({ template, userIds, clientToken, language }),
   });
 }
 // Campaign status + live sent/failed counts.

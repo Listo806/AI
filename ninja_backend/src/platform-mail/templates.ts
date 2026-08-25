@@ -6,6 +6,7 @@
 
 import { ONBOARDING_EMAILS, OnbTemplate, OnbEmail } from './onboarding-emails.data';
 import { AI_CREDITS_EMAIL } from './ai-credits-email.data';
+import { PROMO_EMAILS } from './promo-emails.data';
 //
 // Templates:
 //   welcome               - after a confirmed payment (account active)
@@ -35,7 +36,10 @@ export type TemplateName =
   // pre-rendered in onboarding-emails.data.ts; rendered via token substitution.
   | OnbTemplate
   // "Out of AI credits" email — same rich-render path, own data file.
-  | 'ai_credits_out';
+  | 'ai_credits_out'
+  // Promotional "Business Plan — 25% off ($257/mo)" campaign email. Rich render
+  // path, own data file. Bulk-only (see manual-email.catalog.ts).
+  | 'promo_business_257';
 export type MailLang = 'en' | 'es' | 'pt';
 
 export interface RenderedEmail {
@@ -75,6 +79,8 @@ export interface TemplateVars {
   teamWorkspaceUrl?: string;
   // checkout_recovery only: resume-checkout link for the customer's selected plan.
   checkoutUrl?: string;
+  // promo_business_257 only: CTA link that opens the $257 Business promo checkout.
+  promoCheckoutUrl?: string;
 }
 
 const BRAND = 'Cortexa AI CRM';
@@ -573,6 +579,7 @@ const COPY: Partial<Record<TemplateName, Partial<Record<MailLang, Copy>>>> = {
 const RICH_EMAILS: Record<string, Record<MailLang, OnbEmail>> = {
   ...ONBOARDING_EMAILS,
   ai_credits_out: AI_CREDITS_EMAIL,
+  ...PROMO_EMAILS,
 };
 const ONB_NAMES: string[] = Object.keys(RICH_EMAILS);
 function isOnb(name: TemplateName): boolean {
@@ -619,6 +626,7 @@ function renderOnboarding(
     '{{support_email}}': vars.supportEmail || 'support@cortexaaicrm.com',
     '{{unsubscribe_url}}': vars.unsubscribeUrl || app,
     '{{checkout_url}}': vars.checkoutUrl || vars.upgradeUrl || app,
+    '{{promo_checkout_url}}': vars.promoCheckoutUrl || vars.checkoutUrl || app,
   };
   const sub = (s: string) => {
     for (const [k, v] of Object.entries(tokens)) s = s.split(k).join(v);

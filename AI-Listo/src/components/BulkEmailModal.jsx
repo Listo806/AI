@@ -1,21 +1,35 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { Mail, X, Users, Eye, Check, AlertTriangle, Loader } from "lucide-react";
+import { Mail, X, Users, Check, AlertTriangle, Loader, Globe } from "lucide-react";
 import {
   getBulkEmailTemplates,
   estimateBulkEmail,
   sendBulkEmail,
   getBulkCampaign,
-  previewCustomerTemplateEmail,
+  previewBulkTemplate,
 } from "../api/platformApi";
 import "./BulkEmailModal.css";
 
 /**
  * Bulk email campaign modal. Opened from the Customers table when 1+ customers
- * are selected. Flow: compose (pick template) → confirm (eligible / suppressed /
- * invalid + EN/ES/PT breakdown) → result (queued summary + live progress). Sends
- * through the existing Cortexa/SendGrid engine per-recipient (own language),
- * suppression-aware, logged, idempotent. Never uses BCC or the local mail app.
+ * are selected.
+ *
+ * Flow (client spec):
+ *   Select customers → Select template → Select language → Preview full email →
+ *   Review recipients → Send.
+ *
+ * Language is REQUIRED and the WHOLE campaign is sent in that one language — the
+ * system never silently defaults to English. The preview shows exactly what will
+ * be sent in the chosen language, and the final review restates template +
+ * language + recipient count with one last full preview before sending.
  */
+
+const LANGS = [
+  { code: "en", label: "English" },
+  { code: "es", label: "Spanish" },
+  { code: "pt", label: "Portuguese" },
+];
+const langLabel = (code) => LANGS.find((l) => l.code === code)?.label || "—";
+
 export default function BulkEmailModal({ recipients = [], onClose }) {
   const userIds = useMemo(
     () => Array.from(new Set(recipients.map((r) => r.id).filter(Boolean))),
@@ -25,6 +39,7 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
 
   const [templates, setTemplates] = useState([]);
   const [template, setTemplate] = useState("");
+  const [language, setLanguage] = useState(""); // "" until the admin chooses
   const [step, setStep] = useState("compose"); // compose | confirm | result
   const [estimate, setEstimate] = useState(null);
   const [result, setResult] = useState(null);
@@ -51,26 +66,42 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
 
   const selectedTemplate = templates.find((t) => t.name === template);
 
-  const doPreview = useCallback(async () => {
-    if (!firstId || !template) return;
+  // Auto-build the full preview whenever the template OR language changes, so the
+  // admin always sees exactly what will be sent in the chosen language. Works
+  // with or without a sample recipient.
+  useEffect(() => {
+    if (!template || !language) {
+      setPreview(null);
+      return;
+    }
+    let cancelled = false;
     setPreviewing(true);
     setErr(null);
-    try {
-      const res = await previewCustomerTemplateEmail(firstId, template);
-      if (res?.ok) {
-        setPreview({ subject: res.subject, html: res.html, language: res.language });
-      } else {
-        setErr(res?.error || "Could not build the preview.");
-      }
-    } catch (e) {
-      setErr(e?.message || "Could not build the preview.");
-    } finally {
-      setPreviewing(false);
-    }
-  }, [firstId, template]);
+    previewBulkTemplate({ template, language, userId: firstId })
+      .then((res) => {
+        if (cancelled) return;
+        if (res?.ok) {
+          setPreview({ subject: res.subject, html: res.html, language: res.language });
+        } else {
+          setErr(res?.error || "Could not build the preview.");
+          setPreview(null);
+        }
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setErr(e?.message || "Could not build the preview.");
+        setPreview(null);
+      })
+      .finally(() => {
+        if (!cancelled) setPreviewing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [template, language, firstId]);
 
   const goConfirm = useCallback(async () => {
-    if (!template || !userIds.length) return;
+    if (!template || !language || !userIds.length) return;
     setBusy(true);
     setErr(null);
     try {
@@ -89,7 +120,7 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
     } finally {
       setBusy(false);
     }
-  }, [template, userIds]);
+  }, [template, language, userIds]);
 
   const pollCampaign = useCallback((id) => {
     if (!id) return;
@@ -115,12 +146,17 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
 
   const confirmSend = useCallback(async () => {
     if (busy) return;
+    if (!language) {
+      setErr("Select the campaign language before sending.");
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
       const res = await sendBulkEmail({
         template,
         userIds,
+        language,
         clientToken: clientToken.current,
       });
       if (!res?.ok) {
@@ -135,7 +171,22 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
     } finally {
       setBusy(false);
     }
-  }, [busy, template, userIds, pollCampaign]);
+  }, [busy, template, userIds, language, pollCampaign]);
+
+  const PreviewBox = () =>
+    previewing ? (
+      <div className="bem-preview-box bem-preview-loading">
+        <Loader size={15} className="bem-spin" /> Building preview…
+      </div>
+    ) : preview ? (
+      <div className="bem-preview-box">
+        <div className="bem-preview-meta">
+          <span>Preview · {langLabel(preview.language)}</span>
+          <span className="bem-preview-subj">{preview.subject}</span>
+        </div>
+        <iframe title="Email preview" className="bem-iframe" srcDoc={preview.html} />
+      </div>
+    ) : null;
 
   return (
     <div className="bem-ov" onClick={onClose}>
@@ -157,17 +208,14 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
           </div>
         </div>
 
-        {/* STEP 1 — COMPOSE */}
+        {/* STEP 1 — COMPOSE (template + language + preview) */}
         {step === "compose" && (
           <div className="bem-body">
             <label className="bem-label">Template</label>
             <select
               className="bem-select"
               value={template}
-              onChange={(e) => {
-                setTemplate(e.target.value);
-                setPreview(null);
-              }}
+              onChange={(e) => setTemplate(e.target.value)}
             >
               {templates.length === 0 && <option value="">Loading…</option>}
               {templates.map((t) => (
@@ -180,26 +228,34 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
               <div className="bem-hint">{selectedTemplate.description}</div>
             )}
 
-            <div className="bem-kv">
-              <span>Subject</span>
-              <b>Automatic — from the template</b>
-              <span>Language</span>
-              <b>Automatic — each customer's own language (EN / ES / PT)</b>
+            <label className="bem-label bem-label-lang">
+              <Globe size={13} /> Language <span className="bem-req">required</span>
+            </label>
+            <div className="bem-lang-group" role="group" aria-label="Campaign language">
+              {LANGS.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  className={`bem-lang-btn ${language === l.code ? "bem-lang-on" : ""}`}
+                  onClick={() => setLanguage(l.code)}
+                >
+                  {l.label}
+                </button>
+              ))}
             </div>
-
-            <button className="bem-btn bem-btn-ghost bem-preview" onClick={doPreview} disabled={previewing || !firstId}>
-              <Eye size={15} /> {previewing ? "Building preview…" : "Preview email"}
-            </button>
-
-            {preview && (
-              <div className="bem-preview-box">
-                <div className="bem-preview-meta">
-                  <span>Preview ({String(preview.language || "en").toUpperCase()})</span>
-                  <span className="bem-preview-subj">{preview.subject}</span>
-                </div>
-                <iframe title="Email preview" className="bem-iframe" srcDoc={preview.html} />
+            {!language ? (
+              <div className="bem-hint">
+                Choose the language for this campaign. Every selected customer will
+                receive this version.
+              </div>
+            ) : (
+              <div className="bem-hint">
+                All {userIds.length} customer{userIds.length === 1 ? "" : "s"} will
+                receive the <b>{langLabel(language)}</b> version.
               </div>
             )}
+
+            <PreviewBox />
 
             {err && <div className="bem-error">{err}</div>}
 
@@ -207,18 +263,35 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
               <button className="bem-btn bem-btn-ghost" onClick={onClose}>
                 Cancel
               </button>
-              <button className="bem-btn bem-btn-primary" onClick={goConfirm} disabled={busy || !template || !userIds.length}>
-                {busy ? "Checking…" : `Send to ${userIds.length} customer${userIds.length === 1 ? "" : "s"}`}
+              <button
+                className="bem-btn bem-btn-primary"
+                onClick={goConfirm}
+                disabled={busy || !template || !language || !userIds.length || previewing}
+              >
+                {busy ? "Checking…" : "Review recipients"}
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 2 — CONFIRM */}
+        {/* STEP 2 — CONFIRM / FINAL REVIEW */}
         {step === "confirm" && estimate && (
           <div className="bem-body">
-            <div className="bem-confirm-title">
-              You are about to send <b>{selectedTemplate?.label || template}</b>
+            <div className="bem-review-card">
+              <div className="bem-review-row">
+                <span>Template</span>
+                <b>{selectedTemplate?.label || template}</b>
+              </div>
+              <div className="bem-review-row">
+                <span>Language</span>
+                <b className="bem-review-lang">{langLabel(language)}</b>
+              </div>
+              <div className="bem-review-row">
+                <span>Recipients</span>
+                <b>
+                  {estimate.eligible} customer{estimate.eligible === 1 ? "" : "s"}
+                </b>
+              </div>
             </div>
 
             <div className="bem-stats">
@@ -236,22 +309,21 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
               </div>
             </div>
 
-            <div className="bem-langs">
-              <span className="bem-langs-title">Languages</span>
-              <span>English: <b>{estimate.languages.en}</b></span>
-              <span>Spanish: <b>{estimate.languages.es}</b></span>
-              <span>Portuguese: <b>{estimate.languages.pt}</b></span>
-            </div>
-
             {estimate.eligible === 0 ? (
               <div className="bem-error">
                 <AlertTriangle size={14} /> No eligible recipients (all suppressed or invalid). Nothing to send.
               </div>
             ) : (
               <div className="bem-note">
-                Each customer gets an individual email in their own language. Suppressed and invalid addresses are skipped automatically.
+                All {estimate.eligible} eligible customer{estimate.eligible === 1 ? "" : "s"} will
+                receive the <b>{langLabel(language)}</b> version of{" "}
+                <b>{selectedTemplate?.label || template}</b>. Suppressed and invalid
+                addresses are skipped automatically. Review the full email once more below.
               </div>
             )}
+
+            <div className="bem-review-preview-label">Final preview</div>
+            <PreviewBox />
 
             {err && <div className="bem-error">{err}</div>}
 
@@ -264,7 +336,7 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
                 onClick={confirmSend}
                 disabled={busy || estimate.eligible === 0}
               >
-                {busy ? "Sending…" : `Confirm & Send to ${estimate.eligible}`}
+                {busy ? "Sending…" : `Send Bulk Email · ${langLabel(language)}`}
               </button>
             </div>
           </div>
@@ -281,7 +353,7 @@ export default function BulkEmailModal({ recipients = [], onClose }) {
                 {result.duplicate ? "Campaign already started" : "Bulk email started"}
               </div>
               <div className="bem-success-sub">
-                {selectedTemplate?.label || template}
+                {(selectedTemplate?.label || template)} · {langLabel(result.sendLanguage || language)}
               </div>
             </div>
 

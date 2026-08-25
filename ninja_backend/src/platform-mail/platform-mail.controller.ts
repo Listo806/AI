@@ -7,7 +7,21 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { PlatformMailerService } from './platform-mailer.service';
 import { TemplateName } from './templates';
-import { MANUAL_EMAIL_CATALOG, isManualTemplate, isBulkTemplate } from './manual-email.catalog';
+import {
+  MANUAL_EMAIL_CATALOG,
+  MANUAL_ONLY_CATALOG,
+  isManualTemplate,
+  isBulkTemplate,
+} from './manual-email.catalog';
+
+// Bulk campaigns are sent in ONE admin-selected language (en/es/pt) — never a
+// silent default. The selector value is validated here before anything is queued.
+const BULK_LANGS = ['en', 'es', 'pt'] as const;
+type BulkLang = (typeof BULK_LANGS)[number];
+function normalizeBulkLang(v: any): BulkLang | null {
+  const l = String(v || '').slice(0, 2).toLowerCase();
+  return (BULK_LANGS as readonly string[]).includes(l) ? (l as BulkLang) : null;
+}
 
 const TEST_TEMPLATES: TemplateName[] = [
   'welcome',
@@ -123,7 +137,8 @@ export class PlatformMailController {
     summary: 'List the templates an admin can send to one customer (dropdown)',
   })
   templates() {
-    return { data: MANUAL_EMAIL_CATALOG };
+    // Bulk-only promotions are excluded from the single-customer dropdown.
+    return { data: MANUAL_ONLY_CATALOG };
   }
 
   @Post('preview-customer')
@@ -176,6 +191,36 @@ export class PlatformMailController {
     return { data: MANUAL_EMAIL_CATALOG.filter((e) => e.bulkAllowed !== false) };
   }
 
+  @Post('bulk/preview')
+  @ApiOperation({
+    summary:
+      'Render a bulk template in the SELECTED language for review (no send)',
+  })
+  async bulkPreview(
+    @Body() body: { template?: string; language?: string; userId?: string },
+  ) {
+    const template = String(body?.template || '');
+    const language = normalizeBulkLang(body?.language);
+    if (!isBulkTemplate(template)) {
+      return { ok: false, error: 'Unknown or non-bulk template.' };
+    }
+    if (!language) {
+      return { ok: false, error: 'Choose a language (English, Spanish or Portuguese).' };
+    }
+    try {
+      return await this.mailer.previewBulkTemplate({
+        template: template as TemplateName,
+        language,
+        userId: String(body?.userId || '').trim() || null,
+      });
+    } catch (err: any) {
+      return {
+        ok: false,
+        error: `Could not build the preview: ${String(err?.message || 'unknown error').slice(0, 300)}`,
+      };
+    }
+  }
+
   @Post('bulk/estimate')
   @ApiOperation({
     summary: 'Estimate a bulk send: eligible / suppressed / invalid + languages',
@@ -209,16 +254,30 @@ export class PlatformMailController {
   async bulkSend(
     @CurrentUser() user: any,
     @Body()
-    body: { userIds?: string[]; template?: string; clientToken?: string },
+    body: {
+      userIds?: string[];
+      template?: string;
+      clientToken?: string;
+      language?: string;
+    },
   ) {
     const template = String(body?.template || '');
     const userIds = Array.isArray(body?.userIds) ? body.userIds : [];
     const clientToken = String(body?.clientToken || '').trim() || null;
+    // Language is REQUIRED for bulk — the whole campaign is sent in this one
+    // language. We never silently fall back to English.
+    const language = normalizeBulkLang(body?.language);
     if (!isBulkTemplate(template)) {
       return { ok: false, error: 'Unknown or non-bulk template.' };
     }
     if (!userIds.length) {
       return { ok: false, error: 'Select at least one customer.' };
+    }
+    if (!language) {
+      return {
+        ok: false,
+        error: 'Select the campaign language (English, Spanish or Portuguese) before sending.',
+      };
     }
     const adminId = user?.id || user?.userId || user?.sub || null;
     try {
@@ -227,6 +286,7 @@ export class PlatformMailController {
         userIds,
         adminId,
         clientToken,
+        language,
       });
     } catch (err: any) {
       return {
