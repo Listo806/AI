@@ -36,6 +36,7 @@ export interface WorkspaceEntitlementRow {
 export class WorkspaceEntitlementsService {
   private readonly logger = new Logger(WorkspaceEntitlementsService.name);
   private schemaReady = false;
+  private creditsSchemaReady = false;
 
   constructor(private readonly db: DatabaseService) {}
 
@@ -243,6 +244,177 @@ export class WorkspaceEntitlementsService {
       [teamId, id],
     );
     return rows.length > 0;
+  }
+
+  // ── Included-workspace credits (promotional "1 workspace of your choice") ──
+  //
+  // A promotional base plan (e.g. the $257 Business promo) can include ONE Team
+  // Workspace of the customer's choice. That is modelled as a CREDIT the account
+  // holds; the customer later CHOOSES which workspace, which comps exactly one
+  // workspace entitlement (no Paddle subscription, no $97 charge) and consumes the
+  // credit. Any additional workspace beyond the included one stays on the paid path.
+  private async ensureCreditsSchema(): Promise<void> {
+    if (this.creditsSchemaReady) return;
+    await this.ensureSchema();
+    // Mark comped rows so they are self-describing (and distinguishable from paid
+    // $97 rows). Defaults to 'paddle' for every existing/normal row.
+    await this.db
+      .query(
+        `ALTER TABLE workspace_entitlements
+           ADD COLUMN IF NOT EXISTS source VARCHAR(32) NOT NULL DEFAULT 'paddle'`,
+      )
+      .catch((e: any) =>
+        this.logger.error(`add source column failed: ${e?.message}`),
+      );
+    await this.db.query(
+      `CREATE TABLE IF NOT EXISTS workspace_credits (
+         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+         team_id UUID NOT NULL,
+         source VARCHAR(48) NOT NULL DEFAULT 'promo',
+         paddle_subscription_id VARCHAR(255),
+         total INT NOT NULL DEFAULT 1,
+         used INT NOT NULL DEFAULT 0,
+         created_at TIMESTAMP DEFAULT NOW(),
+         updated_at TIMESTAMP DEFAULT NOW()
+       )`,
+    );
+    // One credit row per granting (base) subscription id → idempotent grant.
+    await this.db.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_workspace_credits_sub
+         ON workspace_credits(paddle_subscription_id)
+        WHERE paddle_subscription_id IS NOT NULL`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_workspace_credits_team
+         ON workspace_credits(team_id)`,
+    );
+    this.creditsSchemaReady = true;
+  }
+
+  /**
+   * Grant included-workspace credit(s) to a team. Idempotent per granting
+   * subscription id: the same base subscription (its created + activated events and
+   * every renewal) can never stack more than one grant.
+   */
+  async grantIncludedWorkspaceCredit(params: {
+    teamId: string;
+    source: string;
+    subscriptionId?: string | null;
+    total?: number;
+  }): Promise<boolean> {
+    if (!params.teamId) return false;
+    await this.ensureCreditsSchema();
+    const total = params.total && params.total > 0 ? params.total : 1;
+    if (params.subscriptionId) {
+      const res = await this.db.query(
+        `INSERT INTO workspace_credits (team_id, source, paddle_subscription_id, total, used)
+         VALUES ($1, $2, $3, $4, 0)
+         ON CONFLICT (paddle_subscription_id) DO NOTHING`,
+        [params.teamId, params.source, params.subscriptionId, total],
+      );
+      const granted = (res.rowCount || 0) > 0;
+      if (granted) {
+        this.logger.log(
+          `Granted ${total} included-workspace credit(s) to team ${params.teamId} (${params.source}) via ${params.subscriptionId}`,
+        );
+      }
+      return granted;
+    }
+    const res = await this.db.query(
+      `INSERT INTO workspace_credits (team_id, source, total, used) VALUES ($1, $2, $3, 0)`,
+      [params.teamId, params.source, total],
+    );
+    return (res.rowCount || 0) > 0;
+  }
+
+  /** How many included-workspace credits the team has left to use. */
+  async availableIncludedCredits(teamId: string): Promise<number> {
+    if (!teamId) return 0;
+    await this.ensureCreditsSchema();
+    const { rows } = await this.db.query(
+      `SELECT COALESCE(SUM(total - used), 0)::int AS n
+         FROM workspace_credits WHERE team_id = $1`,
+      [teamId],
+    );
+    return Number(rows[0]?.n) || 0;
+  }
+
+  /**
+   * Consume one included credit to COMP a chosen workspace: grant an active
+   * entitlement with NO Paddle subscription and NO $97 charge. Atomic and
+   * idempotent — it never over-consumes credits and never double-grants a workspace.
+   * Returns { comped:false, reason } when there is nothing to do so the caller can
+   * fall through to the normal paid ($97) purchase path.
+   */
+  async claimIncludedWorkspace(params: {
+    teamId: string;
+    workspaceId: string;
+    userId?: string | null;
+  }): Promise<{ comped: boolean; reason?: string }> {
+    const workspaceId = normalizeWorkspaceId(params.workspaceId);
+    if (!params.teamId || !workspaceId) return { comped: false, reason: 'invalid' };
+    await this.ensureCreditsSchema();
+
+    // Already entitled (paid or comped): don't consume a credit.
+    if (await this.hasActiveEntitlement(params.teamId, workspaceId)) {
+      return { comped: false, reason: 'already_entitled' };
+    }
+
+    // Atomically claim ONE available credit (returns a row only if one was free).
+    const claim = await this.db.query(
+      `UPDATE workspace_credits
+          SET used = used + 1, updated_at = NOW()
+        WHERE id = (
+          SELECT id FROM workspace_credits
+           WHERE team_id = $1 AND used < total
+           ORDER BY created_at ASC LIMIT 1
+        )
+        -- Re-check on the target row so two concurrent claims on the same single
+        -- credit can never both succeed (the loser sees used = total and matches 0).
+        AND used < total
+        RETURNING id`,
+      [params.teamId],
+    );
+    if (!claim.rows.length) return { comped: false, reason: 'no_credit' };
+    const creditId = claim.rows[0].id;
+
+    // Comped entitlement: a sentinel subscription id keeps the UNIQUE/idempotency
+    // contract (and keeps it non-blank, so the legacy-audit never revokes it) while
+    // recording that this row is included, not a $97 purchase.
+    const sentinel = `comp:${params.teamId}:${workspaceId}`;
+    try {
+      const ins = await this.db.query(
+        `INSERT INTO workspace_entitlements
+           (team_id, workspace_id, paddle_subscription_id, paddle_price_id,
+            status, source, created_by, activated_at, revoked_at, created_at, updated_at)
+         VALUES ($1, $2, $3, NULL, 'active', 'included_promo', $4, NOW(), NULL, NOW(), NOW())
+         ON CONFLICT (paddle_subscription_id) DO NOTHING`,
+        [params.teamId, workspaceId, sentinel, params.userId || null],
+      );
+      if ((ins.rowCount || 0) === 0) {
+        // A comped row for this workspace already existed — refund the credit.
+        await this.db
+          .query(
+            `UPDATE workspace_credits SET used = used - 1, updated_at = NOW() WHERE id = $1`,
+            [creditId],
+          )
+          .catch(() => {});
+        return { comped: false, reason: 'already_entitled' };
+      }
+    } catch (e: any) {
+      await this.db
+        .query(
+          `UPDATE workspace_credits SET used = used - 1, updated_at = NOW() WHERE id = $1`,
+          [creditId],
+        )
+        .catch(() => {});
+      this.logger.error(`claimIncludedWorkspace failed: ${e?.message}`);
+      return { comped: false, reason: 'error' };
+    }
+    this.logger.log(
+      `Comped workspace '${workspaceId}' for team ${params.teamId} using an included credit`,
+    );
+    return { comped: true };
   }
 
   /** Full entitlement rows for a team (all statuses), newest first. */

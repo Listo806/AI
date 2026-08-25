@@ -13,6 +13,7 @@ import { initPaddle, openWorkspaceCheckout } from "../pages/checkout/paddleCheck
 export default function WorkspaceAddOns() {
   const [catalog, setCatalog] = useState(null);
   const [activeIds, setActiveIds] = useState([]);
+  const [includedCredits, setIncludedCredits] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
@@ -23,6 +24,7 @@ export default function WorkspaceAddOns() {
     try {
       const res = await workspaceApi.getEntitlements();
       setActiveIds(res?.activeWorkspaceIds || []);
+      setIncludedCredits(Number(res?.includedWorkspaceCredits) || 0);
     } catch {
       // keep last-good on transient error
     }
@@ -39,6 +41,7 @@ export default function WorkspaceAddOns() {
         if (!alive) return;
         setCatalog(cat);
         setActiveIds(ent?.activeWorkspaceIds || []);
+        setIncludedCredits(Number(ent?.includedWorkspaceCredits) || 0);
       } catch (e) {
         if (alive) setError("Could not load workspace add-ons.");
       } finally {
@@ -76,7 +79,9 @@ export default function WorkspaceAddOns() {
     setError("");
     try {
       const intent = await workspaceApi.purchase(workspace.id);
-      if (intent?.alreadyEntitled) {
+      // Comped by an included-workspace credit (e.g. the $257 promo): activated
+      // server-side with no charge — just refresh, never open Paddle.
+      if (intent?.comped || intent?.alreadyEntitled) {
         await loadEntitlements();
         return;
       }
@@ -131,10 +136,21 @@ export default function WorkspaceAddOns() {
           Workspace add-ons are being finalized and cannot be purchased yet.
         </div>
       )}
+      {includedCredits > 0 && (
+        <div style={ST.included}>
+          🎁 Your plan includes{" "}
+          <b>
+            {includedCredits} free workspace{includedCredits > 1 ? "s" : ""}
+          </b>{" "}
+          — choose any one below to activate it at no extra cost. Additional
+          workspaces are ${catalog?.monthlyPrice || 97}/month each.
+        </div>
+      )}
 
       <div style={ST.list}>
         {workspaces.map((w) => {
           const active = activeIds.includes(w.id);
+          const canInclude = !active && includedCredits > 0;
           return (
             <div key={w.id} style={ST.card}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -156,11 +172,30 @@ export default function WorkspaceAddOns() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={ST.price}>
-                  <span style={ST.priceAmt}>${catalog?.monthlyPrice || 97}</span>
-                  <span style={ST.pricePer}>/mo</span>
+                  {canInclude ? (
+                    <>
+                      <span style={ST.priceStrike}>
+                        ${catalog?.monthlyPrice || 97}
+                      </span>
+                      <span style={ST.priceIncluded}>Included</span>
+                    </>
+                  ) : (
+                    <>
+                      <span style={ST.priceAmt}>${catalog?.monthlyPrice || 97}</span>
+                      <span style={ST.pricePer}>/mo</span>
+                    </>
+                  )}
                 </div>
                 {active ? (
                   <span style={ST.activePill}>Active</span>
+                ) : canInclude ? (
+                  <button
+                    style={{ ...ST.includeBtn, opacity: busyId === w.id ? 0.6 : 1 }}
+                    disabled={busyId === w.id}
+                    onClick={() => buy(w)}
+                  >
+                    {busyId === w.id ? "Activating…" : "Activate — included free"}
+                  </button>
                 ) : (
                   <button
                     style={{
@@ -253,9 +288,31 @@ const ST = {
   },
   name: { fontSize: 15, fontWeight: 600, color: "#0f172a" },
   state: { fontSize: 12, color: "#64748b" },
-  price: { display: "flex", alignItems: "baseline", gap: 2, color: "#0f172a" },
+  price: { display: "flex", alignItems: "baseline", gap: 4, color: "#0f172a" },
   priceAmt: { fontSize: 16, fontWeight: 700 },
   pricePer: { fontSize: 12, color: "#64748b" },
+  priceStrike: { fontSize: 13, color: "#94a3b8", textDecoration: "line-through" },
+  priceIncluded: { fontSize: 13, fontWeight: 700, color: "#16a34a" },
+  included: {
+    background: "#f5f3ff",
+    color: "#5b21b6",
+    border: "1px solid #ddd6fe",
+    borderRadius: 8,
+    padding: "10px 12px",
+    fontSize: 13,
+    marginBottom: 12,
+    lineHeight: 1.5,
+  },
+  includeBtn: {
+    border: "none",
+    background: "#6d5cf0",
+    color: "#fff",
+    borderRadius: 8,
+    padding: "9px 16px",
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+  },
   activePill: {
     fontSize: 12,
     fontWeight: 600,
