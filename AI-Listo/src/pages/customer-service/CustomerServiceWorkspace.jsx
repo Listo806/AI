@@ -125,7 +125,66 @@ const STAT_CONFIG = [
   ["star", "Customer Satisfaction", "csat"],
   ["shield-check", "SLA Compliance", "sla"],
 ];
-
+const MOBILE_WORKSPACE_NAV = [
+  {
+    key: "overview",
+    label: "Overview",
+    icon: "trending-up",
+    tone: "orange",
+    tab: "Overview",
+    slaView: "overview",
+  },
+  {
+    key: "tickets",
+    label: "Tickets",
+    icon: "ticket",
+    tone: "blue",
+    tab: "Tickets",
+  },
+  {
+    key: "customers",
+    label: "Customers",
+    icon: "user-round",
+    tone: "purple",
+    tab: "Customers",
+  },
+  {
+    key: "knowledge",
+    label: "Knowledge Base",
+    icon: "book-open",
+    tone: "green",
+    tab: "Knowledge Base",
+  },
+  {
+    key: "sla",
+    label: "SLA & Escalations",
+    icon: "clock-3",
+    tone: "yellow",
+    tab: "SLA & Escalations",
+    slaView: "sla",
+  },
+  {
+    key: "automations",
+    label: "Automations",
+    icon: "settings",
+    tone: "teal",
+    tab: "Automation",
+  },
+  {
+    key: "reports",
+    label: "Reports",
+    icon: "chart-no-axes-column-increasing",
+    tone: "cyan",
+    tab: "Reports",
+  },
+  {
+    key: "surveys",
+    label: "Surveys",
+    icon: "clipboard-check",
+    tone: "red",
+    tab: "Surveys",
+  },
+];
 function Donut({ title, rows, total }) {
   const list = rows || [];
   return (
@@ -245,6 +304,7 @@ function CsDashboard({ stats }) {
 export default function CustomerServiceWorkspace() {
   const [tab, setTab] = useState("Overview");
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const [mobileSlaView, setMobileSlaView] = useState("sla");
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [status, setStatus] = useState("");
@@ -331,10 +391,15 @@ export default function CustomerServiceWorkspace() {
   };
   const handleSaved = () => setRefreshTick((t) => t + 1);
 
-  const goToWorkspaceTab = (nextTab) => {
+  const goToWorkspaceTab = (nextTab, options = {}) => {
+    if (nextTab === "SLA & Escalations") {
+      setMobileSlaView(
+        options.slaView === "escalations"
+          ? "escalations"
+          : "sla"
+      );
+    }
     setTab(nextTab);
-    setMobileMoreOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Export the currently-filtered tickets to CSV. Data comes only from the
@@ -487,7 +552,60 @@ export default function CustomerServiceWorkspace() {
           );
         })}
       </div>
+      
+      <section className="csw-mobile-workspace-section">
+        <h3 className="csw-mobile-workspace-heading">
+          Customer Service Workspace
+        </h3>
 
+        <nav
+          className="csw-mobile-workspace-nav"
+          aria-label="Customer Service Workspace"
+        >
+          {MOBILE_WORKSPACE_NAV.map((item) => {
+            const isSlaItem =
+              item.tab === "SLA & Escalations";
+
+            const isActive = isSlaItem
+              ? tab === "SLA & Escalations" &&
+                mobileSlaView === item.slaView
+              : tab === item.tab;
+
+            return (
+              <button
+                key={item.key}
+                type="button"
+                className={[
+                  "csw-mobile-workspace-nav-card",
+                  `tone-${item.tone}`,
+                  isActive ? "active" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() =>
+                  goToWorkspaceTab(item.tab, {
+                    slaView: item.slaView,
+                  })
+                }
+                aria-current={isActive ? "page" : undefined}
+              >
+                <span className="csw-mobile-workspace-nav-icon">
+                  <I name={item.icon} size={32} />
+                </span>
+
+                <strong>{item.label}</strong>
+
+                <span
+                  className="csw-mobile-workspace-nav-arrow"
+                  aria-hidden="true"
+                >
+                  <I name="chevron-right" size={30} />
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      </section>  
       <div className="csw-tabs">
         {tabs.map((t) => (
           <button key={t[1]} className={tab === t[1] ? "active" : ""} onClick={() => setTab(t[1])}>
@@ -740,94 +858,6 @@ export default function CustomerServiceWorkspace() {
         </div>
       )}
 
-      <div className="csw-mobile-workspace-label">Workspaces</div>
-
-      <div className="csw-mobile-workspace-tabs-wrap">
-        <nav className="csw-mobile-workspace-nav">
-          <button
-            className={tab === "Overview" ? "active blue" : ""}
-            onClick={() => goToWorkspaceTab("Overview")}
-          >
-            <I name="layout-grid" />
-            <span>Overview</span>
-          </button>
-
-          <button
-            className={tab === "Tickets" ? "active blue" : ""}
-            onClick={() => goToWorkspaceTab("Tickets")}
-          >
-            <I name="ticket" />
-            <span>Tickets</span>
-          </button>
-
-          <button
-            className={tab === "Customers" ? "active blue" : ""}
-            onClick={() => goToWorkspaceTab("Customers")}
-          >
-            <I name="users" />
-            <span>Customers</span>
-          </button>
-
-          <button
-            className={tab === "Knowledge Base" ? "active green" : ""}
-            onClick={() => goToWorkspaceTab("Knowledge Base")}
-          >
-            <BookOpenText className="BookOpenText" size={16} />
-            <span>Knowledge Base</span>
-          </button>
-
-          <button
-            type="button"
-            className={
-              mobileMoreOpen ||
-              ["SLA & Escalations", "Automation", "Reports", "Surveys"].includes(tab)
-                ? "more-open"
-                : ""
-            }
-            aria-expanded={mobileMoreOpen}
-            onClick={() => setMobileMoreOpen((open) => !open)}
-          >
-            <I name="ellipsis" />
-            <span>More</span>
-          </button>
-        </nav>
-
-        {mobileMoreOpen && (
-          <div className="csw-mobile-workspace-more-menu">
-            <button
-              className={tab === "SLA & Escalations" ? "active" : ""}
-              onClick={() => goToWorkspaceTab("SLA & Escalations")}
-            >
-              <I name="alarm-clock" />
-              <span>SLA & Escalations</span>
-            </button>
-
-            <button
-              className={tab === "Automation" ? "active" : ""}
-              onClick={() => goToWorkspaceTab("Automation")}
-            >
-              <I name="network" />
-              <span>Automation</span>
-            </button>
-
-            <button
-              className={tab === "Reports" ? "active" : ""}
-              onClick={() => goToWorkspaceTab("Reports")}
-            >
-              <I name="file-chart-column" />
-              <span>Reports</span>
-            </button>
-
-            <button
-              className={tab === "Surveys" ? "active" : ""}
-              onClick={() => goToWorkspaceTab("Surveys")}
-            >
-              <I name="clipboard-check" />
-              <span>Surveys</span>
-            </button>
-          </div>
-        )}
-      </div>
 
       <CsTicketModal
         key={nonce}
