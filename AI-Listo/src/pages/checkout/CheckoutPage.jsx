@@ -626,13 +626,14 @@ export default function CheckoutPage() {
   return (
     <main className="checkout-page">
       <div className="checkout-shell">
-        <header className="checkout-heading">
-          <h1>{tr.title}</h1>
-          <p>{tr.subtitle}</p>
-        </header>
+        
         <div className="checkout-shell-grid">
           
           <div className="checkout-shell-1 checkout-left-column">
+            <header className="checkout-heading">
+              <h1>{tr.title}</h1>
+              <p>{tr.subtitle}</p>
+            </header>
             {/* =====================================================
                 1. YOUR INFORMATION
             ====================================================== */}
