@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import "./CustomerServiceWorkspace.css";
 import customerServiceApi from "../../api/customerServiceApi";
 import CsTicketModal from "./CsTicketModal";
@@ -305,6 +305,8 @@ export default function CustomerServiceWorkspace() {
   const [tab, setTab] = useState("Overview");
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [mobileSlaView, setMobileSlaView] = useState("sla");
+  const mobileOpenedSectionRef = useRef(null);
+  const shouldScrollToOpenedSectionRef = useRef(false);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [status, setStatus] = useState("");
@@ -392,6 +394,10 @@ export default function CustomerServiceWorkspace() {
   const handleSaved = () => setRefreshTick((t) => t + 1);
 
   const goToWorkspaceTab = (nextTab, options = {}) => {
+    // Mark that this navigation action should scroll
+    // to the newly opened workspace section.
+    shouldScrollToOpenedSectionRef.current = true;
+
     if (nextTab === "SLA & Escalations") {
       setMobileSlaView(
         options.slaView === "escalations"
@@ -399,8 +405,43 @@ export default function CustomerServiceWorkspace() {
           : "sla"
       );
     }
+
     setTab(nextTab);
   };
+  useEffect(() => {
+    if (!shouldScrollToOpenedSectionRef.current) {
+      return;
+    }
+
+    // Only apply this UX on tablet/mobile.
+    if (window.innerWidth > 1024) {
+      shouldScrollToOpenedSectionRef.current = false;
+      return;
+    }
+
+    shouldScrollToOpenedSectionRef.current = false;
+
+    /*
+    * Wait until React has rendered the newly selected
+    * Customer Service section before scrolling.
+    */
+    const frameId = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const target = mobileOpenedSectionRef.current;
+
+        if (!target) return;
+
+        target.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [tab, mobileSlaView]);
 
   // Export the currently-filtered tickets to CSV. Data comes only from the
   // account-scoped list endpoint and respects the active filters. Paged up to a
@@ -614,7 +655,11 @@ export default function CustomerServiceWorkspace() {
           </button>
         ))}
       </div>
-
+      <div
+        ref={mobileOpenedSectionRef}
+        className="csw-mobile-opened-section-anchor"
+        aria-hidden="true"
+      /> 
       {tab === "Overview" ? (
         <CsDashboard stats={stats} />
       ) : tab === "Tickets" ? (
