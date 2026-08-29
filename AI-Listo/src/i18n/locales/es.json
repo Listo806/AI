@@ -43,6 +43,189 @@
     "all": "Todos"
   },
   "nav": {
+    "workspaces": {
+      "title": "ESPACIOS DE TRABAJO CORTEXA",
+      "new": "NUEVO",
+      "active": "ACTIVO",
+      "locked": "BLOQUEADO",
+
+      "flyoutTitle": "Espacios de trabajo Cortexa",
+      "flyoutDescription": "Construye tu equipo de ingresos con IA mediante potentes entornos empresariales diseñados para tu forma de trabajar.",
+      "specializedOperations": "Diseñado para operaciones especializadas",
+      "activateWhatYouNeed": "Activa solo lo que necesitas",
+
+      "whatsIncluded": "QUÉ INCLUYE",
+      "included": "Incluido",
+      "perMonth": "/mes",
+      "closePreview": "Cerrar vista previa del espacio de trabajo",
+
+      "open": "Abrir",
+      "activeSuffix": "Activo",
+      "activating": "Activando…",
+      "openingCheckout": "Abriendo el pago…",
+      "activateIncluded": "Activar — incluido gratis",
+      "addToPlan": "Agregar a mi plan →",
+
+      "activeOnAccount": "Este espacio de trabajo está activo en tu cuenta.",
+      "includedNoCharge": "Incluido con tu plan — activarlo no agrega ningún cargo.",
+      "secureCheckout": "Pago seguro procesado por Paddle",
+
+      "items": {
+        "sales": {
+          "label": "Espacio de Ventas",
+          "description": "Gestiona toda tu operación de ventas, desde la cotización hasta los ingresos, en un solo espacio conectado.",
+          "capabilities": [
+            "Cotizaciones y propuestas",
+            "Clientes",
+            "Pedidos y contratos",
+            "Facturas y pagos",
+            "Comisiones de ventas",
+            "Devoluciones y créditos",
+            "Descuentos y aprobaciones",
+            "Gestión de documentos",
+            "Informes de ventas",
+            "Seguimiento de ingresos"
+          ],
+          "connected": "Conectado con tus leads, pipeline, contactos, IA, automatizaciones, analíticas y datos de CRM de Cortexa."
+        },
+
+        "insurance": {
+          "label": "Espacio de Seguros",
+          "description": "Gestiona toda tu operación de seguros, desde la cotización hasta la póliza, renovación, reclamación y comisión.",
+          "capabilities": [
+            "Pólizas",
+            "Cotizaciones",
+            "Reclamaciones",
+            "Renovaciones",
+            "Aseguradoras",
+            "Comisiones",
+            "Documentos de clientes y pólizas",
+            "Seguimiento de cobertura y primas",
+            "Gestión de renovaciones",
+            "Informes de seguros"
+          ],
+          "connected": "Conectado con tus leads, pipeline, contactos, IA, automatizaciones, WhatsApp, analíticas y datos de CRM de Cortexa."
+        },
+
+        "financial": {
+          "label": "Servicios Financieros",
+          "description": "Gestiona clientes, solicitudes, cuentas, transacciones, documentos y flujos financieros en un solo espacio conectado.",
+          "capabilities": [
+            "Gestión de clientes",
+            "Solicitudes",
+            "Cuentas",
+            "Aprobaciones y revisiones",
+            "Transacciones",
+            "Actividad de inversiones",
+            "Flujos de asesores",
+            "Gestión de documentos",
+            "Seguimiento de comisiones",
+            "Informes financieros"
+          ],
+          "connected": "Conectado con tus leads, pipeline, contactos, IA, automatizaciones, WhatsApp, analíticas y datos de CRM de Cortexa."
+        },
+
+        "ecommerce": {
+          "label": "Comercio Electrónico",
+          "description": "Gestiona clientes, suscripciones, facturación, pagos e ingresos recurrentes en un solo espacio conectado.",
+          "capabilities": [
+            "Clientes y suscripciones",
+            "Planes y precios",
+            "Calendario de facturación",
+            "Pagos recurrentes",
+            "Seguimiento del estado de pagos",
+            "Pagos fallidos y reintentos",
+            "Reembolsos y cancelaciones",
+            "Usuarios y licencias",
+            "Valor de vida del cliente",
+            "Informes de ingresos y facturación",
+            "Integraciones de pasarelas de pago"
+          ],
+          "connected": "Conectado con tus clientes, contactos, IA, automatizaciones, analíticas, datos del equipo y actividad de CRM de Cortexa."
+        },
+
+        "customer_service": {
+          "label": "Atención al Cliente",
+          "description": "Gestiona soporte al cliente, tickets, escalaciones, resoluciones y operaciones de servicio en un solo espacio conectado.",
+          "capabilities": [
+            "Tickets y casos",
+            "Bandeja de soporte",
+            "Historial de soporte del cliente",
+            "Asignación de agentes",
+            "Gestión de prioridad y estado",
+            "Seguimiento de SLA",
+            "Escalaciones",
+            "Soporte asistido por IA",
+            "Base de conocimiento",
+            "Satisfacción del cliente",
+            "Automatización del servicio",
+            "Informes de soporte"
+          ],
+          "connected": "Conectado con tus clientes, contactos, WhatsApp, IA, automatizaciones, analíticas y datos de CRM de Cortexa."
+        },
+
+        "real_estate": {
+          "label": "Espacio Inmobiliario",
+          "description": "Gestiona propiedades, compradores, vendedores, visitas, ofertas, transacciones y comisiones en un espacio inmobiliario conectado.",
+          "capabilities": [
+            "Propiedades y listados",
+            "Compradores y vendedores",
+            "Coincidencia de propiedades y leads con IA",
+            "Visitas",
+            "Ofertas",
+            "Transacciones",
+            "Documentos",
+            "Seguimiento de comisiones",
+            "Optimización de listados",
+            "Insights de propiedades con IA",
+            "Actividad de propiedades",
+            "Informes inmobiliarios"
+          ],
+          "connected": "Conectado con tus leads, pipeline, contactos, IA, automatizaciones, WhatsApp, analíticas y datos de CRM de Cortexa."
+        },
+
+        "team": {
+          "label": "Espacio de Equipo",
+          "description": "Planifica, asigna, colabora y gestiona el trabajo de tu equipo desde un solo espacio conectado.",
+          "capabilities": [
+            "Proyectos",
+            "Tableros Kanban",
+            "Tareas y asignaciones",
+            "Mis tareas",
+            "Calendario del equipo",
+            "Fechas límite y prioridades",
+            "Seguimiento del tiempo",
+            "Visibilidad de carga de trabajo",
+            "Archivos y documentos",
+            "Comentarios y @menciones",
+            "Colaboración del equipo",
+            "Roles y permisos",
+            "Seguimiento de actividad",
+            "Informes del equipo",
+            "Flujos de trabajo asistidos por IA"
+          ],
+          "connected": "Conectado con tu CRM, clientes, contactos, IA, automatizaciones, analíticas y datos empresariales de Cortexa."
+        },
+
+        "lead_generator": {
+          "label": "Generador de Leads",
+          "description": "Encuentra, verifica y enriquece nuevos leads empresariales y envíalos directamente a tu pipeline de Cortexa.",
+          "capabilities": [
+            "Búsqueda de leads empresariales",
+            "Descubrimiento de empresas y contactos",
+            "Búsqueda de emails",
+            "Verificación de emails",
+            "Enriquecimiento de datos",
+            "Exportación masiva de leads",
+            "Sincronización con el pipeline del CRM",
+            "Historial de búsquedas",
+            "Seguimiento del uso de créditos",
+            "Puntuación de calidad de leads"
+          ],
+          "connected": "Conectado directamente con tu pipeline, contactos, IA y automatizaciones de Cortexa."
+        }
+      }
+    },
     "dashboard": "Panel",
     "leads": "Leads",
     "whatsapp": "WhatsApp",
@@ -81,6 +264,7 @@
     "setup": "Configuración",
     "calendar": "Calendario",
     "whatsappQr": "WhatsApp QR",
+    "inviteTeamMember": "Invitar a un miembro del equipo",
     "expandSidebar": "Expandir barra lateral",
     "collapseSidebar": "Contraer barra lateral",
     "addOn": "complemento",

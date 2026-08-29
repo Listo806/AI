@@ -325,32 +325,6 @@ export default function Sidebar({
       path: "/dashboard/customer-service-workspace",
     },
     {
-      id: "marketing",
-      feature: "marketingWorkspace",
-      label: "Marketing Workspace",
-      icon: "megaphone",
-      tone: "pink",
-      description: "Plan, launch, automate, and measure your marketing from campaign to revenue in one connected workspace.",
-      capabilities: ["Campaign Management","Audience Segmentation","Email & SMS Campaigns","Forms & Landing Pages","Marketing Automation","Customer Journeys","Lead Attribution","Retargeting Workflows","Content Management","Campaign Analytics","Revenue Attribution","Marketing Reporting"],
-      perfectFor: ["Marketing Teams","Agencies","Growth Teams","Sales & Marketing Teams","Service Businesses"],
-      benefits: [["megaphone","COMPLETE MARKETING OPERATIONS","Build and manage campaigns, audiences, forms, messaging, automation, and customer journeys from one organized workspace."],["target","AUTOMATED CUSTOMER JOURNEYS","Create targeted follow-up and nurture workflows that move prospects through the customer journey with less manual work."],["badge-dollar-sign","REVENUE ATTRIBUTION","Connect campaigns, leads, conversions, pipeline activity, and revenue so you can see what marketing is actually producing."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, contacts, pipeline, AI, automation, WhatsApp, analytics, and CRM data."]],
-      price: 97,
-      path: "/dashboard/marketing-workspace",
-    },
-    {
-      id: "projects",
-      feature: "projectsWorkspace",
-      label: "Projects Workspace",
-      icon: "briefcase-business",
-      tone: "indigo",
-      description: "Manage client projects, tasks, milestones, deliverables, deadlines, and delivery from one connected workspace.",
-      capabilities: ["Client Projects","Tasks & Assignments","Milestones","Deliverables","Project Deadlines","Files & Documents","Time & Expense Tracking","Project Budgets","Client Delivery Status","Team Assignments","Project Reporting","Delivery Performance"],
-      perfectFor: ["Agencies","Consultants","Professional Services","Client Delivery Teams","Service Businesses"],
-      benefits: [["briefcase-business","COMPLETE CLIENT DELIVERYCOMPLETE CLIENT DELIVERY","Manage projects from kickoff through final delivery with tasks, milestones, deliverables, deadlines, files, and client activity organized in one workspace."],["list-checks","PROJECT VISIBILITY","See project status, progress, priorities, deadlines, budgets, assignments, and delivery activity without losing track of the customer relationship."],["users-round","ON-TIME DELIVERY","Keep teams accountable, identify delays earlier, and manage every client deliverable through completion."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, AI, automation, team data, analytics, and CRM activity."]],
-      price: 97,
-      path: "/dashboard/projects-workspace",
-    },
-    {
       id: "real-estate",
       feature: "realEstateWorkspace",
       label: "Real Estate Workspace",
@@ -415,26 +389,51 @@ export default function Sidebar({
       path: "/dashboard/generator",
     },
   ];
+   const getWorkspaceI18nKey = (workspace) =>
+    String(workspace?.id || "").replace(/-/g, "_");
 
-  // Compact flyout copy shared by desktop hover and mobile/tablet tap.
-  // Reuses the existing workspace data; "Includes" is the compact form of
-  // the old Key Capabilities list.
-  const getWorkspaceConnectionLine = (workspace) => {
-    const connectedBenefit = (workspace?.benefits || []).find(
-      (item) => String(item?.[1] || "").toUpperCase().includes("CONNECTED TO CORTEXA"),
+  const getWorkspaceLabel = (workspace) => {
+    if (!workspace) return "";
+    const key = getWorkspaceI18nKey(workspace);
+    return t(
+      `nav.workspaces.items.${key}.label`,
+      workspace.label || ""
     );
-
-    if (connectedBenefit?.[2]) {
-      return String(connectedBenefit[2])
-        .replace(/^Works seamlessly with your existing\s+/i, "Connected to your ")
-        .replace(/^New leads flow straight into your existing\s+/i, "Connected to your ")
-        .replace(/\.$/, ".");
-    }
-
-    return "Connected to your Cortexa CRM, data, AI, and automation.";
   };
 
+  const getWorkspaceDescription = (workspace) => {
+    if (!workspace) return "";
+    const key = getWorkspaceI18nKey(workspace);
+    return t(
+      `nav.workspaces.items.${key}.description`,
+      workspace.description || ""
+    );
+  };
 
+  const getWorkspaceCapabilities = (workspace) => {
+    if (!workspace) return [];
+    const key = getWorkspaceI18nKey(workspace);
+    const translated = t(
+      `nav.workspaces.items.${key}.capabilities`,
+      {
+        returnObjects: true,
+      }
+    );
+
+    return Array.isArray(translated)
+      ? translated
+      : workspace.capabilities || [];
+  };
+
+  const getWorkspaceConnectionLine = (workspace) => {
+    if (!workspace) return "";
+    const key = getWorkspaceI18nKey(workspace);
+    return t(
+      `nav.workspaces.items.${key}.connected`,
+      "Connected to your Cortexa CRM, data, AI, and automation."
+    );
+  };
+  
 
   // CORTEXA WORKSPACES uses the same plan-feature gating as the
   // regular sidebar, but MUST NOT inherit PlanContext's fail-open behavior
@@ -496,7 +495,7 @@ export default function Sidebar({
   };
 
   const getWorkspaceBadge = (workspace) =>
-    isWorkspaceActive(workspace) ? "ACTIVE" : "LOCKED";
+    isWorkspaceActive(workspace) ? t("nav.workspaces.active") : t("nav.workspaces.locked");
 
   // Every workspace routes to its page; WorkspaceGate + the backend guard enforce
   // access and present the $97 add-on purchase when the team is not entitled.
@@ -591,6 +590,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             },
           ];
 
+  const primaryWhatsappNav =
+    whatsappNavEntries.find(
+      (item) => item.labelKey === "nav.whatsapp"
+    ) || whatsappNavEntries[0];
   const topNavItems = [
     { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
     ...whatsappNavEntries,
@@ -649,12 +652,72 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
   // Order: Dashboard, WhatsApp, Leads, Pipeline, Contacts, Analytics, Properties,
   // then Setup/Calendar/AI Agent (AI_CENTER_ITEMS), then Team/Integrations/Generator.
   const operationalNav = [
-    { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
-    ...whatsappNavEntries,
-    { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
-    { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
-    { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
-    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
+    {
+      path: "/dashboard/home",
+      icon: "home",
+      labelKey: "nav.dashboard",
+    },
+
+    ...(canSeeAiCenter
+      ? [
+          {
+            path: "/dashboard/ai-cortexa",
+            icon: "bot",
+            labelKey: "nav.aiCenter.label",
+          },
+        ]
+      : []),
+
+    ...(primaryWhatsappNav
+      ? [primaryWhatsappNav]
+      : []),
+
+    {
+      path: "/dashboard/leads",
+      icon: "users",
+      labelKey: "nav.leads",
+    },
+
+    {
+      path: "/dashboard/contacts",
+      icon: "contact",
+      labelKey: "nav.contacts",
+    },
+
+    {
+      path: "/dashboard/pipeline",
+      icon: "git-branch",
+      labelKey: "nav.pipeline",
+    },
+
+    {
+      path: "/dashboard/calendar",
+      icon: "calendar",
+      labelKey: "nav.calendar",
+      feature: "calendar",
+    },
+
+    {
+      path: "/dashboard/analytics",
+      icon: "bar-chart-3",
+      labelKey: "nav.analytics",
+    },
+
+    {
+      path: "/dashboard/integrations",
+      icon: "plug",
+      labelKey: "nav.integrations",
+    },
+
+    ...(canSeeAiCenter
+      ? [
+          {
+            path: "/dashboard/ai-cortexa-setup",
+            icon: "settings",
+            labelKey: "nav.setup",
+          },
+        ]
+      : []),
   ];
 
   let navItems = operationalNav;
@@ -807,68 +870,13 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                     <SidebarIcon name={aiCenterOpen ? "chevron-down" : "chevron-right"}
                       style={{ marginLeft: "auto", width: "16px", height: "16px" }} />
                   </button>*/}
-                  {AI_CENTER_ITEMS.map((item, index) => (
-                    <NavLink
-                      key={`${item.path}-${index}`}
-                      to={item.path}
-                      className={({ isActive }) =>
-                        `crm-nav-link ${isActive ? "active" : ""}`
-                      }
-                      onClick={(e) => {
-                        if (isLocked(item)) {
-                          e.preventDefault();
-                          openFeatureAddOns(FEATURE_TO_ADDON[item.feature] || null);
-                        }
-                        if (onClose) onClose();
-                      }}
-                      title={isCollapsed ? t(item.labelKey) : undefined}
-                    >
-                      <SidebarIcon name={item.icon} className="crm-nav-icon" />
-                      {!isCollapsed && (
-                        <span className="crm-nav-label">
-                          {item.label || t(item.labelKey)}
-                        </span>
-                      )}
-                      {!isCollapsed && isLocked(item) && <LockBadge />}
-                    </NavLink>
-                  ))}
+                  
                 </>
               )}
               {/*</div>*/}
             </>
           )}
-          {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.system")}</div>*/}
-          {systemNavItems.map((item, index) => (
-            <NavLink
-              key={`${item.path}-${index}`}
-              to={item.path}
-              className={({ isActive }) =>
-                `crm-nav-link ${isActive ? "active" : ""}`
-              }
-              onClick={(e) => {
-                if (isLocked(item)) {
-                  e.preventDefault();
-                  openFeatureAddOns(FEATURE_TO_ADDON[item.feature] || null);
-                }
-                if (onClose) onClose();
-              }}
-              title={isCollapsed ? t(item.labelKey) : undefined}
-            >
-              <SidebarIcon name={item.icon} className="crm-nav-icon" />
-              {!isCollapsed && (
-                <>
-                  <span className="crm-nav-label">{t(item.labelKey)}</span>
-
-                  {item.labelKey === "nav.generator" && (
-                    <span className="crm-nav-addon">{t("nav.addOn")}</span>
-                  )}
-                  {isLocked(item) && <LockBadge />}
-                </>
-              )}
-            </NavLink>
-          ))}
           
-
           {/* Core-CRM growth action: invite a teammate. Persistent, above the
               Workspaces section, visible on every core CRM page (desktop) and in
               the mobile drawer. Opens the global Invite Team Member modal. */}
@@ -876,10 +884,17 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             type="button"
             className="crm-nav-link crm-invite-team-link"
             onClick={() => {
-              window.dispatchEvent(new Event("cortexa:open-invite-team"));
+              window.dispatchEvent(
+                new Event("cortexa:open-invite-team")
+              );
+
               if (onClose) onClose();
             }}
-            title={isCollapsed ? "Invite Team Member" : undefined}
+            title={
+              isCollapsed
+                ? t("nav.inviteTeamMember")
+                : undefined
+            }
             style={{
               width: "100%",
               border: "none",
@@ -889,9 +904,15 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
               font: "inherit",
             }}
           >
-            <SidebarIcon name="user-plus" className="crm-nav-icon" />
+            <SidebarIcon
+              name="user-plus"
+              className="crm-nav-icon"
+            />
+
             {!isCollapsed && (
-              <span className="crm-nav-label">Invite Team Member</span>
+              <span className="crm-nav-label">
+                {t("nav.inviteTeamMember")}
+              </span>
             )}
           </button>
 
@@ -901,8 +922,8 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
               onMouseLeave={() => setHoveredWorkspace(null)}
             >
               <div className="crm-workspaces-heading">
-                <span>CORTEXA WORKSPACES</span>
-                <span className="crm-workspaces-new">NEW</span>
+                <span>{t("nav.workspaces.title")}</span>
+                <span className="crm-workspaces-new">{t("nav.workspaces.new")}</span>
               </div>
 
               <div className="crm-workspaces-list">
@@ -941,7 +962,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       </span>
 
                       <span className="crm-workspace-label">
-                        {workspace.label}
+                        {getWorkspaceLabel(workspace)}
                       </span>
 
                       <span
@@ -1109,7 +1130,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
           <button
             type="button"
             className="crm-workspace-flyout-close"
-            aria-label="Close workspace preview"
+            aria-label={t("nav.workspaces.closePreview")}
             onClick={() => setHoveredWorkspace(null)}
           >
             <SidebarIcon name="x" />
@@ -1157,11 +1178,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
           <div className="crm-workspace-flyout-intro">
             <div className="crm-workspace-flyout-kicker">
               <SidebarIcon name="sparkles" />
-
               <div>
-                <h3>Cortexa Workspaces</h3>
+                <h3>{t("nav.workspaces.flyoutTitle")}</h3>
                 <p>
-                  Build your AI revenue team with powerful business environments designed around the way you operate.
+                  {t("nav.workspaces.flyoutDescription")}
                 </p>
               </div>
             </div>
@@ -1169,24 +1189,13 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             <div className="crm-workspace-flyout-points">
               <span>
                 <SidebarIcon name="rocket" />
-                Built for specialized operations
+                {t("nav.workspaces.specializedOperations")}
               </span>
               <span>
                 <SidebarIcon name="lock-keyhole" />
-                Activate only what you need
-              </span>
-              <span>
-                <SidebarIcon name="shield-check" />
-                Connected to your Cortexa CRM
-              </span>
-              <span>
-                <SidebarIcon name="zap" />
-                AI-powered across your business
+                {t("nav.workspaces.activateWhatYouNeed")}
               </span>
             </div>
-            <p className="caption">
-                One platform. More capabilities.
-              </p>
           </div>
 
           <div className={`crm-workspace-detail-card ${
@@ -1209,8 +1218,8 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
               </span>
 
               <div className="crm-workspace-detail-title">
-                <h3>{hoveredWorkspace.label}</h3>
-                <p>{hoveredWorkspace.description}</p>
+                <h3>{getWorkspaceLabel(hoveredWorkspace)}</h3>
+                <p>{getWorkspaceDescription(hoveredWorkspace)}</p>
               </div>
 
               <span
@@ -1223,15 +1232,17 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             </div>
 
             <div className="crm-workspace-detail-body">
-              <h4>WHAT&apos;S INCLUDED</h4>
+              <h4>{t("nav.workspaces.whatsIncluded")}</h4>
 
               <div className="crm-workspace-capabilities">
-                {(hoveredWorkspace.capabilities || []).slice(0, 6).map((capability) => (
-                  <span key={capability}>
-                    <SidebarIcon name="circle-check" />
-                    {capability}
-                  </span>
-                ))}
+                {getWorkspaceCapabilities(hoveredWorkspace)
+                  .slice(0, 6)
+                  .map((capability, index) => (
+                    <span key={`${hoveredWorkspace.id}-${index}`}>
+                      <SidebarIcon name="circle-check" />
+                      {capability}
+                    </span>
+                  ))}
               </div>
 
               <div className="crm-workspace-divider" />
@@ -1250,7 +1261,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                   (wsIncludedCredits > 0 ? (
                     <div className="crm-workspace-preview-price">
                       <strong style={{ color: "#16a34a" }}>
-                        Included
+                        {t("nav.workspaces.included")}
                         <em
                           style={{
                             textDecoration: "line-through",
@@ -1266,7 +1277,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                     <div className="crm-workspace-preview-price">
                       <strong>
                         ${hoveredWorkspace.price}
-                        <em>/month</em>
+                        <em>{t("nav.workspaces.perMonth")}</em>
                       </strong>
                     </div>
                   ))}
@@ -1296,15 +1307,19 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                 >
                   {isWorkspaceActive(hoveredWorkspace)
                     ? hoveredWorkspace.path
-                      ? `Open ${hoveredWorkspace.label}`
-                      : `${hoveredWorkspace.label} Active`
+                      ? `${t("nav.workspaces.open")} ${getWorkspaceLabel(
+                          hoveredWorkspace
+                        )}`
+                      : `${getWorkspaceLabel(
+                          hoveredWorkspace
+                        )} ${t("nav.workspaces.activeSuffix")}`
                     : wsBusy
                       ? wsIncludedCredits > 0
-                        ? "Activating…"
-                        : "Opening checkout…"
+                        ? t("nav.workspaces.activating")
+                        : t("nav.workspaces.openingCheckout")
                       : wsIncludedCredits > 0
-                        ? "Activate — included free"
-                        : "Add to My Plan →"}
+                        ? t("nav.workspaces.activateIncluded")
+                        : t("nav.workspaces.addToPlan")}
                 </button>
 
                 {wsError && !isWorkspaceActive(hoveredWorkspace) ? (
@@ -1313,16 +1328,16 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                   </p>
                 ) : isWorkspaceActive(hoveredWorkspace) ? (
                   <p className="crm-workspace-price-helper">
-                    This workspace is active on your account.
+                    {t("nav.workspaces.activeOnAccount")}
                   </p>
                 ) : wsIncludedCredits > 0 ? (
                   <p className="crm-workspace-price-helper" style={{ color: "#16a34a" }}>
-                    Included with your plan — activating adds no charge.
+                    {t("nav.workspaces.includedNoCharge")}
                   </p>
                 ) : (
                   <p className="crm-workspace-secure">
                     <SidebarIcon name="lock-keyhole" />
-                    <span>Secure checkout powered by Paddle</span>
+                    <span>{t("nav.workspaces.secureCheckout")}</span>
                   </p>
                 )}
               </div>

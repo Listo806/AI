@@ -43,6 +43,189 @@
     "all": "All"
   },
   "nav": {
+    "workspaces": {
+      "title": "CORTEXA WORKSPACES",
+      "new": "NEW",
+      "active": "ACTIVE",
+      "locked": "LOCKED",
+
+      "flyoutTitle": "Cortexa Workspaces",
+      "flyoutDescription": "Build your AI revenue team with powerful business environments designed around the way you operate.",
+      "specializedOperations": "Built for specialized operations",
+      "activateWhatYouNeed": "Activate only what you need",
+
+      "whatsIncluded": "WHAT'S INCLUDED",
+      "included": "Included",
+      "perMonth": "/month",
+      "closePreview": "Close workspace preview",
+
+      "open": "Open",
+      "activeSuffix": "Active",
+      "activating": "Activating…",
+      "openingCheckout": "Opening checkout…",
+      "activateIncluded": "Activate — included free",
+      "addToPlan": "Add to My Plan →",
+
+      "activeOnAccount": "This workspace is active on your account.",
+      "includedNoCharge": "Included with your plan — activating adds no charge.",
+      "secureCheckout": "Secure checkout powered by Paddle",
+
+      "items": {
+        "sales": {
+          "label": "Sales Workspace",
+          "description": "Run your entire sales operation from quote to revenue in one connected workspace.",
+          "capabilities": [
+            "Quotes & Proposals",
+            "Customers",
+            "Orders & Contracts",
+            "Invoices & Payments",
+            "Sales Commissions",
+            "Returns & Credits",
+            "Discounts & Approvals",
+            "Document Management",
+            "Sales Reporting",
+            "Revenue Tracking"
+          ],
+          "connected": "Connected to your Cortexa leads, pipeline, contacts, AI, automation, analytics, and CRM data."
+        },
+
+        "insurance": {
+          "label": "Insurance Workspace",
+          "description": "Manage your entire insurance operation—from quote to policy, renewal, claim, and commission—in one connected workspace.",
+          "capabilities": [
+            "Policies",
+            "Quotes",
+            "Claims",
+            "Renewals",
+            "Carriers",
+            "Commissions",
+            "Client & Policy Documents",
+            "Coverage & Premium Tracking",
+            "Renewal Management",
+            "Insurance Reporting"
+          ],
+          "connected": "Connected to your Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."
+        },
+
+        "financial": {
+          "label": "Financial Services",
+          "description": "Manage clients, applications, accounts, transactions, documents, and financial workflows in one connected workspace.",
+          "capabilities": [
+            "Client Management",
+            "Applications",
+            "Accounts",
+            "Approvals & Reviews",
+            "Transactions",
+            "Investment Activity",
+            "Advisor Workflows",
+            "Document Management",
+            "Commission Tracking",
+            "Financial Reporting"
+          ],
+          "connected": "Connected to your Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."
+        },
+
+        "ecommerce": {
+          "label": "E-Commerce",
+          "description": "Manage customers, subscriptions, billing, payments, and recurring revenue in one connected workspace.",
+          "capabilities": [
+            "Customers & Subscriptions",
+            "Plans & Pricing",
+            "Billing Calendar",
+            "Recurring Payments",
+            "Payment Status Tracking",
+            "Failed Payments & Retries",
+            "Refunds & Cancellations",
+            "Seats & Users",
+            "Customer Lifetime Value",
+            "Revenue & Billing Reporting",
+            "Payment Gateway Integrations"
+          ],
+          "connected": "Connected to your Cortexa customers, contacts, AI, automation, analytics, team data, and CRM activity."
+        },
+
+        "customer_service": {
+          "label": "Customer Service",
+          "description": "Manage customer support, tickets, escalations, resolutions, and service operations in one connected workspace.",
+          "capabilities": [
+            "Tickets & Cases",
+            "Support Inbox",
+            "Customer Support History",
+            "Agent Assignment",
+            "Priority & Status Management",
+            "SLA Tracking",
+            "Escalations",
+            "AI-Assisted Support",
+            "Knowledge Base",
+            "Customer Satisfaction",
+            "Service Automation",
+            "Support Reporting"
+          ],
+          "connected": "Connected to your Cortexa customers, contacts, WhatsApp, AI, automation, analytics, and CRM data."
+        },
+
+        "real_estate": {
+          "label": "Real Estate Workspace",
+          "description": "Manage properties, buyers, sellers, showings, offers, transactions, and commissions in one connected real estate workspace.",
+          "capabilities": [
+            "Properties & Listings",
+            "Buyers & Sellers",
+            "AI Property-to-Lead Matching",
+            "Showings",
+            "Offers",
+            "Transactions",
+            "Documents",
+            "Commission Tracking",
+            "Listing Optimization",
+            "AI Property Insights",
+            "Property Activity",
+            "Real Estate Reporting"
+          ],
+          "connected": "Connected to your Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."
+        },
+
+        "team": {
+          "label": "Team Workspace",
+          "description": "Plan, assign, collaborate, and manage your team's work from one connected workspace.",
+          "capabilities": [
+            "Projects",
+            "Kanban Boards",
+            "Tasks & Assignments",
+            "My Tasks",
+            "Team Calendar",
+            "Deadlines & Priorities",
+            "Time Tracking",
+            "Workload Visibility",
+            "Files & Documents",
+            "Comments & @Mentions",
+            "Team Collaboration",
+            "Roles & Permissions",
+            "Activity Tracking",
+            "Team Reporting",
+            "AI-Assisted Workflows"
+          ],
+          "connected": "Connected to your Cortexa CRM, customers, contacts, AI, automation, analytics, and business data."
+        },
+
+        "lead_generator": {
+          "label": "Lead Generator",
+          "description": "Find, verify, and enrich new business leads on demand, then push them straight into your Cortexa pipeline.",
+          "capabilities": [
+            "Business Lead Search",
+            "Company & Contact Discovery",
+            "Email Finding",
+            "Email Verification",
+            "Data Enrichment",
+            "Bulk Lead Export",
+            "CRM Pipeline Sync",
+            "Search History",
+            "Credit Usage Tracking",
+            "Lead Quality Scoring"
+          ],
+          "connected": "Connected directly to your Cortexa pipeline, contacts, AI, and automation."
+        }
+      }
+    },
     "dashboard": "Dashboard",
     "leads": "Leads",
     "whatsapp": "WhatsApp",
@@ -84,6 +267,7 @@
     "setup": "Setup",
     "calendar": "Calendar",
     "whatsappQr": "WhatsApp QR",
+    "inviteTeamMember": "Invite Team Member",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
     "addOn": "add on",
