@@ -278,6 +278,7 @@ export default function TeamWorkspace() {
   ];
 
   const [workspaceTab, setWorkspaceTab] = useState("Tasks");
+  const [workspaceMobileMoreOpen, setWorkspaceMobileMoreOpen] = useState(false);
   const [workspaceTaskView, setWorkspaceTaskView] = useState("table");
 
   const [workspaceOverview, setWorkspaceOverview] = useState(null);
@@ -2576,8 +2577,281 @@ export default function TeamWorkspace() {
     ],
   ];
 
+  const mobileMainTabs = WORKSPACE_TABS.slice(0, 5);
+  const mobileMoreTabs = WORKSPACE_TABS.slice(5);
+
+  const switchWorkspaceTab = (label) => {
+    setWorkspaceTab(label);
+    setWorkspaceMobileMoreOpen(false);
+    if (label === "Board") setWorkspaceTaskView("board");
+    if (label === "Tasks" || label === "My Tasks") setWorkspaceTaskView("table");
+    if (label === "Calendar") setWorkspaceTaskView("calendar");
+  };
+
+  const mobileBoardColumns = [
+    { key: "pending", label: "To Do", tone: "blue", Icon: ListTodo },
+    { key: "in_progress", label: "In Progress", tone: "green", Icon: LayoutGrid },
+    { key: "review", label: "Review", tone: "orange", Icon: Search },
+    { key: "completed", label: "Completed", tone: "purple", Icon: CheckCircle2 },
+  ];
+
+  const mobileTaskTone = (task, index = 0) => {
+    const status = String(task?.status || "").toLowerCase();
+    if (status === "in_progress") return "green";
+    if (status === "review") return "orange";
+    if (status === "completed") return "purple";
+    if (status === "on_hold" || status === "blocked") return "purple";
+    return ["blue", "green", "orange", "purple", "cyan"][index % 5];
+  };
+
+  const mobileProjectTone = (index = 0) => ["blue", "green", "orange", "purple", "cyan"][index % 5];
+
   return (
     <div className="team-workspace">
+      <div className="tw-mobile-shell">
+        <section className="tw-mobile-hero">
+          <div className="tw-mobile-hero-icon"><Users size={32} /></div>
+          <div className="tw-mobile-hero-copy">
+            <h1>Team Workspace</h1>
+            <p>Plan, organize, and execute internal projects with your team.</p>
+          </div>
+          <button type="button" className="tw-mobile-new" onClick={() => setNewMenuOpen((v) => !v)}>
+            <Plus size={22} /> <span>New</span>
+          </button>
+        </section>
+
+        <div className="tw-mobile-tabs-wrap">
+          <nav className="tw-mobile-tabs">
+            {mobileMainTabs.map(({ label, icon: TabIcon }) => (
+              <button key={label} type="button" className={workspaceTab === label ? "active" : ""} onClick={() => switchWorkspaceTab(label)}>
+                <TabIcon size={18} strokeWidth={1.9} />
+                <span>{label}</span>
+              </button>
+            ))}
+            <button type="button" className={`tw-mobile-more-tab ${workspaceMobileMoreOpen ? "more-open" : ""} ${mobileMoreTabs.some((tab) => tab.label === workspaceTab) ? "active more-active" : ""}`} onClick={() => setWorkspaceMobileMoreOpen((v) => !v)}>
+              <MoreVertical size={18} /> <span>More</span>
+            </button>
+          </nav>
+          {workspaceMobileMoreOpen && (
+            <div className="sales-ws-tabs-mobile-more-menu tw-mobile-more-menu">
+              {mobileMoreTabs.map(({ label, icon: TabIcon }) => (
+                <button key={label} type="button" className={workspaceTab === label ? "active" : ""} onClick={() => switchWorkspaceTab(label)}>
+                  <TabIcon size={15} /><span>{label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {workspaceTab === "Overview" && (
+          <section className="tw-mobile-page tw-mobile-overview">
+            <header className="tw-mobile-overview-head">
+              <div><LayoutGrid size={22}/><h2>Team Overview</h2></div>
+              <p>Real-time overview of your team and project performance.</p>
+            </header>
+            <div className="tw-mobile-overview-list">
+              {dashboardStats.map(([label, value, sub, change, Icon], index) => (
+                <article className={`tw-mobile-overview-card tone-${mobileProjectTone(index)}`} key={label}>
+                  <div className="tw-mobile-overview-icon"><Icon size={30}/></div>
+                  <div className="tw-mobile-overview-value"><b>{label}</b><strong>{value}</strong><span>{sub}</span>{change ? <small>↑ {change}</small> : null}</div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {workspaceTab === "Projects" && (
+          <section className="tw-mobile-page tw-mobile-projects">
+            <header className="tw-mobile-section-head">
+              <div className="tw-mobile-title"><FolderKanban size={24}/><div><h2>Projects</h2><p>Manage all team projects in one place.</p></div></div>
+              <div className="tw-mobile-head-actions"><button type="button"><SlidersHorizontal size={17}/> Filters</button><button type="button"><RotateCcw size={17}/> Sort</button></div>
+            </header>
+            <label className="tw-mobile-search"><Search size={20}/><input value={projectSearch} onChange={(e)=>setProjectSearch(e.target.value)} placeholder="Search projects..."/></label>
+            <div className="tw-mobile-project-list">
+              {filteredWorkspaceProjects.slice(0,5).map((project,index)=>{
+                const tasks=Number(project.taskCount||0); const completed=Number(project.completedTasks||0); const tone=mobileProjectTone(index);
+                return <article className={`tw-mobile-project-card tone-${tone}`} key={project.id} onClick={()=>openWorkspaceProjectDetail(project)}>
+                  <div className="tw-mobile-project-icon"><FolderKanban size={30}/></div>
+                  <div className="tw-mobile-project-main"><h3>{project.name}</h3><p>{project.description || "No description"}</p><div className="tw-mobile-project-people"><span>{String(project.ownerName||"TM").split(" ").map(x=>x[0]).join("").slice(0,2)}</span><span className="ghost"><Users size={14}/></span></div></div>
+                  <div className="tw-mobile-project-meta"><label>Progress</label><div className="tw-mobile-progress"><i><b style={{width:`${Math.min(100,Number(project.progress||0))}%`}}/></i><strong>{Number(project.progress||0)}%</strong></div><div className="tw-mobile-project-stats"><span><small>Tasks</small><b>{completed} / {tasks}</b></span><span><small>Team</small><b>{project.memberCount || project.teamCount || 1}</b></span><span><small>Due Date</small><b>{formatDate(project.dueDate)}</b></span></div></div>
+                  <ChevronRight className="tw-mobile-card-arrow" size={24}/>
+                </article>
+              })}
+            </div>
+            <button type="button" className="tw-mobile-wide-new" onClick={openNewWorkspaceProject}><Plus size={19}/> New Project</button>
+            <div className="tw-mobile-summary"><div><BarChart3 size={25}/><span><b>Projects Summary</b><small>Overview of all projects</small></span></div><strong>Total Projects <em>{workspaceProjects.length}</em></strong><section>{[['In Progress', workspaceProjects.filter(p=>String(p.status||'').toLowerCase()==='active').length],['On Track', workspaceProjects.filter(p=>Number(p.progress||0)>=50).length],['At Risk', workspaceProjects.filter(p=>String(p.priority||'').toLowerCase()==='urgent').length],['Completed', workspaceProjects.filter(p=>String(p.status||'').toLowerCase()==='completed').length]].map(([l,v],i)=><span className={`tone-${mobileProjectTone(i)}`} key={l}><small>{l}</small><b>{v}</b></span>)}</section></div>
+          </section>
+        )}
+
+        {workspaceTab === "Board" && (
+          <section className="tw-mobile-page tw-mobile-board">
+            <header className="tw-mobile-section-head"><div className="tw-mobile-title"><Columns3 size={24}/><div><h2>Board</h2><p>Visualize and manage project workflow.</p></div></div><div className="tw-mobile-head-actions"><button><SlidersHorizontal size={17}/> Filters</button><button><RotateCcw size={17}/> Sort</button></div></header>
+            <div className="tw-mobile-board-list">
+              {mobileBoardColumns.map(({key,label,tone,Icon})=>{const items=workspaceBoardTasks.filter(t=>String(t.status||'pending')===key);const overdue=items.filter(t=>t.dueDate && new Date(t.dueDate).getTime()<Date.now()).length;const high=items.filter(t=>['high','urgent'].includes(String(t.priority||'').toLowerCase())).length;return <article className={`tw-mobile-board-card tone-${tone}`} key={key}><div className="tw-mobile-board-icon"><Icon size={34}/></div><div className="tw-mobile-board-copy"><div><h3>{label}</h3><b>{items.length}</b></div><p>{key==='pending'?'Tasks that are planned but not yet started.':key==='in_progress'?'Tasks that are currently in progress.':key==='review'?'Tasks that are under review or approval.':'Tasks that have been completed.'}</p><small><Users size={15}/> {new Set(items.map(x=>x.assigneeId||x.assignee).filter(Boolean)).size} Assignees</small></div><div className="tw-mobile-board-metrics"><span><small>Tasks</small><b>{items.length}</b></span><span><small>Overdue</small><b className="danger">{overdue}</b></span><span><small>High Priority</small><b className="warn">{high}</b></span></div><ChevronRight size={24}/></article>})}
+            </div>
+            <div className="tw-mobile-board-summary"><div className="title"><BarChart3 size={24}/><span><b>Board Summary</b><small>Overview of all tasks by status</small></span><strong>Total Tasks <em>{workspaceBoardTasks.length}</em></strong></div><section>{mobileBoardColumns.map(({key,label,tone})=>{const n=workspaceBoardTasks.filter(t=>String(t.status||'pending')===key).length;const pct=workspaceBoardTasks.length?Math.round(n/workspaceBoardTasks.length*100):0;return <span className={`tone-${tone}`} key={key}><small>{label}</small><b>{n}</b><i className="tw-mobile-board-progress" aria-label={`${label} ${pct}%`}><u style={{width:`${pct}%`}}/></i><em>{pct}%</em></span>})}</section></div>
+          </section>
+        )}
+
+        {workspaceTab === "Tasks" && (
+          <section className="tw-mobile-page tw-mobile-tasks">
+            <header className="tw-mobile-section-head"><div className="tw-mobile-title"><ListTodo size={24}/><div><h2>Tasks</h2><p>Manage and track all team tasks</p></div></div><div className="tw-mobile-head-actions"><button onClick={()=>taskImportInputRef.current?.click()}><Upload size={17}/> Import</button><button onClick={exportWorkspaceTasks}><Download size={17}/> Export</button><button className="square"><SlidersHorizontal size={17}/><span>Filters</span></button></div></header>
+            <label className="tw-mobile-search"><Search size={20}/><input value={workspaceTaskSearch} onChange={(e)=>setWorkspaceTaskSearch(e.target.value)} placeholder="Search tasks..."/></label>
+            <div className="tw-mobile-filter-grid">
+              <label className="tw-mobile-filter-control tone-blue">
+                <ListTodo />
+                <span><b>Status</b></span>
+                <select
+                  value={workspaceStatus}
+                  onChange={(e) => { setWorkspaceStatus(e.target.value); setWorkspaceTaskPage(1); }}
+                  aria-label="Filter tasks by status"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="review">Review</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </label>
+
+              <label className="tw-mobile-filter-control tone-orange">
+                <Flag />
+                <span><b>Priority</b></span>
+                <select
+                  value={workspacePriority}
+                  onChange={(e) => { setWorkspacePriority(e.target.value); setWorkspaceTaskPage(1); }}
+                  aria-label="Filter tasks by priority"
+                >
+                  <option value="all">All Priorities</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </label>
+
+              <label className="tw-mobile-filter-control tone-green">
+                <Users />
+                <span><b>Assignee</b></span>
+                <select
+                  value={workspaceAssignee}
+                  onChange={(e) => { setWorkspaceAssignee(e.target.value); setWorkspaceTaskPage(1); }}
+                  aria-label="Filter tasks by assignee"
+                >
+                  <option value="all">All Assignees</option>
+                  {workspaceMembers.map((member) => <option value={member.id} key={member.id}>{member.name}</option>)}
+                </select>
+              </label>
+
+              <label className="tw-mobile-filter-control tone-purple">
+                <FolderKanban />
+                <span><b>Project</b></span>
+                <select
+                  value={workspaceProject}
+                  onChange={(e) => { setWorkspaceProject(e.target.value); setWorkspaceTaskPage(1); }}
+                  aria-label="Filter tasks by project"
+                >
+                  <option value="all">All Projects</option>
+                  {workspaceProjects.map((project) => <option value={project.id} key={project.id}>{project.name}</option>)}
+                </select>
+              </label>
+
+              <label className="tw-mobile-filter-control tone-cyan">
+                <LayoutGrid />
+                <span><b>Task Type</b></span>
+                <select
+                  value={workspaceTaskType}
+                  onChange={(e) => { setWorkspaceTaskType(e.target.value); setWorkspaceTaskPage(1); }}
+                  aria-label="Filter tasks by type"
+                >
+                  <option value="all">All Types</option>
+                  <option value="task">Task</option>
+                  <option value="bug">Bug</option>
+                  <option value="feature">Feature</option>
+                  <option value="meeting">Meeting</option>
+                  <option value="follow_up">Follow Up</option>
+                </select>
+              </label>
+
+              <label className="tw-mobile-filter-control tone-red tw-mobile-date-filter">
+                <CalendarDays />
+                <span><b>Due Date</b></span>
+                <input
+                  type="date"
+                  className={workspaceDateTo ? "has-value" : "is-empty"}
+                  value={workspaceDateTo}
+                  onChange={(e) => { setWorkspaceDateTo(e.target.value); setWorkspaceTaskPage(1); }}
+                  aria-label="Filter tasks due by date"
+                />
+                {!workspaceDateTo && <small className="tw-mobile-date-placeholder">Any Date</small>}
+              </label>
+            </div>
+            <div className="tw-mobile-filter-foot"><button onClick={resetWorkspaceFilters}><RotateCcw size={15}/> Reset Filters</button><span>Sort: Due Date (Soonest)</span></div>
+            <div className="tw-mobile-task-list">{workspaceTasks.slice(0,5).map((task,index)=><article className={`tw-mobile-task-row tone-${mobileTaskTone(task,index)}`} key={task.id}><div className="tw-mobile-task-icon"><ListTodo size={27}/></div><div className="tw-mobile-task-main"><h3>{task.name}</h3><p>Project: <b>{task.project || 'No project'}</b></p><div><span className={`tw-pill status-${String(task.status||'pending').replaceAll('_','-')}`}>{formatTaskStatus(task.status)}</span><span className={`tw-pill priority-${String(task.priority||'medium').toLowerCase()}`}>{formatTaskStatus(task.priority)}</span><span className="tw-assignee"><span className="tw-avatar">{String(task.assignee||'TM').split(' ').map(x=>x[0]).join('').slice(0,2)}</span>{task.assignee||'Unassigned'}</span></div></div><div className="tw-mobile-task-meta"><span><CalendarDays/> {formatDate(task.dueDate)}</span><span><Users/> {Number(task.progress||0)}% <i><b style={{width:`${Number(task.progress||0)}%`}}/></i></span><span><Clock3/> {minutesToText(task.loggedMinutes||task.timeLoggedMinutes||0)}</span></div><button className="tw-mobile-dots"><MoreVertical size={18}/></button></article>)}</div>
+            <div className="tw-mobile-simple-pagination"><span>{workspaceTaskPagination.page} of {workspaceTaskPagination.totalPages}</span><button disabled={workspaceTaskPagination.page>=workspaceTaskPagination.totalPages} onClick={()=>setWorkspaceTaskPage(p=>p+1)}><ChevronRight/></button></div>
+          </section>
+        )}
+
+        {workspaceTab === "My Tasks" && (
+          <section className="tw-mobile-page tw-mobile-my-tasks">
+            <header className="tw-mobile-section-head"><div className="tw-mobile-title"><CircleUserRound size={25}/><div><h2>My Tasks</h2><p>Your personal productivity center.</p></div></div><button className="tw-mobile-filter-icon"><SlidersHorizontal size={20}/></button></header>
+            <div className="tw-mobile-my-tabs"><button className="active"><CalendarDays/> Today <b>{workspaceTasks.filter(t=>deadlineDistance(t.dueDate)==='Today').length}</b></button><button><Clock3/> Upcoming <b>{workspaceTasks.filter(t=>t.dueDate && new Date(t.dueDate).getTime()>Date.now()).length}</b></button><button><Flag/> Overdue <b>{workspaceTasks.filter(t=>t.dueDate && new Date(t.dueDate).getTime()<Date.now()).length}</b></button></div>
+            <label className="tw-mobile-search"><Search size={20}/><input value={workspaceTaskSearch} onChange={(e)=>setWorkspaceTaskSearch(e.target.value)} placeholder="Search my tasks..."/><SlidersHorizontal size={18}/></label>
+            <div className="tw-mobile-my-list">{workspaceTasks.slice(0,4).map((task,index)=><article className={`tw-mobile-my-card tone-${mobileTaskTone(task,index)}`} key={task.id}><div className="tw-mobile-task-icon"><ListTodo size={25}/></div><div className="tw-mobile-my-main"><div className="top"><h3>{task.name}</h3><span><CalendarDays/> {deadlineDistance(task.dueDate)||formatDate(task.dueDate)}</span></div><p>Project: <b>{task.project||'No project'}</b></p><small>{task.description||'Manage and complete this assigned task.'}</small><div className="chips"><span className={`tw-pill status-${String(task.status||'pending').replaceAll('_','-')}`}>{formatTaskStatus(task.status)}</span><span className={`tw-pill priority-${String(task.priority||'medium').toLowerCase()}`}>{formatTaskStatus(task.priority)}</span><span className="tw-assignee"><span className="tw-avatar">{String(task.assignee||'TM').split(' ').map(x=>x[0]).join('').slice(0,2)}</span>{task.assignee||'You'}</span><i><b style={{width:`${Number(task.progress||0)}%`}}/></i><em>{Number(task.progress||0)}%</em></div></div><button className="tw-mobile-circle-check" aria-label="complete task"/></article>)}</div>
+            <button type="button" className="tw-mobile-wide-new" onClick={openNewWorkspaceTask}><Plus size={18}/> New Task</button>
+          </section>
+        )}
+        {workspaceTab === "Calendar" && (
+          <section className="tw-mobile-page tw-mobile-more-page tw-mobile-calendar-page">
+            <header className="tw-mobile-section-head">
+              <div className="tw-mobile-title"><CalendarDays size={25}/><div><h2>Calendar</h2><p>Tasks and project deadlines in one schedule.</p></div></div>
+              <div className="tw-mobile-head-actions"><button type="button" onClick={()=>changeCalendarMonth(-1)}><ChevronLeft size={17}/></button><button type="button" onClick={goCalendarToday}>Today</button><button type="button" onClick={()=>changeCalendarMonth(1)}><ChevronRight size={17}/></button></div>
+            </header>
+            <div className="tw-mobile-more-summary"><div><CalendarDays/><span><small>Current month</small><strong>{calendarMonthLabel}</strong></span></div><b>{calendarEvents.length}<small>Events</small></b></div>
+            <div className="tw-mobile-calendar-week">{["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(day=><span key={day}>{day}</span>)}</div>
+            <div className="tw-mobile-calendar-grid">{calendarDays.map(day=><button type="button" key={day.dateKey} className={`${day.currentMonth?"":"muted"} ${calendarSelectedDay===day.dateKey?"active":""}`} onClick={()=>setCalendarSelectedDay(day.dateKey)}><b>{day.date.getDate()}</b>{day.events.length>0&&<i>{day.events.length}</i>}</button>)}</div>
+            <div className="tw-mobile-more-list">{calendarEvents.filter(event=>!calendarSelectedDay||event.dateKey===calendarSelectedDay).slice(0,6).map((event,index)=><button type="button" className={`tw-mobile-more-row tone-${mobileProjectTone(index)}`} key={event.id} onClick={()=>openCalendarEvent(event)}><span className="tw-mobile-more-row-icon"><CalendarDays/></span><span className="tw-mobile-more-row-copy"><strong>{event.title}</strong><small>{event.project} · {formatDate(event.dateKey)}</small></span><span className="tw-mobile-more-row-value">{formatTaskStatus(event.status)}</span><ChevronRight/></button>)}</div>
+          </section>
+        )}
+
+        {workspaceTab === "Time Tracking" && (
+          <section className="tw-mobile-page tw-mobile-more-page">
+            <header className="tw-mobile-section-head"><div className="tw-mobile-title"><Clock3 size={25}/><div><h2>Time Tracking</h2><p>Tracked time by member, project, and task.</p></div></div><button className="tw-mobile-filter-icon" type="button"><SlidersHorizontal size={19}/></button></header>
+            <label className="tw-mobile-search"><Search size={20}/><input value={workspaceTimeSearch} onChange={(e)=>{setWorkspaceTimeSearch(e.target.value);setWorkspaceTimePage(1)}} placeholder="Search time entries..."/></label>
+            <div className="tw-mobile-more-kpis">{[["Hours",`${Number(workspaceTimeData?.summary?.hoursLogged||0).toLocaleString()}h`],["Entries",workspaceTimeData?.summary?.entryCount||0],["Members",workspaceTimeData?.summary?.activeMembers||0],["Projects",workspaceTimeData?.summary?.projectsTracked||0]].map(([label,value],index)=><div className={`tone-${mobileProjectTone(index)}`} key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
+            <div className="tw-mobile-more-list">{(workspaceTimeData?.data||[]).slice(0,6).map((entry,index)=><article className={`tw-mobile-more-row tone-${mobileProjectTone(index)}`} key={entry.id}><span className="tw-mobile-more-row-icon"><Clock3/></span><span className="tw-mobile-more-row-copy"><strong>{entry.taskName||"Time entry"}</strong><small>{entry.memberName||"—"} · {entry.projectName||"No project"}</small></span><span className="tw-mobile-more-row-value">{minutesToText(entry.minutes)}</span></article>)}</div>
+            <div className="tw-mobile-simple-pagination"><span>{workspaceTimePage} of {workspaceTimeData?.pagination?.totalPages||1}</span><button disabled={workspaceTimePage>=(workspaceTimeData?.pagination?.totalPages||1)} onClick={()=>setWorkspaceTimePage(p=>p+1)}><ChevronRight/></button></div>
+          </section>
+        )}
+
+        {workspaceTab === "Files" && (
+          <section className="tw-mobile-page tw-mobile-more-page">
+            <header className="tw-mobile-section-head"><div className="tw-mobile-title"><FileText size={25}/><div><h2>Files</h2><p>Files shared across team projects and tasks.</p></div></div><div className="tw-mobile-head-actions"><button type="button" onClick={()=>workspaceFileInputRef.current?.click()}><Upload size={17}/> Upload</button></div></header>
+            <label className="tw-mobile-search"><Search size={20}/><input value={workspaceFileSearch} onChange={(e)=>setWorkspaceFileSearch(e.target.value)} placeholder="Search files..."/></label>
+            <div className="tw-mobile-more-summary"><div><FolderOpen/><span><small>Workspace files</small><strong>{workspaceFiles.length} files</strong></span></div><b>{workspaceFiles.filter(file=>file.projectId).length}<small>Linked</small></b></div>
+            <div className="tw-mobile-more-list">{workspaceFiles.slice(0,8).map((file,index)=><article className={`tw-mobile-more-row tone-${mobileProjectTone(index)}`} key={file.id}><span className="tw-mobile-more-row-icon"><FileText/></span><span className="tw-mobile-more-row-copy"><strong>{file.originalName}</strong><small>{file.projectName||"No project"} · {formatFileSize(file.size)}</small></span><div className="tw-mobile-more-actions"><button type="button" onClick={()=>openWorkspaceFile(file)}><Eye/></button><button type="button" onClick={()=>removeWorkspaceFile(file)}><Trash2/></button></div></article>)}</div>
+          </section>
+        )}
+
+        {workspaceTab === "Team" && (
+          <section className="tw-mobile-page tw-mobile-more-page">
+            <header className="tw-mobile-section-head"><div className="tw-mobile-title"><Users size={25}/><div><h2>Team</h2><p>Members, workload, delivery, and tracked time.</p></div></div><div className="tw-mobile-head-actions"><button type="button" onClick={handleOpenInvite}><Plus size={17}/> Invite</button></div></header>
+            <div className="tw-mobile-more-kpis">{[["Members",workspaceMembers.length],["Assigned",workspaceTeamTotals.assigned],["Completed",workspaceTeamTotals.completed],["Hours",`${(workspaceTeamTotals.loggedMinutes/60).toFixed(1)}h`]].map(([label,value],index)=><div className={`tone-${mobileProjectTone(index)}`} key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
+            <div className="tw-mobile-more-list">{workspaceTeamPerformanceRows.slice(0,8).map((member,index)=><article className={`tw-mobile-more-row tone-${mobileProjectTone(index)}`} key={member.id}><span className="tw-mobile-more-avatar">{String(member.name||"TM").split(" ").map(x=>x[0]).join("").slice(0,2)}</span><span className="tw-mobile-more-row-copy"><strong>{member.name}</strong><small>{member.role||"Member"} · {member.completed||0}/{member.assigned||0} completed</small></span><span className="tw-mobile-more-row-value">{minutesToText(member.loggedMinutes)}</span></article>)}</div>
+          </section>
+        )}
+
+        {workspaceTab === "Reports" && (
+          <section className="tw-mobile-page tw-mobile-more-page tw-mobile-reports-page">
+            <header className="tw-mobile-section-head"><div className="tw-mobile-title"><BarChart3 size={25}/><div><h2>Reports & Analytics</h2><p>Delivery, workload, activity, and time analytics.</p></div></div><div className="tw-mobile-head-actions"><button type="button" onClick={exportWorkspaceReports}><Download size={17}/> Export</button></div></header>
+            <div className="tw-mobile-more-kpis six">{[["Created",workspaceReports?.summary?.tasksCreated||0],["Completed",workspaceReports?.summary?.tasksCompleted||0],["Completion",`${workspaceReports?.summary?.completionRate||0}%`],["On Time",`${workspaceReports?.summary?.onTimeRate||0}%`],["Progress",`${workspaceReports?.summary?.avgProgress||0}%`],["Hours",`${workspaceReports?.summary?.hoursLogged||0}h`]].map(([label,value],index)=><div className={`tone-${mobileProjectTone(index)}`} key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
+            <div className="tw-mobile-report-panels"><article><div className="tw-mini-head"><strong>Task Status</strong><span>Live</span></div>{(workspaceReports?.statusBreakdown||statusBreakdown||[]).slice(0,5).map((row,index)=><div className="tw-mobile-report-line" key={row.status||row.label||index}><span>{formatTaskStatus(row.status||row.label)}</span><i><b style={{width:`${Math.min(100,Number(row.percentage||row.percent||0))}%`}}/></i><strong>{row.count||row.value||0}</strong></div>)}</article><article><div className="tw-mini-head"><strong>Recent Activity</strong><span>Live</span></div>{(workspaceReports?.recentActivity||[]).slice(0,5).map((activity,index)=><div className="tw-mobile-report-activity" key={activity.id||index}><span><ListTodo/></span><div><strong>{reportActivityPresentation(activity).label}</strong><small>{reportActivityPresentation(activity).detail}</small></div></div>)}</article></div>
+          </section>
+        )}
+
+      </div>
       <div className="tw-new-header">
         <div>
           <h1>Team Workspace</h1>
