@@ -424,6 +424,147 @@ export class EcommerceWorkspaceService {
       return { id, key: label, count };
     });
 
+
+    // Analytics row requested by the E-commerce Subscriptions Admin.
+    // These are calculated from the SAME filtered customer population as every
+    // other summary metric; no demo/static numbers are returned.
+    const paidPlanSelected = (r: any) => {
+      const selected = String(r?.selected_plan || r?.plan || '').trim().toLowerCase();
+      return ['solo', 'pro', 'business', 'team', 'scale', 'growth'].includes(selected);
+    };
+
+    const customerStatusRows = [
+      {
+        id: 'free',
+        key: 'Free',
+        count: data.filter((r) =>
+          String(r?.payment_status || '').toLowerCase() === 'free' ||
+          String(r?.status || '').toLowerCase() === 'free',
+        ).length,
+      },
+      {
+        id: 'checkout_pending',
+        key: 'Checkout Pending',
+        count: data.filter((r) => {
+          const ps = String(r?.payment_status || '').toLowerCase();
+          const cs = String(r?.checkout_status || '').toLowerCase();
+          const paid = ps === 'active' || cs === 'paid';
+          return paidPlanSelected(r) && !paid;
+        }).length,
+      },
+      {
+        id: 'registered',
+        key: 'Registered / No Plan',
+        count: data.filter((r) => {
+          const ps = String(r?.payment_status || '').toLowerCase();
+          const cs = String(r?.checkout_status || '').toLowerCase();
+          const isFree = ps === 'free' || String(r?.status || '').toLowerCase() === 'free';
+          const paid = ps === 'active' || cs === 'paid';
+          return !isFree && !paidPlanSelected(r) && !paid;
+        }).length,
+      },
+      {
+        id: 'paid',
+        key: 'Paid',
+        count: data.filter((r) => {
+          const ps = String(r?.payment_status || '').toLowerCase();
+          const cs = String(r?.checkout_status || '').toLowerCase();
+          return ps === 'active' || cs === 'paid';
+        }).length,
+      },
+    ];
+
+    const now = Date.now();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const todayTs = startOfToday.getTime();
+    const sevenDaysAgo = now - 7 * 86400000;
+    const thirtyDaysAgo = now - 30 * 86400000;
+    const seenAt = (r: any) => {
+      const ts = r?.last_seen_at ? new Date(r.last_seen_at).getTime() : NaN;
+      return Number.isFinite(ts) ? ts : null;
+    };
+
+    const customerActivityRows = [
+      {
+        id: 'today',
+        key: 'Active Today',
+        count: data.filter((r) => {
+          const ts = seenAt(r);
+          return ts != null && ts >= todayTs;
+        }).length,
+      },
+      {
+        id: 'last_7_days',
+        key: 'Active Last 7 Days',
+        count: data.filter((r) => {
+          const ts = seenAt(r);
+          return ts != null && ts >= sevenDaysAgo && ts < todayTs;
+        }).length,
+      },
+      {
+        id: 'inactive_7_30',
+        key: 'Inactive 7–30 Days',
+        count: data.filter((r) => {
+          const ts = seenAt(r);
+          return ts != null && ts >= thirtyDaysAgo && ts < sevenDaysAgo;
+        }).length,
+      },
+      {
+        id: 'inactive_30_plus',
+        key: 'Inactive 30+ Days',
+        count: data.filter((r) => {
+          const ts = seenAt(r);
+          return ts == null || ts < thirtyDaysAgo;
+        }).length,
+      },
+    ];
+
+    // Workspace Opportunity is based on verified workspace entitlement records.
+    // Active entitlements are paid Workspaces. Transient past_due/suspended rows
+    // are shown as Trial/Pending. Customers with a team but no paid entitlement
+    // are "Has Workspace"; customers without a team are "No Workspace".
+    const entitlementByTeam = new Map<string, Set<string>>();
+    try {
+      const teamIds = [...new Set(
+        data.map((r) => String(r?.team_id || '')).filter(Boolean),
+      )];
+      if (teamIds.length) {
+        const entitlementRes = await this.db.query(
+          `SELECT team_id::text AS team_id, status
+             FROM workspace_entitlements
+            WHERE team_id = ANY($1::uuid[])
+              AND status IN ('active','past_due','suspended')`,
+          [teamIds],
+        );
+        entitlementRes.rows.forEach((row: any) => {
+          const id = String(row.team_id || '');
+          if (!entitlementByTeam.has(id)) entitlementByTeam.set(id, new Set());
+          entitlementByTeam.get(id)!.add(String(row.status || '').toLowerCase());
+        });
+      }
+    } catch (error: any) {
+      // Environments that have not applied the workspace-entitlements migration
+      // still get a valid summary; teams simply remain in the non-paid buckets.
+      this.logger.warn(`Workspace opportunity summary unavailable: ${error?.message || error}`);
+    }
+
+    const workspaceBucket = (r: any) => {
+      const teamId = String(r?.team_id || '');
+      if (!teamId) return 'none';
+      const statuses = entitlementByTeam.get(teamId);
+      if (statuses?.has('active')) return 'paid_workspace';
+      if (statuses?.has('past_due') || statuses?.has('suspended')) return 'trial_pending';
+      return 'has_workspace';
+    };
+
+    const workspaceOpportunityRows = [
+      { id: 'none', key: 'No Workspace', count: data.filter((r) => workspaceBucket(r) === 'none').length },
+      { id: 'has_workspace', key: 'Has Workspace', count: data.filter((r) => workspaceBucket(r) === 'has_workspace').length },
+      { id: 'trial_pending', key: 'Workspace Trial / Pending', count: data.filter((r) => workspaceBucket(r) === 'trial_pending').length },
+      { id: 'paid_workspace', key: 'Paid Workspace', count: data.filter((r) => workspaceBucket(r) === 'paid_workspace').length },
+    ];
+
     return {
       kpis: {
         totalRegistered: total,
@@ -452,6 +593,9 @@ export class EcommerceWorkspaceService {
         plan: planRows,
         language: group((r) => r.language || 'en'),
         country: group((r) => r.country || 'Unknown'),
+        customerStatus: customerStatusRows,
+        customerActivity: customerActivityRows,
+        workspaceOpportunity: workspaceOpportunityRows,
       },
     };
   }

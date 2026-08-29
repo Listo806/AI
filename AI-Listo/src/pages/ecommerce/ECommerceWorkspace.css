@@ -243,7 +243,7 @@
    genuinely narrow screens (tablet / phone). */
 .cxc-analytics {
   display: grid;
-  grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.2fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 9px;
   margin-bottom: 16px;
 }
@@ -2366,4 +2366,283 @@
   .crm-dark .cxc-table tbody tr.cxc-table-state-row > td.cxc-table-state-cell {
     color: #9aa7bd !important;
   }
+}
+/* =========================================================
+   SUBSCRIPTION ANALYTICS UPDATE — scoped to requested row only
+   Desktop: Customers by Plan + Status + Activity + Workspace
+   Mobile/tablet: ONLY Status + Activity + Workspace
+   ========================================================= */
+.cxc-subscription-analytics {
+  grid-template-columns: minmax(0, 1.55fr) repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  align-items: stretch;
+}
+.cxc-subscription-analytics > .cxc-card { min-width: 0; margin: 0; }
+
+.cxc-plan-rings-card,
+.cxc-analytics-breakdown-card {
+  padding: 13px 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e4eaf2;
+}
+.cxc-plan-rings-head,
+.cxc-analytics-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cxc-plan-rings-head { margin-bottom: 15px; }
+.cxc-plan-rings-head h3,
+.cxc-analytics-card-title-row h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+.cxc-plan-rings-head p,
+.cxc-analytics-card-title-row p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.cxc-plan-rings-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  align-items: start;
+}
+.cxc-plan-ring-item {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.cxc-plan-ring-item > strong {
+  color: #111827;
+  font-size: 9px;
+  line-height: 1.15;
+}
+.cxc-plan-ring-item > span {
+  color: #111827;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.cxc-analytics-breakdown-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.cxc-analytics-card-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 8px;
+  align-items: flex-start;
+}
+.cxc-analytics-card-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: #155eef;
+  background: #eff5ff;
+}
+.cxc-status-card .cxc-analytics-card-icon { color: #f97316; background: #fff4e8; }
+.cxc-activity-card .cxc-analytics-card-icon { color: #155eef; background: #eff5ff; }
+.cxc-workspace-card .cxc-analytics-card-icon { color: #155eef; background: #eff5ff; }
+.cxc-analytics-card-copy { min-width: 0; }
+.cxc-analytics-card-arrow { color: #155eef; flex: 0 0 auto; margin-top: 1px; }
+.cxc-analytics-card-body {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  margin-top: 12px;
+}
+.cxc-analytics-ring-wrap {
+  width: var(--cxc-ring-size, 88px);
+  height: var(--cxc-ring-size, 88px);
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.cxc-analytics-ring { width: 100%; height: 100%; overflow: visible; }
+.cxc-analytics-ring-track { stroke: #edf1f6; }
+.cxc-analytics-ring-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  pointer-events: none;
+}
+.cxc-analytics-ring-center strong {
+  color: #0f172a;
+  font-size: 17px;
+  line-height: 1;
+  font-weight: 800;
+}
+.cxc-analytics-ring-center span {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 8px;
+}
+.cxc-analytics-legend { min-width: 0; }
+.cxc-analytics-legend-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 5px;
+  min-height: 25px;
+  border-bottom: 1px solid #f0f3f7;
+  font-size: 9px;
+}
+.cxc-analytics-legend-row:last-child { border-bottom: 0; }
+.cxc-analytics-dot { width: 8px; height: 8px; border-radius: 50%; }
+.cxc-analytics-legend-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #334155;
+}
+.cxc-analytics-legend-row strong { color: #0f172a; font-size: 9px; white-space: nowrap; }
+.cxc-analytics-legend-pct { color: #64748b; font-size: 9px; white-space: nowrap; }
+
+/* Mobile reference: this section is intentionally isolated from every other Admin area. */
+@media (max-width: 1024px) {
+  .cxc-subscription-analytics {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    margin-bottom: 18px;
+  }
+  .cxc-subscription-analytics .cxc-plan-rings-card { display: none !important; }
+
+  .cxc-subscription-analytics .cxc-analytics-breakdown-card {
+    min-height: 320px;
+    padding: 24px 26px;
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 16px;
+    border-radius: 18px;
+  }
+  .cxc-subscription-analytics .cxc-analytics-card-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+  }
+  .cxc-subscription-analytics .cxc-analytics-card-icon svg { width: 31px; height: 31px; }
+  .cxc-subscription-analytics .cxc-analytics-card-title-row h3 {
+    font-size: clamp(23px, 3vw, 31px);
+    line-height: 1.15;
+  }
+  .cxc-subscription-analytics .cxc-analytics-card-title-row p {
+    margin-top: 7px;
+    font-size: clamp(15px, 2vw, 21px);
+    line-height: 1.25;
+  }
+  .cxc-subscription-analytics .cxc-analytics-card-arrow {
+    width: 29px;
+    height: 29px;
+    margin-top: 3px;
+  }
+  .cxc-subscription-analytics .cxc-analytics-card-body {
+    grid-template-columns: minmax(180px, .9fr) minmax(0, 1.8fr);
+    gap: 30px;
+    margin-top: 22px;
+  }
+  .cxc-subscription-analytics .cxc-analytics-ring-wrap {
+    --cxc-ring-size: min(230px, 28vw) !important;
+    justify-self: center;
+  }
+  .cxc-subscription-analytics .cxc-analytics-ring-center strong {
+    font-size: clamp(31px, 5vw, 46px);
+  }
+  .cxc-subscription-analytics .cxc-analytics-ring-center span {
+    margin-top: 8px;
+    font-size: clamp(14px, 2vw, 20px);
+  }
+  .cxc-subscription-analytics .cxc-analytics-legend-row {
+    grid-template-columns: 15px minmax(0, 1fr) auto minmax(66px, auto);
+    gap: 12px;
+    min-height: 54px;
+    font-size: clamp(14px, 2vw, 20px);
+  }
+  .cxc-subscription-analytics .cxc-analytics-dot { width: 15px; height: 15px; }
+  .cxc-subscription-analytics .cxc-analytics-legend-row strong { font-size: inherit; }
+  .cxc-subscription-analytics .cxc-analytics-legend-pct {
+    min-width: 66px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: inherit;
+    text-align: center;
+  }
+
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-breakdown-card {
+    border-color: rgba(91, 107, 128, .48);
+    background:
+      radial-gradient(circle at 55% 18%, rgba(22, 62, 113, .08), transparent 45%),
+      linear-gradient(145deg, #050b12 0%, #07101a 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.015);
+  }
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-card-title-row h3,
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-ring-center strong,
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-legend-row strong,
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-legend-label { color: #f8fafc; }
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-card-title-row p,
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-ring-center span { color: #aab6c8; }
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-card-icon {
+    color: #ff8a18;
+    background: transparent;
+    filter: drop-shadow(0 0 10px rgba(255, 132, 22, .38));
+  }
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-card-arrow { color: #fff; }
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-ring-track { stroke: #17202d; }
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-legend-row { border-bottom-color: rgba(80,96,117,.22); }
+  .crm-dark .cxc-subscription-analytics .cxc-analytics-legend-pct {
+    color: #b7c2d6;
+    background: rgba(31, 42, 57, .7);
+  }
+}
+
+@media (max-width: 560px) {
+  .cxc-subscription-analytics .cxc-analytics-breakdown-card {
+    min-height: 0;
+    padding: 20px 18px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .cxc-subscription-analytics .cxc-analytics-card-icon { width: 42px; height: 42px; }
+  .cxc-subscription-analytics .cxc-analytics-card-icon svg { width: 27px; height: 27px; }
+  .cxc-subscription-analytics .cxc-analytics-card-body {
+    grid-template-columns: minmax(118px, .82fr) minmax(0, 1.45fr);
+    gap: 16px;
+    margin-top: 18px;
+  }
+  .cxc-subscription-analytics .cxc-analytics-ring-wrap { --cxc-ring-size: min(156px, 35vw) !important; }
+  .cxc-subscription-analytics .cxc-analytics-card-title-row h3 { font-size: 20px; }
+  .cxc-subscription-analytics .cxc-analytics-card-title-row p { font-size: 14px; }
+  .cxc-subscription-analytics .cxc-analytics-legend-row {
+    grid-template-columns: 11px minmax(0, 1fr) auto minmax(30px, auto);
+    gap: 5px;
+    min-height: 44px;
+    font-size: 11px;
+  }
+  .cxc-subscription-analytics .cxc-analytics-dot { width: 11px; height: 11px; }
+  .cxc-subscription-analytics .cxc-analytics-legend-pct { min-width: 30px; padding: 4px 7px; }
+  .cxc-subscription-analytics .cxc-analytics-ring-center strong { font-size: 29px; }
+  .cxc-subscription-analytics .cxc-analytics-ring-center span { font-size: 13px; margin-top: 5px; }
 }

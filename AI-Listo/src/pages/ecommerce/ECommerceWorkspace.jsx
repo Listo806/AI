@@ -282,48 +282,89 @@ function csvToCustomers(rows) {
   return out;
 }
 
-function Donut({ data }) {
-  const total = (data || []).reduce((s, d) => s + (d.count || 0), 0) || 1;
-  const r = 40, c = 2 * Math.PI * r;
-  let acc = 0;
+function AnalyticsRing({ rows = [], total = 0, centerValue, centerLabel = "Total", size = 96, stroke = 13 }) {
+  const safeTotal = Math.max(0, Number(total || 0));
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
   return (
-    <svg width="80" height="80" viewBox="0 0 96 96" style={{ flexShrink: 0 }}>
-      <g transform="translate(48,48) rotate(-90)">
-        <circle r={r} fill="none" stroke="#eef2f7" strokeWidth="13" />
-        {(data || []).map((d, i) => {
-          const frac = (d.count || 0) / total;
-          const el = (
-            <circle key={i} r={r} fill="none" stroke={DONUT_COLORS[i % DONUT_COLORS.length]} strokeWidth="13"
-              strokeDasharray={`${frac * c} ${c - frac * c}`} strokeDashoffset={-acc * c} />
-          );
-          acc += frac;
-          return el;
-        })}
-      </g>
-    </svg>
+    <div className="cxc-analytics-ring-wrap" style={{ "--cxc-ring-size": `${size}px` }}>
+      <svg className="cxc-analytics-ring" viewBox="0 0 96 96" aria-hidden="true">
+        <g transform="translate(48,48) rotate(-90)">
+          <circle className="cxc-analytics-ring-track" r={radius} fill="none" strokeWidth={stroke} />
+          {safeTotal > 0 && rows.map((row, index) => {
+            const count = Math.max(0, Number(row?.count || 0));
+            const fraction = Math.min(1, count / safeTotal);
+            const dash = fraction * circumference;
+            const circle = (
+              <circle
+                key={`${row?.key || index}-${index}`}
+                r={radius}
+                fill="none"
+                stroke={row?.color || DONUT_COLORS[index % DONUT_COLORS.length]}
+                strokeWidth={stroke}
+                strokeLinecap="butt"
+                strokeDasharray={`${dash} ${Math.max(0, circumference - dash)}`}
+                strokeDashoffset={-offset * circumference}
+              />
+            );
+            offset += fraction;
+            return circle;
+          })}
+        </g>
+      </svg>
+      <div className="cxc-analytics-ring-center">
+        <strong>{Number(centerValue ?? safeTotal).toLocaleString()}</strong>
+        {centerLabel && <span>{centerLabel}</span>}
+      </div>
+    </div>
   );
 }
 
-function DonutCard({ title, rows }) {
-  const total = (rows || []).reduce((s, r) => s + (r.count || 0), 0) || 1;
+function AnalyticsBreakdownCard({
+  className = "",
+  title,
+  subtitle,
+  icon,
+  rows = [],
+  total = 0,
+}) {
+  const safeTotal = Math.max(0, Number(total || 0));
+
   return (
-    <div className="cxc-card">
-      <div className="cxc-card-title">{title}</div>
-      <div className="cxc-donut-body">
-        <Donut data={rows} />
-        <div className="cxc-legend">
-          {(rows || []).length === 0 && <div className="cxc-muted" style={{ fontSize: 12 }}>No data</div>}
-          {(rows || []).map((r, i) => (
-            <div className="cxc-legend-row" key={r.key}>
-              <span className="cxc-dot" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }} />
-              <span className="cxc-legend-key">{r.key}</span>
-              <span className="cxc-legend-val">{r.count.toLocaleString()}</span>
-              <span className="cxc-legend-pct">{Math.round((r.count / total) * 100)}%</span>
+    <article className={`cxc-card cxc-analytics-breakdown-card ${className}`}>
+      <div className="cxc-analytics-card-head">
+        <div className="cxc-analytics-card-icon">{icon}</div>
+        <div className="cxc-analytics-card-copy">
+          <div className="cxc-analytics-card-title-row">
+            <div>
+              <h3>{title}</h3>
+              <p>{subtitle}</p>
             </div>
-          ))}
+            <ChevronRight className="cxc-analytics-card-arrow" size={20} aria-hidden="true" />
+          </div>
         </div>
       </div>
-    </div>
+      
+      <div className="cxc-analytics-card-body">
+        <AnalyticsRing rows={rows} total={safeTotal} centerValue={safeTotal} />
+        <div className="cxc-analytics-legend">
+          {rows.map((row, index) => {
+            const count = Math.max(0, Number(row?.count || 0));
+            const pct = safeTotal ? Math.round((count / safeTotal) * 1000) / 10 : 0;
+            return (
+              <div className="cxc-analytics-legend-row" key={row?.key || index}>
+                <span className="cxc-analytics-dot" style={{ background: row?.color || DONUT_COLORS[index % DONUT_COLORS.length] }} />
+                <span className="cxc-analytics-legend-label">{row?.key}</span>
+                <strong>{count.toLocaleString()}</strong>
+                <span className="cxc-analytics-legend-pct">{pct}%</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -597,6 +638,37 @@ function ECommerceSubscriptionsUI() {
     0,
   );
 
+
+  const analyticsTotal = Number(summary?.kpis?.totalRegistered || 0);
+  const breakdown = summary?.breakdowns || {};
+
+  const customerStatusRows = [
+    { key: "Free", count: Number(breakdown?.customerStatus?.find?.((r) => r.id === "free" || r.key === "Free")?.count || 0), color: "#ff6b00" },
+    { key: "Checkout Pending", count: Number(breakdown?.customerStatus?.find?.((r) => r.id === "checkout_pending" || r.key === "Checkout Pending")?.count || 0), color: "#ff9f0a" },
+    { key: "Registered / No Plan", count: Number(breakdown?.customerStatus?.find?.((r) => r.id === "registered" || r.key === "Registered / No Plan")?.count || 0), color: "#ff2d20" },
+    { key: "Paid", count: Number(breakdown?.customerStatus?.find?.((r) => r.id === "paid" || r.key === "Paid")?.count || 0), color: "#00c853" },
+  ];
+
+  const customerActivityRows = [
+    { key: "Active Today", count: Number(breakdown?.customerActivity?.find?.((r) => r.id === "today" || r.key === "Active Today")?.count || 0), color: "#00c853" },
+    { key: "Active Last 7 Days", count: Number(breakdown?.customerActivity?.find?.((r) => r.id === "last_7_days" || r.key === "Active Last 7 Days")?.count || 0), color: "#0b7cff" },
+    { key: "Inactive 7–30 Days", count: Number(breakdown?.customerActivity?.find?.((r) => r.id === "inactive_7_30" || r.key === "Inactive 7–30 Days")?.count || 0), color: "#ff9f0a" },
+    { key: "Inactive 30+ Days", count: Number(breakdown?.customerActivity?.find?.((r) => r.id === "inactive_30_plus" || r.key === "Inactive 30+ Days")?.count || 0), color: "#ff2d20" },
+  ];
+
+  const workspaceOpportunityRows = [
+    { key: "No Workspace", count: Number(breakdown?.workspaceOpportunity?.find?.((r) => r.id === "none" || r.key === "No Workspace")?.count || 0), color: "#ff2d20" },
+    { key: "Has Workspace", count: Number(breakdown?.workspaceOpportunity?.find?.((r) => r.id === "has_workspace" || r.key === "Has Workspace")?.count || 0), color: "#00c853" },
+    { key: "Workspace Trial / Pending", count: Number(breakdown?.workspaceOpportunity?.find?.((r) => r.id === "trial_pending" || r.key === "Workspace Trial / Pending")?.count || 0), color: "#ffc400" },
+    { key: "Paid Workspace", count: Number(breakdown?.workspaceOpportunity?.find?.((r) => r.id === "paid_workspace" || r.key === "Paid Workspace")?.count || 0), color: "#1837ff" },
+  ];
+
+  const planRingRows = customersByPlan.map((plan, index) => ({
+    key: plan.label,
+    count: plan.count,
+    color: ["#0ecb48", "#ff9500", "#0969ff", "#7c3aed"][index],
+  }));
+
   return (
     <div className="cxc-page">
       {/* cxc-scale shrinks the whole page ~6% per client; kept OFF the modals
@@ -628,50 +700,63 @@ function ECommerceSubscriptionsUI() {
         <Kpi variant="gold" icon={<Gift size={18} />} label="Free Accounts" value={kpis ? kpis.freeAccounts.toLocaleString() : "—"} sub={kpis ? `${kpis.freePctOfTotal}% of total` : ""} subClass="muted" />
       </div>
 
-      {/* Analytics: funnel + breakdowns — moved ABOVE tabs/filters per client */}
-      <div className="cxc-analytics">
-        <div className="cxc-card cxc-plan-customers-card">
-          <div className="cxc-plan-customers-head">
+      {/* Subscription analytics — ONLY this row changes per the approved desktop/mobile reference. */}
+      <div className="cxc-analytics cxc-subscription-analytics">
+        <article className="cxc-card cxc-plan-rings-card">
+          <div className="cxc-plan-rings-head">
             <div>
-              <h2>Subscriptions by Plan</h2>
+              <h3>Customers by Plan</h3>
               <p>Customers by their selected plan.</p>
             </div>
-
             <div className="cxc-active-customers-pill">
               <Users size={15} />
-              <strong>
-                {activeCustomersByPlan.toLocaleString()} Customers
-              </strong>
+              <strong>{activeCustomersByPlan.toLocaleString()} Customers</strong>
             </div>
           </div>
-
-          <div className="cxc-plan-customers-grid">
-            {customersByPlan.map(({ key, label, count, price, Icon, tone }) => (
-              <div
-                key={key}
-                className={`cxc-plan-customer-card cxc-plan-customer-card--${tone}`}
-              >
-                <div className="cxc-plan-customer-top">
-                  <div className="cxc-plan-customer-icon">
-                    <Icon size={27} />
-                  </div>
-                  <strong>{label}</strong>
+          <div className="cxc-plan-rings-grid">
+            {customersByPlan.map((plan, index) => {
+              const pct = analyticsTotal ? Math.round((plan.count / analyticsTotal) * 1000) / 10 : 0;
+              const toneRows = [
+                { key: plan.label, count: plan.count, color: planRingRows[index].color },
+                { key: "Other", count: Math.max(0, analyticsTotal - plan.count), color: "rgba(148,163,184,.18)" },
+              ];
+              return (
+                <div className={`cxc-plan-ring-item cxc-plan-ring-item--${plan.tone}`} key={plan.key}>
+                  <AnalyticsRing rows={toneRows} total={Math.max(analyticsTotal, 1)} centerValue={plan.count} centerLabel="" size={80} stroke={11} />
+                  <strong>{plan.label}</strong>
+                  <span>{pct}%</span>
                 </div>
-
-                <div className="cxc-plan-customer-count">
-                  {count.toLocaleString()}
-                </div>
-
-                <div className="cxc-plan-customer-price">
-                  {price}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
-        <DonutCard title="By Source" rows={summary?.breakdowns?.source} />
-        <DonutCard title="By Offer" rows={summary?.breakdowns?.plan} />
-        <DonutCard title="By Language" rows={summary?.breakdowns?.language} />
+        </article>
+
+        <AnalyticsBreakdownCard
+          className="cxc-status-card"
+          title="Customer Status"
+          subtitle="Where your customers stand"
+          icon={<Users size={22} />}
+          rows={customerStatusRows}
+          total={analyticsTotal}
+        />
+
+        <AnalyticsBreakdownCard
+          className="cxc-activity-card"
+          title="Customer Activity"
+          subtitle="Based on last 30 days"
+          icon={<Zap size={22} />}
+          rows={customerActivityRows}
+          total={analyticsTotal}
+        />
+
+        <AnalyticsBreakdownCard
+          className="cxc-workspace-card"
+          title="Workspace Opportunity"
+          subtitle="Your workspace upsell potential"
+          icon={<Rocket size={22} />}
+          rows={workspaceOpportunityRows}
+          total={analyticsTotal}
+        />
       </div>
 
       {/* Tabs + filters panel */}
