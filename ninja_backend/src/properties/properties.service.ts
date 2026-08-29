@@ -1331,6 +1331,13 @@ export class PropertiesService {
       scope.params,
     );
 
+    await this.ensureRealEstateWorkspaceSchema();
+    const workspace = await this.getRealEstateWorkspaceData(
+      userId,
+      teamId,
+      userRole,
+    );
+
     return {
       range: period.range,
       rangeLabel: period.label,
@@ -1397,6 +1404,11 @@ export class PropertiesService {
             : "No budget",
         count: Number(lead.count || 0),
       })),
+
+      // Full Real Estate Workspace data. These arrays are tenant scoped and
+      // intentionally return [] when no records exist; the frontend must never
+      // invent sample records. Buyers/sellers reuse existing CRM data.
+      workspace,
     };
   }
 
@@ -1624,4 +1636,389 @@ export class PropertiesService {
 
     return rows[0] || {};
   }
+
+  private realEstateWorkspaceSchemaReady = false;
+
+  /**
+   * The original Properties module predates the full Real Estate Workspace.
+   * Keep Properties as the source of truth and add only lifecycle records that
+   * do not already exist elsewhere in the CRM. Buyers reuse leads; sellers
+   * reuse property owners/users. No duplicate customer/property tables.
+   */
+  private async ensureRealEstateWorkspaceSchema(): Promise<void> {
+    if (this.realEstateWorkspaceSchemaReady) return;
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS real_estate_showings (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID,
+        created_by UUID NOT NULL,
+        property_id UUID,
+        buyer_lead_id UUID,
+        agent_id UUID,
+        scheduled_at TIMESTAMPTZ,
+        status TEXT NOT NULL DEFAULT 'scheduled',
+        notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_showings_team ON real_estate_showings(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_showings_property ON real_estate_showings(property_id)`);
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS real_estate_offers (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID,
+        created_by UUID NOT NULL,
+        property_id UUID,
+        buyer_lead_id UUID,
+        amount NUMERIC(14,2),
+        asking_price NUMERIC(14,2),
+        status TEXT NOT NULL DEFAULT 'pending',
+        offer_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_offers_team ON real_estate_offers(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_offers_property ON real_estate_offers(property_id)`);
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS real_estate_transactions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID,
+        created_by UUID NOT NULL,
+        property_id UUID,
+        buyer_lead_id UUID,
+        agent_id UUID,
+        deal_value NUMERIC(14,2),
+        stage TEXT NOT NULL DEFAULT 'under_contract',
+        progress INTEGER NOT NULL DEFAULT 0,
+        closing_date DATE,
+        status TEXT NOT NULL DEFAULT 'active',
+        notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_transactions_team ON real_estate_transactions(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_transactions_property ON real_estate_transactions(property_id)`);
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS real_estate_documents (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID,
+        created_by UUID NOT NULL,
+        property_id UUID,
+        title TEXT NOT NULL,
+        doc_type TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        signed_count INTEGER NOT NULL DEFAULT 0,
+        signer_count INTEGER NOT NULL DEFAULT 0,
+        progress INTEGER NOT NULL DEFAULT 0,
+        stored_file_id UUID,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_documents_team ON real_estate_documents(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_documents_property ON real_estate_documents(property_id)`);
+
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS real_estate_commissions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID,
+        created_by UUID NOT NULL,
+        property_id UUID,
+        agent_id UUID,
+        client_lead_id UUID,
+        total_commission NUMERIC(14,2) NOT NULL DEFAULT 0,
+        agent_split_pct NUMERIC(5,2) NOT NULL DEFAULT 50,
+        brokerage_split_pct NUMERIC(5,2) NOT NULL DEFAULT 50,
+        pending_payout NUMERIC(14,2) NOT NULL DEFAULT 0,
+        paid_amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+        payout_date DATE,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_commissions_team ON real_estate_commissions(team_id)`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_re_commissions_property ON real_estate_commissions(property_id)`);
+
+    this.realEstateWorkspaceSchemaReady = true;
+  }
+
+  private workspaceWhere(
+    alias: string,
+    userId: string,
+    teamId: string | null,
+    userRole?: string,
+  ) {
+    const canViewAll =
+      userRole === 'admin' ||
+      userRole === 'super_admin' ||
+      userRole === 'developer';
+
+    if (canViewAll) return { where: 'TRUE', params: [] as any[] };
+    if (teamId) return { where: `${alias}.team_id = $1`, params: [teamId] };
+    return { where: `${alias}.created_by = $1`, params: [userId] };
+  }
+
+  async getRealEstateWorkspaceData(
+    userId: string,
+    teamId: string | null,
+    userRole?: string,
+  ) {
+    await this.ensureRealEstateWorkspaceSchema();
+
+    const propertyScope = this.getScope(userId, teamId, userRole);
+    const showingScope = this.workspaceWhere('s', userId, teamId, userRole);
+    const offerScope = this.workspaceWhere('o', userId, teamId, userRole);
+    const txScope = this.workspaceWhere('x', userId, teamId, userRole);
+    const docScope = this.workspaceWhere('d', userId, teamId, userRole);
+    const commissionScope = this.workspaceWhere('c', userId, teamId, userRole);
+
+    // Buyers are existing CRM leads matched to property inventory. We do not
+    // create a second buyer/customer table.
+    const { rows: buyers } = await this.db.query(
+      `SELECT l.id, l.name,
+              COALESCE(l.parsed_city, '') AS location,
+              l.parsed_budget_min AS "budgetMin",
+              l.parsed_budget_max AS "budgetMax",
+              COUNT(p.id)::int AS "matchCount"
+       FROM leads l
+       LEFT JOIN properties p
+         ON (p.team_id = l.team_id OR p.created_by = l.created_by)
+        AND (
+          l.property_id = p.id OR
+          (p.city IS NOT NULL AND l.parsed_city IS NOT NULL AND LOWER(TRIM(p.city)) = LOWER(TRIM(l.parsed_city))) OR
+          (p.price IS NOT NULL
+            AND (l.parsed_budget_min IS NULL OR p.price >= l.parsed_budget_min)
+            AND (l.parsed_budget_max IS NULL OR p.price <= l.parsed_budget_max))
+        )
+       WHERE ${propertyScope.where.replaceAll('team_id', 'l.team_id').replaceAll('created_by', 'l.created_by')}
+       GROUP BY l.id
+       ORDER BY "matchCount" DESC, l.created_at DESC
+       LIMIT 40`,
+      propertyScope.params,
+    );
+
+    // Sellers are existing property owners/creators; again no duplicated CRM
+    // entity is introduced.
+    const { rows: sellers } = await this.db.query(
+      `SELECT u.id, u.name, u.email,
+              COUNT(p.id)::int AS "propertyCount",
+              COALESCE(SUM(p.price), 0)::numeric AS "listingValue",
+              COUNT(*) FILTER (WHERE p.status = 'published')::int AS "activeListings"
+       FROM properties p
+       LEFT JOIN users u ON u.id = p.created_by
+       WHERE ${propertyScope.where.replaceAll('team_id', 'p.team_id').replaceAll('created_by', 'p.created_by')}
+       GROUP BY u.id, u.name, u.email
+       ORDER BY "listingValue" DESC
+       LIMIT 40`,
+      propertyScope.params,
+    );
+
+    const { rows: showings } = await this.db.query(
+      `SELECT s.id, s.property_id AS "propertyId", p.title AS "propertyTitle",
+              p.address, p.city, p.state, p.thumbnail_url AS "thumbnailUrl",
+              s.buyer_lead_id AS "buyerLeadId", l.name AS "buyerName",
+              s.agent_id AS "agentId", a.name AS "agentName",
+              s.scheduled_at AS "scheduledAt", s.status, s.notes
+       FROM real_estate_showings s
+       LEFT JOIN properties p ON p.id = s.property_id
+       LEFT JOIN leads l ON l.id = s.buyer_lead_id
+       LEFT JOIN users a ON a.id = s.agent_id
+       WHERE ${showingScope.where}
+       ORDER BY s.scheduled_at ASC NULLS LAST, s.created_at DESC
+       LIMIT 50`,
+      showingScope.params,
+    );
+
+    const { rows: offers } = await this.db.query(
+      `SELECT o.id, o.property_id AS "propertyId", p.title AS "propertyTitle",
+              p.address, p.city, p.state, p.thumbnail_url AS "thumbnailUrl",
+              o.buyer_lead_id AS "buyerLeadId", l.name AS "buyerName",
+              o.amount, COALESCE(o.asking_price, p.price) AS "askingPrice",
+              o.status, o.offer_date AS "offerDate", o.notes
+       FROM real_estate_offers o
+       LEFT JOIN properties p ON p.id = o.property_id
+       LEFT JOIN leads l ON l.id = o.buyer_lead_id
+       WHERE ${offerScope.where}
+       ORDER BY o.offer_date DESC, o.created_at DESC
+       LIMIT 50`,
+      offerScope.params,
+    );
+
+    const { rows: transactions } = await this.db.query(
+      `SELECT x.id, x.property_id AS "propertyId", p.title AS "propertyTitle",
+              p.address, p.city, p.state, p.thumbnail_url AS "thumbnailUrl",
+              x.buyer_lead_id AS "buyerLeadId", l.name AS "buyerName",
+              x.agent_id AS "agentId", a.name AS "agentName",
+              COALESCE(x.deal_value, p.price) AS "dealValue", x.stage,
+              x.progress, x.closing_date AS "closingDate", x.status, x.notes
+       FROM real_estate_transactions x
+       LEFT JOIN properties p ON p.id = x.property_id
+       LEFT JOIN leads l ON l.id = x.buyer_lead_id
+       LEFT JOIN users a ON a.id = x.agent_id
+       WHERE ${txScope.where}
+       ORDER BY x.closing_date ASC NULLS LAST, x.created_at DESC
+       LIMIT 50`,
+      txScope.params,
+    );
+
+    const { rows: documents } = await this.db.query(
+      `SELECT d.id, d.property_id AS "propertyId", p.title AS "propertyTitle",
+              d.title, d.doc_type AS "docType", d.status,
+              d.signed_count AS "signedCount", d.signer_count AS "signerCount",
+              d.progress, d.stored_file_id AS "storedFileId", d.created_at AS "createdAt"
+       FROM real_estate_documents d
+       LEFT JOIN properties p ON p.id = d.property_id
+       WHERE ${docScope.where}
+       ORDER BY d.created_at DESC
+       LIMIT 50`,
+      docScope.params,
+    );
+
+    const { rows: commissions } = await this.db.query(
+      `SELECT c.id, c.property_id AS "propertyId", p.title AS "propertyTitle",
+              p.address, p.city, p.state, p.thumbnail_url AS "thumbnailUrl",
+              c.agent_id AS "agentId", a.name AS "agentName",
+              c.client_lead_id AS "clientLeadId", l.name AS "clientName",
+              c.total_commission AS "totalCommission",
+              c.agent_split_pct AS "agentSplitPct",
+              c.brokerage_split_pct AS "brokerageSplitPct",
+              c.pending_payout AS "pendingPayout", c.paid_amount AS "paidAmount",
+              c.payout_date AS "payoutDate", c.status
+       FROM real_estate_commissions c
+       LEFT JOIN properties p ON p.id = c.property_id
+       LEFT JOIN users a ON a.id = c.agent_id
+       LEFT JOIN leads l ON l.id = c.client_lead_id
+       WHERE ${commissionScope.where}
+       ORDER BY c.payout_date ASC NULLS LAST, c.created_at DESC
+       LIMIT 50`,
+      commissionScope.params,
+    );
+
+    const numberize = (rows: any[], keys: string[]) =>
+      rows.map((row) => {
+        const out = { ...row };
+        keys.forEach((key) => {
+          if (out[key] != null) out[key] = Number(out[key]);
+        });
+        return out;
+      });
+
+    const commissionRows = numberize(commissions, [
+      'totalCommission', 'agentSplitPct', 'brokerageSplitPct', 'pendingPayout', 'paidAmount',
+    ]);
+
+    const grossCommission = commissionRows.reduce((sum, item) => sum + Number(item.totalCommission || 0), 0);
+    const agentSplit = commissionRows.reduce(
+      (sum, item) => sum + Number(item.totalCommission || 0) * (Number(item.agentSplitPct || 0) / 100),
+      0,
+    );
+    const brokerage = commissionRows.reduce(
+      (sum, item) => sum + Number(item.totalCommission || 0) * (Number(item.brokerageSplitPct || 0) / 100),
+      0,
+    );
+    const pendingPayout = commissionRows.reduce((sum, item) => sum + Number(item.pendingPayout || 0), 0);
+    const paid = commissionRows.reduce((sum, item) => sum + Number(item.paidAmount || 0), 0);
+
+    return {
+      buyers: numberize(buyers, ['budgetMin', 'budgetMax', 'matchCount']),
+      sellers: numberize(sellers, ['propertyCount', 'listingValue', 'activeListings']),
+      showings,
+      offers: numberize(offers, ['amount', 'askingPrice']),
+      transactions: numberize(transactions, ['dealValue', 'progress']),
+      documents: numberize(documents, ['signedCount', 'signerCount', 'progress']),
+      commissions: commissionRows,
+      commissionSummary: {
+        grossCommission,
+        agentSplit,
+        brokerage,
+        pendingPayout,
+        paid,
+      },
+    };
+  }
+
+  async createRealEstateWorkspaceRecord(
+    section: string,
+    body: any,
+    userId: string,
+    teamId: string | null,
+  ) {
+    await this.ensureRealEstateWorkspaceSchema();
+    const resolvedTeamId = teamId || null;
+
+    if (section === 'showings') {
+      const { rows } = await this.db.query(
+        `INSERT INTO real_estate_showings
+           (team_id, created_by, property_id, buyer_lead_id, agent_id, scheduled_at, status, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+        [resolvedTeamId, userId, body.propertyId || null, body.buyerLeadId || null,
+         body.agentId || null, body.scheduledAt || null, body.status || 'scheduled', body.notes || null],
+      );
+      return rows[0];
+    }
+
+    if (section === 'offers') {
+      const { rows } = await this.db.query(
+        `INSERT INTO real_estate_offers
+           (team_id, created_by, property_id, buyer_lead_id, amount, asking_price, status, offer_date, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        [resolvedTeamId, userId, body.propertyId || null, body.buyerLeadId || null,
+         body.amount || null, body.askingPrice || null, body.status || 'pending', body.offerDate || new Date(), body.notes || null],
+      );
+      return rows[0];
+    }
+
+    if (section === 'transactions') {
+      const { rows } = await this.db.query(
+        `INSERT INTO real_estate_transactions
+           (team_id, created_by, property_id, buyer_lead_id, agent_id, deal_value, stage, progress, closing_date, status, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+        [resolvedTeamId, userId, body.propertyId || null, body.buyerLeadId || null,
+         body.agentId || null, body.dealValue || null, body.stage || 'under_contract',
+         Math.max(0, Math.min(100, Number(body.progress || 0))), body.closingDate || null,
+         body.status || 'active', body.notes || null],
+      );
+      return rows[0];
+    }
+
+    if (section === 'documents') {
+      if (!body.title) throw new BadRequestException('Document title is required');
+      const { rows } = await this.db.query(
+        `INSERT INTO real_estate_documents
+           (team_id, created_by, property_id, title, doc_type, status, signed_count, signer_count, progress, stored_file_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+        [resolvedTeamId, userId, body.propertyId || null, body.title, body.docType || null,
+         body.status || 'pending', Number(body.signedCount || 0), Number(body.signerCount || 0),
+         Math.max(0, Math.min(100, Number(body.progress || 0))), body.storedFileId || null],
+      );
+      return rows[0];
+    }
+
+    if (section === 'commissions') {
+      const { rows } = await this.db.query(
+        `INSERT INTO real_estate_commissions
+           (team_id, created_by, property_id, agent_id, client_lead_id, total_commission,
+            agent_split_pct, brokerage_split_pct, pending_payout, paid_amount, payout_date, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+        [resolvedTeamId, userId, body.propertyId || null, body.agentId || null,
+         body.clientLeadId || null, Number(body.totalCommission || 0),
+         Number(body.agentSplitPct ?? 50), Number(body.brokerageSplitPct ?? 50),
+         Number(body.pendingPayout || 0), Number(body.paidAmount || 0),
+         body.payoutDate || null, body.status || 'pending'],
+      );
+      return rows[0];
+    }
+
+    throw new BadRequestException(`Unsupported real estate workspace section: ${section}`);
+  }
+
 }

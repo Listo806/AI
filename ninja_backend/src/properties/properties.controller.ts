@@ -257,6 +257,35 @@ export class PropertiesController {
     );
   }
 
+  @Get("workspace/data")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth("JWT-auth")
+  @ApiOperation({ summary: "Get Real Estate Workspace data" })
+  async getWorkspaceData(@CurrentUser() user: any) {
+    return this.propertiesService.getRealEstateWorkspaceData(
+      user.id,
+      user.teamId,
+      user.role,
+    );
+  }
+
+  @Post("workspace/:section")
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
+  @ApiBearerAuth("JWT-auth")
+  @ApiOperation({ summary: "Create a Real Estate Workspace record" })
+  async createWorkspaceRecord(
+    @Param("section") section: string,
+    @Body() body: any,
+    @CurrentUser() user: any,
+  ) {
+    return this.propertiesService.createRealEstateWorkspaceRecord(
+      section,
+      body,
+      user.id,
+      user.teamId,
+    );
+  }
+
   @Get(":id")
   @ApiOperation({
     summary:
