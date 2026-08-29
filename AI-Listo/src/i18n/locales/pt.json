@@ -866,6 +866,26 @@
     }
   },
   "properties": {
+    "workspaceTitle": "Espaço Imobiliário",
+    "workspaceOverviewDescription": "Gerencie imóveis, compradores e vendedores e feche mais negócios com inteligência de IA.",
+    "workspacePropertiesDescription": "Gerencie imóveis e inventário",
+    "workspaceNavigation": "Seções do espaço imobiliário",
+    "inventorySubtitle": "Gerencie seu inventário de imóveis.",
+    "grid": "Grade",
+    "list": "Lista",
+    "moreFilters": "Mais filtros",
+    "tabs": {
+      "overview": "Visão geral",
+      "properties": "Imóveis",
+      "buyers": "Compradores",
+      "sellers": "Vendedores",
+      "showings": "Visitas",
+      "offers": "Ofertas",
+      "transactions": "Transações",
+      "documents": "Documentos",
+      "commissions": "Comissões",
+      "more": "Mais"
+    },
     "title": "Propriedades",
     "addProperty": "Adicionar Propriedade",
     "noProperties": "Ainda não há propriedades. Adicione seu primeiro anúncio.",

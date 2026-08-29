@@ -1894,6 +1894,7 @@ body #root .properties-page .card-actions-trigger {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
 }
 
 .properties-page .re-header-actions {
@@ -2016,7 +2017,11 @@ body #root .properties-page .card-actions-trigger {
   gap: 9px;
   margin: 12px 0;
 }
-
+.properties-page .re-metrics-grid .re-metric-info{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
 .properties-page .re-metric-card {
   min-width: 0;
   min-height: 82px;
@@ -2500,7 +2505,7 @@ body #root .properties-page .card-actions-trigger {
   background: #fff;
   font-size: 9.5px;
 }
-
+body.crm-dark #root .properties-page .re-pagination-controls select{color: #4b5563;}
 .properties-page .re-pagination-controls button {
   width: 27px;
   height: 27px;
@@ -2672,7 +2677,6 @@ body #root .properties-page .card-actions-trigger {
 
 @media (max-width: 900px) {
   .properties-page .re-workspace-header { align-items: flex-start; flex-direction: column; }
-  .properties-page .re-header-actions { width: 100%; justify-content: flex-end; }
   .properties-page .re-title-wrap p { white-space: normal; }
   .properties-page .re-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .properties-page .re-properties-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2688,4 +2692,1791 @@ body #root .properties-page .card-actions-trigger {
   .properties-page .re-inventory-body { grid-template-columns: 78px 1fr; }
   .properties-page .re-inventory-score { grid-column: 1 / -1; border-left: 0; border-top: 1px solid #eef0f3; padding: 8px 0 0; min-height: 0; }
   .properties-page .re-more-filter-popover { width: min(310px, calc(100vw - 36px)); right: auto; left: 0; }
+}
+/* =========================================================
+   REAL ESTATE — REAL MOBILE CARD ACTION BUTTON
+   ========================================================= */
+
+.properties-page .re-mobile-card-actions {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  body #root
+  .properties-page
+  .re-card-action-wrap {
+    display: none;
+  }
+
+  body #root
+  .properties-page
+  .re-mobile-card-actions {
+    position: absolute;
+
+    top: 9px;
+    right: 9px;
+
+    z-index: 20;
+
+    display: block;
+  }
+
+  body #root
+  .properties-page
+  .re-mobile-card-actions > button {
+    width: 32px;
+    height: 32px;
+
+    padding: 0;
+
+    display: grid;
+    place-items: center;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #f4f4f5;
+
+    cursor: pointer;
+  }
+
+  body #root
+  .properties-page
+  .re-mobile-card-actions
+  .property-actions-menu {
+    position: absolute;
+
+    top: 34px;
+    right: 0;
+
+    min-width: 150px;
+
+    z-index: 50;
+  }
+
+  body #root
+  .properties-page
+  .re-property-body {
+    position: relative;
+  }
+
+  /*
+   * REMOVE this if you added the pseudo ⋮
+   * from my previous CSS version.
+   */
+  body #root
+  .properties-page
+  .re-property-body::after {
+    display: none !important;
+    content: none !important;
+  }
+}
+
+.properties-page .re-mobile-property-title,
+.properties-page .re-mobile-price-filter,
+.properties-page .re-mobile-location-icon {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  
+  /* Workspace title row */
+  body #root .properties-page .re-workspace-header {
+    min-height: 112px;
+    margin: 0 !important;
+    padding: 18px 0 18px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: start !important;
+    justify-content: space-between !important;
+    gap: 18px;
+    border-bottom: 1px solid #202832;
+  }
+
+  body #root .properties-page .re-title-icon {
+    width: 64px !important;
+    height: 64px !important;
+    flex: 0 0 64px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px !important;
+    color: #a759ff !important;
+    background: linear-gradient(145deg, rgba(95, 44, 177, .36), rgba(45, 18, 82, .50)) !important;
+    border: 1px solid #5632a2 !important;
+    box-shadow: inset 0 0 26px rgba(139, 75, 255, .12);
+  }
+
+  body #root .properties-page .re-title-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  body #root .properties-page .re-title-wrap h1 {
+    margin: 0 !important;
+    color: #fff !important;
+    font-size: clamp(24px, 3vw, 31px) !important;
+    line-height: 1.08;
+    font-weight: 750 !important;
+    letter-spacing: -.03em;
+    text-align: left;
+  }
+
+  body #root .properties-page .re-desktop-workspace-subtitle {
+    display: none !important;
+  }
+
+  body #root .properties-page .re-mobile-workspace-subtitle {
+    display: block !important;
+    margin-top: 6px !important;
+    color: #d4d7dc !important;
+    font-size: 15px !important;
+    line-height: 1.25;
+    white-space: normal !important;
+  }
+
+  body #root .properties-page .re-actions-menu-wrap {
+    display: none !important;
+  }
+
+  body #root .properties-page .re-add-property {
+    padding: 0 24px !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    background: linear-gradient(135deg, #7437ff 0%, #6c22ff 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 26px rgba(108, 34, 255, .25) !important;
+    font-size: 16px !important;
+    font-weight: 650 !important;
+    white-space: nowrap;
+  }
+
+  body #root .properties-page .re-add-property svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Workspace tab strip */
+  body #root .properties-page .re-tabs {
+    width: calc(100% + 44px);
+    min-height: 68px !important;
+    margin-left: -22px;
+    padding: 0 22px;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border-top: 0 !important;
+    border-bottom: 1px solid #2a3139 !important;
+    background: rgba(2, 7, 11, .96) !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  body #root .properties-page .re-tabs::-webkit-scrollbar { display: none; }
+
+  body #root .properties-page .re-tabs button {
+    min-width: max-content;
+    height: 68px;
+    padding: 0 clamp(18px, 2.5vw, 34px) !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0 !important;
+    background: transparent !important;
+    color: #d7d9dd !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    cursor: pointer;
+  }
+
+  body #root .properties-page .re-tabs button.active {
+    color: #a44dff !important;
+  }
+
+  body #root .properties-page .re-tabs button.active::after {
+    left: 16px !important;
+    right: 16px !important;
+    bottom: 0 !important;
+    height: 3px !important;
+    background: #a044ff !important;
+  }
+
+  body #root .properties-page .re-tab-desktop-extra { display: none !important; }
+  body #root .properties-page .re-mobile-more-tab { display: inline-flex !important; }
+
+  /* This is Properties, not Overview: hide overview cards/panels */
+  body #root .properties-page .re-metrics-grid,
+  body #root .properties-page .re-bottom-grid {
+    display: none !important;
+  }
+
+  /* Properties heading + Grid/List */
+  body #root .properties-page .re-mobile-properties-heading {
+    display: flex !important;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 28px 6px 20px;
+  }
+
+  body #root .properties-page .re-mobile-properties-heading h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 27px;
+    line-height: 1.05;
+    font-weight: 750;
+    letter-spacing: -.025em;
+  }
+
+  body #root .properties-page .re-mobile-properties-heading p {
+    margin: 7px 0 0;
+    color: #c9cdd3;
+    font-size: 15px;
+  }
+
+  body #root .properties-page .re-mobile-view-toggle {
+    height: 60px;
+    display: flex !important;
+    align-items: stretch;
+    flex: 0 0 auto;
+    border: 1px solid #4b5059;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #050a0f;
+  }
+
+  body #root .properties-page .re-mobile-view-toggle button {
+    min-width: 112px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 0;
+    background: transparent;
+    color: #d7d9de;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  body #root .properties-page .re-mobile-view-toggle button + button {
+    border-left: 1px solid #343a42;
+  }
+
+  body #root .properties-page .re-mobile-view-toggle button.active {
+    color: #a653ff;
+    background: rgba(108, 42, 194, .25);
+    box-shadow: inset 0 0 0 1px #8137ef;
+  }
+
+  /* Search and filters */
+  body #root .properties-page .re-filter-toolbar {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px !important;
+    padding: 0 6px 24px !important;
+  }
+
+  body #root .properties-page .re-search-field {
+    grid-column: 1 / -1;
+    width: 100% !important;
+    height: 58px !important;
+    padding: 0 18px !important;
+    border: 1px solid #414954 !important;
+    border-radius: 10px !important;
+    background: #090f14 !important;
+    color: #aeb4bd !important;
+  }
+
+  body #root .properties-page .re-search-field svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  body #root .properties-page .re-search-field input {
+    color: #f4f5f7 !important;
+    background: transparent !important;
+    font-size: 16px !important;
+  }
+
+  body #root .properties-page .re-search-field input::placeholder { color: #a4aab3; }
+
+  body #root .properties-page .re-compact-select,
+  body #root .properties-page .re-more-filter-btn,
+  body #root .properties-page .re-mobile-price-filter {
+    width: 100% !important;
+    height: 40px !important;
+    min-width: 0 !important;
+    padding: 0 14px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 1px solid #454c56 !important;
+    border-radius: 9px !important;
+    background: #070c11 !important;
+    color: #f0f1f3 !important;
+    font-size: 14px !important;
+  }
+
+  body #root .properties-page .re-compact-select select {
+    width: 100%;
+    color: #f0f1f3 !important;
+    background: #070c11 !important;
+    font-size: 14px !important;
+  }
+
+  body #root .properties-page .re-compact-select select option {
+    color: #fff;
+    background: #070c11;
+  }
+
+  body #root .properties-page .re-price-range { display: none !important; }
+  body #root .properties-page .re-mobile-price-filter { display: flex !important; cursor: pointer; }
+
+  body #root .properties-page .re-more-filter-wrap { width: 100% !important; }
+  body #root .properties-page .re-desktop-filter-label { display: none !important; }
+  body #root .properties-page .re-mobile-filter-label { display: inline !important; }
+  body #root .properties-page .re-toolbar-spacer,
+  body #root .properties-page .re-icon-tool,
+  body #root .properties-page .re-filter-toolbar > .re-view-toggle { display: none !important; }
+
+  body #root .properties-page .re-more-filter-popover {
+    top: 62px !important;
+    right: 0 !important;
+    left: auto !important;
+    width: min(430px, calc(100vw - 44px)) !important;
+    padding: 14px !important;
+    border: 1px solid #3c444f !important;
+    border-radius: 12px !important;
+    background: #080e14 !important;
+    color: #f8fafc !important;
+    box-shadow: 0 22px 50px rgba(0,0,0,.48) !important;
+  }
+
+  body #root .properties-page .re-more-filter-popover label { color: #d4d7dd !important; }
+  body #root .properties-page .re-more-filter-popover select {
+    border-color: #414954 !important;
+    background: #0d141b !important;
+    color: #fff !important;
+  }
+
+  /* Horizontal property cards */
+  body #root .properties-page .re-properties-grid,
+  body #root .properties-page .re-properties-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px !important;
+    padding: 0 6px;
+  }
+
+  body #root .properties-page .re-property-card,
+  body #root .properties-page .re-properties-list .re-property-card {
+    position: relative;
+    width: 100%;
+    min-height: 205px;
+    display: grid !important;
+    grid-template-columns: minmax(210px, 30%) minmax(0, 1fr) !important;
+    overflow: hidden;
+    border: 1px solid #2b3742 !important;
+    border-radius: 12px !important;
+    background: linear-gradient(105deg, #071018 0%, #050a0f 100%) !important;
+    box-shadow: none !important;
+    cursor: pointer;
+  }
+
+  body #root .properties-page .re-property-card:hover { transform: none !important; box-shadow: none !important; }
+
+  body #root .properties-page .re-property-media,
+  body #root .properties-page .re-properties-list .re-property-media {
+    height: 100% !important;
+    min-height: 205px !important;
+    overflow: hidden;
+    border-radius: 11px 0 0 11px !important;
+    background: #111820;
+  }
+
+  body #root .properties-page .re-property-media > img,
+  body #root .properties-page .re-properties-list .re-property-media > img,
+  body #root .properties-page .re-property-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 11px 0 0 11px !important;
+    object-fit: cover;
+  }
+
+  body #root .properties-page .re-status-badge {
+    top: 12px !important;
+    left: 12px !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    font-size: 10px !important;
+    line-height: 1;
+  }
+
+  body #root .properties-page .re-card-action-wrap { display: none !important; }
+
+  body #root .properties-page .re-property-body {
+    position: relative;
+    min-width: 0;
+    padding: 16px 20px 12px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: transparent !important;
+  }
+
+  body #root .properties-page .re-mobile-card-actions {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    z-index: 25;
+    display: block !important;
+  }
+
+  body #root .properties-page .re-mobile-card-actions > button {
+    width: 34px !important;
+    height: 34px !important;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent !important;
+    color: #f3f4f6 !important;
+  }
+
+  body #root .properties-page .re-mobile-card-actions .property-actions-menu {
+    top: 36px !important;
+    right: 0 !important;
+    min-width: 160px;
+    z-index: 60;
+    border-color: #37414b !important;
+    background: #0a1118 !important;
+  }
+
+  body #root .properties-page .re-mobile-card-actions .property-actions-menu button {
+    color: #e5e7eb !important;
+  }
+
+  body #root .properties-page .re-mobile-property-title {
+    display: block !important;
+    max-width: calc(100% - 36px);
+    margin: 0 0 8px !important;
+    color: #f7f7f8 !important;
+    font-size: clamp(17px, 2.4vw, 21px) !important;
+    line-height: 1.14;
+    font-weight: 750;
+    letter-spacing: -.015em;
+  }
+
+  body #root .properties-page .re-property-price-row { display: none !important; }
+
+  body #root .properties-page .re-property-address {
+    margin: 0 !important;
+    display: flex !important;
+    align-items: flex-start;
+    gap: 7px;
+    color: #d8dbe0 !important;
+    font-size: 14px !important;
+    line-height: 1.25;
+  }
+
+  body #root .properties-page .re-mobile-location-icon {
+    display: block !important;
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: #b46aff;
+  }
+
+  body #root .properties-page .re-property-city {
+    margin: 2px 0 0 0 !important;
+    color: #c0c5cc !important;
+    font-size: 13px !important;
+    line-height: 1.2;
+    white-space: normal !important;
+  }
+
+  body #root .properties-page .re-property-specs {
+    margin-top: 14px !important;
+    padding-bottom: 12px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px !important;
+    border-bottom: 1px solid #303841 !important;
+    color: #d7d9de !important;
+    font-size: 13px !important;
+  }
+
+  body #root .properties-page .re-property-specs > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  body #root .properties-page .re-property-specs svg { width: 18px; height: 18px; }
+
+  body #root .properties-page .re-ai-score {
+    margin-left: auto !important;
+    min-width: 68px !important;
+    padding: 8px 7px !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 8px !important;
+    background: #06130d !important;
+  }
+
+  body #root .properties-page .re-ai-score b { font-size: 17px !important; }
+  body #root .properties-page .re-ai-score span::after { content: " AI Score"; }
+  body #root .properties-page .re-ai-score span { font-size: 0 !important; }
+  body #root .properties-page .re-ai-score span::after { font-size: 9px !important; }
+
+  body #root .properties-page .re-property-footer {
+    min-height: 42px;
+    padding-top: 11px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  body #root .properties-page .re-agent-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7636ff, #4d20d7) !important;
+    color: #fff !important;
+    font-size: 11px !important;
+  }
+
+  body #root .properties-page .re-agent-mini > span {
+    max-width: 220px !important;
+    color: #f0f1f3 !important;
+    font-size: 13px !important;
+  }
+
+  body #root .properties-page .re-matched-mini {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 10px;
+    color: #c6c9cf !important;
+  }
+
+  body #root .properties-page .re-matched-mini b {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #6b35d7;
+    border-radius: 8px;
+    color: #f0e9ff !important;
+    background: rgba(79, 33, 142, .16);
+    font-size: 13px !important;
+  }
+
+  body #root .properties-page .re-matched-mini span {
+    color: #c6c9cf !important;
+    font-size: 12px !important;
+  }
+
+  body #root .properties-page .re-empty-card {
+    min-height: 180px;
+    border-color: #37414b !important;
+    background: #071018 !important;
+    color: #aab1bb !important;
+  }
+
+  /* Pagination */
+  body #root .properties-page .re-pagination-row {
+    min-height: 76px;
+    padding: 14px 6px 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px;
+    color: #c4c8ce !important;
+    font-size: 14px !important;
+  }
+
+  body #root .properties-page .re-pagination-controls select {
+    height: 48px !important;
+    padding: 0 14px !important;
+    border: 1px solid #414954 !important;
+    border-radius: 9px !important;
+    background: #090f15 !important;
+    color: #dfe2e6 !important;
+    font-size: 13px !important;
+  }
+
+  body #root .properties-page .re-pagination-controls button {
+    width: 42px !important;
+    height: 42px !important;
+    color: #d9dce1 !important;
+    font-size: 15px !important;
+  }
+
+  body #root .properties-page .re-pagination-controls button.active {
+    background: linear-gradient(135deg, #8546ff, #5b26df) !important;
+    color: #fff !important;
+  }
+}
+
+@media (max-width: 700px) {
+ 
+  body #root .properties-page .re-title-wrap { gap: 11px; }
+
+  body #root .properties-page .re-title-icon {
+    width: 48px !important;
+    height: 48px !important;
+    flex-basis: 48px;
+    border-radius: 10px !important;
+  }
+
+  body #root .properties-page .re-title-icon svg { width: 24px; height: 24px; }
+
+  body #root .properties-page .re-title-wrap h1 {
+    font-size: clamp(18px, 5.4vw, 22px) !important;
+    white-space: nowrap;
+  }
+
+  body #root .properties-page .re-mobile-workspace-subtitle {
+    margin-top: 4px !important;
+    font-size: 11px !important;
+  }
+
+  body #root .properties-page .re-add-property {
+    padding: 0 13px !important;
+    font-size: 12px !important;
+  }
+
+  body #root .properties-page .re-add-property svg { width: 18px; height: 18px; }
+
+  body #root .properties-page .re-tabs {
+    width: calc(100% + 24px);
+    min-height: 56px !important;
+    margin-left: -12px;
+    padding: 0 10px;
+  }
+
+  body #root .properties-page .re-tabs button {
+    height: 56px;
+    padding: 0 14px !important;
+    font-size: 12px !important;
+  }
+
+  body #root .properties-page .re-mobile-properties-heading {
+    align-items: center;
+    padding: 20px 2px 16px;
+  }
+
+  body #root .properties-page .re-mobile-properties-heading h2 { font-size: 21px; }
+  body #root .properties-page .re-mobile-properties-heading p { margin-top: 5px; font-size: 11px; }
+
+  body #root .properties-page .re-mobile-view-toggle { height: 46px; }
+  body #root .properties-page .re-mobile-view-toggle button {
+    min-width: 68px;
+    padding: 0 10px;
+    gap: 5px;
+    font-size: 11px;
+  }
+  body #root .properties-page .re-mobile-view-toggle button svg { width: 16px; height: 16px; }
+
+  body #root .properties-page .re-filter-toolbar {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px !important;
+    padding: 0 2px 16px !important;
+  }
+
+  body #root .properties-page .re-search-field {
+    height: 40px !important;
+    padding: 0 12px !important;
+  }
+  body #root .properties-page .re-search-field input { font-size: 12px !important; }
+
+  body #root .properties-page .re-compact-select,
+  body #root .properties-page .re-more-filter-btn,
+  body #root .properties-page .re-mobile-price-filter {
+    height: 38px !important;
+    padding: 0 8px !important;
+    font-size: 10px !important;
+  }
+  body #root .properties-page .re-compact-select select { font-size: 10px !important; }
+  body #root .properties-page .re-compact-select svg,
+  body #root .properties-page .re-more-filter-btn svg,
+  body #root .properties-page .re-mobile-price-filter svg { width: 12px; height: 12px; }
+
+  body #root .properties-page .re-property-card,
+  body #root .properties-page .re-properties-list .re-property-card {
+    min-height: 154px;
+    grid-template-columns: 31% minmax(0, 69%) !important;
+  }
+
+  body #root .properties-page .re-property-media,
+  body #root .properties-page .re-properties-list .re-property-media {
+    min-height: 154px !important;
+  }
+
+  body #root .properties-page .re-property-body {
+    padding: 10px 12px 8px !important;
+  }
+
+  body #root .properties-page .re-mobile-property-title {
+    margin-bottom: 5px !important;
+    font-size: 13px !important;
+    line-height: 1.13;
+  }
+
+  body #root .properties-page .re-property-address {
+    gap: 4px;
+    font-size: 10px !important;
+  }
+  body #root .properties-page .re-property-city {
+    font-size: 9px !important;
+  }
+
+  body #root .properties-page .re-property-specs {
+    margin-top: 7px !important;
+    padding-bottom: 7px !important;
+    gap: 8px !important;
+    font-size: 9px !important;
+  }
+  body #root .properties-page .re-property-specs svg { width: 13px; height: 13px; }
+
+  body #root .properties-page .re-ai-score {
+    min-width: 46px !important;
+    padding: 4px !important;
+  }
+  body #root .properties-page .re-ai-score b { font-size: 12px !important; }
+  body #root .properties-page .re-ai-score span::after { font-size: 7px !important; }
+
+  body #root .properties-page .re-property-footer {
+    min-height: 30px;
+    padding-top: 7px !important;
+  }
+
+  body #root .properties-page .re-agent-avatar {
+    width: 23px !important;
+    height: 23px !important;
+    flex-basis: 23px;
+    font-size: 8px !important;
+  }
+  body #root .properties-page .re-agent-mini > span,
+  body #root .properties-page .re-matched-mini span { font-size: 9px !important; }
+
+  body #root .properties-page .re-matched-mini { gap: 5px; }
+  body #root .properties-page .re-matched-mini b {
+    width: 25px;
+    height: 25px;
+    font-size: 9px !important;
+  }
+
+  body #root .properties-page .re-status-badge {
+    top: 7px !important;
+    left: 7px !important;
+    padding: 4px 6px !important;
+    font-size: 7px !important;
+  }
+
+  body #root .properties-page .re-mobile-card-actions {
+    top: 4px !important;
+    right: 4px !important;
+  }
+  body #root .properties-page .re-mobile-card-actions > button {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  body #root .properties-page .re-mobile-card-actions > button svg { width: 17px; height: 17px; }
+
+  body #root .properties-page .re-pagination-row {
+    min-height: 60px;
+    padding-top: 10px !important;
+    font-size: 10px !important;
+  }
+  body #root .properties-page .re-pagination-controls { gap: 2px; }
+  body #root .properties-page .re-pagination-controls select {
+    height: 38px !important;
+    padding: 0 8px !important;
+    font-size: 9px !important;
+  }
+  body #root .properties-page .re-pagination-controls button {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  body #root .properties-page .re-title-wrap h1 { font-size: 17px !important; }
+  body #root .properties-page .re-mobile-workspace-subtitle { font-size: 10px !important; }
+  body #root .properties-page .re-add-property { padding: 0 9px !important; font-size: 11px !important; }
+  body #root .properties-page .re-mobile-view-toggle button { min-width: 58px; }
+  body #root .properties-page .re-mobile-properties-heading h2 { font-size: 19px; }
+  body #root .properties-page .re-mobile-properties-heading p { font-size: 10px; }
+  body #root .properties-page .re-property-card,
+  body #root .properties-page .re-properties-list .re-property-card { grid-template-columns: 35% minmax(0, 65%) !important; }
+  body #root .properties-page .re-pagination-row { align-items: flex-start !important; flex-direction: column !important; }
+  body #root .properties-page .re-pagination-controls { width: 100%; justify-content: flex-end; }
+}
+
+/* ======================================================================
+   REAL ESTATE WORKSPACE — FINAL RESPONSIVE IMPLEMENTATION
+   Desktop remains desktop. Screenshot-specific UI is <= 1024px only.
+   ====================================================================== */
+
+.properties-page.real-estate-workspace {
+  --re-bg: #ffffff;
+  --re-card: #ffffff;
+  --re-card-2: #f8fafc;
+  --re-text: #111827;
+  --re-muted: #667085;
+  --re-border: #e5e7eb;
+  --re-blue: #0b8cff;
+  --re-purple: #8b4dff;
+  --re-green: #22c55e;
+  --re-orange: #f97316;
+  --re-red: #ef4444;
+  --re-pink: #db4ecf;
+  color: var(--re-text);
+}
+
+.crm-dark .properties-page.real-estate-workspace,
+.dark .properties-page.real-estate-workspace,
+[data-theme="dark"] .properties-page.real-estate-workspace {
+  --re-bg: #0b0f19;
+  --re-card: #071018;
+  --re-card-2: #09121b;
+  --re-text: #f7f8fa;
+  --re-muted: #aeb6c2;
+  --re-border: #26313c;
+  background: #0b0f19;
+  color: var(--re-text);
+}
+.crm-dark .properties-page .re-title-wrap h1{color: var(--re-text);}
+.properties-page .re-mobile-tablet-only,
+.properties-page .re-tabs-mobile-wrap,
+.properties-page .re-mobile-card-actions,
+.properties-page .re-mobile-filter-label,
+.properties-page .re-mobile-price-filter,
+.properties-page .re-overview-mobile {
+  display: none !important;
+}
+
+.properties-page nav.re-tabs-desktop { display: flex; }
+.properties-page .re-toolbar-spacer.re-desktop-only { display: block; }
+.properties-page .re-view-toggle.re-desktop-only { display: flex; }
+.properties-page button.re-icon-tool.re-desktop-only { display: inline-flex; }
+
+/* Real tabs on desktop */
+.properties-page .re-tabs-desktop button {
+  position: relative;
+  cursor: pointer;
+}
+.properties-page .re-tabs-desktop button.active {
+  color: var(--re-purple);
+  font-weight: 700;
+}
+.properties-page .re-tabs-desktop button.active::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--re-purple);
+}
+
+.properties-page .re-workspace-error {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(239,68,68,.35);
+  border-radius: 10px;
+  color: #dc2626;
+  background: rgba(239,68,68,.07);
+}
+
+.properties-page .re-overview-desktop-head,
+.properties-page .re-ws-section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 14px;
+}
+.properties-page .re-overview-desktop-head h2,
+.properties-page .re-ws-section-head h2 {
+  margin: 0;
+  color: var(--re-text);
+  text-align: left;
+  font-size: 15px;
+}
+.properties-page .re-ws-section-head p {
+  margin: 3px 0 0;
+  color: var(--re-muted);
+  text-align: left;
+}
+.properties-page .re-overview-desktop-head .re-date-select {
+  margin-left: auto;
+}
+.properties-page .re-date-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--re-border);
+  border-radius: 9px;
+  background: var(--re-card);
+}
+.properties-page .re-date-select select {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--re-text);
+}
+
+.properties-page button.re-overview-card {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.properties-page button.re-overview-card > svg { margin-left: auto; }
+
+/* Workspace shared sections */
+.properties-page .re-ws-section { padding: 0 2px 26px; }
+.properties-page .re-ws-section-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  border: 1px solid currentColor;
+}
+.properties-page .re-ws-section-icon.blue { color: var(--re-blue); background: rgba(11,140,255,.08); }
+.properties-page .re-ws-section-icon.orange { color: var(--re-orange); background: rgba(249,115,22,.08); }
+.properties-page .re-ws-section-icon.green { color: var(--re-green); background: rgba(34,197,94,.08); }
+.properties-page .re-ws-section-head > div:nth-child(2) { min-width: 0; }
+.properties-page .re-ws-section-head .re-outline-action,
+.properties-page .re-outline-action {
+  margin-left: auto;
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 9px;
+  border: 1px solid var(--re-blue);
+  background: transparent;
+  color: var(--re-blue);
+  cursor: pointer;
+}
+.properties-page .re-outline-action.orange { border-color: var(--re-orange); color: var(--re-orange); }
+
+.properties-page .re-ws-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--re-border);
+  border-radius: 9px;
+  background: var(--re-card-2);
+  color: var(--re-muted);
+}
+.properties-page .re-ws-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--re-text);
+}
+
+.properties-page .re-status-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  margin-bottom: 14px;
+  border: 1px solid var(--re-border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--re-card);
+}
+.properties-page .re-status-tabs button {
+  min-height: 42px;
+  border: 0;
+  border-right: 1px solid var(--re-border);
+  background: transparent;
+  color: var(--re-text);
+  cursor: pointer;
+}
+.properties-page .re-status-tabs button:last-child { border-right: 0; }
+.properties-page .re-status-tabs button.active { color: var(--re-blue); background: rgba(11,140,255,.06); box-shadow: inset 0 -2px var(--re-blue); }
+.properties-page .re-status-tabs.orange button.active { color: var(--re-orange); background: rgba(249,115,22,.06); box-shadow: inset 0 -2px var(--re-orange); }
+.properties-page .re-status-tabs b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 21px;
+  height: 21px;
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--re-blue);
+  color: #fff;
+  font-size: 11px;
+}
+
+.properties-page .re-status-pill {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  padding: 4px 9px;
+  border-radius: 7px;
+  color: #fff;
+  background: #089c15;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.properties-page .re-status-pill.status-accepted,
+.properties-page .re-status-pill.status-confirmed,
+.properties-page .re-status-pill.status-paid,
+.properties-page .re-status-pill.status-closed,
+.properties-page .re-status-pill.status-completed { background: #16803c; }
+.properties-page .re-status-pill.status-pending,
+.properties-page .re-status-pill.status-appraisal { background: #b75b00; }
+.properties-page .re-status-pill.status-rejected,
+.properties-page .re-status-pill.status-cancelled { background: #c1121f; }
+
+.properties-page .re-people-list,
+.properties-page .re-showing-list,
+.properties-page .re-offer-list,
+.properties-page .re-transaction-list,
+.properties-page .re-document-list,
+.properties-page .re-commission-list { display: grid; gap: 10px; }
+
+.properties-page .re-person-card,
+.properties-page .re-showing-card,
+.properties-page .re-offer-card,
+.properties-page .re-transaction-card,
+.properties-page .re-document-row,
+.properties-page .re-commission-card {
+  border: 1px solid var(--re-border);
+  border-radius: 12px;
+  background: var(--re-card);
+  color: var(--re-text);
+}
+.properties-page .re-person-card.buyer { border-color: rgba(11,140,255,.7); }
+.properties-page .re-person-card.seller { border-color: rgba(249,115,22,.7); }
+
+.properties-page .re-person-card {
+  display: flex;
+  gap: 14px;
+  flex-direction: column;
+  padding: 16px 18px;
+}
+.properties-page .re-person-card .re-person-top{
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) 130px;
+  gap: 14px;
+  text-align: left;
+}
+.properties-page .re-person-avatar {
+  width: 50px; height: 50px; display: grid; place-items: center;
+  border-radius: 50%; border: 2px solid var(--re-blue); color: #fff; background: #155fc3; font-weight: 800;
+}
+.properties-page .re-person-card.seller .re-person-avatar { border-color: var(--re-orange); background: #d65b05; }
+.properties-page .re-person-name-row { display: flex; align-items: center; gap: 10px; justify-content: space-between;}
+.properties-page .re-person-main > small { display: block; margin-top: 3px; color: var(--re-muted); }
+.properties-page .re-person-bottom { display: grid; grid-template-columns: 1fr 1.4fr; gap: 18px; margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--re-border); }
+.properties-page .re-person-bottom span { display: grid; gap: 3px; justify-content: flex-start;padding-left: 25px;}
+.properties-page .re-person-bottom span:first-child { border-right: 1px solid var(--re-border); }
+.properties-page .re-person-bottom small, .properties-page .re-person-side small { color: var(--re-muted); }
+.properties-page .re-person-side { display: flex; gap: 15px; justify-content: end; padding-left: 16px; border-left: 1px solid var(--re-border); }
+.properties-page .re-person-side strong { color: var(--re-purple); }
+.properties-page .re-person-side .re-person-side-top{display: flex;flex-direction: column;text-align: left;gap: 5px;}
+
+.properties-page .re-showing-card {
+  display: grid;
+  grid-template-columns: 145px 74px minmax(0,1fr) auto 22px;
+  gap: 14px;
+  align-items: center;
+  padding: 10px;
+  border-color: rgba(11,140,255,.75);
+}
+.properties-page .re-showing-card > img,
+.properties-page .re-transaction-card > img,
+.properties-page .re-commission-card > img,
+.properties-page .re-thumb-placeholder {
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 9px;
+  background: var(--re-card-2);
+}
+.properties-page .re-thumb-placeholder { display: grid; place-items: center; color: var(--re-muted); }
+.properties-page .re-date-block { display: grid; justify-items: center; gap: 2px; padding: 7px 5px; border: 1px solid var(--re-blue); border-radius: 9px; }
+.properties-page .re-date-block b, .properties-page .re-date-block small { color: var(--re-blue); }
+.properties-page .re-date-block strong { font-size: 26px; }
+.properties-page .re-showing-main h3, .properties-page .re-transaction-main h3, .properties-page .re-commission-main h3 { margin: 0 0 6px; }
+.properties-page .re-showing-main p, .properties-page .re-transaction-main p, .properties-page .re-commission-main p { display:flex; align-items:center; gap:5px; margin:0 0 10px; color:var(--re-muted); }
+.properties-page .re-showing-main > div, .properties-page .re-transaction-main > div, .properties-page .re-commission-main > div { display:flex; gap:24px; }
+.properties-page .re-showing-main > div span, .properties-page .re-transaction-main > div span, .properties-page .re-commission-main > div span { display:grid; grid-template-columns:auto 1fr; column-gap:6px; align-items:center; }
+.properties-page .re-showing-main > div small, .properties-page .re-transaction-main > div small, .properties-page .re-commission-main > div small { grid-column:2; color:var(--re-muted); }
+
+.properties-page .re-offer-card {
+  display: grid;
+  grid-template-columns: 40px 1.4fr .8fr .8fr auto 20px;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 16px;
+  border-color: rgba(11,140,255,.75);
+}
+.properties-page .re-offer-icon { width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:#0c683c;color:#fff; }
+.properties-page .re-offer-card > div { display:grid; gap:3px; text-align: left;}
+.properties-page .re-offer-card small { color: var(--re-muted); }
+.properties-page .re-offer-card > div:first-of-type small { display:flex;align-items:center;gap:4px; }
+
+.properties-page .re-transaction-card {
+  display:grid;
+  grid-template-columns: 150px minmax(0,1fr) 200px 20px;
+  gap:15px;
+  align-items:center;
+  padding:10px;
+  border-color:rgba(11,140,255,.75);
+}
+.properties-page .re-transaction-side { display:grid; gap:4px; padding-left:14px; border-left:1px solid var(--re-border); }
+.properties-page .re-transaction-side strong { font-size:18px; }
+.properties-page .re-progress { height:6px; overflow:hidden; border-radius:10px; background:#4b5563; }
+.properties-page .re-progress i { display:block; height:100%; background:var(--re-blue); }
+
+.properties-page .re-document-row {
+  display:grid;
+  grid-template-columns:48px minmax(0,1fr) 110px minmax(120px,1fr) 42px 18px 18px;
+  gap:12px;
+  align-items:center;
+  padding:10px 14px;
+}
+.properties-page .re-doc-icon { width:40px;height:40px;display:grid;place-items:center;border-radius:8px;background:#c51d26;color:#fff;font-size:10px;font-weight:800; }
+.properties-page .re-document-row > div:first-of-type { display:grid; gap:3px; }
+.properties-page .re-document-row small { color:var(--re-muted); }
+
+.properties-page .re-commission-summary {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+  margin: 12px 0 14px;
+}
+.properties-page .re-commission-summary article {
+  min-height:88px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  border:1px solid var(--re-border);
+  border-radius:11px;
+  background:var(--re-card);
+}
+.properties-page .re-commission-summary article > span { width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:rgba(139,77,255,.12);color:var(--re-purple); }
+.properties-page .re-commission-summary article div { display:grid;gap:6px;text-align: left; }
+.properties-page .re-commission-summary article small { color:var(--re-muted); }
+.properties-page .re-commission-summary article > svg { margin-left:auto; }
+.properties-page .re-commission-card {
+  display:grid;
+  grid-template-columns:150px minmax(0,1fr);
+  gap:16px;
+  align-items:center;
+  padding:10px;
+  border-color:rgba(11,140,255,.6);
+}
+.properties-page .re-commission-main{
+  text-align: left;
+}
+.properties-page .re-commission-values { display:grid;grid-template-columns:repeat(4,1fr); border-top:1px solid var(--re-border);padding-top: 10px;}
+.properties-page .re-commission-values span { display:grid;gap:3px;padding:0 10px;border-left:1px solid var(--re-border); }
+.properties-page .re-commission-values small { color:var(--re-muted); }
+.properties-page .re-commission-values span:first-child{border: 0;}
+.properties-page .re-inline-tabs { margin-left:auto; display:flex; border:1px solid var(--re-border); border-radius:9px; overflow:hidden; }
+.properties-page .re-inline-tabs button { min-height:40px;padding:0 18px;border:0;background:transparent;color:var(--re-text); }
+.properties-page .re-inline-tabs button.active { color:var(--re-blue); border: 1px solid var(--re-blue); border-radius: 9px; }
+.re-flex{display: flex; gap: 10px; margin-left: auto;}
+.properties-page .re-ws-empty {
+  min-height:160px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:6px;
+  padding:25px;
+  border:1px dashed var(--re-border);
+  border-radius:12px;
+  color:var(--re-muted);
+  text-align:center;
+  background:var(--re-card);
+}
+.properties-page .re-ws-empty strong { color:var(--re-text); }
+
+.crm-dark .properties-page.real-estate-workspace,
+.dark .properties-page.real-estate-workspace,
+[data-theme="dark"] .properties-page.real-estate-workspace {
+  background: var(--re-bg) !important;
+  color: var(--re-text) !important;
+}
+.crm-dark .properties-page .re-title-wrap h1,
+.crm-dark .properties-page .re-property-address,
+.crm-dark .properties-page .re-property-price-row strong,
+.crm-dark .properties-page .re-bottom-card h3,
+.crm-dark .properties-page .re-metric-card strong,
+.crm-dark .properties-page .re-metric-card span,
+.dark .properties-page .re-title-wrap h1,
+[data-theme="dark"] .properties-page .re-title-wrap h1 { color: var(--re-text) !important; }
+.crm-dark .properties-page .re-title-wrap p,
+.crm-dark .properties-page .re-property-city,
+.crm-dark .properties-page .re-property-specs,
+.crm-dark .properties-page .re-metric-card small { color: var(--re-muted) !important; }
+.crm-dark .properties-page .re-tabs,
+.crm-dark .properties-page .re-workspace-header { border-color: var(--re-border) !important; }
+.crm-dark .properties-page .re-tabs button { color: var(--re-muted) !important; background: transparent !important; }
+.crm-dark .properties-page .re-tabs button.active { color: var(--re-purple) !important; }
+.crm-dark .properties-page .re-actions-btn,
+.crm-dark .properties-page .re-more-filter-btn,
+.crm-dark .properties-page .re-icon-tool,
+.crm-dark .properties-page .re-search-field,
+.crm-dark .properties-page .re-compact-select,
+.crm-dark .properties-page .re-price-range,
+.crm-dark .properties-page .re-view-toggle,
+.crm-dark .properties-page .re-property-card,
+.crm-dark .properties-page .re-bottom-card,
+.crm-dark .properties-page .re-metric-card,
+.crm-dark .properties-page .re-header-actions-menu,
+.crm-dark .properties-page .re-more-filter-popover {
+  border-color: var(--re-border) !important;
+  background: var(--re-card) !important;
+  color: var(--re-text) !important;
+}
+.crm-dark .properties-page .re-search-field input,
+.crm-dark .properties-page .re-compact-select select,
+.crm-dark .properties-page .re-price-range input,
+.crm-dark .properties-page .re-more-filter-popover select { color: var(--re-text) !important; background: transparent !important; }
+.crm-dark .properties-page .re-property-footer,
+.crm-dark .properties-page .re-property-specs { border-color: var(--re-border) !important; }
+
+.properties-page .re-ws-section-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.properties-page .re-filter-action {
+  color: var(--re-text);
+  border-color: var(--re-border);
+}
+
+.properties-page .re-status-tabs button {
+  position: relative;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+.properties-page .re-status-tabs button b {
+  transition: background .18s ease, color .18s ease;
+}
+
+.properties-page .re-status-tabs button.status-tab-0 b { background: #0b8cff; }
+.properties-page .re-status-tabs button.status-tab-1 b { background: #16a34a; }
+.properties-page .re-status-tabs button.status-tab-2 b { background: #2563eb; }
+.properties-page .re-status-tabs button.status-tab-3 b { background: #f97316; }
+.properties-page .re-status-tabs button.status-tab-4 b { background: #7c3aed; }
+
+.properties-page .re-status-tabs.orange button.status-tab-0 b { background: #f97316; }
+.properties-page .re-status-tabs.orange button.status-tab-1 b { background: #16a34a; }
+.properties-page .re-status-tabs.orange button.status-tab-2 b { background: #2563eb; }
+.properties-page .re-status-tabs.orange button.status-tab-3 b { background: #7c3aed; }
+
+.properties-page .re-status-tabs button:hover {
+  background: color-mix(in srgb, var(--re-blue) 7%, transparent);
+}
+
+.properties-page .re-status-tabs.orange button:hover {
+  background: rgba(249,115,22,.07);
+}
+
+/* status pills — each semantic status gets its own background */
+.properties-page .re-status-pill.tone-green {
+  color: #d7ffe4;
+  background: #087a32;
+  border: 1px solid #13a847;
+}
+.properties-page .re-status-pill.tone-blue {
+  color: #e1efff;
+  background: #064ba5;
+  border: 1px solid #1269d7;
+}
+.properties-page .re-status-pill.tone-orange {
+  color: #fff0df;
+  background: #a84a05;
+  border: 1px solid #d7680b;
+}
+.properties-page .re-status-pill.tone-purple {
+  color: #f3e9ff;
+  background: #57218c;
+  border: 1px solid #7f35bf;
+}
+.properties-page .re-status-pill.tone-red {
+  color: #ffe7ea;
+  background: #a3131d;
+  border: 1px solid #d11e2b;
+}
+.properties-page .re-status-pill.tone-neutral {
+  color: var(--re-text);
+  background: color-mix(in srgb, var(--re-card) 82%, #64748b 18%);
+  border: 1px solid var(--re-border);
+}
+
+.properties-page .re-view-all-link {
+  width: max-content;
+  margin: 12px auto 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--re-blue);
+  font-weight: 700;
+  cursor: pointer;
+}
+.properties-page .re-view-all-link.tone-orange { color: var(--re-orange); }
+.properties-page .re-view-all-link:hover { text-decoration: underline; }
+
+.properties-page .re-seller-list {
+  display: grid;
+  gap: 0;
+  border: 1px solid rgba(249,115,22,.72);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--re-card);
+}
+
+.properties-page .re-seller-card {
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1.15fr) minmax(210px, .9fr) minmax(190px, .8fr) 32px;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(249,115,22,.55);
+  background: var(--re-card);
+  color: var(--re-text);
+}
+.properties-page .re-seller-person {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.properties-page .re-seller-person > div:last-child,
+.properties-page .re-seller-property,
+.properties-page .re-seller-listing {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+.properties-page .re-seller-person strong,
+.properties-page .re-seller-property strong { font-size: 14px; }
+.properties-page .re-seller-person small,
+.properties-page .re-seller-property small,
+.properties-page .re-seller-listing small { color: var(--re-muted); }
+.properties-page .re-seller-property,
+.properties-page .re-seller-listing {
+  padding-left: 18px;
+  border-left: 1px solid var(--re-border);
+}
+.properties-page .re-person-avatar.seller-avatar {
+  border-color: var(--re-orange);
+  background: #d85d05;
+}
+
+.properties-page .re-showing-card.tone-blue,
+.properties-page .re-offer-card.tone-blue,
+.properties-page .re-transaction-card.tone-blue { border-color: #0b8cff; }
+.properties-page .re-showing-card.tone-green,
+.properties-page .re-offer-card.tone-green,
+.properties-page .re-transaction-card.tone-green { border-color: #16a34a; }
+.properties-page .re-showing-card.tone-orange,
+.properties-page .re-offer-card.tone-orange,
+.properties-page .re-transaction-card.tone-orange { border-color: #f97316; }
+.properties-page .re-showing-card.tone-purple,
+.properties-page .re-offer-card.tone-purple,
+.properties-page .re-transaction-card.tone-purple { border-color: #a855f7; }
+.properties-page .re-showing-card.tone-red,
+.properties-page .re-offer-card.tone-red,
+.properties-page .re-transaction-card.tone-red { border-color: #ef3340; }
+
+.properties-page .re-commission-summary article {
+  --commission-tone: #22c55e;
+  --commission-rgb: 34,197,94;
+  border-color: rgba(var(--commission-rgb), .48);
+  background:
+    radial-gradient(circle at 12% 50%, rgba(var(--commission-rgb), .12), transparent 46%),
+    var(--re-card);
+  box-shadow: inset 0 0 24px rgba(var(--commission-rgb), .035);
+}
+.properties-page .re-commission-summary article.tone-green,
+.properties-page .re-commission-summary article.tone-lime { --commission-tone:#22c55e; --commission-rgb:34,197,94; }
+.properties-page .re-commission-summary article.tone-blue { --commission-tone:#2f80ff; --commission-rgb:47,128,255; }
+.properties-page .re-commission-summary article.tone-purple { --commission-tone:#b14cff; --commission-rgb:177,76,255; }
+.properties-page .re-commission-summary article.tone-orange { --commission-tone:#ff7300; --commission-rgb:255,115,0; }
+.properties-page .re-commission-summary article > span {
+  color: var(--commission-tone);
+  background: rgba(var(--commission-rgb), .14);
+  border: 1px solid rgba(var(--commission-rgb), .28);
+  box-shadow: 0 0 22px rgba(var(--commission-rgb), .12);
+}
+.properties-page .re-commission-summary article strong { color: var(--re-text); }
+.properties-page .re-commission-summary article em {
+  color: var(--re-muted);
+  font-style: normal;
+  font-size: 11px;
+}
+.properties-page .re-commission-summary article > svg { color: var(--commission-tone); }
+
+.properties-page .re-commission-card {
+  --commission-card-tone: #0b8cff;
+  --commission-card-rgb: 11,140,255;
+  border-color: var(--commission-card-tone);
+  background:
+    linear-gradient(110deg, rgba(var(--commission-card-rgb), .045), transparent 38%),
+    var(--re-card);
+}
+.properties-page .re-commission-card.tone-blue { --commission-card-tone:#0b8cff; --commission-card-rgb:11,140,255; }
+.properties-page .re-commission-card.tone-green { --commission-card-tone:#22b83f; --commission-card-rgb:34,184,63; }
+.properties-page .re-commission-card.tone-orange { --commission-card-tone:#ff7200; --commission-card-rgb:255,114,0; }
+.properties-page .re-commission-card.tone-purple { --commission-card-tone:#af46df; --commission-card-rgb:175,70,223; }
+.properties-page .re-commission-card .re-commission-values span:first-child b,
+.properties-page .re-commission-card .re-commission-title-row h3 { color: var(--commission-card-tone); }
+.properties-page .re-commission-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+@media (max-width: 1024px) {
+  .properties-page .re-status-tabs {
+    overflow-x: auto;
+    grid-auto-columns: minmax(130px, 1fr);
+    scrollbar-width: none;
+  }
+  .properties-page .re-status-tabs::-webkit-scrollbar { display:none; }
+
+  .properties-page .re-seller-card {
+    grid-template-columns: minmax(220px, 1.2fr) minmax(180px, .9fr) minmax(165px, .8fr) 26px;
+    gap: 12px;
+    padding: 11px 13px;
+  }
+
+  .properties-page .re-commission-summary article {
+    min-height: 72px;
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  body .properties-page .re-seller-list{gap: 0;}
+  .properties-page .re-overview-desktop-head, .properties-page .re-ws-section-head{gap: 6px;}
+  .properties-page .re-ws-section-head .re-outline-action, .properties-page .re-outline-action{
+    padding: 0 5px;
+    gap: 4px;
+    font-size: 10px;
+    min-height: 34px;
+  }
+  body #root .properties-page.real-estate-workspace {
+    --re-pad: 22px;
+    width:100%;
+    min-height:100vh;
+    background:var(--re-bg) !important;
+    color:var(--re-text) !important;
+    padding: 0;
+  }
+
+  body #root .properties-page .re-desktop-only,
+  body #root .properties-page nav.re-tabs-desktop,
+  body #root .properties-page .re-overview-desktop { display:none !important; }
+  body #root .properties-page .re-mobile-tablet-only,
+  body #root .properties-page .re-tabs-mobile-wrap,
+  body #root .properties-page .re-overview-mobile { display:block !important; }
+  body #root .properties-page .re-mobile-view-toggle,
+  body #root .properties-page .re-header-range { display:flex !important; }
+  body #root .properties-page .re-mobile-filter-label { display:inline !important; }
+
+  body #root .properties-page .re-workspace-header {
+    min-height:92px;
+    margin:0 !important;
+    padding:0 0 16px !important;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    border-bottom:1px solid var(--re-border) !important;
+    background:transparent !important;
+  }
+  body #root .properties-page .re-title-wrap { display:flex;align-items:start;gap:14px;min-width:0; }
+  body #root .properties-page .re-title-icon { width:56px;height:56px;flex:0 0 56px;border-radius:12px;color:var(--re-purple);background:rgba(139,77,255,.14);border:1px solid rgba(139,77,255,.45); }
+  body #root .properties-page .re-title-wrap h1 { margin:0;color:var(--re-text)!important;font-size:clamp(23px,3vw,30px)!important;line-height:1.08;font-weight:800; }
+  body #root .properties-page .re-title-wrap p { margin:5px 0 0!important;color:var(--re-muted)!important;font-size:14px!important; }
+  body #root .properties-page .re-header-actions { width:auto!important;display:flex;align-items:center;justify-content:flex-end;gap:6px; flex-direction: column;}
+  body #root .properties-page .re-header-range { min-height:42px;align-items:center;gap:7px;padding:0 11px;border:1px solid var(--re-border);border-radius:8px;background:var(--re-card); }
+  body #root .properties-page .re-header-range select { border:0;outline:0;background:transparent;color:var(--re-text);font-size:14px; }
+  body #root .properties-page .re-add-property { min-height:42px!important;padding:0 20px!important;border:0!important;border-radius:9px!important;background:linear-gradient(135deg,#7841ff,#5d21ee)!important;color:#fff!important;font-size:15px!important;box-shadow:0 10px 30px rgba(99,49,238,.22); }
+
+  body #root .properties-page .re-tabs-mobile-wrap { position:relative;margin:0 calc(var(--re-pad) * -1) 0;border-bottom:1px solid var(--re-border);background:var(--re-bg); }
+  body #root .properties-page .re-tabs-mobile { width:100%;min-height:58px;display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:none;padding:0;margin:0!important;border:0!important;background:transparent!important; }
+  body #root .properties-page .re-tabs-mobile::-webkit-scrollbar { display:none; }
+  body #root .properties-page .re-tabs-mobile button { position:relative;min-width:max-content;padding:0 clamp(12px,2vw,23px)!important;border:0!important;background:transparent!important;color:var(--re-muted)!important;font-size:13px!important;font-weight:500!important; }
+  body #root .properties-page .re-tabs-mobile button.active { color:var(--re-purple)!important; }
+  body #root .properties-page .re-tabs-mobile button.active::after { content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--re-purple); }
+  body #root .properties-page .re-tabs-mobile button.more-open { color:var(--re-purple)!important; }
+  body #root .properties-page .re-tabs-mobile button svg { transition:transform .18s ease; }
+  body #root .properties-page .re-tabs-mobile button svg.rotate { transform:rotate(180deg); }
+  body #root .properties-page .sales-ws-tabs-mobile-more-menu.re-tabs-mobile-more-menu { display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px var(--re-pad) 12px;background:var(--re-bg); }
+  body #root .properties-page .re-tabs-mobile-more-menu button { min-height:34px;padding:7px 10px;border:1px solid var(--re-border);border-radius:8px;background:var(--re-card);color:var(--re-muted);font-size:11px; }
+  body #root .properties-page .re-tabs-mobile-more-menu button.active { border-color:var(--re-purple);color:var(--re-purple);background:rgba(139,77,255,.08); }
+
+  /* Overview screenshot */
+  body #root .properties-page .re-overview-mobile { padding-top:22px!important; }
+  body #root .properties-page .re-overview-mobile-title h2 { margin:0 0 16px;color:var(--re-text);font-size:17px;font-weight:500;text-align: left; }
+  body #root .properties-page .re-overview-mobile-list { display:grid;gap:14px; }
+  body #root .properties-page .re-overview-mobile-card { --tone:var(--re-purple);min-height:146px;width:100%;display:grid;grid-template-columns:100px minmax(0,1fr) 24px;align-items:center;gap:12px;padding:16px 28px;border:1px solid var(--tone);border-radius:12px;background:linear-gradient(110deg,color-mix(in srgb,var(--tone) 5%,var(--re-card)),var(--re-card));color:var(--re-text);text-align:left; }
+  body #root .properties-page .re-overview-mobile-card.tone-blue { --tone:#0b8cff; } body #root .properties-page .re-overview-mobile-card.tone-green { --tone:#22c55e; } body #root .properties-page .re-overview-mobile-card.tone-pink { --tone:#d94ccf; } body #root .properties-page .re-overview-mobile-card.tone-orange { --tone:#f97316; } body #root .properties-page .re-overview-mobile-card.tone-purple, body #root .properties-page .re-overview-mobile-card.tone-violet { --tone:#9b4dff; }
+  body #root .properties-page .re-overview-mobile-icon { width:94px;height:94px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--tone);color:var(--tone);background:color-mix(in srgb,var(--tone) 10%,transparent); }
+  body #root .properties-page .re-overview-mobile-icon svg { width:42px;height:42px; }
+  body #root .properties-page .re-overview-mobile-copy { display:grid;justify-items:center;gap:5px; }
+  body #root .properties-page .re-overview-mobile-copy b { color:var(--re-muted);font-size:17px; }
+  body #root .properties-page .re-overview-mobile-copy strong { color:var(--re-text);font-size:26px;line-height:1; }
+  body #root .properties-page .re-overview-mobile-copy small { color:#35df68;font-size:16px; }
+  body #root .properties-page .re-overview-realtime {text-align: left; display:grid;grid-template-columns:1.8fr 1fr;justify-content:space-between;align-items:center;gap:6px;margin-top:28px;padding:20px 26px;border:1px solid var(--re-border);border-radius:12px;background:var(--re-card);color:var(--re-muted); }
+  body #root .properties-page .re-overview-realtime span { display:flex;align-items:center;gap:10px; justify-content: end;}
+
+  body #root .properties-page .re-properties-section-head { display:flex!important;align-items:center;justify-content:space-between;gap:14px;padding:16px 0!important; }
+  body #root .properties-page .re-properties-section-head h2 { margin:0;color:var(--re-text);font-size:20px;text-align: left; }
+  body #root .properties-page .re-properties-section-head p { margin:5px 0 0;color:var(--re-muted);font-size:13px; }
+  body #root .properties-page .re-mobile-view-toggle { height:50px;border:1px solid var(--re-border);border-radius:9px;overflow:hidden;background:var(--re-card); }
+  body #root .properties-page .re-mobile-view-toggle button { min-width:86px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;color:var(--re-muted); }
+  body #root .properties-page .re-mobile-view-toggle button.active { color:var(--re-purple);background:rgba(139,77,255,.12);box-shadow:inset 0 0 0 1px var(--re-purple); }
+  body #root .properties-page .re-filter-toolbar { display:grid!important;grid-template-columns:repeat(5,auto);gap:9px;padding:0 6px 16px!important;background:transparent!important; }
+  body #root .properties-page .re-search-field { grid-column:1/-1;min-height:50px;border:1px solid var(--re-border)!important;background:var(--re-card)!important;color:var(--re-muted)!important; }
+  body #root .properties-page .re-search-field input { color:var(--re-text)!important;background:transparent!important; }
+  body #root .properties-page .re-compact-select, body #root .properties-page .re-mobile-price-filter, body #root .properties-page .re-more-filter-btn { border:1px solid var(--re-border)!important;border-radius:9px;background:var(--re-card)!important;color:var(--re-text)!important; }
+  body #root .properties-page .re-compact-select select { color:var(--re-text)!important;background:var(--re-card)!important; }
+  body #root .properties-page .re-mobile-price-filter { display:flex!important;align-items:center;justify-content:space-between;padding:0 12px; }
+  body #root .properties-page .re-more-filter-wrap { width:100%; }
+  body #root .properties-page .re-more-filter-btn { width:100%;justify-content:center; }
+  body #root .properties-page .re-desktop-filter-label { display:none!important; }
+
+  body #root .properties-page .re-properties-grid, body #root .properties-page .re-properties-list { display:grid!important;grid-template-columns:1fr!important;gap:9px!important;}
+  body #root .properties-page .re-property-card { min-height:170px;display:grid!important;grid-template-columns:minmax(190px,29%) minmax(0,1fr)!important;border:1px solid var(--re-border)!important;border-radius:11px!important;background:var(--re-card)!important;color:var(--re-text)!important;overflow:hidden!important;box-shadow:none!important; }
+  body #root .properties-page .re-property-media { height:100%!important;min-height:170px!important;border-radius:10px 0 0 10px!important; }
+  body #root .properties-page .re-property-media img, body #root .properties-page .re-property-placeholder { width:100%;height:100%;object-fit:cover;border-radius:10px 0 0 10px!important; }
+  body #root .properties-page .re-property-body { position:relative;padding:13px 18px 10px!important;display:flex!important;flex-direction:column;justify-content:center; }
+  body #root .properties-page .re-property-address { margin:0 32px 5px 0!important;color:var(--re-text)!important;font-size:17px!important;font-weight:800!important; }
+  body #root .properties-page .re-property-city { display:flex;align-items:flex-start;gap:5px;margin:0!important;color:var(--re-muted)!important;font-size:12px!important; }
+  body #root .properties-page .re-property-specs { margin-top:13px!important;padding-bottom:10px!important;border-bottom:1px solid var(--re-border)!important;color:var(--re-muted)!important; }
+  body #root .properties-page .re-property-footer { padding-top:9px!important; }
+  body #root .properties-page .re-mobile-card-actions { position:absolute;top:8px;right:8px;display:block!important;z-index:10; }
+  body #root .properties-page .re-mobile-card-actions > button { width:32px;height:32px;display:grid;place-items:center;border:0;background:transparent;color:var(--re-text); }
+  body #root .properties-page .re-pagination-row { color:var(--re-muted)!important; }
+
+  body #root .properties-page .re-ws-section { padding-top:18px; }
+  body #root .properties-page .re-ws-section-head { margin:0 0 13px; }
+  body #root .properties-page .re-ws-section-head h2 { color:var(--re-text)!important;font-size:15px; }
+  body #root .properties-page .re-ws-section-head p { color:var(--re-muted)!important;font-size:13px; }
+  body #root .properties-page .re-ws-search { background:var(--re-card)!important; }
+  body #root .properties-page .re-status-tabs { background:var(--re-card)!important; }
+  body #root .properties-page .re-person-card, body #root .properties-page .re-showing-card, body #root .properties-page .re-offer-card, body #root .properties-page .re-transaction-card, body #root .properties-page .re-document-row, body #root .properties-page .re-commission-card, body #root .properties-page .re-commission-summary article { background:var(--re-card)!important;color:var(--re-text)!important; }
+
+  body #root .properties-page .re-transaction-commission-preview .re-commission-summary {grid-template-columns: repeat(5, minmax(0, 1fr)); }
+ .properties-page .re-commission-summary article { min-height:76px;grid-template-columns: 38px 1fr 38px;display: grid;}
+  body #root .properties-page .re-transaction-commission-preview .re-commission-summary article { display: flex;min-height:76px;border-color:var(--re-purple); }
+  body #root .properties-page .re-commission-summary article > div { margin:auto; text-align: center;}
+    body #root .properties-page .re-transaction-commission-preview .re-commission-summary article > div { text-align: left;}
+  body #root .properties-page .re-commission-card { grid-template-columns:150px minmax(0,1fr); }
+  body #root .properties-page .re-commission-values { grid-column:2;grid-template-columns:repeat(4,1fr); }
+  body #root .properties-page .re-ws-section{padding-top: 16px!important;}
+  body #root .properties-page .re-commission-summary {grid-template-columns:1fr;gap:7px; }
+}
+
+@media (max-width: 700px) {
+  .properties-page button, .properties-page input, .properties-page select {
+    font-size: 11px;
+  }
+  body #root .properties-page .re-transaction-commission-preview .re-commission-summary{gap:2px;}
+  body #root .properties-page .re-commission-summary article{font-size: 9px;}
+  .properties-page .re-commission-summary article{padding: 10px 3px;gap:3px}
+  .properties-page .re-inline-tabs button, body .properties-page .re-filter-action{min-height: 34px;font-size: 10px;}
+  .properties-page .re-inline-tabs button{padding: 0 6px;}
+  body .properties-page .re-seller-person strong, body .properties-page .re-seller-property strong {
+    font-size: 12px;
+  }
+  .properties-page .re-seller-property, .properties-page .re-seller-listing{padding-left: 10px;}
+  .properties-page .re-status-pill{font-weight: 500;}
+  body #root .properties-page.real-estate-workspace { --re-pad:12px;padding-bottom:96px!important; }
+  body #root .properties-page .re-workspace-header { min-height:78px;padding:0 0 12px!important;gap:9px; }
+  body #root .properties-page .re-title-icon { width:46px;height:46px;flex-basis:46px; }
+  body #root .properties-page .re-title-wrap { gap:9px; }
+  body #root .properties-page .re-title-wrap h1 { font-size:18px!important; }
+  body #root .properties-page .re-title-wrap p { font-size:12px!important; }
+  body #root .properties-page .re-header-range { min-height:32px;padding:0 4px; }
+  body #root .properties-page .re-header-range select { max-width:90px;font-size:11px; }
+  body #root .properties-page .re-add-property { min-height:32px!important;padding:0 6px!important;font-size:10px!important; }
+  body #root .properties-page .re-tabs-mobile { min-height:52px; }
+  body #root .properties-page .re-tabs-mobile button { padding:0 5px!important;font-size:10px!important; }
+ 
+  body #root .properties-page .re-overview-mobile { padding-top:17px!important; }
+  body #root .properties-page .re-overview-mobile-list { gap:10px; }
+  body #root .properties-page .re-overview-mobile-card { min-height:108px;grid-template-columns:40px minmax(0,1fr) 16px;gap:8px;padding:12px 16px; }
+  body #root .properties-page .re-overview-mobile-icon { width:70px;height:70px; }
+  body #root .properties-page .re-overview-mobile-icon svg { width:32px;height:32px; }
+  body #root .properties-page .re-overview-mobile-copy b { font-size:13px; }
+  body #root .properties-page .re-overview-mobile-copy strong { font-size:20px; }
+  body #root .properties-page .re-overview-mobile-copy small { font-size:12px; }
+  body #root .properties-page .re-overview-realtime { margin-top:18px;padding:10px;font-size:10px; }
+
+  body #root .properties-page .re-properties-section-head { padding:10px 0!important; }
+  body #root .properties-page .re-properties-section-head h2 { font-size:16px; }
+  body #root .properties-page .re-properties-section-head p { font-size:10px; }
+  body #root .properties-page .re-mobile-view-toggle { height:42px; }
+  body #root .properties-page .re-mobile-view-toggle button { min-width:62px;padding:0 8px;font-size:10px; }
+  body #root .properties-page .re-filter-toolbar { gap:7px;padding:0 0 15px!important; }
+  body #root .properties-page .re-search-field { min-height:32px; }
+  body #root .properties-page .re-compact-select, body #root .properties-page .re-mobile-price-filter, body #root .properties-page .re-more-filter-btn { font-size:10px; }
+  body #root .properties-page .re-property-card { min-height:145px;grid-template-columns:38% 62%!important; }
+  body #root .properties-page .re-property-media { min-height:145px!important; }
+  body #root .properties-page .re-property-body { padding:9px 10px 7px!important; }
+  body #root .properties-page .re-property-address { font-size:12px!important; }
+  body #root .properties-page .re-property-city { font-size:9px!important; }
+  body #root .properties-page .re-property-specs { gap:7px!important;margin-top:7px!important;font-size:9px!important; }
+  body #root .properties-page .re-property-footer { font-size:9px; }
+
+  body #root .properties-page .re-person-card { grid-template-columns:42px minmax(0,1fr) 92px;gap:8px;padding:11px; }
+  body #root .properties-page .re-person-avatar { min-width:40px; width:40px;height:40px;font-size:12px; }
+  body #root .properties-page .re-person-main strong { font-size:12px; }
+  body #root .properties-page .re-person-main > small, body #root .properties-page .re-person-bottom small, body #root .properties-page .re-person-side small { font-size:8px; }
+  body #root .properties-page .re-person-bottom { gap:8px;margin-top:8px;padding-top:8px; }
+  body #root .properties-page .re-person-bottom b, body #root .properties-page .re-person-side strong { font-size:10px; }
+
+  body #root .properties-page .re-showing-card { grid-template-columns:34% 55px minmax(0,1fr) auto 14px;gap:7px;padding:7px; }
+  body #root .properties-page .re-showing-card > img, body #root .properties-page .re-thumb-placeholder { height:105px; }
+  body #root .properties-page .re-date-block strong { font-size:19px; }
+  body #root .properties-page .re-showing-main h3 { font-size:12px; }
+  body #root .properties-page .re-showing-main p { font-size:8px; }
+  body #root .properties-page .re-showing-main > div { gap:8px; }
+  body #root .properties-page .re-showing-main > div span { font-size:9px; }
+
+  body #root .properties-page .re-offer-card { grid-template-columns:38px minmax(0,1.2fr) .8fr .8fr auto 14px;gap:6px;padding:9px; }
+  body #root .properties-page .re-offer-card strong, body #root .properties-page .re-offer-card b { font-size:10px; }
+  body #root .properties-page .re-offer-card small { font-size:7px; }
+
+  body #root .properties-page .re-transaction-card { grid-template-columns:32% minmax(0,1fr) 30% 14px;gap:7px;padding:7px; }
+  body #root .properties-page .re-transaction-card > img { height:110px; }
+  body #root .properties-page .re-transaction-main h3 { font-size:11px; }
+  body #root .properties-page .re-transaction-main p, body #root .properties-page .re-transaction-main small, body #root .properties-page .re-transaction-side small { font-size:7px; }
+  body #root .properties-page .re-transaction-side strong { font-size:13px; }
+
+  body #root .properties-page .re-document-row { grid-template-columns:36px minmax(0,1fr) 72px minmax(70px,1fr) 30px 14px 14px;gap:6px;padding:8px; }
+  body #root .properties-page .re-document-row strong { font-size:9px; }
+  body #root .properties-page .re-document-row small { font-size:7px; }
+
+  body #root .properties-page .re-commission-card { grid-template-columns:27% minmax(0,1fr);gap:8px;padding:7px; }
+  body #root .properties-page .re-commission-card > img { height:105px; }
+  body #root .properties-page .re-commission-main h3 { font-size:11px; }
+  body #root .properties-page .re-commission-main p, body #root .properties-page .re-commission-main small { font-size:7px; }
+  body #root .properties-page .re-commission-values { grid-column:1/-1;grid-template-columns:repeat(4,1fr); }
+  body #root .properties-page .re-commission-values small { font-size:7px; }
+  body #root .properties-page .re-commission-values b { font-size:9px; }
+}
+
+.properties-page .re-ws-stack > .re-ws-section + .re-ws-section {
+  margin-top: 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--re-border);
+}
+.properties-page .re-offer-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.properties-page .re-offer-quick-actions button {
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: 36px minmax(0,1fr) 18px;
+  align-items: center;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  background: var(--re-card);
+  text-align: left;
+}
+.properties-page .re-offer-quick-actions button span { display: grid; gap: 3px; }
+.properties-page .re-offer-quick-actions button small { color: var(--re-muted); }
+.properties-page .re-offer-quick-actions .purple { color: #8b4dff; }
+.properties-page .re-offer-quick-actions .amber { color: #e7a600; }
+.properties-page .re-offer-quick-actions .green { color: #10b981; }
+.properties-page .re-offer-quick-actions .red { color: #ef3340; }
+.properties-page .re-transaction-commission-preview .re-panel-link { margin-left: auto; }
+
+@media (max-width: 700px) {
+  .properties-page .re-seller-person small, .properties-page .re-seller-property small, .properties-page .re-seller-listing small{overflow: hidden;}
+  body #root .properties-page .re-offer-quick-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+  body #root .properties-page .re-offer-quick-actions button {
+    min-height: 70px;
+    grid-template-columns: 16px minmax(0,1fr) 12px;
+    gap: 3px;
+    padding: 7px 5px;
+    border-radius: 9px;
+  }
+  body #root .properties-page .re-offer-quick-actions button b { font-size: 9px; }
+  body #root .properties-page .re-offer-quick-actions button small { font-size: 7px; }
+  body #root .properties-page .re-offer-quick-actions button svg { width: 15px; height: 15px; }
+}
+@media (max-width: 640px) {
+  .properties-page .re-ws-section-actions {
+    gap: 7px;
+  }
+  .properties-page .re-filter-action {
+    min-width: 44px;
+  }
+
+  .properties-page .re-seller-list {
+    border: 0;
+    background: transparent;
+    gap: 8px;
+    overflow: visible;
+  }
+  .properties-page .re-seller-card {
+    grid-template-columns: 1.4fr 1fr 1fr 20px;
+    gap: 6px;
+    border: 1px solid var(--re-orange);
+    border-radius: 11px;
+    padding: 10px 6px;
+  }
+  
+  .properties-page .re-commission-card {
+    grid-template-columns: 108px minmax(0,1fr);
+  }
+  .properties-page .re-commission-values {
+    grid-template-columns: repeat(2,1fr);
+    gap: 8px 0;
+  }
 }

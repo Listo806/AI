@@ -1784,7 +1784,7 @@ export class PropertiesService {
     // Buyers are existing CRM leads matched to property inventory. We do not
     // create a second buyer/customer table.
     const { rows: buyers } = await this.db.query(
-      `SELECT l.id, l.name,
+      `SELECT l.id, l.name, l.email, l.phone, l.status,
               COALESCE(l.parsed_city, '') AS location,
               l.parsed_budget_min AS "budgetMin",
               l.parsed_budget_max AS "budgetMax",
@@ -1809,14 +1809,16 @@ export class PropertiesService {
     // Sellers are existing property owners/creators; again no duplicated CRM
     // entity is introduced.
     const { rows: sellers } = await this.db.query(
-      `SELECT u.id, u.name, u.email,
+      `SELECT u.id, u.name, u.email, u.phone,
               COUNT(p.id)::int AS "propertyCount",
+              MAX(p.title) AS "propertyTitle",
+              MAX(p.status) AS "listingStatus",
               COALESCE(SUM(p.price), 0)::numeric AS "listingValue",
               COUNT(*) FILTER (WHERE p.status = 'published')::int AS "activeListings"
        FROM properties p
        LEFT JOIN users u ON u.id = p.created_by
        WHERE ${propertyScope.where.replaceAll('team_id', 'p.team_id').replaceAll('created_by', 'p.created_by')}
-       GROUP BY u.id, u.name, u.email
+       GROUP BY u.id, u.name, u.email, u.phone
        ORDER BY "listingValue" DESC
        LIMIT 40`,
       propertyScope.params,

@@ -866,6 +866,26 @@
     }
   },
   "properties": {
+    "workspaceTitle": "Real Estate Workspace",
+    "workspaceOverviewDescription": "Manage properties, buyers, sellers and close more deals with AI intelligence.",
+    "workspacePropertiesDescription": "Manage properties and inventory",
+    "workspaceNavigation": "Real estate workspace sections",
+    "inventorySubtitle": "Manage your property inventory.",
+    "grid": "Grid",
+    "list": "List",
+    "moreFilters": "More Filters",
+    "tabs": {
+      "overview": "Overview",
+      "properties": "Properties",
+      "buyers": "Buyers",
+      "sellers": "Sellers",
+      "showings": "Showings",
+      "offers": "Offers",
+      "transactions": "Transactions",
+      "documents": "Documents",
+      "commissions": "Commissions",
+      "more": "More"
+    },
     "title": "Properties",
     "addProperty": "Add Property",
     "noProperties": "No properties yet. Add your first listing.",
