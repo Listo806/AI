@@ -885,58 +885,34 @@ const pricingV3 = {
     save: "Save 20%",
     popular: "",
     toStart: "to start",
-    forever: "Forever",
     keyFeatures: "FEATURES:",
     everythingFree: "FEATURES:",
     everythingSolo: "FEATURES:",
     everythingBusiness: "FEATURES:",
-    ctaFree: "Get Started",
     ctaTrial: "Start Free Trial",
     then: "Then",
     perMonth: "/month",
     perYear: "/year",
-    workspaceIncluded: "✓ 1 Workspace Included",
+    workspaceIncluded: "1 Workspace Included",
+    userIncluded: "1 User Included",
+    usersIncluded: "{count} Users Included",
     oneTimeActivation: "one-time activation",
     annualSavings: "20% savings vs.",
     atMonthlyPricing: "at monthly pricing",
     paidTrialNote: "Solo, Business, and Scale plans include a 14-day trial.",
     plans: {
-      free: {
-        name: "Free",
-        desc: "Perfect to explore and get started.",
-        price: "$0",
-        users: "",
-        features: [
-          "AI Agent (Limited)",
-          "Basic AI Chat",
-          "Basic Dashboard",
-          "Limited AI Conversations (50/mo)",
-          "Basic Automations (5 workflows)",
-          "Contact Management (Limited)",
-          "1 App Integration",
-          "Knowledge Base (Basic)",
-          "Activity Timeline",
-          "Task Management (Basic)",
-          "Calendar & Appointments (Basic)",
-          "Basic Reports & Insights",
-          "Mobile Access",
-          "Community Support",
-        ],
-      },
       solo: {
         name: "Solo Plan",
         desc: "Everything you need to start getting started.",
         price: "$7",
         users: "",
         features: [
-          "Everything in Free, plus:",
           "Full CRM & Contact Management",
           "Lead & Pipeline Management",
           "Advanced Dashboard & Insights",
           "AI Chat (Standard)",
           "AI Conversations (250/mo)",
           "Workflow Builder (25/mo)",
-          "Team Members (Up to 3 Users)",
           "Advanced Automations",
           "Calendar & Scheduling",
           "Documents & File Storage",
@@ -955,7 +931,6 @@ const pricingV3 = {
         price: "$14",
         users: "3 users",
         features: [
-          "Everything in Solo Plan, plus:",
           "Team Workspace (3 Users)",
           "Advanced Permissions & Roles",
           "Advanced Reports & Analytics",
@@ -980,7 +955,6 @@ const pricingV3 = {
         price: "$21",
         users: "5 users",
         features: [
-          "Everything in Business Plan, plus:",
           "Team Workspace (5 Users)",
           "Unlimited AI Usage",
           "AI Chat (Premium)",
@@ -1009,58 +983,34 @@ const pricingV3 = {
     save: "Ahorra 20%",
     popular: "",
     toStart: "para comenzar",
-    forever: "Para siempre",
     keyFeatures: "CARACTERÍSTICAS:",
     everythingFree: "CARACTERÍSTICAS:",
     everythingSolo: "CARACTERÍSTICAS:",
     everythingBusiness: "CARACTERÍSTICAS:",
-    ctaFree: "Comenzar",
     ctaTrial: "Iniciar prueba gratis",
     then: "Luego",
     perMonth: "/mes",
     perYear: "/año",
-    workspaceIncluded: "✓ 1 espacio de trabajo incluido",
+    workspaceIncluded: "1 espacio de trabajo incluido",
+    userIncluded: "1 usuario incluido",
+    usersIncluded: "{count} usuarios incluidos",
     oneTimeActivation: "activación única",
     annualSavings: "20% de ahorro vs.",
     atMonthlyPricing: "con precio mensual",
     paidTrialNote: "Los planes Solo, Business y Scale incluyen una prueba gratuita de 14 días.",
     plans: {
-      free: {
-        name: "Free",
-        desc: "Perfecto para explorar y comenzar.",
-        price: "$0",
-        users: "",
-        features: [
-          "Agente de IA (Limitado)",
-          "Chat básico con IA",
-          "Panel básico",
-          "Conversaciones con IA limitadas (50/mes)",
-          "Automatizaciones básicas (5 flujos)",
-          "Gestión de contactos (Limitada)",
-          "Integración con 1 aplicación",
-          "Base de conocimientos (Básica)",
-          "Cronología de actividad",
-          "Gestión de tareas (Básica)",
-          "Calendario y citas (Básico)",
-          "Informes e insights básicos",
-          "Acceso móvil",
-          "Soporte de la comunidad",
-        ],
-      },
       solo: {
         name: "Plan Solo",
         desc: "Todo lo que necesitas para empezar.",
         price: "$7",
         users: "",
         features: [
-          "Todo lo de Free, más:",
           "CRM completo y gestión de contactos",
           "Gestión de leads y pipeline",
           "Panel e insights avanzados",
           "Chat con IA (Estándar)",
           "Conversaciones con IA (250/mes)",
           "Constructor de flujos (25/mes)",
-          "Miembros del equipo (Hasta 3 usuarios)",
           "Automatizaciones avanzadas",
           "Calendario y programación",
           "Documentos y almacenamiento de archivos",
@@ -1079,7 +1029,6 @@ const pricingV3 = {
         price: "$14",
         users: "3 usuarios",
         features: [
-          "Todo lo del Plan Solo, más:",
           "Espacio de trabajo del equipo (3 usuarios)",
           "Permisos y roles avanzados",
           "Informes y analítica avanzados",
@@ -1104,7 +1053,6 @@ const pricingV3 = {
         price: "$21",
         users: "5 usuarios",
         features: [
-          "Todo lo del Plan Business, más:",
           "Espacio de trabajo del equipo (5 usuarios)",
           "Uso ilimitado de IA",
           "Chat con IA (Premium)",
@@ -1133,58 +1081,34 @@ const pricingV3 = {
     save: "Economize 20%",
     popular: "",
     toStart: "para começar",
-    forever: "Para sempre",
     keyFeatures: "RECURSOS:",
     everythingFree: "RECURSOS:",
     everythingSolo: "RECURSOS:",
     everythingBusiness: "RECURSOS:",
-    ctaFree: "Começar",
     ctaTrial: "Iniciar teste grátis",
     then: "Depois",
     perMonth: "/mês",
     perYear: "/ano",
-    workspaceIncluded: "✓ 1 espaço de trabalho incluído",
+    workspaceIncluded: "1 espaço de trabalho incluído",
+    userIncluded: "1 usuário incluído",
+    usersIncluded: "{count} usuários incluídos",
     oneTimeActivation: "ativação única",
     annualSavings: "20% de economia vs.",
     atMonthlyPricing: "com preço mensal",
     paidTrialNote: "Os planos Solo, Business e Scale incluem um teste gratuito de 14 dias.",
     plans: {
-      free: {
-        name: "Free",
-        desc: "Perfeito para explorar e começar.",
-        price: "$0",
-        users: "",
-        features: [
-          "Agente de IA (Limitado)",
-          "Chat básico com IA",
-          "Dashboard básico",
-          "Conversas com IA limitadas (50/mês)",
-          "Automações básicas (5 fluxos)",
-          "Gestão de contatos (Limitada)",
-          "Integração com 1 aplicativo",
-          "Base de conhecimento (Básica)",
-          "Linha do tempo de atividades",
-          "Gestão de tarefas (Básica)",
-          "Calendário e compromissos (Básico)",
-          "Relatórios e insights básicos",
-          "Acesso móvel",
-          "Suporte da comunidade",
-        ],
-      },
       solo: {
         name: "Plano Solo",
         desc: "Tudo o que você precisa para começar.",
         price: "$7",
         users: "",
         features: [
-          "Tudo do Free, mais:",
           "CRM completo e gestão de contatos",
           "Gestão de leads e pipeline",
           "Dashboard e insights avançados",
           "Chat com IA (Padrão)",
           "Conversas com IA (250/mês)",
           "Construtor de fluxos (25/mês)",
-          "Membros da equipe (Até 3 usuários)",
           "Automações avançadas",
           "Calendário e agendamento",
           "Documentos e armazenamento de arquivos",
@@ -1203,7 +1127,6 @@ const pricingV3 = {
         price: "$14",
         users: "3 usuários",
         features: [
-          "Tudo do Plano Solo, mais:",
           "Workspace de equipe (3 usuários)",
           "Permissões e funções avançadas",
           "Relatórios e análises avançadas",
@@ -1228,7 +1151,6 @@ const pricingV3 = {
         price: "$21",
         users: "5 usuários",
         features: [
-          "Tudo do Plano Business, mais:",
           "Workspace de equipe (5 usuários)",
           "Uso ilimitado de IA",
           "Chat com IA (Premium)",
@@ -1330,8 +1252,10 @@ export default function PricingPage() {
           <strong>{formatUsd(plan.activation)}</strong>
           <span>{pv3.toStart}</span>
         </div>
-        <div className="cx-pricing-v3-workspaceIncluded-label">
-          {pv3.workspaceIncluded}
+        <div className="cx-pricing-v3-inclusions">
+          <span><Check size={16} strokeWidth={2.8} /> {pv3.workspaceIncluded}</span>
+          <i aria-hidden="true" />
+          <span><User size={16} strokeWidth={2.6} /> {planKey === "solo" ? pv3.userIncluded : pv3.usersIncluded.replace("{count}", planKey === "team" ? "3" : "5")}</span>
         </div>
         <div className="cx-pricing-v3-activation-label">
           {formatUsd(plan.activation)} {pv3.oneTimeActivation}
@@ -1496,35 +1420,6 @@ export default function PricingPage() {
           <div className="cx-pricing-v3-grid">
             <article className="cx-pricing-v3-card">
               <div className="cx-pricing-v3-card-top">
-                <h2>{pv3.plans.free.name}</h2>
-                <p className="cx-pricing-v3-desc">{pv3.plans.free.desc}</p>
-                <div className="cx-pricing-v3-price n-flex cx-pricing-v3-free-price n-flex">
-                  <strong>{pv3.plans.free.price}</strong>
-                  <b>{pv3.forever}</b>
-                </div>
-                <Link
-                  to="/trial?from=pricing"
-                  className="cx-pricing-v3-cta cx-pricing-v3-cta-black"
-                  onClick={(e) => onPlanCta(e, "free")}
-                >
-                  {pv3.ctaFree}
-                </Link>
-              </div>
-              <div className="cx-pricing-v3-features">
-                <h3>{pv3.keyFeatures}</h3>
-                <ul>
-                  {pv3.plans.free.features.map((feature) => (
-                    <li key={feature}>
-                      <Check size={18} strokeWidth={2.5} />{" "}
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-
-            <article className="cx-pricing-v3-card">
-              <div className="cx-pricing-v3-card-top">
                 <h2>{pv3.plans.solo.name}</h2>
                 <p className="cx-pricing-v3-desc">{pv3.plans.solo.desc}</p>
                 {renderPaidPrice("solo")}
@@ -1537,7 +1432,7 @@ export default function PricingPage() {
                 </Link>
               </div>
               <div className="cx-pricing-v3-features">
-                <h3>{pv3.everythingFree}</h3>
+                <h3>{pv3.keyFeatures}</h3>
                 <ul>
                   {pv3.plans.solo.features.map((feature) => (
                     <li key={feature}>
@@ -1568,7 +1463,7 @@ export default function PricingPage() {
                 </Link>
               </div>
               <div className="cx-pricing-v3-features">
-                <h3>{pv3.everythingSolo}</h3>
+                <h3>{pv3.keyFeatures}</h3>
                 <ul>
                   {pv3.plans.business.features.map((feature) => (
                     <li key={feature}>
@@ -1594,7 +1489,7 @@ export default function PricingPage() {
                 </Link>
               </div>
               <div className="cx-pricing-v3-features">
-                <h3>{pv3.everythingBusiness}</h3>
+                <h3>{pv3.keyFeatures}</h3>
                 <ul>
                   {pv3.plans.scale.features.map((feature) => (
                     <li key={feature}>
