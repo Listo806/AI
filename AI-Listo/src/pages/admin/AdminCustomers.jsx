@@ -2133,15 +2133,7 @@ function CustomerModal({
         onClose={() => setMoreOpen(false)}
         className="up-right down"
       >
-        <button
-          className="cxc-menu-item"
-          onClick={() => {
-            setMoreOpen(false);
-            onChangePlan && onChangePlan(c);
-          }}
-        >
-          Change plan
-        </button>
+        
         <button className="cxc-menu-item" onClick={doDeactivate}>
           Deactivate
         </button>
