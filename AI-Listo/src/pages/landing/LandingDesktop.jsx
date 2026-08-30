@@ -512,10 +512,10 @@ export default function Landing() {
       heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
-      heroCTA: "Get Started, It’s Free!",
+      heroCTA: "Get Started!",
       heroFreeAccess: "Sign Up? — Get Free Access!",
-      heroNoCard: "No credit card required.",
-      heroFreeForever: "Free forever.",
+      heroNoCard: "14-Day Free Trial",
+      heroFreeForever: "Starting at $7",
       heroUnlock: "Unlock potential today!",
       heroTag1: "One AI Platform. Everything Connected.",
       heroTag2: "AI-Assisted Follow-Up Workflows",
@@ -567,7 +567,7 @@ export default function Landing() {
       smartV2Bottom: "Manage Leads. Appointments. Deals. In One Place.",
 
       topLine1: "The simple ",
-      topHighlight: "AI revenue operating system",
+      topHighlight: "Agentic AI revenue operating system",
       topLine3:
         "for bussinesses tired of complicated, overpriced CRM software.",
       pricing: "Pricing",
@@ -1017,10 +1017,10 @@ export default function Landing() {
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
-      heroCTA: "Empieza Gratis!",
+      heroCTA: "¡Comenzar!",
       heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
-      heroNoCard: "No se requiere tarjeta de crédito.",
-      heroFreeForever: "Gratis para siempre.",
+      heroNoCard: "Prueba gratuita de 14 días",
+      heroFreeForever: "Desde $7",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       heroTag1: "Una plataforma de IA. Todo conectado.",
       heroTag2: "Flujos de seguimiento asistidos por IA",
@@ -1073,7 +1073,7 @@ export default function Landing() {
       smartV2Bottom: "Gestiona leads. Citas. Negocios. Todo en un solo lugar.",
 
       topLine1: "El ",
-      topHighlight: "Sistema operativo de ingresos con IA",
+      topHighlight: "Sistema operativo de ingresos con IA agéntica",
       topLine3:
         "simple para empresas cansadas de software CRM complicado y demasiado costoso.",
       pricing: "Precios",
@@ -1494,10 +1494,10 @@ export default function Landing() {
       heroCheck11: "Agenda compromissos diretamente no seu calendário",
       heroCheck12:
         "Veja todos os leads, negócios e oportunidades em um único painel",
-      heroCTA: "Comece Grátis!",
+      heroCTA: "Começar!",
       heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
-      heroNoCard: "Nenhum cartão de crédito necessário.",
-      heroFreeForever: "Grátis para sempre.",
+      heroNoCard: "Teste grátis de 14 dias",
+      heroFreeForever: "A partir de US$ 7",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
       heroTag2: "Fluxos de acompanhamento assistidos por IA",
@@ -1550,7 +1550,7 @@ export default function Landing() {
       smartV2Bottom: "Gerencie leads. Agendamentos. Negócios. Tudo em um só lugar.",
 
       topLine1: "O ",
-      topHighlight: "Sistema operacional de receita com IA",
+      topHighlight: "Sistema operacional de receita com IA agéntica",
       topLine3:
         "simples para empresas cansadas de softwares de CRM complicados e caros.",
       pricing: "Preços",
