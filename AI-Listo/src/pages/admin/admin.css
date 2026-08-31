@@ -1204,8 +1204,8 @@ body.crm-dark .admin-plan-table tbody tr:hover td {
 }
 
 .iau-primary-btn {
-  min-height: 48px;
-  padding: 0 24px;
+  min-height: 40px;
+  padding: 0 16px;
   border: 0;
   border-radius: 9px;
   display: inline-flex;
@@ -1652,7 +1652,7 @@ body.crm-dark .admin-plan-table tbody tr:hover td {
   .iau-header { align-items: flex-start; }
   .iau-header h1 { font-size: 25px; }
   .iau-header p { font-size: 14px; }
-  .iau-primary-btn { min-height: 44px; padding: 0 16px; }
+  .iau-primary-btn { min-height: 40px; padding: 0 16px; }
   .iau-filter-card {
     padding: 16px;
     grid-template-columns: minmax(0, 1fr) minmax(125px, .45fr) minmax(125px, .45fr) auto;

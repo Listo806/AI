@@ -267,10 +267,10 @@
     "switchToDark": "Switch to dark mode",
     "admin": "Admin",
     "listings": "Listings",
-    "users": "Users",
+    "users": "Internal Users & Access",
     "teams": "Teams",
     "adminSignups": "Sign-ups",
-    "adminCustomers": "Customers"
+    "adminCustomers": "E-commerce Subscriptions"
   },
   "header": {
     "profile": "Profile",
