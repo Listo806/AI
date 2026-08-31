@@ -48,28 +48,23 @@
       "new": "NOVO",
       "active": "ATIVO",
       "locked": "BLOQUEADO",
-
       "flyoutTitle": "Espaços de trabalho Cortexa",
       "flyoutDescription": "Monte sua equipe de receita com IA usando ambientes empresariais poderosos, projetados para a forma como você trabalha.",
       "specializedOperations": "Criado para operações especializadas",
       "activateWhatYouNeed": "Ative apenas o que você precisa",
-
       "whatsIncluded": "O QUE ESTÁ INCLUÍDO",
       "included": "Incluído",
       "perMonth": "/mês",
       "closePreview": "Fechar visualização do espaço de trabalho",
-
       "open": "Abrir",
       "activeSuffix": "Ativo",
       "activating": "Ativando…",
       "openingCheckout": "Abrindo checkout…",
       "activateIncluded": "Ativar — incluído gratuitamente",
       "addToPlan": "Adicionar ao meu plano →",
-
       "activeOnAccount": "Este espaço de trabalho está ativo na sua conta.",
       "includedNoCharge": "Incluído no seu plano — a ativação não adiciona nenhuma cobrança.",
       "secureCheckout": "Checkout seguro processado pela Paddle",
-
       "items": {
         "sales": {
           "label": "Espaço de Vendas",
@@ -88,7 +83,6 @@
           ],
           "connected": "Conectado aos seus leads, pipeline, contatos, IA, automações, análises e dados de CRM do Cortexa."
         },
-
         "insurance": {
           "label": "Espaço de Seguros",
           "description": "Gerencie toda a sua operação de seguros, da cotação à apólice, renovação, sinistro e comissão.",
@@ -106,7 +100,6 @@
           ],
           "connected": "Conectado aos seus leads, pipeline, contatos, IA, automações, WhatsApp, análises e dados de CRM do Cortexa."
         },
-
         "financial": {
           "label": "Serviços Financeiros",
           "description": "Gerencie clientes, solicitações, contas, transações, documentos e fluxos financeiros em um único espaço conectado.",
@@ -124,7 +117,6 @@
           ],
           "connected": "Conectado aos seus leads, pipeline, contatos, IA, automações, WhatsApp, análises e dados de CRM do Cortexa."
         },
-
         "ecommerce": {
           "label": "Comércio Eletrônico",
           "description": "Gerencie clientes, assinaturas, faturamento, pagamentos e receita recorrente em um único espaço conectado.",
@@ -143,7 +135,6 @@
           ],
           "connected": "Conectado aos seus clientes, contatos, IA, automações, análises, dados da equipe e atividade de CRM do Cortexa."
         },
-
         "customer_service": {
           "label": "Atendimento ao Cliente",
           "description": "Gerencie suporte ao cliente, tickets, escalonamentos, resoluções e operações de serviço em um único espaço conectado.",
@@ -163,7 +154,6 @@
           ],
           "connected": "Conectado aos seus clientes, contatos, WhatsApp, IA, automações, análises e dados de CRM do Cortexa."
         },
-
         "real_estate": {
           "label": "Espaço Imobiliário",
           "description": "Gerencie imóveis, compradores, vendedores, visitas, ofertas, transações e comissões em um espaço imobiliário conectado.",
@@ -183,7 +173,6 @@
           ],
           "connected": "Conectado aos seus leads, pipeline, contatos, IA, automações, WhatsApp, análises e dados de CRM do Cortexa."
         },
-
         "team": {
           "label": "Espaço da Equipe",
           "description": "Planeje, atribua, colabore e gerencie o trabalho da sua equipe em um único espaço conectado.",
@@ -206,7 +195,6 @@
           ],
           "connected": "Conectado ao seu CRM, clientes, contatos, IA, automações, análises e dados empresariais do Cortexa."
         },
-
         "lead_generator": {
           "label": "Gerador de Leads",
           "description": "Encontre, verifique e enriqueça novos leads empresariais sob demanda e envie-os diretamente para o pipeline do Cortexa.",
@@ -2684,7 +2672,31 @@
       "roleUpdateFailed": "Falha ao atualizar a função",
       "userDeactivated": "Usuário desativado",
       "userReactivated": "Usuário reativado",
-      "reactivateFailed": "Falha ao reativar"
+      "reactivateFailed": "Falha ao reativar",
+      "internalTitle": "Usuários internos e acesso",
+      "internalSubtitle": "Gerencie o acesso administrativo à plataforma Cortexa.",
+      "addInternalUser": "Adicionar usuário interno",
+      "searchInternalPlaceholder": "Buscar por nome ou e-mail...",
+      "allStatuses": "Todos os status",
+      "internalUser": "Usuário interno",
+      "lastActive": "Última atividade",
+      "added": "Adicionado",
+      "viewDetails": "Ver detalhes",
+      "editAccess": "Editar acesso",
+      "resetPassword": "Redefinir senha",
+      "aboutInternalUsers": "Sobre usuários internos",
+      "aboutInternalUsersCopy": "Esses usuários têm acesso à plataforma Cortexa para fins administrativos, de desenvolvimento ou suporte. Clientes e membros de suas equipes são gerenciados na seção Clientes.",
+      "learnRolesPermissions": "Saiba mais sobre funções e permissões",
+      "showingUsers": "Mostrando {{from}} a {{to}} de {{total}} usuários",
+      "roleSuperAdmin": "Super Admin",
+      "roleAdmin": "Admin",
+      "roleDeveloper": "Desenvolvedor",
+      "roleSupport": "Suporte",
+      "roleOwner": "Proprietário",
+      "roleUser": "Usuário",
+      "roleWholesaler": "Atacadista",
+      "roleInvestor": "Investidor",
+      "userFallback": "Usuário"
     },
     "teams": {
       "pageTitle": "Admin: Equipes",

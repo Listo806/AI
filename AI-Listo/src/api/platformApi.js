@@ -111,9 +111,14 @@ export async function updateAdminListing(id, { teamId }) {
 // ADMIN USERS (Super Admin / Admin) - Full CRUD
 // ============================================================================
 
-export async function getAdminUsers(role = null) {
-  const qs = role ? `?role=${encodeURIComponent(role)}` : "";
-  const res = await apiClient.request(`/admin/users${qs}`);
+export async function getAdminUsers(filters = {}) {
+  const normalized = typeof filters === "string" ? { role: filters } : (filters || {});
+  const params = new URLSearchParams();
+  if (normalized.role) params.set("role", normalized.role);
+  if (normalized.status) params.set("status", normalized.status);
+  if (normalized.q) params.set("q", normalized.q);
+  const qs = params.toString();
+  const res = await apiClient.request(`/admin/users${qs ? `?${qs}` : ""}`);
   return Array.isArray(res?.data) ? res.data : res?.data || [];
 }
 
@@ -506,20 +511,28 @@ export async function updateAdminUserRole(id, role) {
   return res?.data || res;
 }
 
+// Deactivates INTERNAL ACCESS only. The users identity/customer data is preserved.
 export async function deleteAdminUser(id) {
-  const res = await apiClient.request(`/admin/users/${id}`, {
-    method: "DELETE",
+  const res = await apiClient.request(`/admin/users/${id}`, { method: "DELETE" });
+  return res?.data || res;
+}
+
+export async function reactivateAdminUser(id) {
+  const res = await apiClient.request(`/admin/users/${id}/reactivate`, { method: "POST" });
+  return res?.data || res;
+}
+
+export async function resetAdminUserPassword(id, password) {
+  const res = await apiClient.request(`/admin/users/${id}/reset-password`, {
+    method: "POST",
+    body: JSON.stringify({ password }),
   });
   return res?.data || res;
 }
 
-// Permanently delete a user (hard delete). The backend blocks this with a 409
-// if the user owns a workspace that still has other active members, so ownership
-// must be transferred first. Returns { deleted } on success.
+// Removes only the internal-access record; authentication/customer identity stays intact.
 export async function hardDeleteAdminUser(id) {
-  const res = await apiClient.request(`/admin/users/${id}/permanent`, {
-    method: "DELETE",
-  });
+  const res = await apiClient.request(`/admin/users/${id}/permanent`, { method: "DELETE" });
   return res?.data || res;
 }
 

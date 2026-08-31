@@ -1,31 +1,44 @@
-import { IsString, IsEmail, IsEnum, IsOptional, IsBoolean, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { UserRole } from '../../users/entities/user.entity';
+import {
+  INTERNAL_USER_ROLES,
+  INTERNAL_USER_STATUSES,
+  InternalUserRole,
+  InternalUserStatus,
+} from './create-admin-user.dto';
 
 export class UpdateAdminUserDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  name?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsEmail()
   email?: string;
 
-  @ApiPropertyOptional({ minLength: 6 })
+  @ApiPropertyOptional({ enum: INTERNAL_USER_ROLES })
   @IsOptional()
   @IsString()
-  @MinLength(6)
-  password?: string;
+  @IsIn(INTERNAL_USER_ROLES)
+  role?: InternalUserRole;
 
-  @ApiPropertyOptional({ enum: UserRole })
-  @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
-
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: INTERNAL_USER_STATUSES })
   @IsOptional()
   @IsString()
-  teamId?: string | null;
+  @IsIn(INTERNAL_USER_STATUSES)
+  status?: InternalUserStatus;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: [String] })
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsArray()
+  @IsString({ each: true })
+  permissions?: string[];
 }

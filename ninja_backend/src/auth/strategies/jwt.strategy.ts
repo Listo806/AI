@@ -19,21 +19,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // "Last Active" heartbeat. This strategy runs on EVERY authenticated request,
-  // so it captures a customer returning to a valid session and actively using
-  // Cortexa (not just an explicit login). Throttled in-memory to at most one DB
-  // write per user per window, and fire-and-forget so it never blocks or fails
-  // a request. Registered (registered_at/created_at) is set once at signup and
-  // is never touched here.
   private static readonly lastSeenWrites = new Map<string, number>();
-  private static readonly LAST_SEEN_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
+  private static readonly LAST_SEEN_THROTTLE_MS = 10 * 60 * 1000;
 
   private touchLastSeen(userId: string): void {
     if (!userId) return;
     const now = Date.now();
     const prev = JwtStrategy.lastSeenWrites.get(userId) || 0;
     if (now - prev < JwtStrategy.LAST_SEEN_THROTTLE_MS) return;
-    // Bound memory: the throttle map only needs recent writers.
     if (JwtStrategy.lastSeenWrites.size > 50000) {
       JwtStrategy.lastSeenWrites.clear();
     }
@@ -45,59 +38,74 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     const user = await this.authService.validateUser(payload.id);
-    if (!user) {
-      throw new UnauthorizedException();
-    }
+    if (!user) throw new UnauthorizedException();
 
-    // Record real authenticated activity for the admin "Last Active" column.
     this.touchLastSeen(user.id);
 
-    // Token version validation: check if token version matches current user/team version
-    // This invalidates tokens when role/subscription changes occur
-    // Skip validation if columns don't exist (backward compatibility)
     try {
       const { rows } = await this.db.query(
-        `SELECT u.token_version, COALESCE(t.token_version, 0) as team_token_version
+        `SELECT
+            u.token_version,
+            u.role as legacy_role,
+            COALESCE(t.token_version, 0) as team_token_version,
+            ia.internal_role,
+            ia.status as internal_access_status,
+            ia.permissions as internal_permissions
          FROM users u
          LEFT JOIN teams t ON t.id = u.team_id
+         LEFT JOIN internal_user_access ia ON ia.user_id = u.id
          WHERE u.id = $1`,
         [user.id],
       );
 
-      if (rows.length === 0) {
-        throw new UnauthorizedException();
+      if (rows.length === 0) throw new UnauthorizedException();
+
+      const row = rows[0];
+      const currentTokenVersion = row.token_version ?? 1;
+      const currentTeamTokenVersion = row.team_token_version ?? 0;
+
+      if (
+        payload.tokenVersion !== undefined &&
+        payload.tokenVersion !== currentTokenVersion
+      ) {
+        throw new UnauthorizedException('Token invalidated due to account changes');
       }
 
-      const currentTokenVersion = rows[0].token_version ?? 1;
-      const currentTeamTokenVersion = rows[0].team_token_version ?? 0;
-
-      // Only validate if token has version info (tokens generated before migration won't have it)
-      // If token doesn't have version, allow it (backward compatibility)
-      if (payload.tokenVersion !== undefined) {
-        if (payload.tokenVersion !== currentTokenVersion) {
-          throw new UnauthorizedException('Token invalidated due to account changes');
-        }
+      if (
+        payload.teamTokenVersion !== undefined &&
+        payload.teamTokenVersion !== currentTeamTokenVersion
+      ) {
+        throw new UnauthorizedException(
+          'Token invalidated due to subscription/team changes',
+        );
       }
 
-      if (payload.teamTokenVersion !== undefined) {
-        if (payload.teamTokenVersion !== currentTeamTokenVersion) {
-          throw new UnauthorizedException('Token invalidated due to subscription/team changes');
-        }
-      }
-      
-      // If token doesn't have version info, it's from before migration - allow it
-      return user;
+      const internalActive = row.internal_access_status === 'active';
+      const privilegedLegacyRole = ['super_admin', 'admin', 'developer'].includes(
+        String(row.legacy_role || ''),
+      );
+
+      // Once the migration exists, legacy privileged roles are not enough by
+      // themselves. A missing/inactive internal access row removes effective
+      // administrative privilege without disabling the customer's base identity.
+      const effectiveRole =
+        privilegedLegacyRole && !internalActive ? 'user' : user.role;
+
+      return {
+        ...user,
+        role: effectiveRole,
+        internalRole: internalActive ? (row.internal_role ?? null) : null,
+        internalAccessStatus: row.internal_access_status ?? null,
+        internalPermissions: Array.isArray(row.internal_permissions)
+          ? row.internal_permissions
+          : [],
+      };
     } catch (error: any) {
-      // If columns don't exist yet (migration not run), skip version validation
-      if (error.code === '42703') { // undefined_column
-        // Skip token version validation - columns not migrated yet
+      // Backward compatibility while migration is being deployed.
+      if (error?.code === '42P01' || error?.code === '42703') {
         return user;
       }
-      // Re-throw other errors (including UnauthorizedException)
       throw error;
     }
-
-    return user;
   }
 }
-

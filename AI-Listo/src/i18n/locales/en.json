@@ -48,28 +48,23 @@
       "new": "NEW",
       "active": "ACTIVE",
       "locked": "LOCKED",
-
       "flyoutTitle": "Cortexa Workspaces",
       "flyoutDescription": "Build your AI revenue team with powerful business environments designed around the way you operate.",
       "specializedOperations": "Built for specialized operations",
       "activateWhatYouNeed": "Activate only what you need",
-
       "whatsIncluded": "WHAT'S INCLUDED",
       "included": "Included",
       "perMonth": "/month",
       "closePreview": "Close workspace preview",
-
       "open": "Open",
       "activeSuffix": "Active",
       "activating": "Activating…",
       "openingCheckout": "Opening checkout…",
       "activateIncluded": "Activate — included free",
       "addToPlan": "Add to My Plan →",
-
       "activeOnAccount": "This workspace is active on your account.",
       "includedNoCharge": "Included with your plan — activating adds no charge.",
       "secureCheckout": "Secure checkout powered by Paddle",
-
       "items": {
         "sales": {
           "label": "Sales Workspace",
@@ -88,7 +83,6 @@
           ],
           "connected": "Connected to your Cortexa leads, pipeline, contacts, AI, automation, analytics, and CRM data."
         },
-
         "insurance": {
           "label": "Insurance Workspace",
           "description": "Manage your entire insurance operation—from quote to policy, renewal, claim, and commission—in one connected workspace.",
@@ -106,7 +100,6 @@
           ],
           "connected": "Connected to your Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."
         },
-
         "financial": {
           "label": "Financial Services",
           "description": "Manage clients, applications, accounts, transactions, documents, and financial workflows in one connected workspace.",
@@ -124,7 +117,6 @@
           ],
           "connected": "Connected to your Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."
         },
-
         "ecommerce": {
           "label": "E-Commerce",
           "description": "Manage customers, subscriptions, billing, payments, and recurring revenue in one connected workspace.",
@@ -143,7 +135,6 @@
           ],
           "connected": "Connected to your Cortexa customers, contacts, AI, automation, analytics, team data, and CRM activity."
         },
-
         "customer_service": {
           "label": "Customer Service",
           "description": "Manage customer support, tickets, escalations, resolutions, and service operations in one connected workspace.",
@@ -163,7 +154,6 @@
           ],
           "connected": "Connected to your Cortexa customers, contacts, WhatsApp, AI, automation, analytics, and CRM data."
         },
-
         "real_estate": {
           "label": "Real Estate Workspace",
           "description": "Manage properties, buyers, sellers, showings, offers, transactions, and commissions in one connected real estate workspace.",
@@ -183,7 +173,6 @@
           ],
           "connected": "Connected to your Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."
         },
-
         "team": {
           "label": "Team Workspace",
           "description": "Plan, assign, collaborate, and manage your team's work from one connected workspace.",
@@ -206,7 +195,6 @@
           ],
           "connected": "Connected to your Cortexa CRM, customers, contacts, AI, automation, analytics, and business data."
         },
-
         "lead_generator": {
           "label": "Lead Generator",
           "description": "Find, verify, and enrich new business leads on demand, then push them straight into your Cortexa pipeline.",
@@ -2684,7 +2672,31 @@
       "roleUpdateFailed": "Failed to update role",
       "userDeactivated": "User deactivated",
       "userReactivated": "User reactivated",
-      "reactivateFailed": "Failed to reactivate"
+      "reactivateFailed": "Failed to reactivate",
+      "internalTitle": "Internal Users & Access",
+      "internalSubtitle": "Manage administrative access to the Cortexa platform.",
+      "addInternalUser": "Add Internal User",
+      "searchInternalPlaceholder": "Search by name or email...",
+      "allStatuses": "All Statuses",
+      "internalUser": "Internal User",
+      "lastActive": "Last Active",
+      "added": "Added",
+      "viewDetails": "View Details",
+      "editAccess": "Edit Access",
+      "resetPassword": "Reset Password",
+      "aboutInternalUsers": "About Internal Users",
+      "aboutInternalUsersCopy": "These users have access to the Cortexa platform for administrative, development, or support purposes. Customers and their team members are managed from the Customers section.",
+      "learnRolesPermissions": "Learn more about roles & permissions",
+      "showingUsers": "Showing {{from}} to {{to}} of {{total}} users",
+      "roleSuperAdmin": "Super Admin",
+      "roleAdmin": "Admin",
+      "roleDeveloper": "Developer",
+      "roleSupport": "Support",
+      "roleOwner": "Owner",
+      "roleUser": "User",
+      "roleWholesaler": "Wholesaler",
+      "roleInvestor": "Investor",
+      "userFallback": "User"
     },
     "teams": {
       "pageTitle": "Admin: Teams",

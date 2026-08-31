@@ -1,100 +1,143 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiQuery, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { IsString, MinLength } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { UserRole } from '../users/entities/user.entity';
 import { AdminUsersService } from './admin-users.service';
-import { CreateAdminUserDto } from './dto/create-admin-user.dto';
+import {
+  CreateAdminUserDto,
+  InternalUserRole,
+  INTERNAL_USER_ROLES,
+} from './dto/create-admin-user.dto';
 import { UpdateAdminUserDto } from './dto/update-admin-user.dto';
+import { InternalAdminGuard } from './internal-admin.guard';
+
+class ResetInternalUserPasswordDto {
+  @IsString()
+  @MinLength(8)
+  password: string;
+}
 
 @ApiTags('admin')
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@UseGuards(JwtAuthGuard, InternalAdminGuard)
 @ApiBearerAuth('JWT-auth')
 export class AdminUsersController {
   constructor(private readonly adminUsers: AdminUsersService) {}
 
   @Get('users')
-  @ApiOperation({ summary: 'List all users (admin)' })
-  @ApiQuery({ name: 'role', required: false })
-  @ApiResponse({ status: 200 })
-  async list(@Query('role') role?: string) {
-    const data = await this.adminUsers.findAll(role);
+  @ApiOperation({ summary: 'List internal users only' })
+  @ApiQuery({ name: 'role', required: false, enum: INTERNAL_USER_ROLES })
+  @ApiQuery({ name: 'status', required: false, enum: ['active', 'inactive'] })
+  @ApiQuery({ name: 'q', required: false })
+  async list(
+    @Query('role') role?: string,
+    @Query('status') status?: string,
+    @Query('q') q?: string,
+  ) {
+    const data = await this.adminUsers.findAll(role, status, q);
     return { data };
   }
 
   @Get('users/:id')
-  @ApiOperation({ summary: 'Get one user by id' })
+  @ApiOperation({ summary: 'Get one internal user with recent access audit' })
   @ApiParam({ name: 'id' })
-  @ApiResponse({ status: 200 })
-  @ApiResponse({ status: 404 })
   async getOne(@Param('id') id: string) {
     const data = await this.adminUsers.findOne(id);
     return { data };
   }
 
   @Post('users')
-  @ApiOperation({ summary: 'Create user (admin)' })
+  @ApiOperation({ summary: 'Grant internal access; reuses an existing identity when email already exists' })
   @ApiBody({ type: CreateAdminUserDto })
   @ApiResponse({ status: 201 })
-  @ApiResponse({ status: 400 })
-  @ApiResponse({ status: 409 })
-  async create(@Body() body: CreateAdminUserDto) {
-    const data = await this.adminUsers.create(body);
+  @ApiResponse({ status: 409, description: 'Identity already has internal access' })
+  async create(@Body() body: CreateAdminUserDto, @CurrentUser() actor: any) {
+    const data = await this.adminUsers.create(body, actor?.id);
     return { data };
   }
 
   @Put('users/:id')
-  @ApiOperation({ summary: 'Update user (admin)' })
+  @ApiOperation({ summary: 'Update internal user identity/access' })
   @ApiParam({ name: 'id' })
   @ApiBody({ type: UpdateAdminUserDto })
-  @ApiResponse({ status: 200 })
-  @ApiResponse({ status: 404 })
-  async update(@Param('id') id: string, @Body() body: UpdateAdminUserDto) {
-    const data = await this.adminUsers.update(id, body);
+  async update(
+    @Param('id') id: string,
+    @Body() body: UpdateAdminUserDto,
+    @CurrentUser() actor: any,
+  ) {
+    const data = await this.adminUsers.update(id, body, actor?.id);
     return { data };
   }
 
   @Put('users/:id/role')
-  @ApiOperation({ summary: 'Update user role (legacy)' })
+  @ApiOperation({ summary: 'Update internal role' })
   @ApiParam({ name: 'id' })
   @ApiBody({
     schema: {
       type: 'object',
       required: ['role'],
-      properties: { role: { type: 'string', enum: ['owner', 'agent', 'admin', 'va', 'va_uploader', 'user', 'super_admin'] } },
+      properties: { role: { type: 'string', enum: INTERNAL_USER_ROLES } },
     },
   })
-  @ApiResponse({ status: 200 })
-  @ApiResponse({ status: 404 })
-  async updateRole(@Param('id') id: string, @Body() body: { role: string }) {
-    const data = await this.adminUsers.updateRole(id, body.role);
+  async updateRole(
+    @Param('id') id: string,
+    @Body() body: { role: InternalUserRole },
+    @CurrentUser() actor: any,
+  ) {
+    const data = await this.adminUsers.updateRole(id, body.role, actor?.id);
     return { data };
   }
 
   @Delete('users/:id')
-  @ApiOperation({ summary: 'Deactivate user (soft: keep account/data, block access)' })
-  @ApiParam({ name: 'id' })
-  @ApiResponse({ status: 200 })
-  @ApiResponse({ status: 404 })
-  async remove(@Param('id') id: string) {
-    const data = await this.adminUsers.remove(id);
+  @ApiOperation({ summary: 'Deactivate internal access only; preserves the users identity and customer data' })
+  async deactivate(@Param('id') id: string, @CurrentUser() actor: any) {
+    const data = await this.adminUsers.deactivate(id, actor?.id);
+    return { data };
+  }
+
+  @Post('users/:id/reactivate')
+  @ApiOperation({ summary: 'Reactivate internal access' })
+  async reactivate(@Param('id') id: string, @CurrentUser() actor: any) {
+    const data = await this.adminUsers.reactivate(id, actor?.id);
+    return { data };
+  }
+
+  @Post('users/:id/reset-password')
+  @ApiOperation({ summary: 'Set a new password and invalidate prior sessions' })
+  async resetPassword(
+    @Param('id') id: string,
+    @Body() body: ResetInternalUserPasswordDto,
+    @CurrentUser() actor: any,
+  ) {
+    const data = await this.adminUsers.resetPassword(id, body.password, actor?.id);
     return { data };
   }
 
   @Delete('users/:id/permanent')
   @ApiOperation({
-    summary: 'Permanently delete user (hard delete; blocked if owns a shared workspace)',
+    summary: 'Delete internal access record only. Authentication/customer identity is preserved.',
   })
-  @ApiParam({ name: 'id' })
-  @ApiResponse({ status: 200 })
-  @ApiResponse({ status: 404 })
-  @ApiResponse({ status: 400, description: 'Owns a workspace with other active members (transfer ownership first)' })
-  async removePermanent(@Param('id') id: string, @CurrentUser() user: any) {
-    const data = await this.adminUsers.hardRemove(id, user?.id);
+  async removePermanent(@Param('id') id: string, @CurrentUser() actor: any) {
+    const data = await this.adminUsers.hardRemove(id, actor?.id);
     return { data };
   }
 }

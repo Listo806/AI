@@ -1,22 +1,53 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, Min } from 'class-validator';
+import {
+  IsArray,
+  IsEmail,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
 
-export class CreateAdminTeamDto {
-  @ApiProperty({ example: 'Acme Team' })
+export const INTERNAL_USER_ROLES = [
+  'super_admin',
+  'admin',
+  'developer',
+  'support',
+] as const;
+
+export const INTERNAL_USER_STATUSES = ['active', 'inactive'] as const;
+
+export type InternalUserRole = (typeof INTERNAL_USER_ROLES)[number];
+export type InternalUserStatus = (typeof INTERNAL_USER_STATUSES)[number];
+
+export class CreateAdminUserDto {
+  @ApiProperty({ example: 'Maria Lopez' })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiPropertyOptional({ default: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  seatLimit?: number;
-
-  @ApiProperty({ description: 'User ID of the team owner' })
-  @IsString()
+  @ApiProperty({ example: 'maria.lopez@cortexa.com' })
+  @IsEmail()
   @IsNotEmpty()
-  ownerId: string;
+  email: string;
+
+  @ApiProperty({ enum: INTERNAL_USER_ROLES, example: 'admin' })
+  @IsString()
+  @IsIn(INTERNAL_USER_ROLES)
+  role: InternalUserRole;
+
+  @ApiPropertyOptional({ enum: INTERNAL_USER_STATUSES, default: 'active' })
+  @IsOptional()
+  @IsString()
+  @IsIn(INTERNAL_USER_STATUSES)
+  status?: InternalUserStatus = 'active';
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Explicit internal permissions. Defaults are derived from the role.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  permissions?: string[];
 }
