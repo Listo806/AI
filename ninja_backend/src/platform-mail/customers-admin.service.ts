@@ -977,6 +977,237 @@ export class CustomersAdminService {
       count: r.count,
     }));
 
+
+    // -------------------------------------------------------------------------
+    // Admin analytics cards: same canonical definitions as ECommerceWorkspace,
+    // but across the ADMIN'S filtered customer population rather than one tenant.
+    // -------------------------------------------------------------------------
+    const { rows: analyticsRows } = await this.db.query(
+      `SELECT id, team_id, last_seen_at, payment_status, checkout_status,
+              selected_plan, plan
+         FROM users
+        WHERE ${where}`,
+      params,
+    );
+
+    // Owner accounts can legitimately have users.team_id = NULL while owning a
+    // team through teams.owner_id. Resolve that fallback in one batch so
+    // Workspace Opportunity does not incorrectly classify those owners as
+    // "No Workspace".
+    const ownerIds = analyticsRows
+      .map((r: any) => String(r?.id || ''))
+      .filter(Boolean);
+
+    const ownedTeamByOwner = new Map<string, string>();
+    if (ownerIds.length) {
+      try {
+        const { rows: ownedTeams } = await this.db.query(
+          `SELECT owner_id::text AS owner_id, id::text AS team_id
+             FROM teams
+            WHERE owner_id = ANY($1::uuid[])`,
+          [ownerIds],
+        );
+        ownedTeams.forEach((row: any) => {
+          if (row?.owner_id && row?.team_id && !ownedTeamByOwner.has(String(row.owner_id))) {
+            ownedTeamByOwner.set(String(row.owner_id), String(row.team_id));
+          }
+        });
+      } catch (error: any) {
+        this.logger.warn(
+          `Admin workspace owner-team resolution unavailable: ${error?.message || error}`,
+        );
+      }
+    }
+
+    const analyticsTeamId = (r: any): string => {
+      const direct = String(r?.team_id || '').trim();
+      if (direct) return direct;
+      return ownedTeamByOwner.get(String(r?.id || '')) || '';
+    };
+
+    // Customer Status — same mutually-exclusive semantics as the admin tabs.
+    const paidPlanSelected = (r: any) => {
+      const selected = String(r?.selected_plan || r?.plan || '')
+        .trim()
+        .toLowerCase();
+      return ['solo', 'pro', 'business', 'team', 'scale', 'growth'].includes(
+        selected,
+      );
+    };
+
+    const customerStatusRows = [
+      {
+        id: 'free',
+        key: 'Free',
+        count: analyticsRows.filter(
+          (r: any) => String(r?.payment_status || '').toLowerCase() === 'free',
+        ).length,
+      },
+      {
+        id: 'checkout_pending',
+        key: 'Checkout Pending',
+        count: analyticsRows.filter((r: any) => {
+          const ps = String(r?.payment_status || '').toLowerCase();
+          const cs = String(r?.checkout_status || '').toLowerCase();
+          const paid = ps === 'active' || cs === 'paid';
+          return paidPlanSelected(r) && !paid;
+        }).length,
+      },
+      {
+        id: 'registered',
+        key: 'Registered / No Plan',
+        count: analyticsRows.filter((r: any) => {
+          const ps = String(r?.payment_status || '').toLowerCase();
+          const cs = String(r?.checkout_status || '').toLowerCase();
+          const isFree = ps === 'free';
+          const paid = ps === 'active' || cs === 'paid';
+          return !isFree && !paidPlanSelected(r) && !paid;
+        }).length,
+      },
+      {
+        id: 'paid',
+        key: 'Paid',
+        count: analyticsRows.filter((r: any) => {
+          const ps = String(r?.payment_status || '').toLowerCase();
+          const cs = String(r?.checkout_status || '').toLowerCase();
+          return ps === 'active' || cs === 'paid';
+        }).length,
+      },
+    ];
+
+    // Customer Activity — four non-overlapping buckets that always sum to the
+    // filtered customer total. last_seen_at=NULL belongs to Inactive 30+ Days.
+    const now = Date.now();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const todayTs = startOfToday.getTime();
+    const sevenDaysAgo = now - 7 * 86400000;
+    const thirtyDaysAgo = now - 30 * 86400000;
+    const seenAt = (r: any): number | null => {
+      const ts = r?.last_seen_at ? new Date(r.last_seen_at).getTime() : NaN;
+      return Number.isFinite(ts) ? ts : null;
+    };
+
+    const customerActivityRows = [
+      {
+        id: 'today',
+        key: 'Active Today',
+        count: analyticsRows.filter((r: any) => {
+          const ts = seenAt(r);
+          return ts != null && ts >= todayTs;
+        }).length,
+      },
+      {
+        id: 'last_7_days',
+        key: 'Active Last 7 Days',
+        count: analyticsRows.filter((r: any) => {
+          const ts = seenAt(r);
+          return ts != null && ts >= sevenDaysAgo && ts < todayTs;
+        }).length,
+      },
+      {
+        id: 'inactive_7_30',
+        key: 'Inactive 7–30 Days',
+        count: analyticsRows.filter((r: any) => {
+          const ts = seenAt(r);
+          return ts != null && ts >= thirtyDaysAgo && ts < sevenDaysAgo;
+        }).length,
+      },
+      {
+        id: 'inactive_30_plus',
+        key: 'Inactive 30+ Days',
+        count: analyticsRows.filter((r: any) => {
+          const ts = seenAt(r);
+          return ts == null || ts < thirtyDaysAgo;
+        }).length,
+      },
+    ];
+
+    // Workspace Opportunity — same source of truth as ECommerceWorkspace:
+    // workspace_entitlements. `active` = paid workspace, `past_due`/`suspended`
+    // = trial/pending recovery opportunity. A resolved team with no qualifying
+    // entitlement is "Has Workspace"; no resolved team is "No Workspace".
+    const entitlementByTeam = new Map<string, Set<string>>();
+    const teamIds = [
+      ...new Set(
+        analyticsRows
+          .map((r: any) => analyticsTeamId(r))
+          .filter(Boolean),
+      ),
+    ];
+
+    if (teamIds.length) {
+      try {
+        const entitlementRes = await this.db.query(
+          `SELECT team_id::text AS team_id, status
+             FROM workspace_entitlements
+            WHERE team_id = ANY($1::uuid[])
+              AND status IN ('active','past_due','suspended')`,
+          [teamIds],
+        );
+
+        entitlementRes.rows.forEach((row: any) => {
+          const teamId = String(row?.team_id || '');
+          if (!teamId) return;
+          if (!entitlementByTeam.has(teamId)) {
+            entitlementByTeam.set(teamId, new Set<string>());
+          }
+          entitlementByTeam
+            .get(teamId)!
+            .add(String(row?.status || '').toLowerCase());
+        });
+      } catch (error: any) {
+        // Older environments without workspace_entitlements must not break the
+        // whole Admin Customers summary.
+        this.logger.warn(
+          `Admin Workspace Opportunity summary unavailable: ${error?.message || error}`,
+        );
+      }
+    }
+
+    const workspaceBucket = (r: any) => {
+      const teamId = analyticsTeamId(r);
+      if (!teamId) return 'none';
+
+      const statuses = entitlementByTeam.get(teamId);
+      if (statuses?.has('active')) return 'paid_workspace';
+      if (statuses?.has('past_due') || statuses?.has('suspended')) {
+        return 'trial_pending';
+      }
+      return 'has_workspace';
+    };
+
+    const workspaceOpportunityRows = [
+      {
+        id: 'none',
+        key: 'No Workspace',
+        count: analyticsRows.filter(
+          (r: any) => workspaceBucket(r) === 'none',
+        ).length,
+      },
+      {
+        id: 'has_workspace',
+        key: 'Has Workspace',
+        count: analyticsRows.filter(
+          (r: any) => workspaceBucket(r) === 'has_workspace',
+        ).length,
+      },
+      {
+        id: 'trial_pending',
+        key: 'Workspace Trial / Pending',
+        count: analyticsRows.filter(
+          (r: any) => workspaceBucket(r) === 'trial_pending',
+        ).length,
+      },
+      {
+        id: 'paid_workspace',
+        key: 'Paid Workspace',
+        count: analyticsRows.filter(
+          (r: any) => workspaceBucket(r) === 'paid_workspace',
+        ).length,
+      },
+    ];
+
     // Funnel (respects the same filters): registered -> plan selected ->
     // checkout started -> payment completed.
     const { rows: f } = await this.db.query(
@@ -1027,7 +1258,29 @@ export class CustomersAdminService {
         checkoutStarted: fr.checkout_started ?? 0,
         paymentCompleted: fr.payment_completed ?? 0,
       },
-      breakdowns: { source: bySource, plan: byPlan, language: byLanguage, country: byCountry },
+      breakdowns: {
+        source: bySource,
+        plan: byPlan,
+        language: byLanguage,
+        country: byCountry,
+        customerStatus: customerStatusRows,
+        customerActivity: customerActivityRows,
+        workspaceOpportunity: workspaceOpportunityRows,
+      },
+      // Explicit aliases make these analytics easy to inspect in Network/Swagger and
+      // keep older frontends compatible while the Admin UI is being rolled out.
+      customerActivity: customerActivityRows,
+      workspaceOpportunity: workspaceOpportunityRows,
+      analyticsTotals: {
+        customerActivity: customerActivityRows.reduce(
+          (sum: number, row: any) => sum + Number(row.count || 0),
+          0,
+        ),
+        workspaceOpportunity: workspaceOpportunityRows.reduce(
+          (sum: number, row: any) => sum + Number(row.count || 0),
+          0,
+        ),
+      },
     };
   }
 

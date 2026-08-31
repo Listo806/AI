@@ -311,12 +311,7 @@
    lets every card shrink to share the width instead of overflowing, so the four
    fit within the content area without a horizontal scrollbar. They only stack on
    genuinely narrow screens (tablet / phone). */
-.cxc-analytics {
-  display: grid;
-  grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.2fr) minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: 9px;
-  margin-bottom: 16px;
-}
+
 @media (max-width: 900px) { .cxc-analytics { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .cxc-analytics { grid-template-columns: 1fr; } }
 
@@ -1692,4 +1687,480 @@
 
 .crm-dark .cxc-ai-metric--reset .cxc-ai-metric-icon {
   color: #34d399;
+}
+/* =========================================================
+   ADMIN E-COMMERCE SUBSCRIPTIONS — ANALYTICS ROW V2
+   Scoped only to the approved desktop/mobile analytics section.
+   ========================================================= */
+
+.cxc-analytics-v2 {
+  grid-template-columns:minmax(0, 1.55fr) repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+.cxc-analytics-v2 > .cxc-card {
+  min-height: 214px;
+  border-color: #e6ebf2;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+}
+
+/* Customers by Plan — four compact ring metrics */
+.cxc-analytics-v2 .cxc-plan-customers-card {
+  padding: 15px 14px 13px;
+}
+
+.cxc-analytics-v2 .cxc-plan-customers-head {
+  margin-bottom: 14px;
+}
+
+.cxc-analytics-v2 .cxc-plan-customers-head h2 {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.cxc-analytics-v2 .cxc-plan-customers-head p {
+  margin-top: 4px;
+  font-size: 10.5px;
+}
+
+.cxc-analytics-v2 .cxc-active-customers-pill {
+  min-height: 28px;
+  padding-inline: 10px;
+}
+
+.cxc-analytics-v2 .cxc-active-customers-pill strong {
+  font-size: 10px;
+}
+
+.cxc-analytics-v2 .cxc-plan-customers-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cxc-analytics-v2 .cxc-plan-customer-card {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+}
+
+.cxc-plan-ring {
+  --plan-color: #16a34a;
+  --plan-soft: #dff7e8;
+  width: 82px;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #fff 0 55%, transparent 56%),
+    conic-gradient(var(--plan-color) 0 var(--plan-pct), var(--plan-soft) var(--plan-pct) 100%);
+}
+
+.cxc-plan-ring::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.025);
+  pointer-events: none;
+}
+
+.cxc-plan-ring > span {
+  position: relative;
+  z-index: 1;
+  color: #0f172a;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.cxc-plan-ring-label {
+  margin-top: 10px;
+  color: #111827;
+  font-size: 9px;
+  line-height: 1.15;
+}
+
+.cxc-plan-customer-card > small {
+  margin-top: 5px;
+  color: #111827;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.cxc-plan-customer-card--free .cxc-plan-ring {
+  --plan-color: #16a34a;
+  --plan-soft: #e6f6eb;
+}
+.cxc-plan-customer-card--solo .cxc-plan-ring {
+  --plan-color: #ff9800;
+  --plan-soft: #fff0d7;
+}
+.cxc-plan-customer-card--business .cxc-plan-ring {
+  --plan-color: #1268f3;
+  --plan-soft: #dfeaff;
+}
+.cxc-plan-customer-card--scale .cxc-plan-ring {
+  --plan-color: #7c3aed;
+  --plan-soft: #eee4ff;
+}
+
+/* Shared Customer Status / Activity / Workspace card */
+.cxc-insight-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: 9px;
+  row-gap: 10px;
+  padding: 15px 13px 12px;
+  overflow: hidden;
+}
+
+.cxc-insight-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: #1d4ed8;
+  background: #eef4ff;
+  border-radius: 9px;
+}
+
+.cxc-insight-head {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cxc-insight-head h3 {
+  margin: 1px 0 0;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.cxc-insight-head p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 9.8px;
+  line-height: 1.25;
+}
+
+.cxc-insight-head > svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  color: #0757e8;
+}
+
+.cxc-insight-donut {
+  width: 92px;
+  height: 92px;
+  position: relative;
+  align-self: center;
+  justify-self: center;
+}
+
+.cxc-insight-donut svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.cxc-insight-donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.cxc-insight-donut-center strong {
+  color: #0f172a;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.cxc-insight-donut-center span {
+  display: none;
+}
+
+.cxc-insight-legend {
+  min-width: 0;
+  align-self: center;
+}
+
+.cxc-insight-legend-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 27px;
+  border-bottom: 1px solid #eef2f7;
+  color: #334155;
+  font-size: 9.8px;
+}
+
+.cxc-insight-legend-row:last-child {
+  border-bottom: 0;
+}
+
+.cxc-insight-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.cxc-insight-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cxc-insight-legend-row strong {
+  color: #0f172a;
+  font-size: 9.8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cxc-insight-legend-row em {
+  display: none;
+}
+
+.cxc-insight-card--status .cxc-insight-icon,
+.cxc-insight-card--activity .cxc-insight-icon,
+.cxc-insight-card--workspace .cxc-insight-icon {
+  color: #ff7300;
+  background: #fff3e8;
+}
+
+/* ---------------------------------------------------------
+   MOBILE / TABLET — update ONLY the three approved cards.
+   Customers by Plan is desktop-only in this row.
+   --------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .cxc-analytics-v2 {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .cxc-analytics-v2 .cxc-plan-customers-card {
+    display: none;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-card {
+    min-height: 300px;
+    grid-template-columns: minmax(128px, 34%) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 26px;
+    row-gap: 8px;
+    padding: 28px 30px 24px;
+    border: 1px solid #252d39;
+    border-radius: 22px;
+    background: linear-gradient(145deg, #0c1118 0%, #0a0f16 100%);
+    box-shadow: inset 0 0 40px rgba(27, 38, 53, 0.12);
+    color: #f8fafc;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-icon {
+    grid-column: 1;
+    grid-row: 1;
+    width: 48px;
+    height: 48px;
+    margin-left: 2px;
+    border-radius: 12px;
+    background: transparent;
+    color: #ff7a00;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-icon svg {
+    width: 38px;
+    height: 38px;
+    filter: drop-shadow(0 0 8px rgba(255, 122, 0, 0.32));
+  }
+
+  .cxc-analytics-v2 .cxc-insight-head {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: flex-start;
+    padding-top: 2px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-head h3 {
+    color: #f8fafc;
+    font-size: clamp(22px, 3vw, 31px);
+    line-height: 1.05;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-head p {
+    margin-top: 8px;
+    color: #aab4c7;
+    font-size: clamp(14px, 2vw, 20px);
+  }
+
+  .cxc-analytics-v2 .cxc-insight-head > svg {
+    width: 28px;
+    height: 28px;
+    margin-top: 2px;
+    color: #fff;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-donut {
+    grid-column: 1;
+    grid-row: 2;
+    width: min(100%, 220px);
+    height: auto;
+    aspect-ratio: 1;
+    align-self: center;
+    justify-self: center;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-donut-center strong {
+    color: #fff;
+    font-size: clamp(30px, 5vw, 48px);
+  }
+
+  .cxc-analytics-v2 .cxc-insight-donut-center span {
+    display: block;
+    margin-top: 7px;
+    color: #b6bfd0;
+    font-size: clamp(14px, 2.2vw, 23px);
+  }
+
+  .cxc-analytics-v2 .cxc-insight-legend {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-legend-row {
+    grid-template-columns: 16px minmax(0, 1fr) auto auto;
+    gap: 12px;
+    min-height: 54px;
+    border-color: #1f2733;
+    color: #f4f6fb;
+    font-size: clamp(14px, 2vw, 21px);
+  }
+
+  .cxc-analytics-v2 .cxc-insight-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-label {
+    white-space: normal;
+    line-height: 1.12;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-legend-row strong {
+    color: #fff;
+    font-size: clamp(15px, 2vw, 22px);
+  }
+
+  .cxc-analytics-v2 .cxc-insight-legend-row em {
+    display: inline-flex;
+    min-width: 72px;
+    min-height: 38px;
+    padding: 0 12px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #151c26;
+    color: #aeb8ca;
+    font-style: normal;
+    font-size: clamp(14px, 2vw, 21px);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 620px) {
+  .cxc-analytics-v2 .cxc-insight-card {
+    min-height: 240px;
+    grid-template-columns: 112px minmax(0, 1fr);
+    column-gap: 14px;
+    padding: 20px 16px 18px;
+    border-radius: 17px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-head h3 {
+    font-size: 19px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-head p {
+    margin-top: 5px;
+    font-size: 13px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-head > svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-donut {
+    width: 108px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-donut-center strong {
+    font-size: 27px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-donut-center span {
+    margin-top: 3px;
+    font-size: 12px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-legend-row {
+    grid-template-columns: 10px minmax(0, 1fr) auto auto;
+    gap: 6px;
+    min-height: 39px;
+    font-size: 11.5px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-dot {
+    width: 9px;
+    height: 9px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-legend-row strong {
+    font-size: 12px;
+  }
+
+  .cxc-analytics-v2 .cxc-insight-legend-row em {
+    min-width: 48px;
+    min-height: 28px;
+    padding-inline: 8px;
+    font-size: 11.5px;
+  }
 }

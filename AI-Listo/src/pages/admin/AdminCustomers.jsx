@@ -480,6 +480,166 @@ function DonutCard({ title, rows }) {
   );
 }
 
+
+function AnalyticsRing({
+  rows = [],
+  centerValue,
+  centerLabel = "Total",
+  size = 96,
+  stroke = 13,
+}) {
+  const safeTotal = rows.reduce(
+    (sum, row) => sum + Math.max(0, Number(row?.count || 0)),
+    0,
+  );
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  return (
+    <div
+      className="cxc-analytics-ring-wrap"
+      style={{ "--cxc-ring-size": `${size}px` }}
+    >
+      <svg
+        className="cxc-analytics-ring"
+        viewBox="0 0 96 96"
+        role="img"
+        aria-label={`${safeTotal.toLocaleString()} total`}
+      >
+        <g transform="translate(48,48) rotate(-90)">
+          <circle
+            className="cxc-analytics-ring-track"
+            r={radius}
+            fill="none"
+            strokeWidth={stroke}
+          />
+
+          {safeTotal > 0 &&
+            rows.map((row, index) => {
+              const count = Math.max(0, Number(row?.count || 0));
+              const fraction = Math.min(1, count / safeTotal);
+              const dash = fraction * circumference;
+
+              const circle = (
+                <circle
+                  key={`${row?.key || index}-${index}`}
+                  r={radius}
+                  fill="none"
+                  stroke={
+                    row?.color ||
+                    DONUT_COLORS[index % DONUT_COLORS.length]
+                  }
+                  strokeWidth={stroke}
+                  strokeLinecap="butt"
+                  strokeDasharray={`${dash} ${Math.max(
+                    0,
+                    circumference - dash,
+                  )}`}
+                  strokeDashoffset={-offset * circumference}
+                />
+              );
+
+              offset += fraction;
+              return circle;
+            })}
+        </g>
+      </svg>
+
+      <div className="cxc-analytics-ring-center">
+        <strong>
+          {Number(centerValue ?? safeTotal).toLocaleString()}
+        </strong>
+        {centerLabel && <span>{centerLabel}</span>}
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsBreakdownCard({
+  className = "",
+  title,
+  subtitle,
+  icon,
+  rows = [],
+}) {
+  const safeTotal = rows.reduce(
+    (sum, row) => sum + Math.max(0, Number(row?.count || 0)),
+    0,
+  );
+
+  return (
+    <article
+      className={`cxc-card cxc-analytics-breakdown-card ${className}`}
+    >
+      <div className="cxc-analytics-card-head">
+        <div className="cxc-analytics-card-icon">
+          {icon}
+        </div>
+
+        <div className="cxc-analytics-card-copy">
+          <div className="cxc-analytics-card-title-row">
+            <div>
+              <h3>{title}</h3>
+              {subtitle && <p>{subtitle}</p>}
+            </div>
+
+            <ChevronRight
+              className="cxc-analytics-card-arrow"
+              size={20}
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="cxc-analytics-card-body">
+        <AnalyticsRing
+          rows={rows}
+          centerValue={safeTotal}
+        />
+
+        <div className="cxc-analytics-legend">
+          {rows.map((row, index) => {
+            const count = Math.max(0, Number(row?.count || 0));
+            const pct =
+              safeTotal > 0
+                ? Math.round((count / safeTotal) * 1000) / 10
+                : 0;
+
+            return (
+              <div
+                className="cxc-analytics-legend-row"
+                key={row?.key || index}
+              >
+                <span
+                  className="cxc-analytics-dot"
+                  style={{
+                    background:
+                      row?.color ||
+                      DONUT_COLORS[index % DONUT_COLORS.length],
+                  }}
+                />
+
+                <span className="cxc-analytics-legend-label">
+                  {row?.label || row?.key}
+                </span>
+
+                <strong>{count.toLocaleString()}</strong>
+
+                <span className="cxc-analytics-legend-pct">
+                  {pct}%
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+
 function Kpi({ variant, icon, label, value, sub, subClass }) {
   return (
     <div className={`cxc-kpi cxc-kpi--${variant}`}>
@@ -945,6 +1105,141 @@ export default function AdminCustomers() {
     0,
   );
 
+  const registeredTotal = Number(kpis?.totalRegistered ?? total ?? 0) || 0;
+  const customerStatusRows = [
+    {
+      key: "Free",
+      count: Number(summary?.tabs?.free ?? getPlanCount("free") ?? 0) || 0,
+      color: "#ff6b00",
+    },
+    {
+      key: "Checkout Pending",
+      count: Number(summary?.tabs?.checkout_pending ?? 0) || 0,
+      color: "#ff9f0a",
+    },
+    {
+      key: "Registered / No Plan",
+      count: Number(summary?.tabs?.registered ?? 0) || 0,
+      color: "#ff2d20",
+    },
+    {
+      key: "Paid",
+      count:
+        Number(
+          summary?.tabs?.active ??
+            kpis?.activeCustomers ??
+            0,
+        ) || 0,
+      color: "#00c853",
+    },
+  ];
+
+  const breakdownCount = (rows, ids = [], labels = []) => {
+    const list = Array.isArray(rows) ? rows : [];
+    const match = list.find((item) => {
+      const id = String(item?.id ?? "").trim().toLowerCase();
+      const key = String(item?.key ?? item?.label ?? item?.name ?? "")
+        .trim()
+        .toLowerCase();
+      return (
+        ids.some((candidate) => id === String(candidate).toLowerCase()) ||
+        labels.some((candidate) => key === String(candidate).toLowerCase())
+      );
+    });
+    return Number(match?.count ?? match?.value ?? 0) || 0;
+  };
+
+  const activitySource =
+    summary?.breakdowns?.customerActivity ??
+    summary?.breakdowns?.customer_activity ??
+    summary?.customerActivity ??
+    summary?.customer_activity ??
+    [];
+  const customerActivityRows = [
+    {
+      key: "Active Today",
+      count: breakdownCount(activitySource, ["today"], ["Active Today"]),
+      color: "#00c853",
+    },
+    {
+      key: "Active Last 7 Days",
+      count: breakdownCount(
+        activitySource,
+        ["last_7_days"],
+        ["Active Last 7 Days"],
+      ),
+      color: "#0b7cff",
+    },
+    {
+      key: "Inactive 7–30 Days",
+      count: breakdownCount(
+        activitySource,
+        ["inactive_7_30"],
+        ["Inactive 7–30 Days", "Inactive 7-30 Days"],
+      ),
+      color: "#ff9f0a",
+    },
+    {
+      key: "Inactive 30+ Days",
+      count: breakdownCount(
+        activitySource,
+        ["inactive_30_plus"],
+        ["Inactive 30+ Days"],
+      ),
+      color: "#ff2d20",
+    },
+  ];
+
+  const workspaceSource =
+    summary?.breakdowns?.workspaceOpportunity ??
+    summary?.breakdowns?.workspace_opportunity ??
+    summary?.workspaceOpportunity ??
+    summary?.workspace_opportunity ??
+    [];
+  const workspaceOpportunityRows = [
+    {
+      key: "No Workspace",
+      count: breakdownCount(workspaceSource, ["none"], ["No Workspace"]),
+      color: "#ff2d20",
+    },
+    {
+      key: "Has Workspace",
+      count: breakdownCount(
+        workspaceSource,
+        ["has_workspace"],
+        ["Has Workspace"],
+      ),
+      color: "#00c853",
+    },
+    {
+      key: "Workspace Trial / Pending",
+      count: breakdownCount(
+        workspaceSource,
+        ["trial_pending"],
+        ["Workspace Trial / Pending"],
+      ),
+      color: "#ffc400",
+    },
+    {
+      key: "Paid Workspace",
+      count: breakdownCount(
+        workspaceSource,
+        ["paid_workspace"],
+        ["Paid Workspace"],
+      ),
+      color: "#1837ff",
+    },
+  ];
+
+  const analyticsTotal = Number(registeredTotal || 0);
+
+  const planRingRows = customersByPlan.map((plan, index) => ({
+    key: plan.label,
+    count: plan.count,
+    color: ["#0ecb48", "#ff9500", "#0969ff", "#7c3aed"][index],
+  }));
+
+
   return (
     <div className="cxc-page">
       {/* cxc-scale shrinks the whole page ~6% per client; kept OFF the modals
@@ -1032,12 +1327,12 @@ export default function AdminCustomers() {
           />
         </div>
 
-        {/* Analytics: funnel + breakdowns — moved ABOVE tabs/filters per client */}
-        <div className="cxc-analytics">
-          <div className="cxc-card cxc-plan-customers-card">
-            <div className="cxc-plan-customers-head">
+        {/* Subscription analytics — same maintainable structure as ECommerceWorkspace. */}
+        <div className="cxc-analytics cxc-subscription-analytics">
+          <article className="cxc-card cxc-plan-rings-card">
+            <div className="cxc-plan-rings-head">
               <div>
-                <h2>Customers by Plan</h2>
+                <h3>Customers by Plan</h3>
                 <p>Customers by their selected plan.</p>
               </div>
 
@@ -1049,33 +1344,75 @@ export default function AdminCustomers() {
               </div>
             </div>
 
-            <div className="cxc-plan-customers-grid">
-              {customersByPlan.map(
-                ({ key, label, count, price, Icon, tone }) => (
+            <div className="cxc-plan-rings-grid">
+              {customersByPlan.map((plan, index) => {
+                const pct =
+                  analyticsTotal > 0
+                    ? Math.round(
+                        (plan.count / analyticsTotal) * 1000,
+                      ) / 10
+                    : 0;
+
+                const toneRows = [
+                  {
+                    key: plan.label,
+                    count: plan.count,
+                    color: planRingRows[index].color,
+                  },
+                  {
+                    key: "Other",
+                    count: Math.max(
+                      0,
+                      analyticsTotal - plan.count,
+                    ),
+                    color: "rgba(148,163,184,.18)",
+                  },
+                ];
+
+                return (
                   <div
-                    key={key}
-                    className={`cxc-plan-customer-card cxc-plan-customer-card--${tone}`}
+                    className={`cxc-plan-ring-item cxc-plan-ring-item--${plan.tone}`}
+                    key={plan.key}
                   >
-                    <div className="cxc-plan-customer-top">
-                      <div className="cxc-plan-customer-icon">
-                        <Icon size={27} />
-                      </div>
-                      <strong>{label}</strong>
-                    </div>
+                    <AnalyticsRing
+                      rows={toneRows}
+                      centerValue={plan.count}
+                      centerLabel=""
+                      size={80}
+                      stroke={11}
+                    />
 
-                    <div className="cxc-plan-customer-count">
-                      {count.toLocaleString()}
-                    </div>
-
-                    <div className="cxc-plan-customer-price">{price}</div>
+                    <strong>{plan.label}</strong>
+                    <span>{pct}%</span>
                   </div>
-                ),
-              )}
+                );
+              })}
             </div>
-          </div>
-          <DonutCard title="By Source" rows={summary?.breakdowns?.source} />
-          <DonutCard title="By Offer" rows={summary?.breakdowns?.plan} />
-          <DonutCard title="By Language" rows={summary?.breakdowns?.language} />
+          </article>
+
+          <AnalyticsBreakdownCard
+            className="cxc-status-card"
+            title="Customer Status"
+            subtitle="Where your customers stand"
+            icon={<Users size={22} />}
+            rows={customerStatusRows}
+          />
+
+          <AnalyticsBreakdownCard
+            className="cxc-activity-card"
+            title="Customer Activity"
+            subtitle="Based on last 30 days"
+            icon={<Zap size={22} />}
+            rows={customerActivityRows}
+          />
+
+          <AnalyticsBreakdownCard
+            className="cxc-workspace-card"
+            title="Workspace Opportunity"
+            subtitle="Your workspace upsell potential"
+            icon={<Rocket size={22} />}
+            rows={workspaceOpportunityRows}
+          />
         </div>
 
         {/* Tabs + filters panel */}
