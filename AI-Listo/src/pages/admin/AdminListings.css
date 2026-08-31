@@ -10,16 +10,17 @@
 .alx-page *, .alx-page *::before, .alx-page *::after { box-sizing: border-box; }
 
 .alx-header {
-  min-height: 78px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 16px;
 }
-.alx-header-main { display: flex; align-items: center; gap: 15px; min-width: 0; }
+.alx-header-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .alx-header-icon {
-  width: 48px; height: 48px; flex: 0 0 48px;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
   display: grid; place-items: center;
   border-radius: 14px;
   color: #1769ff;
