@@ -264,13 +264,13 @@
     "switchToDark": "Mudar para o modo escuro",
     "admin": "Administração",
     "listings": "Anúncios",
-    "users": "Usuários internos e acesso",
+    "users": "Acesso interno",
     "teams": "Equipes",
     "marketplace": "Marketplace",
     "vaUpload": "Upload VA",
     "generator": "Gerador de leads",
     "adminSignups": "Cadastros",
-    "adminCustomers": "Assinaturas de comércio eletrônico"
+    "adminCustomers": "Assinaturas"
   },
   "header": {
     "profile": "Perfil",
