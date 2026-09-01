@@ -40,6 +40,7 @@ import { EcommerceWorkspaceModule } from './ecommerce/ecommerce-workspace.module
 import { ProjectsModule } from './projects/projects.module';
 import { LeadgenModule } from './leadgen/leadgen.module';
 import { AiUnitsModule } from './ai-units/ai-units.module';
+import { BusinessSuiteModule } from './business-suite/business-suite.module';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { AiUnitsModule } from './ai-units/ai-units.module';
     ProjectsModule,
     LeadgenModule,
     AiUnitsModule,
+    BusinessSuiteModule,
   ],
   controllers: [AppController],
 })

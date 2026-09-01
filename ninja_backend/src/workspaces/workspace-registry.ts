@@ -24,6 +24,12 @@ export const WORKSPACE_CATALOG: WorkspaceDef[] = [
     route: '/dashboard/sales-workspace',
   },
   {
+    id: 'business',
+    name: 'Business Suite',
+    featureKey: 'businessWorkspace',
+    route: '/dashboard/business-workspace',
+  },
+  {
     id: 'insurance',
     name: 'Insurance Workspace',
     featureKey: 'insuranceWorkspace',
