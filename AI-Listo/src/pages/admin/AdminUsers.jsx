@@ -496,12 +496,12 @@ export default function AdminUsers() {
                 <tbody>
                   {paginatedUsers.map((u, idx) => (
                     <tr key={u.id}>
-                      <td><div className="iau-user-cell"><span className={`iau-avatar iau-avatar--${idx % 6}`}>{avatarText(u)}</span><span className="iau-user-copy"><strong>{u.name || u.email?.split('@')?.[0] || 'User'}</strong><small>{u.email}</small></span></div></td>
-                      <td><span className={`iau-role-badge iau-role-badge--${u.role}`}><ShieldCheck size={14} /> {roleLabel(u.role)}</span></td>
-                      <td><span className={`iau-status-pill ${u.status === 'active' ? 'is-active' : 'is-inactive'}`}><span className="iau-status-dot" />{u.status === 'active' ? 'Active' : 'Inactive'}</span></td>
-                      <td><span className="iau-last-active"><span className={`iau-live-dot ${u.status === 'active' ? 'is-live' : ''}`} />{formatLastActive(u.lastActive)}</span></td>
-                      <td className="iau-date-cell">{formatDate(u.createdAt)}</td>
-                      <td className="iau-actions-cell">
+                      <td data-label="Internal User" className="iau-mobile-user-cell"><div className="iau-user-cell"><span className={`iau-avatar iau-avatar--${idx % 6}`}>{avatarText(u)}</span><span className="iau-user-copy"><strong>{u.name || u.email?.split('@')?.[0] || 'User'}</strong><small>{u.email}</small></span></div></td>
+                      <td data-label="Role"><span className={`iau-role-badge iau-role-badge--${u.role}`}><ShieldCheck size={14} /> {roleLabel(u.role)}</span></td>
+                      <td data-label="Status"><span className={`iau-status-pill ${u.status === 'active' ? 'is-active' : 'is-inactive'}`}><span className="iau-status-dot" />{u.status === 'active' ? 'Active' : 'Inactive'}</span></td>
+                      <td data-label="Last Active"><span className="iau-last-active"><span className={`iau-live-dot ${u.status === 'active' ? 'is-live' : ''}`} />{formatLastActive(u.lastActive)}</span></td>
+                      <td data-label="Added" className="iau-date-cell">{formatDate(u.createdAt)}</td>
+                      <td data-label="Actions" className="iau-actions-cell">
                         <div className="iau-row-menu-wrap" onClick={(e) => e.stopPropagation()}>
                           <button type="button" className="iau-row-menu-btn" onClick={() => setRowMenu(rowMenu === u.id ? null : u.id)}><MoreVertical size={19} /></button>
                           {rowMenu === u.id ? (
