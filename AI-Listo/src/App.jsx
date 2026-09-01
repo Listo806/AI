@@ -88,6 +88,7 @@ import AIAssistant from "./pages/ai-assistant/AIAssistant";
 import Analytics from "./pages/dashboard/Analytics";
 import Team from "./pages/team/Team";
 import SalesWorkspace from "./pages/sales/SalesWorkspace";
+import BusinessSuite from "./pages/business-suite/BusinessSuite";
 import InsuranceWorkspace from "./pages/insurance/InsuranceWorkspace";
 import FinancialServicesWorkspace from "./pages/financial/FinancialServicesWorkspace";
 import CustomerServiceWorkspace from "./pages/customer-service/CustomerServiceWorkspace";
@@ -397,6 +398,17 @@ function AppRoutes() {
 
         {/* Analytics Route — included for all plans, Free included. No paywall. */}
         <Route path="analytics" element={<Analytics />} />
+
+
+        {/* Business Suite Workspace */}
+        <Route
+          path="business-workspace"
+          element={
+            <WorkspaceGate workspaceId="business">
+              <BusinessSuite />
+            </WorkspaceGate>
+          }
+        />
 
         {/* Sales Workspace */}
         <Route

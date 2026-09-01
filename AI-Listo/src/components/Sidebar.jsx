@@ -260,6 +260,63 @@ export default function Sidebar({
 
   const workspaceItems = [
     {
+      id: "business",
+      feature: "businessWorkspace",
+      label: "Business Suite",
+      icon: "briefcase-business",
+      tone: "slate",
+      description:
+        "Manage operations, billing, products, services, and everyday business workflows in one connected workspace.",
+      capabilities: [
+        "Tasks & To-Dos",
+        "Follow-Ups",
+        "Documents",
+        "Work Items",
+        "Estimates & Quotes",
+        "Invoices",
+        "Payments",
+        "Expenses",
+        "Products",
+        "Services",
+        "Price Lists",
+        "Categories",
+        "Business Reports",
+        "Activity Tracking",
+      ],
+      perfectFor: [
+        "Small Businesses",
+        "Service Businesses",
+        "Agencies",
+        "Consultants",
+        "Operations Teams",
+        "Growing Companies",
+      ],
+      benefits: [
+        [
+          "briefcase-business",
+          "COMPLETE BUSINESS OPERATIONS",
+          "Manage tasks, documents, billing, expenses, products, services, and everyday business activity from one organized workspace.",
+        ],
+        [
+          "receipt-text",
+          "CONNECTED BILLING",
+          "Move from estimate to invoice to payment while keeping outstanding balances and financial activity synchronized.",
+        ],
+        [
+          "package",
+          "PRODUCTS & SERVICES",
+          "Maintain products, services, categories, and price lists and reuse them across estimates and invoices.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa contacts, CRM, team, AI, automation, analytics, and business data.",
+        ],
+      ],
+      price: 97,
+      path: "/dashboard/business-workspace",
+    },
+    {
       id: "sales",
       feature: "salesWorkspace",
       label: "Sales Workspace",

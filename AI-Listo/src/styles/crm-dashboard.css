@@ -4116,3 +4116,10 @@ body.crm-dark .crm-workspace-price-row > button:not(.is-active) {
 body.crm-dark .crm-workspace-flyout-close {
   color: #cbd5e1;
 }
+
+
+/* Business Suite workspace — unique neutral/blue business tone */
+.crm-workspace-icon-slate,
+.crm-workspace-detail-icon.crm-workspace-icon-slate {
+  background: linear-gradient(135deg, #334155, #2563eb);
+}

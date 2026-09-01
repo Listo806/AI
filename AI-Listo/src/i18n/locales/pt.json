@@ -66,6 +66,27 @@
       "includedNoCharge": "Incluído no seu plano — a ativação não adiciona nenhuma cobrança.",
       "secureCheckout": "Checkout seguro processado pela Paddle",
       "items": {
+        "business": {
+          "label": "Suíte Empresarial",
+          "description": "Gerencie operações, faturamento, produtos, serviços e fluxos de trabalho do dia a dia em um único espaço conectado.",
+          "capabilities": [
+            "Tarefas e pendências",
+            "Acompanhamentos",
+            "Documentos",
+            "Itens de trabalho",
+            "Estimativas e cotações",
+            "Faturas",
+            "Pagamentos",
+            "Despesas",
+            "Produtos",
+            "Serviços",
+            "Listas de preços",
+            "Categorias",
+            "Relatórios empresariais",
+            "Acompanhamento de atividades"
+          ],
+          "connected": "Conectado aos seus contatos, CRM, equipe, IA, automações, análises e dados empresariais do Cortexa."
+        },
         "sales": {
           "label": "Espaço de Vendas",
           "description": "Gerencie toda a sua operação de vendas, da cotação à receita, em um único espaço conectado.",
@@ -4956,5 +4977,18 @@
     "add": "Adicionar",
     "reports": "Relatórios",
     "more": "Mais"
+  },
+  "businessSuite": {
+    "title": "Suíte Empresarial",
+    "subtitle": "Gerencie suas operações, faturamento e produtos em um só lugar.",
+    "workspaceSettings": "Configurações do espaço",
+    "new": "Novo",
+    "overview": "Visão geral",
+    "reports": "Relatórios",
+    "activity": "Atividade",
+    "customers": "Clientes",
+    "operations": "Operações",
+    "billing": "Faturamento",
+    "catalog": "Catálogo"
   }
 }

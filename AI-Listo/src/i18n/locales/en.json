@@ -66,6 +66,27 @@
       "includedNoCharge": "Included with your plan — activating adds no charge.",
       "secureCheckout": "Secure checkout powered by Paddle",
       "items": {
+        "business": {
+          "label": "Business Suite",
+          "description": "Manage operations, billing, products, services, and everyday business workflows in one connected workspace.",
+          "capabilities": [
+            "Tasks & To-Dos",
+            "Follow-Ups",
+            "Documents",
+            "Work Items",
+            "Estimates & Quotes",
+            "Invoices",
+            "Payments",
+            "Expenses",
+            "Products",
+            "Services",
+            "Price Lists",
+            "Categories",
+            "Business Reports",
+            "Activity Tracking"
+          ],
+          "connected": "Connected to your Cortexa contacts, CRM, team, AI, automation, analytics, and business data."
+        },
         "sales": {
           "label": "Sales Workspace",
           "description": "Run your entire sales operation from quote to revenue in one connected workspace.",
@@ -4956,5 +4977,18 @@
     "add": "Add",
     "reports": "Reports",
     "more": "More"
+  },
+  "businessSuite": {
+    "title": "Business Suite",
+    "subtitle": "Manage your operations, billing and products all in one place.",
+    "workspaceSettings": "Workspace Settings",
+    "new": "New",
+    "overview": "Overview",
+    "reports": "Reports",
+    "activity": "Activity",
+    "customers": "Customers",
+    "operations": "Operations",
+    "billing": "Billing",
+    "catalog": "Catalog"
   }
 }
