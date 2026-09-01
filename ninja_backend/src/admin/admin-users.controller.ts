@@ -95,7 +95,7 @@ export class AdminUsersController {
     schema: {
       type: 'object',
       required: ['role'],
-      properties: { role: { type: 'string', enum: INTERNAL_USER_ROLES } },
+      properties: { role: { type: 'string', enum: [...INTERNAL_USER_ROLES] } },
     },
   })
   async updateRole(
