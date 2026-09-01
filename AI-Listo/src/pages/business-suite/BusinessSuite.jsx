@@ -147,11 +147,11 @@ function Reports({reports,data,customerSummary,onOpen}) {
     [ClipboardCheck,'Tasks Report','Track task completion and team productivity',num(data.kpis.openTasks)],
     [Layers3,'Export Data','Export your data and generate custom reports','Export'],
   ];
-  return <section className="bsw-mobile-module orange"><ModuleTitle icon={BarChart3} title="Reports" subtitle="Track performance and analytics"/><div className="bsw-module-cards">{items.map(([Icon,label,desc,value])=><button key={label} onClick={()=>onOpen('reports')}><span className="bsw-module-icon"><Icon/></span><span><b>{label}</b><small>{desc}</small></span><em>{value}</em><ChevronRight/></button>)}</div><button className="bsw-module-view">View All Reports <ChevronRight/></button></section>;
+  return <section className="bsw-responsive-module bsw-reports-module orange"><ModuleTitle icon={BarChart3} title="Reports" subtitle="Track performance and analytics"/><div className="bsw-module-cards">{items.map(([Icon,label,desc,value])=><button key={label} onClick={()=>onOpen('reports')}><span className="bsw-module-icon"><Icon/></span><span><b>{label}</b><small>{desc}</small></span><em>{value}</em><ChevronRight/></button>)}</div><button className="bsw-module-view">View All Reports <ChevronRight/></button></section>;
 }
 
 function ActivityView({rows}) {
-  return <section className="bsw-mobile-module cyan"><ModuleTitle icon={Activity} title="Activity" subtitle="Stay updated with recent activities"/><div className="bsw-activity-cards">{(rows||[]).map((r,i)=><article key={r.id||i}><span className="bsw-module-icon"><Activity/></span><span><b>{r.title||r.action||'Activity'}</b><small>{r.details||r.entity_type||''}</small></span><time>{timeAgo(r.created_at)}</time><ChevronRight/></article>)}{!rows?.length&&<p className="bsw-empty-inline">No activity yet.</p>}</div><button className="bsw-module-view">View All Activity <ChevronRight/></button></section>;
+  return <section className="bsw-responsive-module bsw-activity-module cyan"><ModuleTitle icon={Activity} title="Activity" subtitle="Stay updated with recent activities"/><div className="bsw-activity-cards">{(rows||[]).map((r,i)=><article key={r.id||i}><span className="bsw-module-icon"><Activity/></span><span><b>{r.title||r.action||'Activity'}</b><small>{r.details||r.entity_type||''}</small></span><time>{timeAgo(r.created_at)}</time><ChevronRight/></article>)}{!rows?.length&&<p className="bsw-empty-inline">No activity yet.</p>}</div><button className="bsw-module-view">View All Activity <ChevronRight/></button></section>;
 }
 
 function ResourcePanel({type,onClose,onChanged}) {
