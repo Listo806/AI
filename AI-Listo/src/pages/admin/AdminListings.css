@@ -287,3 +287,756 @@ body.crm-dark .alx-table-footer, body.crm-dark .alx-detail-head { border-color: 
   .alx-page-size-top { margin-left: 0; width: 100%; justify-content: flex-end; }
   .alx-header p{margin-top: 0;}
 }
+
+
+/* =========================================================
+   ADMIN LISTINGS — TABLET / MOBILE
+   Desktop geometry above remains unchanged.
+   ========================================================= */
+
+.alx-mobile-list {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .alx-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0 16px 28px;
+    overflow-x: hidden;
+  }
+
+  .alx-header {
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .alx-header-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .alx-header-icon {
+    width: 50px;
+    height: 50px;
+    flex-basis: 50px;
+    border-radius: 12px;
+  }
+
+  .alx-header h1 {
+    font-size: 25px;
+  }
+
+  .alx-header p {
+    max-width: 520px;
+    margin-top: 5px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .alx-add-btn {
+    min-height: 42px;
+    padding: 0 16px;
+    flex: 0 0 auto;
+  }
+
+  .alx-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .alx-metric-card {
+    min-height: 94px;
+    padding: 14px;
+    align-items: center;
+  }
+
+  .alx-metric-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .alx-metric-copy {
+    margin: 0 auto;
+  }
+
+  .alx-metric-copy > span {
+    white-space: normal;
+    font-size: 11px;
+  }
+
+  .alx-metric-copy strong {
+    margin-top: 7px;
+    font-size: 23px;
+  }
+
+  .alx-metric-copy small {
+    margin-top: 6px;
+  }
+
+  .alx-controls-card {
+    overflow: visible;
+  }
+
+  .alx-controls-top {
+    min-height: auto;
+    padding: 12px;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .alx-search {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .alx-view-toggle {
+    width: 100%;
+    display: none;
+  }
+
+  .alx-view-toggle button {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .alx-outline-btn {
+    width: 100%;
+  }
+
+  .alx-filter-grid {
+    min-height: auto;
+    padding: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .alx-clear-btn {
+    width: 100%;
+    justify-self: stretch;
+    border: 1px dashed #cfd9e6;
+    border-radius: 7px;
+    background: #f8fbff;
+  }
+
+  .alx-bulk-row {
+    min-height: 48px;
+    padding: 6px 2px;
+    flex-wrap: wrap;
+  }
+
+  .alx-page-size-top {
+    margin-left: auto;
+  }
+
+  /* Replace the wide desktop table with cards on tablet/mobile. */
+  .alx-desktop-table {
+    display: none;
+  }
+
+  .alx-mobile-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .alx-table-card {
+    overflow: visible;
+  }
+
+  .alx-mobile-card {
+    position: relative;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #dce5ef;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 5px 18px rgba(15, 35, 69, .035);
+  }
+
+  .alx-mobile-card.is-selected {
+    border-color: #8db9ff;
+    box-shadow: 0 0 0 2px rgba(23, 105, 255, .08);
+  }
+
+  .alx-mobile-card-top {
+    display: grid;
+    grid-template-columns: 18px 82px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+  }
+
+  .alx-mobile-check {
+    padding-top: 3px;
+  }
+
+  .alx-mobile-check input {
+    width: 15px;
+    height: 15px;
+    accent-color: #1769ff;
+  }
+
+  .alx-mobile-thumb {
+    width: 82px;
+    height: 68px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #e0e7ef;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #70839b;
+  }
+
+  .alx-mobile-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .alx-mobile-property {
+    position: relative;
+    min-width: 0;
+  }
+
+  .alx-mobile-title-row {
+    min-width: 0;
+    padding-right: 28px;
+  }
+
+  .alx-mobile-title-row strong {
+    display: block;
+    overflow: hidden;
+    color: #142640;
+    font-size: 13px;
+    line-height: 1.25;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .alx-mobile-more {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #526681;
+  }
+
+  .alx-mobile-location {
+    margin-top: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    color: #65758c;
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .alx-mobile-location svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  .alx-mobile-badges {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .alx-mobile-action-menu {
+    top: 30px;
+    right: 0;
+    z-index: 80;
+  }
+
+  .alx-mobile-specs {
+    margin-top: 12px;
+    padding: 10px 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid #e7edf3;
+    border-bottom: 1px solid #e7edf3;
+  }
+
+  .alx-mobile-specs > span {
+    min-width: 0;
+    padding: 0 7px;
+    border-right: 1px solid #e7edf3;
+    text-align: center;
+  }
+
+  .alx-mobile-specs > span:first-child {
+    padding-left: 0;
+  }
+
+  .alx-mobile-specs > span:last-child {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .alx-mobile-specs b,
+  .alx-mobile-specs small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .alx-mobile-specs b {
+    color: #172b4d;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .alx-mobile-specs small {
+    margin-top: 3px;
+    color: #8491a4;
+    font-size: 8px;
+  }
+
+  .alx-mobile-info-grid {
+    padding-top: 11px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 10px;
+    text-align: left;
+  }
+
+  .alx-mobile-info-grid > div {
+    min-width: 0;
+  }
+
+  .alx-mobile-info-grid > div > small {
+    display: block;
+    margin-bottom: 5px;
+    color: #8491a4;
+    font-size: 9px;
+  }
+
+  .alx-mobile-info-grid strong {
+    display: block;
+    overflow: hidden;
+    color: #172b4d;
+    font-size: 11px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .alx-mobile-info-grid em {
+    display: block;
+    margin-top: 2px;
+    color: #8491a4;
+    font-size: 8.5px;
+    font-style: normal;
+  }
+
+  .alx-mobile-owner {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .alx-mobile-owner b {
+    overflow: hidden;
+    color: #172b4d;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .alx-mobile-activity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alx-mobile-activity b {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #445975;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .alx-mobile-card-actions {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .alx-mobile-card-actions .alx-view-btn,
+  .alx-mobile-card-actions .alx-edit-btn {
+    width: 100%;
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  .alx-table-footer {
+    min-height: auto;
+    padding: 12px;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+  }
+
+  .alx-footer-size {
+    display: none;
+  }
+
+  .alx-detail-panel {
+    width: min(520px, 92vw);
+  }
+
+  .alx-detail-body {
+    overscroll-behavior: contain;
+  }
+
+  body.crm-dark .alx-mobile-card, body.crm-dark .alx-mobile-thumb {
+    background: #0b0f19;
+    border-color: #273244;
+  }
+
+  body.crm-dark .alx-mobile-title-row strong,
+  body.crm-dark .alx-mobile-specs b,
+  body.crm-dark .alx-mobile-info-grid strong,
+  body.crm-dark .alx-mobile-owner b {
+    color: #f3f6fb;
+  }
+
+  body.crm-dark .alx-mobile-location,
+  body.crm-dark .alx-mobile-specs small,
+  body.crm-dark .alx-mobile-info-grid > div > small,
+  body.crm-dark .alx-mobile-info-grid em,
+  body.crm-dark .alx-mobile-activity b {
+    color: #aab6c8;
+  }
+
+  body.crm-dark .alx-mobile-specs,
+  body.crm-dark .alx-mobile-specs > span {
+    border-color: #273244;
+  }
+
+  body.crm-dark .alx-clear-btn, body.crm-dark .alx-source-badge, body.crm-dark .alx-status-badge.is-published,
+  body.crm-dark .alx-status-badge.is-approved {
+    border-color: #344156;
+    background: #111827;
+  }
+  .crm-dark .alx-header-icon{
+    background: #111a2a;
+    border-color: #111a2a;
+    box-shadow: none;
+  }
+  .crm-dark .alx-metric-card.is-blue .alx-metric-icon{
+    background: rgba(14, 49, 120, 0.24);
+    border: 1px solid rgba(52, 124, 255, 0.56);
+    box-shadow: 0 0 18px rgba(52, 124, 255, 0.13), inset 0 0 16px rgba(52, 124, 255, 0.05);
+  }
+  .crm-dark .alx-metric-card.is-green .alx-metric-icon{
+    background: rgba(9, 82, 39, 0.24);
+    border: 1px solid rgba(43, 191, 99, 0.56);
+    box-shadow: 0 0 18px rgba(43, 191, 99, 0.12), inset 0 0 16px rgba(43, 191, 99, 0.05);
+  }
+  .crm-dark .alx-metric-card.is-amber .alx-metric-icon{
+    background: rgba(113, 43, 7, 0.24);
+    border: 1px solid rgba(243, 111, 39, 0.58);
+    box-shadow: 0 0 18px rgba(243, 111, 39, 0.13), inset 0 0 16px rgba(243, 111, 39, 0.05);
+  }
+  .crm-dark .alx-metric-card.is-purple .alx-metric-icon{
+    background: rgba(80, 23, 111, 0.24);
+    border: 1px solid rgba(168, 69, 232, 0.56);
+    box-shadow: 0 0 18px rgba(168, 69, 232, 0.13), inset 0 0 16px rgba(168, 69, 232, 0.05);
+  }
+  .crm-dark .alx-metric-card.is-slate .alx-metric-icon{
+    background: rgba(14, 49, 120, 0.24);
+    border: 1px solid rgba(52, 124, 255, 0.56);
+    box-shadow: 0 0 18px rgba(52, 124, 255, 0.13), inset 0 0 16px rgba(52, 124, 255, 0.05);
+  }
+}
+
+@media (max-width: 700px) {
+  .alx-page {
+    padding: 0 12px 24px;
+  }
+
+  .alx-header {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alx-header-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    border-radius: 10px;
+  }
+
+  .alx-header h1 {
+    font-size: 20px;
+  }
+
+  .alx-header p {
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .alx-add-btn {
+    min-height: 38px;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .alx-metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .alx-metric-card {
+    min-height: 82px;
+    padding: 11px;
+    gap: 9px;
+  }
+
+  .alx-metric-card:last-child {
+    grid-column: auto;
+  }
+
+  .alx-metric-icon {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    border-radius: 8px;
+  }
+
+  .alx-metric-copy strong {
+    font-size: 20px;
+  }
+
+  .alx-metric-copy small {
+    font-size: 9px;
+  }
+
+  .alx-controls-top {
+    grid-template-columns: 1fr 1fr;
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .alx-search {
+    grid-column: 1 / -1;
+  }
+
+  .alx-view-toggle {
+    grid-column: 1 / -1;
+  }
+
+  .alx-outline-btn {
+    height: 38px;
+    padding: 0 10px;
+    font-size: 10px;
+  }
+
+  .alx-filter-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .alx-filter-grid select {
+    height: 38px;
+  }
+
+  .alx-clear-btn {
+    grid-column: 1 / -1;
+  }
+
+  .alx-bulk-row {
+    gap: 8px;
+  }
+
+  .alx-page-size-top {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .alx-mobile-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .alx-table-footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .alx-pagination {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .alx-detail-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .alx-detail-head {
+    min-height: 68px;
+    padding: 13px 14px;
+  }
+
+  .alx-detail-body {
+    height: calc(100% - 68px);
+    padding: 14px;
+  }
+
+  .alx-gallery {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .alx-detail-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .alx-detail-actions button,
+  .alx-detail-actions a {
+    width: 100%;
+  }
+
+  .admin-reject-modal-overlay {
+    padding: 14px;
+  }
+
+  .admin-reject-modal {
+    width: min(100%, 430px);
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .alx-page {
+    padding-inline: 10px;
+  }
+
+  .alx-header {
+    align-items: flex-start;
+  }
+
+  .alx-header-main {
+    gap: 8px;
+  }
+
+  .alx-header-icon {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .alx-header h1 {
+    font-size: 18px;
+  }
+
+  .alx-header p {
+    max-width: 190px;
+    font-size: 10px;
+  }
+
+  .alx-add-btn {
+    min-height: 36px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  .alx-add-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .alx-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .alx-metric-card {
+    min-height: 76px;
+  }
+
+  .alx-controls-top {
+    grid-template-columns: 1fr;
+  }
+
+  .alx-search,
+  .alx-view-toggle {
+    grid-column: 1;
+  }
+
+  .alx-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alx-clear-btn {
+    grid-column: 1;
+  }
+
+  .alx-mobile-card {
+    padding: 11px;
+  }
+
+  .alx-mobile-card-top {
+    grid-template-columns: 16px 72px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .alx-mobile-thumb {
+    width: 72px;
+    height: 62px;
+  }
+
+  .alx-mobile-title-row strong {
+    font-size: 12px;
+  }
+
+  .alx-mobile-specs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .alx-mobile-specs b {
+    font-size: 10px;
+  }
+
+  .alx-mobile-info-grid {
+    gap: 10px 8px;
+  }
+
+  .alx-mobile-card-actions {
+    gap: 6px;
+  }
+
+  .alx-detail-actions {
+    grid-template-columns: 1fr;
+  }
+}

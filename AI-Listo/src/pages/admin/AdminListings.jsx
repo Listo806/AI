@@ -518,8 +518,10 @@ export default function AdminListings() {
         ) : filteredListings.length === 0 ? (
           <div className="alx-state">{t('admin.noListingsMatch')}</div>
         ) : (
-          <div className="alx-table-scroll">
-            <table className="alx-table">
+          <>
+            <div className="alx-desktop-table">
+              <div className="alx-table-scroll">
+                <table className="alx-table">
               <thead>
                 <tr>
                   <th className="alx-check-col"><input type="checkbox" checked={allPageSelected} onChange={toggleSelectPage} /></th>
@@ -592,9 +594,128 @@ export default function AdminListings() {
                     </tr>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="alx-mobile-list">
+              {paginatedListings.map((item) => {
+                const date = formatDate(item.createdAt);
+                const source = sourceLabel(item);
+                const owner = agentOwnerName(item);
+                const views = item.viewsCount ?? item.views_count ?? item.views ?? 0;
+                const leads = item.leadsCount ?? item.leads_count ?? item.matchedLeads ?? item.matched_leads ?? 0;
+                const selected = selectedIds.includes(item.id);
+
+                return (
+                  <article
+                    key={`mobile-${item.id}`}
+                    className={`alx-mobile-card ${selected ? 'is-selected' : ''}`}
+                  >
+                    <div className="alx-mobile-card-top">
+                      <label className="alx-mobile-check" aria-label={`Select ${item.title || 'listing'}`}>
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleSelected(item.id)}
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        className="alx-mobile-thumb"
+                        onClick={() => loadDetail(item.id)}
+                      >
+                        {item.thumbnailUrl
+                          ? <img src={item.thumbnailUrl} alt="" />
+                          : <Building2 size={24} />}
+                      </button>
+
+                      <div className="alx-mobile-property">
+                        <div className="alx-mobile-title-row">
+                          <strong>{item.title || t('admin.untitled')}</strong>
+                          <button
+                            type="button"
+                            className="alx-mobile-more"
+                            onClick={() => setOpenActionId((id) => id === item.id ? null : item.id)}
+                            aria-label="Listing actions"
+                          >
+                            <MoreVertical size={18} />
+                          </button>
+                        </div>
+
+                        <small className="alx-mobile-location">
+                          <MapPin size={12} />
+                          {shortLocation(item)}
+                        </small>
+
+                        <div className="alx-mobile-badges">
+                          <span className={`alx-source-badge source-${normalize(source).replace(/[^a-z0-9]+/g, '-')}`}>{source}</span>
+                          <span className={`alx-status-badge is-${statusTone(item)}`}>{displayStatus(item)}</span>
+                        </div>
+
+                        {openActionId === item.id && (
+                          <div className="alx-action-menu alx-mobile-action-menu">
+                            <button type="button" onClick={() => loadDetail(item.id)}>View Details</button>
+                            {(normalize(item.status) === 'pending_review' || !item.status) && (
+                              <button type="button" onClick={() => handleStatusChange(item.id, 'approved')}>Approve</button>
+                            )}
+                            {normalize(item.status) !== 'published' && (
+                              <button type="button" onClick={() => handleStatusChange(item.id, 'published')}>Publish</button>
+                            )}
+                            <button type="button" onClick={() => openRejectModal(item.id)}>Reject / Unpublish</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="alx-mobile-specs">
+                      <span><b>{item.bedrooms ?? item.beds ?? 0}</b><small>Beds</small></span>
+                      <span><b>{item.bathrooms ?? item.baths ?? 0}</b><small>Baths</small></span>
+                      <span><b>{item.area ?? item.squareFeet ?? item.sqft ?? '—'}</b><small>Area</small></span>
+                      <span><b>{listingType(item)}</b><small>Type</small></span>
+                    </div>
+
+                    <div className="alx-mobile-info-grid">
+                      <div>
+                        <small>Price</small>
+                        <strong>{formatPrice(item.price)}</strong>
+                      </div>
+                      <div>
+                        <small>Agent / Owner</small>
+                        <span className="alx-mobile-owner">
+                          <span className="alx-avatar">{initials(owner)}</span>
+                          <b>{owner}</b>
+                        </span>
+                      </div>
+                      <div>
+                        <small>Views / Leads</small>
+                        <span className="alx-mobile-activity">
+                          <b><Eye size={13} /> {Number(views).toLocaleString()}</b>
+                          <b><Users size={13} /> {Number(leads).toLocaleString()}</b>
+                        </span>
+                      </div>
+                      <div>
+                        <small>Created</small>
+                        <strong>{date.date}</strong>
+                        <em>{date.time}</em>
+                      </div>
+                    </div>
+
+                    <div className="alx-mobile-card-actions">
+                      <button type="button" className="alx-view-btn" onClick={() => loadDetail(item.id)}>
+                        <Eye size={15} /> View
+                      </button>
+                      <button type="button" className="alx-edit-btn" onClick={() => loadDetail(item.id)}>
+                        <Pencil size={15} /> Edit
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {!loading && filteredListings.length > 0 && (

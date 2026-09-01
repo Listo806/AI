@@ -2069,4 +2069,10 @@ body.crm-dark .admin-plan-table tbody tr:hover td {
 
   .crm-dark .iau-table tbody td::before,
   [data-theme='dark'] .iau-table tbody td::before { color: #718197; }
+  .crm-dark .iau-role-badge--developer, .crm-dark .iau-status-pill.is-inactive,
+  .iau-role-badge--user, .crm-dark .iau-role-badge--wholesaler, .crm-dark .iau-role-badge--investor,
+  .crm-dark .iau-role-badge--owner{
+    border-color: #202b3d;
+    background: #111827;
+   }
 }
