@@ -500,7 +500,13 @@ export class AdminBillingCalendarService {
   }
 
   async bulkReschedule(body: any) {
-    const ids = [...new Set((body.subscriptionIds || []).map((x: any) => String(x)).filter(Boolean))];
+    const ids: string[] = Array.from(
+      new Set<string>(
+        (body.subscriptionIds || [])
+          .map((x: any) => String(x))
+          .filter((x: string) => Boolean(x)),
+      ),
+    );
     if (!ids.length) throw new BadRequestException('subscriptionIds is required');
     if (ids.length > 100) throw new BadRequestException('Maximum 100 subscriptions per bulk action');
     const results: any[] = [];
