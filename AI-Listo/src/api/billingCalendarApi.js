@@ -41,7 +41,7 @@ const billingCalendarApi = {
   // OVERVIEW
   // =========================================================
 
-  getOverview(month) {
+  overview(month) {
     return get(
       `/admin/billing-calendar/overview${buildQuery({
         month,
@@ -49,11 +49,16 @@ const billingCalendarApi = {
     );
   },
 
+  // Alias
+  getOverview(month) {
+    return this.overview(month);
+  },
+
   // =========================================================
-  // CALENDAR MONTH
+  // MONTH
   // =========================================================
 
-  getMonth(month) {
+  month(month) {
     return get(
       `/admin/billing-calendar/month${buildQuery({
         month,
@@ -61,55 +66,92 @@ const billingCalendarApi = {
     );
   },
 
+  // Alias
+  getMonth(month) {
+    return this.month(month);
+  },
+
   // =========================================================
-  // DAY DETAILS
+  // DAY
   // =========================================================
 
-  getDay(date, params = {}) {
+  day(date, params = {}) {
+    if (!date) {
+      return Promise.reject(
+        new Error("date is required")
+      );
+    }
+
     return get(
-      `/admin/billing-calendar/day/${encodeURIComponent(date)}${buildQuery(
-        params
-      )}`
+      `/admin/billing-calendar/day/${encodeURIComponent(
+        date
+      )}${buildQuery(params)}`
     );
+  },
+
+  // Alias
+  getDay(date, params = {}) {
+    return this.day(date, params);
   },
 
   // =========================================================
   // UPCOMING BILLING
   // =========================================================
 
+  upcoming(params = {}) {
+    return get(
+      `/admin/billing-calendar/upcoming${buildQuery(
+        params
+      )}`
+    );
+  },
+
+  // Alias
   getUpcoming(params = {}) {
-    return get(
-      `/admin/billing-calendar/upcoming${buildQuery(params)}`
-    );
+    return this.upcoming(params);
   },
 
   // =========================================================
-  // BILLING ACTIVITY
+  // ACTIVITY
   // =========================================================
 
+  activity(params = {}) {
+    return get(
+      `/admin/billing-calendar/activity${buildQuery(
+        params
+      )}`
+    );
+  },
+
+  // Alias
   getActivity(params = {}) {
-    return get(
-      `/admin/billing-calendar/activity${buildQuery(params)}`
-    );
+    return this.activity(params);
   },
 
   // =========================================================
-  // BILLING EXCEPTIONS
+  // EXCEPTIONS
   // =========================================================
 
-  getExceptions() {
+  exceptions() {
     return get(
       "/admin/billing-calendar/exceptions"
     );
   },
 
+  // Alias
+  getExceptions() {
+    return this.exceptions();
+  },
+
   // =========================================================
-  // RESCHEDULE ONE SUBSCRIPTION
+  // RESCHEDULE SINGLE SUBSCRIPTION
   // =========================================================
 
-  rescheduleSubscription(subscriptionId, payload) {
+  reschedule(subscriptionId, payload = {}) {
     if (!subscriptionId) {
-      throw new Error("subscriptionId is required");
+      return Promise.reject(
+        new Error("subscriptionId is required")
+      );
     }
 
     return post(
@@ -120,11 +162,19 @@ const billingCalendarApi = {
     );
   },
 
+  // Alias
+  rescheduleSubscription(subscriptionId, payload = {}) {
+    return this.reschedule(
+      subscriptionId,
+      payload
+    );
+  },
+
   // =========================================================
   // BULK RESCHEDULE
   // =========================================================
 
-  bulkReschedule(payload) {
+  bulkReschedule(payload = {}) {
     return post(
       "/admin/billing-calendar/bulk/reschedule",
       payload
@@ -135,9 +185,11 @@ const billingCalendarApi = {
   // PAUSE SUBSCRIPTION
   // =========================================================
 
-  pauseSubscription(subscriptionId, payload = {}) {
+  pause(subscriptionId, payload = {}) {
     if (!subscriptionId) {
-      throw new Error("subscriptionId is required");
+      return Promise.reject(
+        new Error("subscriptionId is required")
+      );
     }
 
     return post(
@@ -148,13 +200,23 @@ const billingCalendarApi = {
     );
   },
 
+  // Alias
+  pauseSubscription(subscriptionId, payload = {}) {
+    return this.pause(
+      subscriptionId,
+      payload
+    );
+  },
+
   // =========================================================
   // CANCEL SUBSCRIPTION
   // =========================================================
 
-  cancelSubscription(subscriptionId, payload = {}) {
+  cancel(subscriptionId, payload = {}) {
     if (!subscriptionId) {
-      throw new Error("subscriptionId is required");
+      return Promise.reject(
+        new Error("subscriptionId is required")
+      );
     }
 
     return post(
@@ -165,13 +227,23 @@ const billingCalendarApi = {
     );
   },
 
+  // Alias
+  cancelSubscription(subscriptionId, payload = {}) {
+    return this.cancel(
+      subscriptionId,
+      payload
+    );
+  },
+
   // =========================================================
-  // SEND BILLING REMINDER
+  // SEND REMINDER
   // =========================================================
 
-  sendReminder(subscriptionId, payload = {}) {
+  reminder(subscriptionId, payload = {}) {
     if (!subscriptionId) {
-      throw new Error("subscriptionId is required");
+      return Promise.reject(
+        new Error("subscriptionId is required")
+      );
     }
 
     return post(
@@ -182,13 +254,23 @@ const billingCalendarApi = {
     );
   },
 
+  // Alias
+  sendReminder(subscriptionId, payload = {}) {
+    return this.reminder(
+      subscriptionId,
+      payload
+    );
+  },
+
   // =========================================================
-  // RETRY FAILED PAYMENT
+  // RETRY PAYMENT
   // =========================================================
 
-  retryPayment(subscriptionId, payload = {}) {
+  retry(subscriptionId, payload = {}) {
     if (!subscriptionId) {
-      throw new Error("subscriptionId is required");
+      return Promise.reject(
+        new Error("subscriptionId is required")
+      );
     }
 
     return post(
@@ -199,13 +281,26 @@ const billingCalendarApi = {
     );
   },
 
+  // Alias
+  retryPayment(subscriptionId, payload = {}) {
+    return this.retry(
+      subscriptionId,
+      payload
+    );
+  },
+
   // =========================================================
-  // OPTIONAL STATUS UPDATE
+  // OPTIONAL UPDATE
   // =========================================================
 
-  updateSubscription(subscriptionId, payload = {}) {
+  updateSubscription(
+    subscriptionId,
+    payload = {}
+  ) {
     if (!subscriptionId) {
-      throw new Error("subscriptionId is required");
+      return Promise.reject(
+        new Error("subscriptionId is required")
+      );
     }
 
     return patch(

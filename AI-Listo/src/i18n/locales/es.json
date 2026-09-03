@@ -4991,5 +4991,82 @@
     "operations": "Operaciones",
     "billing": "Facturación",
     "catalog": "Catálogo"
+  },
+  "adminBillingCalendar": {
+    "title": "Calendario de Facturación",
+    "subtitle": "Gestiona los calendarios de facturación, suscripciones y actividad de pagos de Paddle.",
+    "kpis": {
+      "monthlyRevenue": "Ingresos Mensuales",
+      "activeSubscriptions": "Suscripciones Activas",
+      "mrrForecast": "Previsión MRR (30 Días)",
+      "failedPayments": "Pagos Fallidos",
+      "churnRate": "Tasa de Cancelación",
+      "currentMonth": "Mes actual",
+      "activeInPaddle": "Activas en Paddle",
+      "upcomingRenewals": "Próximas renovaciones",
+      "needsAttention": "Requiere atención"
+    },
+    "views": {
+      "month": "Mes",
+      "week": "Semana",
+      "list": "Lista"
+    },
+    "status": {
+      "scheduled": "Programado",
+      "paid": "Pagado",
+      "failed": "Fallido",
+      "pastDue": "Vencido",
+      "canceled": "Cancelado",
+      "rescheduled": "Reprogramado"
+    },
+    "weekdays": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb"
+    },
+    "searchCustomers": "Buscar clientes...",
+    "filters": "Filtros",
+    "table": {
+      "customer": "Cliente",
+      "plan": "Plan",
+      "billingTime": "Hora de cobro"
+    },
+    "actions": {
+      "viewCustomer": "Ver Cliente",
+      "rescheduleBilling": "Reprogramar Facturación",
+      "changePlan": "Cambiar Plan",
+      "pauseSubscription": "Pausar Suscripción",
+      "cancelSubscription": "Cancelar Suscripción",
+      "sendReminder": "Enviar Recordatorio",
+      "refund": "Reembolso / Reembolso Parcial",
+      "retryPayment": "Reintentar Pago",
+      "reschedule": "Reprogramar",
+      "retryFailed": "Reintentar Fallidos",
+      "exportList": "Exportar Lista"
+    },
+    "sections": {
+      "upcomingBillingDays": "Próximos Días de Facturación",
+      "recentActivity": "Actividad Reciente",
+      "billingExceptions": "Excepciones de Facturación",
+      "bulkActions": "Acciones Masivas"
+    },
+    "viewAll": "Ver todo",
+    "quickReschedule": "Reprogramación Rápida",
+    "moveSelectedTo": "Mover seleccionados a",
+    "paddleConfirmation": "Paddle confirma primero; Cortexa actualiza solo después de la confirmación.",
+    "syncedWithPaddle": "Todos los datos de facturación están sincronizados con Paddle.",
+    "paddleStatus": "Estado de Paddle: Operativo",
+    "lastSync": "Última sincronización",
+    "exceptions": {
+      "failedPayments": "Pagos Fallidos",
+      "pastDue": "Vencidos",
+      "rescheduled": "Reprogramados",
+      "needsReview": "Requiere Revisión",
+      "refundPending": "Reembolso Pendiente"
+    }
   }
 }

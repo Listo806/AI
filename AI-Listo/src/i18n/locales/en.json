@@ -4991,5 +4991,82 @@
     "operations": "Operations",
     "billing": "Billing",
     "catalog": "Catalog"
+  },
+  "adminBillingCalendar": {
+    "title": "Billing Calendar",
+    "subtitle": "Manage Paddle billing schedules, subscriptions, and payment activity.",
+    "kpis": {
+      "monthlyRevenue": "Monthly Revenue",
+      "activeSubscriptions": "Active Subscriptions",
+      "mrrForecast": "MRR Forecast (30 Days)",
+      "failedPayments": "Failed Payments",
+      "churnRate": "Churn Rate",
+      "currentMonth": "Current month",
+      "activeInPaddle": "Active in Paddle",
+      "upcomingRenewals": "Upcoming renewals",
+      "needsAttention": "Needs attention"
+    },
+    "views": {
+      "month": "Month",
+      "week": "Week",
+      "list": "List"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "paid": "Paid",
+      "failed": "Failed",
+      "pastDue": "Past Due",
+      "canceled": "Canceled",
+      "rescheduled": "Rescheduled"
+    },
+    "weekdays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "searchCustomers": "Search customers...",
+    "filters": "Filters",
+    "table": {
+      "customer": "Customer",
+      "plan": "Plan",
+      "billingTime": "Billing Time"
+    },
+    "actions": {
+      "viewCustomer": "View Customer",
+      "rescheduleBilling": "Reschedule Billing",
+      "changePlan": "Change Plan",
+      "pauseSubscription": "Pause Subscription",
+      "cancelSubscription": "Cancel Subscription",
+      "sendReminder": "Send Reminder",
+      "refund": "Refund / Partial Refund",
+      "retryPayment": "Retry Payment",
+      "reschedule": "Reschedule",
+      "retryFailed": "Retry Failed",
+      "exportList": "Export List"
+    },
+    "sections": {
+      "upcomingBillingDays": "Upcoming Billing Days",
+      "recentActivity": "Recent Activity",
+      "billingExceptions": "Billing Exceptions",
+      "bulkActions": "Bulk Actions"
+    },
+    "viewAll": "View all",
+    "quickReschedule": "Quick Reschedule",
+    "moveSelectedTo": "Move selected to",
+    "paddleConfirmation": "Paddle confirms first; Cortexa updates only after confirmation.",
+    "syncedWithPaddle": "All billing schedule data is synchronized with Paddle.",
+    "paddleStatus": "Paddle Status: Operational",
+    "lastSync": "Last sync",
+    "exceptions": {
+      "failedPayments": "Failed Payments",
+      "pastDue": "Past Due",
+      "rescheduled": "Rescheduled",
+      "needsReview": "Needs Review",
+      "refundPending": "Refund Pending"
+    }
   }
 }
