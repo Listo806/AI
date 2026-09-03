@@ -5067,6 +5067,31 @@
       "rescheduled": "Rescheduled",
       "needsReview": "Needs Review",
       "refundPending": "Refund Pending"
+    },
+    "customers": "customers",
+    "selected": "selected",
+    "showing": "Showing",
+    "errors": {
+      "load": "Unable to load billing calendar.",
+      "day": "Unable to load billing day.",
+      "invalidDate": "Invalid billing date/time."
+    },
+    "messages": {
+      "reschedulePartial": "{{succeeded}} updated, {{failed}} failed.",
+      "rescheduled": "Billing schedule updated after Paddle confirmation.",
+      "reminderSent": "Billing reminder sent.",
+      "remindersSent": "{{count}} billing reminder(s) sent.",
+      "noRetryEligible": "None of the selected rows are failed or past due.",
+      "retryRequested": "Retry request completed.",
+      "paddleRetry": "Paddle manages automatic retries. The secure payment-update page was opened when available.",
+      "planChanged": "Customer plan updated."
+    },
+    "confirm": {
+      "bulkReschedule": "Reschedule {{count}} subscription(s) to {{date}} at {{time}}? Paddle will be updated first.",
+      "singleReschedule": "Reschedule billing from {{from}} to {{to}}? Paddle will be updated first.",
+      "sendReminder": "Send a billing reminder to {{count}} selected customer(s)?",
+      "pause": "Pause {{customer}}'s subscription at the next billing period?",
+      "cancel": "Cancel {{customer}}'s subscription at the end of the current billing period?"
     }
   }
 }

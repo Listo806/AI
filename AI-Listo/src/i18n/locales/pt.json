@@ -5067,6 +5067,31 @@
       "rescheduled": "Reagendados",
       "needsReview": "Precisa de Revisão",
       "refundPending": "Reembolso Pendente"
+    },
+    "customers": "clientes",
+    "selected": "selecionados",
+    "showing": "Mostrando",
+    "errors": {
+      "load": "Não foi possível carregar o calendário de faturamento.",
+      "day": "Não foi possível carregar o dia de faturamento.",
+      "invalidDate": "Data ou horário de faturamento inválido."
+    },
+    "messages": {
+      "reschedulePartial": "{{succeeded}} atualizados, {{failed}} falharam.",
+      "rescheduled": "Agenda de faturamento atualizada após a confirmação da Paddle.",
+      "reminderSent": "Lembrete de faturamento enviado.",
+      "remindersSent": "{{count}} lembrete(s) de faturamento enviado(s).",
+      "noRetryEligible": "Nenhuma linha selecionada está com pagamento falho ou vencido.",
+      "retryRequested": "Solicitação de nova tentativa concluída.",
+      "paddleRetry": "A Paddle gerencia as novas tentativas automáticas. A página segura de atualização de pagamento foi aberta quando disponível.",
+      "planChanged": "Plano do cliente atualizado."
+    },
+    "confirm": {
+      "bulkReschedule": "Reagendar {{count}} assinatura(s) para {{date}} às {{time}}? A Paddle será atualizada primeiro.",
+      "singleReschedule": "Reagendar o faturamento de {{from}} para {{to}}? A Paddle será atualizada primeiro.",
+      "sendReminder": "Enviar um lembrete de faturamento para {{count}} cliente(s) selecionados?",
+      "pause": "Pausar a assinatura de {{customer}} no próximo período de faturamento?",
+      "cancel": "Cancelar a assinatura de {{customer}} ao final do período de faturamento atual?"
     }
   }
 }

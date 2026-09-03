@@ -5067,6 +5067,31 @@
       "rescheduled": "Reprogramados",
       "needsReview": "Requiere Revisión",
       "refundPending": "Reembolso Pendiente"
+    },
+    "customers": "clientes",
+    "selected": "seleccionados",
+    "showing": "Mostrando",
+    "errors": {
+      "load": "No se pudo cargar el calendario de facturación.",
+      "day": "No se pudo cargar el día de facturación.",
+      "invalidDate": "Fecha u hora de facturación no válida."
+    },
+    "messages": {
+      "reschedulePartial": "{{succeeded}} actualizados, {{failed}} fallidos.",
+      "rescheduled": "Calendario de facturación actualizado después de la confirmación de Paddle.",
+      "reminderSent": "Recordatorio de facturación enviado.",
+      "remindersSent": "Se enviaron {{count}} recordatorio(s) de facturación.",
+      "noRetryEligible": "Ninguna fila seleccionada tiene un pago fallido o vencido.",
+      "retryRequested": "Solicitud de reintento completada.",
+      "paddleRetry": "Paddle gestiona los reintentos automáticos. Se abrió la página segura de actualización de pago cuando estaba disponible.",
+      "planChanged": "Plan del cliente actualizado."
+    },
+    "confirm": {
+      "bulkReschedule": "¿Reprogramar {{count}} suscripción(es) para {{date}} a las {{time}}? Paddle se actualizará primero.",
+      "singleReschedule": "¿Reprogramar la facturación de {{from}} a {{to}}? Paddle se actualizará primero.",
+      "sendReminder": "¿Enviar un recordatorio de facturación a {{count}} cliente(s) seleccionados?",
+      "pause": "¿Pausar la suscripción de {{customer}} en el próximo período de facturación?",
+      "cancel": "¿Cancelar la suscripción de {{customer}} al final del período de facturación actual?"
     }
   }
 }

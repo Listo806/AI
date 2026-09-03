@@ -59,7 +59,7 @@ export class AdminBillingCalendarController {
   }
 
   @Get('activity')
-  @ApiOperation({ summary: 'Recent billing activity' })
+  @ApiOperation({ summary: 'Real Paddle/Cortexa billing activity' })
   activity(@Query('limit') limit?: string) {
     return this.billingCalendar.getActivity(Number(limit || 5));
   }
@@ -70,8 +70,20 @@ export class AdminBillingCalendarController {
     return this.billingCalendar.getExceptions();
   }
 
+  @Get('exceptions/records')
+  @ApiOperation({ summary: 'Records behind Billing Exceptions cards' })
+  exceptionRecords(@Query('type') type?: string, @Query('limit') limit?: string) {
+    return this.billingCalendar.getExceptionRecords(type || 'all', Number(limit || 100));
+  }
+
+  @Get('transactions/:transactionId')
+  @ApiOperation({ summary: 'Get a Paddle transaction for refund/details' })
+  transaction(@Param('transactionId') transactionId: string) {
+    return this.billingCalendar.getTransaction(transactionId);
+  }
+
   @Post('subscriptions/:subscriptionId/reschedule')
-  @ApiOperation({ summary: 'Change next Paddle billing date' })
+  @ApiOperation({ summary: 'Change next Paddle billing date; mirror only after Paddle confirms' })
   reschedule(
     @Param('subscriptionId') subscriptionId: string,
     @Body() body: { date?: string; time?: string; nextBilledAt?: string; prorationBillingMode?: string },
@@ -82,7 +94,7 @@ export class AdminBillingCalendarController {
   @Post('bulk/reschedule')
   @ApiOperation({ summary: 'Change next Paddle billing date for selected subscriptions' })
   bulkReschedule(
-    @Body() body: { subscriptionIds?: string[]; date?: string; time?: string; prorationBillingMode?: string },
+    @Body() body: { subscriptionIds?: string[]; date?: string; time?: string; nextBilledAt?: string; prorationBillingMode?: string },
   ) {
     if (!Array.isArray(body?.subscriptionIds) || body.subscriptionIds.length === 0) {
       throw new BadRequestException('subscriptionIds is required');
@@ -109,14 +121,23 @@ export class AdminBillingCalendarController {
   }
 
   @Post('subscriptions/:subscriptionId/reminder')
-  @ApiOperation({ summary: 'Get the secure Paddle payment-update URL for a billing reminder flow' })
+  @ApiOperation({ summary: 'Resolve customer + Paddle secure payment-update target for reminder delivery' })
   reminder(@Param('subscriptionId') subscriptionId: string) {
     return this.billingCalendar.getReminderTarget(subscriptionId);
   }
 
   @Post('subscriptions/:subscriptionId/retry')
-  @ApiOperation({ summary: 'Retry failed payment when supported by the configured Paddle workflow' })
+  @ApiOperation({ summary: 'Use Paddle-supported recovery behavior without creating duplicate charges' })
   retry(@Param('subscriptionId') subscriptionId: string) {
     return this.billingCalendar.retryPayment(subscriptionId);
+  }
+
+  @Post('subscriptions/:subscriptionId/refund')
+  @ApiOperation({ summary: 'Request a full/partial Paddle refund adjustment' })
+  refund(
+    @Param('subscriptionId') subscriptionId: string,
+    @Body() body: { transactionId?: string; type?: 'full' | 'partial'; reason?: string; itemId?: string; amount?: string },
+  ) {
+    return this.billingCalendar.refund(subscriptionId, body || {});
   }
 }
