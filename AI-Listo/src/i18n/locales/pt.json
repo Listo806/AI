@@ -291,7 +291,8 @@
     "vaUpload": "Upload VA",
     "generator": "Gerador de leads",
     "adminSignups": "Cadastros",
-    "adminCustomers": "Assinaturas"
+    "adminCustomers": "Assinaturas",
+    "billingCalendar": "Calendário de faturamento"
   },
   "header": {
     "profile": "Perfil",

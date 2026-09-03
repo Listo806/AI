@@ -148,6 +148,7 @@ import LeadGeneratorGate from "./pages/generator/LeadGeneratorGate";
 import SetupGuidePage from "./pages/common/SetupGuidePage";
 import IntegrationsPage from "./pages/common/IntegrationsPage";
 import FeaturesPage from "./pages/common/FeaturesPage";
+import AdminBillingCalendar from "./pages/admin/AdminBillingCalendar";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -253,7 +254,10 @@ function publicRoutes(prefix) {
       />
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
-      <Route path={`${p}/checkout-business-offer`} element={<PromoBusinessCheckout />} />
+      <Route
+        path={`${p}/checkout-business-offer`}
+        element={<PromoBusinessCheckout />}
+      />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
       <Route path={`${p}/onboarding`} element={<Onboarding />} />
     </>
@@ -374,8 +378,12 @@ function AppRoutes() {
         <Route path="admin/listings" element={<AdminListings />} />
         <Route path="admin/users" element={<AdminUsers />} />
         <Route path="admin/customers" element={<AdminCustomers />} />
+        <Route path="admin/billing-calendar" element={<AdminBillingCalendar />}  />
         <Route path="admin/signups" element={<AdminSignups />} />
-        <Route path="admin/customers-legacy" element={<AdminSignups customersOnly />} />
+        <Route
+          path="admin/customers-legacy"
+          element={<AdminSignups customersOnly />}
+        />
         <Route path="admin/teams" element={<AdminTeams />} />
         <Route path="admin/plans" element={<AdminPlans />} />
 
@@ -398,7 +406,6 @@ function AppRoutes() {
 
         {/* Analytics Route — included for all plans, Free included. No paywall. */}
         <Route path="analytics" element={<Analytics />} />
-
 
         {/* Business Suite Workspace */}
         <Route

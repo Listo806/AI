@@ -291,7 +291,8 @@
     "users": "Internal Access",
     "teams": "Teams",
     "adminSignups": "Sign-ups",
-    "adminCustomers": "Subscriptions"
+    "adminCustomers": "Subscriptions",
+    "billingCalendar": "Billing Calendar"
   },
   "header": {
     "profile": "Profile",

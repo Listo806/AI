@@ -327,6 +327,13 @@ export default function DashboardLayout() {
                             {t('nav.adminCustomers') || 'Customers'}
                           </Link>
                           <Link
+                            to="/dashboard/admin/billing-calendar"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            {t('nav.billingCalendar') || 'Billing Calendar'}
+                          </Link>
+                          <Link
                             to="/dashboard/admin/listings"
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}

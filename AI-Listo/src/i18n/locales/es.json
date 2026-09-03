@@ -291,7 +291,8 @@
     "vaUpload": "Carga VA",
     "generator": "Generador de leads",
     "adminSignups": "Registros",
-    "adminCustomers": "Suscripciones"
+    "adminCustomers": "Suscripciones",
+    "billingCalendar": "Calendario de facturación"
   },
   "header": {
     "profile": "Perfil",

@@ -842,6 +842,75 @@ export class PaddleService {
   }
 
   /**
+   * Change the next Paddle billing date. Paddle is the source of truth.
+   * The caller should mirror the returned subscription locally only after this succeeds.
+   */
+  async changeNextBillingDate(
+    subscriptionId: string,
+    nextBilledAt: string,
+    prorationBillingMode: string = 'prorated_next_billing_period',
+  ): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+    if (!subscriptionId) throw new BadRequestException('A subscription is required');
+
+    const date = new Date(nextBilledAt);
+    if (Number.isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid next billing date');
+    }
+    if (date.getTime() <= Date.now()) {
+      throw new BadRequestException('Next billing date must be in the future');
+    }
+
+    try {
+      const updated = await (this.paddle as any).subscriptions.update(subscriptionId, {
+        nextBilledAt: date.toISOString(),
+        prorationBillingMode,
+      });
+      this.logger.log(`Changed next billing date for ${subscriptionId} to ${date.toISOString()}`);
+      return updated;
+    } catch (error: any) {
+      this.logger.error(`Failed to change Paddle billing date: ${error.message}`, error);
+      throw new BadRequestException(`Failed to change billing date: ${error.message}`);
+    }
+  }
+
+  /** Pause a Paddle subscription now or at the next billing period. */
+  async pauseSubscription(
+    subscriptionId: string,
+    immediately: boolean = false,
+    resumeAt?: string,
+  ): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+    if (!subscriptionId) throw new BadRequestException('A subscription is required');
+
+    const payload: any = {
+      effectiveFrom: immediately ? 'immediately' : 'next_billing_period',
+    };
+    if (resumeAt) {
+      const d = new Date(resumeAt);
+      if (Number.isNaN(d.getTime())) throw new BadRequestException('Invalid resumeAt');
+      payload.resumeAt = d.toISOString();
+    }
+
+    try {
+      const paddleAny = this.paddle as any;
+      if (!paddleAny.subscriptions?.pause) {
+        throw new Error('Installed Paddle SDK does not expose subscriptions.pause()');
+      }
+      const updated = await paddleAny.subscriptions.pause(subscriptionId, payload);
+      this.logger.log(`Paused subscription ${subscriptionId} (${payload.effectiveFrom})`);
+      return updated;
+    } catch (error: any) {
+      this.logger.error(`Failed to pause Paddle subscription: ${error.message}`, error);
+      throw new BadRequestException(`Failed to pause subscription: ${error.message}`);
+    }
+  }
+
+  /**
    * Verify a Paddle Billing webhook signature.
    * The Paddle-Signature header is "ts=<unix>;h1=<hex>". The signed payload is
    * "<ts>:<raw request body>" hashed with HMAC-SHA256 using the endpoint secret
