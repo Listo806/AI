@@ -493,10 +493,10 @@ export default function Landing() {
         },
       ],
 
-      heroTitleLine1: "Agentic",
-      heroTitleLine2: "AI",
-      heroTitleLine3: "Revenue",
-      heroTitleLine31: "Operating System",
+      heroTitleLine1: "Agentic CRM built to",
+      heroTitleLine2: "automate and track ",
+      heroTitleLine3: "your business",
+      heroTitleLine31: "workflow.",
       heroTitleLine4: "Built to Turn",
       heroTitleLine5: "Conversations",
       heroTitleLine6: "Into Revenue.",
@@ -523,7 +523,7 @@ export default function Landing() {
       heroTag4: "Pipeline Intelligence That Closes",
       heroTag5: "WhatsApp Integration Built-in",
       heroTag6: "Secure. Reliable. Built for Real Estate.",
-      heroHead: "Built to Help Businesses Automate, Operate and Grow Revenue",
+      heroHead: "All-in-One Business Operating System",
 
       smartV2Badge: "FROM LEAD TO REVENUE — ONE CONNECTED SYSTEM",
       smartV2Title1: "See Your Entire Revenue Operation.",
@@ -994,10 +994,10 @@ export default function Landing() {
         },
       ],
 
-      heroTitleLine1: "Agentic",
-      heroTitleLine2: "IA",
-      heroTitleLine3: "de Ingresos",
-      heroTitleLine31: "Sistema Operativo",
+      heroTitleLine1: "CRM agéntico creado para",
+      heroTitleLine2: "automatizar y hacer seguimiento de ",
+      heroTitleLine3: "tu negocio",
+      heroTitleLine31: "flujo de trabajo.",
       heroTitleLine4: "Diseñado para convertir",
       heroTitleLine5: "las conversaciones",
       heroTitleLine6: "en ingresos.",
@@ -1469,10 +1469,10 @@ export default function Landing() {
         },
       ],
 
-      heroTitleLine1: "Agentic",
-      heroTitleLine2: "IA",
-      heroTitleLine3: "de Receita",
-      heroTitleLine31: "Sistema Operacional",
+      heroTitleLine1: "CRM agêntico criado para",
+      heroTitleLine2: "automatizar e acompanhar ",
+      heroTitleLine3: "o seu negócio",
+      heroTitleLine31: "fluxo de trabalho.",
       heroTitleLine4: "Criado para transformar",
       heroTitleLine5: "conversas",
       heroTitleLine6: "em receita.",
@@ -1859,18 +1859,13 @@ export default function Landing() {
           <div className="hero-left">
             <div className="hero-left-in">
               <div className="hero-dead-wrap">
-                <span className="hero-head1 hero-head">AI REVENUE OS</span>
-                <br />
                 <span className="hero-head">{tr.heroHead}</span>
               </div>
               <h1 className="hero-title">
-                <span className="text-os">{tr.heroTitleLine2}</span>{" "}
-                {tr.heroTitleLine3}
-                <br />
-                {tr.heroTitleLine31} <br />
-                {tr.heroTitleLine4} <br />
-                {tr.heroTitleLine5} <br />
-                <span> {tr.heroTitleLine6}</span>
+                {tr.heroTitleLine1} <br />
+                <span className="text-os">{tr.heroTitleLine2}</span><br />
+                <span className="text-os">{tr.heroTitleLine3}</span><br />
+                <span className="text-os">{tr.heroTitleLine31}</span><br />
               </h1>
               <div className="hero-checks">
                 <p>{tr.herotextabove}</p>

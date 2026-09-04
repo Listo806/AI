@@ -570,10 +570,10 @@ export default function LandingMobile() {
 
   const t = {
     en: {
-      heroTitle1: "Agentic AI Revenue ",
-      heroTitle11: "Operating System ",
-      heroTitle2: "Built to Turn",
-      heroTitle3: "Conversations",
+      heroTitle1: "Agentic CRM built to",
+      heroTitle11: "automate and track",
+      heroTitle2: "your business",
+      heroTitle3: "workflow.",
       heroTitle4: "Into Revenue.",
       heroDesc: "AI organizes. AI qualifies. You follow up. You close.",
       heroTopBanner1: "Agentic AI",
@@ -978,10 +978,11 @@ export default function LandingMobile() {
     },
 
     es: {
-      heroTitle1: "Sistema Operativo de ",
-      heroTitle11: "Ingresos con IA Agéntica",
-      heroTitle2: "Creado para Convertir",
-      heroTitle3: "Conversaciones",
+      
+      heroTitle1: "CRM agéntico creado para",
+      heroTitle11: "automatizar y hacer seguimiento de ",
+      heroTitle2: "tu negocio",
+      heroTitle3: "flujo de trabajo.",
       heroTitle4: "en Ingresos.",
       heroDesc:
         "La IA organiza. La IA califica. Tú haces seguimiento. Tú cierras.",
@@ -1391,10 +1392,11 @@ export default function LandingMobile() {
     },
 
     pt: {
-      heroTitle1: "Sistema Operacional de ",
-      heroTitle11: "Receita com IA Agêntica",
-      heroTitle2: "Criado para Transformar",
-      heroTitle3: "Conversas",
+      heroTitle1: "CRM agêntico criado para",
+      heroTitle11: "automatizar e acompanhar ",
+      heroTitle2: "o seu negócio",
+      heroTitle3: "fluxo de trabalho.",
+
       heroTitle4: "em Receita.",
       heroDesc: "A IA organiza. A IA qualifica. Você faz o acompanhamento. Você fecha.",
       heroTopBanner1: "Agentic AI",
@@ -1960,8 +1962,6 @@ export default function LandingMobile() {
           {tr.heroTitle2}
           <br />
           {tr.heroTitle3}
-          <br />
-          {tr.heroTitle4}
         </h1>
 
         <p className="m-description">{tr.heroDesc}</p>

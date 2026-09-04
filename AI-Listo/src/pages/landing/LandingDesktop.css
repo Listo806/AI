@@ -1413,7 +1413,12 @@ section#footer {
   background: #1d4ed8;
 }
 
-#cortexa-ai-crm-landing .hero-dead-wrap {}
+#cortexa-ai-crm-landing .hero-dead-wrap {
+  display: inline-block;
+  background: #b5adad2b;
+  padding: 3px 9px 4px;
+  border-radius: 10px;
+}
 
 #cortexa-ai-crm-landing .hero-tags {
   display: grid;
