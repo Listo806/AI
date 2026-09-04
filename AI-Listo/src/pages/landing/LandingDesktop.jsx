@@ -495,7 +495,7 @@ export default function Landing() {
 
       heroTitleLine1: "Agentic CRM built to",
       heroTitleLine2: "automate and track ",
-      heroTitleLine3: "your business",
+      heroTitleLine3: "your business workflow.",
       heroTitleLine31: "workflow.",
       heroTitleLine4: "Built to Turn",
       heroTitleLine5: "Conversations",
@@ -996,7 +996,7 @@ export default function Landing() {
 
       heroTitleLine1: "CRM agéntico creado para",
       heroTitleLine2: "automatizar y hacer seguimiento de ",
-      heroTitleLine3: "tu negocio",
+      heroTitleLine3: "tu negocio flujo de trabajo.",
       heroTitleLine31: "flujo de trabajo.",
       heroTitleLine4: "Diseñado para convertir",
       heroTitleLine5: "las conversaciones",
@@ -1471,7 +1471,7 @@ export default function Landing() {
 
       heroTitleLine1: "CRM agêntico criado para",
       heroTitleLine2: "automatizar e acompanhar ",
-      heroTitleLine3: "o seu negócio",
+      heroTitleLine3: "o seu negócio fluxo de trabalho.",
       heroTitleLine31: "fluxo de trabalho.",
       heroTitleLine4: "Criado para transformar",
       heroTitleLine5: "conversas",
@@ -1864,8 +1864,7 @@ export default function Landing() {
               <h1 className="hero-title">
                 {tr.heroTitleLine1} <br />
                 <span className="text-os">{tr.heroTitleLine2}</span><br />
-                <span className="text-os">{tr.heroTitleLine3}</span><br />
-                <span className="text-os">{tr.heroTitleLine31}</span><br />
+                <span className="text-os">{tr.heroTitleLine3}</span>
               </h1>
               <div className="hero-checks">
                 <p>{tr.herotextabove}</p>

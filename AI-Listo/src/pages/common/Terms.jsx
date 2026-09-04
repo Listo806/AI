@@ -36,7 +36,7 @@ const t = {
         "blocks": [
           {
             "type": "paragraph",
-            "text": "CORTEXA AI Revenue OS is a business software platform providing tools that may include:"
+            "text": "CORTEXA CRM is a business software platform providing tools that may include:"
           },
           {
             "type": "list",
@@ -877,7 +877,7 @@ const t = {
         "blocks": [
           {
             "type": "paragraph",
-            "text": "CORTEXA AI Revenue OS es una plataforma de software empresarial que proporciona herramientas que pueden incluir:"
+            "text": "CORTEXA CRM es una plataforma de software empresarial que proporciona herramientas que pueden incluir:"
           },
           {
             "type": "list",
@@ -1718,7 +1718,7 @@ const t = {
         "blocks": [
           {
             "type": "paragraph",
-            "text": "O CORTEXA AI Revenue OS é uma plataforma de software empresarial que fornece ferramentas que podem incluir:"
+            "text": "O CORTEXA CRM é uma plataforma de software empresarial que fornece ferramentas que podem incluir:"
           },
           {
             "type": "list",
