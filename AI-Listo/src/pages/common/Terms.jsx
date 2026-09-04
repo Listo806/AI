@@ -123,78 +123,12 @@ const t = {
         ]
       },
       {
-        "title": "5. PLANS, FREE FOREVER & PRICING",
+        "title": "5. PLANS & PRICING",
         "blocks": [
-          {
-            "type": "paragraph",
-            "text": "CORTEXA currently offers Free Forever and paid subscription plans."
-          },
-          {
-            "type": "paragraph",
-            "text": "Pricing and plan details displayed during checkout form part of the customer's purchase terms."
-          },
+          
           {
             "type": "subheading",
-            "text": "A. FREE FOREVER"
-          },
-          {
-            "type": "paragraph",
-            "text": "Price:"
-          },
-          {
-            "type": "paragraph",
-            "text": "$0 recurring subscription charge."
-          },
-          {
-            "type": "paragraph",
-            "text": "The Free Forever plan allows customers to create and maintain a CORTEXA account without a recurring subscription charge."
-          },
-          {
-            "type": "paragraph",
-            "text": "Free Forever provides access only to the functionality and usage allowances designated for the Free plan."
-          },
-          {
-            "type": "paragraph",
-            "text": "Free Forever does NOT provide unlimited access to CORTEXA."
-          },
-          {
-            "type": "paragraph",
-            "text": "Free-plan functionality may include limitations such as:"
-          },
-          {
-            "type": "list",
-            "items": [
-              "Limited AI functionality and usage",
-              "Limited AI conversations or processing",
-              "Limited automations and workflows",
-              "Limited contact-management functionality",
-              "Limited integrations",
-              "Limited users",
-              "Limited dashboard or reporting functionality",
-              "Restricted premium functionality",
-              "Restricted advanced functionality",
-              "Restricted paid Workspaces and add-ons"
-            ]
-          },
-          {
-            "type": "paragraph",
-            "text": "Features designated as premium, paid, advanced, Workspace, add-on, or higher-tier functionality are not included in Free Forever unless expressly stated."
-          },
-          {
-            "type": "paragraph",
-            "text": "\"Free Forever\" means that CORTEXA does not charge a recurring subscription fee for the Free plan. It does not mean that all current or future CORTEXA functionality, AI usage, third-party services, Workspaces, add-ons, or integrations are provided without charge."
-          },
-          {
-            "type": "paragraph",
-            "text": "No credit card is required for the Free Forever plan unless the customer separately chooses to purchase a paid product, subscription, Workspace, add-on, or other paid service."
-          },
-          {
-            "type": "paragraph",
-            "text": "CORTEXA may reasonably modify Free-plan functionality and usage allowances as the platform evolves, subject to applicable law."
-          },
-          {
-            "type": "subheading",
-            "text": "B. SOLO"
+            "text": "A. SOLO"
           },
           {
             "type": "paragraph",
@@ -226,7 +160,7 @@ const t = {
           },
           {
             "type": "subheading",
-            "text": "C. BUSINESS"
+            "text": "B. BUSINESS"
           },
           {
             "type": "paragraph",
@@ -258,7 +192,7 @@ const t = {
           },
           {
             "type": "subheading",
-            "text": "D. SCALE"
+            "text": "C. SCALE"
           },
           {
             "type": "paragraph",
@@ -787,7 +721,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA AI Revenue OS"
+            "text": "CORTEXA CRM"
           },
           {
             "type": "paragraph",
@@ -803,7 +737,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA Agentic AI Revenue OS"
+            "text": "CORTEXA CRM"
           },
           {
             "type": "paragraph",
@@ -964,78 +898,12 @@ const t = {
         ]
       },
       {
-        "title": "5. PLANES, FREE FOREVER Y PRECIOS",
+        "title": "5. PLANES Y PRECIOS",
         "blocks": [
-          {
-            "type": "paragraph",
-            "text": "CORTEXA ofrece actualmente planes Free Forever y suscripciones de pago."
-          },
-          {
-            "type": "paragraph",
-            "text": "Los precios y detalles de los planes mostrados durante el checkout forman parte de los términos de compra del cliente."
-          },
+          
           {
             "type": "subheading",
-            "text": "A. FREE FOREVER"
-          },
-          {
-            "type": "paragraph",
-            "text": "Precio:"
-          },
-          {
-            "type": "paragraph",
-            "text": "$0 de cargo recurrente de suscripción."
-          },
-          {
-            "type": "paragraph",
-            "text": "El plan Free Forever permite a los clientes crear y mantener una cuenta CORTEXA sin un cargo recurrente de suscripción."
-          },
-          {
-            "type": "paragraph",
-            "text": "Free Forever proporciona acceso únicamente a la funcionalidad y los límites de uso designados para el plan Free."
-          },
-          {
-            "type": "paragraph",
-            "text": "Free Forever NO proporciona acceso ilimitado a CORTEXA."
-          },
-          {
-            "type": "paragraph",
-            "text": "La funcionalidad del plan Free puede incluir limitaciones como:"
-          },
-          {
-            "type": "list",
-            "items": [
-              "Funcionalidad y uso de IA limitados",
-              "Conversaciones o procesamiento de IA limitados",
-              "Automatizaciones y flujos de trabajo limitados",
-              "Funcionalidad limitada de gestión de contactos",
-              "Integraciones limitadas",
-              "Usuarios limitados",
-              "Funcionalidad limitada de paneles o informes",
-              "Funcionalidad premium restringida",
-              "Funcionalidad avanzada restringida",
-              "Workspaces y complementos de pago restringidos"
-            ]
-          },
-          {
-            "type": "paragraph",
-            "text": "Las funciones designadas como premium, de pago, avanzadas, Workspace, complemento o de nivel superior no están incluidas en Free Forever salvo que se indique expresamente."
-          },
-          {
-            "type": "paragraph",
-            "text": "\"Free Forever\" significa que CORTEXA no cobra una tarifa recurrente de suscripción por el plan Free. No significa que toda la funcionalidad actual o futura de CORTEXA, el uso de IA, los servicios de terceros, Workspaces, complementos o integraciones se proporcionen sin cargo."
-          },
-          {
-            "type": "paragraph",
-            "text": "No se requiere tarjeta de crédito para el plan Free Forever, salvo que el cliente decida por separado comprar un producto, suscripción, Workspace, complemento u otro servicio de pago."
-          },
-          {
-            "type": "paragraph",
-            "text": "CORTEXA puede modificar razonablemente la funcionalidad y los límites de uso del plan Free a medida que evoluciona la plataforma, sujeto a la legislación aplicable."
-          },
-          {
-            "type": "subheading",
-            "text": "B. SOLO"
+            "text": "A. SOLO"
           },
           {
             "type": "paragraph",
@@ -1067,7 +935,7 @@ const t = {
           },
           {
             "type": "subheading",
-            "text": "C. BUSINESS"
+            "text": "B. BUSINESS"
           },
           {
             "type": "paragraph",
@@ -1099,7 +967,7 @@ const t = {
           },
           {
             "type": "subheading",
-            "text": "D. SCALE"
+            "text": "C. SCALE"
           },
           {
             "type": "paragraph",
@@ -1628,7 +1496,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA AI Revenue OS"
+            "text": "CORTEXA CRM"
           },
           {
             "type": "paragraph",
@@ -1644,7 +1512,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA Agentic AI Revenue OS"
+            "text": "CORTEXA CRM"
           },
           {
             "type": "paragraph",
@@ -1805,78 +1673,12 @@ const t = {
         ]
       },
       {
-        "title": "5. PLANOS, FREE FOREVER E PREÇOS",
+        "title": "5. PLANOS E PREÇOS",
         "blocks": [
-          {
-            "type": "paragraph",
-            "text": "O CORTEXA oferece atualmente planos Free Forever e assinaturas pagas."
-          },
-          {
-            "type": "paragraph",
-            "text": "Os preços e detalhes dos planos exibidos durante o checkout fazem parte dos termos de compra do cliente."
-          },
+          
           {
             "type": "subheading",
-            "text": "A. FREE FOREVER"
-          },
-          {
-            "type": "paragraph",
-            "text": "Preço:"
-          },
-          {
-            "type": "paragraph",
-            "text": "$0 de cobrança recorrente de assinatura."
-          },
-          {
-            "type": "paragraph",
-            "text": "O plano Free Forever permite que os clientes criem e mantenham uma conta CORTEXA sem cobrança recorrente de assinatura."
-          },
-          {
-            "type": "paragraph",
-            "text": "O Free Forever fornece acesso apenas às funcionalidades e limites de uso designados para o plano Free."
-          },
-          {
-            "type": "paragraph",
-            "text": "O Free Forever NÃO fornece acesso ilimitado ao CORTEXA."
-          },
-          {
-            "type": "paragraph",
-            "text": "A funcionalidade do plano Free pode incluir limitações como:"
-          },
-          {
-            "type": "list",
-            "items": [
-              "Funcionalidade e uso de IA limitados",
-              "Conversas ou processamento de IA limitados",
-              "Automações e fluxos de trabalho limitados",
-              "Funcionalidade limitada de gestão de contatos",
-              "Integrações limitadas",
-              "Usuários limitados",
-              "Funcionalidade limitada de dashboard ou relatórios",
-              "Funcionalidade premium restrita",
-              "Funcionalidade avançada restrita",
-              "Workspaces e complementos pagos restritos"
-            ]
-          },
-          {
-            "type": "paragraph",
-            "text": "Recursos designados como premium, pagos, avançados, Workspace, complemento ou de nível superior não estão incluídos no Free Forever, salvo indicação expressa."
-          },
-          {
-            "type": "paragraph",
-            "text": "\"Free Forever\" significa que o CORTEXA não cobra uma taxa recorrente de assinatura pelo plano Free. Isso não significa que todas as funcionalidades atuais ou futuras do CORTEXA, uso de IA, serviços de terceiros, Workspaces, complementos ou integrações sejam fornecidos gratuitamente."
-          },
-          {
-            "type": "paragraph",
-            "text": "Não é necessário cartão de crédito para o plano Free Forever, salvo se o cliente optar separadamente por comprar um produto, assinatura, Workspace, complemento ou outro serviço pago."
-          },
-          {
-            "type": "paragraph",
-            "text": "O CORTEXA pode modificar razoavelmente as funcionalidades e limites de uso do plano Free à medida que a plataforma evolui, sujeito à legislação aplicável."
-          },
-          {
-            "type": "subheading",
-            "text": "B. SOLO"
+            "text": "A. SOLO"
           },
           {
             "type": "paragraph",
@@ -1908,7 +1710,7 @@ const t = {
           },
           {
             "type": "subheading",
-            "text": "C. BUSINESS"
+            "text": "B. BUSINESS"
           },
           {
             "type": "paragraph",
@@ -1940,7 +1742,7 @@ const t = {
           },
           {
             "type": "subheading",
-            "text": "D. SCALE"
+            "text": "C. SCALE"
           },
           {
             "type": "paragraph",
@@ -2469,7 +2271,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA AI Revenue OS"
+            "text": "CORTEXA CRM"
           },
           {
             "type": "paragraph",
@@ -2485,7 +2287,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA Agentic AI Revenue OS"
+            "text": "CORTEXA CRM"
           },
           {
             "type": "paragraph",
