@@ -5,7 +5,7 @@ const t = {
     "title": "TERMS OF SERVICE",
     "effectiveDate": "Effective Date: August 12, 2026",
     "intro": [
-      "These Terms of Service (\"Terms\") govern access to and use of CORTEXA AI Revenue OS (\"CORTEXA,\" \"Cortexa,\" \"we,\" \"our,\" or \"us\"), operated by Listo Qasa S.A.S.",
+      "These Terms of Service (\"Terms\") govern access to and use of CORTEXA CRM (\"CORTEXA,\" \"Cortexa,\" \"we,\" \"our,\" or \"us\"), operated by Listo Qasa S.A.S.",
       "By creating an account, accessing or using CORTEXA, or purchasing a paid subscription or add-on, you agree to these Terms."
     ],
     "sections": [
@@ -846,7 +846,7 @@ const t = {
     "title": "TÉRMINOS DE SERVICIO",
     "effectiveDate": "Fecha de entrada en vigor: 12 de agosto de 2026",
     "intro": [
-      "Estos Términos de Servicio (\"Términos\") regulan el acceso y uso de CORTEXA AI Revenue OS (\"CORTEXA\", \"Cortexa\", \"nosotros\", \"nuestro\" o \"nos\"), operado por Listo Qasa S.A.S.",
+      "Estos Términos de Servicio (\"Términos\") regulan el acceso y uso de CORTEXA CRM (\"CORTEXA\", \"Cortexa\", \"nosotros\", \"nuestro\" o \"nos\"), operado por Listo Qasa S.A.S.",
       "Al crear una cuenta, acceder o utilizar CORTEXA, o comprar una suscripción de pago o un complemento, usted acepta estos Términos."
     ],
     "sections": [
@@ -1687,7 +1687,7 @@ const t = {
     "title": "TERMOS DE SERVIÇO",
     "effectiveDate": "Data de vigência: 12 de agosto de 2026",
     "intro": [
-      "Estes Termos de Serviço (\"Termos\") regem o acesso e o uso do CORTEXA AI Revenue OS (\"CORTEXA\", \"Cortexa\", \"nós\", \"nosso\" ou \"nos\"), operado pela Listo Qasa S.A.S.",
+      "Estes Termos de Serviço (\"Termos\") regem o acesso e o uso do CORTEXA CRM (\"CORTEXA\", \"Cortexa\", \"nós\", \"nosso\" ou \"nos\"), operado pela Listo Qasa S.A.S.",
       "Ao criar uma conta, acessar ou usar o CORTEXA, ou adquirir uma assinatura paga ou complemento, você concorda com estes Termos."
     ],
     "sections": [
