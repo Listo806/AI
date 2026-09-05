@@ -904,7 +904,7 @@ const pricingV3 = {
       solo: {
         name: "Solo Plan",
         desc: "Everything you need to start getting started.",
-        price: "$7",
+        price: "$11",
         users: "",
         features: [
           "Full CRM & Contact Management",
@@ -928,7 +928,7 @@ const pricingV3 = {
       business: {
         name: "Business Plan",
         desc: "More tools. Smarter workflows. More power.",
-        price: "$14",
+        price: "$22",
         users: "3 users",
         features: [
           "Team Workspace (3 Users)",
@@ -952,7 +952,7 @@ const pricingV3 = {
       scale: {
         name: "Scale Plan",
         desc: "All the power you need to grow without limits.",
-        price: "$21",
+        price: "$33",
         users: "5 users",
         features: [
           "Team Workspace (5 Users)",
@@ -1002,7 +1002,7 @@ const pricingV3 = {
       solo: {
         name: "Plan Solo",
         desc: "Todo lo que necesitas para empezar.",
-        price: "$7",
+        price: "$11",
         users: "",
         features: [
           "CRM completo y gestión de contactos",
@@ -1026,7 +1026,7 @@ const pricingV3 = {
       business: {
         name: "Plan Business",
         desc: "Más herramientas. Flujos más inteligentes. Más potencia.",
-        price: "$14",
+        price: "$22",
         users: "3 usuarios",
         features: [
           "Espacio de trabajo del equipo (3 usuarios)",
@@ -1050,7 +1050,7 @@ const pricingV3 = {
       scale: {
         name: "Plan Scale",
         desc: "Toda la potencia que necesitas para crecer sin límites.",
-        price: "$21",
+        price: "$33",
         users: "5 usuarios",
         features: [
           "Espacio de trabajo del equipo (5 usuarios)",
@@ -1100,7 +1100,7 @@ const pricingV3 = {
       solo: {
         name: "Plano Solo",
         desc: "Tudo o que você precisa para começar.",
-        price: "$7",
+        price: "$11",
         users: "",
         features: [
           "CRM completo e gestão de contatos",
@@ -1124,7 +1124,7 @@ const pricingV3 = {
       business: {
         name: "Plano Business",
         desc: "Mais ferramentas. Fluxos mais inteligentes. Mais potência.",
-        price: "$14",
+        price: "$22",
         users: "3 usuários",
         features: [
           "Workspace de equipe (3 usuários)",
@@ -1148,7 +1148,7 @@ const pricingV3 = {
       scale: {
         name: "Plano Scale",
         desc: "Toda a potência de que você precisa para crescer sem limites.",
-        price: "$21",
+        price: "$33",
         users: "5 usuários",
         features: [
           "Workspace de equipe (5 usuários)",
@@ -1204,21 +1204,21 @@ export default function PricingPage() {
 
   const billingPrices = {
     solo: {
-      activation: 7,
-      monthly: 197,
-      annual: 1891.2,
+      activation: 11,
+      monthly: 127,
+      annual: 1219.2,
       monthlyAnnualized: 2364,
     },
     team: {
-      activation: 14,
-      monthly: 347,
-      annual: 3331.2,
+      activation: 22,
+      monthly: 297,
+      annual: 2851.2,
       monthlyAnnualized: 4164,
     },
     growth: {
-      activation: 21,
-      monthly: 497,
-      annual: 4771.2,
+      activation:33,
+      monthly: 397,
+      annual: 3811.2,
       monthlyAnnualized: 5964,
     },
   };

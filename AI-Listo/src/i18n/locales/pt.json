@@ -44,7 +44,7 @@
   },
   "nav": {
     "workspaces": {
-      "title": "ESPAÇOS DE TRABALHO CORTEXA",
+      "title": "ESCOLHA SEU ESPAÇO DE TRABALHO",
       "new": "NOVO",
       "active": "ATIVO",
       "locked": "BLOQUEADO",
@@ -61,7 +61,7 @@
       "activating": "Ativando…",
       "openingCheckout": "Abrindo checkout…",
       "activateIncluded": "Ativar — incluído gratuitamente",
-      "addToPlan": "Adicionar ao meu plano →",
+      "addToPlan": "Adicionar ao meu CRM →",
       "activeOnAccount": "Este espaço de trabalho está ativo na sua conta.",
       "includedNoCharge": "Incluído no seu plano — a ativação não adiciona nenhuma cobrança.",
       "secureCheckout": "Checkout seguro processado pela Paddle",

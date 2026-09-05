@@ -44,7 +44,7 @@
   },
   "nav": {
     "workspaces": {
-      "title": "CORTEXA WORKSPACES",
+      "title": "CHOOSE YOUR WORKSPACE",
       "new": "NEW",
       "active": "ACTIVE",
       "locked": "LOCKED",
@@ -61,7 +61,7 @@
       "activating": "Activating…",
       "openingCheckout": "Opening checkout…",
       "activateIncluded": "Activate — included free",
-      "addToPlan": "Add to My Plan →",
+      "addToPlan": "Add to My CRM →",
       "activeOnAccount": "This workspace is active on your account.",
       "includedNoCharge": "Included with your plan — activating adds no charge.",
       "secureCheckout": "Secure checkout powered by Paddle",

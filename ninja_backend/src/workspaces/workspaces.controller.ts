@@ -19,10 +19,10 @@ import {
   isWorkspaceLocked,
 } from './workspace-registry';
 
-// Read + purchase-intent endpoints for the paid Workspace add-ons. The actual
-// grant/revoke of access happens in the signature-verified Paddle webhook; these
-// endpoints only expose the catalog, the team's current entitlements, and the
-// parameters the frontend needs to open the $97/month Paddle checkout.
+// Workspace access endpoints. Customer-facing workspace selection is now attached
+// directly to the customer's active CRM subscription. Existing Paddle-backed
+// entitlement rows remain supported for legacy customers, but selecting the one
+// Workspace included with the CRM plan never opens a separate checkout.
 @ApiTags('workspaces')
 @ApiBearerAuth('JWT-auth')
 @Controller('workspaces')
@@ -33,8 +33,7 @@ export class WorkspacesController {
     private readonly db: DatabaseService,
   ) {}
 
-  // Billing actions are restricted to account owners/admins, matching the seat and
-  // lead-generator add-on purchase endpoints.
+  // Workspace-plan changes are restricted to the account owner/admin roles.
   private assertBillingAdmin(user: any) {
     const role = String(user?.role || '').toLowerCase();
     if (!['admin', 'super_admin', 'owner', 'developer'].includes(role)) {
@@ -42,13 +41,27 @@ export class WorkspacesController {
     }
   }
 
+  private async getActiveCrmSubscription(teamId: string) {
+    const { rows } = await this.db.query(
+      `SELECT id, team_id AS "teamId", plan_id AS "planId", status, provider
+         FROM subscriptions
+        WHERE team_id = $1
+          AND LOWER(status::text) IN ('active', 'trialing')
+        ORDER BY CASE WHEN LOWER(status::text) = 'active' THEN 0 ELSE 1 END,
+                 updated_at DESC, created_at DESC
+        LIMIT 1`,
+      [teamId],
+    );
+    return rows[0] || null;
+  }
+
   @Get('catalog')
-  @ApiOperation({ summary: 'List the paid Workspace add-ons and their price' })
+  @ApiOperation({ summary: 'List Workspaces available for the CRM plan' })
   async getCatalog() {
-    const available = !!process.env.PADDLE_PRICE_WORKSPACE;
     return {
-      monthlyPrice: 97,
-      available,
+      includedWithPlan: true,
+      includedWorkspaceLimit: 1,
+      available: true,
       workspaces: WORKSPACE_CATALOG.map((w) => ({
         id: w.id,
         name: w.name,
@@ -61,14 +74,11 @@ export class WorkspacesController {
   @ApiOperation({ summary: "The current team's Workspace entitlements" })
   async getEntitlements(@CurrentUser() user: any) {
     const teamId = await this.entitlements.resolveTeamId(user);
-    const [rows, activeWorkspaceIds, includedWorkspaceCredits] = await Promise.all([
+    const [rows, activeWorkspaceIds] = await Promise.all([
       this.entitlements.listForTeam(teamId),
       this.entitlements.listActiveWorkspaceIds(teamId),
-      this.entitlements.availableIncludedCredits(teamId),
     ]);
-    // includedWorkspaceCredits > 0 → the customer can activate ONE workspace of
-    // their choice for free (e.g. from the $257 Business promo).
-    return { entitlements: rows, activeWorkspaceIds, includedWorkspaceCredits };
+    return { entitlements: rows, activeWorkspaceIds };
   }
 
   @Get('access')
@@ -77,27 +87,28 @@ export class WorkspacesController {
   })
   async getAccess(@CurrentUser() user: any) {
     const teamId = await this.entitlements.resolveTeamId(user);
-    const [activeIds, includedWorkspaceCredits] = await Promise.all([
-      this.entitlements.listActiveWorkspaceIds(teamId),
-      this.entitlements.availableIncludedCredits(teamId),
-    ]);
+    const instances = await this.entitlements.listActiveWorkspaceInstances(teamId);
+    const instanceByWorkspace = new Map(
+      instances.map((row) => [row.workspace_id, row]),
+    );
     const isSupport = String(user?.role || '').toLowerCase() === 'super_admin';
+
     return {
-      // > 0 → the customer can activate ONE workspace of their choice for free
-      // (e.g. the $257 Business promo's included workspace).
-      includedWorkspaceCredits,
       workspaces: WORKSPACE_CATALOG.map((w) => {
         const locked = isWorkspaceLocked(w.id);
-        const entitled = activeIds.includes(w.id);
+        const instance = instanceByWorkspace.get(w.id);
+        const entitled = !!instance;
         return {
           id: w.id,
           name: w.name,
           route: w.route,
           locked,
           entitled,
-          // Open when the lock is off, the team is entitled, or the caller is
-          // platform support.
           accessible: !locked || entitled || isSupport,
+          workspaceInstanceId: instance?.id || null,
+          planSubscriptionId: instance?.plan_subscription_id || null,
+          planId: instance?.plan_id || null,
+          source: instance?.source || null,
         };
       }),
     };
@@ -162,10 +173,9 @@ export class WorkspacesController {
   // by WorkspaceLockGuard, so any account WITHOUT a verified active entitlement is
   // already locked out at the data layer — no per-account reset is needed for that.
   // This endpoint (a) reports the exact numbers, and (b) revokes any ACTIVE
-  // entitlement row that is improper: an unknown/legacy workspace id, or one with no
-  // real Paddle subscription id (i.e. never a verified $97 purchase). Legitimately
-  // purchased entitlements (valid workspace id + real subscription id) are preserved,
-  // and CRM data / accounts / ids are never touched.
+  // entitlement row that is improper. Plan-linked rows are valid even though they do
+  // not have a Paddle workspace subscription; they are linked to the customer's base
+  // CRM subscription through plan_subscription_id. CRM data/accounts are untouched.
   @Post('legacy-audit')
   @ApiOperation({ summary: 'Platform support: one-time legacy Workspace access lockdown + report' })
   async legacyAudit(@CurrentUser() user: any) {
@@ -200,8 +210,14 @@ export class WorkspacesController {
         WHERE status = 'active'
           AND (
             workspace_id <> ALL($1::text[])
-            OR paddle_subscription_id IS NULL
-            OR btrim(paddle_subscription_id) = ''
+            OR (
+              COALESCE(source, 'paddle') = 'paddle'
+              AND (paddle_subscription_id IS NULL OR btrim(paddle_subscription_id) = '')
+            )
+            OR (
+              source = 'plan_included'
+              AND plan_subscription_id IS NULL
+            )
           )
         RETURNING id, team_id AS "teamId", workspace_id AS "workspaceId"`,
       [validIds],
@@ -216,7 +232,7 @@ export class WorkspacesController {
     const teamsKeepingAccess = afterRes.rows[0]?.teams || 0;
 
     return {
-      enforcement: 'All paid Workspaces are locked by default; access requires a verified $97 entitlement (or super_admin). Plans never include a Workspace.',
+      enforcement: 'Workspaces are locked by default; customer access requires an active entitlement linked to the CRM plan (or a preserved legacy paid entitlement).',
       lockedWorkspaces: getLockedWorkspaceIds(),
       totals: {
         totalTeams,
@@ -235,15 +251,15 @@ export class WorkspacesController {
         rows: revokedRes.rows,
       },
       note:
-        'Revoked entries were improper grants (unknown workspace id or no real Paddle subscription). CRM data, accounts, and ids were not modified.',
+        'Revoked entries were improper grants only. Valid plan-linked Workspace instances and existing CRM/customer data were preserved.',
     };
   }
 
-  @Post(':workspaceId/purchase')
+  @Post(':workspaceId/activate')
   @ApiOperation({
-    summary: 'Get the Paddle checkout parameters to buy a Workspace add-on',
+    summary: 'Attach the selected Workspace directly to the active CRM plan',
   })
-  async purchase(
+  async activate(
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: any,
   ) {
@@ -256,76 +272,56 @@ export class WorkspacesController {
 
     const teamId = await this.entitlements.resolveTeamId(user);
     if (!teamId) {
-      throw new BadRequestException('A team is required to purchase a workspace add-on.');
+      throw new BadRequestException('A CRM team/account is required to activate a workspace.');
     }
 
-    // Idempotent: if the team already holds this workspace, say so instead of
-    // opening a second subscription (or spending an included credit) for the same
-    // access. Checked BEFORE the paid-price requirement so it also works for teams
-    // whose access came from an included/comped credit.
-    const already = await this.entitlements.hasActiveEntitlement(teamId, workspace.id);
-    if (already) {
-      return { alreadyEntitled: true, workspaceId: workspace.id };
-    }
-
-    // Promotional INCLUDED workspace: if the team holds an included-workspace credit
-    // (e.g. from the $257 Business promo), the customer's CHOICE of workspace is
-    // comped — activated with NO $97 charge — and the credit is consumed. Only the
-    // ONE workspace they pick is activated; any additional workspace falls through
-    // to the normal paid path below.
-    const includedCredits = await this.entitlements.availableIncludedCredits(teamId);
-    if (includedCredits > 0) {
-      const res = await this.entitlements.claimIncludedWorkspace({
-        teamId,
-        workspaceId: workspace.id,
-        userId: user?.id || null,
-      });
-      if (res.comped) {
-        return { comped: true, includedByPromo: true, workspaceId: workspace.id };
-      }
-      if (res.reason === 'already_entitled') {
-        return { alreadyEntitled: true, workspaceId: workspace.id };
-      }
-      // no_credit (race) / error → fall through to the normal paid path.
-    }
-
-    // Per-workspace Paddle price so the checkout shows the SPECIFIC workspace name
-    // (e.g. "Sales Workspace Add-On"). Set PADDLE_PRICE_WORKSPACE_<ID> (id upper-cased,
-    // hyphens -> underscores, e.g. PADDLE_PRICE_WORKSPACE_SALES,
-    // PADDLE_PRICE_WORKSPACE_FINANCIAL_SERVICES, PADDLE_PRICE_WORKSPACE_LEAD_GENERATOR).
-    // Falls back to the shared generic price when a specific one is not configured, so
-    // nothing breaks before the named prices exist. The workspace name is always in
-    // custom_data below, so metadata/webhook/admin are workspace-specific regardless.
-    const specificEnvKey = `PADDLE_PRICE_WORKSPACE_${workspace.id
-      .toUpperCase()
-      .replace(/-/g, '_')}`;
-    const priceId = process.env[specificEnvKey] || process.env.PADDLE_PRICE_WORKSPACE;
-    if (!priceId) {
+    const activeSubscription = await this.getActiveCrmSubscription(teamId);
+    if (!activeSubscription) {
       throw new BadRequestException(
-        'PADDLE_PRICE_WORKSPACE is not configured yet. Add the $97 Workspace Paddle price id to enable purchases.',
+        'An active CRM plan is required before a workspace can be added.',
       );
     }
 
-    // The webhook re-derives team authoritatively from userId and re-validates the
-    // workspace id, so these values only prefill the checkout; they are not trusted
-    // on their own for granting access.
+    const result = await this.entitlements.activateForPlan({
+      teamId,
+      workspaceId: workspace.id,
+      planSubscriptionId: activeSubscription.id,
+      planId: activeSubscription.planId || null,
+      userId: user?.id || null,
+    });
+
+    if (!result.activated) {
+      if (result.reason === 'already_has_plan_workspace') {
+        throw new BadRequestException(
+          'This CRM plan already has its included Workspace selected. Open the active Workspace or contact support to change the selection.',
+        );
+      }
+      throw new BadRequestException('The workspace could not be activated for this CRM plan.');
+    }
+
     return {
-      alreadyEntitled: false,
-      priceId,
-      environment:
-        process.env.PADDLE_ENVIRONMENT === 'production' ? 'production' : 'sandbox',
-      customData: {
-        userId: user?.id || null,
-        teamId,
-        addon: 'workspace',
-        workspaceId: workspace.id,
-        workspaceName: workspace.name,
-        // Exact checkout/billing descriptor for this purchase, e.g.
-        // "Sales Workspace Add-On" — recorded so Admin/billing always shows which
-        // workspace the $97 recurring charge belongs to.
-        addonLabel: `${workspace.name} Add-On`,
-      },
-      email: user?.email || null,
+      success: true,
+      activated: true,
+      alreadyEntitled: !!result.alreadyEntitled,
+      workspaceId: workspace.id,
+      workspaceInstanceId: result.workspaceInstanceId,
+      planSubscriptionId: result.planSubscriptionId,
+      planId: result.planId,
+      route: workspace.route,
+      source: 'plan_included',
+      paymentRequired: false,
     };
   }
+
+  // Backwards-compatible alias for older frontend builds. It intentionally performs
+  // the same no-payment plan activation and never returns Paddle checkout data.
+  @Post(':workspaceId/purchase')
+  @ApiOperation({ summary: 'Deprecated alias: activate Workspace on CRM plan' })
+  async purchase(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.activate(workspaceId, user);
+  }
+
 }

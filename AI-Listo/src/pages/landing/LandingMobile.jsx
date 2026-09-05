@@ -680,7 +680,7 @@ export default function LandingMobile() {
       ctaButtonText: "Get Started!",
       heroFreeAccess: "Sign Up? — Get Free Access!",
       heroNoCard: "14-Day Free Trial",
-      heroFreeForever: "Starting at $7",
+      heroFreeForever: "Starting at $11",
 
       faqSubtitle: "FAQS",
       faqTitle: "Everything you need to know",
@@ -1086,7 +1086,7 @@ export default function LandingMobile() {
       ctaButtonText: "¡Comenzar!",
       heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
       heroNoCard: "Prueba gratuita de 14 días",
-      heroFreeForever: "Desde $7",
+      heroFreeForever: "Desde $11",
 
       faqSubtitle: "PREGUNTAS FRECUENTES",
       faqTitle: "Todo lo que necesitas saber",
@@ -1503,7 +1503,7 @@ export default function LandingMobile() {
       ctaButtonText: "Começar!",
       heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
       heroNoCard: "Teste grátis de 14 dias",
-      heroFreeForever: "A partir de US$ 7",
+      heroFreeForever: "A partir de US$ 11",
 
       faqSubtitle: "PERGUNTAS FREQUENTES",
       faqTitle: "Tudo o que você precisa saber",

@@ -515,7 +515,7 @@ export default function Landing() {
       heroCTA: "Get Started!",
       heroFreeAccess: "Sign Up? — Get Free Access!",
       heroNoCard: "14-Day Free Trial",
-      heroFreeForever: "Starting at $7",
+      heroFreeForever: "Starting at $11",
       heroUnlock: "Unlock potential today!",
       heroTag1: "One AI Platform. Everything Connected.",
       heroTag2: "AI-Assisted Follow-Up Workflows",
@@ -1020,7 +1020,7 @@ export default function Landing() {
       heroCTA: "¡Comenzar!",
       heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
       heroNoCard: "Prueba gratuita de 14 días",
-      heroFreeForever: "Desde $7",
+      heroFreeForever: "Desde $11",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       heroTag1: "Una plataforma de IA. Todo conectado.",
       heroTag2: "Flujos de seguimiento asistidos por IA",
@@ -1497,7 +1497,7 @@ export default function Landing() {
       heroCTA: "Começar!",
       heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
       heroNoCard: "Teste grátis de 14 dias",
-      heroFreeForever: "A partir de US$ 7",
+      heroFreeForever: "A partir de US$ 11",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
       heroTag2: "Fluxos de acompanhamento assistidos por IA",
@@ -2623,10 +2623,6 @@ export default function Landing() {
               {tr.revenueOverviewCta} <ArrowRight size={18} />
             </a>
             <div className="revenue-overview-checks">
-              <span>
-                <CheckCircle2 size={16} />
-                {tr.revenueOverviewNoCard}
-              </span>
               <span>
                 <CheckCircle2 size={16} />
                 {tr.revenueOverviewCancel}

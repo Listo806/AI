@@ -5,11 +5,9 @@ import { usePlan } from "../context/PlanContext";
 import { useAiUnits } from "../context/AiUnitsContext";
 import { LockBadge } from "./FeatureLock";
 import { openFeatureAddOns, FEATURE_TO_ADDON } from "./FeatureAddOns";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import workspaceApi from "../api/workspaceApi";
 import apiClient from "../api/apiClient";
-import { fetchPaddleConfig } from "../api/paddleApi";
-import { initPaddle, openWorkspaceCheckout } from "../pages/checkout/paddleCheckout";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
@@ -120,15 +118,11 @@ export default function Sidebar({
   const [wsError, setWsError] = useState(null);
   const [wsBusy, setWsBusy] = useState(false);
 
-  // LIVE per-workspace entitlement for the sidebar badges. Keyed by backend catalog
-  // id (e.g. "financial_services"). ACTIVE (green) when the team owns the $97 add-on,
-  // LOCKED (red) otherwise. Sourced from the real entitlement endpoints, never
-  // hard-coded. Fails closed (empty -> LOCKED) so nothing shows ACTIVE by accident.
+  // LIVE per-workspace entitlement for the sidebar badges. ACTIVE (green) means
+  // the workspace is linked to this customer's CRM account/plan. LOCKED means it
+  // has not been selected for the plan yet.
   const [wsEntitled, setWsEntitled] = useState({});
   const [leadGenEntitled, setLeadGenEntitled] = useState(false);
-  // > 0 → the account can activate ONE workspace of its choice for free (e.g. the
-  // $257 Business promo's included workspace). Drives the "Included / free" CTA.
-  const [wsIncludedCredits, setWsIncludedCredits] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -141,7 +135,6 @@ export default function Sidebar({
             map[w.id] = !!w.entitled;
           });
           setWsEntitled(map);
-          setWsIncludedCredits(Number(access.includedWorkspaceCredits) || 0);
         }
       } catch (_e) {
         /* fail closed — leave map empty so badges read LOCKED */
@@ -159,8 +152,7 @@ export default function Sidebar({
     };
   }, [user?.id]);
 
-  // Reload the live workspace entitlements (used to flip a badge to ACTIVE
-  // after a successful purchase; the webhook grants asynchronously).
+  // Reload the live workspace entitlements after a plan-linked activation.
   const loadAccess = useCallback(async () => {
     try {
       const access = await workspaceApi.getAccess();
@@ -170,86 +162,54 @@ export default function Sidebar({
           map[w.id] = !!w.entitled;
         });
         setWsEntitled(map);
-        setWsIncludedCredits(Number(access.includedWorkspaceCredits) || 0);
       }
     } catch {
       /* ignore */
     }
   }, []);
 
-  const paddleReadyRef = useRef(false);
-  const accessTimers = useRef([]);
-  const scheduleAccessRefresh = useCallback(() => {
-    accessTimers.current.forEach((t) => clearTimeout(t));
-    accessTimers.current = [3000, 8000, 15000].map((ms) => setTimeout(loadAccess, ms));
-  }, [loadAccess]);
-  useEffect(() => () => accessTimers.current.forEach((t) => clearTimeout(t)), []);
-
-  const ensurePaddle = useCallback(async () => {
-    if (paddleReadyRef.current) return true;
-    const cfg = await fetchPaddleConfig();
-    if (!cfg?.clientToken) return false;
-    await initPaddle(cfg, (ev) => {
-      if (ev?.name === "checkout.completed") scheduleAccessRefresh();
-    });
-    paddleReadyRef.current = true;
-    return true;
-  }, [scheduleAccessRefresh]);
-
-  // Open the real Paddle checkout for the selected $97 Workspace. Only after a
-  // verified payment does the webhook grant the entitlement — this never
-  // activates the workspace on click. Falls back to the info modal if checkout
-  // is unavailable.
-  const buyWorkspace = useCallback(
+  // Add the selected Workspace directly to the customer's active CRM plan.
+  // The backend creates/returns the stable Workspace instance UUID and links it
+  // to the current customer/team + CRM subscription. No Paddle checkout is opened.
+  const activateWorkspace = useCallback(
     async (ws) => {
-      // The sidebar workspace id must match the backend catalog id. The only
-      // divergence is Financial (sidebar "financial" -> catalog "financial_services").
       const catalogId = ws.id === "financial" ? "financial_services" : ws.id;
       setWsError(null);
       setWsBusy(true);
+
       try {
-        const intent = await workspaceApi.purchase(catalogId);
-        if (intent?.alreadyEntitled) {
-          await loadAccess();
-          setWsError(null);
-          return;
-        }
-        // Included with the plan (e.g. the $257 Business promo's one free
-        // workspace): comped server-side with no charge — refresh, never open Paddle.
-        if (intent?.comped) {
-          await loadAccess();
-          setWsError(null);
-          return;
-        }
-        if (!intent?.priceId) {
+        const result = await workspaceApi.activate(catalogId);
+
+        if (!result?.activated && !result?.alreadyEntitled) {
           setWsError(
-            "Workspace checkout is not available yet. Please try again shortly.",
+            result?.message ||
+              "Could not add this workspace to your CRM plan. Please try again.",
           );
           return;
         }
-        const ok = await ensurePaddle();
-        if (!ok) {
-          setWsError("Checkout could not open right now. Please try again in a moment.");
-          return;
+
+        await loadAccess();
+        setWsError(null);
+        setHoveredWorkspace(null);
+
+        // Requirement: once selected, the workspace should immediately load inside
+        // the customer's CRM. Prefer the backend route, then the sidebar route.
+        const nextRoute = result?.route || ws.path;
+        if (nextRoute) {
+          window.location.href = nextRoute;
         }
-        openWorkspaceCheckout({
-          priceId: intent.priceId,
-          customData: intent.customData,
-          email: intent.email,
-        });
-        scheduleAccessRefresh();
       } catch (e) {
-        // Never a dead click: surface why checkout could not open (unknown
-        // workspace, admin-only billing, price not configured, etc.).
         setWsError(
-          e?.message ||
-            "Could not open the workspace checkout. Please try again shortly.",
+          e?.response?.data?.message ||
+            e?.data?.message ||
+            e?.message ||
+            "Could not add this workspace to your CRM plan. Please try again.",
         );
       } finally {
         setWsBusy(false);
       }
     },
-    [ensurePaddle, loadAccess, scheduleAccessRefresh],
+    [loadAccess],
   );
 
   // Reset the Add-to-Plan feedback whenever a different workspace is hovered.
@@ -980,7 +940,6 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             >
               <div className="crm-workspaces-heading">
                 <span>{t("nav.workspaces.title")}</span>
-                <span className="crm-workspaces-new">{t("nav.workspaces.new")}</span>
               </div>
 
               <div className="crm-workspaces-list">
@@ -1310,34 +1269,13 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
               </p>
 
               <div className="crm-workspace-price-row">
-                {/* When the account holds an included-workspace credit (e.g. the
-                    $257 Business promo), the customer's chosen workspace is free —
-                    show "Included" instead of the $97 price. */}
-                {!isWorkspaceActive(hoveredWorkspace) &&
-                  hoveredWorkspace.price &&
-                  (wsIncludedCredits > 0 ? (
-                    <div className="crm-workspace-preview-price">
-                      <strong style={{ color: "#16a34a" }}>
-                        {t("nav.workspaces.included")}
-                        <em
-                          style={{
-                            textDecoration: "line-through",
-                            color: "#9aa1b0",
-                            marginLeft: 6,
-                          }}
-                        >
-                          ${hoveredWorkspace.price}/mo
-                        </em>
-                      </strong>
-                    </div>
-                  ) : (
-                    <div className="crm-workspace-preview-price">
-                      <strong>
-                        ${hoveredWorkspace.price}
-                        <em>{t("nav.workspaces.perMonth")}</em>
-                      </strong>
-                    </div>
-                  ))}
+                {!isWorkspaceActive(hoveredWorkspace) && (
+                  <div className="crm-workspace-preview-price">
+                    <strong style={{ color: "#16a34a" }}>
+                      {t("nav.workspaces.included", "Included with your plan")}
+                    </strong>
+                  </div>
+                )}
 
                 <button
                   type="button"
@@ -1348,18 +1286,13 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       : ""
                   }
                   onClick={() => {
-                    // Active (entitled or admin) -> open the workspace. Locked, or
-                    // an admin previewing the customer state -> add the workspace.
-                    // With an included credit the backend comps it (no charge);
-                    // otherwise it opens the real $97 Paddle checkout, activated only
-                    // after a verified payment (webhook), never on click.
                     if (isWorkspaceActive(hoveredWorkspace)) {
                       if (hoveredWorkspace.path) {
                         window.location.href = hoveredWorkspace.path;
                       }
                       return;
                     }
-                    buyWorkspace(hoveredWorkspace);
+                    activateWorkspace(hoveredWorkspace);
                   }}
                 >
                   {isWorkspaceActive(hoveredWorkspace)
@@ -1371,12 +1304,8 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                           hoveredWorkspace
                         )} ${t("nav.workspaces.activeSuffix")}`
                     : wsBusy
-                      ? wsIncludedCredits > 0
-                        ? t("nav.workspaces.activating")
-                        : t("nav.workspaces.openingCheckout")
-                      : wsIncludedCredits > 0
-                        ? t("nav.workspaces.activateIncluded")
-                        : t("nav.workspaces.addToPlan")}
+                      ? t("nav.workspaces.activating", "Adding to your plan...")
+                      : t("nav.workspaces.addToPlan", "Add to My Plan")}
                 </button>
 
                 {wsError && !isWorkspaceActive(hoveredWorkspace) ? (
@@ -1387,17 +1316,16 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                   <p className="crm-workspace-price-helper">
                     {t("nav.workspaces.activeOnAccount")}
                   </p>
-                ) : wsIncludedCredits > 0 ? (
-                  <p className="crm-workspace-price-helper" style={{ color: "#16a34a" }}>
-                    {t("nav.workspaces.includedNoCharge")}
-                  </p>
                 ) : (
-                  <p className="crm-workspace-secure">
-                    <SidebarIcon name="lock-keyhole" />
-                    <span>{t("nav.workspaces.secureCheckout")}</span>
+                  <p className="crm-workspace-price-helper" style={{ color: "#16a34a" }}>
+                    {t(
+                      "nav.workspaces.includedNoCharge",
+                      "This workspace will be added directly to your active CRM plan. No additional checkout is required.",
+                    )}
                   </p>
                 )}
               </div>
+
 
             </div>
           </div>

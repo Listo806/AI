@@ -16,21 +16,34 @@ export interface WorkspaceEntitlementRow {
   id: string;
   team_id: string;
   workspace_id: string;
-  paddle_subscription_id: string;
+  paddle_subscription_id: string | null;
   paddle_price_id: string | null;
+  plan_subscription_id: string | null;
+  plan_id: string | null;
+  user_id: string | null;
+  source: string | null;
   status: WorkspaceEntitlementStatus;
   activated_at: string | null;
   revoked_at: string | null;
 }
 
+export interface PlanWorkspaceActivationResult {
+  activated: boolean;
+  alreadyEntitled?: boolean;
+  workspaceInstanceId?: string;
+  workspaceId?: string;
+  planSubscriptionId?: string;
+  planId?: string | null;
+  reason?: 'already_has_plan_workspace' | 'invalid';
+}
+
 /**
- * Grant/revoke plumbing for paid Workspace add-ons.
+ * Workspace access plumbing.
  *
- * A paid Workspace is its OWN Paddle subscription, separate from the base plan and
- * from every other Workspace. The Paddle webhook is the single writer here: it
- * grants on first payment and revokes on cancel/past-due/refund, always scoped by
- * the workspace subscription's own id. Nothing in this service ever touches the
- * user's base plan, is_active, or payment_status.
+ * Existing paid/Paddle workspace entitlements remain supported for backwards
+ * compatibility, but the customer-facing "Add to My Plan" flow now creates a
+ * plan-linked workspace instance directly against the customer's active CRM
+ * subscription. No separate Workspace checkout is required for that flow.
  */
 @Injectable()
 export class WorkspaceEntitlementsService {
@@ -45,13 +58,18 @@ export class WorkspaceEntitlementsService {
   // pattern). Idempotent and cheap after the first call.
   private async ensureSchema(): Promise<void> {
     if (this.schemaReady) return;
+
     await this.db.query(
       `CREATE TABLE IF NOT EXISTS workspace_entitlements (
          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
          team_id UUID NOT NULL,
          workspace_id VARCHAR(64) NOT NULL,
-         paddle_subscription_id VARCHAR(255) NOT NULL,
+         paddle_subscription_id VARCHAR(255),
          paddle_price_id VARCHAR(255),
+         plan_subscription_id UUID,
+         plan_id UUID,
+         user_id UUID,
+         source VARCHAR(32) NOT NULL DEFAULT 'paddle',
          status VARCHAR(32) NOT NULL DEFAULT 'active',
          created_by UUID,
          activated_at TIMESTAMP,
@@ -61,6 +79,30 @@ export class WorkspaceEntitlementsService {
          CONSTRAINT uq_workspace_entitlements_sub UNIQUE (paddle_subscription_id)
        )`,
     );
+
+    // Existing deployments originally required paddle_subscription_id and did not
+    // have plan-link columns. Make the schema forward-compatible in-place.
+    await this.db.query(
+      `ALTER TABLE workspace_entitlements
+         ALTER COLUMN paddle_subscription_id DROP NOT NULL`,
+    ).catch(() => {});
+    await this.db.query(
+      `ALTER TABLE workspace_entitlements
+         ADD COLUMN IF NOT EXISTS plan_subscription_id UUID`,
+    );
+    await this.db.query(
+      `ALTER TABLE workspace_entitlements
+         ADD COLUMN IF NOT EXISTS plan_id UUID`,
+    );
+    await this.db.query(
+      `ALTER TABLE workspace_entitlements
+         ADD COLUMN IF NOT EXISTS user_id UUID`,
+    );
+    await this.db.query(
+      `ALTER TABLE workspace_entitlements
+         ADD COLUMN IF NOT EXISTS source VARCHAR(32) NOT NULL DEFAULT 'paddle'`,
+    );
+
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_workspace_entitlements_team
          ON workspace_entitlements(team_id)`,
@@ -69,6 +111,22 @@ export class WorkspaceEntitlementsService {
       `CREATE INDEX IF NOT EXISTS idx_workspace_entitlements_team_ws
          ON workspace_entitlements(team_id, workspace_id, status)`,
     );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_workspace_entitlements_plan_subscription
+         ON workspace_entitlements(plan_subscription_id)`,
+    );
+
+    // Current Cortexa plans include one selected Workspace. This index ensures one
+    // active plan-linked Workspace instance per active CRM subscription, while
+    // preserving all legacy Paddle rows.
+    await this.db.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_workspace_entitlements_plan_active
+         ON workspace_entitlements(plan_subscription_id)
+         WHERE plan_subscription_id IS NOT NULL
+           AND source = 'plan_included'
+           AND status = 'active'`,
+    );
+
     this.schemaReady = true;
   }
 
@@ -244,6 +302,181 @@ export class WorkspaceEntitlementsService {
       [teamId, id],
     );
     return rows.length > 0;
+  }
+
+  /** Active workspace instances for access responses, including the stable UUID. */
+  async listActiveWorkspaceInstances(teamId: string): Promise<WorkspaceEntitlementRow[]> {
+    if (!teamId) return [];
+    await this.ensureSchema();
+    const { rows } = await this.db.query(
+      `SELECT id, team_id, workspace_id, paddle_subscription_id, paddle_price_id,
+              plan_subscription_id, plan_id, user_id, source, status, activated_at, revoked_at
+         FROM workspace_entitlements
+        WHERE team_id = $1 AND status = 'active'
+        ORDER BY activated_at DESC NULLS LAST, created_at DESC`,
+      [teamId],
+    );
+    return rows as WorkspaceEntitlementRow[];
+  }
+
+  /**
+   * Activate the customer's selected Workspace directly on their active CRM plan.
+   * The workspace_entitlements.id UUID is the stable Workspace instance id.
+   * No Paddle checkout or separate Workspace subscription is created.
+   */
+  async activateForPlan(params: {
+    teamId: string;
+    workspaceId: string;
+    planSubscriptionId: string;
+    planId?: string | null;
+    userId?: string | null;
+  }): Promise<PlanWorkspaceActivationResult> {
+    const workspaceId = normalizeWorkspaceId(params.workspaceId);
+    if (!params.teamId || !workspaceId || !params.planSubscriptionId) {
+      return { activated: false, reason: 'invalid' };
+    }
+
+    await this.ensureSchema();
+
+    // If this exact workspace is already active for the team, return its stable id.
+    const existingWorkspace = await this.db.query(
+      `SELECT id, workspace_id, plan_subscription_id, plan_id
+         FROM workspace_entitlements
+        WHERE team_id = $1 AND workspace_id = $2 AND status = 'active'
+        ORDER BY updated_at DESC LIMIT 1`,
+      [params.teamId, workspaceId],
+    );
+    if (existingWorkspace.rows[0]) {
+      const row = existingWorkspace.rows[0];
+      return {
+        activated: true,
+        alreadyEntitled: true,
+        workspaceInstanceId: row.id,
+        workspaceId: row.workspace_id,
+        planSubscriptionId: row.plan_subscription_id || params.planSubscriptionId,
+        planId: row.plan_id || params.planId || null,
+      };
+    }
+
+    // One selected Workspace is included with the current CRM plan. If this plan
+    // already has one active selection, do not silently add a second free workspace.
+    const currentPlanWorkspace = await this.db.query(
+      `SELECT id, workspace_id
+         FROM workspace_entitlements
+        WHERE plan_subscription_id = $1
+          AND source = 'plan_included'
+          AND status = 'active'
+        LIMIT 1`,
+      [params.planSubscriptionId],
+    );
+    if (currentPlanWorkspace.rows[0]) {
+      return {
+        activated: false,
+        workspaceInstanceId: currentPlanWorkspace.rows[0].id,
+        workspaceId: currentPlanWorkspace.rows[0].workspace_id,
+        planSubscriptionId: params.planSubscriptionId,
+        planId: params.planId || null,
+        reason: 'already_has_plan_workspace',
+      };
+    }
+
+    // Reuse a previously canceled plan-linked row for the same base subscription
+    // when possible, preserving a single stable instance record for that plan.
+    const previous = await this.db.query(
+      `SELECT id
+         FROM workspace_entitlements
+        WHERE plan_subscription_id = $1 AND source = 'plan_included'
+        ORDER BY updated_at DESC LIMIT 1`,
+      [params.planSubscriptionId],
+    );
+
+    let row: any;
+    if (previous.rows[0]) {
+      const updated = await this.db.query(
+        `UPDATE workspace_entitlements
+            SET team_id = $2,
+                workspace_id = $3,
+                plan_id = $4,
+                user_id = $5,
+                created_by = COALESCE(created_by, $5),
+                paddle_subscription_id = NULL,
+                paddle_price_id = NULL,
+                status = 'active',
+                activated_at = NOW(),
+                revoked_at = NULL,
+                updated_at = NOW()
+          WHERE id = $1
+          RETURNING id, workspace_id, plan_subscription_id, plan_id`,
+        [
+          previous.rows[0].id,
+          params.teamId,
+          workspaceId,
+          params.planId || null,
+          params.userId || null,
+        ],
+      );
+      row = updated.rows[0];
+    } else {
+      try {
+        const inserted = await this.db.query(
+          `INSERT INTO workspace_entitlements
+             (team_id, workspace_id, paddle_subscription_id, paddle_price_id,
+              plan_subscription_id, plan_id, user_id, status, source, created_by,
+              activated_at, revoked_at, created_at, updated_at)
+           VALUES ($1, $2, NULL, NULL, $3, $4, $5, 'active', 'plan_included', $5,
+                   NOW(), NULL, NOW(), NOW())
+           RETURNING id, workspace_id, plan_subscription_id, plan_id`,
+          [
+            params.teamId,
+            workspaceId,
+            params.planSubscriptionId,
+            params.planId || null,
+            params.userId || null,
+          ],
+        );
+        row = inserted.rows[0];
+      } catch (e: any) {
+        // Concurrent click safety: if another request won the unique plan index,
+        // return that selected workspace instead of creating a duplicate.
+        if (String(e?.code || '') === '23505') {
+          const winner = await this.db.query(
+            `SELECT id, workspace_id, plan_subscription_id, plan_id
+               FROM workspace_entitlements
+              WHERE plan_subscription_id = $1
+                AND source = 'plan_included'
+                AND status = 'active'
+              LIMIT 1`,
+            [params.planSubscriptionId],
+          );
+          if (winner.rows[0]?.workspace_id === workspaceId) {
+            row = winner.rows[0];
+          } else {
+            return {
+              activated: false,
+              workspaceInstanceId: winner.rows[0]?.id,
+              workspaceId: winner.rows[0]?.workspace_id,
+              planSubscriptionId: params.planSubscriptionId,
+              planId: winner.rows[0]?.plan_id || params.planId || null,
+              reason: 'already_has_plan_workspace',
+            };
+          }
+        } else {
+          throw e;
+        }
+      }
+    }
+
+    this.logger.log(
+      `Activated plan-linked workspace '${workspaceId}' (${row?.id}) for team ${params.teamId} on CRM subscription ${params.planSubscriptionId}`,
+    );
+
+    return {
+      activated: true,
+      workspaceInstanceId: row?.id,
+      workspaceId: row?.workspace_id || workspaceId,
+      planSubscriptionId: row?.plan_subscription_id || params.planSubscriptionId,
+      planId: row?.plan_id || params.planId || null,
+    };
   }
 
   // ── Included-workspace credits (promotional "1 workspace of your choice") ──
@@ -423,6 +656,7 @@ export class WorkspaceEntitlementsService {
     await this.ensureSchema();
     const { rows } = await this.db.query(
       `SELECT id, team_id, workspace_id, paddle_subscription_id, paddle_price_id,
+              plan_subscription_id, plan_id, user_id, source,
               status, activated_at, revoked_at
          FROM workspace_entitlements
         WHERE team_id = $1

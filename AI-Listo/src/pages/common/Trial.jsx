@@ -524,21 +524,6 @@ export default function StartTrial() {
             />
           </button>
 
-          <div className="trial-v3-security">
-            <ShieldCheck size={30} strokeWidth={2} />
-            <p>
-              <span className="trial-v3-desktop-copy">
-                {isFreeAccessFlow
-                  ? "No credit card required. Free forever."
-                  : tr.security}
-              </span>
-              <span className="trial-v3-mobile-copy">
-                {isFreeAccessFlow
-                  ? "No credit card required. Free forever."
-                  : tr.mobileSecurity}
-              </span>
-            </p>
-          </div>
         </form>
       </section>
     </main>
