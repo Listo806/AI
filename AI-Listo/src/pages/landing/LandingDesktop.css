@@ -1419,8 +1419,11 @@ section#footer {
   padding: 3px 9px 4px;
   border-radius: 10px;
 }
-#cortexa-ai-crm-landing .hero-dead-wrap, #cortexa-ai-crm-landing .hero-title, .hero-p{
+#cortexa-ai-crm-landing .hero-dead-wrap, #cortexa-ai-crm-landing .hero-title{
   margin-left: 40px;
+}
+.hero-checks.hero-p{
+  text-align: center;
 }
 #cortexa-ai-crm-landing .hero-tags {
   display: grid;
