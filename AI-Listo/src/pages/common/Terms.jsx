@@ -5,7 +5,7 @@ const t = {
     "title": "TERMS OF SERVICE",
     "effectiveDate": "Effective Date: August 12, 2026",
     "intro": [
-      "These Terms of Service (\"Terms\") govern access to and use of CORTEXA CRM (\"CORTEXA,\" \"Cortexa,\" \"we,\" \"our,\" or \"us\"), operated by Listo Qasa S.A.S.",
+      "These Terms of Service (\"Terms\") govern access to and use of CORTEXA S.A.S. (\"CORTEXA,\" \"Cortexa,\" \"we,\" \"our,\" or \"us\"), operated by Listo Qasa S.A.S.",
       "By creating an account, accessing or using CORTEXA, or purchasing a paid subscription or add-on, you agree to these Terms."
     ],
     "sections": [
@@ -36,7 +36,7 @@ const t = {
         "blocks": [
           {
             "type": "paragraph",
-            "text": "CORTEXA CRM is a business software platform providing tools that may include:"
+            "text": "CORTEXA S.A.S. is a business software platform providing tools that may include:"
           },
           {
             "type": "list",
@@ -136,7 +136,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$7 USD."
+            "text": "$11 USD."
           },
           {
             "type": "paragraph",
@@ -148,11 +148,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$197 USD per month."
+            "text": "$127 USD per month."
           },
           {
             "type": "paragraph",
-            "text": "Unless canceled before the first recurring charge becomes due, the Solo plan will automatically continue at $197 USD per month."
+            "text": "Unless canceled before the first recurring charge becomes due, the Solo plan will automatically continue at $127 USD per month."
           },
           {
             "type": "paragraph",
@@ -168,7 +168,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$14 USD."
+            "text": "$22 USD."
           },
           {
             "type": "paragraph",
@@ -180,11 +180,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$347 USD per month."
+            "text": "$297 USD per month."
           },
           {
             "type": "paragraph",
-            "text": "Unless canceled before the first recurring charge becomes due, the Business plan will automatically continue at $347 USD per month."
+            "text": "Unless canceled before the first recurring charge becomes due, the Business plan will automatically continue at $297 USD per month."
           },
           {
             "type": "paragraph",
@@ -200,7 +200,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$21 USD."
+            "text": "$33 USD."
           },
           {
             "type": "paragraph",
@@ -212,11 +212,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$497 USD per month."
+            "text": "$397 USD per month."
           },
           {
             "type": "paragraph",
-            "text": "Unless canceled before the first recurring charge becomes due, the Scale plan will automatically continue at $497 USD per month."
+            "text": "Unless canceled before the first recurring charge becomes due, the Scale plan will automatically continue at $397 USD per month."
           },
           {
             "type": "paragraph",
@@ -238,9 +238,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo — $7 USD",
-              "Business — $14 USD",
-              "Scale — $21 USD"
+              "Solo — $11 USD",
+              "Business — $22 USD",
+              "Scale — $33 USD"
             ]
           },
           {
@@ -258,9 +258,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo — $197/month",
-              "Business — $347/month",
-              "Scale — $497/month"
+              "Solo — $127/month",
+              "Business — $297/month",
+              "Scale — $397/month"
             ]
           },
           {
@@ -291,9 +291,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo renews at $197 USD per month.",
-              "Business renews at $347 USD per month.",
-              "Scale renews at $497 USD per month."
+              "Solo renews at $127 USD per month.",
+              "Business renews at $297 USD per month.",
+              "Scale renews at $397 USD per month."
             ]
           },
           {
@@ -721,7 +721,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA CRM"
+            "text": "CORTEXA S.A.S."
           },
           {
             "type": "paragraph",
@@ -737,7 +737,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA CRM"
+            "text": "CORTEXA S.A.S."
           },
           {
             "type": "paragraph",
@@ -780,7 +780,7 @@ const t = {
     "title": "TÉRMINOS DE SERVICIO",
     "effectiveDate": "Fecha de entrada en vigor: 12 de agosto de 2026",
     "intro": [
-      "Estos Términos de Servicio (\"Términos\") regulan el acceso y uso de CORTEXA CRM (\"CORTEXA\", \"Cortexa\", \"nosotros\", \"nuestro\" o \"nos\"), operado por Listo Qasa S.A.S.",
+      "Estos Términos de Servicio (\"Términos\") regulan el acceso y uso de CORTEXA S.A.S. (\"CORTEXA\", \"Cortexa\", \"nosotros\", \"nuestro\" o \"nos\"), operado por Listo Qasa S.A.S.",
       "Al crear una cuenta, acceder o utilizar CORTEXA, o comprar una suscripción de pago o un complemento, usted acepta estos Términos."
     ],
     "sections": [
@@ -811,7 +811,7 @@ const t = {
         "blocks": [
           {
             "type": "paragraph",
-            "text": "CORTEXA CRM es una plataforma de software empresarial que proporciona herramientas que pueden incluir:"
+            "text": "CORTEXA S.A.S. es una plataforma de software empresarial que proporciona herramientas que pueden incluir:"
           },
           {
             "type": "list",
@@ -911,7 +911,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$7 USD."
+            "text": "$11 USD."
           },
           {
             "type": "paragraph",
@@ -923,11 +923,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$197 USD por mes."
+            "text": "$127 USD por mes."
           },
           {
             "type": "paragraph",
-            "text": "Salvo que se cancele antes de que venza el primer cargo recurrente, el plan Solo continuará automáticamente a $197 USD por mes."
+            "text": "Salvo que se cancele antes de que venza el primer cargo recurrente, el plan Solo continuará automáticamente a $127 USD por mes."
           },
           {
             "type": "paragraph",
@@ -943,7 +943,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$14 USD."
+            "text": "$22 USD."
           },
           {
             "type": "paragraph",
@@ -955,11 +955,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$347 USD por mes."
+            "text": "$297 USD por mes."
           },
           {
             "type": "paragraph",
-            "text": "Salvo que se cancele antes de que venza el primer cargo recurrente, el plan Business continuará automáticamente a $347 USD por mes."
+            "text": "Salvo que se cancele antes de que venza el primer cargo recurrente, el plan Business continuará automáticamente a $297 USD por mes."
           },
           {
             "type": "paragraph",
@@ -975,7 +975,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$21 USD."
+            "text": "$33 USD."
           },
           {
             "type": "paragraph",
@@ -987,11 +987,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$497 USD por mes."
+            "text": "$397 USD por mes."
           },
           {
             "type": "paragraph",
-            "text": "Salvo que se cancele antes de que venza el primer cargo recurrente, el plan Scale continuará automáticamente a $497 USD por mes."
+            "text": "Salvo que se cancele antes de que venza el primer cargo recurrente, el plan Scale continuará automáticamente a $397 USD por mes."
           },
           {
             "type": "paragraph",
@@ -1013,9 +1013,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo — $7 USD",
-              "Business — $14 USD",
-              "Scale — $21 USD"
+              "Solo — $11 USD",
+              "Business — $22 USD",
+              "Scale — $33 USD"
             ]
           },
           {
@@ -1033,9 +1033,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo — $197/mes",
-              "Business — $347/mes",
-              "Scale — $497/mes"
+              "Solo — $127/mes",
+              "Business — $297/mes",
+              "Scale — $397/mes"
             ]
           },
           {
@@ -1066,9 +1066,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo se renueva a $197 USD por mes.",
-              "Business se renueva a $347 USD por mes.",
-              "Scale se renueva a $497 USD por mes."
+              "Solo se renueva a $127 USD por mes.",
+              "Business se renueva a $297 USD por mes.",
+              "Scale se renueva a $397 USD por mes."
             ]
           },
           {
@@ -1496,7 +1496,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA CRM"
+            "text": "CORTEXA S.A.S."
           },
           {
             "type": "paragraph",
@@ -1512,7 +1512,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA CRM"
+            "text": "CORTEXA S.A.S."
           },
           {
             "type": "paragraph",
@@ -1555,7 +1555,7 @@ const t = {
     "title": "TERMOS DE SERVIÇO",
     "effectiveDate": "Data de vigência: 12 de agosto de 2026",
     "intro": [
-      "Estes Termos de Serviço (\"Termos\") regem o acesso e o uso do CORTEXA CRM (\"CORTEXA\", \"Cortexa\", \"nós\", \"nosso\" ou \"nos\"), operado pela Listo Qasa S.A.S.",
+      "Estes Termos de Serviço (\"Termos\") regem o acesso e o uso do CORTEXA S.A.S. (\"CORTEXA\", \"Cortexa\", \"nós\", \"nosso\" ou \"nos\"), operado pela Listo Qasa S.A.S.",
       "Ao criar uma conta, acessar ou usar o CORTEXA, ou adquirir uma assinatura paga ou complemento, você concorda com estes Termos."
     ],
     "sections": [
@@ -1586,7 +1586,7 @@ const t = {
         "blocks": [
           {
             "type": "paragraph",
-            "text": "O CORTEXA CRM é uma plataforma de software empresarial que fornece ferramentas que podem incluir:"
+            "text": "O CORTEXA S.A.S. é uma plataforma de software empresarial que fornece ferramentas que podem incluir:"
           },
           {
             "type": "list",
@@ -1686,7 +1686,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$7 USD."
+            "text": "$11 USD."
           },
           {
             "type": "paragraph",
@@ -1698,11 +1698,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$197 USD por mês."
+            "text": "$127 USD por mês."
           },
           {
             "type": "paragraph",
-            "text": "Salvo cancelamento antes do vencimento da primeira cobrança recorrente, o plano Solo continuará automaticamente por $197 USD por mês."
+            "text": "Salvo cancelamento antes do vencimento da primeira cobrança recorrente, o plano Solo continuará automaticamente por $127 USD por mês."
           },
           {
             "type": "paragraph",
@@ -1718,7 +1718,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$14 USD."
+            "text": "$22 USD."
           },
           {
             "type": "paragraph",
@@ -1730,11 +1730,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$347 USD por mês."
+            "text": "$297 USD por mês."
           },
           {
             "type": "paragraph",
-            "text": "Salvo cancelamento antes do vencimento da primeira cobrança recorrente, o plano Business continuará automaticamente por $347 USD por mês."
+            "text": "Salvo cancelamento antes do vencimento da primeira cobrança recorrente, o plano Business continuará automaticamente por $297 USD por mês."
           },
           {
             "type": "paragraph",
@@ -1750,7 +1750,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$21 USD."
+            "text": "$33 USD."
           },
           {
             "type": "paragraph",
@@ -1762,11 +1762,11 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "$497 USD por mês."
+            "text": "$397 USD por mês."
           },
           {
             "type": "paragraph",
-            "text": "Salvo cancelamento antes do vencimento da primeira cobrança recorrente, o plano Scale continuará automaticamente por $497 USD por mês."
+            "text": "Salvo cancelamento antes do vencimento da primeira cobrança recorrente, o plano Scale continuará automaticamente por $397 USD por mês."
           },
           {
             "type": "paragraph",
@@ -1788,9 +1788,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo — $7 USD",
-              "Business — $14 USD",
-              "Scale — $21 USD"
+              "Solo — $11 USD",
+              "Business — $22 USD",
+              "Scale — $33 USD"
             ]
           },
           {
@@ -1808,9 +1808,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo — $197/mês",
-              "Business — $347/mês",
-              "Scale — $497/mês"
+              "Solo — $127/mês",
+              "Business — $297/mês",
+              "Scale — $397/mês"
             ]
           },
           {
@@ -1841,9 +1841,9 @@ const t = {
           {
             "type": "list",
             "items": [
-              "Solo renova por $197 USD por mês.",
-              "Business renova por $347 USD por mês.",
-              "Scale renova por $497 USD por mês."
+              "Solo renova por $127 USD por mês.",
+              "Business renova por $297 USD por mês.",
+              "Scale renova por $397 USD por mês."
             ]
           },
           {
@@ -2271,7 +2271,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA CRM"
+            "text": "CORTEXA S.A.S."
           },
           {
             "type": "paragraph",
@@ -2287,7 +2287,7 @@ const t = {
           },
           {
             "type": "paragraph",
-            "text": "CORTEXA CRM"
+            "text": "CORTEXA S.A.S."
           },
           {
             "type": "paragraph",
