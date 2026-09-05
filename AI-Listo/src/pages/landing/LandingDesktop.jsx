@@ -1866,7 +1866,7 @@ export default function Landing() {
                 <span className="text-os">{tr.heroTitleLine2}</span><br />
                 <span className="text-os">{tr.heroTitleLine3}</span>
               </h1>
-              <div className="hero-checks">
+              <div className="hero-checks hero-p">
                 <p>{tr.herotextabove}</p>
               </div>
               <div className="hero-inline hero-inline-free-access">
