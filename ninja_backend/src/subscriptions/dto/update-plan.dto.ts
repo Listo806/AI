@@ -14,7 +14,19 @@ export class UpdatePlanDto {
   @IsNumber()
   @Min(0)
   @Type(() => Number)
+  activationFee?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
   price?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  annualPrice?: number | null;
 
   @IsOptional()
   @IsNumber()
@@ -36,6 +48,24 @@ export class UpdatePlanDto {
   @IsNumber()
   @Min(0)
   listingLimit?: number | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  leadsContactsLimit?: number | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  aiConversationLimit?: number | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  whatsappConnections?: number | null;
 
   @IsOptional()
   @Type(() => Boolean)
@@ -65,4 +95,3 @@ export class UpdatePlanDto {
   @IsString()
   planCategory?: string;
 }
-

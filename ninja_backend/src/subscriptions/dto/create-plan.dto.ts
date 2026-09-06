@@ -10,10 +10,22 @@ export class CreatePlanDto {
   @IsString()
   description?: string;
 
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  activationFee?: number;
+
   @IsNumber()
   @Min(0)
   @Type(() => Number)
   price: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  annualPrice?: number | null;
 
   @IsNumber()
   @Min(1)
@@ -29,6 +41,24 @@ export class CreatePlanDto {
   @IsNumber()
   @Min(0)
   listingLimit?: number | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  leadsContactsLimit?: number | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  aiConversationLimit?: number | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  whatsappConnections?: number | null;
 
   @IsOptional()
   @Type(() => Boolean)
