@@ -303,7 +303,7 @@ body.crm-dark .admin-table .admin-status-badge.published {
 }
 
 .admin-plan-table thead th:nth-child(2) {
-  min-width: 110px;
+  min-width: 90px;
 }
 
 .admin-plan-table thead th:nth-child(3) {
@@ -311,19 +311,19 @@ body.crm-dark .admin-table .admin-status-badge.published {
 }
 
 .admin-plan-table thead th:nth-child(4) {
-  min-width: 95px;
+  min-width: 75px;
 }
 
 .admin-plan-table thead th:nth-child(5) {
-  min-width: 90px;
+  min-width: 70px;
 }
 
 .admin-plan-table thead th:nth-child(6) {
-  min-width: 119px;
+  min-width: 85px;
 }
 
 .admin-plan-table thead th:nth-child(7) {
-  min-width: 115px;
+  min-width: 75px;
 }
 
 .admin-plan-table thead th span,
@@ -458,8 +458,8 @@ body.crm-dark .admin-table .admin-status-badge.published {
   align-items: center;
   gap: 8px;
   color: #101828;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   white-space: nowrap;
 }
 

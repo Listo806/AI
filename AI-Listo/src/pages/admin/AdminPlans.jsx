@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/subscriptionApi';
-import { loadPlansConfig, PLAN_ORDER } from '../../config/plans';
 import { useNotification } from '../../context/NotificationContext';
 import {
   BriefcaseBusiness,
@@ -28,6 +27,7 @@ import './admin.css';
 const defaultForm = {
   name: '',
   description: '',
+  activationFee: 0,
   price: 0,
   seatLimit: 1,
   listingLimit: null,
@@ -49,6 +49,7 @@ function PlanFormModal({ plan, onClose, onSuccess }) {
   const [form, setForm] = useState(() => ({
     ...defaultForm,
     ...plan,
+    activationFee: plan?.activationFee ?? 0,
     annualPrice: plan?.annualPrice ?? '',
     aiConversationLimit:
       plan?.aiConversationLimit ??
@@ -95,7 +96,24 @@ function PlanFormModal({ plan, onClose, onSuccess }) {
       const body = {
         name: form.name.trim(),
         description: form.description?.trim() || null,
+        activationFee: Number(form.activationFee) || 0,
         price: Number(form.price) || 0,
+        annualPrice:
+          form.annualPrice === '' || form.annualPrice == null
+            ? null
+            : Number(form.annualPrice),
+        aiConversationLimit:
+          form.aiConversationLimit === '' || form.aiConversationLimit == null
+            ? null
+            : Number(form.aiConversationLimit),
+        whatsappConnections:
+          form.whatsappConnections === '' || form.whatsappConnections == null
+            ? null
+            : Number(form.whatsappConnections),
+        leadsContactsLimit:
+          form.leadsContactsLimit === '' || form.leadsContactsLimit == null
+            ? null
+            : Number(form.leadsContactsLimit),
         seatLimit: Math.max(1, Number(form.seatLimit) || 1),
         listingLimit:
           form.leadsContactsLimit === '' ||
@@ -211,6 +229,20 @@ function PlanFormModal({ plan, onClose, onSuccess }) {
 
         <section className="admin-plan-modal-section">
           <h4>{t('admin.plans.pricingHeading')}</h4>
+
+          <label className="admin-plan-modal-field">
+            <span>{t('admin.plans.activationFeeUsd', 'Activation Fee (USD)')}</span>
+            <div className="admin-plan-modal-input-suffix">
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={form.activationFee}
+                onChange={(e) => setField('activationFee', e.target.value)}
+              />
+              <em>{t('admin.plans.oneTime', 'one-time')}</em>
+            </div>
+          </label>
 
           <label className="admin-plan-modal-field">
             <span>{t('admin.plans.monthlyPriceUsd')}</span>
@@ -592,53 +624,22 @@ export default function AdminPlans() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
 
-  // Read-only view of the LIVE customer plans. Source of truth is the backend
-  // plan-config (mirrored in ../../config/plans and tied to the Paddle price IDs),
-  // so this list always matches the live pricing structure and can never drift.
-  // The old editable subscription_plans CRUD is retired.
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await getPlans(false);
+      setPlans(Array.isArray(list) ? list : []);
+    } catch (err) {
+      showError(err?.message || t('common.error'));
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [showError, t]);
+
   useEffect(() => {
-    let alive = true;
-    loadPlansConfig()
-      .then((cfg) => {
-        if (!alive) return;
-        const ordered = (cfg?.plans || [])
-          .slice()
-          .sort((a, b) => PLAN_ORDER.indexOf(a.id) - PLAN_ORDER.indexOf(b.id));
-        const mapped = ordered.map((p) => {
-          const core = [];
-          if (p.features?.crm) core.push('CRM');
-          if (p.features?.aiAgent) core.push('AI Agent');
-          if (p.features?.advancedAiAgent) core.push('Advanced AI');
-          if (p.features?.teamWorkspace) core.push('Team Workspace');
-          if (p.features?.advancedAnalytics) core.push('Advanced Analytics');
-          return {
-            id: p.id,
-            name:
-              p.id === 'business'
-                ? `${p.label} (3 users)`
-                : p.id === 'scale'
-                  ? `${p.label} (5 users)`
-                  : p.label,
-            description: '',
-            price: p.pricing?.monthly ?? 0,
-            intro: p.pricing?.intro ?? 0,
-            isFree: !!p.isFree,
-            seatLimit: p.seats,
-            aiConversations: p.limits?.aiConversationsPerMonth ?? null,
-            whatsappConnections: p.limits?.whatsappConnections ?? null,
-            leadsContactsLimit: null,
-            coreFeatures: core,
-            isActive: true,
-          };
-        });
-        setPlans(mapped);
-      })
-      .catch(() => alive && setPlans([]))
-      .finally(() => alive && setLoading(false));
-    return () => {
-      alive = false;
-    };
-  }, []);
+    load();
+  }, [load]);
 
   const handleToggleActive = async (plan) => {
     setTogglingId(plan.id);
@@ -819,14 +820,18 @@ export default function AdminPlans() {
                       <td>
                         <div className="admin-plan-metric">
                           <strong>
-                            {plan.isFree
+                            {visual.type === 'free'
                               ? '—'
-                              : `$${Number(plan.intro ?? 0).toLocaleString(
+                              : `$${Number(plan.activationFee ?? 0).toLocaleString(
                                   'en-US',
                                   { maximumFractionDigits: 2 },
                                 )}`}
                           </strong>
-                          <small>{plan.isFree ? 'no charge' : 'to start'}</small>
+                          <small>
+                            {visual.type === 'free'
+                              ? t('admin.plans.noCharge', 'no charge')
+                              : t('admin.plans.toStart', 'to start')}
+                          </small>
                         </div>
                       </td>
 
@@ -991,11 +996,8 @@ export default function AdminPlans() {
         <PlanFormModal
           plan={modal.plan}
           onClose={() => setModal(null)}
-          onSuccess={() => {
-            // The current table is sourced from loadPlansConfig().
-            // Keep the new read-only/live-config architecture intact for now.
-            // Close the modal after save; backend/config persistence wiring can
-            // be connected separately without changing this table layout.
+          onSuccess={async () => {
+            await load();
             setModal(null);
           }}
         />
