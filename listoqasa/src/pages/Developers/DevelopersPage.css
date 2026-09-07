@@ -1,0 +1,489 @@
+.lq-dev-hero {
+  min-height: 470px;
+  background:
+    linear-gradient(90deg, rgba(8, 18, 34, .76) 0%, rgba(8, 18, 34, .42) 44%, rgba(8, 18, 34, .14) 100%),
+    url("src/assets/public/images/listoqasa/developers/developers-hero.jpg") center / cover no-repeat;
+}
+
+.lq-dev-hero-inner {
+  min-height: 470px;
+  display: flex;
+  align-items: center;
+  padding-top: 65px;
+}
+
+.lq-dev-hero-copy {
+  max-width: 540px;
+  color: #fff;
+}
+
+.lq-dev-hero-copy h1 {
+  margin: 0 0 20px;
+  font-size: clamp(48px, 5vw, 69px);
+  line-height: 1.02;
+  letter-spacing: -2px;
+  font-weight: 700;
+}
+
+.lq-dev-hero-copy p {
+  margin: 0 0 18px;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 550;
+}
+
+.lq-dev-primary-btn,
+.lq-dev-white-btn {
+  min-height: 47px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 25px;
+  border-radius: 7px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.lq-dev-primary-btn {
+  background: #0867ff;
+  color: #fff;
+}
+
+.lq-dev-hero-note {
+  margin-top: 15px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.lq-dev-page {
+  background: #fff;
+}
+
+.lq-dev-eyebrow {
+  display: block;
+  margin-bottom: 7px;
+  color: #0867ff;
+  font-size: 13px;
+  letter-spacing: .5px;
+  font-weight: 700;
+}
+
+.lq-dev-intro,
+.lq-dev-journey-section,
+.lq-dev-portfolio {
+  text-align: center;
+}
+
+.lq-dev-intro {
+  padding: 33px 0 40px;
+}
+
+.lq-dev-intro h2,
+.lq-dev-journey-section h2,
+.lq-dev-portfolio h2,
+.lq-dev-ai-tools h2 {
+  margin: 0;
+  color: #07172f;
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.lq-dev-intro > p {
+  margin: 10px 0 0;
+  color: #54617a;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.lq-dev-benefit-grid {
+  max-width: 900px;
+  margin: 30px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 70px;
+}
+
+.lq-dev-benefit svg {
+  width: 38px;
+  height: 38px;
+  color: #0867ff;
+  margin-bottom: 11px;
+}
+
+.lq-dev-benefit h3 {
+  margin: 0 0 8px;
+  color: #0a1932;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lq-dev-benefit p {
+  max-width: 195px;
+  margin: 0 auto;
+  color: #5a6880;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.lq-dev-marketing-card {
+  margin: 0 35px 36px;
+  padding: 23px;
+  display: grid;
+  grid-template-columns: 36% 64%;
+  gap: 15px;
+  border-radius: 13px;
+  background: linear-gradient(110deg, #f7faff, #edf4ff);
+}
+
+.lq-dev-marketing-copy {
+  padding: 5px 18px 0 4px;
+}
+
+.lq-dev-marketing-copy > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #0867ff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lq-dev-marketing-copy h2 {
+  max-width: 280px;
+  margin: 0 0 15px;
+  color: #07172f;
+  font-size: 29px;
+  line-height: 1.04;
+  font-weight: 700;
+}
+
+.lq-dev-marketing-copy > p {
+  max-width: 300px;
+  margin: 0 0 18px;
+  color: #56647a;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.lq-dev-marketing-copy ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lq-dev-marketing-copy li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: #42516a;
+  font-size: 13px;
+}
+
+.lq-dev-marketing-copy li svg {
+  width: 14px;
+  height: 14px;
+  color: #0867ff;
+  fill: #0867ff;
+  stroke: #fff;
+}
+
+.lq-dev-marketing-visual {
+  position: relative;
+  min-height: 290px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.lq-dev-marketing-visual > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lq-dev-channel {
+  position: absolute;
+  z-index: 2;
+  min-height: 47px;
+  display: none;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 15px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 8px 20px rgba(11,30,60,.13);
+  color: #08162d;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.lq-dev-channel svg {
+  width: 21px;
+  height: 21px;
+  color: #0867ff;
+}
+
+.lq-dev-google-letter {
+  color: #4285f4;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.lq-dev-mini-logo {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  background: #0867ff;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lq-dev-google { top: 35px; left: 34px; }
+.lq-dev-social { top: 35px; right: 34px; }
+.lq-dev-marketplace { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.lq-dev-email { left: 25px; bottom: 31px; }
+.lq-dev-partners { right: 26px; bottom: 31px; }
+
+.lq-dev-journey-section {
+  padding: 7px 0 39px;
+}
+
+.lq-dev-journey {
+  max-width: 920px;
+  margin: 25px auto 0;
+  display: grid;
+  grid-template-columns: 1fr 80px 1fr 80px 1fr 80px 1fr;
+  align-items: start;
+}
+
+.lq-dev-journey-step {
+  text-align: center;
+}
+
+.lq-dev-journey-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 10px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eef4ff;
+  color: #0867ff;
+}
+
+.lq-dev-journey-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.lq-dev-journey-step h3 {
+  margin: 0 0 6px;
+  color: #0c1b33;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lq-dev-journey-step p {
+  max-width: 160px;
+  margin: 0 auto;
+  color: #617087;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.lq-dev-journey-line {
+  height: 1px;
+  margin-top: 29px;
+  border-top: 1px dashed #8fb5ff;
+}
+
+.lq-dev-portfolio {
+  padding-bottom: 35px;
+}
+
+.lq-dev-stats {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.lq-dev-stats article {
+  min-height: 110px;
+  padding: 18px;
+  border: 1px solid #e1e6ed;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.lq-dev-stats svg {
+  width: 14px;
+  height: 14px;
+  margin-bottom: 6px;
+  color: #0867ff;
+}
+
+.lq-dev-stats strong {
+  display: block;
+  color: #111;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 850;
+}
+
+.lq-dev-stats p {
+  margin: 7px auto 0;
+  max-width: 150px;
+  color: #526177;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.lq-dev-ai-tools {
+  margin: 0 8px 0;
+  padding: 18px 27px 20px;
+  text-align: center;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(100deg, #f6f9ff, #edf4ff);
+}
+
+.lq-dev-ai-subtitle {
+  margin: 7px 0 20px;
+  color: #59667c;
+  font-size: 13px;
+}
+
+.lq-dev-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.lq-dev-ai-grid article {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 24px;
+  text-align: left;
+  border-right: 1px solid #d8e1ee;
+}
+
+.lq-dev-ai-grid article:last-child {
+  border-right: 0;
+}
+
+.lq-dev-ai-icon {
+  width: 51px;
+  height: 51px;
+  flex: 0 0 51px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e8f0ff;
+  color: #0867ff;
+}
+
+.lq-dev-ai-grid h3 {
+  margin: 0 0 5px;
+  color: #0b1830;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lq-dev-ai-grid p {
+  margin: 0;
+  color: #5b6880;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.lq-dev-bottom-cta {
+  min-height: 215px;
+  background:
+    linear-gradient(90deg, rgba(8,98,255,.97), rgba(26,100,241,.82) 44%, rgba(5,57,135,.15) 76%),
+    url("src/assets/public/images/listoqasa/developers/developer-bottom-cta.jpg") center right / cover no-repeat;
+  color: #fff;
+}
+
+.lq-dev-bottom-cta-inner {
+  min-height: 215px;
+  display: flex;
+  align-items: center;
+}
+
+.lq-dev-bottom-cta h2 {
+  margin: 0 0 10px;
+  font-size: 27px;
+  font-weight: 700;
+}
+
+.lq-dev-bottom-cta p {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.lq-dev-white-btn {
+  background: #fff;
+  color: #0867ff;
+}
+
+@media (max-width: 900px) {
+  .lq-dev-marketing-card {
+    grid-template-columns: 1fr;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .lq-dev-benefit-grid {
+    gap: 25px;
+  }
+
+  .lq-dev-journey {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+
+  .lq-dev-journey-line {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .lq-dev-hero {
+    min-height: 610px;
+    background-position: 63% center;
+  }
+
+  .lq-dev-hero-inner {
+    min-height: 610px;
+    align-items: flex-end;
+    padding-bottom: 40px;
+  }
+
+  .lq-dev-benefit-grid,
+  .lq-dev-stats,
+  .lq-dev-ai-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lq-dev-journey {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lq-dev-ai-grid article {
+    min-height: 80px;
+    border-right: 0;
+    border-bottom: 1px solid #d8e1ee;
+  }
+
+  .lq-dev-ai-grid article:last-child {
+    border-bottom: 0;
+  }
+}
