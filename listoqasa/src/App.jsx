@@ -7,6 +7,9 @@ import FindAgentPage from "./pages/FindAgent/FindAgentPage";
 import DevelopersPage from "./pages/Developers/DevelopersPage";
 import AiCrmPage from "./pages/AiCrm/AiCrmPage";
 import VacationRentalsPage from "./pages/VacationRentals/VacationRentalsPage";
+import OwnerPlansPage from "./pages/OwnerPlans/OwnerPlansPage";
+import AgentDeveloperPlansPage from "./pages/AgentDeveloperPlans/AgentDeveloperPlansPage";
+import VacationRentalPlansPage from "./pages/VacationRentalPlans/VacationRentalPlansPage";
 export default function App() {
   return (
     <BrowserRouter>
@@ -26,6 +29,12 @@ export default function App() {
 
         <Route path="/ai-help" element={<AiCrmPage />} />
         <Route path="/vacation-rentals" element={<VacationRentalsPage />} />
+        
+        <Route path="/owner-plans" element={<OwnerPlansPage />} />
+
+        <Route path="/agent-plans" element={<AgentDeveloperPlansPage />} />
+        <Route path="/developer-plans" element={<AgentDeveloperPlansPage />} />
+        <Route path="/vacation-rental-plans" element={<VacationRentalPlansPage />} />
       </Routes>
     </BrowserRouter>
   );

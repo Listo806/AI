@@ -1,27 +1,8 @@
-// App.jsx
+import OwnerPlansPage from "./pages/OwnerPlans/OwnerPlansPage";
+import AgentDeveloperPlansPage from "./pages/AgentDeveloperPlans/AgentDeveloperPlansPage";
+import VacationRentalPlansPage from "./pages/VacationRentalPlans/VacationRentalPlansPage";
 
-import VacationRentalsPage from "./pages/VacationRentals/VacationRentalsPage";
-
-// Inside <Routes>:
-
-<Route
-  path="/vacation-rentals"
-  element={<VacationRentalsPage />}
-/>
-
-// Optional compatibility with old Webflow language URLs:
-
-<Route
-  path="/en/vacation-rentals"
-  element={<VacationRentalsPage />}
-/>
-
-<Route
-  path="/es/vacation-rentals"
-  element={<VacationRentalsPage />}
-/>
-
-<Route
-  path="/pt/vacation-rentals"
-  element={<VacationRentalsPage />}
-/>
+<Route path="/owner-plans" element={<OwnerPlansPage />} />
+<Route path="/agent-plans" element={<AgentDeveloperPlansPage />} />
+<Route path="/developer-plans" element={<AgentDeveloperPlansPage />} />
+<Route path="/vacation-rental-plans" element={<VacationRentalPlansPage />} />
