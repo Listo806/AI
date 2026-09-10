@@ -6,6 +6,7 @@ import SiteLayout from "../../components/layout/SiteLayout";
 import PropertyCard from "../../components/property/PropertyCard";
 import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
 import "./HomePage.css";
+import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
 
 const FALLBACK_PROPERTY_IMAGE = "/images/listoqasa/properties/property-placeholder.jpg";
 
@@ -123,7 +124,12 @@ export default function HomePage() {
 
   return (
     <SiteLayout headerVariant="light">
-      <section className="lq-home-hero">
+      <section
+        className="lq-home-hero"
+        style={{
+          "--lq-home-hero-image": `url(${homeHeroImage})`,
+        }}
+      >
         <div className="lq-container lq-home-hero-inner">
           <div className="lq-home-hero-content">
             <h1>{t("home.heroTitle1")}<br />{t("home.heroTitle2")}</h1>

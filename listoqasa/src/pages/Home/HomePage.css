@@ -8,7 +8,7 @@
       rgba(3, 16, 38, 0.32) 47%,
       rgba(3, 16, 38, 0.08) 100%
     ),
-    url("src/assets/public/images/listoqasa/home-hero.jpg")
+    var(--lq-home-hero-image)
       center center / cover no-repeat;
 }
 .lq-home-hero-inner {
