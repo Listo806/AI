@@ -6,7 +6,7 @@
             rgba(3, 13, 28, 0.84) 0%,
             rgba(3, 13, 28, 0.42) 43%,
             rgba(3, 13, 28, 0.12) 100%),
-        url("src/assets/public/images/listoqasa/agents/agent-hero.jpg"
+        url("../../assets/public/images/listoqasa/agents/agent-hero.jpg"
         ) center / cover no-repeat;
 }
 .lq-agent-hero-inner {
@@ -362,7 +362,7 @@
             rgba(1, 25, 55, 0.99) 0%,
             rgba(2, 35, 76, 0.95) 45%,
             rgba(2, 33, 68, 0.5) 70%),
-        url("src/assets/public/images/listoqasa/agents/agent-bottom-cta.jpg"
+        url("../../assets/public/images/listoqasa/agents/agent-bottom-cta.jpg"
         ) center right / cover no-repeat;
 }
 .lq-agent-bottom-copy {

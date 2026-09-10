@@ -20,7 +20,7 @@
                 255,
                 255,
                 0.02) 100%),
-        url("src/assets/public/images/listoqasa/find-agent/agent-hero.jpg"
+        url("../../assets/public/images/listoqasa/find-agent/agent-hero.jpg"
         ) center right / cover no-repeat;
 }
 .lq-find-hero-inner {
@@ -550,7 +550,7 @@
                 60,
                 233,
                 0.93)),
-        url("src/assets/public/images/listoqasa/find-agent/cta-city.jpg"
+        url("../../assets/public/images/listoqasa/find-agent/cta-city.jpg"
         ) center / cover no-repeat;
     color: #fff;
 }
