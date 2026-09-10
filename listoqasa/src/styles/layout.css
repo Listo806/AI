@@ -206,7 +206,7 @@
     );
 }
 .lq-footer-inner {
-  width: min(1160px, calc(100% - 50px));
+  width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
 }
 .lq-footer-top {
@@ -220,7 +220,7 @@
     0.9fr
     1.45fr;
   gap: 25px;
-  padding: 0 5px 28px;
+  padding: 0 0 28px;
 }
 .lq-footer-logo .lq-logo-text {
   color: #0867ff;

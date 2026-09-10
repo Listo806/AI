@@ -32,6 +32,8 @@ import {
   getVacationRentalsLayoutData,
 } from "../../api/vacationRentalsApi";
 
+import vacationHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
+
 import "./VacationRentalsPage.css";
 
 const PROPERTY_PLACEHOLDER = "";
@@ -638,6 +640,39 @@ export default function VacationRentalsPage() {
     <SiteLayout
       headerVariant="dark"
     >
+      <section
+        className="lq-vr-hero"
+        style={{
+          "--lq-vr-hero-image": `url(${vacationHeroImage})`,
+        }}
+      >
+        <div className="lq-vr-hero-overlay" />
+
+        <div className="lq-vr-hero-inner">
+          <div className="lq-vr-hero-copy">
+            <h1>{t("vacationBrowse.heroTitle")}</h1>
+
+            <p>{t("vacationBrowse.heroDescription")}</p>
+
+            <form
+              className="lq-vr-hero-search"
+              onSubmit={(event) => event.preventDefault()}
+            >
+              <MapPin size={20} />
+
+              <input
+                type="text"
+                placeholder={t("vacationBrowse.heroSearchPlaceholder")}
+              />
+
+              <button type="submit">
+                {t("vacationBrowse.heroSearchButton")}
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
       <main className="lq-vr-page">
         <div className="lq-vr-container">
           <PropertyRow

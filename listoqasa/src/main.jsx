@@ -5,6 +5,7 @@ import "./i18n/i18n";
 import "./i18n/registerDevelopersAiCrm";
 import "./i18n/registerVacationRentals";
 import "./i18n/registerPricingPlans";
+import "./i18n/registerHeaderVacationHero";
 import App from "./App";
 
 import "./styles/globals.css";

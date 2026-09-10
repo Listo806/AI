@@ -11,23 +11,33 @@ import {
   Bot,
   Globe2,
   Check,
+  Home,
+  CalendarDays,
+  UserRound,
+  BriefcaseBusiness,
+  Building2,
+  ChevronDown,
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
+import "./HeaderListProperty.css";
 
 export default function Header({
   variant = "light",
 }) {
   const { t, i18n } = useTranslation();
-  const currentLanguage =
-  (
+  const currentLanguage = (
     i18n.resolvedLanguage ||
-    currentLanguage ||
+    i18n.language ||
     "en"
   )
     .split("-")[0]
     .toLowerCase();
+
   const [mobileOpen, setMobileOpen] =
+    useState(false);
+
+  const [listPropertyOpen, setListPropertyOpen] =
     useState(false);
 
   const isDark = variant === "dark";
@@ -42,23 +52,40 @@ export default function Header({
       to: "/rent",
     },
     {
-      label: t("header.vacationRentals"),
-      to: "/vacation-rentals",
-    },
-    {
       label: t("header.sell"),
       to: "/owners",
     },
+  ];
+
+  const listPropertyItems = [
     {
-      label: t("header.land"),
-      to: "/land",
+      icon: Home,
+      label: t("header.listPropertyMenu.rentals"),
+      description: t("header.listPropertyMenu.rentalsDesc"),
+      to: "/owner-plans",
     },
     {
-      label: t("header.agents"),
+      icon: CalendarDays,
+      label: t("header.listPropertyMenu.vacationRentals"),
+      description: t("header.listPropertyMenu.vacationRentalsDesc"),
+      to: "/vacation-rentals",
+    },
+    {
+      icon: UserRound,
+      label: t("header.listPropertyMenu.owners"),
+      description: t("header.listPropertyMenu.ownersDesc"),
+      to: "/owners",
+    },
+    {
+      icon: BriefcaseBusiness,
+      label: t("header.listPropertyMenu.agents"),
+      description: t("header.listPropertyMenu.agentsDesc"),
       to: "/agents",
     },
     {
-      label: t("header.developers"),
+      icon: Building2,
+      label: t("header.listPropertyMenu.developers"),
+      description: t("header.listPropertyMenu.developersDesc"),
       to: "/developers",
     },
   ];
@@ -122,14 +149,54 @@ export default function Header({
           </Link>
 
           <nav className="lq-main-nav">
+            <div
+              className={`lq-list-property-nav ${
+                listPropertyOpen ? "is-open" : ""
+              }`}
+              onMouseEnter={() => setListPropertyOpen(true)}
+              onMouseLeave={() => setListPropertyOpen(false)}
+            >
+              <button
+                type="button"
+                className="lq-nav-link lq-list-property-trigger"
+                onClick={() => setListPropertyOpen((value) => !value)}
+                aria-expanded={listPropertyOpen}
+              >
+                {t("header.listProperty")}
+                <ChevronDown size={15} strokeWidth={2} />
+              </button>
+
+              <div className="lq-list-property-dropdown">
+                {listPropertyItems.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className="lq-list-property-item"
+                      onClick={() => setListPropertyOpen(false)}
+                    >
+                      <span className="lq-list-property-icon">
+                        <Icon size={18} strokeWidth={1.9} />
+                      </span>
+
+                      <span className="lq-list-property-copy">
+                        <strong>{item.label}</strong>
+                        <small>{item.description}</small>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `lq-nav-link ${
-                    isActive ? "active" : ""
-                  }`
+                  `lq-nav-link ${isActive ? "active" : ""}`
                 }
               >
                 {item.label}
@@ -150,7 +217,7 @@ export default function Header({
               className="lq-header-action-link lq-ai-help"
             >
               <span>
-                {t("header.aiHelp")}
+                {t("header.aiCrm")}
               </span>
 
               <Bot
@@ -279,6 +346,31 @@ export default function Header({
         </div>
 
         <nav className="lq-mobile-nav">
+          <div className="lq-mobile-list-property">
+            <span className="lq-mobile-list-property-title">
+              {t("header.listProperty")}
+            </span>
+
+            {listPropertyItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="lq-mobile-list-property-item"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Icon size={17} />
+                  <span>
+                    <strong>{item.label}</strong>
+                    <small>{item.description}</small>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+
           {navItems.map((item) => (
             <Link
               key={item.to}
@@ -306,7 +398,7 @@ export default function Header({
               setMobileOpen(false)
             }
           >
-            {t("header.aiHelp")}
+            {t("header.aiCrm")}
           </Link>
         </nav>
 

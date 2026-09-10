@@ -1,6 +1,136 @@
+.lq-vr-hero {
+  position: relative;
+  min-height: 470px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background:
+    var(--lq-vr-hero-image)
+    center center / cover no-repeat;
+}
+
+.lq-vr-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(3, 16, 38, .76) 0%,
+      rgba(3, 16, 38, .48) 44%,
+      rgba(3, 16, 38, .12) 75%,
+      rgba(3, 16, 38, .04) 100%
+    );
+}
+
+.lq-vr-hero-inner {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding-top: 68px;
+}
+
+.lq-vr-hero-copy {
+  width: min(680px, 100%);
+  padding-left: 57px;
+  color: #fff;
+}
+
+.lq-vr-hero-copy h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(50px, 5.3vw, 73px);
+  line-height: 0.98;
+  letter-spacing: -2.5px;
+  font-weight: 750;
+}
+
+.lq-vr-hero-copy p {
+  margin: 18px 0 22px;
+  max-width: 610px;
+  font-size: 18px;
+  line-height: 1.45;
+  font-weight: 550;
+}
+
+.lq-vr-hero-search {
+  width: min(100%, 630px);
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 9px 8px 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .18);
+}
+
+.lq-vr-hero-search svg {
+  color: #17233a;
+}
+
+.lq-vr-hero-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #17233a;
+  font: inherit;
+  font-size: 15px;
+}
+
+.lq-vr-hero-search input::placeholder {
+  color: #8b95a7;
+}
+
+.lq-vr-hero-search button {
+  min-height: 46px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background: #0867ff;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .lq-vr-hero {
+    min-height: 520px;
+  }
+
+  .lq-vr-hero-inner {
+    width: calc(100% - 28px);
+    padding-top: 92px;
+  }
+
+  .lq-vr-hero-copy h1 {
+    font-size: 45px;
+    letter-spacing: -1.8px;
+  }
+
+  .lq-vr-hero-copy p {
+    font-size: 16px;
+  }
+
+  .lq-vr-hero-search {
+    grid-template-columns: auto 1fr;
+    border-radius: 20px;
+    padding: 13px 14px;
+  }
+
+  .lq-vr-hero-search button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
 .lq-vr-page {
   min-height: 100vh;
-  padding: 88px 0 18px;
+  padding: 18px 0 18px;
   background: #ffffff;
   color: #0a1830;
 }
