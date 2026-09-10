@@ -20,8 +20,7 @@
                 255,
                 255,
                 0.02) 100%),
-        url("../../assets/public/images/listoqasa/find-agent/agent-hero.jpg"
-        ) center right / cover no-repeat;
+        var(--lq-find-hero-image) center right / cover no-repeat;
 }
 .lq-find-hero-inner {
     min-height: 550px;
@@ -550,8 +549,7 @@
                 60,
                 233,
                 0.93)),
-        url("../../assets/public/images/listoqasa/find-agent/cta-city.jpg"
-        ) center / cover no-repeat;
+        var(--lq-find-cta-image) center / cover no-repeat;
     color: #fff;
 }
 .lq-find-cta h2 {

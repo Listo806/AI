@@ -18,6 +18,9 @@ import {
 import { useTranslation } from "react-i18next";
 
 import SiteLayout from "../../components/layout/SiteLayout";
+import developersHeroImage from "../../assets/public/images/listoqasa/developers/developers-hero.jpg";
+import developerDemandCityImage from "../../assets/public/images/listoqasa/developers/developer-demand-city.jpg";
+import developerBottomCtaImage from "../../assets/public/images/listoqasa/developers/developer-bottom-cta.jpg";
 import "./DevelopersPage.css";
 
 export default function DevelopersPage() {
@@ -84,7 +87,10 @@ export default function DevelopersPage() {
 
   return (
     <SiteLayout headerVariant="light">
-      <section className="lq-dev-hero">
+      <section
+        className="lq-dev-hero"
+        style={{ "--lq-dev-hero-image": `url(${developersHeroImage})` }}
+      >
         <div className="lq-container lq-dev-hero-inner">
           <div className="lq-dev-hero-copy">
             <h1>
@@ -167,7 +173,7 @@ export default function DevelopersPage() {
 
             <div className="lq-dev-marketing-visual">
               <img
-                src="src/assets/public/images/listoqasa/developers/developer-demand-city.jpg"
+                src={developerDemandCityImage}
                 alt=""
               />
 
@@ -287,7 +293,10 @@ export default function DevelopersPage() {
           </section>
         </div>
 
-        <section className="lq-dev-bottom-cta">
+        <section
+          className="lq-dev-bottom-cta"
+          style={{ "--lq-dev-bottom-cta-image": `url(${developerBottomCtaImage})` }}
+        >
           <div className="lq-container lq-dev-bottom-cta-inner">
             <div>
               <h2>{t("developers.ctaTitle")}</h2>

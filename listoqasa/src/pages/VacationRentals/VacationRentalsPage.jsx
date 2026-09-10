@@ -34,8 +34,7 @@ import {
 
 import "./VacationRentalsPage.css";
 
-const PROPERTY_PLACEHOLDER =
-  "src/assets/public/images/listoqasa/properties/property-placeholder.jpg";
+const PROPERTY_PLACEHOLDER = "";
 
 /*
  * These 8 city names are DESIGN CONFIGURATION,
@@ -44,6 +43,24 @@ const PROPERTY_PLACEHOLDER =
  * Property counts below are always loaded from the API.
  * Images are presentation assets.
  */
+const LOCATION_IMAGES = import.meta.glob(
+  "../../assets/public/images/listoqasa/locations/*.jpg",
+  {
+    eager: true,
+    import: "default",
+  }
+);
+
+function getLocationImage(slug) {
+  const suffix = `/locations/${slug}.jpg`;
+
+  const match = Object.entries(LOCATION_IMAGES).find(
+    ([path]) => path.endsWith(suffix)
+  );
+
+  return match?.[1] || "";
+}
+
 const LOCATION_CONFIG = [
   {
     city: "Quito",
@@ -241,8 +258,7 @@ function PropertyCard({
             className="lq-vr-card-image"
             loading="lazy"
             onError={(event) => {
-              event.currentTarget.src =
-                PROPERTY_PLACEHOLDER;
+              event.currentTarget.style.display = "none";
             }}
           />
 
@@ -605,8 +621,7 @@ export default function VacationRentalsPage() {
           (location) => ({
             ...location,
 
-            image:
-              `src/assets/public/images/listoqasa/locations/${location.slug}.jpg`,
+            image: getLocationImage(location.slug),
 
             count:
               Number(

@@ -19,6 +19,10 @@ import {
 import { useTranslation } from "react-i18next";
 
 import SiteLayout from "../../components/layout/SiteLayout";
+import aiCrmDashboardImage from "../../assets/public/images/listoqasa/ai-crm/ai-crm-dashboard.png";
+import aiChatCardImage from "../../assets/public/images/listoqasa/ai-crm/ai-chat-card.png";
+import propertiesScreenImage from "../../assets/public/images/listoqasa/ai-crm/properties-screen.png";
+import aiCrmCtaImage from "../../assets/public/images/listoqasa/ai-crm/ai-crm-cta.jpg";
 import "./AiCrmPage.css";
 
 export default function AiCrmPage() {
@@ -83,13 +87,13 @@ export default function AiCrmPage() {
 
             <div className="lq-ai-hero-visual">
               <img
-                src="src/assets/public/images/listoqasa/ai-crm/ai-crm-dashboard.png"
+                src={aiCrmDashboardImage}
                 alt="Cortexa AI CRM dashboard"
               />
 
               <img
                 className="lq-ai-chat-float"
-                src="src/assets/public/images/listoqasa/ai-crm/ai-chat-card.png"
+                src={aiChatCardImage}
                 alt=""
               />
             </div>
@@ -134,7 +138,7 @@ export default function AiCrmPage() {
           <div className="lq-container lq-ai-agent-grid">
             <div className="lq-ai-phone-card">
               <img
-                src="src/assets/public/images/listoqasa/ai-crm/ai-chat-card.png"
+                src={aiChatCardImage}
                 alt=""
               />
             </div>
@@ -178,7 +182,7 @@ export default function AiCrmPage() {
 
             <div className="lq-ai-property-visual">
               <img
-                src="src/assets/public/images/listoqasa/ai-crm/properties-screen.png"
+                src={propertiesScreenImage}
                 alt=""
               />
             </div>
@@ -212,7 +216,10 @@ export default function AiCrmPage() {
           </div>
         </section>
 
-        <section className="lq-ai-bottom-cta">
+        <section
+          className="lq-ai-bottom-cta"
+          style={{ "--lq-ai-cta-image": `url(${aiCrmCtaImage})` }}
+        >
           <div className="lq-container lq-ai-bottom-cta-inner">
             <div>
               <h2>{t("aiCrm.ctaTitle")}</h2>

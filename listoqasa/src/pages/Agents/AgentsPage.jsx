@@ -19,6 +19,9 @@ import { useTranslation } from "react-i18next";
 
 import SiteLayout from "../../components/layout/SiteLayout";
 
+import agentHeroImage from "../../assets/public/images/listoqasa/agents/agent-hero.jpg";
+import agentMarketingCityImage from "../../assets/public/images/listoqasa/agents/agent-marketing-city.jpg";
+import agentBottomCtaImage from "../../assets/public/images/listoqasa/agents/agent-bottom-cta.jpg";
 import "./AgentsPage.css";
 
 export default function AgentsPage() {
@@ -27,7 +30,10 @@ export default function AgentsPage() {
   return (
     <SiteLayout headerVariant="light">
       {/* HERO */}
-      <section className="lq-agent-hero">
+      <section
+        className="lq-agent-hero"
+        style={{ "--lq-agent-hero-image": `url(${agentHeroImage})` }}
+      >
         <div className="lq-container lq-agent-hero-inner">
           <div className="lq-agent-hero-copy">
             <h1>
@@ -134,7 +140,7 @@ export default function AgentsPage() {
 
             <div className="lq-agent-marketing-visual">
               <img
-                src="src/assets/public/images/listoqasa/agents/agent-marketing-city.jpg"
+                src={agentMarketingCityImage}
                 alt=""
               />
 
@@ -211,7 +217,10 @@ export default function AgentsPage() {
         </div>
 
         {/* CTA */}
-        <section className="lq-agent-bottom-cta">
+        <section
+          className="lq-agent-bottom-cta"
+          style={{ "--lq-agent-bottom-cta-image": `url(${agentBottomCtaImage})` }}
+        >
           <div className="lq-container">
             <div className="lq-agent-bottom-copy">
               <h2>{t("agent.growTitle")}</h2>

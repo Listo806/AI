@@ -8,7 +8,7 @@
       rgba(7, 25, 47, 0.19) 55%,
       rgba(5, 16, 32, 0.03)
     ),
-    url("src/assets/public/images/listoqasa/owners/owner-hero.jpg")
+    var(--lq-owner-hero-image)
       center center / cover no-repeat;
 }
 .lq-owner-hero-inner {
@@ -286,7 +286,7 @@
   margin-top: 16px;
   border-radius: 12px;
   background:
-    url("src/assets/public/images/listoqasa/owners/owner-cta.jpg")
+    var(--lq-owner-cta-image)
       center center / cover no-repeat;
 }
 .lq-owner-cta-overlay {

@@ -22,32 +22,40 @@ import { useTranslation } from "react-i18next";
 
 import SiteLayout from "../../components/layout/SiteLayout";
 
+import ownerHeroImage from "../../assets/public/images/listoqasa/owners/owner-hero.jpg";
+import ownerCtaImage from "../../assets/public/images/listoqasa/owners/owner-cta.jpg";
+import quitoImage from "../../assets/public/images/listoqasa/owners/quito.jpg";
+import guayaquilImage from "../../assets/public/images/listoqasa/owners/guayaquil.jpg";
+import cuencaImage from "../../assets/public/images/listoqasa/owners/cuenca.jpg";
+import mantaImage from "../../assets/public/images/listoqasa/owners/manta.jpg";
+import cumbayaImage from "../../assets/public/images/listoqasa/owners/cumbaya.jpg";
+import samborondonImage from "../../assets/public/images/listoqasa/owners/samborondon.jpg";
 import "./OwnersPage.css";
 
 const locations = [
   {
     name: "Quito",
-    image: "src/assets/public/images/listoqasa/owners/quito.jpg",
+    image: quitoImage,
   },
   {
     name: "Guayaquil",
-    image: "src/assets/public/images/listoqasa/owners/guayaquil.jpg",
+    image: guayaquilImage,
   },
   {
     name: "Cuenca",
-    image: "src/assets/public/images/listoqasa/owners/cuenca.jpg",
+    image: cuencaImage,
   },
   {
     name: "Manta",
-    image: "src/assets/public/images/listoqasa/owners/manta.jpg",
+    image: mantaImage,
   },
   {
     name: "Cumbayá",
-    image: "src/assets/public/images/listoqasa/owners/cumbaya.jpg",
+    image: cumbayaImage,
   },
   {
     name: "Samborondón",
-    image: "src/assets/public/images/listoqasa/owners/samborondon.jpg",
+    image: samborondonImage,
   },
 ];
 
@@ -133,7 +141,10 @@ export default function OwnersPage() {
   return (
     <SiteLayout headerVariant="dark">
       {/* HERO */}
-      <section className="lq-owner-hero">
+      <section
+        className="lq-owner-hero"
+        style={{ "--lq-owner-hero-image": `url(${ownerHeroImage})` }}
+      >
         <div className="lq-container lq-owner-hero-inner">
           <div className="lq-owner-hero-content">
             <h1>
@@ -298,7 +309,10 @@ export default function OwnersPage() {
           </section>
 
           {/* CTA */}
-          <section className="lq-owner-cta">
+          <section
+            className="lq-owner-cta"
+            style={{ "--lq-owner-cta-image": `url(${ownerCtaImage})` }}
+          >
             <div className="lq-owner-cta-overlay" />
 
             <div className="lq-owner-cta-content">

@@ -51,7 +51,7 @@ async function bootstrap() {
         "https://www.cortexaaicrm.com",
         "https://cortexaaicrm.com",
         "https://listoqasa.com",
-        "https://listoqasa.netlify.app/",
+        "https://listoqasa.netlify.app",
       ];
 
   // Get the server's own origin (for Swagger UI)

@@ -24,6 +24,12 @@ import { useTranslation } from "react-i18next";
 
 import SiteLayout from "../../components/layout/SiteLayout";
 
+import findAgentHeroImage from "../../assets/public/images/listoqasa/find-agent/agent-hero.jpg";
+import findAgentCtaImage from "../../assets/public/images/listoqasa/find-agent/cta-city.jpg";
+import azTeamImage from "../../assets/public/images/listoqasa/find-agent/az-team.jpg";
+import andresImage from "../../assets/public/images/listoqasa/find-agent/andres.jpg";
+import blueOfficeImage from "../../assets/public/images/listoqasa/find-agent/blue-office.jpg";
+import mariaImage from "../../assets/public/images/listoqasa/find-agent/maria.jpg";
 import "./FindAgentPage.css";
 
 const professionals = [
@@ -35,7 +41,7 @@ const professionals = [
     specialties: "Residential • Luxury • Rentals",
     rating: "4.8",
     reviews: 128,
-    image: "src/assets/public/images/listoqasa/find-agent/az-team.jpg",
+    image: azTeamImage,
     avatar: "AZ",
   },
 
@@ -47,7 +53,7 @@ const professionals = [
     specialties: "Residential • Investment",
     rating: "4.9",
     reviews: 64,
-    image: "src/assets/public/images/listoqasa/find-agent/andres.jpg",
+    image: andresImage,
   },
 
   {
@@ -58,7 +64,7 @@ const professionals = [
     specialties: "Residential • Commercial • Land",
     rating: "4.7",
     reviews: 93,
-    image: "src/assets/public/images/listoqasa/find-agent/blue-office.jpg",
+    image: blueOfficeImage,
     avatar: "BR",
   },
 
@@ -70,7 +76,7 @@ const professionals = [
     specialties: "Residential • Luxury • Rentals",
     rating: "4.9",
     reviews: 51,
-    image: "src/assets/public/images/listoqasa/find-agent/maria.jpg",
+    image: mariaImage,
   },
 ];
 
@@ -82,7 +88,10 @@ export default function FindAgentPage() {
   return (
     <SiteLayout headerVariant="dark">
       {/* HERO */}
-      <section className="lq-find-hero">
+      <section
+        className="lq-find-hero"
+        style={{ "--lq-find-hero-image": `url(${findAgentHeroImage})` }}
+      >
         <div className="lq-container lq-find-hero-inner">
           <div className="lq-find-hero-copy">
             <span className="lq-find-eyebrow">{t("findAgent.eyebrow")}</span>
@@ -322,7 +331,10 @@ export default function FindAgentPage() {
           </section>
 
           {/* CTA */}
-          <section className="lq-find-cta">
+          <section
+            className="lq-find-cta"
+            style={{ "--lq-find-cta-image": `url(${findAgentCtaImage})` }}
+          >
             <div>
               <h2>{t("findAgent.ctaTitle")}</h2>
 

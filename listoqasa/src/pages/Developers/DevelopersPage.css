@@ -2,7 +2,7 @@
   min-height: 470px;
   background:
     linear-gradient(90deg, rgba(8, 18, 34, .76) 0%, rgba(8, 18, 34, .42) 44%, rgba(8, 18, 34, .14) 100%),
-    url("../../assets/public/images/listoqasa/developers/developers-hero.jpg") center / cover no-repeat;
+    var(--lq-dev-hero-image) center / cover no-repeat;
 }
 
 .lq-dev-hero-inner {
@@ -407,7 +407,7 @@
   min-height: 215px;
   background:
     linear-gradient(90deg, rgba(8,98,255,.97), rgba(26,100,241,.82) 44%, rgba(5,57,135,.15) 76%),
-    url("../../assets/public/images/listoqasa/developers/developer-bottom-cta.jpg") center right / cover no-repeat;
+    var(--lq-dev-bottom-cta-image) center right / cover no-repeat;
   color: #fff;
 }
 

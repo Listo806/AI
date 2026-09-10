@@ -388,7 +388,7 @@
   color: #fff;
   background:
     linear-gradient(100deg, rgba(85,70,234,.98), rgba(111,58,235,.91) 52%, rgba(40,47,135,.22) 78%),
-    url("../../assets/public/images/listoqasa/ai-crm/ai-crm-cta.jpg") center right / cover no-repeat;
+    var(--lq-ai-cta-image) center right / cover no-repeat;
 }
 
 .lq-ai-bottom-cta-inner {
