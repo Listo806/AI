@@ -25,7 +25,6 @@ import { useTranslation } from "react-i18next";
 import SiteLayout from "../../components/layout/SiteLayout";
 
 import findAgentHeroImage from "../../assets/public/images/listoqasa/find-agent/agent-hero.jpg";
-import findAgentCtaImage from "../../assets/public/images/listoqasa/find-agent/cta-city.jpg";
 import azTeamImage from "../../assets/public/images/listoqasa/find-agent/az-team.jpg";
 import andresImage from "../../assets/public/images/listoqasa/find-agent/andres.jpg";
 import blueOfficeImage from "../../assets/public/images/listoqasa/find-agent/blue-office.jpg";
@@ -331,10 +330,7 @@ export default function FindAgentPage() {
           </section>
 
           {/* CTA */}
-          <section
-            className="lq-find-cta"
-            style={{ "--lq-find-cta-image": `url(${findAgentCtaImage})` }}
-          >
+          <section className="lq-find-cta">
             <div>
               <h2>{t("findAgent.ctaTitle")}</h2>
 
