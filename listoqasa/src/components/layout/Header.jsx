@@ -17,6 +17,7 @@ import {
   BriefcaseBusiness,
   Building2,
   ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
@@ -68,7 +69,7 @@ export default function Header({
       icon: CalendarDays,
       label: t("header.listPropertyMenu.vacationRentals"),
       description: t("header.listPropertyMenu.vacationRentalsDesc"),
-      to: "/vacation-rental-plans",
+      to: "/vacation-rentals",
     },
     {
       icon: UserRound,
@@ -301,50 +302,53 @@ export default function Header({
               </button>
 
               <div className="lq-account-dropdown">
-                <div className="lq-account-dropdown-section">
-                  <span className="lq-account-dropdown-eyebrow">
-                    {t("header.accountMenu.marketplace", {
-                      defaultValue: "MARKETPLACE",
-                    })}
+                <Link
+                  to="/sign-in"
+                  className="lq-account-signin-item"
+                >
+                  <span className="lq-account-signin-copy">
+                    <strong>
+                      {t("header.accountMenu.signIn", {
+                        defaultValue: "Sign In",
+                      })}
+                    </strong>
+
+                    <small>
+                      {t("header.accountMenu.marketplace", {
+                        defaultValue: "Marketplace",
+                      })}
+                    </small>
                   </span>
 
-                  <Link
-                    to="/sign-in"
-                    className="lq-account-dropdown-link"
-                  >
-                    {t("header.accountMenu.marketplaceSignIn", {
-                      defaultValue: "Marketplace Sign In",
-                    })}
-                  </Link>
-                </div>
+                  <ChevronRight
+                    size={20}
+                    strokeWidth={2}
+                  />
+                </Link>
 
-                <div className="lq-account-dropdown-divider" />
+                <a
+                  href="https://www.cortexaaicrm.com/sign-in"
+                  className="lq-account-signin-item"
+                >
+                  <span className="lq-account-signin-copy">
+                    <strong>
+                      {t("header.accountMenu.signIn", {
+                        defaultValue: "Sign In",
+                      })}
+                    </strong>
 
-                <div className="lq-account-dropdown-section">
-                  <span className="lq-account-dropdown-eyebrow">
-                    {t("header.accountMenu.aiCrm", {
-                      defaultValue: "AI CRM",
-                    })}
+                    <small>
+                      {t("header.accountMenu.cortexaCrm", {
+                        defaultValue: "Cortexa CRM",
+                      })}
+                    </small>
                   </span>
 
-                  <a
-                    href="https://www.cortexaaicrm.com/sign-in"
-                    className="lq-account-dropdown-link"
-                  >
-                    {t("header.accountMenu.crmSignIn", {
-                      defaultValue: "CRM Sign In",
-                    })}
-                  </a>
-
-                  <a
-                    href="https://www.cortexaaicrm.com/sign-up"
-                    className="lq-account-dropdown-cta"
-                  >
-                    {t("header.accountMenu.createCrm", {
-                      defaultValue: "Create CRM Account",
-                    })}
-                  </a>
-                </div>
+                  <ChevronRight
+                    size={20}
+                    strokeWidth={2}
+                  />
+                </a>
               </div>
             </div>
           </div>

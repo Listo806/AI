@@ -364,7 +364,7 @@
 .lq-language-dropdown {
   width: 154px;
   position: absolute;
-  top: 40px;
+  top: 46px;
   right: -9px;
   z-index: 200;
   padding: 8px 0;
@@ -449,8 +449,7 @@
 
 /* =========================
    DESKTOP ACCOUNT MENU
-   Hover the round hamburger button.
-   No close/X button: it disappears automatically on mouse leave.
+   Compact hover Sign In menu
 ========================= */
 
 .lq-account-menu {
@@ -460,40 +459,43 @@
   height: 56px;
 }
 
-/* Invisible bridge so the dropdown stays open while the pointer
-   moves from the round button down into the panel. */
+/* Hover bridge between round menu button and dropdown */
 .lq-account-menu::after {
   content: "";
   position: absolute;
-  top: 43px;
-  right: 0;
-  width: 285px;
-  height: 22px;
+  top: 42px;
+  right: -4px;
+  width: 260px;
+  height: 28px;
 }
 
 .lq-account-dropdown {
   position: absolute;
-  top: 54px;
-  right: 0;
+  top: 56px;
+  right: -4px;
   z-index: 260;
-  width: 285px;
-  padding: 34px 28px 30px;
-  border: 1px solid #d8dee8;
-  border-radius: 14px;
+
+  width: 258px;
+  padding: 11px 0;
+
+  border: 1px solid rgba(12, 30, 62, 0.08);
+  border-radius: 4px;
+
   background: #ffffff;
-  color: #111827;
+  color: #0b1b42;
+
   box-shadow:
-    0 20px 55px rgba(7, 20, 39, 0.18);
+    0 12px 28px rgba(5, 19, 45, 0.20);
 
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(-7px);
+  transform: translateY(-5px);
 
   transition:
-    opacity 0.16s ease,
-    visibility 0.16s ease,
-    transform 0.16s ease;
+    opacity 0.15s ease,
+    visibility 0.15s ease,
+    transform 0.15s ease;
 }
 
 .lq-account-menu:hover .lq-account-dropdown,
@@ -504,62 +506,60 @@
   transform: translateY(0);
 }
 
-.lq-account-dropdown-section {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
+.lq-account-signin-item {
+  width: 100%;
+  min-height: 72px;
 
-.lq-account-dropdown-eyebrow {
-  margin-bottom: 20px;
-  color: #667085;
-  font-size: 13px;
-  line-height: 1;
-  font-weight: 800;
-  letter-spacing: 4px;
-}
-
-.lq-account-dropdown-link {
-  color: #121826;
-  text-decoration: none;
-  font-size: 24px;
-  line-height: 1.2;
-  font-weight: 500;
-  transition: color 0.16s ease;
-}
-
-.lq-account-dropdown-link:hover {
-  color: #0c4d91;
-}
-
-.lq-account-dropdown-divider {
-  height: 1px;
-  margin: 28px 0 30px;
-  background: #d9dee7;
-}
-
-.lq-account-dropdown-cta {
-  min-height: 58px;
-  margin-top: 28px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 18px;
-  border-radius: 6px;
-  background: #123f78;
-  color: #ffffff;
+  justify-content: space-between;
+  gap: 18px;
+
+  padding: 13px 20px;
+
+  color: #0a1a43;
   text-decoration: none;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
+
   transition:
-    background 0.16s ease,
-    transform 0.16s ease;
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
-.lq-account-dropdown-cta:hover {
-  background: #0d3567;
-  transform: translateY(-1px);
+.lq-account-signin-item:hover {
+  background: #f6f8fc;
+}
+
+.lq-account-signin-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.lq-account-signin-copy strong {
+  color: #0a1a43;
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.lq-account-signin-copy small {
+  margin-top: 4px;
+
+  color: #98a2b8;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 450;
+}
+
+.lq-account-signin-item > svg {
+  flex: 0 0 auto;
+  color: #0b1f50;
+  transition: transform 0.15s ease;
+}
+
+.lq-account-signin-item:hover > svg {
+  transform: translateX(2px);
 }
 
 @media (max-width: 900px) {

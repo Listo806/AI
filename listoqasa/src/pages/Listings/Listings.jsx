@@ -1,7 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
+import {
+  Search,
+  SlidersHorizontal,
+  ChevronDown,
+  X,
+  Heart,
+  MapPin,
+  BedDouble,
+  Bath,
+  Maximize2,
+  MessageCircle,
+  UserRound,
+  Bookmark,
+} from 'lucide-react';
 import apiClient from '../../api/apiClient';
 import PropertyMap from '../../components/PropertyMap';
 import ContactModal from '../../components/ContactModal';
@@ -73,6 +86,22 @@ export default function Listings() {
 
   const [mobilePanel, setMobilePanel] = useState('list');
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState(() => new Set());
+  const [searchSaved, setSearchSaved] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.add('lq-marketplace-white-page');
+    return () => document.body.classList.remove('lq-marketplace-white-page');
+  }, []);
+
+  const toggleFavorite = (propertyId) => {
+    setFavoriteIds((current) => {
+      const next = new Set(current);
+      if (next.has(propertyId)) next.delete(propertyId);
+      else next.add(propertyId);
+      return next;
+    });
+  };
 
   // Calculate distance between two coordinates (Haversine formula)
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -619,16 +648,31 @@ export default function Listings() {
                 )}
               </div>
 
-              <label className="listings-sort-compact">
-                <span>{t('listings.sortLabel', { defaultValue: 'Sort:' })}</span>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="newest">{t('listings.sortNewest')}</option>
-                  <option value="price-low">{t('listings.sortPriceLow')}</option>
-                  <option value="price-high">{t('listings.sortPriceHigh')}</option>
-                  <option value="distance">{t('listings.sortDistance')}</option>
-                </select>
-                <ChevronDown size={15} />
-              </label>
+              <div className="listings-results-meta-actions">
+                <label className="listings-sort-compact">
+                  <span>{t('listings.sortLabel', { defaultValue: 'Sort:' })}</span>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                    <option value="newest">{t('listings.sortNewest')}</option>
+                    <option value="price-low">{t('listings.sortPriceLow')}</option>
+                    <option value="price-high">{t('listings.sortPriceHigh')}</option>
+                    <option value="distance">{t('listings.sortDistance')}</option>
+                  </select>
+                  <ChevronDown size={15} />
+                </label>
+
+                <button
+                  type="button"
+                  className={`listings-save-search ${searchSaved ? 'active' : ''}`}
+                  onClick={() => setSearchSaved((value) => !value)}
+                >
+                  <Bookmark size={17} />
+                  <span>
+                    {searchSaved
+                      ? t('listings.searchSaved', { defaultValue: 'Search Saved' })
+                      : t('listings.saveSearch', { defaultValue: 'Save Search' })}
+                  </span>
+                </button>
+              </div>
             </div>
           </section>
 
@@ -701,63 +745,140 @@ export default function Listings() {
                           }}
                         >
                           <div className="listings-card-media">
-                            <Link to={detailPath} className="listings-card-image-wrap" onClick={(event) => event.stopPropagation()}>
+                            <Link
+                              to={detailPath}
+                              className="listings-card-image-wrap"
+                              onClick={(event) => event.stopPropagation()}
+                            >
                               {property.thumbnailUrl ? (
                                 <img
                                   src={property.thumbnailUrl}
-                                  alt=""
+                                  alt={property.title || ''}
                                   className="listings-card-image"
                                   loading="lazy"
                                 />
                               ) : (
-                                <div className="listings-card-image listings-card-image--placeholder" aria-hidden />
+                                <div
+                                  className="listings-card-image listings-card-image--placeholder"
+                                  aria-hidden
+                                />
                               )}
                             </Link>
-                          </div>
-                          <div className="listings-card-body">
-                            <div className="listings-card-topline">
-                              <h3 className="listings-card-title">
-                                <Link to={detailPath} onClick={(event) => event.stopPropagation()}>{property.title || t('listings.untitledProperty')}</Link>
-                              </h3>
-                            </div>
-                            <p className="listings-card-subtitle">{marketExploreSubtitle(property, t)}</p>
-                            {typeLabel && (
-                              <p className="listings-card-meta-line">{typeLabel}</p>
+
+                            {(property.isFeatured || property.featured) && (
+                              <span className="listings-featured-badge">
+                                {t('listings.featured', { defaultValue: 'Featured' })}
+                              </span>
                             )}
-                            <div className="listings-card-price-row">
-                              {property.price != null ? (
-                                <>
-                                  <span className="listings-card-price">{formatPrice(property.price)}</span>
-                                  {property.type === 'rent' && (
-                                    <span className="listings-card-price-note">{t('listings.perMonth')}</span>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="listings-card-price listings-card-price--muted">{t('listings.priceOnRequest')}</span>
+
+                            <button
+                              type="button"
+                              className={`listings-card-heart ${favoriteIds.has(property.id) ? 'active' : ''}`}
+                              aria-label={t('listings.save', { defaultValue: 'Save property' })}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleFavorite(property.id);
+                              }}
+                            >
+                              <Heart
+                                size={24}
+                                fill={favoriteIds.has(property.id) ? 'currentColor' : 'none'}
+                              />
+                            </button>
+                          </div>
+
+                          <div className="listings-card-body">
+                            <div className="listings-card-heading-row">
+                              <div className="listings-card-price-row">
+                                {property.price != null ? (
+                                  <>
+                                    <span className="listings-card-price">
+                                      {formatPrice(property.price)}
+                                    </span>
+                                    {property.type === 'rent' && (
+                                      <span className="listings-card-price-note">
+                                        {t('listings.perMonth')}
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="listings-card-price listings-card-price--muted">
+                                    {t('listings.priceOnRequest')}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="listings-card-location-inline">
+                                <MapPin size={15} />
+                                <span>
+                                  {[property.address || property.neighborhood, property.city]
+                                    .filter(Boolean)
+                                    .join(', ') || property.state || 'Ecuador'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <h3 className="listings-card-title listings-card-title--compact">
+                              <Link
+                                to={detailPath}
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {property.title || t('listings.untitledProperty')}
+                              </Link>
+                            </h3>
+
+                            <div className="listings-card-specs">
+                              {property.bedrooms != null && (
+                                <span>
+                                  <BedDouble size={16} />
+                                  {property.bedrooms}
+                                </span>
+                              )}
+
+                              {property.bathrooms != null && (
+                                <span>
+                                  <Bath size={16} />
+                                  {property.bathrooms}
+                                </span>
+                              )}
+
+                              {(property.squareFeet || property.square_feet || property.lotSize) && (
+                                <span>
+                                  <Maximize2 size={16} />
+                                  {Number(
+                                    property.squareFeet ||
+                                    property.square_feet ||
+                                    property.lotSize
+                                  ).toLocaleString()} m²
+                                </span>
                               )}
                             </div>
-                            <div className="listings-card-actions listings-card-actions--compact">
-                              <div className="listings-action-buttons">
-                                <button
-                                  type="button"
-                                  onClick={(event) => { event.stopPropagation(); setWhatsappProperty(property); }}
-                                  className="listings-btn listings-btn-whatsapp listings-btn--sm"
-                                >
-                                  WhatsApp
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(event) => { event.stopPropagation(); handleContactAgent(property); }}
-                                  className="listings-btn listings-btn-contact listings-btn--sm"
-                                >
-                                  {t('listings.contact')}
-                                </button>
-                              </div>
-                              <Link to={detailPath} className="listings-card-detail-link" onClick={(event) => event.stopPropagation()}>
-                                {t('listings.viewDetails')}
-                              </Link>
+
+                            <div className="listings-card-actions listings-card-actions--reference">
+                              <button
+                                type="button"
+                                className="listings-card-action listings-card-action-whatsapp"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setWhatsappProperty(property);
+                                }}
+                              >
+                                <MessageCircle size={19} />
+                                WhatsApp
+                              </button>
+
+                              <button
+                                type="button"
+                                className="listings-card-action listings-card-action-contact"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleContactAgent(property);
+                                }}
+                              >
+                                <UserRound size={19} />
+                                {t('listings.contact')}
+                              </button>
                             </div>
-                            <p className="listings-card-footnote">{t('listings.listedDate', { date: formatDate(property.createdAt) })}</p>
                           </div>
                         </article>
                       );
