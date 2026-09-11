@@ -7,6 +7,7 @@ import PropertyCard from "../../components/property/PropertyCard";
 import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
 import "./HomePage.css";
 import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
+import MarketplaceBrowseSections from "../../components/marketplace/MarketplaceBrowseSections";
 
 const FALLBACK_PROPERTY_IMAGE = "/images/listoqasa/properties/property-placeholder.jpg";
 
@@ -242,6 +243,8 @@ export default function HomePage() {
 
           <ListingSection title={t("home.newListings")} properties={newListings} loading={newLoading} error={newError} newBadge viewAllTo="/buy" />
           <ListingSection title={t("home.luxuryHomes")} properties={luxuryListings} loading={luxuryLoading} error={luxuryError} viewAllTo="/buy?collection=luxury" />
+
+          <MarketplaceBrowseSections />
 
           <Link to="/owners" className="lq-owner-home-banner">
             <div className="lq-owner-home-icon"><HandCoins size={42} strokeWidth={1.6} /></div>

@@ -8,6 +8,7 @@ import "./i18n/registerPricingPlans";
 import "./i18n/registerHeaderVacationHero";
 import "./i18n/registerCenteredHero";
 import "./i18n/registerHomeHeroMode";
+import "./i18n/registerVacationLegacy";
 import App from "./App";
 
 import "./styles/globals.css";

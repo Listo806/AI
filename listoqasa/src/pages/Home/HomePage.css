@@ -533,3 +533,8 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+
+/* Marketplace browse moved from Vacation Rentals into Home */
+.lq-home-content .lq-home-marketplace-browse{width:100%;padding:0 0 18px;background:#fff;}
+.lq-home-content .lq-home-marketplace-browse .lq-vr-container{width:100%;}
