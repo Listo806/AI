@@ -1,0 +1,197 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import apiClient from '../api/apiClient';
+import { normalizePhoneToE164 } from '../utils/whatsapp';
+import '../styles/ContactModal.css';
+
+export default function ContactModal({ property, onClose, onSubmit }) {
+  const { t } = useTranslation();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    notes: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      // Build property address for notes
+      const addressParts = [];
+      if (property.address) addressParts.push(property.address);
+      if (property.city) addressParts.push(property.city);
+      if (property.state) addressParts.push(property.state);
+      const address = addressParts.length > 0 ? addressParts.join(', ') : property.title;
+
+      // Create lead with property association (phone normalized to E.164)
+      const normalizedPhone = formData.phone ? normalizePhoneToE164(formData.phone) : undefined;
+      const leadData = {
+        name: formData.name,
+        email: formData.email || undefined,
+        phone: normalizedPhone || undefined,
+        notes: formData.notes || `Interested in property: ${address}`,
+        source: 'contact_form',
+        status: 'new',
+        propertyId: property.id, // Associate lead with property
+      };
+
+      // Use public endpoint for contact form (no auth required)
+      const response = await apiClient.request('/leads/public', {
+        method: 'POST',
+        body: JSON.stringify(leadData),
+      });
+
+      setSuccess(true);
+      
+      // Call onSubmit callback if provided
+      if (onSubmit) {
+        onSubmit(response);
+      }
+
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (err) {
+      setError(err.message || t('contacts.modal.submitError', 'Failed to submit contact form'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="crm-modal-overlay" onClick={onClose}>
+        <div className="crm-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="crm-modal-header">
+            <h3>{t('contacts.modal.successTitle', 'Success!')}</h3>
+            <button className="crm-modal-close" onClick={onClose}>×</button>
+          </div>
+          <div className="crm-modal-body">
+            <p style={{ textAlign: 'center', padding: '20px', color: '#166534' }}>
+              ✓ {t('contacts.modal.successMessage', "Your message has been sent. We'll get back to you soon!")}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="crm-modal-overlay" onClick={onClose}>
+      <div className="crm-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="crm-modal-header">
+          <h3>{t('contacts.modal.title', 'Contact Agent')}</h3>
+          <button className="crm-modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="crm-modal-body">
+          <p style={{ marginBottom: '20px', color: '#64748b' }}>
+            {t('contacts.modal.interestedPrefix', 'Interested in ')}<strong>{property.title}</strong>{t('contacts.modal.interestedSuffix', "? Fill out the form below and we'll get back to you.")}
+          </p>
+
+          {error && (
+            <div className="crm-error" style={{ marginBottom: '20px' }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="crm-form">
+            <div className="crm-form-field">
+              <label htmlFor="contact-name">{t('contacts.modal.nameLabel', 'Name *')}</label>
+              <input
+                id="contact-name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                placeholder={t('contacts.modal.namePlaceholder', 'Your full name')}
+              />
+            </div>
+
+            <div className="crm-form-field">
+              <label htmlFor="contact-email">{t('contacts.modal.emailLabel', 'Email')}</label>
+              <input
+                id="contact-email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                disabled={loading}
+                placeholder={t('contacts.modal.emailPlaceholder', 'your.email@example.com')}
+              />
+            </div>
+
+            <div className="crm-form-field">
+              <label htmlFor="contact-phone">{t('contacts.modal.phoneLabel', 'Phone')}</label>
+              <input
+                id="contact-phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                onBlur={(e) => {
+                  const val = e.target.value?.trim();
+                  if (val) {
+                    const normalized = normalizePhoneToE164(val);
+                    if (normalized && normalized !== val) {
+                      setFormData((prev) => ({ ...prev, phone: normalized }));
+                    }
+                  }
+                }}
+                disabled={loading}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+
+            <div className="crm-form-field">
+              <label htmlFor="contact-notes">{t('contacts.modal.messageLabel', 'Message')}</label>
+              <textarea
+                id="contact-notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                rows={4}
+                disabled={loading}
+                placeholder={t('contacts.modal.messagePlaceholder', 'Tell us about your interest in this property...')}
+              />
+            </div>
+
+            <div className="crm-form-actions">
+              <button
+                type="button"
+                onClick={onClose}
+                className="crm-btn crm-btn-secondary"
+                disabled={loading}
+              >
+                {t('contacts.modal.cancel', 'Cancel')}
+              </button>
+              <button
+                type="submit"
+                className="crm-btn crm-btn-primary"
+                disabled={loading}
+              >
+                {loading ? t('contacts.modal.sending', 'Sending...') : t('contacts.modal.sendMessage', 'Send Message')}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

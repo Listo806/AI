@@ -9,6 +9,8 @@
   left: 0;
   right: 0;
   height: 72px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
 }
 .lq-header-inner {
   width: min(1210px, calc(100% - 42px));

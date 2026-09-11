@@ -139,7 +139,7 @@ export default function OwnersPage() {
   ];
 
   return (
-    <SiteLayout headerVariant="dark">
+    <SiteLayout headerVariant="light">
       {/* HERO */}
       <section
         className="lq-owner-hero"

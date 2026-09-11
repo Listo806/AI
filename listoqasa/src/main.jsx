@@ -9,6 +9,7 @@ import "./i18n/registerHeaderVacationHero";
 import "./i18n/registerCenteredHero";
 import "./i18n/registerHomeHeroMode";
 import "./i18n/registerVacationLegacy";
+import "./i18n/registerMarketplaceListings";
 import App from "./App";
 
 import "./styles/globals.css";
