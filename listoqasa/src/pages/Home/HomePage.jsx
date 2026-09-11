@@ -1,6 +1,24 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Volume2, Home, KeyRound, Building2, LandPlot, Store, Umbrella, Construction, ClipboardList, ArrowRight, HandCoins } from "lucide-react";
+import {
+  Search,
+  Volume2,
+  Home,
+  KeyRound,
+  Building2,
+  LandPlot,
+  Store,
+  Umbrella,
+  Construction,
+  ClipboardList,
+  ArrowRight,
+  HandCoins,
+  Heart,
+  Bell,
+  MapPin,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SiteLayout from "../../components/layout/SiteLayout";
 import PropertyCard from "../../components/property/PropertyCard";
@@ -117,6 +135,78 @@ export default function HomePage() {
     { label: t("home.categories.developers"), icon: Construction, href: "/developers" },
     { label: t("home.categories.newProjects"), icon: ClipboardList, href: "/new-projects" },
   ], [t]);
+
+  const marketplaceBenefits = useMemo(
+    () => [
+      {
+        key: "findFaster",
+        icon: Search,
+        title: t("home.marketplaceBenefits.findFaster.title", {
+          defaultValue: "Find Faster",
+        }),
+        description: t("home.marketplaceBenefits.findFaster.description", {
+          defaultValue:
+            "Powerful search and filters help you find the right property quickly.",
+        }),
+      },
+      {
+        key: "saveFavorites",
+        icon: Heart,
+        title: t("home.marketplaceBenefits.saveFavorites.title", {
+          defaultValue: "Save Favorites",
+        }),
+        description: t("home.marketplaceBenefits.saveFavorites.description", {
+          defaultValue:
+            "Save your favorite properties and get notified of new matches.",
+        }),
+      },
+      {
+        key: "stayUpdated",
+        icon: Bell,
+        title: t("home.marketplaceBenefits.stayUpdated.title", {
+          defaultValue: "Stay Updated",
+        }),
+        description: t("home.marketplaceBenefits.stayUpdated.description", {
+          defaultValue:
+            "Be the first to know about new listings and price changes.",
+        }),
+      },
+      {
+        key: "localKnowledge",
+        icon: MapPin,
+        title: t("home.marketplaceBenefits.localKnowledge.title", {
+          defaultValue: "Local Knowledge",
+        }),
+        description: t("home.marketplaceBenefits.localKnowledge.description", {
+          defaultValue:
+            "Explore neighborhoods and discover the best places to live.",
+        }),
+      },
+      {
+        key: "safeSecure",
+        icon: ShieldCheck,
+        title: t("home.marketplaceBenefits.safeSecure.title", {
+          defaultValue: "Safe & Secure",
+        }),
+        description: t("home.marketplaceBenefits.safeSecure.description", {
+          defaultValue:
+            "Connect with verified agents and property owners with confidence.",
+        }),
+      },
+      {
+        key: "mobileFriendly",
+        icon: Smartphone,
+        title: t("home.marketplaceBenefits.mobileFriendly.title", {
+          defaultValue: "Mobile Friendly",
+        }),
+        description: t("home.marketplaceBenefits.mobileFriendly.description", {
+          defaultValue:
+            "Search, save, and connect anytime, anywhere on your device.",
+        }),
+      },
+    ],
+    [t]
+  );
 
   const submitSearch = (event) => {
     event.preventDefault();
@@ -244,13 +334,35 @@ export default function HomePage() {
           <ListingSection title={t("home.newListings")} properties={newListings} loading={newLoading} error={newError} newBadge viewAllTo="/buy" />
           <ListingSection title={t("home.luxuryHomes")} properties={luxuryListings} loading={luxuryLoading} error={luxuryError} viewAllTo="/buy?collection=luxury" />
 
-          <MarketplaceBrowseSections />
+          
 
           <Link to="/owners" className="lq-owner-home-banner">
             <div className="lq-owner-home-icon"><HandCoins size={42} strokeWidth={1.6} /></div>
             <div className="lq-owner-home-copy"><h3>{t("home.ownerBannerTitle")}</h3><p>{t("home.ownerBannerDescription")}</p></div>
             <ArrowRight className="lq-owner-home-arrow" size={34} />
           </Link>
+          <MarketplaceBrowseSections />
+
+          <section className="lq-marketplace-benefits">
+            {marketplaceBenefits.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <article
+                  key={item.key}
+                  className="lq-marketplace-benefit"
+                >
+                  <div className="lq-marketplace-benefit-icon">
+                    <Icon size={39} strokeWidth={1.65} />
+                  </div>
+
+                  <h3>{item.title}</h3>
+
+                  <p>{item.description}</p>
+                </article>
+              );
+            })}
+          </section>
         </div>
       </div>
     </SiteLayout>

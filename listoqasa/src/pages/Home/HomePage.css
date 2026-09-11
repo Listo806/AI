@@ -538,3 +538,108 @@
 /* Marketplace browse moved from Vacation Rentals into Home */
 .lq-home-content .lq-home-marketplace-browse{width:100%;padding:0 0 18px;background:#fff;}
 .lq-home-content .lq-home-marketplace-browse .lq-vr-container{width:100%;}
+
+
+/* =========================================================
+   HOME — MARKETPLACE BENEFITS
+   Section below "Are you a real estate professional?"
+========================================================= */
+
+.lq-marketplace-benefits {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 20px 0 4px;
+  padding: 20px 0 8px;
+  background: #ffffff;
+}
+
+.lq-marketplace-benefit {
+  position: relative;
+  min-height: 158px;
+  padding: 0 28px;
+  text-align: center;
+  color: #0a1930;
+}
+
+.lq-marketplace-benefit:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 0;
+  width: 1px;
+  height: 132px;
+  background: #dfe5ed;
+}
+
+.lq-marketplace-benefit-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 11px;
+  display: grid;
+  place-items: center;
+  color: #0867ff;
+}
+
+.lq-marketplace-benefit h3 {
+  margin: 0 0 9px;
+  color: #09182f;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.lq-marketplace-benefit p {
+  max-width: 190px;
+  margin: 0 auto;
+  color: #34445d;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 1180px) {
+  .lq-marketplace-benefits {
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 28px;
+  }
+
+  .lq-marketplace-benefit:nth-child(3)::after {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .lq-marketplace-benefits {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px 0;
+    padding-top: 12px;
+  }
+
+  .lq-marketplace-benefit {
+    min-height: 170px;
+    padding: 0 18px;
+  }
+
+  .lq-marketplace-benefit:nth-child(2n)::after {
+    display: none;
+  }
+
+  .lq-marketplace-benefit:nth-child(3)::after {
+    display: block;
+  }
+}
+
+@media (max-width: 430px) {
+  .lq-marketplace-benefits {
+    grid-template-columns: 1fr;
+  }
+
+  .lq-marketplace-benefit {
+    min-height: auto;
+    padding: 0 30px 24px;
+  }
+
+  .lq-marketplace-benefit::after {
+    display: none !important;
+  }
+}
