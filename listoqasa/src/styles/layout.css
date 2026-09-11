@@ -446,3 +446,131 @@
   color: #0867ff;
   font-weight: 700;
 }
+
+/* =========================
+   DESKTOP ACCOUNT MENU
+   Hover the round hamburger button.
+   No close/X button: it disappears automatically on mouse leave.
+========================= */
+
+.lq-account-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 56px;
+}
+
+/* Invisible bridge so the dropdown stays open while the pointer
+   moves from the round button down into the panel. */
+.lq-account-menu::after {
+  content: "";
+  position: absolute;
+  top: 43px;
+  right: 0;
+  width: 285px;
+  height: 22px;
+}
+
+.lq-account-dropdown {
+  position: absolute;
+  top: 54px;
+  right: 0;
+  z-index: 260;
+  width: 285px;
+  padding: 34px 28px 30px;
+  border: 1px solid #d8dee8;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #111827;
+  box-shadow:
+    0 20px 55px rgba(7, 20, 39, 0.18);
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-7px);
+
+  transition:
+    opacity 0.16s ease,
+    visibility 0.16s ease,
+    transform 0.16s ease;
+}
+
+.lq-account-menu:hover .lq-account-dropdown,
+.lq-account-menu:focus-within .lq-account-dropdown {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.lq-account-dropdown-section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.lq-account-dropdown-eyebrow {
+  margin-bottom: 20px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 4px;
+}
+
+.lq-account-dropdown-link {
+  color: #121826;
+  text-decoration: none;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 500;
+  transition: color 0.16s ease;
+}
+
+.lq-account-dropdown-link:hover {
+  color: #0c4d91;
+}
+
+.lq-account-dropdown-divider {
+  height: 1px;
+  margin: 28px 0 30px;
+  background: #d9dee7;
+}
+
+.lq-account-dropdown-cta {
+  min-height: 58px;
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 6px;
+  background: #123f78;
+  color: #ffffff;
+  text-decoration: none;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  transition:
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+
+.lq-account-dropdown-cta:hover {
+  background: #0d3567;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  /* On tablet/mobile the existing click-to-open side menu remains.
+     The hover dropdown is desktop-only. */
+  .lq-account-menu {
+    height: auto;
+  }
+
+  .lq-account-menu::after,
+  .lq-account-dropdown {
+    display: none;
+  }
+}

@@ -68,7 +68,7 @@ export default function Header({
       icon: CalendarDays,
       label: t("header.listPropertyMenu.vacationRentals"),
       description: t("header.listPropertyMenu.vacationRentalsDesc"),
-      to: "/vacation-rentals",
+      to: "/vacation-rental-plans",
     },
     {
       icon: UserRound,
@@ -120,6 +120,15 @@ export default function Header({
 
     document.documentElement.lang = code;
     };
+
+  const handleMenuButtonClick = () => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 900px)").matches
+    ) {
+      setMobileOpen(true);
+    }
+  };
 
   return (
     <>
@@ -278,19 +287,66 @@ export default function Header({
               </div>
             </div>
 
-            <button
-              type="button"
-              className="lq-menu-button"
-              onClick={() =>
-                setMobileOpen(true)
-              }
-              aria-label="Open menu"
-            >
-              <Menu
-                size={24}
-                strokeWidth={2.2}
-              />
-            </button>
+            <div className="lq-account-menu">
+              <button
+                type="button"
+                className="lq-menu-button"
+                onClick={handleMenuButtonClick}
+                aria-label="Account menu"
+              >
+                <Menu
+                  size={24}
+                  strokeWidth={2.2}
+                />
+              </button>
+
+              <div className="lq-account-dropdown">
+                <div className="lq-account-dropdown-section">
+                  <span className="lq-account-dropdown-eyebrow">
+                    {t("header.accountMenu.marketplace", {
+                      defaultValue: "MARKETPLACE",
+                    })}
+                  </span>
+
+                  <Link
+                    to="/sign-in"
+                    className="lq-account-dropdown-link"
+                  >
+                    {t("header.accountMenu.marketplaceSignIn", {
+                      defaultValue: "Marketplace Sign In",
+                    })}
+                  </Link>
+                </div>
+
+                <div className="lq-account-dropdown-divider" />
+
+                <div className="lq-account-dropdown-section">
+                  <span className="lq-account-dropdown-eyebrow">
+                    {t("header.accountMenu.aiCrm", {
+                      defaultValue: "AI CRM",
+                    })}
+                  </span>
+
+                  <a
+                    href="https://www.cortexaaicrm.com/sign-in"
+                    className="lq-account-dropdown-link"
+                  >
+                    {t("header.accountMenu.crmSignIn", {
+                      defaultValue: "CRM Sign In",
+                    })}
+                  </a>
+
+                  <a
+                    href="https://www.cortexaaicrm.com/sign-up"
+                    className="lq-account-dropdown-cta"
+                  >
+                    {t("header.accountMenu.createCrm", {
+                      defaultValue: "Create CRM Account",
+                    })}
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </header>
