@@ -36,7 +36,7 @@ function normalizeListing(listing) {
 }
 
 function ListingSection({ title, properties, loading, error, newBadge = false, viewAllTo = "/buy" }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   if (!loading && !error && properties.length === 0) return null;
 
   return (
@@ -62,9 +62,10 @@ function ListingSection({ title, properties, loading, error, newBadge = false, v
 }
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
+  const [searchMode, setSearchMode] = useState("buy");
   const [newListings, setNewListings] = useState([]);
   const [luxuryListings, setLuxuryListings] = useState([]);
   const [newLoading, setNewLoading] = useState(true);
@@ -118,27 +119,114 @@ export default function HomePage() {
 
   const submitSearch = (event) => {
     event.preventDefault();
-    const value = searchValue.trim();
-    navigate(value ? `/buy?search=${encodeURIComponent(value)}` : "/buy");
+
+    const city = searchValue.trim();
+
+    if (!city) return;
+
+    const params = new URLSearchParams({
+      city,
+      mode: searchMode,
+    });
+
+    navigate(`/search-results?${params.toString()}`);
+  };
+
+  const handleHeroMode = (mode) => {
+    if (mode === "vacation") {
+      const params = new URLSearchParams(window.location.search);
+      const currentLanguage = params.get("lang") || "en";
+
+      navigate(`/vacation-rentals?lang=${currentLanguage}`);
+      return;
+    }
+
+    setSearchMode(mode);
   };
 
   return (
     <SiteLayout headerVariant="light">
       <section
-        className="lq-home-hero"
+        className={`lq-home-hero lq-home-hero-${searchMode}`}
         style={{
           "--lq-home-hero-image": `url(${homeHeroImage})`,
         }}
       >
         <div className="lq-container lq-home-hero-inner">
           <div className="lq-home-hero-content">
-            <h1>{t("home.heroTitle1")}<br />{t("home.heroTitle2")}</h1>
-            <p>{t("home.heroDescription")}</p>
+            <h1>
+              {searchMode === "rent"
+                ? t("home.heroRentTitle", {
+                    defaultValue: "Find the Perfect Rental",
+                  })
+                : t("home.heroBuyTitle", {
+                    defaultValue: "Find Homes That Match You",
+                  })}
+            </h1>
+
+            <div className="lq-home-hero-tabs">
+              <button
+                type="button"
+                className={searchMode === "buy" ? "active" : ""}
+                onClick={() => handleHeroMode("buy")}
+              >
+                {t("home.heroTabs.buy", { defaultValue: "Buy" })}
+              </button>
+
+              <button
+                type="button"
+                className={searchMode === "rent" ? "active" : ""}
+                onClick={() => handleHeroMode("rent")}
+              >
+                {t("home.heroTabs.rent", { defaultValue: "Rent" })}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleHeroMode("vacation")}
+              >
+                {t("home.heroTabs.vacationRentals", {
+                  defaultValue: "Vacation Rentals",
+                })}
+              </button>
+            </div>
+
             <form className="lq-home-search" onSubmit={submitSearch}>
               <Search size={25} />
-              <input type="text" value={searchValue} onChange={(e) => setSearchValue(e.target.value)} placeholder={t("home.searchPlaceholder")} />
-              <button type="button" className="lq-search-voice" aria-label="Voice search"><Volume2 size={26} /></button>
+
+              <input
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder={t("home.searchPlaceholder", {
+                  defaultValue:
+                    "Search by city, neighborhood, or property",
+                })}
+              />
+
+              <button
+                type="button"
+                className="lq-search-voice"
+                aria-label="Voice search"
+              >
+                <Volume2 size={26} />
+              </button>
+
+              <button
+                type="submit"
+                className="lq-home-search-submit"
+              >
+                {t("home.searchButton", {
+                  defaultValue: "Search",
+                })}
+              </button>
             </form>
+
+            <p className="lq-home-hero-tagline">
+              {t("home.heroTagline", {
+                defaultValue: "Search smarter. Search faster.",
+              })}
+            </p>
           </div>
         </div>
       </section>

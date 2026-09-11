@@ -1,3 +1,102 @@
+/* OLD LISTOQASA STYLE - CENTERED VACATION HERO */
+.lq-vr-hero {
+  position: relative;
+  min-height: 470px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: var(--lq-vr-hero-image) center center / cover no-repeat;
+}
+.lq-vr-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(3,16,38,.30), rgba(3,16,38,.10) 48%, rgba(3,16,38,.34));
+}
+.lq-vr-hero-inner {
+  position: relative;
+  z-index: 2;
+  width: min(1100px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 88px 20px 28px;
+  display: flex;
+  justify-content: center;
+}
+.lq-vr-hero-copy {
+  width: min(900px, 100%);
+  padding: 0;
+  text-align: center;
+  color: #fff;
+}
+
+.lq-vr-hero-tabs {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 34px;
+}
+.lq-vr-hero-tabs a {
+  position: relative;
+  padding: 7px 0 10px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 21px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.lq-vr-hero-tabs a.active::after,
+.lq-vr-hero-tabs a:hover::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: #2f73ff;
+}
+.lq-vr-hero-search {
+  width: min(900px, 100%);
+  min-height: 72px;
+  margin: 14px auto 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 8px 7px 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 16px 38px rgba(0,0,0,.2);
+}
+.lq-vr-hero-search button {
+  min-width: 105px;
+  min-height: 56px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background: #2f73ff;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.lq-vr-hero-tagline {
+  margin: 14px 0 0 !important;
+  color: #fff !important;
+  font-size: 24px !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,.32);
+}
+@media (max-width: 760px) {
+  .lq-vr-hero { min-height: 560px; }
+  .lq-vr-hero-inner { width: calc(100% - 28px); padding: 100px 8px 28px; }
+  .lq-vr-hero-copy h1 { font-size: clamp(42px, 11vw, 58px); letter-spacing: -1.7px; }
+  .lq-vr-hero-tabs { gap: 18px; flex-wrap: wrap; }
+  .lq-vr-hero-tabs a { font-size: 17px; }
+  .lq-vr-hero-search { min-height: 64px; padding-left: 16px; }
+  .lq-vr-hero-search button { min-width: 92px; min-height: 50px; padding: 0 18px; }
+  .lq-vr-hero-tagline { font-size: 20px !important; }
+}
+
 .lq-vr-hero {
   position: relative;
   min-height: 470px;
@@ -39,7 +138,7 @@
 .lq-vr-hero-copy h1 {
   margin: 0;
   color: #ffffff;
-  font-size: clamp(50px, 5.3vw, 73px);
+  font-size: clamp(50px, 5vw, 73px);
   line-height: 0.98;
   letter-spacing: -2.5px;
   font-weight: 750;

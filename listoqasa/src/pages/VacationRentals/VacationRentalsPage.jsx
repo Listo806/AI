@@ -638,7 +638,7 @@ export default function VacationRentalsPage() {
 
   return (
     <SiteLayout
-      headerVariant="dark"
+      headerVariant="light"
     >
       <section
         className="lq-vr-hero"
@@ -647,28 +647,35 @@ export default function VacationRentalsPage() {
         }}
       >
         <div className="lq-vr-hero-overlay" />
-
         <div className="lq-vr-hero-inner">
           <div className="lq-vr-hero-copy">
             <h1>{t("vacationBrowse.heroTitle")}</h1>
 
-            <p>{t("vacationBrowse.heroDescription")}</p>
+            <div className="lq-vr-hero-tabs">
+              <Link to="/">{t("vacationBrowse.heroTabs.buy")}</Link>
+              <Link to="/">{t("vacationBrowse.heroTabs.rent")}</Link>
+              <Link to="/vacation-rentals" className="active">
+                {t("vacationBrowse.heroTabs.vacationRentals")}
+              </Link>
+            </div>
 
             <form
               className="lq-vr-hero-search"
               onSubmit={(event) => event.preventDefault()}
             >
               <MapPin size={20} />
-
               <input
                 type="text"
                 placeholder={t("vacationBrowse.heroSearchPlaceholder")}
               />
-
               <button type="submit">
                 {t("vacationBrowse.heroSearchButton")}
               </button>
             </form>
+
+            <p className="lq-vr-hero-tagline">
+              {t("vacationBrowse.heroTagline")}
+            </p>
           </div>
         </div>
       </section>

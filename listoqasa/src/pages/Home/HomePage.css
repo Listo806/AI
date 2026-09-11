@@ -1,3 +1,195 @@
+/* =========================================================
+   HOME HERO — MATCH OLD LISTOQASA INTERACTION
+   Buy/Rent stay on Home and switch active mode.
+   Vacation Rentals navigates to /vacation-rentals.
+========================================================= */
+
+.lq-home-hero {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(4, 19, 39, .28) 0%,
+      rgba(4, 19, 39, .10) 48%,
+      rgba(4, 19, 39, .34) 100%
+    ),
+    var(--lq-home-hero-image)
+      center center / cover no-repeat;
+}
+
+/*
+ * The old Webflow also swapped the hero background for Rent.
+ * We keep the current imported React asset to avoid inventing/missing files.
+ * If a dedicated rent image is later added, set a separate CSS variable here.
+ */
+.lq-home-hero-rent {
+  background-position: center center;
+}
+
+.lq-home-hero-inner {
+  min-height: 520px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 92px 20px 28px;
+}
+
+.lq-home-hero-content {
+  width: min(900px, 100%);
+  padding: 0;
+  text-align: center;
+  color: #fff;
+}
+
+.lq-home-hero-tabs {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+}
+
+.lq-home-hero-tabs button {
+  position: relative;
+  padding: 7px 0 10px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .3);
+}
+
+.lq-home-hero-tabs button.active::after,
+.lq-home-hero-tabs button:hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: #2f73ff;
+}
+
+.lq-home-search {
+  width: min(900px, 100%);
+  height: 72px;
+  margin: 14px auto 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 8px 7px 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .2);
+}
+
+.lq-home-search > svg {
+  color: #0e2037;
+}
+
+.lq-home-search input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #132139;
+  font-size: 16px;
+}
+
+.lq-home-search input::placeholder {
+  color: #7f8a9d;
+}
+
+.lq-search-voice {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  background: transparent;
+  color: #111827;
+}
+
+.lq-home-search-submit {
+  min-width: 105px;
+  height: 56px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background: #2f73ff;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lq-home-hero-tagline {
+  margin: 14px 0 0;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .32);
+}
+
+@media (max-width: 768px) {
+  .lq-home-hero,
+  .lq-home-hero-inner {
+    min-height: 600px;
+  }
+
+  .lq-home-hero-inner {
+    align-items: center;
+    padding: 105px 14px 32px;
+  }
+
+  .lq-home-hero-content {
+    width: 100%;
+  }
+
+  .lq-home-hero-content h1 {
+    font-size: clamp(42px, 11vw, 58px);
+    letter-spacing: -1.6px;
+  }
+
+  .lq-home-hero-tabs {
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .lq-home-hero-tabs button {
+    font-size: 17px;
+  }
+
+  .lq-home-search {
+    height: auto;
+    min-height: 64px;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .lq-search-voice {
+    display: none;
+  }
+
+  .lq-home-search-submit {
+    min-width: 92px;
+    height: 50px;
+    padding: 0 18px;
+  }
+
+  .lq-home-hero-tagline {
+    font-size: 20px;
+  }
+}
+
 .lq-home-hero {
   position: relative;
   min-height: 480px;

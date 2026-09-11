@@ -6,6 +6,8 @@ import "./i18n/registerDevelopersAiCrm";
 import "./i18n/registerVacationRentals";
 import "./i18n/registerPricingPlans";
 import "./i18n/registerHeaderVacationHero";
+import "./i18n/registerCenteredHero";
+import "./i18n/registerHomeHeroMode";
 import App from "./App";
 
 import "./styles/globals.css";
