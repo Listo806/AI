@@ -69,7 +69,7 @@ export default function Header({
       icon: CalendarDays,
       label: t("header.listPropertyMenu.vacationRentals"),
       description: t("header.listPropertyMenu.vacationRentalsDesc"),
-      to: "/vacation-rentals",
+      to: "/vacation-rental-plans",
     },
     {
       icon: UserRound,

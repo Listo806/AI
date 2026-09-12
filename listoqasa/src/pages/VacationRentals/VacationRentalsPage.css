@@ -552,3 +552,281 @@
     grid-column: auto;
   }
 }
+
+/* =========================================================
+   VACATION RENTALS — PRIVATE HEADER
+   Only for /vacation-rentals
+========================================================= */
+
+.lq-vacation-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+
+  width: 100%;
+  height: 76px;
+
+  background: transparent;
+  color: #fff;
+}
+
+.lq-vacation-header-inner {
+  width: min(1180px, calc(100% - 48px));
+  height: 76px;
+
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.lq-vacation-header-brand {
+  color: #fff;
+  text-decoration: none;
+
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 800;
+
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, .28);
+}
+
+.lq-vacation-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.lq-vacation-header-list-property {
+  color: #fff;
+  text-decoration: none;
+
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 750;
+
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, .30);
+}
+
+.lq-vacation-header-list-property:hover {
+  opacity: .86;
+}
+
+.lq-vacation-language,
+.lq-vacation-menu-wrap {
+  position: relative;
+}
+
+.lq-vacation-icon-button {
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+  color: #fff;
+
+  cursor: pointer;
+
+  filter:
+    drop-shadow(
+      0 2px 5px rgba(0, 0, 0, .24)
+    );
+}
+
+.lq-vacation-menu-button {
+  width: 43px;
+  height: 43px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: #fff;
+  color: #111827;
+
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, .16);
+
+  cursor: pointer;
+}
+
+.lq-vacation-language::after {
+  content: "";
+  position: absolute;
+  top: 32px;
+  right: -8px;
+  width: 190px;
+  height: 18px;
+}
+
+.lq-vacation-language-menu {
+  position: absolute;
+  top: 45px;
+  right: -8px;
+  z-index: 180;
+
+  width: 185px;
+  padding: 8px;
+
+  border-radius: 13px;
+
+  background: #fff;
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, .20);
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transform: translateY(-5px);
+
+  transition:
+    opacity .14s ease,
+    visibility .14s ease,
+    transform .14s ease;
+}
+
+.lq-vacation-language:hover
+  .lq-vacation-language-menu,
+.lq-vacation-language:focus-within
+  .lq-vacation-language-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+
+  transform: translateY(0);
+}
+
+.lq-vacation-language-menu button {
+  width: 100%;
+  min-height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 0 10px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  color: #111827;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.lq-vacation-language-menu button:hover,
+.lq-vacation-language-menu button.active {
+  background: #f4f7fb;
+}
+
+.lq-vacation-language-menu strong {
+  color: #59657a;
+  font-size: 12px;
+}
+
+.lq-vacation-menu-dropdown {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  z-index: 180;
+
+  width: 205px;
+  padding: 9px;
+
+  border-radius: 13px;
+
+  background: #fff;
+  color: #111827;
+
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, .20);
+}
+
+.lq-vacation-menu-dropdown a {
+  min-height: 40px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 11px;
+
+  border-radius: 8px;
+
+  color: #111827;
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lq-vacation-menu-dropdown a:hover {
+  background: #f4f7fb;
+}
+
+/* Header floats directly on top of old hero. */
+.lq-old-vr-hero {
+  padding-top: 100px;
+}
+
+@media (max-width: 700px) {
+  .lq-vacation-header,
+  .lq-vacation-header-inner {
+    height: 68px;
+  }
+
+  .lq-vacation-header-inner {
+    width: calc(100% - 28px);
+  }
+
+  .lq-vacation-header-brand {
+    font-size: 18px;
+  }
+
+  .lq-vacation-header-actions {
+    gap: 8px;
+  }
+
+  .lq-vacation-header-list-property {
+    font-size: 12px;
+  }
+
+  .lq-vacation-icon-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .lq-vacation-menu-button {
+    width: 39px;
+    height: 39px;
+  }
+
+  .lq-old-vr-hero {
+    padding-top: 92px;
+  }
+}
+
+@media (max-width: 480px) {
+  .lq-vacation-header-list-property {
+    display: none;
+  }
+}

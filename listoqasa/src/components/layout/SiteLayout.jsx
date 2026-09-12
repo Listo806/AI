@@ -5,11 +5,12 @@ import Footer from "./Footer";
 export default function SiteLayout({
   children,
   headerVariant = "light",
+  showHeader = true,
   showFooter = true,
 }) {
   return (
     <div className="lq-site">
-      <Header variant={headerVariant} />
+      {showHeader && <Header variant={headerVariant} />}
 
       <main>{children}</main>
  

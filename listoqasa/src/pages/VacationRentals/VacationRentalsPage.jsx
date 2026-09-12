@@ -19,6 +19,7 @@ import {
 } from "./legacyVacationData";
 
 import VacationRentalsFooter from "./VacationRentalsFooter";
+import VacationRentalsHeader from "./VacationRentalsHeader";
 
 import "./VacationRentalsPage.css";
 
@@ -160,7 +161,8 @@ export default function VacationRentalsPage() {
   };
 
   return (
-    <SiteLayout headerVariant="light" showFooter={false}>
+    <SiteLayout headerVariant="light" showHeader={false} showFooter={false}>
+      <VacationRentalsHeader />
       <section className="lq-old-vr-hero">
         <div className="lq-old-vr-overlay" />
 
