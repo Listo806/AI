@@ -410,3 +410,145 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* VACATION RENTALS ONLY FOOTER */
+.lq-vacation-footer {
+  width: 100%;
+  background: #101010;
+  color: #fff;
+}
+
+.lq-vacation-footer-inner {
+  width: min(1240px, calc(100% - 64px));
+  margin: 0 auto;
+  padding: 52px 0 22px;
+}
+
+.lq-vacation-footer-grid {
+  display: grid;
+  grid-template-columns: minmax(250px, 1.45fr) repeat(4, minmax(140px, 1fr));
+  gap: 55px;
+  align-items: start;
+}
+
+.lq-vacation-footer-brand {
+  max-width: 285px;
+}
+
+.lq-vacation-footer-logo {
+  display: inline-block;
+  color: #fff;
+  text-decoration: none;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.lq-vacation-footer-brand p {
+  margin: 15px 0 0;
+  color: #f0f0f0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.lq-vacation-footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.lq-vacation-footer-column h3 {
+  margin: 0 0 7px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.lq-vacation-footer-column a {
+  width: fit-content;
+  color: #eee;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1.35;
+  transition: color .16s ease, transform .16s ease;
+}
+
+.lq-vacation-footer-column a:hover {
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.lq-vacation-footer-bottom {
+  min-height: 46px;
+  margin-top: 48px;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid #343434;
+  color: #e2e2e2;
+  font-size: 12px;
+}
+
+.lq-vacation-footer-languages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lq-vacation-footer-languages button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a7a7a7;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.lq-vacation-footer-languages button:hover,
+.lq-vacation-footer-languages button.active {
+  color: #fff;
+}
+
+@media (max-width: 1050px) {
+  .lq-vacation-footer-grid {
+    grid-template-columns: minmax(220px, 1.3fr) repeat(2, 1fr);
+    gap: 42px 35px;
+  }
+}
+
+@media (max-width: 700px) {
+  .lq-vacation-footer-inner {
+    width: calc(100% - 36px);
+    padding-top: 40px;
+  }
+
+  .lq-vacation-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 34px 24px;
+  }
+
+  .lq-vacation-footer-brand {
+    max-width: none;
+    grid-column: 1 / -1;
+  }
+
+  .lq-vacation-footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-top: 36px;
+  }
+}
+
+@media (max-width: 460px) {
+  .lq-vacation-footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lq-vacation-footer-brand {
+    grid-column: auto;
+  }
+}

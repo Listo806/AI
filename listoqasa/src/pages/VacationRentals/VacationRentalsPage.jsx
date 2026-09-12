@@ -18,6 +18,8 @@ import {
   legacyVacationDestinations,
 } from "./legacyVacationData";
 
+import VacationRentalsFooter from "./VacationRentalsFooter";
+
 import "./VacationRentalsPage.css";
 
 function LegacyStayRow({ section }) {
@@ -158,7 +160,7 @@ export default function VacationRentalsPage() {
   };
 
   return (
-    <SiteLayout headerVariant="light">
+    <SiteLayout headerVariant="light" showFooter={false}>
       <section className="lq-old-vr-hero">
         <div className="lq-old-vr-overlay" />
 
@@ -383,6 +385,8 @@ export default function VacationRentalsPage() {
           </div>
         </section>
       </main>
+
+      <VacationRentalsFooter />
     </SiteLayout>
   );
 }
