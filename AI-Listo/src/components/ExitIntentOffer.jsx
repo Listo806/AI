@@ -24,15 +24,19 @@ const T = {
   en: {
     headline1: "WAIT!",
     headline2: "DON'T LEAVE!",
-    sub: "Start Your Free Trial Today.",
-    desc: "Get started with Cortexa for $0. Create your account now and choose the plan that fits your business on the next step.",
+    sub: "Start Your FREE Trial Today",
+    desc: "Create your Cortexa account to access advanced features, exclusive data and tools built for AI marketers.",
     name: "Full Name",
-    email: "Email Address",
-    phone: "Phone Number (Required)",
-    password: "Password",
+    email: "Your Email",
+    phone: "Phone Number (Optional)",
+    password: "Create a Password",
     cta: "CREATE MY ACCOUNT & SEE PLANS",
     creating: "Creating your account…",
     reassure: "Start for $0. Upgrade when you're ready.",
+    updatesTitle: "Yes! Send me product updates, special offers, and relevant AI tips.",
+    benefit1: "Early access to new features",
+    benefit2: "Expert insights and proven strategies",
+    benefit3: "Tools and resources to grow your business",
     close: "Close",
     errRequired: "Please fill in all fields.",
     errEmail: "Please enter a valid email address.",
@@ -42,15 +46,19 @@ const T = {
   es: {
     headline1: "¡ESPERA!",
     headline2: "NO TE VAYAS.",
-    sub: "Comienza tu prueba gratis hoy.",
-    desc: "Empieza con Cortexa por $0. Crea tu cuenta ahora y elige el plan que se adapte a tu negocio en el siguiente paso.",
+    sub: "Comienza tu prueba GRATIS hoy",
+    desc: "Crea tu cuenta de Cortexa para acceder a funciones avanzadas, datos exclusivos y herramientas creadas para especialistas en marketing con IA.",
     name: "Nombre completo",
-    email: "Correo electrónico",
-    phone: "Número de teléfono (obligatorio)",
-    password: "Contraseña",
+    email: "Tu correo electrónico",
+    phone: "Número de teléfono (opcional)",
+    password: "Crea una contraseña",
     cta: "CREAR MI CUENTA Y VER PLANES",
     creating: "Creando tu cuenta…",
     reassure: "Empieza por $0. Mejora cuando quieras.",
+    updatesTitle: "¡Sí! Envíame actualizaciones de productos, ofertas especiales y consejos relevantes sobre IA.",
+    benefit1: "Acceso anticipado a nuevas funciones",
+    benefit2: "Consejos de expertos y estrategias comprobadas",
+    benefit3: "Herramientas y recursos para hacer crecer tu negocio",
     close: "Cerrar",
     errRequired: "Completa todos los campos.",
     errEmail: "Ingresa un correo electrónico válido.",
@@ -60,15 +68,19 @@ const T = {
   pt: {
     headline1: "ESPERE!",
     headline2: "NÃO SAIA.",
-    sub: "Comece seu teste grátis hoje.",
-    desc: "Comece com a Cortexa por $0. Crie sua conta agora e escolha o plano ideal para o seu negócio na próxima etapa.",
+    sub: "Comece seu teste GRÁTIS hoje",
+    desc: "Crie sua conta Cortexa para acessar recursos avançados, dados exclusivos e ferramentas criadas para profissionais de marketing com IA.",
     name: "Nome completo",
-    email: "Endereço de e-mail",
-    phone: "Número de telefone (obrigatório)",
-    password: "Senha",
+    email: "Seu e-mail",
+    phone: "Número de telefone (opcional)",
+    password: "Crie uma senha",
     cta: "CRIAR MINHA CONTA E VER PLANOS",
     creating: "Criando sua conta…",
     reassure: "Comece por $0. Faça upgrade quando quiser.",
+    updatesTitle: "Sim! Envie-me atualizações de produtos, ofertas especiais e dicas relevantes sobre IA.",
+    benefit1: "Acesso antecipado a novos recursos",
+    benefit2: "Insights de especialistas e estratégias comprovadas",
+    benefit3: "Ferramentas e recursos para expandir seu negócio",
     close: "Fechar",
     errRequired: "Preencha todos os campos.",
     errEmail: "Digite um e-mail válido.",
@@ -140,6 +152,7 @@ export default function ExitIntentOffer() {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const cardRef = useRef(null);
@@ -199,7 +212,7 @@ export default function ExitIntentOffer() {
       const email = form.email.trim();
       const phone = form.phone.trim();
       const password = form.password;
-      if (!name || !email || !phone || !password) {
+      if (!name || !email || !password) {
         setError(tr.errRequired);
         return;
       }
@@ -217,8 +230,9 @@ export default function ExitIntentOffer() {
           body: JSON.stringify({
             name,
             email,
-            phone,
+            phone: phone || null,
             password,
+            marketingOptIn,
             source: "exit_popup",
             language: lang,
             landingPage: attribution.landingPage || null,
@@ -257,7 +271,7 @@ export default function ExitIntentOffer() {
         setLoading(false);
       }
     },
-    [form, loading, tr, lang, navigate, prefix, setUser],
+    [form, loading, tr, lang, navigate, prefix, setUser, marketingOptIn],
   );
 
   // Exit-intent detection (desktop cursor-leaves-top; mobile scroll-up + timed
@@ -421,26 +435,29 @@ export default function ExitIntentOffer() {
           {error && <div className="exit-offer-error">{error}</div>}
 
           <div className="exit-offer-benefits">
-            <div className="exit-offer-benefit-title">
-              <span className="exit-offer-new">NEW</span>
-              <strong>{tr.reassure}</strong>
-            </div>
+            <label className="exit-offer-benefit-title exit-offer-optin">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+              />
+              <span className="exit-offer-checkbox" aria-hidden="true">
+                ✓
+              </span>
+              <strong>{tr.updatesTitle}</strong>
+            </label>
 
             <div className="exit-offer-benefit-row">
-              <ShieldCheck size={18} />
-              <span>Start free with our $0 plan</span>
+              <span className="exit-offer-check">✓</span>
+              <span>{tr.benefit1}</span>
             </div>
             <div className="exit-offer-benefit-row">
-              <ShieldCheck size={18} />
-              <span>Upgrade anytime, no pressure</span>
+              <span className="exit-offer-check">✓</span>
+              <span>{tr.benefit2}</span>
             </div>
             <div className="exit-offer-benefit-row">
-              <ShieldCheck size={18} />
-              <span>Unlock powerful features as you grow</span>
-            </div>
-            <div className="exit-offer-benefit-row">
-              <ShieldCheck size={18} />
-              <span>Cancel anytime, risk-free</span>
+              <span className="exit-offer-check">✓</span>
+              <span>{tr.benefit3}</span>
             </div>
           </div>
 
@@ -454,10 +471,10 @@ export default function ExitIntentOffer() {
           </button>
         </form>
 
-        <p className="exit-offer-reassure">
+        {/*}<p className="exit-offer-reassure">
           <ShieldCheck size={16} />
           <span>{tr.reassure}</span>
-        </p>
+        </p>*/}
       </div>
 
       <style>{`
@@ -648,6 +665,53 @@ export default function ExitIntentOffer() {
             gap: 9px;
             font-size: 15px;
             color: #111;
+          }
+
+          .exit-offer-optin {
+            position: relative;
+            cursor: pointer;
+            align-items: flex-start;
+          }
+
+          .exit-offer-optin input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+          }
+
+          .exit-offer-checkbox {
+            width: 24px;
+            height: 24px;
+            flex: 0 0 24px;
+            display: grid;
+            place-items: center;
+            border-radius: 5px;
+            background: #2f6fed;
+            color: #fff;
+            font-size: 17px;
+            line-height: 1;
+            font-weight: 800;
+            margin-top: 1px;
+          }
+
+          .exit-offer-optin input:not(:checked) + .exit-offer-checkbox {
+            background: #fff;
+            color: transparent;
+            box-shadow: inset 0 0 0 1.5px #b8c0cc;
+          }
+
+          .exit-offer-optin strong {
+            line-height: 1.35;
+          }
+
+          .exit-offer-check {
+            width: 24px;
+            flex: 0 0 24px;
+            color: #2563eb;
+            font-size: 21px;
+            line-height: 1;
+            font-weight: 800;
+            text-align: center;
           }
 
           .exit-offer-new {
