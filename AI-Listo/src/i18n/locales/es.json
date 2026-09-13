@@ -5093,5 +5093,134 @@
       "pause": "¿Pausar la suscripción de {{customer}} en el próximo período de facturación?",
       "cancel": "¿Cancelar la suscripción de {{customer}} al final del período de facturación actual?"
     }
+  },
+  "aestheticWellness": {
+    "title": "Espacio de Estética y Bienestar",
+    "subtitle": "Gestiona consultas, evaluaciones, citas, tratamientos, seguimientos y clientes recurrentes.",
+    "loading": "Cargando el espacio de la clínica…",
+    "today": "Hoy",
+    "last7Days": "Últimos 7 días",
+    "last30Days": "Últimos 30 días",
+    "export": "Exportar",
+    "retry": "Reintentar",
+    "errors": {
+      "loadDashboard": "No se pudo cargar el panel de Estética y Bienestar."
+    },
+    "filters": {
+      "title": "Filtros",
+      "location": "Ubicación",
+      "provider": "Profesional",
+      "allLocations": "Todas las ubicaciones",
+      "allProviders": "Todos los profesionales",
+      "clear": "Limpiar filtros"
+    },
+    "setup": {
+      "title": "Completar configuración de la clínica",
+      "description": "Agrega tratamientos, profesionales, reglas de reserva, preguntas de calificación, reglas de seguridad, preguntas frecuentes, automatizaciones y prueba tu recepcionista con IA.",
+      "finish": "Finalizar configuración",
+      "complete": "Completar configuración de la clínica"
+    },
+    "aiReceptionist": {
+      "overline": "RECEPCIONISTA IA",
+      "activeTitle": "El agente de IA de tu clínica está activo",
+      "inactiveTitle": "El agente de IA de tu clínica aún no está activo",
+      "live": "Activo",
+      "setupRequired": "Configuración requerida",
+      "description": "Responde consultas, califica el interés en tratamientos y reserva consultas.",
+      "conversationsToday": "Conversaciones de hoy",
+      "consultationsBooked": "Consultas reservadas",
+      "avgResponse": "Resp. promedio",
+      "viewConversations": "Ver conversaciones",
+      "manageAgent": "Gestionar agente IA"
+    },
+    "metrics": {
+      "newInquiries": "Nuevas consultas",
+      "consultationsBooked": "Consultas reservadas",
+      "todaysAppointments": "Citas de hoy",
+      "showRate": "Tasa de asistencia",
+      "revenueToday": "Ingresos de hoy",
+      "rebookingDue": "Reservas pendientes"
+    },
+    "comparison": {
+      "vsYesterday": "vs. ayer",
+      "vsLastWeek": "vs. semana pasada"
+    },
+    "actions": {
+      "viewAll": "Ver todo"
+    },
+    "schedule": {
+      "title": "Agenda de hoy",
+      "empty": "No hay citas programadas para hoy.",
+      "viewCalendar": "Ver calendario",
+      "addAppointment": "Agregar cita"
+    },
+    "pipeline": {
+      "title": "Pipeline de la clínica",
+      "viewPipeline": "Ver pipeline",
+      "empty": "No hay actividad en el pipeline de la clínica.",
+      "newInquiry": "Nueva consulta",
+      "aiQualified": "Calificado por IA",
+      "consultationBooked": "Consulta reservada",
+      "confirmed": "Confirmado",
+      "treatmentCompleted": "Tratamiento completado",
+      "followUp": "Seguimiento"
+    },
+    "rebooking": {
+      "title": "Clientes listos para volver a reservar",
+      "sendReminder": "Enviar recordatorio",
+      "empty": "No hay clientes pendientes de volver a reservar.",
+      "dueToday": "Vence hoy",
+      "daysOverdue_one": "{{count}} día de retraso",
+      "daysOverdue_other": "{{count}} días de retraso",
+      "dueInDays_one": "Vence en {{count}} día",
+      "dueInDays_other": "Vence en {{count}} días"
+    },
+    "followUp": {
+      "title": "Cola de seguimiento",
+      "review": "Revisar seguimientos",
+      "postTreatment": "controles posteriores al tratamiento",
+      "missedConsultations": "consultas perdidas",
+      "unansweredInquiries": "consultas sin respuesta",
+      "rebookingReminders": "recordatorios de nueva reserva"
+    },
+    "treatmentInterest": {
+      "title": "Interés en tratamientos",
+      "empty": "Aún no hay datos de interés en tratamientos."
+    },
+    "providerPerformance": {
+      "title": "Rendimiento de profesionales",
+      "manageProviders": "Gestionar profesionales",
+      "provider": "Profesional",
+      "appointments": "Citas",
+      "revenue": "Ingresos",
+      "showRate": "Tasa de asistencia",
+      "empty": "Aún no hay datos de rendimiento de profesionales."
+    },
+    "revenueOverview": {
+      "title": "Resumen de ingresos"
+    },
+    "aiActivity": {
+      "title": "Actividad del agente IA",
+      "empty": "Aún no hay actividad de IA.",
+      "safetyNote": "Las preguntas médicas siempre se transfieren al personal de la clínica."
+    },
+    "status": {
+      "pending": "Pendiente",
+      "confirmed": "Confirmado",
+      "completed": "Completado",
+      "canceled": "Cancelado",
+      "scheduled": "Programado",
+      "noShow": "No asistió"
+    },
+    "time": {
+      "secondsShort_one": "{{count}} s",
+      "secondsShort_other": "{{count}} s",
+      "minutesShort_one": "{{count}} min",
+      "minutesShort_other": "{{count}} min"
+    },
+    "csv": {
+      "metric": "Métrica",
+      "value": "Valor"
+    }
   }
 }

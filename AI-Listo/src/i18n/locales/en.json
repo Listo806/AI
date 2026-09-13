@@ -5093,5 +5093,134 @@
       "pause": "Pause {{customer}}'s subscription at the next billing period?",
       "cancel": "Cancel {{customer}}'s subscription at the end of the current billing period?"
     }
+  },
+  "aestheticWellness": {
+    "title": "Aesthetic & Wellness Workspace",
+    "subtitle": "Manage inquiries, consultations, appointments, treatments, follow-ups, and returning clients.",
+    "loading": "Loading clinic workspace…",
+    "today": "Today",
+    "last7Days": "Last 7 Days",
+    "last30Days": "Last 30 Days",
+    "export": "Export",
+    "retry": "Retry",
+    "errors": {
+      "loadDashboard": "Unable to load Aesthetic & Wellness dashboard."
+    },
+    "filters": {
+      "title": "Filters",
+      "location": "Location",
+      "provider": "Provider",
+      "allLocations": "All locations",
+      "allProviders": "All providers",
+      "clear": "Clear filters"
+    },
+    "setup": {
+      "title": "Complete Clinic Setup",
+      "description": "Add treatments, providers, booking rules, qualification questions, safety rules, FAQs, automations, and test your AI receptionist.",
+      "finish": "Finish Setup",
+      "complete": "Complete Clinic Setup"
+    },
+    "aiReceptionist": {
+      "overline": "AI RECEPTIONIST",
+      "activeTitle": "Your clinic's AI agent is active",
+      "inactiveTitle": "Your clinic's AI agent is not live yet",
+      "live": "Live",
+      "setupRequired": "Setup Required",
+      "description": "Answering inquiries, qualifying treatment interest, and booking consultations.",
+      "conversationsToday": "Conversations Today",
+      "consultationsBooked": "Consultations Booked",
+      "avgResponse": "Avg. Response",
+      "viewConversations": "View Conversations",
+      "manageAgent": "Manage AI Agent"
+    },
+    "metrics": {
+      "newInquiries": "New Inquiries",
+      "consultationsBooked": "Consultations Booked",
+      "todaysAppointments": "Today's Appointments",
+      "showRate": "Show Rate",
+      "revenueToday": "Revenue Today",
+      "rebookingDue": "Rebooking Due"
+    },
+    "comparison": {
+      "vsYesterday": "vs. yesterday",
+      "vsLastWeek": "vs. last week"
+    },
+    "actions": {
+      "viewAll": "View All"
+    },
+    "schedule": {
+      "title": "Today's Schedule",
+      "empty": "No appointments scheduled today.",
+      "viewCalendar": "View Calendar",
+      "addAppointment": "Add Appointment"
+    },
+    "pipeline": {
+      "title": "Clinic Pipeline",
+      "viewPipeline": "View Pipeline",
+      "empty": "No clinic pipeline activity.",
+      "newInquiry": "New Inquiry",
+      "aiQualified": "AI Qualified",
+      "consultationBooked": "Consultation Booked",
+      "confirmed": "Confirmed",
+      "treatmentCompleted": "Treatment Completed",
+      "followUp": "Follow-Up"
+    },
+    "rebooking": {
+      "title": "Clients Ready to Rebook",
+      "sendReminder": "Send Reminder",
+      "empty": "No clients due to rebook.",
+      "dueToday": "Due today",
+      "daysOverdue_one": "{{count}} day overdue",
+      "daysOverdue_other": "{{count}} days overdue",
+      "dueInDays_one": "Due in {{count}} day",
+      "dueInDays_other": "Due in {{count}} days"
+    },
+    "followUp": {
+      "title": "Follow-Up Queue",
+      "review": "Review Follow-Ups",
+      "postTreatment": "post-treatment check-ins",
+      "missedConsultations": "missed consultations",
+      "unansweredInquiries": "unanswered inquiries",
+      "rebookingReminders": "rebooking reminders"
+    },
+    "treatmentInterest": {
+      "title": "Treatment Interest",
+      "empty": "No treatment interest yet."
+    },
+    "providerPerformance": {
+      "title": "Provider Performance",
+      "manageProviders": "Manage Providers",
+      "provider": "Provider",
+      "appointments": "Appointments",
+      "revenue": "Revenue",
+      "showRate": "Show Rate",
+      "empty": "No provider performance yet."
+    },
+    "revenueOverview": {
+      "title": "Revenue Overview"
+    },
+    "aiActivity": {
+      "title": "AI Agent Activity",
+      "empty": "No AI activity yet.",
+      "safetyNote": "Medical questions always transfer to clinic staff."
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "canceled": "Canceled",
+      "scheduled": "Scheduled",
+      "noShow": "No-show"
+    },
+    "time": {
+      "secondsShort_one": "{{count}}s",
+      "secondsShort_other": "{{count}}s",
+      "minutesShort_one": "{{count}}m",
+      "minutesShort_other": "{{count}}m"
+    },
+    "csv": {
+      "metric": "Metric",
+      "value": "Value"
+    }
   }
 }
