@@ -165,7 +165,7 @@ export default function OwnersPage() {
               {t("owners.heroDescription2")}
             </p>
 
-            <Link to="/owners/create" className="lq-primary-button">
+            <Link to="/owner-plans" className="lq-primary-button">
               {t("owners.listProperty")}
 
               <ArrowRight size={18} />
@@ -325,7 +325,7 @@ export default function OwnersPage() {
 
                 <p>{t("owners.ctaDescription")}</p>
 
-                <Link to="/owners/create" className="lq-primary-button">
+                <Link to="/owner-plans" className="lq-primary-button">
                   {t("owners.listProperty")}
 
                   <ArrowRight size={18} />
