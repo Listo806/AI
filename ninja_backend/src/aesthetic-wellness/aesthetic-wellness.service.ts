@@ -1066,54 +1066,172 @@ export class AestheticWellnessService {
   }
 
   private async getRevenueOverview(teamId: string, providerId?: string) {
-    const params = providerId
-      ? [teamId, WORKSPACE_ID, providerId]
-      : [teamId, WORKSPACE_ID];
-    const providerFilter = providerId ? "AND r.provider_id=$3" : "";
-    const { rows } = await this.db.query(
-      `WITH days AS (
-         SELECT generate_series(CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, INTERVAL '1 day')::date day
-       ), totals AS (
-         SELECT r.completed_at::date day, SUM(r.revenue)::numeric value
-           FROM aesthetic_treatment_records r
-          WHERE r.team_id=$1 AND r.workspace_id=$2 AND r.status='completed'
-            AND r.completed_at >= CURRENT_DATE - INTERVAL '6 days'
-            ${providerFilter}
-          GROUP BY 1
-       )
-       SELECT d.day, COALESCE(t.value,0)::numeric value
-         FROM days d LEFT JOIN totals t ON t.day=d.day
-        ORDER BY d.day`,
+    const params: any[] = [teamId, WORKSPACE_ID];
+
+    let providerFilter = "";
+
+    if (providerId) {
+      params.push(providerId);
+
+      providerFilter = `
+      AND r.provider_id = $${params.length}
+    `;
+    }
+
+    /*
+     * Current 7 days.
+     *
+     * IMPORTANT:
+     * Do not use "day" as the generated column alias here.
+     * PostgreSQL on production was failing at:
+     *
+     *   generate_series(...)::date day
+     *
+     * Use report_date explicitly instead.
+     */
+    const currentResult = await this.db.query(
+      `
+    WITH date_series AS (
+      SELECT
+        generate_series(
+          CURRENT_DATE - INTERVAL '6 days',
+          CURRENT_DATE,
+          INTERVAL '1 day'
+        )::date AS report_date
+    ),
+
+    revenue_by_date AS (
+      SELECT
+        r.completed_at::date AS report_date,
+
+        COALESCE(
+          SUM(r.revenue),
+          0
+        )::numeric AS revenue_value
+
+      FROM aesthetic_treatment_records r
+
+      WHERE r.team_id = $1
+        AND r.workspace_id = $2
+        AND r.status = 'completed'
+        AND r.completed_at IS NOT NULL
+        AND r.completed_at >=
+          CURRENT_DATE - INTERVAL '6 days'
+        AND r.completed_at <
+          CURRENT_DATE + INTERVAL '1 day'
+
+        ${providerFilter}
+
+      GROUP BY
+        r.completed_at::date
+    )
+
+    SELECT
+      ds.report_date,
+
+      COALESCE(
+        rb.revenue_value,
+        0
+      )::numeric AS revenue_value
+
+    FROM date_series ds
+
+    LEFT JOIN revenue_by_date rb
+      ON rb.report_date = ds.report_date
+
+    ORDER BY
+      ds.report_date ASC
+    `,
       params,
     );
-    const values = rows.map((r: any) => Number(r.value || 0));
-    const total = values.reduce((a: number, b: number) => a + b, 0);
-    const max = Math.max(...values, 1);
-    const prev = await this.db.query(
-      `SELECT COALESCE(SUM(r.revenue),0)::numeric total
-         FROM aesthetic_treatment_records r
-        WHERE r.team_id=$1 AND r.workspace_id=$2 AND r.status='completed'
-          AND r.completed_at >= CURRENT_DATE - INTERVAL '13 days'
-          AND r.completed_at < CURRENT_DATE - INTERVAL '6 days'
-          ${providerFilter}`,
+
+    const rows = currentResult.rows || [];
+
+    const values = rows.map((row: any) => Number(row.revenue_value || 0));
+
+    const total = values.reduce((sum: number, value: number) => sum + value, 0);
+
+    const maxValue = Math.max(...values, 1);
+
+    /*
+     * Previous 7-day period.
+     *
+     * Current:
+     *   today - 6 days -> today
+     *
+     * Previous:
+     *   today - 13 days -> today - 7 days
+     */
+    const previousResult = await this.db.query(
+      `
+      SELECT
+        COALESCE(
+          SUM(r.revenue),
+          0
+        )::numeric AS total
+
+      FROM aesthetic_treatment_records r
+
+      WHERE r.team_id = $1
+        AND r.workspace_id = $2
+        AND r.status = 'completed'
+        AND r.completed_at IS NOT NULL
+
+        AND r.completed_at >=
+          CURRENT_DATE - INTERVAL '13 days'
+
+        AND r.completed_at <
+          CURRENT_DATE - INTERVAL '6 days'
+
+        ${providerFilter}
+      `,
       params,
     );
-    const previous = Number(prev.rows[0]?.total || 0);
-    const changePercent = previous
-      ? Math.round(((total - previous) / previous) * 100)
-      : total
-        ? 100
-        : 0;
+
+    const previousTotal = Number(previousResult.rows[0]?.total || 0);
+
+    let changePercent = 0;
+
+    if (previousTotal > 0) {
+      changePercent = Math.round(
+        ((total - previousTotal) / previousTotal) * 100,
+      );
+    } else if (total > 0) {
+      changePercent = 100;
+    }
+
     return {
       total,
+
       changePercent,
-      points: rows.map((r: any) => ({
-        label: new Date(`${r.day}T12:00:00Z`).toLocaleDateString("en-US", {
-          weekday: "short",
-        }),
-        value: Number(r.value || 0),
-        percent: Math.round((Number(r.value || 0) / max) * 100),
-      })),
+
+      points: rows.map((row: any) => {
+        /*
+         * PostgreSQL DATE may arrive either as:
+         *   Date
+         * or
+         *   YYYY-MM-DD
+         */
+        const rawDate = row.report_date;
+
+        const date =
+          rawDate instanceof Date
+            ? rawDate
+            : new Date(`${String(rawDate).slice(0, 10)}T12:00:00Z`);
+
+        return {
+          label: date.toLocaleDateString("en-US", {
+            weekday: "short",
+            timeZone: "UTC",
+          }),
+
+          value: Number(row.revenue_value || 0),
+
+          percent: Math.round(
+            (Number(row.revenue_value || 0) / maxValue) * 100,
+          ),
+        };
+      }),
     };
   }
 
