@@ -71,7 +71,7 @@ export default function AiCrmPage() {
 
               <p>{t("aiCrm.heroDescription")}</p>
 
-              <Link to="/dashboard/home" className="lq-ai-primary-btn">
+              <Link to="/ai-help/pricing" className="lq-ai-primary-btn">
                 {t("aiCrm.exploreCrm")}
                 <ArrowRight size={17} />
               </Link>
@@ -225,7 +225,7 @@ export default function AiCrmPage() {
               <h2>{t("aiCrm.ctaTitle")}</h2>
               <p>{t("aiCrm.ctaDescription")}</p>
 
-              <Link to="/dashboard/home" className="lq-ai-white-btn">
+              <Link to="/ai-help/pricing" className="lq-ai-white-btn">
                 {t("aiCrm.exploreCortexa")}
                 <ArrowRight size={17} />
               </Link>
