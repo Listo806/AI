@@ -908,7 +908,7 @@ export class AestheticWellnessService {
           leadParams,
         ),
         this.db.query(
-          `SELECT COUNT(*)::int total FROM leads l WHERE l.team_id=$1 AND l.workspace_id=$2 AND (l.status='qualified' OR l.lead_ai_state='qualified') ${leadFilter}`,
+          `SELECT COUNT(*)::int total FROM leads l WHERE l.team_id=$1 AND l.workspace_id=$2 AND l.status='qualified' ${leadFilter}`,
           leadParams,
         ),
         this.db.query(
@@ -971,12 +971,11 @@ export class AestheticWellnessService {
     const provider = providerId
       ? await this.assertProvider(teamId, providerId)
       : null;
+    // lead_tasks in the current CRM schema does not reliably expose assigned_to.
+    // Keep the workspace/team scope here; provider-specific queues are derived
+    // from appointments/treatment records instead.
     const params: any[] = [teamId, WORKSPACE_ID];
-    let assigned = "";
-    if (provider?.user_id) {
-      params.push(provider.user_id);
-      assigned = `AND t.assigned_to = $${params.length}`;
-    }
+    const assigned = "";
     const [postTreatment, missed, unanswered, rebooking] = await Promise.all([
       this.db.query(
         `SELECT COUNT(*)::int total FROM aesthetic_treatment_records r WHERE r.team_id=$1 AND r.workspace_id=$2 AND r.status='completed' AND r.completed_at >= CURRENT_DATE - INTERVAL '7 days' ${providerId ? "AND r.provider_id=$3" : ""}`,
@@ -991,7 +990,7 @@ export class AestheticWellnessService {
           : [teamId, WORKSPACE_ID],
       ),
       this.db.query(
-        `SELECT COUNT(*)::int total FROM lead_tasks t WHERE t.team_id=$1 AND t.workspace_id=$2 AND t.status IN ('pending','in_progress') AND (LOWER(t.title) LIKE '%unanswered%' OR LOWER(COALESCE(t.description,'')) LIKE '%unanswered%') ${assigned}`,
+        `SELECT COUNT(*)::int total FROM lead_tasks t WHERE t.team_id=$1 AND t.workspace_id=$2 AND t.status IN ('pending','in_progress') AND LOWER(COALESCE(t.title,'')) LIKE '%unanswered%' ${assigned}`,
         params,
       ),
       this.db.query(
