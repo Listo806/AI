@@ -15,16 +15,9 @@
     width: 100%;
     min-width: 0;
     min-height: calc(100vh - 1px);
-    padding: 14px 16px 22px;
-    background: #fbfcff;
     color: #111544;
     font-family: inherit;
-}
-
-.aw-page button,
-.aw-page select,
-.aw-page input {
-    font: inherit;
+    margin-bottom: 10px;
 }
 
 .aw-page strong,
@@ -149,7 +142,7 @@
     width: 100%;
     min-height: 54px;
     margin: 0 0 10px;
-    padding: 9px 12px;
+    padding: 9px 12px!important;
     border: 1px solid #f0d49d;
     border-radius: 8px;
     background: #fffaf0;
@@ -157,6 +150,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 14px;
+    text-align: left;
 }
 
 .aw-setup-warning>div:first-child {
@@ -260,10 +254,11 @@
 
 .aw-agent-main {
     min-width: 0;
-    padding: 13px 19px 13px 17px;
+    padding: 13px;
     display: flex;
     align-items: center;
-    gap: 17px;
+    gap: 12px;
+    text-align: left;
 }
 
 .aw-agent-avatar {
@@ -360,9 +355,9 @@
     padding: 0 12px;
     border-left: 1px solid #e0e4ec;
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 5px;
+    flex-direction: column;
 }
 
 .aw-agent-stat svg {
@@ -372,6 +367,9 @@
 
 .aw-agent-stat>div {
     min-width: 0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .aw-agent-stat strong {
@@ -391,6 +389,7 @@
     line-height: 1.15;
     font-weight: 400;
     white-space: nowrap;
+    text-align: left;
 }
 
 .aw-agent-actions {
@@ -434,6 +433,7 @@
     grid-template-rows: auto 1fr;
     column-gap: 10px;
     position: relative;
+    text-align: left;
 }
 
 .aw-stat-icon {
@@ -493,7 +493,7 @@
 }
 
 .aw-metric-trend strong {
-    font-size: 9px;
+    font-size: 10px;
     line-height: 1;
     font-weight: 600;
 }
@@ -503,7 +503,7 @@
     margin-top: 4px;
     color: #7b839d;
     text-align: right;
-    font-size: 8px;
+    font-size: 10px;
     line-height: 1;
     font-weight: 400;
     white-space: nowrap;
@@ -532,7 +532,7 @@
 .aw-section-header {
     height: 44px;
     min-height: 44px;
-    padding: 0 14px;
+    padding: 0 10px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -544,7 +544,7 @@
     margin-right: auto;
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 6px;
 }
 
 .aw-section-title svg {
@@ -555,7 +555,7 @@
 .aw-section-title h2 {
     margin: 0;
     color: #111440;
-    font-size: 13px;
+    font-size: 11px;
     line-height: 1;
     font-weight: 700;
     white-space: nowrap;
@@ -721,7 +721,7 @@
     flex: 1 1 0;
     min-width: 0;
     position: relative;
-    margin-right: -2px;
+    margin-right: -10px;
     padding: 13px 8px 8px 12px;
     background: #f0efff;
     clip-path: polygon(0 0,
@@ -874,6 +874,7 @@
     font-weight: 400;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-align: left;
 }
 
 .aw-small-panel-grid .aw-panel:nth-child(2) .aw-full-btn {
@@ -1217,17 +1218,13 @@
    ============================================================ */
 
 @media (max-width: 1450px) {
-    .aw-page {
-        padding: 12px 13px 20px;
-    }
-
     .aw-title-wrap h1 {
         font-size: 22px;
     }
 
     .aw-agent-card {
         grid-template-columns:
-            minmax(410px, 1.7fr) 128px 128px 122px 240px;
+            minmax(410px, 1.7fr) 130px 130px 130px 240px;
     }
 
     .aw-agent-title h2 {

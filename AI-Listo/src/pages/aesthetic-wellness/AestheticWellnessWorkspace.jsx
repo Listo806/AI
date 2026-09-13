@@ -239,9 +239,9 @@ export default function AestheticWellnessWorkspace() {
             <p>Answering inquiries, qualifying treatment interest, and booking consultations.</p>
           </div>
         </div>
-        <div className="aw-agent-stat"><MessageCircle size={24} strokeWidth={1.8} /><div><strong>{dashboard.aiReceptionist.conversationsToday || 0}</strong><span>Conversations Today</span></div></div>
-        <div className="aw-agent-stat"><CalendarPlus size={24} strokeWidth={1.8} /><div><strong>{dashboard.aiReceptionist.consultationsBooked || 0}</strong><span>Consultations Booked</span></div></div>
-        <div className="aw-agent-stat"><Zap size={24} strokeWidth={1.8} /><div><strong>{formatResponseTime(dashboard.aiReceptionist.avgResponseSeconds)}</strong><span>Avg. Response</span></div></div>
+        <div className="aw-agent-stat"><div><MessageCircle size={24} strokeWidth={1.8} /><strong>{dashboard.aiReceptionist.conversationsToday || 0}</strong></div><span>Conversations Today</span></div>
+        <div className="aw-agent-stat"><div><CalendarPlus size={24} strokeWidth={1.8} /><strong>{dashboard.aiReceptionist.consultationsBooked || 0}</strong></div><span>Consultations Booked</span></div>
+        <div className="aw-agent-stat"><div><Zap size={24} strokeWidth={1.8} /><strong>{formatResponseTime(dashboard.aiReceptionist.avgResponseSeconds)}</strong></div><span>Avg. Response</span></div>
         <div className="aw-agent-actions"><button className="aw-primary-btn" onClick={viewConversations}>View Conversations</button><button className="aw-secondary-btn" onClick={manageAgent}>Manage AI Agent</button></div>
       </section>
 
