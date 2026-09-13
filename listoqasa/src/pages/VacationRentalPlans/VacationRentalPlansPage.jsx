@@ -25,8 +25,8 @@ export default function VacationRentalPlansPage() {
         key: "starter",
         icon: Home,
         monthlyPrice: 77,
-        yearlyPrice: 924,
-        saving: 228,
+        yearlyPrice: 921.6,
+        saving: 230.4,
         listings: 3,
         cta: "/owners/create?plan=vacation-starter",
         features: [
@@ -41,8 +41,8 @@ export default function VacationRentalPlansPage() {
         key: "growth",
         icon: Star,
         monthlyPrice: 107,
-        yearlyPrice: 1284,
-        saving: 256,
+        yearlyPrice: 1232,
+        saving: 308,
         listings: 6,
         dark: true,
         popular: true,
@@ -61,8 +61,8 @@ export default function VacationRentalPlansPage() {
         key: "premium",
         icon: Gem,
         monthlyPrice: 177,
-        yearlyPrice: 2124,
-        saving: 504,
+        yearlyPrice: 2102.4,
+        saving: 525.6,
         unlimited: true,
         cta: "/owners/create?plan=vacation-premium",
         features: [
@@ -80,6 +80,14 @@ export default function VacationRentalPlansPage() {
 
   const isMonthly =
     billingCycle === "monthly";
+
+  const formatMoney = (value) =>
+    Number(value).toLocaleString("en-US", {
+      minimumFractionDigits:
+        Number(value) % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    });
+
 
   const buildCheckoutUrl = (plan) => {
     const separator =
@@ -106,7 +114,7 @@ export default function VacationRentalPlansPage() {
             </p>
 
             <div
-              className="lq-pricing-billing-toggle"
+              className="lq-pricing-billing-toggle lq-vacation-billing-toggle"
               role="group"
               aria-label={t(
                 "plans.common.billingCycle",
@@ -158,33 +166,13 @@ export default function VacationRentalPlansPage() {
                 <Check size={17} />
 
                 {t(
-                  "plans.common.yearly",
+                  "plans.common.yearlySave20",
                   {
                     defaultValue:
-                      "Yearly",
+                      "Yearly — Save 20%",
                   }
                 )}
               </button>
-            </div>
-
-            <div className="lq-pricing-note">
-              <Check size={18} />
-
-              {isMonthly
-                ? t(
-                    "plans.vacation.monthlyNote",
-                    {
-                      defaultValue:
-                        "Pay month to month. Cancel anytime.",
-                    }
-                  )
-                : t(
-                    "plans.vacation.yearlyNote",
-                    {
-                      defaultValue:
-                        "Billed yearly. Cancel anytime.",
-                    }
-                  )}
             </div>
           </header>
 
@@ -290,7 +278,7 @@ export default function VacationRentalPlansPage() {
 
                       <div className="lq-plan-year-price lq-plan-year-price-primary">
                         $
-                        {plan.yearlyPrice.toLocaleString()}
+                        {formatMoney(plan.yearlyPrice)}
 
                         <span>
                           {t(
@@ -310,7 +298,7 @@ export default function VacationRentalPlansPage() {
                           "plans.common.saveYearly",
                           {
                             amount:
-                              plan.saving,
+                              formatMoney(plan.saving),
                           }
                         )}
                       </div>

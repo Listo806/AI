@@ -69,3 +69,19 @@
     font-size: 12px;
   }
 }
+
+/* Vacation Rental Plans — billing control only */
+.lq-vacation-billing-toggle button:first-child {
+  min-width: 150px;
+}
+
+.lq-vacation-billing-toggle button:last-child {
+  min-width: 210px;
+}
+
+@media (max-width: 640px) {
+  .lq-vacation-billing-toggle button:first-child,
+  .lq-vacation-billing-toggle button:last-child {
+    min-width: 0;
+  }
+}

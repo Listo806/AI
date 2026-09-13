@@ -325,7 +325,7 @@
 .lq-property-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 13px;
+  gap: 11px;
 }
 .lq-property-card {
   min-width: 0;
@@ -337,7 +337,7 @@
     0 3px 8px rgba(20, 38, 70, 0.05);
 }
 .lq-property-image-wrap {
-  height: 215px;
+  height: 116px;
   position: relative;
   overflow: hidden;
   background: #e9edf3;
@@ -386,9 +386,8 @@
 }
 .lq-property-body h3 {
   margin: 0 0 8px;
-  min-height: 31px;
   color: #08182f;
-  font-size: 13px;
+  font-size: 10.5px;
   line-height: 1.25;
   font-weight: 650;
 }
@@ -396,14 +395,14 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   color: #576278;
   font-size: 10px;
 }
 .lq-property-price {
-  margin-bottom: 17px;
+  margin-bottom: 10px;
   color: #0866ff;
-  font-size: 16px;
+  font-size: 11px;
   font-weight: 750;
 }
 .lq-property-meta {
