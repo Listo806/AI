@@ -1,0 +1,1446 @@
+/* ============================================================
+   AESTHETIC & WELLNESS WORKSPACE
+   Desktop reference: supplied client design
+   Max font-weight: 700
+   ============================================================ */
+
+.aw-page,
+.aw-page *,
+.aw-page *::before,
+.aw-page *::after {
+    box-sizing: border-box;
+}
+
+.aw-page {
+    width: 100%;
+    min-width: 0;
+    min-height: calc(100vh - 1px);
+    padding: 14px 16px 22px;
+    background: #fbfcff;
+    color: #111544;
+    font-family: inherit;
+}
+
+.aw-page button,
+.aw-page select,
+.aw-page input {
+    font: inherit;
+}
+
+.aw-page strong,
+.aw-page b,
+.aw-page h1,
+.aw-page h2,
+.aw-page h3,
+.aw-page h4 {
+    font-weight: 700;
+}
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+
+.aw-page-header {
+    width: 100%;
+    min-height: 68px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 2px 0 13px;
+}
+
+.aw-title-wrap {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.aw-title-icon {
+    width: 48px;
+    height: 46px;
+    flex: 0 0 48px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a44da1;
+}
+
+.aw-title-icon::after {
+    content: "✦";
+    position: absolute;
+    left: 0;
+    top: -1px;
+    color: #b660ae;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.aw-title-wrap h1 {
+    margin: 0;
+    color: #11143f;
+    font-size: 25px;
+    line-height: 1.12;
+    letter-spacing: -0.45px;
+    font-weight: 700;
+}
+
+.aw-title-wrap p {
+    margin: 3px 0 0;
+    color: #5d6586;
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 400;
+}
+
+.aw-header-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 27px;
+}
+
+.aw-top-control {
+    height: 34px;
+    min-width: 139px;
+    padding: 0 13px;
+    border: 1px solid #d7dce9;
+    border-radius: 7px;
+    background: #fff;
+    color: #161b4b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    box-shadow: none;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.aw-top-control svg {
+    flex: 0 0 auto;
+    color: #182052;
+}
+
+.aw-date-control {
+    min-width: 127px;
+}
+
+.aw-date-control svg:last-child {
+    margin-left: auto;
+}
+
+.aw-top-control:hover {
+    border-color: #aaaee2;
+    background: #fdfdff;
+}
+
+/* ============================================================
+   SETUP WARNING
+   ============================================================ */
+
+.aw-setup-warning {
+    width: 100%;
+    min-height: 54px;
+    margin: 0 0 10px;
+    padding: 9px 12px;
+    border: 1px solid #f0d49d;
+    border-radius: 8px;
+    background: #fffaf0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.aw-setup-warning>div:first-child {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.aw-setup-warning>div:first-child>svg {
+    flex: 0 0 auto;
+    color: #bd7615;
+}
+
+.aw-setup-warning strong {
+    display: block;
+    margin-bottom: 2px;
+    color: #72440c;
+    font-size: 11px;
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+.aw-setup-warning p {
+    margin: 0;
+    color: #8b6b42;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.aw-setup-warning-actions {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 7px;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.aw-primary-btn,
+.aw-secondary-btn {
+    height: 35px;
+    min-height: 35px;
+    padding: 0 14px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 10.5px;
+    line-height: 1;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: none;
+}
+
+.aw-primary-btn {
+    color: #fff;
+    border: 1px solid #4e43dd;
+    background: linear-gradient(180deg, #6258df 0%, #4d42cf 100%);
+}
+
+.aw-primary-btn:hover {
+    background: linear-gradient(180deg, #584ed8 0%, #463bc6 100%);
+}
+
+.aw-secondary-btn {
+    color: #4d43d9;
+    border: 1px solid #736be5;
+    background: #fff;
+}
+
+.aw-secondary-btn:hover {
+    background: #faf9ff;
+}
+
+.aw-full-btn {
+    width: 100%;
+}
+
+/* ============================================================
+   AI RECEPTIONIST
+   ============================================================ */
+
+.aw-agent-card {
+    width: 100%;
+    height: 111px;
+    min-height: 111px;
+    margin-bottom: 11px;
+    border: 1px solid #dce1eb;
+    border-radius: 8px;
+    background: #fff;
+    display: grid;
+    grid-template-columns:
+        minmax(470px, 1.85fr) 154px 154px 146px 286px;
+    align-items: stretch;
+    overflow: hidden;
+}
+
+.aw-agent-main {
+    min-width: 0;
+    padding: 13px 19px 13px 17px;
+    display: flex;
+    align-items: center;
+    gap: 17px;
+}
+
+.aw-agent-avatar {
+    width: 66px;
+    height: 66px;
+    flex: 0 0 66px;
+    border-radius: 50%;
+    color: #4f46e5;
+    background: #f0efff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aw-agent-copy {
+    min-width: 0;
+}
+
+.aw-overline {
+    display: block;
+    margin: 0 0 6px;
+    color: #6564aa;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.25px;
+    font-weight: 500;
+}
+
+.aw-agent-title {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.aw-agent-title h2 {
+    margin: 0;
+    color: #121542;
+    font-size: 18px;
+    line-height: 1.15;
+    letter-spacing: -0.2px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.aw-agent-main p {
+    margin: 6px 0 0;
+    color: #5e6688;
+    font-size: 11px;
+    line-height: 1.3;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.aw-live-pill {
+    height: 23px;
+    padding: 0 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+    font-size: 9.5px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.aw-live-pill i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.aw-live-pill.live {
+    color: #087d49;
+    background: #e1f8eb;
+}
+
+.aw-live-pill.live i {
+    background: #19a462;
+}
+
+.aw-live-pill.inactive {
+    color: #aa680c;
+    background: #fff2d5;
+}
+
+.aw-live-pill.inactive i {
+    background: #e69b1b;
+}
+
+.aw-agent-stat {
+    min-width: 0;
+    padding: 0 12px;
+    border-left: 1px solid #e0e4ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.aw-agent-stat svg {
+    flex: 0 0 auto;
+    color: #524bf0;
+}
+
+.aw-agent-stat>div {
+    min-width: 0;
+}
+
+.aw-agent-stat strong {
+    display: block;
+    margin: 0;
+    color: #111441;
+    font-size: 21px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.aw-agent-stat span {
+    display: block;
+    margin-top: 7px;
+    color: #646d8d;
+    font-size: 9.5px;
+    line-height: 1.15;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.aw-agent-actions {
+    min-width: 0;
+    border-left: 1px solid #e0e4ec;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.aw-agent-actions .aw-primary-btn,
+.aw-agent-actions .aw-secondary-btn {
+    height: 39px;
+    min-height: 39px;
+    padding: 0 15px;
+}
+
+/* ============================================================
+   KPI CARDS
+   ============================================================ */
+
+.aw-stats-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 11px;
+    margin-bottom: 11px;
+}
+
+.aw-stat-card {
+    height: 95px;
+    min-width: 0;
+    border: 1px solid #dce1eb;
+    border-radius: 8px;
+    background: #fff;
+    padding: 13px 12px;
+    display: grid;
+    grid-template-columns: 35px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 10px;
+    position: relative;
+}
+
+.aw-stat-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 30px;
+    height: 30px;
+    margin-top: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5048ed;
+}
+
+.aw-stat-main {
+    min-width: 0;
+}
+
+.aw-stat-main>span {
+    display: block;
+    color: #30395f;
+    font-size: 10px;
+    line-height: 1.2;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.aw-stat-main>strong {
+    display: block;
+    margin-top: 6px;
+    color: #11143e;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.2px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.aw-metric-trend {
+    position: absolute;
+    top: 48px;
+    right: 12px;
+    max-width: 76px;
+    color: #178d51;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 1px 2px;
+    font-size: 9px;
+    line-height: 1;
+}
+
+.aw-metric-trend svg {
+    width: 10px;
+    height: 10px;
+}
+
+.aw-metric-trend strong {
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.aw-metric-trend>span {
+    width: 100%;
+    margin-top: 4px;
+    color: #7b839d;
+    text-align: right;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.aw-trend-negative {
+    color: #d34b51;
+}
+
+.aw-trend-down {
+    transform: rotate(180deg);
+}
+
+/* ============================================================
+   COMMON PANEL
+   ============================================================ */
+
+.aw-panel {
+    min-width: 0;
+    border: 1px solid #dce1eb;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.aw-section-header {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #e5e8ef;
+}
+
+.aw-section-title {
+    min-width: 0;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.aw-section-title svg {
+    flex: 0 0 auto;
+    color: #5048ef;
+}
+
+.aw-section-title h2 {
+    margin: 0;
+    color: #111440;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.aw-link-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #4f46e5;
+    font-size: 9.5px;
+    line-height: 1;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.aw-section-range {
+    color: #6b728d;
+    font-size: 9px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.aw-empty {
+    padding: 22px 10px;
+    color: #959cb0;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+/* ============================================================
+   MAIN BODY - EXACT 3 COLUMN STRUCTURE
+   ============================================================ */
+
+.aw-dashboard-main {
+    width: 100%;
+    display: grid;
+    grid-template-columns:
+        minmax(390px, 1.03fr) minmax(435px, 1.15fr) minmax(265px, 0.72fr);
+    gap: 11px;
+    align-items: start;
+}
+
+.aw-center-column {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.aw-small-panel-grid {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1.18fr 0.82fr;
+    gap: 11px;
+}
+
+/* ============================================================
+   TODAY SCHEDULE
+   ============================================================ */
+
+.aw-schedule {
+    min-height: 296px;
+}
+
+.aw-schedule-list {
+    padding: 0 12px;
+}
+
+.aw-schedule-row {
+    height: 40px;
+    min-height: 40px;
+    display: grid;
+    grid-template-columns:
+        57px minmax(58px, 0.75fr) minmax(89px, 1.15fr) minmax(69px, 0.9fr) 72px;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.aw-schedule-row>strong {
+    color: #212850;
+    font-size: 9.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.aw-schedule-row>b {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #151942;
+    font-size: 9.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.aw-schedule-row>span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #555e7d;
+    font-size: 9px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.aw-status {
+    justify-self: end;
+    min-width: 69px;
+    padding: 5px 7px;
+    border-radius: 999px;
+    text-align: center;
+    font-size: 8.5px;
+    line-height: 1;
+    font-weight: 500;
+    font-style: normal;
+    text-transform: capitalize;
+}
+
+.aw-status.confirmed,
+.aw-status.completed {
+    color: #187448;
+    background: #dcf5e6;
+}
+
+.aw-status.pending {
+    color: #9b650d;
+    background: #ffefc6;
+}
+
+.aw-status.canceled,
+.aw-status.cancelled {
+    color: #ba444b;
+    background: #ffe1e3;
+}
+
+.aw-schedule-actions {
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 0.82fr 1.18fr;
+    gap: 11px;
+}
+
+.aw-schedule-actions button {
+    width: 100%;
+}
+
+/* ============================================================
+   CLINIC PIPELINE
+   ============================================================ */
+
+.aw-pipeline {
+    height: 101px;
+    padding: 9px 12px 13px;
+    display: flex;
+    align-items: stretch;
+}
+
+.aw-pipeline-stage {
+    flex: 1 1 0;
+    min-width: 0;
+    position: relative;
+    margin-right: -2px;
+    padding: 13px 8px 8px 12px;
+    background: #f0efff;
+    clip-path: polygon(0 0,
+            calc(100% - 13px) 0,
+            100% 50%,
+            calc(100% - 13px) 100%,
+            0 100%,
+            13px 50%);
+    text-align: center;
+}
+
+.aw-pipeline-stage:first-child {
+    clip-path: polygon(0 0,
+            calc(100% - 13px) 0,
+            100% 50%,
+            calc(100% - 13px) 100%,
+            0 100%);
+}
+
+.aw-pipeline-stage:nth-child(1) {
+    background: #eeefff;
+}
+
+.aw-pipeline-stage:nth-child(2) {
+    background: #e9e7fb;
+}
+
+.aw-pipeline-stage:nth-child(3) {
+    background: #f6e8f0;
+}
+
+.aw-pipeline-stage:nth-child(4) {
+    background: #f3e2e8;
+}
+
+.aw-pipeline-stage:nth-child(5) {
+    background: #eee3f3;
+}
+
+.aw-pipeline-stage:nth-child(6) {
+    background: #e8e4fa;
+}
+
+.aw-pipeline-stage span {
+    display: block;
+    min-height: 24px;
+    color: #24274e;
+    font-size: 8.5px;
+    line-height: 1.2;
+    font-weight: 500;
+}
+
+.aw-pipeline-stage strong {
+    display: block;
+    margin-top: 7px;
+    color: #151844;
+    font-size: 17px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+/* ============================================================
+   REBOOK
+   ============================================================ */
+
+.aw-small-panel-grid .aw-panel {
+    min-height: 166px;
+}
+
+.aw-rebook-row {
+    min-height: 37px;
+    padding: 4px 9px;
+    display: grid;
+    grid-template-columns: minmax(78px, 1fr) auto auto;
+    align-items: center;
+    gap: 6px;
+}
+
+.aw-rebook-row>div {
+    min-width: 0;
+}
+
+.aw-rebook-row strong {
+    color: #171a43;
+    font-size: 8.5px;
+    font-weight: 600;
+}
+
+.aw-rebook-row div span {
+    margin-left: 5px;
+    color: #636a83;
+    font-size: 8px;
+    font-weight: 400;
+}
+
+.aw-due {
+    padding: 5px 7px;
+    border-radius: 999px;
+    background: #fff0c7;
+    color: #a6680e;
+    font-size: 7.5px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.aw-due.danger {
+    background: #ffe1e4;
+    color: #ce454c;
+}
+
+.aw-rebook-row button {
+    height: 24px;
+    padding: 0 7px;
+    border: 1px solid #6a63e4;
+    border-radius: 4px;
+    background: #fff;
+    color: #5047db;
+    font-size: 7.5px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* ============================================================
+   FOLLOW UP
+   ============================================================ */
+
+.aw-followup-row {
+    height: 27px;
+    padding: 0 10px;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    align-items: center;
+}
+
+.aw-followup-row strong {
+    grid-column: 1;
+    grid-row: 1;
+    color: #111541;
+    font-size: 12px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.aw-followup-row span {
+    grid-column: 2;
+    grid-row: 1;
+    overflow: hidden;
+    color: #555c78;
+    font-size: 8px;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aw-small-panel-grid .aw-panel:nth-child(2) .aw-full-btn {
+    width: calc(100% - 18px);
+    height: 27px;
+    min-height: 27px;
+    margin: 4px 9px 8px;
+    padding: 0 8px;
+    font-size: 8px;
+}
+
+/* ============================================================
+   TREATMENT INTEREST
+   ============================================================ */
+
+.aw-treatment-panel {
+    min-height: 205px;
+}
+
+.aw-treatment-list {
+    padding: 10px 13px 13px;
+}
+
+.aw-treatment-row {
+    height: 37px;
+    display: grid;
+    grid-template-columns: minmax(82px, 1fr) minmax(100px, 1.25fr) 30px;
+    align-items: center;
+    gap: 8px;
+}
+
+.aw-treatment-row>span {
+    color: #262a50;
+    font-size: 9px;
+    line-height: 1.1;
+    font-weight: 500;
+}
+
+.aw-treatment-track {
+    height: 18px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #f1f2f6;
+}
+
+.aw-treatment-track i {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: #6b61d4;
+}
+
+.aw-treatment-row:nth-child(2) .aw-treatment-track i {
+    background: #a79be3;
+}
+
+.aw-treatment-row:nth-child(3) .aw-treatment-track i {
+    background: #d596b8;
+}
+
+.aw-treatment-row:nth-child(4) .aw-treatment-track i {
+    background: #e4b1c6;
+}
+
+.aw-treatment-row>strong {
+    color: #292d54;
+    text-align: right;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+/* ============================================================
+   BOTTOM THREE PANELS
+   ============================================================ */
+
+.aw-bottom-grid {
+    width: 100%;
+    margin-top: 11px;
+    display: grid;
+    grid-template-columns: 1.03fr 0.97fr 0.92fr;
+    gap: 11px;
+}
+
+.aw-bottom-grid>.aw-panel {
+    min-height: 198px;
+}
+
+/* provider */
+
+.aw-provider-table {
+    padding: 0 13px 10px;
+}
+
+.aw-provider-head,
+.aw-provider-row {
+    display: grid;
+    grid-template-columns: 1.15fr 0.86fr 0.82fr 0.72fr;
+    align-items: center;
+    gap: 8px;
+}
+
+.aw-provider-head {
+    height: 32px;
+    padding: 0 9px;
+    color: #58617f;
+    background: #f7f8fb;
+    font-size: 8.5px;
+    font-weight: 500;
+}
+
+.aw-provider-row {
+    height: 35px;
+    padding: 0 9px;
+    border-bottom: 1px solid #eceff4;
+    color: #424a67;
+    font-size: 9px;
+    font-weight: 400;
+}
+
+.aw-provider-row:last-child {
+    border-bottom: 0;
+}
+
+.aw-provider-row strong {
+    color: #171a42;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+/* revenue */
+
+.aw-revenue-summary {
+    height: 47px;
+    padding: 9px 14px 5px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.aw-revenue-summary>strong {
+    color: #111440;
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.aw-revenue-summary>span {
+    padding: 4px 7px;
+    border-radius: 999px;
+    color: #21814e;
+    background: #dff5e8;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.aw-revenue-chart {
+    height: 96px;
+    margin: 0 13px 11px 38px;
+    padding: 4px 6px 17px;
+    border-left: 1px solid #e3e7ef;
+    border-bottom: 1px solid #e3e7ef;
+    background:
+        linear-gradient(to bottom,
+            transparent 24%,
+            #edf0f5 25%,
+            transparent 26%,
+            transparent 49%,
+            #edf0f5 50%,
+            transparent 51%,
+            transparent 74%,
+            #edf0f5 75%,
+            transparent 76%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+}
+
+.aw-chart-point {
+    height: 100%;
+    flex: 1 1 0;
+    position: relative;
+}
+
+.aw-chart-point i {
+    width: 6px;
+    height: 6px;
+    position: absolute;
+    left: 50%;
+    bottom: calc((100% - 17px) * var(--value, 0));
+    border: 1px solid #574ee2;
+    border-radius: 50%;
+    background: #5b54e5;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.aw-chart-point::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    width: 100%;
+    bottom: calc((100% - 17px) * var(--value, 0) + 2px);
+    border-top: 1.5px solid #645ae5;
+    z-index: 1;
+}
+
+.aw-chart-point:last-child::after {
+    display: none;
+}
+
+.aw-chart-point span {
+    position: absolute;
+    left: 50%;
+    bottom: -13px;
+    color: #68718c;
+    transform: translateX(-50%);
+    font-size: 7.5px;
+    font-weight: 400;
+}
+
+/* AI activity */
+
+.aw-ai-activity-list {
+    padding: 6px 13px 3px;
+}
+
+.aw-ai-activity-row {
+    min-height: 25px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 9px 56px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+}
+
+.aw-ai-activity-row>i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #5a52e8;
+    z-index: 2;
+}
+
+.aw-ai-activity-row:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 16px;
+    bottom: -9px;
+    width: 1px;
+    background: #d6daf2;
+}
+
+.aw-ai-activity-row>span {
+    color: #6a718c;
+    font-size: 8px;
+    font-weight: 400;
+}
+
+.aw-ai-activity-row>strong {
+    overflow: hidden;
+    color: #292e51;
+    font-size: 8.5px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aw-ai-safety-note {
+    min-height: 31px;
+    margin: 4px 10px 9px;
+    padding: 7px 11px 7px 33px;
+    position: relative;
+    border-radius: 5px;
+    background: #f0efff;
+    color: #5d6480;
+    display: flex;
+    align-items: center;
+    font-size: 8.5px;
+    font-weight: 400;
+}
+
+.aw-ai-safety-note::before {
+    content: "i";
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    border: 1px solid #655ce5;
+    border-radius: 50%;
+    color: #574ee1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* ============================================================
+   ERRORS / LOADING
+   ============================================================ */
+
+.aw-error {
+    margin-bottom: 10px;
+    padding: 8px 11px;
+    border: 1px solid #fecaca;
+    border-radius: 7px;
+    background: #fff4f4;
+    color: #ad343b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.aw-error button {
+    border: 1px solid #efafb3;
+    border-radius: 4px;
+    background: #fff;
+    color: #ad343b;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.aw-loading {
+    min-height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #757d99;
+    font-size: 11px;
+}
+
+/* ============================================================
+   1366 / SMALLER DESKTOP
+   Keep same structure, shrink instead of redesigning.
+   ============================================================ */
+
+@media (max-width: 1450px) {
+    .aw-page {
+        padding: 12px 13px 20px;
+    }
+
+    .aw-title-wrap h1 {
+        font-size: 22px;
+    }
+
+    .aw-agent-card {
+        grid-template-columns:
+            minmax(410px, 1.7fr) 128px 128px 122px 240px;
+    }
+
+    .aw-agent-title h2 {
+        font-size: 16px;
+    }
+
+    .aw-agent-stat strong {
+        font-size: 19px;
+    }
+
+    .aw-agent-actions {
+        padding: 0 10px;
+        gap: 7px;
+    }
+
+    .aw-agent-actions .aw-primary-btn,
+    .aw-agent-actions .aw-secondary-btn {
+        padding: 0 10px;
+        font-size: 9px;
+    }
+
+    .aw-stat-main>strong {
+        font-size: 19px;
+    }
+
+    .aw-dashboard-main {
+        grid-template-columns:
+            minmax(345px, 1.03fr) minmax(395px, 1.14fr) minmax(225px, 0.72fr);
+    }
+}
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 1120px) {
+    .aw-page-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .aw-header-actions {
+        width: 100%;
+        padding-top: 0;
+        justify-content: flex-start;
+    }
+
+    .aw-agent-card {
+        height: auto;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .aw-agent-main {
+        grid-column: 1 / -1;
+        min-height: 92px;
+        border-bottom: 1px solid #e0e4ec;
+    }
+
+    .aw-agent-stat {
+        min-height: 68px;
+        border-left: 0;
+        border-right: 1px solid #e0e4ec;
+    }
+
+    .aw-agent-actions {
+        grid-column: 1 / -1;
+        min-height: 58px;
+        border-left: 0;
+        border-top: 1px solid #e0e4ec;
+    }
+
+    .aw-stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .aw-dashboard-main {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .aw-treatment-panel {
+        grid-column: 1 / -1;
+    }
+
+    .aw-bottom-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .aw-bottom-grid>article:last-child {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 760px) {
+    .aw-page {
+        padding: 10px 9px 18px;
+    }
+
+    .aw-title-icon {
+        width: 39px;
+        height: 39px;
+        flex-basis: 39px;
+    }
+
+    .aw-title-wrap h1 {
+        font-size: 19px;
+    }
+
+    .aw-title-wrap p {
+        font-size: 10px;
+    }
+
+    .aw-header-actions {
+        gap: 6px;
+    }
+
+    .aw-top-control {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .aw-agent-card {
+        grid-template-columns: 1fr;
+    }
+
+    .aw-agent-main,
+    .aw-agent-actions {
+        grid-column: 1;
+    }
+
+    .aw-agent-main {
+        min-height: 105px;
+    }
+
+    .aw-agent-title {
+        align-items: flex-start;
+    }
+
+    .aw-agent-title h2,
+    .aw-agent-main p {
+        white-space: normal;
+    }
+
+    .aw-agent-stat {
+        min-height: 56px;
+        justify-content: flex-start;
+        border-right: 0;
+        border-top: 1px solid #e0e4ec;
+        padding: 0 18px;
+    }
+
+    .aw-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .aw-dashboard-main,
+    .aw-bottom-grid,
+    .aw-small-panel-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .aw-treatment-panel,
+    .aw-bottom-grid>article:last-child {
+        grid-column: auto;
+    }
+
+    .aw-schedule {
+        min-height: 0;
+    }
+
+    .aw-schedule-row {
+        grid-template-columns: 50px 1fr 70px;
+    }
+
+    .aw-schedule-row>span {
+        display: none;
+    }
+
+    .aw-status {
+        grid-column: 3;
+    }
+}
+
+@media (max-width: 480px) {
+    .aw-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .aw-stat-card {
+        height: 76px;
+    }
+
+    .aw-schedule-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .aw-pipeline {
+        height: auto;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 5px;
+    }
+
+    .aw-pipeline-stage,
+    .aw-pipeline-stage:first-child {
+        min-height: 66px;
+        margin: 0;
+        clip-path: none;
+        border-radius: 5px;
+    }
+}
+
+.aw-filter-wrap{position:relative}.aw-filter-popover{position:absolute;right:0;top:42px;z-index:40;width:250px;padding:12px;border:1px solid #dce1eb;border-radius:9px;background:#fff;box-shadow:0 14px 34px rgba(25,31,70,.12);display:flex;flex-direction:column;gap:10px}.aw-filter-popover label{display:flex;flex-direction:column;gap:5px;color:#59617d;font-size:10px;font-weight:500}.aw-filter-popover select{width:100%;height:34px;border:1px solid #d8dde8;border-radius:6px;background:#fff;color:#171b45;padding:0 9px;font-size:10px;outline:none}.aw-filter-popover>button{height:32px;border:1px solid #d8dde8;border-radius:6px;background:#f8f9fc;color:#4f5672;font-size:10px;cursor:pointer}.aw-filter-popover>button:hover{background:#f1f2f8}@media(max-width:760px){.aw-filter-popover{left:0;right:auto;width:min(280px,calc(100vw - 28px))}}

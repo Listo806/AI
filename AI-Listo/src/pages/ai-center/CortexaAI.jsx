@@ -53,7 +53,7 @@ import {
   ChevronsRight,
   ChevronsLeft
 } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import CortexaAISetup from "./CortexaAISetup";
 import apiClient from "../../api/apiClient";
@@ -71,11 +71,59 @@ import TestAgentModal from "./components/TestAgentModal";
 import KnowledgeItemModal from "./components/KnowledgeItemModal";
 import KnowledgeImportModal from "./components/KnowledgeImportModal";
 import KnowledgeInsightsModal from "./components/KnowledgeInsightsModal";
+import AestheticConversionFlow from "./components/AestheticConversionFlow";
 
 export default function CortexaAI() {
   const { t } = useTranslation();
   const location = useLocation();
-  const isSetupRoute = location.pathname === "/dashboard/ai-cortexa-setup";
+  const navigate = useNavigate();
+
+  const isSetupRoute = location.pathname.startsWith(
+    "/dashboard/ai-cortexa-setup",
+  );
+
+  const setupRouteMode = useMemo(() => {
+    if (location.pathname.endsWith("/ai-cortexa-setup/training")) {
+      return "training";
+    }
+
+    if (location.pathname.endsWith("/ai-cortexa-setup/conversion-flow")) {
+      return "conversion-flow";
+    }
+
+    return "overview";
+  }, [location.pathname]);
+
+  const setupParams = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search],
+  );
+
+  const setupWorkspaceId = setupParams.get("workspace_id") || "";
+  const setupSection = setupParams.get("section") || "";
+  const setupReturnTo = setupParams.get("return_to") || "";
+  const isAestheticWellnessSetup = setupWorkspaceId === "aesthetic-wellness";
+
+  const buildWorkspaceQuery = useCallback(
+    (extra = {}) => {
+      const params = new URLSearchParams();
+
+      if (setupWorkspaceId) {
+        params.set("workspace_id", setupWorkspaceId);
+      }
+
+      Object.entries(extra).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.set(key, String(value));
+        }
+      });
+
+      const query = params.toString();
+      return query ? `?${query}` : "";
+    },
+    [setupWorkspaceId],
+  );
+
   const { user } = useAuth();
   const [activePage, setActivePage] = useState("chat");
   const [openStep, setOpenStep] = useState(1);
@@ -174,7 +222,7 @@ export default function CortexaAI() {
     }
     setPageError("");
     try {
-      const data = await request("/ai-center/agent/setup");
+      const data = await request(`/ai-center/agent/setup${buildWorkspaceQuery()}`);
       setSetupData(data);
       if (data?.appointmentRules) {
         setAppointmentRules(data.appointmentRules);
@@ -194,7 +242,7 @@ export default function CortexaAI() {
         setLoadingSetup(false);
       }
     }
-  }, []);
+  }, [buildWorkspaceQuery, t]);
 
   const whatsappSetup = useWhatsAppSetup({
     onConnected: loadSetup,
@@ -272,7 +320,7 @@ export default function CortexaAI() {
     try {
       setAppointmentRulesLoading(true);
       setAppointmentRulesError("");
-      const data = await aiAgentSetupService.getAppointmentRules();
+      const data = await aiAgentSetupService.getAppointmentRules({ workspaceId: setupWorkspaceId });
       setAppointmentRules(data);
     } catch (error) {
       console.error(error);
@@ -294,7 +342,7 @@ export default function CortexaAI() {
     try {
       setAppointmentRulesSaving(true);
       setAppointmentRulesError("");
-      const data = await aiAgentSetupService.saveAppointmentRules(payload);
+      const data = await aiAgentSetupService.saveAppointmentRules(payload, { workspaceId: setupWorkspaceId });
       setAppointmentRules(data);
       setAppointmentRulesOpen(false);
       await loadSetup({
@@ -315,7 +363,7 @@ export default function CortexaAI() {
     setBehaviorError("");
 
     try {
-      const data = await aiAgentSetupService.getBehavior();
+      const data = await aiAgentSetupService.getBehavior({ workspaceId: setupWorkspaceId });
 
       setBehavior(data);
     } catch (error) {
@@ -341,7 +389,7 @@ export default function CortexaAI() {
     setBehaviorError("");
 
     try {
-      const saved = await aiAgentSetupService.saveBehavior(payload);
+      const saved = await aiAgentSetupService.saveBehavior(payload, { workspaceId: setupWorkspaceId });
       setBehavior(saved);
       setBehaviorOpen(false);
       await loadSetup({
@@ -368,7 +416,7 @@ export default function CortexaAI() {
     setAutomationsError("");
 
     try {
-      const data = await aiAgentSetupService.getAutomations();
+      const data = await aiAgentSetupService.getAutomations({ workspaceId: setupWorkspaceId });
 
       setAutomations(data);
     } catch (error) {
@@ -394,7 +442,7 @@ export default function CortexaAI() {
     setAutomationsError("");
 
     try {
-      const saved = await aiAgentSetupService.saveAutomations(payload);
+      const saved = await aiAgentSetupService.saveAutomations(payload, { workspaceId: setupWorkspaceId });
       setAutomations(saved);
       setAutomationsOpen(false);
       await loadSetup({
@@ -544,13 +592,25 @@ export default function CortexaAI() {
     setLaunchError("");
 
     try {
-      const updated = await aiAgentSetupService.updateSetup({
-        launched: true,
-      });
+      const updated = await aiAgentSetupService.updateSetup(
+        { launched: true },
+        { workspaceId: setupWorkspaceId },
+      );
+
       setSetupData(updated);
+
       await loadSetup({
         silent: true,
       });
+
+      if (setupReturnTo) {
+        navigate(setupReturnTo, { replace: true });
+        return;
+      }
+
+      if (isAestheticWellnessSetup) {
+        navigate("/dashboard/aesthetic-wellness", { replace: true });
+      }
     } catch (error) {
       console.error("LAUNCH AI AGENT FAILED:", error);
 
@@ -966,6 +1026,68 @@ export default function CortexaAI() {
     loadSetup();
   }, [loadSetup]);
 
+  const resolveFirstIncompleteSetupStep = useCallback(
+    (data) => {
+      if (!data) return 1;
+      if (!data?.whatsapp?.connected) return 1;
+      if (!data?.businessProfile?.completed) return 2;
+
+      if (
+        !isAestheticWellnessSetup &&
+        Number(data?.properties?.imported || 0) <= 0
+      ) {
+        return 3;
+      }
+
+      if (!data?.appointmentRules?.completed) {
+        return isAestheticWellnessSetup ? 3 : 4;
+      }
+
+      if (!data?.behavior?.completed) {
+        return isAestheticWellnessSetup ? 4 : 5;
+      }
+
+      if (!data?.automations?.completed) {
+        return isAestheticWellnessSetup ? 5 : 6;
+      }
+
+      if (!data?.testAi?.tested) {
+        return isAestheticWellnessSetup ? 6 : 7;
+      }
+
+      if (!data?.launch?.launched) {
+        return isAestheticWellnessSetup ? 7 : 8;
+      }
+
+      return 1;
+    },
+    [isAestheticWellnessSetup],
+  );
+
+  useEffect(() => {
+    if (!isSetupRoute || !setupData) return;
+
+    const requestedStep = Number(setupParams.get("step") || 0);
+
+    if (requestedStep > 0) {
+      setOpenStep(requestedStep);
+      return;
+    }
+
+    if (setupRouteMode === "training") {
+      setActivePage("knowledge");
+      return;
+    }
+
+    setOpenStep(resolveFirstIncompleteSetupStep(setupData));
+  }, [
+    isSetupRoute,
+    setupData,
+    setupParams,
+    setupRouteMode,
+    resolveFirstIncompleteSetupStep,
+  ]);
+
   useEffect(() => {
     if (isSetupRoute) {
       return;
@@ -1235,7 +1357,7 @@ export default function CortexaAI() {
     setBusinessProfileError("");
 
     try {
-      const data = await aiAgentSetupService.getBusinessProfile();
+      const data = await aiAgentSetupService.getBusinessProfile({ workspaceId: setupWorkspaceId });
 
       setBusinessProfile(data);
     } catch (error) {
@@ -1256,7 +1378,7 @@ export default function CortexaAI() {
     setBusinessProfileError("");
 
     try {
-      const saved = await aiAgentSetupService.saveBusinessProfile(payload);
+      const saved = await aiAgentSetupService.saveBusinessProfile(payload, { workspaceId: setupWorkspaceId });
 
       setBusinessProfile(saved);
       setBusinessProfileOpen(false);
@@ -1306,6 +1428,12 @@ export default function CortexaAI() {
   return (
     <>
       {isSetupRoute ? (
+        isAestheticWellnessSetup && setupRouteMode === "conversion-flow" ? (
+          <AestheticConversionFlow
+            initialSection={setupSection || "treatments"}
+            onClose={() => navigate(`/dashboard/aesthetic-wellness`)}
+          />
+        ) : (
         <CortexaAISetup
           setupData={setupData}
           openStep={openStep}
@@ -1313,6 +1441,14 @@ export default function CortexaAI() {
           whatsappSetup={whatsappSetup}
           onBusinessProfile={openBusinessProfile}
           onPropertyImport={openPropertyImport}
+          onClinicSetup={() => {
+            const q = new URLSearchParams({
+              workspace_id: setupWorkspaceId || "aesthetic-wellness",
+              return_to: setupReturnTo || "/dashboard/aesthetic-wellness",
+              section: "treatments",
+            });
+            navigate(`/dashboard/ai-cortexa-setup/conversion-flow?${q.toString()}`);
+          }}
           onAppointmentRules={openAppointmentRules}
           onBehavior={openBehavior}
           onAutomations={openAutomations}
@@ -1320,7 +1456,11 @@ export default function CortexaAI() {
           onLaunch={launchAgent}
           launchingAgent={launchingAgent}
           launchError={launchError}
+          workspaceId={setupWorkspaceId}
+          routeMode={setupRouteMode}
+          requestedSection={setupSection}
         />
+        )
       ) : (
         <div
           className={`cx-ai-shell ${

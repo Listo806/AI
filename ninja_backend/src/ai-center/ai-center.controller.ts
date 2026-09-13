@@ -33,6 +33,7 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { AiAgentSetupCompleteGuard } from "./guards/ai-agent-setup-complete.guard";
 import { AllowBeforeAgentSetup } from "./decorators/allow-before-agent-setup.decorator";
+import { WorkspaceAiSetupService } from "../aesthetic-wellness/workspace-ai-setup.service";
 
 import { FilesInterceptor } from "@nestjs/platform-express";
 
@@ -45,6 +46,7 @@ export class AiCenterController {
   constructor(
     private readonly service: AiCenterService,
     private readonly aiUnits: AiUnitsService,
+    private readonly workspaceSetup: WorkspaceAiSetupService,
   ) {}
 
   @Get("overview")
@@ -140,7 +142,13 @@ export class AiCenterController {
   @Get("agent/setup")
   @AllowBeforeAgentSetup()
   @ApiOperation({ summary: "Get AI Agent setup progress" })
-  async getAgentSetup(@CurrentUser() user: any) {
+  async getAgentSetup(
+    @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId?: string,
+  ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.getSetup(user.teamId, workspaceId!);
+    }
     return this.service.getAgentSetup(user.teamId);
   }
 
@@ -151,23 +159,33 @@ export class AiCenterController {
   @ApiOperation({ summary: "Update AI Agent setup state" })
   async updateAgentSetup(
     @CurrentUser() user: any,
-    @Body()
-    body: {
+    @Query("workspace_id") workspaceId: string | undefined,
+    @Body() body: {
       businessProfileCompleted?: boolean;
       appointmentRulesConfigured?: boolean;
       behaviorConfigured?: boolean;
       automationsConfigured?: boolean;
       tested?: boolean;
       launched?: boolean;
+      paused?: boolean;
     },
   ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.updateSetup(user.teamId, workspaceId!, body);
+    }
     return this.service.updateAgentSetup(user.teamId, body);
   }
 
   @Get("agent/business-profile")
   @AllowBeforeAgentSetup()
   @ApiOperation({ summary: "Get AI Agent business profile" })
-  async getAgentBusinessProfile(@CurrentUser() user: any) {
+  async getAgentBusinessProfile(
+    @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId?: string,
+  ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.getBusinessProfile(user.teamId, workspaceId!);
+    }
     return this.service.getAgentBusinessProfile(user.teamId);
   }
 
@@ -178,6 +196,7 @@ export class AiCenterController {
   @ApiOperation({ summary: "Create or update AI Agent business profile" })
   async saveAgentBusinessProfile(
     @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId: string | undefined,
     @Body()
     body: {
       businessName: string;
@@ -203,6 +222,9 @@ export class AiCenterController {
       currency?: string;
     },
   ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.saveBusinessProfile(user.teamId, workspaceId!, body);
+    }
     return this.service.saveAgentBusinessProfile(user.teamId, user.id, body);
   }
 
@@ -480,7 +502,13 @@ export class AiCenterController {
 
   @Get("agent/appointment-rules")
   @AllowBeforeAgentSetup()
-  async getAppointmentRules(@CurrentUser() user: any) {
+  async getAppointmentRules(
+    @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId?: string,
+  ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.getAppointmentRules(user.teamId, workspaceId!);
+    }
     return this.service.getAppointmentRules(user.teamId);
   }
 
@@ -493,6 +521,7 @@ export class AiCenterController {
   })
   async saveAppointmentRules(
     @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId: string | undefined,
 
     @Body()
     body: {
@@ -520,6 +549,9 @@ export class AiCenterController {
       intakeQuestions?: string[];
     },
   ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.saveAppointmentRules(user.teamId, workspaceId!, body);
+    }
     return this.service.saveAppointmentRules(user.teamId, user.id, body);
   }
 
@@ -528,7 +560,13 @@ export class AiCenterController {
   @ApiOperation({
     summary: "Get AI Agent behavior",
   })
-  async getAgentBehavior(@CurrentUser() user: any) {
+  async getAgentBehavior(
+    @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId?: string,
+  ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.getBehavior(user.teamId, workspaceId!);
+    }
     return this.service.getAgentBehavior(user.teamId);
   }
 
@@ -541,6 +579,7 @@ export class AiCenterController {
   })
   async saveAgentBehavior(
     @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId: string | undefined,
     @Body()
     body: {
       tone?: string;
@@ -563,12 +602,21 @@ export class AiCenterController {
       autoEscalateHotLeads?: boolean;
     },
   ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.saveBehavior(user.teamId, workspaceId!, body);
+    }
     return this.service.saveAgentBehavior(user.teamId, user.id, body);
   }
 
   @Get("agent/automations")
   @AllowBeforeAgentSetup()
-  async getAutomations(@CurrentUser() user: any) {
+  async getAutomations(
+    @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId?: string,
+  ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.getAutomations(user.teamId, workspaceId!);
+    }
     return this.service.getAutomations(user.teamId);
   }
 
@@ -578,10 +626,14 @@ export class AiCenterController {
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   async saveAutomations(
     @CurrentUser() user: any,
+    @Query("workspace_id") workspaceId: string | undefined,
 
     @Body()
     body: any,
   ) {
+    if (this.workspaceSetup.supports(workspaceId)) {
+      return this.workspaceSetup.saveAutomations(user.teamId, workspaceId!, body);
+    }
     return this.service.saveAutomations(user.teamId, user.id, body);
   }
 

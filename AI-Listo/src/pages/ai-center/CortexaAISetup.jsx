@@ -32,6 +32,7 @@ export default function CortexaAISetup({
   whatsappSetup,
   onBusinessProfile,
   onPropertyImport,
+  onClinicSetup,
   onAppointmentRules,
   onBehavior,
   onAutomations,
@@ -41,8 +42,10 @@ export default function CortexaAISetup({
   launchError,
   onExploreWorkspace,
   onDismissWorkspaceRecommendation,
+  workspaceId = "",
 }) {
   const { t } = useTranslation();
+  const isAesthetic = workspaceId === "aesthetic-wellness";
 
   const setupSteps = useMemo(() => {
     const data = setupData || {};
@@ -90,32 +93,42 @@ export default function CortexaAISetup({
         accent: "blue",
         complete: Boolean(data?.businessProfile?.completed),
       },
-      {
-        id: 3,
-        key: "properties",
-        title: t("aiCenter.stepPropertiesTitle"),
-        desc: t("aiCenter.stepPropertiesDesc"),
-        desktopTitle: t("aiCenter.desktopStepProductsTitle"),
-        desktopDesc: t("aiCenter.desktopStepProductsDesc"),
-        desktopStatus:
-          Number(data?.properties?.imported || 0) > 0
-            ? t("aiCenter.statusImported", {
-                count: Number(data?.properties?.imported || 0),
-              })
-            : t("aiCenter.desktopStatusNotAdded"),
-        desktopAction: t("aiCenter.desktopActionAdd"),
-        icon: Home,
-        status:
-          data?.properties?.status ||
-          t("aiCenter.statusImported", {
-            count: Number(data?.properties?.imported || 0),
-          }),
-        statusType:
-          Number(data?.properties?.imported || 0) > 0 ? "success" : "muted",
-        action: t("aiCenter.actionImport"),
-        accent: "orange",
-        complete: Number(data?.properties?.imported || 0) > 0,
-      },
+      isAesthetic
+        ? {
+            id: 3,
+            key: "clinicSetup",
+            title: "Treatments & Providers",
+            desc: "Add clinic treatments, providers, locations, services, and availability.",
+            desktopTitle: "Treatments, Providers & Availability",
+            desktopDesc: "Configure the clinic services the AI receptionist can qualify and book.",
+            desktopStatus: data?.clinic?.status || "Not configured",
+            desktopAction: data?.clinic?.configured ? "Manage" : "Set Up",
+            icon: Sparkles,
+            status: data?.clinic?.status || "Not configured",
+            statusType: data?.clinic?.configured ? "success" : "muted",
+            action: data?.clinic?.configured ? "Manage" : "Set Up",
+            accent: "purple",
+            complete: Boolean(data?.clinic?.configured),
+          }
+        : {
+            id: 3,
+            key: "properties",
+            title: t("aiCenter.stepPropertiesTitle"),
+            desc: t("aiCenter.stepPropertiesDesc"),
+            desktopTitle: t("aiCenter.desktopStepProductsTitle"),
+            desktopDesc: t("aiCenter.desktopStepProductsDesc"),
+            desktopStatus:
+              Number(data?.properties?.imported || 0) > 0
+                ? t("aiCenter.statusImported", { count: Number(data?.properties?.imported || 0) })
+                : t("aiCenter.desktopStatusNotAdded"),
+            desktopAction: t("aiCenter.desktopActionAdd"),
+            icon: Home,
+            status: data?.properties?.status || t("aiCenter.statusImported", { count: Number(data?.properties?.imported || 0) }),
+            statusType: Number(data?.properties?.imported || 0) > 0 ? "success" : "muted",
+            action: t("aiCenter.actionImport"),
+            accent: "orange",
+            complete: Number(data?.properties?.imported || 0) > 0,
+          },
       {
         id: 4,
         key: "appointmentRules",
@@ -196,7 +209,7 @@ export default function CortexaAISetup({
         locked: !data?.launch?.unlocked,
       },
     ];
-  }, [setupData, whatsappSetup, t]);
+  }, [setupData, whatsappSetup, t, isAesthetic]);
 
   const completedSteps = Number(setupData?.completedSteps || 0);
   const totalSteps = Number(setupData?.totalSteps || 8);
@@ -210,6 +223,10 @@ export default function CortexaAISetup({
 
       case "properties":
         onPropertyImport?.();
+        break;
+
+      case "clinicSetup":
+        onClinicSetup?.();
         break;
 
       case "appointmentRules":

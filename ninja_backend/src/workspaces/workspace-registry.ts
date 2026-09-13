@@ -85,6 +85,12 @@ export const WORKSPACE_CATALOG: WorkspaceDef[] = [
     featureKey: 'leadGenerator',
     route: '/dashboard/generator',
   },
+  {
+    id: 'aesthetic-wellness',
+    name: 'Aesthetic & Wellness',
+    featureKey: 'aestheticWellnessWorkspace',
+    route: '/dashboard/aesthetic-wellness',
+  },
 ];
 
 const BY_ID: Record<string, WorkspaceDef> = WORKSPACE_CATALOG.reduce(

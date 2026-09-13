@@ -149,6 +149,7 @@ import SetupGuidePage from "./pages/common/SetupGuidePage";
 import IntegrationsPage from "./pages/common/IntegrationsPage";
 import FeaturesPage from "./pages/common/FeaturesPage";
 import AdminBillingCalendar from "./pages/admin/AdminBillingCalendar";
+import AestheticWellnessWorkspace from "./pages/aesthetic-wellness/AestheticWellnessWorkspace";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -392,6 +393,8 @@ function AppRoutes() {
 
         {/* AI Center Routes */}
         <Route path="ai-cortexa-setup" element={<CortexaAI />} />
+        <Route path="ai-cortexa-setup/training" element={<CortexaAI />} />
+        <Route path="ai-cortexa-setup/conversion-flow" element={<CortexaAI />} />
         <Route path="ai-cortexa" element={<AIAgentWorkspace />} />
         <Route path="ai-center" element={<AICenterOverview />} />
         <Route path="ai-assistant" element={<AIAssistant />} />
@@ -493,6 +496,15 @@ function AppRoutes() {
           element={
             <WorkspaceGate workspaceId="team">
               <Team />
+            </WorkspaceGate>
+          }
+        />
+        {/* Aesthetic & Wellness Workspace */}
+        <Route
+          path="aesthetic-wellness"
+          element={
+            <WorkspaceGate workspaceId="aesthetic-wellness">
+              <AestheticWellnessWorkspace />
             </WorkspaceGate>
           }
         />

@@ -41,6 +41,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { LeadgenModule } from './leadgen/leadgen.module';
 import { AiUnitsModule } from './ai-units/ai-units.module';
 import { BusinessSuiteModule } from './business-suite/business-suite.module';
+import { AestheticWellnessModule } from './aesthetic-wellness/aesthetic-wellness.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { BusinessSuiteModule } from './business-suite/business-suite.module';
     LeadgenModule,
     AiUnitsModule,
     BusinessSuiteModule,
+    AestheticWellnessModule,
   ],
   controllers: [AppController],
 })

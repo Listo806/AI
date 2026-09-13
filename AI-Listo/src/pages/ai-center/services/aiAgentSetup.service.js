@@ -23,19 +23,26 @@ const buildQuery = (params = {}) => {
   return query ? `?${query}` : "";
 };
 
+
+const workspaceQuery = (options = {}, extra = {}) => {
+  const workspaceId = options?.workspaceId || options?.workspace_id || "";
+  return buildQuery({
+    ...extra,
+    ...(workspaceId ? { workspace_id: workspaceId } : {}),
+  });
+};
+
 export const aiAgentSetupService = {
   // ==========================
   // AI Agent Setup
   // ==========================
 
-  getSetup() {
-    return request("/ai-center/agent/setup", {
-      method: "GET",
-    });
+  getSetup(options = {}) {
+    return request(`/ai-center/agent/setup${workspaceQuery(options)}`, { method: "GET" });
   },
 
-  updateSetup(payload) {
-    return request("/ai-center/agent/setup", {
+  updateSetup(payload, options = {}) {
+    return request(`/ai-center/agent/setup${workspaceQuery(options)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -48,14 +55,12 @@ export const aiAgentSetupService = {
   // Business Profile
   // ==========================
 
-  getBusinessProfile() {
-    return request("/ai-center/agent/business-profile", {
-      method: "GET",
-    });
+  getBusinessProfile(options = {}) {
+    return request(`/ai-center/agent/business-profile${workspaceQuery(options)}`, { method: "GET" });
   },
 
-  saveBusinessProfile(payload) {
-    return request("/ai-center/agent/business-profile", {
+  saveBusinessProfile(payload, options = {}) {
+    return request(`/ai-center/agent/business-profile${workspaceQuery(options)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -100,14 +105,12 @@ export const aiAgentSetupService = {
     });
   },
 
-  getAppointmentRules() {
-    return request("/ai-center/agent/appointment-rules", {
-      method: "GET",
-    });
+  getAppointmentRules(options = {}) {
+    return request(`/ai-center/agent/appointment-rules${workspaceQuery(options)}`, { method: "GET" });
   },
 
-  saveAppointmentRules(payload) {
-    return request("/ai-center/agent/appointment-rules", {
+  saveAppointmentRules(payload, options = {}) {
+    return request(`/ai-center/agent/appointment-rules${workspaceQuery(options)}`, {
       method: "PUT",
 
       headers: {
@@ -118,14 +121,12 @@ export const aiAgentSetupService = {
     });
   },
 
-  getBehavior() {
-    return request("/ai-center/agent/behavior", {
-      method: "GET",
-    });
+  getBehavior(options = {}) {
+    return request(`/ai-center/agent/behavior${workspaceQuery(options)}`, { method: "GET" });
   },
 
-  saveBehavior(payload) {
-    return request("/ai-center/agent/behavior", {
+  saveBehavior(payload, options = {}) {
+    return request(`/ai-center/agent/behavior${workspaceQuery(options)}`, {
       method: "PUT",
 
       headers: {
@@ -136,14 +137,12 @@ export const aiAgentSetupService = {
     });
   },
 
-  getAutomations() {
-    return request("/ai-center/agent/automations", {
-      method: "GET",
-    });
+  getAutomations(options = {}) {
+    return request(`/ai-center/agent/automations${workspaceQuery(options)}`, { method: "GET" });
   },
 
-  saveAutomations(payload) {
-    return request("/ai-center/agent/automations", {
+  saveAutomations(payload, options = {}) {
+    return request(`/ai-center/agent/automations${workspaceQuery(options)}`, {
       method: "PUT",
 
       headers: {
@@ -190,7 +189,8 @@ export const aiAgentSetupService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: message }),
     });
-    const content = r?.reply || r?.note || "The AI Agent returned no response.";
+    const content =
+      r?.reply || r?.note || "The AI Agent returned no response.";
     return {
       success: true,
       answer: content,
@@ -234,11 +234,13 @@ export const aiAgentSetupService = {
   },
 
   // payload may include activeContext (leads, pipeline, contacts, etc.).
-  // Backend uses it only as a CRM module focus;
-  // industry context remains account-driven.
+  // Backend uses it only as a CRM module focus; industry context remains account-driven.
   sendChatMessage(payload) {
     return request("/ai-center/agent/chat/messages", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(payload),
     });
   },

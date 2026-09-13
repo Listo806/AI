@@ -11,7 +11,13 @@ import apiClient from "../api/apiClient";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
-import { ChevronsLeft, ChevronsRight, Home, icons, ChartColumn } from "lucide-react";
+import {
+  ChevronsLeft,
+  ChevronsRight,
+  Home,
+  icons,
+  ChartColumn,
+} from "lucide-react";
 
 const toLucideComponentName = (name = "") =>
   String(name)
@@ -111,7 +117,8 @@ export default function Sidebar({
   // Super Admin QA mode:
   // false = internal/admin view (all workspaces available to Super Admin)
   // true  = render the same locked/unpaid presentation a normal customer sees
-  const [previewWorkspacesAsCustomer, setPreviewWorkspacesAsCustomer] = useState(false);
+  const [previewWorkspacesAsCustomer, setPreviewWorkspacesAsCustomer] =
+    useState(false);
 
   // Inline "Add to My Plan" feedback shown in the workspace flyout. Cleared each
   // time a different workspace is hovered so a stale message never lingers.
@@ -282,10 +289,44 @@ export default function Sidebar({
       label: "Sales Workspace",
       icon: "chart-no-axes-combined",
       tone: "purple",
-      description: "Run your entire sales operation from quote to revenue in one connected workspace.",
-      capabilities: ["Quotes & Proposals","Customers","Orders & Contracts","Invoices & Payments","Sales Commissions","Returns & Credits","Discounts & Approvals","Document Management","Sales Reporting","Revenue Tracking"],
-      perfectFor: ["Sales Teams","B2B Companies","Distributors","Agencies","Service Providers"],
-      benefits: [["circle-dollar-sign","COMPLETE SALES OPERATIONS","Manage quotes, proposals, orders, contracts, invoices, commissions and the operational side of your sales cycle from one workspace."],["trending-up","REVENUE VISIBILITY","See the activity behind your revenue—from customer orders and invoices to commissions, returns and sales performance."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, analytics and CRM data."]],
+      description:
+        "Run your entire sales operation from quote to revenue in one connected workspace.",
+      capabilities: [
+        "Quotes & Proposals",
+        "Customers",
+        "Orders & Contracts",
+        "Invoices & Payments",
+        "Sales Commissions",
+        "Returns & Credits",
+        "Discounts & Approvals",
+        "Document Management",
+        "Sales Reporting",
+        "Revenue Tracking",
+      ],
+      perfectFor: [
+        "Sales Teams",
+        "B2B Companies",
+        "Distributors",
+        "Agencies",
+        "Service Providers",
+      ],
+      benefits: [
+        [
+          "circle-dollar-sign",
+          "COMPLETE SALES OPERATIONS",
+          "Manage quotes, proposals, orders, contracts, invoices, commissions and the operational side of your sales cycle from one workspace.",
+        ],
+        [
+          "trending-up",
+          "REVENUE VISIBILITY",
+          "See the activity behind your revenue—from customer orders and invoices to commissions, returns and sales performance.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, analytics and CRM data.",
+        ],
+      ],
       price: 97,
       path: "/dashboard/sales-workspace",
     },
@@ -295,10 +336,49 @@ export default function Sidebar({
       label: "Insurance Workspace",
       icon: "shield-check",
       tone: "blue",
-      description: "Manage your entire insurance operation—from quote to policy, renewal, claim, and commission—in one connected workspace.",
-      capabilities: ["Policies","Quotes","Claims","Renewals","Carriers","Commissions","Client & Policy Documents","Coverage & Premium Tracking","Renewal Management","Insurance Reporting"],
-      perfectFor: ["Insurance Agencies","Independent Agents","Brokers","Insurance Teams","Multi-Carrier Agencies"],
-      benefits: [["shield","COMPLETE POLICY OPERATIONS","Manage quotes, policies, carriers, coverage, premiums, renewals and claims from one organized workspace."],["bell-ring","RENEWAL & CLIENT VISIBILITY","Stay ahead of upcoming renewals, policy activity, claims and important client dates without losing track of opportunities."],["users","COMMISSION TRACKING","Track commissions across policies, agents and carriers with clear visibility into insurance revenue."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics and CRM data."]],
+      description:
+        "Manage your entire insurance operation—from quote to policy, renewal, claim, and commission—in one connected workspace.",
+      capabilities: [
+        "Policies",
+        "Quotes",
+        "Claims",
+        "Renewals",
+        "Carriers",
+        "Commissions",
+        "Client & Policy Documents",
+        "Coverage & Premium Tracking",
+        "Renewal Management",
+        "Insurance Reporting",
+      ],
+      perfectFor: [
+        "Insurance Agencies",
+        "Independent Agents",
+        "Brokers",
+        "Insurance Teams",
+        "Multi-Carrier Agencies",
+      ],
+      benefits: [
+        [
+          "shield",
+          "COMPLETE POLICY OPERATIONS",
+          "Manage quotes, policies, carriers, coverage, premiums, renewals and claims from one organized workspace.",
+        ],
+        [
+          "bell-ring",
+          "RENEWAL & CLIENT VISIBILITY",
+          "Stay ahead of upcoming renewals, policy activity, claims and important client dates without losing track of opportunities.",
+        ],
+        [
+          "users",
+          "COMMISSION TRACKING",
+          "Track commissions across policies, agents and carriers with clear visibility into insurance revenue.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics and CRM data.",
+        ],
+      ],
       price: 97,
       path: "/dashboard/insurance-workspace",
     },
@@ -308,10 +388,49 @@ export default function Sidebar({
       label: "Financial Services",
       icon: "landmark",
       tone: "green",
-      description: "Manage clients, applications, accounts, transactions, documents, and financial workflows in one connected workspace.",
-      capabilities: ["Client Management","Applications","Accounts","Approvals & Reviews","Transactions","Investment Activity","Advisor Workflows","Document Management","Commission Tracking","Financial Reporting"],
-      perfectFor: ["Financial Advisors","Financial Services Teams","Consultants","Brokers","Wealth & Client Management Teams"],
-      benefits: [["landmark","COMPLETE CLIENT OPERATIONS","Manage clients, applications, accounts, approvals, transactions, documents, and ongoing financial workflows from one organized workspace."],["file-check-2","APPLICATION & ACCOUNT VISIBILITY","Track applications, account activity, reviews, approvals, and important client actions without losing visibility across your operation."],["bar-chart-3","FINANCIAL WORKFLOW MANAGEMENT","Keep advisors, client activity, documents, commissions, and operational workflows organized and connected."],["trending-up","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."]],
+      description:
+        "Manage clients, applications, accounts, transactions, documents, and financial workflows in one connected workspace.",
+      capabilities: [
+        "Client Management",
+        "Applications",
+        "Accounts",
+        "Approvals & Reviews",
+        "Transactions",
+        "Investment Activity",
+        "Advisor Workflows",
+        "Document Management",
+        "Commission Tracking",
+        "Financial Reporting",
+      ],
+      perfectFor: [
+        "Financial Advisors",
+        "Financial Services Teams",
+        "Consultants",
+        "Brokers",
+        "Wealth & Client Management Teams",
+      ],
+      benefits: [
+        [
+          "landmark",
+          "COMPLETE CLIENT OPERATIONS",
+          "Manage clients, applications, accounts, approvals, transactions, documents, and ongoing financial workflows from one organized workspace.",
+        ],
+        [
+          "file-check-2",
+          "APPLICATION & ACCOUNT VISIBILITY",
+          "Track applications, account activity, reviews, approvals, and important client actions without losing visibility across your operation.",
+        ],
+        [
+          "bar-chart-3",
+          "FINANCIAL WORKFLOW MANAGEMENT",
+          "Keep advisors, client activity, documents, commissions, and operational workflows organized and connected.",
+        ],
+        [
+          "trending-up",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data.",
+        ],
+      ],
       price: 97,
       path: "/dashboard/financial-services",
     },
@@ -321,10 +440,50 @@ export default function Sidebar({
       label: "E-Commerce",
       icon: "shopping-cart",
       tone: "orange",
-      description: "Manage customers, subscriptions, billing, payments, and recurring revenue in one connected workspace.",
-      capabilities: ["Customers & Subscriptions","Plans & Pricing","Billing Calendar","Recurring Payments","Payment Status Tracking","Failed Payments & Retries","Refunds & Cancellations","Seats & Users","Customer Lifetime Value","Revenue & Billing Reporting","Payment Gateway Integrations"],
-      perfectFor: ["Subscription Businesses","E-Commerce Companies","SaaS Businesses","Membership Businesses","Recurring Revenue Companies"],
-      benefits: [["shopping-bag","COMPLETE SUBSCRIPTION OPERATIONS","Manage customers, subscriptions, plans, billing status, payments, seats, and account activity from one organized workspace."],["refresh-cw","BILLING CALENDAR","See upcoming billing, successful payments, failed payments, retries, past-due accounts, and scheduled billing activity from one powerful calendar."],["pie-chart","RECURRING REVENUE CONTROL","Track subscription activity, customer lifetime value, payment performance, cancellations, and recurring revenue with clear operational visibility."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, AI, automation, analytics, team data, and CRM activity."]],
+      description:
+        "Manage customers, subscriptions, billing, payments, and recurring revenue in one connected workspace.",
+      capabilities: [
+        "Customers & Subscriptions",
+        "Plans & Pricing",
+        "Billing Calendar",
+        "Recurring Payments",
+        "Payment Status Tracking",
+        "Failed Payments & Retries",
+        "Refunds & Cancellations",
+        "Seats & Users",
+        "Customer Lifetime Value",
+        "Revenue & Billing Reporting",
+        "Payment Gateway Integrations",
+      ],
+      perfectFor: [
+        "Subscription Businesses",
+        "E-Commerce Companies",
+        "SaaS Businesses",
+        "Membership Businesses",
+        "Recurring Revenue Companies",
+      ],
+      benefits: [
+        [
+          "shopping-bag",
+          "COMPLETE SUBSCRIPTION OPERATIONS",
+          "Manage customers, subscriptions, plans, billing status, payments, seats, and account activity from one organized workspace.",
+        ],
+        [
+          "refresh-cw",
+          "BILLING CALENDAR",
+          "See upcoming billing, successful payments, failed payments, retries, past-due accounts, and scheduled billing activity from one powerful calendar.",
+        ],
+        [
+          "pie-chart",
+          "RECURRING REVENUE CONTROL",
+          "Track subscription activity, customer lifetime value, payment performance, cancellations, and recurring revenue with clear operational visibility.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa customers, contacts, AI, automation, analytics, team data, and CRM activity.",
+        ],
+      ],
       price: 97,
       path: "/dashboard/e-commerce-workspace",
     },
@@ -334,10 +493,51 @@ export default function Sidebar({
       label: "Customer Service",
       icon: "headphones",
       tone: "cyan",
-      description: "Manage customer support, tickets, escalations, resolutions, and service operations in one connected workspace.",
-      capabilities: ["Tickets & Cases","Support Inbox","Customer Support History","Agent Assignment","Priority & Status Management","SLA Tracking","Escalations","AI-Assisted Support","Knowledge Base","Customer Satisfaction","Service Automation","Support Reporting"],
-      perfectFor: ["Customer Service Teams","Support Teams","Service Businesses","Operations Teams","Client Success Teams"],
-      benefits: [["headphones","COMPLETE SUPPORT OPERATIONS","Manage tickets, cases, assignments, priorities, escalations, and resolutions from one organized workspace."],["messages-square","FASTER RESOLUTION","Give your team the customer history, conversations, support activity, and AI assistance they need to resolve issues faster."],["badge-check","SERVICE PERFORMANCE","Track response times, SLA performance, escalations, resolutions, customer satisfaction, and team activity with clear operational visibility."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, WhatsApp, AI, automation, analytics, and CRM data."]],
+      description:
+        "Manage customer support, tickets, escalations, resolutions, and service operations in one connected workspace.",
+      capabilities: [
+        "Tickets & Cases",
+        "Support Inbox",
+        "Customer Support History",
+        "Agent Assignment",
+        "Priority & Status Management",
+        "SLA Tracking",
+        "Escalations",
+        "AI-Assisted Support",
+        "Knowledge Base",
+        "Customer Satisfaction",
+        "Service Automation",
+        "Support Reporting",
+      ],
+      perfectFor: [
+        "Customer Service Teams",
+        "Support Teams",
+        "Service Businesses",
+        "Operations Teams",
+        "Client Success Teams",
+      ],
+      benefits: [
+        [
+          "headphones",
+          "COMPLETE SUPPORT OPERATIONS",
+          "Manage tickets, cases, assignments, priorities, escalations, and resolutions from one organized workspace.",
+        ],
+        [
+          "messages-square",
+          "FASTER RESOLUTION",
+          "Give your team the customer history, conversations, support activity, and AI assistance they need to resolve issues faster.",
+        ],
+        [
+          "badge-check",
+          "SERVICE PERFORMANCE",
+          "Track response times, SLA performance, escalations, resolutions, customer satisfaction, and team activity with clear operational visibility.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa customers, contacts, WhatsApp, AI, automation, analytics, and CRM data.",
+        ],
+      ],
       price: 97,
       path: "/dashboard/customer-service-workspace",
     },
@@ -347,7 +547,8 @@ export default function Sidebar({
       label: "Real Estate Workspace",
       icon: "building-2",
       tone: "emerald",
-      description: "Manage properties, buyers, sellers, showings, offers, transactions, and commissions in one connected real estate workspace.",
+      description:
+        "Manage properties, buyers, sellers, showings, offers, transactions, and commissions in one connected real estate workspace.",
       capabilities: [
         "Properties & Listings",
         "Buyers & Sellers",
@@ -371,10 +572,26 @@ export default function Sidebar({
         "Property Businesses",
       ],
       benefits: [
-        ["building-2", "COMPLETE REAL ESTATE OPERATIONS", "Manage properties, listings, buyers, sellers, showings, offers, transactions, documents, and commissions from one organized workspace."],
-        ["search-check", "SMART PROPERTY MATCHING", "Connect the right properties with the right buyers and leads using your existing Cortexa CRM data and AI-powered matching."],
-        ["chart-no-axes-combined", "FROM LISTING TO COMMISSION", "Follow the complete real estate lifecycle from property and lead matching through showings, offers, transactions, and commissions."],
-        ["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."],
+        [
+          "building-2",
+          "COMPLETE REAL ESTATE OPERATIONS",
+          "Manage properties, listings, buyers, sellers, showings, offers, transactions, documents, and commissions from one organized workspace.",
+        ],
+        [
+          "search-check",
+          "SMART PROPERTY MATCHING",
+          "Connect the right properties with the right buyers and leads using your existing Cortexa CRM data and AI-powered matching.",
+        ],
+        [
+          "chart-no-axes-combined",
+          "FROM LISTING TO COMMISSION",
+          "Follow the complete real estate lifecycle from property and lead matching through showings, offers, transactions, and commissions.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data.",
+        ],
       ],
       price: 97,
       path: "/dashboard/real-estate-workspace",
@@ -385,10 +602,55 @@ export default function Sidebar({
       label: "Team Workspace",
       icon: "users-round",
       tone: "violet",
-      description: "Plan, assign, collaborate, and manage your team’s work from one connected workspace.",
-      capabilities: ["Projects","Kanban Boards","Tasks & Assignments","My Tasks","Team Calendar","Deadlines & Priorities","Time Tracking","Workload Visibility","Files & Documents","Comments & @Mentions","Team Collaboration","Roles & Permissions","Activity Tracking","Team Reporting","AI-Assisted Workflows"],
-      perfectFor: ["Sales Teams","Operations Teams","Project Teams","Agencies","Service Businesses","Growing Companies"],
-      benefits: [["users-round","COMPLETE TEAM OPERATIONS","Manage internal projects, tasks, boards, assignments, deadlines, priorities, files, and team activity from one organized workspace."],["key-round","WORK MANAGEMENT","Give every team member clear ownership of their work with tasks, priorities, deadlines, calendars, workload visibility, and time tracking."],["chart-spline","CONNECTED COLLABORATION","Keep projects, tasks, comments, files, approvals, activity, and team communication connected to the work being completed."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa CRM, customers, contacts, AI, automation, analytics, and business data."]],
+      description:
+        "Plan, assign, collaborate, and manage your team’s work from one connected workspace.",
+      capabilities: [
+        "Projects",
+        "Kanban Boards",
+        "Tasks & Assignments",
+        "My Tasks",
+        "Team Calendar",
+        "Deadlines & Priorities",
+        "Time Tracking",
+        "Workload Visibility",
+        "Files & Documents",
+        "Comments & @Mentions",
+        "Team Collaboration",
+        "Roles & Permissions",
+        "Activity Tracking",
+        "Team Reporting",
+        "AI-Assisted Workflows",
+      ],
+      perfectFor: [
+        "Sales Teams",
+        "Operations Teams",
+        "Project Teams",
+        "Agencies",
+        "Service Businesses",
+        "Growing Companies",
+      ],
+      benefits: [
+        [
+          "users-round",
+          "COMPLETE TEAM OPERATIONS",
+          "Manage internal projects, tasks, boards, assignments, deadlines, priorities, files, and team activity from one organized workspace.",
+        ],
+        [
+          "key-round",
+          "WORK MANAGEMENT",
+          "Give every team member clear ownership of their work with tasks, priorities, deadlines, calendars, workload visibility, and time tracking.",
+        ],
+        [
+          "chart-spline",
+          "CONNECTED COLLABORATION",
+          "Keep projects, tasks, comments, files, approvals, activity, and team communication connected to the work being completed.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa CRM, customers, contacts, AI, automation, analytics, and business data.",
+        ],
+      ],
       price: 97,
       path: "/dashboard/team",
     },
@@ -398,24 +660,117 @@ export default function Sidebar({
       label: "Lead Generator",
       icon: "target",
       tone: "indigo",
-      description: "Find, verify, and enrich new business leads on demand, then push them straight into your Cortexa pipeline.",
-      capabilities: ["Business Lead Search","Company & Contact Discovery","Email Finding","Email Verification","Data Enrichment","Bulk Lead Export","CRM Pipeline Sync","Search History","Credit Usage Tracking","Lead Quality Scoring"],
-      perfectFor: ["Sales Teams","Agencies","Recruiters","B2B Companies","Growth Teams"],
-      benefits: [["target","FIND NEW LEADS ON DEMAND","Search companies and decision-makers by industry, location, and role, and pull fresh prospects whenever you need them."],["mail-check","VERIFIED CONTACT DATA","Find and verify business emails so your outreach reaches real inboxes and your sender reputation stays clean."],["shield-check","CONNECTED TO CORTEXA","New leads flow straight into your existing Cortexa pipeline, contacts, AI, and automation."]],
+      description:
+        "Find, verify, and enrich new business leads on demand, then push them straight into your Cortexa pipeline.",
+      capabilities: [
+        "Business Lead Search",
+        "Company & Contact Discovery",
+        "Email Finding",
+        "Email Verification",
+        "Data Enrichment",
+        "Bulk Lead Export",
+        "CRM Pipeline Sync",
+        "Search History",
+        "Credit Usage Tracking",
+        "Lead Quality Scoring",
+      ],
+      perfectFor: [
+        "Sales Teams",
+        "Agencies",
+        "Recruiters",
+        "B2B Companies",
+        "Growth Teams",
+      ],
+      benefits: [
+        [
+          "target",
+          "FIND NEW LEADS ON DEMAND",
+          "Search companies and decision-makers by industry, location, and role, and pull fresh prospects whenever you need them.",
+        ],
+        [
+          "mail-check",
+          "VERIFIED CONTACT DATA",
+          "Find and verify business emails so your outreach reaches real inboxes and your sender reputation stays clean.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "New leads flow straight into your existing Cortexa pipeline, contacts, AI, and automation.",
+        ],
+      ],
       price: 97,
       path: "/dashboard/generator",
     },
+    {
+      id: "aesthetic-wellness",
+      feature: "aestheticWellnessWorkspace",
+      label: "Aesthetic & Wellness",
+      icon: "sparkles",
+      tone: "pink",
+
+      description:
+        "Manage inquiries, consultations, treatments, appointments, follow-ups, rebooking, and clinic revenue.",
+
+      capabilities: [
+        "Clinic Inquiries",
+        "Consultations",
+        "Appointments",
+        "Treatment Pipeline",
+        "Client Management",
+        "Provider Management",
+        "Rebooking",
+        "Follow-Up Workflows",
+        "AI Receptionist",
+        "Treatment Interest",
+        "Clinic Revenue",
+        "Provider Performance",
+        "Booking & Availability",
+        "AI Agent Activity",
+      ],
+
+      perfectFor: [
+        "Aesthetic Clinics",
+        "Medical Spas",
+        "Wellness Clinics",
+        "Cosmetic Practices",
+        "Injectors",
+        "Skin Clinics",
+      ],
+
+      benefits: [
+        [
+          "sparkles",
+          "COMPLETE CLINIC OPERATIONS",
+          "Manage inquiries, consultations, treatments, appointments, follow-ups, rebooking, and revenue from one connected workspace.",
+        ],
+        [
+          "bot",
+          "AI RECEPTIONIST",
+          "Use Cortexa AI to respond to inquiries, qualify treatment interest, assist with booking, and manage follow-ups.",
+        ],
+        [
+          "calendar-check",
+          "BOOKING & CLIENT RETENTION",
+          "Coordinate providers, appointments, treatment availability, follow-ups, and rebooking from one place.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works seamlessly with your existing Cortexa conversations, leads, contacts, AI, automation, calendar, analytics, and CRM data.",
+        ],
+      ],
+
+      price: 97,
+      path: "/dashboard/aesthetic-wellness",
+    },
   ];
-   const getWorkspaceI18nKey = (workspace) =>
+  const getWorkspaceI18nKey = (workspace) =>
     String(workspace?.id || "").replace(/-/g, "_");
 
   const getWorkspaceLabel = (workspace) => {
     if (!workspace) return "";
     const key = getWorkspaceI18nKey(workspace);
-    return t(
-      `nav.workspaces.items.${key}.label`,
-      workspace.label || ""
-    );
+    return t(`nav.workspaces.items.${key}.label`, workspace.label || "");
   };
 
   const getWorkspaceDescription = (workspace) => {
@@ -423,19 +778,16 @@ export default function Sidebar({
     const key = getWorkspaceI18nKey(workspace);
     return t(
       `nav.workspaces.items.${key}.description`,
-      workspace.description || ""
+      workspace.description || "",
     );
   };
 
   const getWorkspaceCapabilities = (workspace) => {
     if (!workspace) return [];
     const key = getWorkspaceI18nKey(workspace);
-    const translated = t(
-      `nav.workspaces.items.${key}.capabilities`,
-      {
-        returnObjects: true,
-      }
-    );
+    const translated = t(`nav.workspaces.items.${key}.capabilities`, {
+      returnObjects: true,
+    });
 
     return Array.isArray(translated)
       ? translated
@@ -447,10 +799,9 @@ export default function Sidebar({
     const key = getWorkspaceI18nKey(workspace);
     return t(
       `nav.workspaces.items.${key}.connected`,
-      "Connected to your Cortexa CRM, data, AI, and automation."
+      "Connected to your Cortexa CRM, data, AI, and automation.",
     );
   };
-  
 
   // CORTEXA WORKSPACES uses the same plan-feature gating as the
   // regular sidebar, but MUST NOT inherit PlanContext's fail-open behavior
@@ -464,9 +815,7 @@ export default function Sidebar({
   //
   // A workspace can become ACTIVE only when its feature is actually registered
   // in FEATURE_TO_ADDON, or is an existing core feature we already gate today.
-  const CORE_WORKSPACE_FEATURES = new Set([
-    "teamWorkspace",
-  ]);
+  const CORE_WORKSPACE_FEATURES = new Set(["teamWorkspace"]);
 
   const isWorkspaceFeatureRegistered = (workspace) => {
     const feature = workspace?.feature;
@@ -478,10 +827,9 @@ export default function Sidebar({
     );
   };
 
-  const isSuperAdminAccount = [
-    "super_admin",
-    "super-admin",
-  ].includes(String(user?.role || "").toLowerCase());
+  const isSuperAdminAccount = ["super_admin", "super-admin"].includes(
+    String(user?.role || "").toLowerCase(),
+  );
 
   // Sidebar workspace id -> backend catalog id. The only divergence is Financial
   // (sidebar "financial" vs catalog "financial_services").
@@ -512,12 +860,13 @@ export default function Sidebar({
   };
 
   const getWorkspaceBadge = (workspace) =>
-    isWorkspaceActive(workspace) ? t("nav.workspaces.active") : t("nav.workspaces.locked");
+    isWorkspaceActive(workspace)
+      ? t("nav.workspaces.active")
+      : t("nav.workspaces.locked");
 
   // Every workspace routes to its page; WorkspaceGate + the backend guard enforce
   // access and present the $97 add-on purchase when the team is not entitled.
   const canOpenWorkspace = (workspace) => !!workspace?.path;
-
 
   // Helpful while wiring backend/add-on feature keys. Remove later if desired.
   useEffect(() => {
@@ -538,7 +887,6 @@ export default function Sidebar({
       })),
     );
   }, [plan]);
-
 
   const WhatsAppIcon = () => {
     return (
@@ -569,7 +917,7 @@ export default function Sidebar({
       localStorage.setItem("aiCenterSidebarOpen", JSON.stringify(aiCenterOpen));
     } catch (_) {}
   }, [aiCenterOpen]);
-const isAiCenterActive = AI_CENTER_PATHS.some(
+  const isAiCenterActive = AI_CENTER_PATHS.some(
     (p) => location.pathname === p || location.pathname.startsWith(p + "/"),
   );
 
@@ -608,9 +956,8 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
           ];
 
   const primaryWhatsappNav =
-    whatsappNavEntries.find(
-      (item) => item.labelKey === "nav.whatsapp"
-    ) || whatsappNavEntries[0];
+    whatsappNavEntries.find((item) => item.labelKey === "nav.whatsapp") ||
+    whatsappNavEntries[0];
   const topNavItems = [
     { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
     ...whatsappNavEntries,
@@ -660,9 +1007,15 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
   const isFullAccessRole = ["super_admin", "admin", "developer"].includes(role);
 
   const canSeeAiCenter =
-    role && ["super_admin", "admin", "owner", "agent", "developer"].includes(role);
+    role &&
+    ["super_admin", "admin", "owner", "agent", "developer"].includes(role);
   const canSeeAdmin = role === "super_admin" || role === "admin" || isDeveloper;
-  const canSeePlatformListings = ["agent", "owner", "user", "developer"].includes(role);
+  const canSeePlatformListings = [
+    "agent",
+    "owner",
+    "user",
+    "developer",
+  ].includes(role);
   console.log("USER IN SIDEBAR:", user);
   // One operational sidebar for every non-VA role (admins included). Admin pages
   // (Listings/Users/Teams/Plans) now live in the profile dropdown, not here.
@@ -685,9 +1038,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
         ]
       : []),
 
-    ...(primaryWhatsappNav
-      ? [primaryWhatsappNav]
-      : []),
+    ...(primaryWhatsappNav ? [primaryWhatsappNav] : []),
 
     {
       path: "/dashboard/leads",
@@ -740,11 +1091,19 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
   let navItems = operationalNav;
   if (role === "va") {
     navItems = [
-      { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
+      {
+        path: "/dashboard/properties",
+        icon: "building",
+        labelKey: "nav.properties",
+      },
     ];
   } else if (role === "va_uploader") {
     navItems = [
-      { path: "/dashboard/va-upload", icon: "upload", labelKey: "nav.vaUpload" },
+      {
+        path: "/dashboard/va-upload",
+        icon: "upload",
+        labelKey: "nav.vaUpload",
+      },
     ];
   }
 
@@ -887,13 +1246,12 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                     <SidebarIcon name={aiCenterOpen ? "chevron-down" : "chevron-right"}
                       style={{ marginLeft: "auto", width: "16px", height: "16px" }} />
                   </button>*/}
-                  
                 </>
               )}
               {/*</div>*/}
             </>
           )}
-          
+
           {/* Core-CRM growth action: invite a teammate. Persistent, above the
               Workspaces section, visible on every core CRM page (desktop) and in
               the mobile drawer. Opens the global Invite Team Member modal. */}
@@ -901,17 +1259,11 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             type="button"
             className="crm-nav-link crm-invite-team-link"
             onClick={() => {
-              window.dispatchEvent(
-                new Event("cortexa:open-invite-team")
-              );
+              window.dispatchEvent(new Event("cortexa:open-invite-team"));
 
               if (onClose) onClose();
             }}
-            title={
-              isCollapsed
-                ? t("nav.inviteTeamMember")
-                : undefined
-            }
+            title={isCollapsed ? t("nav.inviteTeamMember") : undefined}
             style={{
               width: "100%",
               border: "none",
@@ -921,15 +1273,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
               font: "inherit",
             }}
           >
-            <SidebarIcon
-              name="user-plus"
-              className="crm-nav-icon"
-            />
+            <SidebarIcon name="user-plus" className="crm-nav-icon" />
 
             {!isCollapsed && (
-              <span className="crm-nav-label">
-                {t("nav.inviteTeamMember")}
-              </span>
+              <span className="crm-nav-label">{t("nav.inviteTeamMember")}</span>
             )}
           </button>
 
@@ -955,7 +1302,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                         workspaceActive ? "is-active" : ""
                       } ${workspaceCanOpen ? "is-clickable" : "is-premium"}`}
                       onMouseEnter={() => {
-                        if (typeof window !== "undefined" && window.innerWidth > 1024) {
+                        if (
+                          typeof window !== "undefined" &&
+                          window.innerWidth > 1024
+                        ) {
                           setHoveredWorkspace(workspace);
                         }
                       }}
@@ -989,12 +1339,13 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                         {getWorkspaceBadge(workspace)}
                       </span>
 
-                      <SidebarIcon name="chevron-right"
-                        className="crm-workspace-chevron" />
+                      <SidebarIcon
+                        name="chevron-right"
+                        className="crm-workspace-chevron"
+                      />
                     </button>
                   );
                 })}
-
               </div>
 
               {(() => {
@@ -1003,7 +1354,12 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                 // full green bar. Reads from the real backend balance.
                 const b = aiUnits.balance;
                 if (!b || b.entitled === false) return null;
-                const COLORS = { green: "#16a34a", yellow: "#ea580c", red: "#dc2626", empty: "#dc2626" };
+                const COLORS = {
+                  green: "#16a34a",
+                  yellow: "#ea580c",
+                  red: "#dc2626",
+                  empty: "#dc2626",
+                };
 
                 if (aiUnits.unlimited) {
                   return (
@@ -1012,15 +1368,26 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                         <span>AI Units</span>
                         <strong style={{ color: "#16a34a" }}>Unlimited</strong>
                       </div>
-                      <div className="crm-workspaces-ai-usage-track" role="progressbar" aria-label="AI Units" aria-valuenow="100">
-                        <span className="crm-workspaces-ai-usage-fill" style={{ width: "100%", background: "#16a34a" }} />
+                      <div
+                        className="crm-workspaces-ai-usage-track"
+                        role="progressbar"
+                        aria-label="AI Units"
+                        aria-valuenow="100"
+                      >
+                        <span
+                          className="crm-workspaces-ai-usage-fill"
+                          style={{ width: "100%", background: "#16a34a" }}
+                        />
                       </div>
                     </div>
                   );
                 }
 
                 const remaining = b?.totalRemaining ?? 0;
-                const pct = Math.max(0, Math.min(100, b?.percentRemaining ?? 0));
+                const pct = Math.max(
+                  0,
+                  Math.min(100, b?.percentRemaining ?? 0),
+                );
                 const color = COLORS[b?.color] || "#16a34a";
                 const isOut = remaining <= 0;
                 return (
@@ -1037,17 +1404,29 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                       aria-valuemax="100"
                       aria-valuenow={pct}
                     >
-                      <span className="crm-workspaces-ai-usage-fill" style={{ width: `${pct}%`, background: color }} />
+                      <span
+                        className="crm-workspaces-ai-usage-fill"
+                        style={{ width: `${pct}%`, background: color }}
+                      />
                     </div>
                     {isOut && (
-                      <div style={{ marginTop: 8, fontSize: 12, lineHeight: 1.5 }}>
-                        <strong style={{ display: "block", color: "#dc2626" }}>You're out of AI credits.</strong>
-                        <span style={{ color: "#6b7280" }}>To add more credits and continue using your AI Agent, click here.</span>
+                      <div
+                        style={{ marginTop: 8, fontSize: 12, lineHeight: 1.5 }}
+                      >
+                        <strong style={{ display: "block", color: "#dc2626" }}>
+                          You're out of AI credits.
+                        </strong>
+                        <span style={{ color: "#6b7280" }}>
+                          To add more credits and continue using your AI Agent,
+                          click here.
+                        </span>
                       </div>
                     )}
                     <button
                       type="button"
-                      onClick={() => window.dispatchEvent(new Event("cortexa:open-ai-units"))}
+                      onClick={() =>
+                        window.dispatchEvent(new Event("cortexa:open-ai-units"))
+                      }
                       style={{
                         display: "block",
                         marginTop: 8,
@@ -1070,7 +1449,6 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
               })()}
             </section>
           )}
-
         </nav>
 
         {/* {!isCollapsed && (
@@ -1181,9 +1559,9 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                   setPreviewWorkspacesAsCustomer((current) => !current);
                 }}
               >
-                <SidebarIcon name={
-                    previewWorkspacesAsCustomer ? "shield-check" : "eye"
-                  } />
+                <SidebarIcon
+                  name={previewWorkspacesAsCustomer ? "shield-check" : "eye"}
+                />
                 {previewWorkspacesAsCustomer
                   ? "Back to Admin View"
                   : "Preview as Customer"}
@@ -1196,9 +1574,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
               <SidebarIcon name="sparkles" />
               <div>
                 <h3>{t("nav.workspaces.flyoutTitle")}</h3>
-                <p>
-                  {t("nav.workspaces.flyoutDescription")}
-                </p>
+                <p>{t("nav.workspaces.flyoutDescription")}</p>
               </div>
             </div>
 
@@ -1214,15 +1590,16 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
             </div>
           </div>
 
-          <div className={`crm-workspace-detail-card ${
-            previewWorkspacesAsCustomer
-              ? "is-customer-preview"
-              : ""
-          }`}>
+          <div
+            className={`crm-workspace-detail-card ${
+              previewWorkspacesAsCustomer ? "is-customer-preview" : ""
+            }`}
+          >
             {previewWorkspacesAsCustomer && (
               <div className="crm-workspace-customer-preview-note">
                 <SidebarIcon name="eye" />
-                CUSTOMER PREVIEW — this is the unpaid customer-facing presentation
+                CUSTOMER PREVIEW — this is the unpaid customer-facing
+                presentation
               </div>
             )}
 
@@ -1281,9 +1658,7 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                   type="button"
                   disabled={wsBusy && !isWorkspaceActive(hoveredWorkspace)}
                   className={
-                    isWorkspaceActive(hoveredWorkspace)
-                      ? "is-active"
-                      : ""
+                    isWorkspaceActive(hoveredWorkspace) ? "is-active" : ""
                   }
                   onClick={() => {
                     if (isWorkspaceActive(hoveredWorkspace)) {
@@ -1298,10 +1673,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                   {isWorkspaceActive(hoveredWorkspace)
                     ? hoveredWorkspace.path
                       ? `${t("nav.workspaces.open")} ${getWorkspaceLabel(
-                          hoveredWorkspace
+                          hoveredWorkspace,
                         )}`
                       : `${getWorkspaceLabel(
-                          hoveredWorkspace
+                          hoveredWorkspace,
                         )} ${t("nav.workspaces.activeSuffix")}`
                     : wsBusy
                       ? t("nav.workspaces.activating", "Adding to your plan...")
@@ -1309,7 +1684,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                 </button>
 
                 {wsError && !isWorkspaceActive(hoveredWorkspace) ? (
-                  <p className="crm-workspace-price-helper" style={{ color: "#dc2626" }}>
+                  <p
+                    className="crm-workspace-price-helper"
+                    style={{ color: "#dc2626" }}
+                  >
                     {wsError}
                   </p>
                 ) : isWorkspaceActive(hoveredWorkspace) ? (
@@ -1317,7 +1695,10 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                     {t("nav.workspaces.activeOnAccount")}
                   </p>
                 ) : (
-                  <p className="crm-workspace-price-helper" style={{ color: "#16a34a" }}>
+                  <p
+                    className="crm-workspace-price-helper"
+                    style={{ color: "#16a34a" }}
+                  >
                     {t(
                       "nav.workspaces.includedNoCharge",
                       "This workspace will be added directly to your active CRM plan. No additional checkout is required.",
@@ -1325,8 +1706,6 @@ const isAiCenterActive = AI_CENTER_PATHS.some(
                   </p>
                 )}
               </div>
-
-
             </div>
           </div>
         </aside>

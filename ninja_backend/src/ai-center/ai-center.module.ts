@@ -8,8 +8,9 @@ import { AiUnitsModule } from '../ai-units/ai-units.module';
 import { S3Service } from '../common/aws/s3.service';
 import { AiAgentSetupCompleteGuard } from "./guards/ai-agent-setup-complete.guard";
 import { PaymentGuard } from "../auth/guards/payment.guard";
+import { AestheticWellnessModule } from '../aesthetic-wellness/aesthetic-wellness.module';
 @Module({
-  imports: [DatabaseModule, SubscriptionsModule, PlansModule, AiUnitsModule],
+  imports: [DatabaseModule, SubscriptionsModule, PlansModule, AiUnitsModule, AestheticWellnessModule],
   controllers: [AiCenterController],
   providers: [
     PaymentGuard,
