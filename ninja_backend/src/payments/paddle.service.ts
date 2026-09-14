@@ -646,9 +646,10 @@ export class PaddleService {
       },
     };
 
-    const service = catalog[String(input?.serviceId || '').trim()];
+    const serviceId = String(input?.serviceId || '').trim();
+    const selected = catalog[serviceId];
 
-    if (!service) {
+    if (!selected) {
       throw new BadRequestException('Invalid Web Solutions service');
     }
 
@@ -660,35 +661,45 @@ export class PaddleService {
       );
     }
 
+    /*
+     * Paddle non-catalog item.
+     *
+     * Important details:
+     * - type: custom (not "standard")
+     * - taxCategory must be a real Paddle tax category.
+     *   Web Solutions is an implementation/professional service.
+     * - billingCycle: null makes this a one-time charge.
+     *
+     * We intentionally omit collectionMode/customer/address here so Paddle
+     * creates a DRAFT transaction that Paddle Checkout can complete.
+     */
     const transactionPayload: any = {
-      collectionMode: 'automatic',
       currencyCode: 'USD',
 
       items: [
         {
           quantity: 1,
 
-          // Non-catalog price + non-catalog product.
-          // Paddle generates temporary custom product/price entities for this
-          // transaction, so no pri_... or pro_... environment variables are
-          // required.
           price: {
-            description: service.description,
-            name: service.name,
+            type: 'custom',
+            name: selected.name,
+            description: selected.description,
 
-            // null => one-time, non-recurring
             billingCycle: null,
             trialPeriod: null,
 
             unitPrice: {
-              amount: service.amount,
+              amount: selected.amount,
               currencyCode: 'USD',
             },
 
             product: {
-              name: `CORTEXA Web Solutions - ${service.name}`,
-              taxCategory: 'standard',
-              description: service.description,
+              type: 'custom',
+              name: `CORTEXA Web Solutions - ${selected.name}`,
+              description: selected.description,
+
+              // Valid Paddle Billing tax category for remote implementation work.
+              taxCategory: 'implementation-services',
             },
           },
         },
@@ -696,50 +707,87 @@ export class PaddleService {
 
       customData: {
         purchaseType: 'web_solution',
-        serviceId: input.serviceId,
-        serviceName: service.name,
-        expectedAmount: service.dollars,
-        fullName: String(input.fullName || '').trim(),
-        businessName: String(input.businessName || '').trim(),
-        email: String(input.email || '').trim(),
-        phone: String(input.phone || '').trim(),
-        website: String(input.website || '').trim(),
-        userId: input.userId || null,
+        serviceId,
+        serviceName: selected.name,
+        expectedAmount: selected.dollars,
+
+        fullName: String(input?.fullName || '').trim(),
+        businessName: String(input?.businessName || '').trim(),
+        email: String(input?.email || '').trim(),
+        phone: String(input?.phone || '').trim(),
+        website: String(input?.website || '').trim(),
+
+        userId: input?.userId || null,
       },
     };
 
-    const transaction: any =
-      await paddleAny.transactions.create(transactionPayload);
-
-    const transactionId =
-      transaction?.id ||
-      transaction?.data?.id ||
-      null;
-
-    const checkoutUrl =
-      transaction?.checkout?.url ||
-      transaction?.data?.checkout?.url ||
-      null;
-
-    if (!transactionId) {
-      this.logger.error(
-        `Web Solutions transaction creation returned no id: ${JSON.stringify(transaction)}`,
+    try {
+      this.logger.log(
+        `Creating Web Solutions Paddle transaction: ${serviceId} / $${selected.dollars}`,
       );
+
+      const transaction: any =
+        await paddleAny.transactions.create(transactionPayload);
+
+      const transactionId =
+        transaction?.id ||
+        transaction?.data?.id ||
+        null;
+
+      const checkoutUrl =
+        transaction?.checkout?.url ||
+        transaction?.data?.checkout?.url ||
+        null;
+
+      if (!transactionId) {
+        this.logger.error(
+          `Web Solutions transaction returned no id: ${JSON.stringify(transaction)}`,
+        );
+
+        throw new BadRequestException(
+          'Paddle did not return a transaction id.',
+        );
+      }
+
+      this.logger.log(
+        `Web Solutions Paddle transaction created: ${transactionId}`,
+      );
+
+      return {
+        success: true,
+        transactionId,
+        checkoutUrl,
+        serviceId,
+        serviceName: selected.name,
+        amount: selected.dollars,
+        currency: 'USD',
+      };
+    } catch (error: any) {
+      if (error?.getStatus) {
+        throw error;
+      }
+
+      const details =
+        error?.detail ||
+        error?.message ||
+        error?.response?.body?.error?.detail ||
+        error?.response?.data?.error?.detail ||
+        'Unknown Paddle error';
+
+      this.logger.error(
+        `Web Solutions Paddle transaction failed: ${details}`,
+      );
+
+      if (error?.code) {
+        this.logger.error(
+          `Web Solutions Paddle error code: ${error.code}`,
+        );
+      }
 
       throw new BadRequestException(
-        'Paddle did not return a transaction id.',
+        `Unable to create secure Web Solutions transaction: ${details}`,
       );
     }
-
-    return {
-      success: true,
-      transactionId,
-      checkoutUrl,
-      serviceId: input.serviceId,
-      serviceName: service.name,
-      amount: service.dollars,
-      currency: 'USD',
-    };
   }
 
   async setupWebSolutionsPrices(): Promise<any> {
