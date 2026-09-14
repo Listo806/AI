@@ -1148,28 +1148,64 @@ export class PaddleService {
       /*
        * 1. Resolve the EXISTING product from one configured recurring price.
        */
-      const existingPrice: any = await paddleRest(
-        'GET',
-        `/prices/${encodeURIComponent(String(recurringPriceId))}`,
-      );
+      /*
+       * Some Paddle environments currently return invalid_url for
+       * GET /prices/{price_id}, even though list-prices works.
+       *
+       * Resolve the product through the documented list endpoint instead:
+       *   GET /prices?id=pri_xxx&per_page=1
+       */
+      const configuredProductId =
+        this.configService.get('PADDLE_PRODUCT_ID') ||
+        this.configService.get('PADDLE_WEB_SOLUTIONS_PRODUCT_ID') ||
+        null;
 
-      const productId =
-        existingPrice?.product_id ||
-        existingPrice?.productId;
+      let productId =
+        configuredProductId && String(configuredProductId).startsWith('pro_')
+          ? String(configuredProductId)
+          : null;
 
-      if (!productId || !String(productId).startsWith('pro_')) {
-        this.logger.error(
-          `Web Solutions: could not resolve product from ${recurringPriceId}: ${JSON.stringify(existingPrice)}`,
+      if (!productId) {
+        const priceListPayload: any = await paddleRest(
+          'GET',
+          `/prices?id=${encodeURIComponent(
+            String(recurringPriceId),
+          )}&per_page=1`,
         );
 
-        throw new BadRequestException(
-          `Could not resolve the Paddle Product ID from recurring price '${recurringPriceId}'.`,
+        const prices = Array.isArray(priceListPayload)
+          ? priceListPayload
+          : Array.isArray(priceListPayload?.data)
+            ? priceListPayload.data
+            : [];
+
+        const existingPrice = prices[0] || null;
+
+        productId =
+          existingPrice?.product_id ||
+          existingPrice?.productId ||
+          null;
+
+        if (!productId || !String(productId).startsWith('pro_')) {
+          this.logger.error(
+            `Web Solutions: could not resolve product from recurring price ${recurringPriceId}: ${JSON.stringify(
+              priceListPayload,
+            )}`,
+          );
+
+          throw new BadRequestException(
+            `Could not resolve the Paddle Product ID from recurring price '${recurringPriceId}'.`,
+          );
+        }
+
+        this.logger.log(
+          `Web Solutions: resolved existing Paddle product ${productId} from recurring price ${recurringPriceId} using GET /prices?id=...`,
+        );
+      } else {
+        this.logger.log(
+          `Web Solutions: using configured Paddle product ${productId}`,
         );
       }
-
-      this.logger.log(
-        `Web Solutions: resolved existing Paddle product ${productId} from ${recurringPriceId}`,
-      );
 
       /*
        * 2. Create ONE-TIME prices.
