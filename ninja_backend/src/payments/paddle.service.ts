@@ -1025,6 +1025,88 @@ export class PaddleService {
    * `startPrices` are the NEW one-time starting charges.
    * The frontend requires both IDs for the selected plan before opening checkout.
    */
+
+  /**
+   * One-time admin setup for Web Solutions.
+   *
+   * Creates a dedicated Paddle product and three ONE-TIME prices:
+   *   connection-setup      -> $147
+   *   website-optimization -> $297
+   *   full-transformation  -> $547
+   *
+   * This is completely separate from CRM subscriptions.
+   */
+  async setupWebSolutionsPrices(): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    const product: any = await (this.paddle as any).products.create({
+      name: 'Cortexa Web Solutions',
+      taxCategory: 'standard',
+      description:
+        'Optional one-time Cortexa professional website connection and implementation services',
+    });
+
+    const productId = product?.id || product?.data?.id;
+
+    if (!productId) {
+      throw new BadRequestException(
+        'Paddle did not return a product id for Cortexa Web Solutions',
+      );
+    }
+
+    const createOneTime = async (
+      label: string,
+      amount: string,
+    ) => {
+      return (this.paddle as any).prices.create({
+        productId,
+        description: `Cortexa Web Solutions — ${label}`,
+        unitPrice: {
+          amount,
+          currencyCode: 'USD',
+        },
+      });
+    };
+
+    const connection: any = await createOneTime(
+      'Connection Setup',
+      '14700',
+    );
+
+    const optimization: any = await createOneTime(
+      'Website Optimization',
+      '29700',
+    );
+
+    const transformation: any = await createOneTime(
+      'Full Transformation',
+      '54700',
+    );
+
+    const idOf = (value: any) =>
+      value?.id || value?.data?.id || null;
+
+    return {
+      success: true,
+      environment: this.environment,
+      productId,
+      prices: {
+        'connection-setup': idOf(connection),
+        'website-optimization': idOf(optimization),
+        'full-transformation': idOf(transformation),
+      },
+      env: {
+        PADDLE_PRICE_WEB_CONNECTION: idOf(connection),
+        PADDLE_PRICE_WEB_OPTIMIZATION: idOf(optimization),
+        PADDLE_PRICE_WEB_TRANSFORMATION: idOf(transformation),
+      },
+      note:
+        'Add the three PADDLE_PRICE_WEB_* values to Render and redeploy. These are one-time prices only.',
+    };
+  }
+
   getPublicConfig() {
     return {
       clientToken: this.configService.get('PADDLE_CLIENT_TOKEN') || null,
@@ -1040,6 +1122,15 @@ export class PaddleService {
         solo: this.configService.get('PADDLE_START_PRICE_SOLO') || null,
         team: this.configService.get('PADDLE_START_PRICE_TEAM') || null,
         growth: this.configService.get('PADDLE_START_PRICE_GROWTH') || null,
+      },
+
+      webSolutionsPrices: {
+        'connection-setup':
+          this.configService.get('PADDLE_PRICE_WEB_CONNECTION') || null,
+        'website-optimization':
+          this.configService.get('PADDLE_PRICE_WEB_OPTIMIZATION') || null,
+        'full-transformation':
+          this.configService.get('PADDLE_PRICE_WEB_TRANSFORMATION') || null,
       },
 
       // Paddle NATIVE PAID-TRIAL prices (single line item: "$7 for 14 days, then
