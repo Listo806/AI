@@ -208,8 +208,9 @@
 }
 
 .wsc-payment-card {
-  padding: 24px;
+  padding: 24px!important;
   align-self: start;
+  text-align: left;
 }
 
 .wsc-payment-heading {
