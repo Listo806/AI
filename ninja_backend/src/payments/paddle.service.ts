@@ -26,7 +26,26 @@ export class PaddleService {
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get('PADDLE_API_KEY');
-    this.environment = this.configService.get('PADDLE_ENVIRONMENT') || 'sandbox';
+    const configuredEnvironment = String(
+      this.configService.get('PADDLE_ENVIRONMENT') || 'sandbox',
+    )
+      .trim()
+      .toLowerCase();
+
+    /*
+     * Accept both common Render values:
+     *   live / production  -> Paddle live API
+     *   sandbox / test     -> Paddle sandbox API
+     *
+     * The old code treated anything other than exactly "production"
+     * as sandbox, so PADDLE_ENVIRONMENT=live accidentally called
+     * sandbox-api.paddle.com with live price IDs.
+     */
+    this.environment =
+      configuredEnvironment === 'live' ||
+      configuredEnvironment === 'production'
+        ? 'production'
+        : 'sandbox';
 
     if (!apiKey) {
       this.logger.warn('Paddle not configured. Required: PADDLE_API_KEY');
@@ -1065,10 +1084,30 @@ export class PaddleService {
       );
     }
 
+    /*
+     * Prefer the API-key prefix as the source of truth.
+     *
+     * Paddle live keys contain "_live_" and sandbox keys contain "_sdbx_".
+     * This prevents a stale/misnamed PADDLE_ENVIRONMENT value from sending
+     * requests to the wrong Paddle host.
+     */
+    const apiKeyText = String(apiKey).trim();
+
+    const keyEnvironment =
+      apiKeyText.includes('_live_')
+        ? 'production'
+        : apiKeyText.includes('_sdbx_')
+          ? 'sandbox'
+          : this.environment;
+
     const baseUrl =
-      this.environment === 'production'
+      keyEnvironment === 'production'
         ? 'https://api.paddle.com'
         : 'https://sandbox-api.paddle.com';
+
+    this.logger.log(
+      `Web Solutions Paddle environment: configured=${this.environment}, key=${keyEnvironment}, base=${baseUrl}`,
+    );
 
     const paddleRest = async (
       method: 'GET' | 'POST',
@@ -1145,6 +1184,14 @@ export class PaddleService {
     };
 
     try {
+      /*
+       * Sanity-check the selected Paddle host first.
+       * /event-types requires no entity permissions and is the recommended
+       * Paddle connectivity test. If this fails, the problem is environment /
+       * API-key routing rather than the Web Solutions price setup itself.
+       */
+      await paddleRest('GET', '/event-types');
+
       /*
        * 1. Resolve the EXISTING product from one configured recurring price.
        */
@@ -1278,7 +1325,8 @@ export class PaddleService {
 
       return {
         success: true,
-        environment: this.environment,
+        environment: keyEnvironment,
+        configuredEnvironment: this.environment,
         apiBase: baseUrl,
         derivedFromRecurringPrice: recurringPriceId,
         productId,
