@@ -42,6 +42,7 @@ import { LeadgenModule } from './leadgen/leadgen.module';
 import { AiUnitsModule } from './ai-units/ai-units.module';
 import { BusinessSuiteModule } from './business-suite/business-suite.module';
 import { AestheticWellnessModule } from './aesthetic-wellness/aesthetic-wellness.module';
+import { NuveiModule } from './nuvei/nuvei.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { AestheticWellnessModule } from './aesthetic-wellness/aesthetic-wellness
     DatabaseModule,
     PlansModule,
     AuthModule,
+    NuveiModule,
     UsersModule,
     TeamsModule,
     LeadsModule,
