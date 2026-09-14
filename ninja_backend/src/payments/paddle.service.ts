@@ -1029,82 +1029,183 @@ export class PaddleService {
   /**
    * One-time admin setup for Web Solutions.
    *
-   * Creates a dedicated Paddle product and three ONE-TIME prices:
+   * IMPORTANT:
+   * Reuse the EXISTING Cortexa Paddle product instead of creating a new product.
+   * This follows the same production-safe pattern already used by
+   * setupStartingPrices().
+   *
+   * Creates only three ONE-TIME prices:
    *   connection-setup      -> $147
    *   website-optimization -> $297
    *   full-transformation  -> $547
-   *
-   * This is completely separate from CRM subscriptions.
    */
   async setupWebSolutionsPrices(): Promise<any> {
     if (!this.isConfigured || !this.paddle) {
       throw new BadRequestException('Paddle service is not configured');
     }
 
-    const product: any = await (this.paddle as any).products.create({
-      name: 'Cortexa Web Solutions',
-      taxCategory: 'standard',
-      description:
-        'Optional one-time Cortexa professional website connection and implementation services',
-    });
+    try {
+      const recurringPriceId =
+        this.configService.get('PADDLE_PRICE_TEAM') ||
+        this.configService.get('PADDLE_PRICE_SOLO') ||
+        this.configService.get('PADDLE_PRICE_GROWTH');
 
-    const productId = product?.id || product?.data?.id;
+      if (!recurringPriceId) {
+        throw new BadRequestException(
+          'At least one existing recurring Paddle Price ID is required: PADDLE_PRICE_TEAM, PADDLE_PRICE_SOLO, or PADDLE_PRICE_GROWTH.',
+        );
+      }
 
-    if (!productId) {
+      if (!String(recurringPriceId).startsWith('pri_')) {
+        throw new BadRequestException(
+          `Invalid recurring Paddle Price ID: '${recurringPriceId}'. Expected a pri_... Price ID.`,
+        );
+      }
+
+      /*
+       * Resolve the product from one of the EXISTING production prices.
+       * This is exactly the same approach used by setupStartingPrices().
+       */
+      const existingPrice: any = await (this.paddle as any).prices.get(
+        recurringPriceId,
+      );
+
+      const productId =
+        existingPrice?.productId ||
+        existingPrice?.product_id ||
+        existingPrice?.data?.productId ||
+        existingPrice?.data?.product_id;
+
+      if (!productId || !String(productId).startsWith('pro_')) {
+        this.logger.error(
+          `Web Solutions: could not derive Paddle product from recurring price ${recurringPriceId}: ${JSON.stringify(existingPrice)}`,
+        );
+
+        throw new BadRequestException(
+          `Could not resolve the Paddle Product ID from recurring price '${recurringPriceId}'.`,
+        );
+      }
+
+      this.logger.log(
+        `Web Solutions: resolved existing Paddle product ${productId} from recurring price ${recurringPriceId}`,
+      );
+
+      const makeOneTimePrice = async (
+        serviceId: string,
+        label: string,
+        amount: string,
+      ) => {
+        this.logger.log(
+          `Web Solutions: creating ${label} (${serviceId}) one-time price $${(
+            Number(amount) / 100
+          ).toFixed(2)}`,
+        );
+
+        const created: any = await (this.paddle as any).prices.create({
+          productId,
+          description: `Cortexa Web Solutions — ${label}`,
+          unitPrice: {
+            amount,
+            currencyCode: 'USD',
+          },
+        });
+
+        const priceId =
+          created?.id ||
+          created?.data?.id ||
+          null;
+
+        if (!priceId || !String(priceId).startsWith('pri_')) {
+          this.logger.error(
+            `Web Solutions: Paddle returned an invalid price for ${serviceId}: ${JSON.stringify(created)}`,
+          );
+
+          throw new BadRequestException(
+            `Paddle did not return a valid Price ID for ${label}.`,
+          );
+        }
+
+        return priceId;
+      };
+
+      const connectionPriceId = await makeOneTimePrice(
+        'connection-setup',
+        'Connection Setup',
+        '14700',
+      );
+
+      const optimizationPriceId = await makeOneTimePrice(
+        'website-optimization',
+        'Website Optimization',
+        '29700',
+      );
+
+      const transformationPriceId = await makeOneTimePrice(
+        'full-transformation',
+        'Full Transformation',
+        '54700',
+      );
+
+      return {
+        success: true,
+        environment: this.environment,
+
+        // Helpful for debugging / audit.
+        derivedFromRecurringPrice: recurringPriceId,
+        productId,
+
+        prices: {
+          'connection-setup': connectionPriceId,
+          'website-optimization': optimizationPriceId,
+          'full-transformation': transformationPriceId,
+        },
+
+        env: {
+          PADDLE_PRICE_WEB_CONNECTION: connectionPriceId,
+          PADDLE_PRICE_WEB_OPTIMIZATION: optimizationPriceId,
+          PADDLE_PRICE_WEB_TRANSFORMATION: transformationPriceId,
+        },
+
+        mapping: {
+          'connection-setup': '$147 one-time',
+          'website-optimization': '$297 one-time',
+          'full-transformation': '$547 one-time',
+        },
+
+        note:
+          'Add the three returned PADDLE_PRICE_WEB_* values to Render and redeploy. Existing subscription prices are unchanged.',
+      };
+    } catch (error: any) {
+      /*
+       * Preserve Nest HTTP errors such as BadRequestException.
+       */
+      if (error?.getStatus) {
+        throw error;
+      }
+
+      const details =
+        error?.response?.body ||
+        error?.body ||
+        error?.data ||
+        error?.response ||
+        null;
+
+      this.logger.error(
+        `setupWebSolutionsPrices failed: ${error?.message || error}`,
+      );
+
+      if (details) {
+        this.logger.error(
+          `setupWebSolutionsPrices Paddle details: ${JSON.stringify(details)}`,
+        );
+      }
+
       throw new BadRequestException(
-        'Paddle did not return a product id for Cortexa Web Solutions',
+        `Unable to create Web Solutions Paddle prices: ${
+          error?.message || 'Unknown Paddle error'
+        }`,
       );
     }
-
-    const createOneTime = async (
-      label: string,
-      amount: string,
-    ) => {
-      return (this.paddle as any).prices.create({
-        productId,
-        description: `Cortexa Web Solutions — ${label}`,
-        unitPrice: {
-          amount,
-          currencyCode: 'USD',
-        },
-      });
-    };
-
-    const connection: any = await createOneTime(
-      'Connection Setup',
-      '14700',
-    );
-
-    const optimization: any = await createOneTime(
-      'Website Optimization',
-      '29700',
-    );
-
-    const transformation: any = await createOneTime(
-      'Full Transformation',
-      '54700',
-    );
-
-    const idOf = (value: any) =>
-      value?.id || value?.data?.id || null;
-
-    return {
-      success: true,
-      environment: this.environment,
-      productId,
-      prices: {
-        'connection-setup': idOf(connection),
-        'website-optimization': idOf(optimization),
-        'full-transformation': idOf(transformation),
-      },
-      env: {
-        PADDLE_PRICE_WEB_CONNECTION: idOf(connection),
-        PADDLE_PRICE_WEB_OPTIMIZATION: idOf(optimization),
-        PADDLE_PRICE_WEB_TRANSFORMATION: idOf(transformation),
-      },
-      note:
-        'Add the three PADDLE_PRICE_WEB_* values to Render and redeploy. These are one-time prices only.',
-    };
   }
 
   getPublicConfig() {
