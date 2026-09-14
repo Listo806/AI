@@ -1106,7 +1106,7 @@ export class PaddleService {
         : 'https://sandbox-api.paddle.com';
 
     this.logger.log(
-      `Web Solutions Paddle environment: configured=${this.environment}, key=${keyEnvironment}, base=${baseUrl}`,
+      `Web Solutions Paddle environment: configured=${this.environment}, key=${keyEnvironment}, base=${baseUrl}, version=1`,
     );
 
     const paddleRest = async (
@@ -1128,6 +1128,12 @@ export class PaddleService {
           headers: {
             Authorization: `Bearer ${apiKey}`,
             Accept: 'application/json',
+
+            // Pin Paddle Billing API v1 explicitly.
+            // Some live accounts with an older/default API version can return
+            // invalid_url for Billing endpoints when Paddle-Version is omitted.
+            'Paddle-Version': '1',
+
             ...(body
               ? {
                   'Content-Type': 'application/json',
