@@ -64,7 +64,7 @@
       "addToPlan": "Agregar a mi CRM →",
       "activeOnAccount": "Este espacio de trabajo está activo en tu cuenta.",
       "includedNoCharge": "Incluido con tu plan — activarlo no agrega ningún cargo.",
-      "secureCheckout": "Pago seguro procesado por Paddle",
+      "secureCheckout": "Pago seguro procesado por Nuvei",
       "items": {
         "business": {
           "label": "Suite Empresarial",
@@ -2488,7 +2488,7 @@
       "monthly": "Mensual",
       "billingCycle": "Ciclo de facturación",
       "paymentMethodLabel": "Método de pago",
-      "managedByPaddle": "Gestionado de forma segura por Paddle",
+      "managedByPaddle": "Gestionado de forma segura por Nuvei",
       "featuresOnPlan": "Funciones de este plan",
       "featuresPlaceholder": "Las funciones del plan aparecerán aquí cuando tu suscripción esté activa.",
       "recentInvoices": "Facturas Recientes",

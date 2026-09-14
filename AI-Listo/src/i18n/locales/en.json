@@ -64,7 +64,7 @@
       "addToPlan": "Add to My CRM →",
       "activeOnAccount": "This workspace is active on your account.",
       "includedNoCharge": "Included with your plan — activating adds no charge.",
-      "secureCheckout": "Secure checkout powered by Paddle",
+      "secureCheckout": "Secure checkout powered by Nuvei",
       "items": {
         "business": {
           "label": "Business Suite",
@@ -2488,7 +2488,7 @@
       "monthly": "Monthly",
       "billingCycle": "Billing cycle",
       "paymentMethodLabel": "Payment method",
-      "managedByPaddle": "Managed securely by Paddle",
+      "managedByPaddle": "Managed securely by Nuvei",
       "featuresOnPlan": "Features on this plan",
       "featuresPlaceholder": "Plan features will appear here once your subscription is active.",
       "recentInvoices": "Recent Invoices",

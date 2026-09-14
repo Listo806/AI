@@ -29,7 +29,7 @@ const t = {
     mobileTitle: "Create Your Account",
     mobileSubtitle: "Get Started with Your Free Trial.",
     mobileContinueBtn: "Continue to Choose Your Plan",
-    mobileSecurity: "Secure checkout powered by Paddle",
+    mobileSecurity: "Secure checkout powered by Nuvei",
     placeholders: {
       name: "Full Name",
       email: "Email Address",
@@ -51,7 +51,7 @@ const t = {
     mobileTitle: "Crea Tu Cuenta",
     mobileSubtitle: "Comienza con Tu Prueba Gratuita.",
     mobileContinueBtn: "Continuar para Elegir Tu Plan",
-    mobileSecurity: "Pago seguro procesado por Paddle",
+    mobileSecurity: "Pago seguro procesado por Nuvei",
     placeholders: {
       name: "Nombre completo",
       email: "Correo electrónico",
@@ -73,7 +73,7 @@ const t = {
     mobileTitle: "Crie Sua Conta",
     mobileSubtitle: "Comece com Seu Teste Grátis.",
     mobileContinueBtn: "Continuar para Escolher Seu Plano",
-    mobileSecurity: "Pagamento seguro processado pela Paddle",
+    mobileSecurity: "Pagamento seguro processado pela Nuvei",
     placeholders: {
       name: "Nome completo",
       email: "Endereço de e-mail",
