@@ -55,3 +55,19 @@ export async function fetchWebSolutionsPaddleConfig() {
     return null;
   }
 }
+
+
+export async function createWebSolutionsTransaction(payload) {
+  const result = await apiClient.request(
+    "/payments/paddle/web-solutions/transaction",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return result?.data ?? result;
+}

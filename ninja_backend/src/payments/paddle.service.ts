@@ -593,6 +593,155 @@ export class PaddleService {
     };
   }
 
+
+  /**
+   * Create a one-time Web Solutions transaction using a NON-CATALOG item.
+   *
+   * This avoids creating permanent Paddle product/price records entirely.
+   * The amount is selected only from this server-side map; the client cannot
+   * override it.
+   */
+  async createWebSolutionsTransaction(input: {
+    serviceId: string;
+    fullName?: string;
+    businessName?: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+    userId?: string | null;
+  }): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    const catalog: Record<
+      string,
+      {
+        name: string;
+        amount: string;
+        dollars: number;
+        description: string;
+      }
+    > = {
+      'connection-setup': {
+        name: 'Connection Setup',
+        amount: '14700',
+        dollars: 147,
+        description:
+          'Cortexa Web Solutions one-time connection setup professional service',
+      },
+      'website-optimization': {
+        name: 'Website Optimization',
+        amount: '29700',
+        dollars: 297,
+        description:
+          'Cortexa Web Solutions one-time website optimization professional service',
+      },
+      'full-transformation': {
+        name: 'Full Transformation',
+        amount: '54700',
+        dollars: 547,
+        description:
+          'Cortexa Web Solutions one-time full transformation professional service',
+      },
+    };
+
+    const service = catalog[String(input?.serviceId || '').trim()];
+
+    if (!service) {
+      throw new BadRequestException('Invalid Web Solutions service');
+    }
+
+    const paddleAny = this.paddle as any;
+
+    if (!paddleAny.transactions?.create) {
+      throw new BadRequestException(
+        'Installed Paddle SDK does not expose transactions.create()',
+      );
+    }
+
+    const transactionPayload: any = {
+      collectionMode: 'automatic',
+      currencyCode: 'USD',
+
+      items: [
+        {
+          quantity: 1,
+
+          // Non-catalog price + non-catalog product.
+          // Paddle generates temporary custom product/price entities for this
+          // transaction, so no pri_... or pro_... environment variables are
+          // required.
+          price: {
+            description: service.description,
+            name: service.name,
+
+            // null => one-time, non-recurring
+            billingCycle: null,
+            trialPeriod: null,
+
+            unitPrice: {
+              amount: service.amount,
+              currencyCode: 'USD',
+            },
+
+            product: {
+              name: `CORTEXA Web Solutions - ${service.name}`,
+              taxCategory: 'standard',
+              description: service.description,
+            },
+          },
+        },
+      ],
+
+      customData: {
+        purchaseType: 'web_solution',
+        serviceId: input.serviceId,
+        serviceName: service.name,
+        expectedAmount: service.dollars,
+        fullName: String(input.fullName || '').trim(),
+        businessName: String(input.businessName || '').trim(),
+        email: String(input.email || '').trim(),
+        phone: String(input.phone || '').trim(),
+        website: String(input.website || '').trim(),
+        userId: input.userId || null,
+      },
+    };
+
+    const transaction: any =
+      await paddleAny.transactions.create(transactionPayload);
+
+    const transactionId =
+      transaction?.id ||
+      transaction?.data?.id ||
+      null;
+
+    const checkoutUrl =
+      transaction?.checkout?.url ||
+      transaction?.data?.checkout?.url ||
+      null;
+
+    if (!transactionId) {
+      this.logger.error(
+        `Web Solutions transaction creation returned no id: ${JSON.stringify(transaction)}`,
+      );
+
+      throw new BadRequestException(
+        'Paddle did not return a transaction id.',
+      );
+    }
+
+    return {
+      success: true,
+      transactionId,
+      checkoutUrl,
+      serviceId: input.serviceId,
+      serviceName: service.name,
+      amount: service.dollars,
+      currency: 'USD',
+    };
+  }
+
   async setupWebSolutionsPrices(): Promise<any> {
     if (!this.isConfigured || !this.paddle) {
       throw new BadRequestException('Paddle service is not configured');

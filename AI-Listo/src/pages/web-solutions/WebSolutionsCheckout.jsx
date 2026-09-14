@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Check, LockKeyhole } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { fetchWebSolutionsPaddleConfig } from "../../api/paddleApi";
+import { createWebSolutionsTransaction, fetchWebSolutionsPaddleConfig } from "../../api/paddleApi";
 import {
   initWebSolutionPaddle,
   openWebSolutionPaddleCheckout,
@@ -89,7 +89,7 @@ export default function WebSolutionsCheckout() {
   const inlineOpenedRef = useRef(false);
   const acceptedRef = useRef(false);
 
-  const ready = webSolutionPaddleReady(paddleConfig, requestedId);
+  const ready = webSolutionPaddleReady(paddleConfig);
 
   useEffect(() => {
     acceptedRef.current = form.accepted;
@@ -154,7 +154,7 @@ export default function WebSolutionsCheckout() {
     }
 
     if (!ready) {
-      setError("Secure payment is not configured yet. Please contact support.");
+      setError("Secure payment is unavailable right now. Please contact support.");
       return;
     }
 
@@ -166,23 +166,23 @@ export default function WebSolutionsCheckout() {
         await initWebSolutionPaddle(paddleConfig, handlePaddleEvent);
       }
 
-      openWebSolutionPaddleCheckout({
-        config: paddleConfig,
+      const transaction = await createWebSolutionsTransaction({
         serviceId: requestedId,
+        fullName: form.fullName.trim(),
+        businessName: form.businessName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        website: form.website.trim(),
+        userId: user?.id || null,
+      });
+
+      if (!transaction?.transactionId) {
+        throw new Error("Unable to create secure Paddle transaction");
+      }
+
+      openWebSolutionPaddleCheckout({
+        transactionId: transaction.transactionId,
         inline,
-        customer: {
-          fullName: form.fullName.trim(),
-          businessName: form.businessName.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          website: form.website.trim(),
-          countryCode: form.countryCode,
-          userId: user?.id || null,
-        },
-        metadata: {
-          displayedPrice: plan.price,
-          currency: "USD",
-        },
       });
 
       if (inline) {

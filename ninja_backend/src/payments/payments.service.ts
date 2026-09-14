@@ -391,6 +391,70 @@ export class PaymentsService {
     this.webSolutionsTableReady = true;
   }
 
+
+  private resolveWebSolutionCustomTransaction(data: any):
+    | {
+        serviceId: string;
+        serviceName: string;
+        expectedAmount: number;
+      }
+    | null {
+    const custom = data?.custom_data || {};
+
+    if (String(custom?.purchaseType || custom?.purchase_type || '') !== 'web_solution') {
+      return null;
+    }
+
+    const serviceId = String(custom?.serviceId || custom?.service_id || '').trim();
+
+    const catalog: Record<
+      string,
+      {
+        serviceId: string;
+        serviceName: string;
+        expectedAmount: number;
+      }
+    > = {
+      'connection-setup': {
+        serviceId: 'connection-setup',
+        serviceName: 'Connection Setup',
+        expectedAmount: 147,
+      },
+      'website-optimization': {
+        serviceId: 'website-optimization',
+        serviceName: 'Website Optimization',
+        expectedAmount: 297,
+      },
+      'full-transformation': {
+        serviceId: 'full-transformation',
+        serviceName: 'Full Transformation',
+        expectedAmount: 547,
+      },
+    };
+
+    const service = catalog[serviceId] || null;
+
+    if (!service) return null;
+
+    const grandTotal =
+      Number(data?.details?.totals?.grand_total ?? 0) / 100;
+
+    // The transaction itself was created server-side, but still verify that
+    // Paddle completed the exact expected amount before fulfillment.
+    if (
+      grandTotal > 0 &&
+      Math.abs(grandTotal - service.expectedAmount) > 0.01
+    ) {
+      this.logger.error(
+        `Web Solutions amount mismatch for ${serviceId}: expected ${service.expectedAmount}, got ${grandTotal}`,
+      );
+
+      return null;
+    }
+
+    return service;
+  }
+
   private resolveWebSolutionPrice(data: any):
     | {
         serviceId: string;
@@ -589,7 +653,9 @@ export class PaymentsService {
       eventType === 'transaction.completed' ||
       eventType === 'transaction.paid'
     ) {
-      const webSolution = this.resolveWebSolutionPrice(data);
+      const webSolution =
+        this.resolveWebSolutionCustomTransaction(data) ||
+        this.resolveWebSolutionPrice(data);
 
       if (webSolution) {
         let webMatched = false;
