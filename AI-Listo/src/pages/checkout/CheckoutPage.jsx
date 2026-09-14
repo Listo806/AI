@@ -434,7 +434,7 @@ export default function CheckoutPage() {
           plan: selectedPlan,
           startingCharge: setupFee,
         });
-        openPaddleCheckout({
+        await openPaddleCheckout({
           config: paddleConfig,
           plan: selectedPlan,
           userId,
@@ -482,7 +482,7 @@ export default function CheckoutPage() {
         plan: selectedPlan,
         startingCharge: setupFee,
       });
-      openPaddleCheckout({
+      await openPaddleCheckout({
         config: paddleConfig,
         plan: selectedPlan,
         userId,

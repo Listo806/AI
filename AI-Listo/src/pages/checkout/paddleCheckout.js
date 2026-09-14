@@ -95,98 +95,48 @@ function paidTrialPriceFor(config, plan, billingCycle) {
 export function paddleReady(config, plan, billingCycle) {
   if (!config?.clientToken) return false;
 
-  // Native paid trial is a single self-contained price.
-  if (paidTrialPriceFor(config, plan, billingCycle)) {
+  if (
+    billingCycle !== "annual" &&
+    config?.paidTrialPrices?.[plan]
+  ) {
     return true;
   }
 
-  // Otherwise BOTH one-time + recurring prices are required.
+  const recurring =
+    billingCycle === "annual"
+      ? config?.annualPrices?.[plan]
+      : config?.prices?.[plan];
+
   return Boolean(
     config?.startPrices?.[plan] &&
-      recurringPriceFor(config, plan, billingCycle)
+      recurring
   );
 }
 
 /**
  * Build Paddle customer prefill.
  *
- * To skip Paddle's first:
- *
- * "Please enter your details"
- *
- * screen, Paddle needs:
- *
- * - email
- * - countryCode
- *
- * Some countries additionally require:
- * - postalCode
- *
- * UAE may additionally require:
- * - region
- *
- * IMPORTANT:
- * Do not send an empty address object.
+ * Keep this intentionally minimal. The checkout page already collects the
+ * customer's contact details; Paddle only needs the email prefill here.
  */
-function buildPaddleCustomer({
-  email,
-  countryCode,
-  postalCode,
-  region,
-}) {
+function buildPaddleCustomer({ email }) {
   const cleanEmail = String(email || "").trim();
 
-  const cleanCountryCode = String(countryCode || "")
-    .trim()
-    .toUpperCase();
-
-  const cleanPostalCode = String(postalCode || "").trim();
-
-  const cleanRegion = String(region || "").trim();
-
-  if (!cleanEmail) {
-    return undefined;
-  }
-
-  // If we only know the email, Paddle can prefill the email,
-  // but it may still show the "Your details" step because
-  // country is missing.
-  if (!cleanCountryCode) {
-    return {
-      email: cleanEmail,
-    };
-  }
-
-  const address = {
-    countryCode: cleanCountryCode,
-  };
-
-  if (cleanPostalCode) {
-    address.postalCode = cleanPostalCode;
-  }
-
-  if (cleanRegion) {
-    address.region = cleanRegion;
-  }
-
-  return {
-    email: cleanEmail,
-    address,
-  };
+  return cleanEmail
+    ? {
+        email: cleanEmail,
+      }
+    : undefined;
 }
 
-export function openPaddleCheckout({
+export async function openPaddleCheckout({
   config,
   plan,
   userId,
   email,
-
-  // NEW:
-  // These values allow Paddle to skip the customer-details step.
   countryCode,
   postalCode,
   region,
-
   startingCharge,
   billingCycle,
   settings,
@@ -195,122 +145,111 @@ export function openPaddleCheckout({
     throw new Error("Paddle Checkout is not initialized");
   }
 
-  // Optional Paddle Checkout settings (e.g. inline display).
-  // Only attached when provided, so default overlay behavior
-  // stays unchanged for other callers.
   const settingsArg = settings ? { settings } : {};
+  const customer = buildPaddleCustomer({ email });
 
-  // Build customer once and reuse it for both checkout paths.
-  const customer = buildPaddleCustomer({
-    email,
-    countryCode,
-    postalCode,
-    region,
-  });
+  const recurringPriceId =
+    billingCycle === "annual"
+      ? config?.annualPrices?.[plan]
+      : config?.prices?.[plan];
 
-  // ---------------------------------------------------------
-  // PREFERRED:
-  // Paddle native paid trial
-  //
-  // One line item:
-  // Solo     -> $7 for 14 days -> $197/month
-  // Business -> $14 for 14 days -> $347/month
-  // Scale    -> $21 for 14 days -> $497/month
-  // ---------------------------------------------------------
+  const startPriceId =
+    config?.startPrices?.[plan];
 
-  const paidTrialPriceId = paidTrialPriceFor(
-    config,
-    plan,
-    billingCycle
-  );
+  const paidTrialPriceId =
+    billingCycle === "annual"
+      ? null
+      : config?.paidTrialPrices?.[plan] || null;
 
+  const candidates = [];
+
+  // Paddle native paid trial is the cleanest monthly model:
+  // one price contains "$7/$14/$21 for 14 days, then $197/$347/$497 per month".
   if (paidTrialPriceId) {
-    window.Paddle.Checkout.open({
-      ...settingsArg,
-
+    candidates.push({
+      pricingModel: "native_paid_trial",
       items: [
         {
           priceId: paidTrialPriceId,
           quantity: 1,
         },
       ],
-
-      // Prefilled customer information.
-      //
-      // When email + countryCode are available,
-      // Paddle can go directly to the payment screen.
-      customer,
-
-      customData: {
-        userId,
-        plan,
-        startingCharge,
-        billingCycle: "monthly",
-        pricingModel: "native_paid_trial",
-      },
     });
-
-    return;
   }
 
-  // ---------------------------------------------------------
-  // FALLBACK:
-  // one-time starting charge + recurring subscription
-  //
-  // Used until native paid-trial prices exist,
-  // and currently used for annual billing.
-  // ---------------------------------------------------------
-
-  const startPriceId = config?.startPrices?.[plan];
-
-  const recurringPriceId = recurringPriceFor(
-    config,
-    plan,
-    billingCycle
-  );
-
-  if (!startPriceId) {
-    throw new Error(
-      `Starting Paddle price is not configured for plan: ${plan}`
-    );
+  // Fallback to the already-provisioned one-time start price + recurring plan.
+  if (startPriceId && recurringPriceId) {
+    candidates.push({
+      pricingModel: "starter_plus_recurring",
+      items: [
+        {
+          priceId: startPriceId,
+          quantity: 1,
+        },
+        {
+          priceId: recurringPriceId,
+          quantity: 1,
+        },
+      ],
+    });
   }
 
-  if (!recurringPriceId) {
-    // Annual with no annual price must NEVER silently
-    // fall back to monthly billing.
+  if (!candidates.length) {
     throw new Error(
       billingCycle === "annual"
-        ? `Annual billing for the ${plan} plan is not fully configured yet. Please choose monthly or contact support.`
-        : `Recurring Paddle price is not configured for plan: ${plan}`
+        ? `Annual Paddle pricing is not configured for the ${plan} plan.`
+        : `Paddle pricing is not configured for the ${plan} plan.`
     );
   }
+
+  let selected = null;
+  let lastError = null;
+
+  // Validate the exact items using Paddle's transaction preview BEFORE opening
+  // checkout. This tells us which configured price path Paddle currently accepts.
+  //
+  // It does not alter the visible checkout design.
+  for (const candidate of candidates) {
+    try {
+      if (window.Paddle?.TransactionPreview) {
+        await window.Paddle.TransactionPreview({
+          items: candidate.items,
+        });
+      }
+
+      selected = candidate;
+      break;
+    } catch (error) {
+      lastError = error;
+
+      console.warn(
+        "[PADDLE CHECKOUT PREVIEW FAILED]",
+        candidate.pricingModel,
+        error
+      );
+    }
+  }
+
+  if (!selected) {
+    const detail =
+      lastError?.detail ||
+      lastError?.message ||
+      "Paddle rejected all configured checkout price combinations.";
+
+    throw new Error(detail);
+  }
+
+  console.log(
+    "[PADDLE CHECKOUT PATH]",
+    selected.pricingModel,
+    selected.items
+  );
 
   window.Paddle.Checkout.open({
     ...settingsArg,
 
-    items: [
-      // ONE-TIME starting charge:
-      //
-      // Solo     $7
-      // Business $14
-      // Scale    $21
-      {
-        priceId: startPriceId,
-        quantity: 1,
-      },
+    items: selected.items,
 
-      // Existing recurring subscription:
-      //
-      // Solo     $197/month
-      // Business $347/month
-      // Scale    $497/month
-      {
-        priceId: recurringPriceId,
-        quantity: 1,
-      },
-    ],
-
-    // Same prefilled information applies to the fallback checkout.
     customer,
 
     customData: {
@@ -323,7 +262,8 @@ export function openPaddleCheckout({
           ? "annual"
           : "monthly",
 
-      pricingModel: "starter_plus_recurring",
+      pricingModel:
+        selected.pricingModel,
     },
   });
 }
@@ -343,24 +283,11 @@ export const PADDLE_INLINE_FRAME_CLASS = "cortexa-paddle-frame";
 export function paddleInlineSettings() {
   return {
     displayMode: "inline",
-
     frameTarget: PADDLE_INLINE_FRAME_CLASS,
-
-    // IMPORTANT:
-    // Use Paddle one-page checkout.
-    //
-    // This removes the separate first "Your details" screen.
-    // Email/country are prefilled when available, while any legally
-    // required postal/region field stays inside the same payment screen.
-    variant: "one-page",
-
-    frameInitialHeight: 420,
-
+    frameInitialHeight: 280,
     frameStyle:
       "width:100%;min-width:312px;background-color:transparent;border:none;",
-
     allowLogout: false,
-
     showAddDiscounts: false,
   };
 }

@@ -12,6 +12,17 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import {
+  CardCvcElement,
+  CardExpiryElement,
+  CardNumberElement,
+  Elements,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
+import {
+  loadStripe,
+} from "@stripe/stripe-js";
+import {
   useAuth,
 } from "../../context/AuthContext";
 import "./WebSolutionsCheckout.css";
@@ -21,7 +32,8 @@ const API_BASE =
 
 const PLAN_CATALOG = {
   "connection-setup": {
-    name: "Connection Setup",
+    name:
+      "Connection Setup",
     price: 147,
     included: [
       "Website connection review",
@@ -33,7 +45,8 @@ const PLAN_CATALOG = {
   },
 
   "website-optimization": {
-    name: "Website Optimization",
+    name:
+      "Website Optimization",
     price: 297,
     included: [
       "Website and conversion-path review",
@@ -45,7 +58,8 @@ const PLAN_CATALOG = {
   },
 
   "full-transformation": {
-    name: "Full Transformation",
+    name:
+      "Full Transformation",
     price: 547,
     included: [
       "Substantial website redesign",
@@ -57,32 +71,38 @@ const PLAN_CATALOG = {
   },
 };
 
-export default function WebSolutionsCheckout() {
+const elementOptions = {
+  style: {
+    base: {
+      color: "#07142e",
+      fontFamily:
+        "Inter, sans-serif",
+      fontSize: "16px",
+
+      "::placeholder": {
+        color: "#8b97aa",
+      },
+    },
+
+    invalid: {
+      color: "#dc2626",
+    },
+  },
+};
+
+function CheckoutForm({
+  serviceId,
+  plan,
+}) {
   const {
     user,
   } = useAuth();
 
-  const [
-    searchParams,
-  ] = useSearchParams();
+  const stripe =
+    useStripe();
 
-  const requestedId =
-    searchParams.get("plan") ||
-    "connection-setup";
-
-  const serviceId =
-    PLAN_CATALOG[requestedId]
-      ? requestedId
-      : "connection-setup";
-
-  const plan =
-    useMemo(
-      () =>
-        PLAN_CATALOG[
-          serviceId
-        ],
-      [serviceId],
-    );
+  const elements =
+    useElements();
 
   const [
     form,
@@ -113,6 +133,9 @@ export default function WebSolutionsCheckout() {
 
     website: "",
 
+    country:
+      "United States",
+
     accepted: false,
   }));
 
@@ -122,127 +145,39 @@ export default function WebSolutionsCheckout() {
   ] = useState(false);
 
   const [
-    confirming,
-    setConfirming,
-  ] = useState(false);
+    error,
+    setError,
+  ] = useState("");
 
   const [
     completed,
     setCompleted,
   ] = useState(false);
 
-  const [
-    error,
-    setError,
-  ] = useState("");
-
-  const stripeState =
-    searchParams.get("stripe");
-
-  const sessionId =
-    searchParams.get(
-      "session_id",
-    );
-
-  useEffect(() => {
-    if (
-      stripeState !==
-        "success" ||
-      !sessionId
-    ) {
-      if (
-        stripeState ===
-        "cancelled"
-      ) {
-        setError(
-          "Payment was cancelled. You have not been charged.",
-        );
-      }
-
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      setConfirming(true);
-      setError("");
-
-      try {
-        const response =
-          await fetch(
-            `${API_BASE}/api/payment/web-solutions/confirm-checkout-session`,
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body: JSON.stringify({
-                sessionId,
-              }),
-            },
-          );
-
-        const data =
-          await response
-            .json()
-            .catch(() => ({}));
-
-        if (
-          !response.ok ||
-          !data?.success
-        ) {
-          throw new Error(
-            data?.message ||
-              "The payment could not be verified.",
-          );
-        }
-
-        if (!cancelled) {
-          setCompleted(true);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(
-            e?.message ||
-              "The payment could not be verified.",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setConfirming(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    stripeState,
-    sessionId,
-  ]);
-
   const update =
     (key) => (event) => {
-      const value =
-        event.target.type ===
-        "checkbox"
-          ? event.target.checked
-          : event.target.value;
-
       setForm((prev) => ({
         ...prev,
-        [key]: value,
+
+        [key]:
+          event.target
+            .type ===
+          "checkbox"
+            ? event.target
+                .checked
+            : event.target
+                .value,
       }));
     };
 
-  const handlePurchase =
+  const purchase =
     async () => {
-      if (loading) return;
+      if (
+        loading ||
+        completed
+      ) {
+        return;
+      }
 
       setError("");
 
@@ -273,27 +208,34 @@ export default function WebSolutionsCheckout() {
         return;
       }
 
+      if (
+        !stripe ||
+        !elements
+      ) {
+        setError(
+          "Secure payment is still loading.",
+        );
+        return;
+      }
+
+      const card =
+        elements.getElement(
+          CardNumberElement,
+        );
+
+      if (!card) {
+        setError(
+          "Card details are not ready.",
+        );
+        return;
+      }
+
       setLoading(true);
 
       try {
-        localStorage.setItem(
-          "name",
-          form.fullName.trim(),
-        );
-
-        localStorage.setItem(
-          "email",
-          form.email.trim(),
-        );
-
-        localStorage.setItem(
-          "phone",
-          form.phone.trim(),
-        );
-
-        const response =
+        const initResponse =
           await fetch(
-            `${API_BASE}/api/payment/web-solutions/create-checkout-session`,
+            `${API_BASE}/api/payment/web-solutions/create-payment-intent`,
             {
               method: "POST",
 
@@ -321,40 +263,137 @@ export default function WebSolutionsCheckout() {
                   form.website.trim(),
 
                 userId:
-                  user?.id || null,
+                  user?.id ||
+                  null,
               }),
             },
           );
 
-        const data =
-          await response
+        const init =
+          await initResponse
             .json()
             .catch(() => ({}));
 
         if (
-          !response.ok ||
-          !data?.checkoutUrl
+          !initResponse.ok ||
+          !init?.clientSecret
         ) {
           throw new Error(
-            data?.message ||
-              "Unable to open secure checkout.",
+            init?.message ||
+              "Unable to initialize secure payment.",
           );
         }
 
-        window.location.assign(
-          data.checkoutUrl,
+        const payment =
+          await stripe
+            .confirmCardPayment(
+              init.clientSecret,
+              {
+                payment_method: {
+                  card,
+
+                  billing_details: {
+                    name:
+                      form.fullName.trim(),
+
+                    email:
+                      form.email.trim(),
+
+                    phone:
+                      form.phone.trim() ||
+                      undefined,
+                  },
+                },
+              },
+            );
+
+        if (payment.error) {
+          throw new Error(
+            payment.error
+              .message ||
+              "Payment was declined.",
+          );
+        }
+
+        if (
+          payment
+            .paymentIntent
+            ?.status !==
+          "succeeded"
+        ) {
+          throw new Error(
+            "Payment has not completed.",
+          );
+        }
+
+        const verifyResponse =
+          await fetch(
+            `${API_BASE}/api/payment/web-solutions/confirm`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                paymentIntentId:
+                  payment
+                    .paymentIntent
+                    .id,
+
+                serviceId,
+
+                userId:
+                  user?.id ||
+                  null,
+              }),
+            },
+          );
+
+        const verified =
+          await verifyResponse
+            .json()
+            .catch(() => ({}));
+
+        if (
+          !verifyResponse.ok ||
+          !verified?.success
+        ) {
+          throw new Error(
+            verified?.message ||
+              "Payment was received but could not be finalized.",
+          );
+        }
+
+        localStorage.setItem(
+          "name",
+          form.fullName.trim(),
         );
+
+        localStorage.setItem(
+          "email",
+          form.email.trim(),
+        );
+
+        localStorage.setItem(
+          "phone",
+          form.phone.trim(),
+        );
+
+        setCompleted(true);
       } catch (e) {
         console.error(
-          "Web Solutions hosted checkout error:",
+          "Web Solutions Stripe payment error:",
           e,
         );
 
         setError(
           e?.message ||
-            "Payment could not be started.",
+            "Payment could not be completed.",
         );
-
+      } finally {
         setLoading(false);
       }
     };
@@ -403,8 +442,8 @@ export default function WebSolutionsCheckout() {
           <p className="wsc-lead">
             Review your service,
             enter your details,
-            and complete your
-            secure one-time payment.
+            and complete your secure
+            one-time payment.
           </p>
 
           <article className="wsc-card wsc-plan-card">
@@ -558,13 +597,109 @@ export default function WebSolutionsCheckout() {
             </div>
           </div>
 
-          <div className="wsc-hosted-payment-note">
-            Card details will be
-            entered on Stripe&apos;s
-            secure hosted checkout
-            after you click the button
-            below.
+          <label>
+            <span>
+              Card Number
+            </span>
+
+            <div className="wsc-stripe-field">
+              <CardNumberElement
+                options={{
+                  ...elementOptions,
+                  showIcon: true,
+                }}
+              />
+            </div>
+          </label>
+
+          <div className="wsc-payment-grid">
+            <label>
+              <span>
+                MM / YY
+              </span>
+
+              <div className="wsc-stripe-field">
+                <CardExpiryElement
+                  options={
+                    elementOptions
+                  }
+                />
+              </div>
+            </label>
+
+            <label>
+              <span>
+                CVC
+              </span>
+
+              <div className="wsc-stripe-field">
+                <CardCvcElement
+                  options={
+                    elementOptions
+                  }
+                />
+              </div>
+            </label>
           </div>
+
+          <label>
+            <span>
+              Name on Card
+            </span>
+
+            <input
+              value={
+                form.fullName
+              }
+              onChange={update(
+                "fullName",
+              )}
+              placeholder="e.g. Alex Carter"
+            />
+          </label>
+
+          <label>
+            <span>
+              Billing Country
+            </span>
+
+            <select
+              value={
+                form.country
+              }
+              onChange={update(
+                "country",
+              )}
+            >
+              <option>
+                United States
+              </option>
+
+              <option>
+                Canada
+              </option>
+
+              <option>
+                United Kingdom
+              </option>
+
+              <option>
+                Australia
+              </option>
+
+              <option>
+                Spain
+              </option>
+
+              <option>
+                Portugal
+              </option>
+
+              <option>
+                Vietnam
+              </option>
+            </select>
+          </label>
 
           <div className="wsc-divider" />
 
@@ -631,14 +766,6 @@ export default function WebSolutionsCheckout() {
             </div>
           )}
 
-          {confirming && (
-            <div className="wsc-payment-success">
-              <strong>
-                Verifying payment...
-              </strong>
-            </div>
-          )}
-
           {completed ? (
             <div className="wsc-payment-success">
               <Check
@@ -657,20 +784,16 @@ export default function WebSolutionsCheckout() {
               </span>
             </div>
           ) : (
-            !confirming && (
-              <button
-                className="wsc-submit"
-                type="button"
-                disabled={loading}
-                onClick={
-                  handlePurchase
-                }
-              >
-                {loading
-                  ? "Opening secure checkout..."
-                  : `Complete Purchase — $${plan.price}`}
-              </button>
-            )
+            <button
+              className="wsc-submit"
+              type="button"
+              disabled={loading}
+              onClick={purchase}
+            >
+              {loading
+                ? "Processing..."
+                : `Complete Purchase — $${plan.price}`}
+            </button>
           )}
 
           <div className="wsc-encrypted">
@@ -679,9 +802,9 @@ export default function WebSolutionsCheckout() {
             />
 
             <span>
-              Payment is completed on
-              Stripe&apos;s secure
-              checkout.
+              Your payment
+              information is
+              encrypted and secure.
             </span>
           </div>
 
@@ -697,5 +820,131 @@ export default function WebSolutionsCheckout() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function WebSolutionsCheckout() {
+  const [
+    searchParams,
+  ] = useSearchParams();
+
+  const requestedId =
+    searchParams.get("plan") ||
+    "connection-setup";
+
+  const serviceId =
+    PLAN_CATALOG[requestedId]
+      ? requestedId
+      : "connection-setup";
+
+  const plan =
+    useMemo(
+      () =>
+        PLAN_CATALOG[
+          serviceId
+        ],
+      [serviceId],
+    );
+
+  const [
+    stripePromise,
+    setStripePromise,
+  ] = useState(null);
+
+  const [
+    configError,
+    setConfigError,
+  ] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const response =
+          await fetch(
+            `${API_BASE}/api/payment/web-solutions/config`,
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(() => ({}));
+
+        const key =
+          data?.publishableKey ||
+          import.meta.env
+            .VITE_STRIPE_PUBLISHABLE_KEY ||
+          "";
+
+        if (
+          !key ||
+          !String(key).startsWith(
+            "pk_",
+          )
+        ) {
+          throw new Error(
+            "Stripe publishable key is missing or invalid.",
+          );
+        }
+
+        if (!cancelled) {
+          setStripePromise(
+            loadStripe(key),
+          );
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setConfigError(
+            e?.message ||
+              "Stripe payment configuration is unavailable.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (configError) {
+    return (
+      <div className="wsc-page">
+        <div className="wsc-container">
+          <div className="wsc-error">
+            {configError}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stripePromise) {
+    return (
+      <div className="wsc-page">
+        <div className="wsc-container">
+          Loading secure payment...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Elements
+      stripe={
+        stripePromise
+      }
+      options={{
+        locale: "auto",
+      }}
+    >
+      <CheckoutForm
+        serviceId={
+          serviceId
+        }
+        plan={plan}
+      />
+    </Elements>
   );
 }
