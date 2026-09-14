@@ -7,7 +7,6 @@ import {
   HttpCode,
   UseGuards,
   ForbiddenException,
-  Body,
 } from '@nestjs/common';
 import { PaddleService } from './paddle.service';
 import { PaymentsService } from './payments.service';
@@ -93,43 +92,6 @@ export class PaddleController {
       throw new ForbiddenException('Admins only');
     }
     return this.paddleService.setupPaidTrialPrices();
-  }
-
-
-
-  /**
-   * Public Web Solutions checkout initializer.
-   *
-   * The amount is never accepted from the browser. PaddleService maps
-   * serviceId -> $147/$297/$547 server-side and creates a non-catalog,
-   * one-time Paddle transaction.
-   */
-  @Post('web-solutions/transaction')
-  async createWebSolutionsTransaction(
-    @Body()
-    body: {
-      serviceId: string;
-      fullName?: string;
-      businessName?: string;
-      email?: string;
-      phone?: string;
-      website?: string;
-      userId?: string | null;
-    },
-  ) {
-    return this.paddleService.createWebSolutionsTransaction(body);
-  }
-
-  @Post('setup-web-solutions-prices')
-  @UseGuards(JwtAuthGuard)
-  async setupWebSolutionsPrices(@CurrentUser() user: any) {
-    const role = String(user?.role || '').toLowerCase();
-
-    if (!['admin', 'super_admin', 'owner', 'developer'].includes(role)) {
-      throw new ForbiddenException('Admins only');
-    }
-
-    return this.paddleService.setupWebSolutionsPrices();
   }
 
   @Get('client-token')

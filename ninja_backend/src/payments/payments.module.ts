@@ -10,13 +10,13 @@ import { PlatformMailModule } from '../platform-mail/platform-mail.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AiUnitsModule } from '../ai-units/ai-units.module';
 import { DatabaseModule } from '../database/database.module';
-import { WebSolutionsPaymentsController } from './web-solutions-payments.controller';
-import { WebSolutionsPaymentService } from './web-solutions-payment.service';
+import { WebSolutionsStripeCheckoutController } from './web-solutions-stripe-checkout.controller';
+import { WebSolutionsStripeCheckoutService } from './web-solutions-stripe-checkout.service';
 
 @Module({
   imports: [ConfigModule, PlatformMailModule, WorkspacesModule, AiUnitsModule, DatabaseModule],
-  controllers: [PaddleController, PaymentsController, WebSolutionsPaymentsController],
-  providers: [PaddleService, PaymentsService, PayPalService, WebSolutionsPaymentService],
+  controllers: [PaddleController, PaymentsController, WebSolutionsStripeCheckoutController],
+  providers: [PaddleService, PaymentsService, PayPalService, WebSolutionsStripeCheckoutService],
   exports: [PaddleService],
 })
 export class PaymentsModule {}

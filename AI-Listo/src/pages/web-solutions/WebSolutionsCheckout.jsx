@@ -1,4 +1,5 @@
 import React, {
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -8,20 +9,8 @@ import {
 } from "react-router-dom";
 import {
   Check,
-  CreditCard,
   LockKeyhole,
 } from "lucide-react";
-import {
-  CardCvcElement,
-  CardExpiryElement,
-  CardNumberElement,
-  Elements,
-  useElements,
-  useStripe,
-} from "@stripe/react-stripe-js";
-import {
-  loadStripe,
-} from "@stripe/stripe-js";
 import {
   useAuth,
 } from "../../context/AuthContext";
@@ -29,18 +18,6 @@ import "./WebSolutionsCheckout.css";
 
 const API_BASE =
   "https://backend.cortexaaicrm.com";
-
-const STRIPE_PUBLISHABLE_KEY =
-  import.meta.env
-    .VITE_STRIPE_PUBLISHABLE_KEY ||
-  "";
-
-const stripePromise =
-  STRIPE_PUBLISHABLE_KEY
-    ? loadStripe(
-        STRIPE_PUBLISHABLE_KEY,
-      )
-    : null;
 
 const PLAN_CATALOG = {
   "connection-setup": {
@@ -80,76 +57,64 @@ const PLAN_CATALOG = {
   },
 };
 
-const stripeElementOptions = {
-  style: {
-    base: {
-      color: "#07142e",
-      fontSize: "16px",
-      fontFamily:
-        "Inter, sans-serif",
-
-      "::placeholder": {
-        color: "#8b97aa",
-      },
-    },
-
-    invalid: {
-      color: "#dc2626",
-    },
-  },
-};
-
-function WebSolutionsCheckoutForm({
-  serviceId,
-  plan,
-}) {
+export default function WebSolutionsCheckout() {
   const {
     user,
   } = useAuth();
 
-  const stripe =
-    useStripe();
+  const [
+    searchParams,
+  ] = useSearchParams();
 
-  const elements =
-    useElements();
+  const requestedId =
+    searchParams.get("plan") ||
+    "connection-setup";
 
-  const [form, setForm] =
-    useState(() => ({
-      fullName:
-        localStorage.getItem(
-          "name",
-        ) ||
-        user?.name ||
-        "",
+  const serviceId =
+    PLAN_CATALOG[requestedId]
+      ? requestedId
+      : "connection-setup";
 
-      businessName: "",
-
-      email:
-        localStorage.getItem(
-          "email",
-        ) ||
-        user?.email ||
-        "",
-
-      phone:
-        localStorage.getItem(
-          "phone",
-        ) ||
-        user?.phone ||
-        "",
-
-      website: "",
-
-      country:
-        "United States",
-
-      accepted: false,
-    }));
+  const plan =
+    useMemo(
+      () =>
+        PLAN_CATALOG[
+          serviceId
+        ],
+      [serviceId],
+    );
 
   const [
-    postalCode,
-    setPostalCode,
-  ] = useState("");
+    form,
+    setForm,
+  ] = useState(() => ({
+    fullName:
+      localStorage.getItem(
+        "name",
+      ) ||
+      user?.name ||
+      "",
+
+    businessName: "",
+
+    email:
+      localStorage.getItem(
+        "email",
+      ) ||
+      user?.email ||
+      "",
+
+    phone:
+      localStorage.getItem(
+        "phone",
+      ) ||
+      user?.phone ||
+      "",
+
+    website: "",
+
+    accepted: false,
+  }));
 
   const [
     loading,
@@ -157,14 +122,109 @@ function WebSolutionsCheckoutForm({
   ] = useState(false);
 
   const [
-    error,
-    setError,
-  ] = useState("");
+    confirming,
+    setConfirming,
+  ] = useState(false);
 
   const [
     completed,
     setCompleted,
   ] = useState(false);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const stripeState =
+    searchParams.get("stripe");
+
+  const sessionId =
+    searchParams.get(
+      "session_id",
+    );
+
+  useEffect(() => {
+    if (
+      stripeState !==
+        "success" ||
+      !sessionId
+    ) {
+      if (
+        stripeState ===
+        "cancelled"
+      ) {
+        setError(
+          "Payment was cancelled. You have not been charged.",
+        );
+      }
+
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      setConfirming(true);
+      setError("");
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE}/api/payment/web-solutions/confirm-checkout-session`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                sessionId,
+              }),
+            },
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(() => ({}));
+
+        if (
+          !response.ok ||
+          !data?.success
+        ) {
+          throw new Error(
+            data?.message ||
+              "The payment could not be verified.",
+          );
+        }
+
+        if (!cancelled) {
+          setCompleted(true);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(
+            e?.message ||
+              "The payment could not be verified.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setConfirming(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    stripeState,
+    sessionId,
+  ]);
 
   const update =
     (key) => (event) => {
@@ -186,7 +246,9 @@ function WebSolutionsCheckoutForm({
 
       setError("");
 
-      if (!form.fullName.trim()) {
+      if (
+        !form.fullName.trim()
+      ) {
         setError(
           "Please enter your full name.",
         );
@@ -211,37 +273,27 @@ function WebSolutionsCheckoutForm({
         return;
       }
 
-      if (!stripe || !elements) {
-        setError(
-          "Secure card payment is not ready yet.",
-        );
-        return;
-      }
-
-      const card =
-        elements.getElement(
-          CardNumberElement,
-        );
-
-      if (!card) {
-        setError(
-          "Please check your card details.",
-        );
-        return;
-      }
-
       setLoading(true);
 
       try {
-        /*
-         * 1. Create PaymentIntent.
-         *
-         * The backend decides the amount from serviceId.
-         * The browser does NOT send a trusted amount.
-         */
+        localStorage.setItem(
+          "name",
+          form.fullName.trim(),
+        );
+
+        localStorage.setItem(
+          "email",
+          form.email.trim(),
+        );
+
+        localStorage.setItem(
+          "phone",
+          form.phone.trim(),
+        );
+
         const response =
           await fetch(
-            `${API_BASE}/api/payment/web-solutions/create-payment-intent`,
+            `${API_BASE}/api/payment/web-solutions/create-checkout-session`,
             {
               method: "POST",
 
@@ -274,145 +326,35 @@ function WebSolutionsCheckoutForm({
             },
           );
 
-        const payload =
+        const data =
           await response
             .json()
             .catch(() => ({}));
 
         if (
           !response.ok ||
-          !payload?.clientSecret
+          !data?.checkoutUrl
         ) {
           throw new Error(
-            payload?.message ||
-              "Unable to initialize secure payment.",
+            data?.message ||
+              "Unable to open secure checkout.",
           );
         }
 
-        /*
-         * 2. Confirm card payment through Stripe.js.
-         * Card data never touches Cortexa backend.
-         */
-        const result =
-          await stripe.confirmCardPayment(
-            payload.clientSecret,
-            {
-              payment_method: {
-                card,
-
-                billing_details: {
-                  name:
-                    form.fullName.trim(),
-
-                  email:
-                    form.email.trim(),
-
-                  phone:
-                    form.phone.trim() ||
-                    undefined,
-
-                  address: {
-                    postal_code:
-                      postalCode.trim() ||
-                      undefined,
-                  },
-                },
-              },
-            },
-          );
-
-        if (result.error) {
-          throw new Error(
-            result.error.message ||
-              "Payment could not be completed.",
-          );
-        }
-
-        if (
-          result.paymentIntent
-            ?.status !==
-          "succeeded"
-        ) {
-          throw new Error(
-            "Payment has not completed yet.",
-          );
-        }
-
-        /*
-         * 3. Server re-fetches the PaymentIntent
-         * using STRIPE_SECRET_KEY and verifies:
-         *   - succeeded
-         *   - service id
-         *   - exact amount
-         *
-         * Only after that is the order stored.
-         */
-        const confirmResponse =
-          await fetch(
-            `${API_BASE}/api/payment/web-solutions/confirm`,
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body: JSON.stringify({
-                paymentIntentId:
-                  result.paymentIntent
-                    .id,
-
-                serviceId,
-
-                userId:
-                  user?.id || null,
-              }),
-            },
-          );
-
-        const confirmed =
-          await confirmResponse
-            .json()
-            .catch(() => ({}));
-
-        if (
-          !confirmResponse.ok ||
-          !confirmed?.success
-        ) {
-          throw new Error(
-            confirmed?.message ||
-              "Payment was received but the order could not be finalized.",
-          );
-        }
-
-        localStorage.setItem(
-          "name",
-          form.fullName.trim(),
+        window.location.assign(
+          data.checkoutUrl,
         );
-
-        localStorage.setItem(
-          "email",
-          form.email.trim(),
-        );
-
-        localStorage.setItem(
-          "phone",
-          form.phone.trim(),
-        );
-
-        setCompleted(true);
       } catch (e) {
         console.error(
-          "Web Solutions Stripe checkout error:",
+          "Web Solutions hosted checkout error:",
           e,
         );
 
         setError(
           e?.message ||
-            "Payment could not be completed.",
+            "Payment could not be started.",
         );
-      } finally {
+
         setLoading(false);
       }
     };
@@ -432,6 +374,7 @@ function WebSolutionsCheckoutForm({
             <LockKeyhole
               size={18}
             />
+
             <span>
               Secure Checkout
             </span>
@@ -615,112 +558,13 @@ function WebSolutionsCheckoutForm({
             </div>
           </div>
 
-          <label>
-            <span>
-              Card Number
-            </span>
-
-            <div className="wsc-stripe-field">
-              <CardNumberElement
-                options={{
-                  ...stripeElementOptions,
-                  showIcon: true,
-                }}
-              />
-
-              <CreditCard
-                size={18}
-              />
-            </div>
-          </label>
-
-          <div className="wsc-payment-grid">
-            <label>
-              <span>
-                MM / YY
-              </span>
-
-              <div className="wsc-stripe-field">
-                <CardExpiryElement
-                  options={
-                    stripeElementOptions
-                  }
-                />
-              </div>
-            </label>
-
-            <label>
-              <span>
-                CVC
-              </span>
-
-              <div className="wsc-stripe-field">
-                <CardCvcElement
-                  options={
-                    stripeElementOptions
-                  }
-                />
-              </div>
-            </label>
+          <div className="wsc-hosted-payment-note">
+            Card details will be
+            entered on Stripe&apos;s
+            secure hosted checkout
+            after you click the button
+            below.
           </div>
-
-          <label>
-            <span>
-              ZIP / Postal Code
-            </span>
-
-            <input
-              value={postalCode}
-              onChange={(event) =>
-                setPostalCode(
-                  event.target.value,
-                )
-              }
-              placeholder="12345"
-              autoComplete="postal-code"
-            />
-          </label>
-
-          <label>
-            <span>
-              Billing Country
-            </span>
-
-            <select
-              value={form.country}
-              onChange={update(
-                "country",
-              )}
-            >
-              <option>
-                United States
-              </option>
-
-              <option>
-                Canada
-              </option>
-
-              <option>
-                United Kingdom
-              </option>
-
-              <option>
-                Australia
-              </option>
-
-              <option>
-                Spain
-              </option>
-
-              <option>
-                Portugal
-              </option>
-
-              <option>
-                Vietnam
-              </option>
-            </select>
-          </label>
 
           <div className="wsc-divider" />
 
@@ -787,6 +631,14 @@ function WebSolutionsCheckoutForm({
             </div>
           )}
 
+          {confirming && (
+            <div className="wsc-payment-success">
+              <strong>
+                Verifying payment...
+              </strong>
+            </div>
+          )}
+
           {completed ? (
             <div className="wsc-payment-success">
               <Check
@@ -805,18 +657,20 @@ function WebSolutionsCheckoutForm({
               </span>
             </div>
           ) : (
-            <button
-              className="wsc-submit"
-              type="button"
-              disabled={loading}
-              onClick={
-                handlePurchase
-              }
-            >
-              {loading
-                ? "Processing..."
-                : `Complete Purchase — $${plan.price}`}
-            </button>
+            !confirming && (
+              <button
+                className="wsc-submit"
+                type="button"
+                disabled={loading}
+                onClick={
+                  handlePurchase
+                }
+              >
+                {loading
+                  ? "Opening secure checkout..."
+                  : `Complete Purchase — $${plan.price}`}
+              </button>
+            )
           )}
 
           <div className="wsc-encrypted">
@@ -825,9 +679,9 @@ function WebSolutionsCheckoutForm({
             />
 
             <span>
-              Your payment
-              information is
-              encrypted and secure.
+              Payment is completed on
+              Stripe&apos;s secure
+              checkout.
             </span>
           </div>
 
@@ -843,63 +697,5 @@ function WebSolutionsCheckoutForm({
         </section>
       </main>
     </div>
-  );
-}
-
-export default function WebSolutionsCheckout() {
-  const [
-    searchParams,
-  ] = useSearchParams();
-
-  const requestedId =
-    searchParams.get("plan") ||
-    "connection-setup";
-
-  const serviceId =
-    PLAN_CATALOG[requestedId]
-      ? requestedId
-      : "connection-setup";
-
-  const plan =
-    useMemo(
-      () =>
-        PLAN_CATALOG[
-          serviceId
-        ],
-      [serviceId],
-    );
-
-  if (!stripePromise) {
-    return (
-      <div className="wsc-page">
-        <div className="wsc-container">
-          <div className="wsc-error">
-            Stripe publishable
-            key is missing.
-            Add
-            {" "}
-            VITE_STRIPE_PUBLISHABLE_KEY
-            {" "}
-            to the frontend
-            environment.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Elements
-      stripe={
-        stripePromise
-      }
-    >
-      <WebSolutionsCheckoutForm
-        serviceId={
-          serviceId
-        }
-        plan={plan}
-      />
-    </Elements>
   );
 }

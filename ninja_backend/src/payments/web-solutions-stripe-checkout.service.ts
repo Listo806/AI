@@ -7,44 +7,49 @@ import Stripe from 'stripe';
 import { ConfigService } from '../config/config.service';
 import { DatabaseService } from '../database/database.service';
 
-type WebSolutionServiceId =
+type ServiceId =
   | 'connection-setup'
   | 'website-optimization'
   | 'full-transformation';
 
-type WebSolutionDefinition = {
-  id: WebSolutionServiceId;
-  name: string;
-  amountCents: number;
-};
-
-const WEB_SOLUTION_CATALOG: Record<
-  WebSolutionServiceId,
-  WebSolutionDefinition
+const CATALOG: Record<
+  ServiceId,
+  {
+    id: ServiceId;
+    name: string;
+    description: string;
+    amountCents: number;
+  }
 > = {
   'connection-setup': {
     id: 'connection-setup',
     name: 'Connection Setup',
+    description:
+      'Cortexa Web Solutions one-time connection setup professional service',
     amountCents: 14700,
   },
 
   'website-optimization': {
     id: 'website-optimization',
     name: 'Website Optimization',
+    description:
+      'Cortexa Web Solutions one-time website optimization professional service',
     amountCents: 29700,
   },
 
   'full-transformation': {
     id: 'full-transformation',
     name: 'Full Transformation',
+    description:
+      'Cortexa Web Solutions one-time full transformation professional service',
     amountCents: 54700,
   },
 };
 
 @Injectable()
-export class WebSolutionsPaymentService {
+export class WebSolutionsStripeCheckoutService {
   private readonly logger = new Logger(
-    WebSolutionsPaymentService.name,
+    WebSolutionsStripeCheckoutService.name,
   );
 
   private readonly stripe: Stripe;
@@ -55,22 +60,22 @@ export class WebSolutionsPaymentService {
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
   ) {
-    const secretKey = this.config.getRequired(
+    const secret = this.config.getRequired(
       'STRIPE_SECRET_KEY',
     );
 
-    this.stripe = new Stripe(secretKey, {
+    this.stripe = new Stripe(secret, {
       apiVersion: '2026-02-25.clover',
     });
   }
 
   private getService(
     serviceId: string,
-  ): WebSolutionDefinition {
-    const service =
-      WEB_SOLUTION_CATALOG[
-        String(serviceId || '').trim() as WebSolutionServiceId
-      ];
+  ) {
+    const key =
+      String(serviceId || '').trim() as ServiceId;
+
+    const service = CATALOG[key];
 
     if (!service) {
       throw new BadRequestException(
@@ -81,16 +86,28 @@ export class WebSolutionsPaymentService {
     return service;
   }
 
-  private async ensureSchema(): Promise<void> {
+  private frontendBase(): string {
+    const configured = String(
+      this.config.get('FRONTEND_URL') ||
+        this.config.get('APP_URL') ||
+        'https://www.cortexaaicrm.com',
+    ).trim();
+
+    return configured.replace(/\/+$/, '');
+  }
+
+  private async ensureSchema() {
     if (this.schemaReady) return;
 
     await this.db.query(`
       CREATE TABLE IF NOT EXISTS web_solution_stripe_orders (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
-        stripe_payment_intent_id VARCHAR(255)
+        stripe_checkout_session_id VARCHAR(255)
           NOT NULL
           UNIQUE,
+
+        stripe_payment_intent_id VARCHAR(255),
 
         user_id UUID NULL,
         team_id UUID NULL,
@@ -98,7 +115,7 @@ export class WebSolutionsPaymentService {
         service_id VARCHAR(64) NOT NULL,
         service_name VARCHAR(160) NOT NULL,
 
-        amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+        amount NUMERIC(12,2) NOT NULL,
         currency VARCHAR(8) NOT NULL DEFAULT 'USD',
 
         status VARCHAR(32) NOT NULL DEFAULT 'paid',
@@ -115,28 +132,10 @@ export class WebSolutionsPaymentService {
       )
     `);
 
-    await this.db.query(`
-      CREATE INDEX IF NOT EXISTS
-        idx_web_solution_stripe_orders_user
-      ON web_solution_stripe_orders(
-        user_id,
-        purchased_at DESC
-      )
-    `);
-
-    await this.db.query(`
-      CREATE INDEX IF NOT EXISTS
-        idx_web_solution_stripe_orders_team
-      ON web_solution_stripe_orders(
-        team_id,
-        purchased_at DESC
-      )
-    `);
-
     this.schemaReady = true;
   }
 
-  async createPaymentIntent(input: {
+  async createSession(input: {
     serviceId: string;
     fullName?: string;
     businessName?: string;
@@ -145,7 +144,9 @@ export class WebSolutionsPaymentService {
     website?: string;
     userId?: string | null;
   }) {
-    const service = this.getService(input.serviceId);
+    const service = this.getService(
+      input?.serviceId,
+    );
 
     const email = String(
       input?.email || '',
@@ -166,157 +167,156 @@ export class WebSolutionsPaymentService {
       !/^\S+@\S+\.\S+$/.test(email)
     ) {
       throw new BadRequestException(
-        'A valid email address is required.',
+        'A valid email is required.',
       );
     }
 
-    /*
-     * IMPORTANT:
-     * The browser never sends a trusted amount.
-     * The amount comes only from WEB_SOLUTION_CATALOG above.
-     */
-    const intent =
-      await this.stripe.paymentIntents.create({
-        amount: service.amountCents,
+    const metadata: Record<string, string> = {
+      purchaseType: 'web_solution',
+      serviceId: service.id,
+      serviceName: service.name,
+      expectedAmountCents: String(
+        service.amountCents,
+      ),
+      fullName,
+      businessName: String(
+        input?.businessName || '',
+      ).trim(),
+      email,
+      phone: String(
+        input?.phone || '',
+      ).trim(),
+      website: String(
+        input?.website || '',
+      ).trim(),
+      userId: String(
+        input?.userId || '',
+      ).trim(),
+    };
 
-        currency: 'usd',
+    const base = this.frontendBase();
 
-        automatic_payment_methods: {
-          enabled: true,
+    const session =
+      await this.stripe.checkout.sessions.create({
+        mode: 'payment',
+
+        payment_method_types: ['card'],
+
+        customer_email: email,
+
+        line_items: [
+          {
+            quantity: 1,
+
+            price_data: {
+              currency: 'usd',
+
+              unit_amount:
+                service.amountCents,
+
+              product_data: {
+                name:
+                  `CORTEXA Web Solutions — ${service.name}`,
+
+                description:
+                  service.description,
+
+                metadata: {
+                  serviceId: service.id,
+                },
+              },
+            },
+          },
+        ],
+
+        metadata,
+
+        payment_intent_data: {
+          metadata,
         },
 
-        receipt_email: email,
+        success_url:
+          `${base}/web-solutions/checkout` +
+          `?plan=${encodeURIComponent(service.id)}` +
+          `&stripe=success` +
+          `&session_id={CHECKOUT_SESSION_ID}`,
 
-        description:
-          `Cortexa Web Solutions - ${service.name}`,
-
-        metadata: {
-          purchaseType: 'web_solution',
-
-          serviceId: service.id,
-
-          serviceName: service.name,
-
-          expectedAmountCents: String(
-            service.amountCents,
-          ),
-
-          fullName,
-
-          businessName: String(
-            input?.businessName || '',
-          ).trim(),
-
-          email,
-
-          phone: String(
-            input?.phone || '',
-          ).trim(),
-
-          website: String(
-            input?.website || '',
-          ).trim(),
-
-          userId: String(
-            input?.userId || '',
-          ).trim(),
-        },
+        cancel_url:
+          `${base}/web-solutions/checkout` +
+          `?plan=${encodeURIComponent(service.id)}` +
+          `&stripe=cancelled`,
       });
 
-    if (!intent.client_secret) {
+    if (!session.url) {
       throw new BadRequestException(
-        'Stripe did not return a client secret.',
+        'Stripe did not return a checkout URL.',
       );
     }
 
     this.logger.log(
-      `Web Solutions Stripe intent created: ${intent.id} / ${service.id} / $${(
-        service.amountCents / 100
-      ).toFixed(2)}`,
+      `Web Solutions Stripe Checkout created: ${session.id} / ${service.id}`,
     );
 
     return {
       success: true,
-
-      clientSecret: intent.client_secret,
-
-      paymentIntentId: intent.id,
-
-      serviceId: service.id,
-
-      serviceName: service.name,
-
-      amount:
-        service.amountCents / 100,
-
-      currency: 'USD',
+      checkoutUrl: session.url,
+      sessionId: session.id,
     };
   }
 
-  async confirmPayment(input: {
-    paymentIntentId: string;
-    serviceId: string;
-    userId?: string | null;
-  }) {
-    const service = this.getService(
-      input.serviceId,
-    );
+  async confirmSession(
+    sessionId: string,
+  ) {
+    const cleanId =
+      String(sessionId || '').trim();
 
-    const paymentIntentId = String(
-      input?.paymentIntentId || '',
-    ).trim();
+    if (!cleanId.startsWith('cs_')) {
+      throw new BadRequestException(
+        'Invalid Stripe Checkout session.',
+      );
+    }
+
+    const session =
+      await this.stripe.checkout.sessions.retrieve(
+        cleanId,
+        {
+          expand: [
+            'payment_intent',
+            'customer',
+          ],
+        },
+      );
 
     if (
-      !paymentIntentId.startsWith('pi_')
+      session.mode !== 'payment' ||
+      session.payment_status !== 'paid'
     ) {
       throw new BadRequestException(
-        'Invalid Stripe PaymentIntent.',
+        'Stripe payment is not complete.',
       );
     }
 
-    const intent =
-      await this.stripe.paymentIntents.retrieve(
-        paymentIntentId,
-      );
-
-    if (intent.status !== 'succeeded') {
-      throw new BadRequestException(
-        `Payment is not complete. Stripe status: ${intent.status}`,
-      );
-    }
+    const metadata =
+      session.metadata || {};
 
     if (
-      intent.metadata?.purchaseType !==
+      metadata.purchaseType !==
       'web_solution'
     ) {
       throw new BadRequestException(
-        'Payment is not a Web Solutions payment.',
+        'This is not a Web Solutions payment.',
       );
     }
 
-    if (
-      intent.metadata?.serviceId !==
-      service.id
-    ) {
-      throw new BadRequestException(
-        'Web Solutions service does not match the payment.',
+    const service =
+      this.getService(
+        metadata.serviceId,
       );
-    }
-
-    const amountPaid = Number(
-      intent.amount_received ||
-        intent.amount ||
-        0,
-    );
 
     if (
-      amountPaid !==
+      Number(session.amount_total || 0) !==
       service.amountCents
     ) {
-      this.logger.error(
-        `Web Solutions Stripe amount mismatch: ${intent.id}; expected=${service.amountCents}; received=${amountPaid}`,
-      );
-
       throw new BadRequestException(
         'Paid amount does not match the selected service.',
       );
@@ -324,15 +324,8 @@ export class WebSolutionsPaymentService {
 
     await this.ensureSchema();
 
-    const metadata =
-      intent.metadata || {};
-
     const userId =
-      String(
-        input?.userId ||
-          metadata.userId ||
-          '',
-      ).trim() || null;
+      metadata.userId || null;
 
     let teamId: string | null = null;
 
@@ -360,16 +353,20 @@ export class WebSolutionsPaymentService {
 
         teamId =
           rows[0]?.team_id || null;
-      } catch (error) {
-        this.logger.warn(
-          `Could not resolve team for Web Solutions payment ${intent.id}`,
-        );
-      }
+      } catch (_e) {}
     }
+
+    const paymentIntentId =
+      typeof session.payment_intent ===
+      'string'
+        ? session.payment_intent
+        : session.payment_intent?.id ||
+          null;
 
     await this.db.query(
       `
       INSERT INTO web_solution_stripe_orders (
+        stripe_checkout_session_id,
         stripe_payment_intent_id,
 
         user_id,
@@ -393,40 +390,40 @@ export class WebSolutionsPaymentService {
       )
       VALUES (
         $1,
-
         $2,
+
         $3,
-
         $4,
-        $5,
 
+        $5,
         $6,
+
         $7,
+        $8,
         'paid',
 
-        $8,
         $9,
         $10,
         $11,
         $12,
+        $13,
 
         NOW(),
         NOW()
       )
 
       ON CONFLICT (
-        stripe_payment_intent_id
+        stripe_checkout_session_id
       )
       DO UPDATE SET
         status = 'paid',
-        amount = EXCLUDED.amount,
-        currency = EXCLUDED.currency,
         updated_at = NOW()
 
-      RETURNING *
+      RETURNING id
       `,
       [
-        intent.id,
+        session.id,
+        paymentIntentId,
 
         userId,
         teamId,
@@ -436,10 +433,13 @@ export class WebSolutionsPaymentService {
 
         service.amountCents / 100,
         String(
-          intent.currency || 'usd',
+          session.currency || 'usd',
         ).toUpperCase(),
 
-        metadata.email || null,
+        session.customer_details?.email ||
+          metadata.email ||
+          null,
+
         metadata.fullName || null,
         metadata.businessName || null,
         metadata.phone || null,
@@ -447,22 +447,12 @@ export class WebSolutionsPaymentService {
       ],
     );
 
-    this.logger.log(
-      `Web Solutions Stripe payment recorded: ${intent.id} / ${service.id}`,
-    );
-
     return {
       success: true,
-
-      paymentIntentId: intent.id,
-
       serviceId: service.id,
-
       serviceName: service.name,
-
       amount:
         service.amountCents / 100,
-
       currency: 'USD',
     };
   }
