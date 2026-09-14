@@ -393,23 +393,23 @@ export class PaddleService {
 
   /**
    * SAFE production helper: create ONLY the three one-time starting prices
-   * for the NEW pricing model.
+   * for the NEW pricing model on an EXISTING Paddle product.
    *
-   * No PADDLE_PRODUCT_ID env is required.
+   * This intentionally does NOT create or replace the existing recurring
+   * $197 / $347 / $497 prices.
    *
-   * We derive the existing Paddle Product ID from one of the existing recurring
-   * Price IDs (prefer TEAM, then SOLO, then GROWTH). Paddle Price entities already
-   * contain their related productId, so this avoids manually copying a pro_... ID.
+   * Required env:
+   *   PADDLE_PRODUCT_ID=pro_...
    *
-   * Existing recurring prices remain untouched:
-   *   solo   -> $197/month
-   *   team   -> $347/month
-   *   growth -> $497/month
+   * Creates:
+   *   Solo     -> $7 one-time
+   *   Business -> $14 one-time
+   *   Scale    -> $21 one-time
    *
-   * Creates only:
-   *   solo   -> $7 one-time
-   *   team   -> $14 one-time
-   *   growth -> $21 one-time
+   * Run once per Paddle environment, then copy the returned Price IDs into:
+   *   PADDLE_START_PRICE_SOLO
+   *   PADDLE_START_PRICE_TEAM
+   *   PADDLE_START_PRICE_GROWTH
    */
   async setupStartingPrices(): Promise<any> {
     if (!this.isConfigured || !this.paddle) {
@@ -458,6 +458,15 @@ export class PaddleService {
         PADDLE_START_PRICE_TEAM: startTeam.id,
         PADDLE_START_PRICE_GROWTH: startGrowth.id,
       },
+      webSolutionsPrices: {
+        'connection-setup':
+          this.configService.get('PADDLE_PRICE_WEB_CONNECTION') || null,
+        'website-optimization':
+          this.configService.get('PADDLE_PRICE_WEB_OPTIMIZATION') || null,
+        'full-transformation':
+          this.configService.get('PADDLE_PRICE_WEB_TRANSFORMATION') || null,
+      },
+
       mapping: {
         solo: '$7 one-time -> existing $197/month',
         team: '$14 one-time -> existing $347/month',
@@ -472,126 +481,47 @@ export class PaddleService {
   /**
    * One-time admin setup for Web Solutions.
    *
-   * IMPORTANT:
-   * This intentionally uses the EXACT SAME Paddle SDK flow as the existing,
-   * production-working setupStartingPrices():
+   * Uses the same production-safe pattern as the ORIGINAL
+   * setupStartingPrices(): use PADDLE_PRODUCT_ID directly and create prices.
    *
-   *   1) pick an existing recurring pri_...
-   *   2) this.paddle.prices.get(pri_...)
-   *   3) derive productId
-   *   4) this.paddle.prices.create(...) with NO billingCycle
-   *
-   * No REST fetch(), no products.create(), no Paddle-Version header,
-   * and no environment rewrite.
-   */
-  async setupWebSolutionsPrices(): Promise<any> {
-    if (!this.isConfigured || !this.paddle) {
-      throw new BadRequestException('Paddle service is not configured');
-    }
-
-    const productId = this.configService.get('PADDLE_PRODUCT_ID');
-
-    if (!productId) {
-      throw new BadRequestException(
-        'PADDLE_PRODUCT_ID is required. Use the existing Paddle Product ID (pro_...) already used by setup-starting-prices.',
-      );
-    }
-
-    if (!String(productId).startsWith('pro_')) {
-      throw new BadRequestException(
-        `Invalid PADDLE_PRODUCT_ID: '${productId}'. Paddle Product IDs must start with 'pro_'.`,
-      );
-    }
-
-    const makeWebSolutionPrice = (label: string, amount: string) =>
-      (this.paddle as any).prices.create({
-        productId,
-        description: `CORTEXA Web Solutions - ${label}`,
-        unitPrice: {
-          amount,
-          currencyCode: 'USD',
-        },
-      });
-
-    const connection: any = await makeWebSolutionPrice(
-      'Connection Setup',
-      '14700',
-    );
-    const optimization: any = await makeWebSolutionPrice(
-      'Website Optimization',
-      '29700',
-    );
-    const transformation: any = await makeWebSolutionPrice(
-      'Full Transformation',
-      '54700',
-    );
-
-    return {
-      success: true,
-      productId,
-      environment: this.environment,
-      prices: {
-        'connection-setup': connection.id,
-        'website-optimization': optimization.id,
-        'full-transformation': transformation.id,
-      },
-      env: {
-        PADDLE_PRICE_WEB_CONNECTION: connection.id,
-        PADDLE_PRICE_WEB_OPTIMIZATION: optimization.id,
-        PADDLE_PRICE_WEB_TRANSFORMATION: transformation.id,
-      },
-      mapping: {
-        'connection-setup': '$147 one-time',
-        'website-optimization': '$297 one-time',
-        'full-transformation': '$547 one-time',
-      },
-      note:
-        'Add the three returned PADDLE_PRICE_WEB_* values to Render and redeploy. Existing subscription prices are unchanged.',
-    };
-  }
-
-  /**
-   * One-time admin setup for Paddle's NATIVE PAID TRIALS (released 2026-06-11).
-   *
-   * Creates ONE monthly price per plan that carries a paid trial: the 14-day
-   * trial charges the intro amount ($7 / $14 / $21), then the price renews at the
-   * full monthly amount ($197 / $347 / $497). The trial charge and the recurring
-   * charge live on the SAME price, so the checkout shows a single clean line
-   * ("$7 for 14 days, then $197/month") instead of the two-line-item workaround.
-   *
-   * The existing product is derived from an existing recurring Price (prefer
-   * TEAM, then SOLO, then GROWTH) exactly like setupStartingPrices, so no
-   * PADDLE_PRODUCT_ID env is needed and existing prices are left untouched.
-   *
-   * Safety: each created price is verified to actually carry the paid-trial
-   * amount. If it doesn't (an SDK too old to serialize the new field, or paid
-   * trials not enabled on the account), this THROWS rather than silently creating
-   * a free trial that would give 14 days for $0.
-   *
-   * Store the three returned PADDLE_PRICE_*_PAIDTRIAL ids as env vars. Once set,
-   * the checkout switches to the single native paid-trial line item automatically.
+   * This intentionally does NOT call prices.get(), because that catalog GET
+   * is what is currently returning Paddle invalid_url in production.
    */
   async setupPaidTrialPrices(): Promise<any> {
     if (!this.isConfigured || !this.paddle) {
       throw new BadRequestException('Paddle service is not configured');
     }
 
-    const productId = this.configService.get('PADDLE_PRODUCT_ID');
+    const recurringPriceId =
+      this.configService.get('PADDLE_PRICE_TEAM') ||
+      this.configService.get('PADDLE_PRICE_SOLO') ||
+      this.configService.get('PADDLE_PRICE_GROWTH');
 
-    if (!productId) {
+    if (!recurringPriceId || !String(recurringPriceId).startsWith('pri_')) {
       throw new BadRequestException(
-        'PADDLE_PRODUCT_ID is required to create the paid-trial prices.',
+        'An existing recurring Paddle Price ID (PADDLE_PRICE_TEAM, PADDLE_PRICE_SOLO, or PADDLE_PRICE_GROWTH) is required to derive the product.',
       );
     }
 
-    if (!String(productId).startsWith('pro_')) {
+    const existingPrice: any = await (this.paddle as any).prices.get(
+      recurringPriceId,
+    );
+    const productId =
+      existingPrice?.productId ||
+      existingPrice?.product_id ||
+      existingPrice?.data?.productId ||
+      existingPrice?.data?.product_id;
+
+    if (!productId || !String(productId).startsWith('pro_')) {
       throw new BadRequestException(
-        `Invalid PADDLE_PRODUCT_ID: '${productId}'. Paddle Product IDs must start with 'pro_'.`,
+        `Could not resolve the Paddle Product ID from recurring price '${recurringPriceId}'.`,
       );
     }
 
     const idOf = (p: any) => p?.id || p?.data?.id;
 
+    // Create a monthly price with a native PAID trial, then read back the saved
+    // trial amount to be certain Paddle stored it (never a silent free trial).
     const makePaidTrial = async (
       label: string,
       recurringAmount: string,
@@ -602,6 +532,8 @@ export class PaddleService {
         description: `CORTEXA ${label} plan (monthly, $${Number(trialAmount) / 100} 14-day paid trial)`,
         unitPrice: { amount: recurringAmount, currencyCode: 'USD' },
         billingCycle: { interval: 'month', frequency: 1 },
+        // Native paid trial: the trial period carries its OWN unit price (the
+        // amount charged today) and requires a payment method up front.
         trialPeriod: {
           interval: 'day',
           frequency: 14,
@@ -609,7 +541,6 @@ export class PaddleService {
           unitPrice: { amount: trialAmount, currencyCode: 'USD' },
         },
       };
-
       const created: any = await (this.paddle as any).prices.create(payload);
 
       const tp =
@@ -617,15 +548,16 @@ export class PaddleService {
         created?.trial_period ||
         created?.data?.trialPeriod ||
         created?.data?.trial_period;
-
       const savedTrial = tp?.unitPrice?.amount ?? tp?.unit_price?.amount;
-
-      if (savedTrial != null && String(savedTrial) !== String(trialAmount)) {
+      if (String(savedTrial ?? '') !== String(trialAmount)) {
         throw new BadRequestException(
-          `Paddle returned an unexpected paid-trial amount for ${label}: expected ${trialAmount}, got ${savedTrial}.`,
+          `Paddle did not store the paid-trial charge for the ${label} price ` +
+            `(expected ${trialAmount}, got ${savedTrial ?? 'none'}). This usually means the ` +
+            `installed @paddle/paddle-node-sdk predates the June 2026 paid-trials release, or ` +
+            `paid trials are not enabled on this Paddle account. Upgrade the SDK / enable paid ` +
+            `trials, then re-run. (No usable price was stored.)`,
         );
       }
-
       return created;
     };
 
@@ -636,6 +568,7 @@ export class PaddleService {
     return {
       success: true,
       environment: this.environment,
+      derivedFromRecurringPrice: recurringPriceId,
       productId,
       paidTrialPrices: {
         solo: idOf(solo),
@@ -647,6 +580,145 @@ export class PaddleService {
         PADDLE_PRICE_TEAM_PAIDTRIAL: idOf(team),
         PADDLE_PRICE_GROWTH_PAIDTRIAL: idOf(growth),
       },
+      mapping: {
+        solo: '$7 for 14 days, then $197/month',
+        team: '$14 for 14 days, then $347/month',
+        growth: '$21 for 14 days, then $497/month',
+      },
+      note:
+        'Add the three PADDLE_PRICE_*_PAIDTRIAL values to Render and redeploy. Once set, ' +
+        'the checkout opens a SINGLE native paid-trial line item and stops using the ' +
+        'two-line-item (start + recurring) structure. Existing prices are untouched, so ' +
+        'you can roll back by clearing these env vars.',
+    };
+  }
+
+  async setupWebSolutionsPrices(): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    /*
+     * Web Solutions has its own Paddle product.
+     * We do not require PADDLE_PRODUCT_ID from the subscription catalog.
+     *
+     * First run:
+     *   - create "CORTEXA Web Solutions"
+     *   - create the three one-time prices
+     *
+     * Later runs:
+     *   - if PADDLE_WEB_SOLUTIONS_PRODUCT_ID exists, reuse that product.
+     */
+    let productId = String(
+      this.configService.get('PADDLE_WEB_SOLUTIONS_PRODUCT_ID') || '',
+    ).trim();
+
+    if (productId && !productId.startsWith('pro_')) {
+      throw new BadRequestException(
+        `Invalid PADDLE_WEB_SOLUTIONS_PRODUCT_ID: '${productId}'. Expected a pro_... Product ID.`,
+      );
+    }
+
+    if (!productId) {
+      const product: any = await (this.paddle as any).products.create({
+        name: 'CORTEXA Web Solutions',
+        taxCategory: 'standard',
+        description:
+          'Optional one-time Cortexa website connection and implementation services',
+      });
+
+      productId =
+        product?.id ||
+        product?.data?.id ||
+        '';
+
+      if (!productId || !productId.startsWith('pro_')) {
+        this.logger.error(
+          `Web Solutions product creation returned an invalid response: ${JSON.stringify(product)}`,
+        );
+
+        throw new BadRequestException(
+          'Paddle did not return a valid Web Solutions Product ID.',
+        );
+      }
+    }
+
+    const createOneTimePrice = async (
+      serviceId: string,
+      label: string,
+      amount: string,
+    ): Promise<string> => {
+      const created: any = await (this.paddle as any).prices.create({
+        productId,
+        description: `CORTEXA Web Solutions - ${label}`,
+        unitPrice: {
+          amount,
+          currencyCode: 'USD',
+        },
+      });
+
+      const priceId =
+        created?.id ||
+        created?.data?.id ||
+        '';
+
+      if (!priceId || !priceId.startsWith('pri_')) {
+        this.logger.error(
+          `Web Solutions price creation failed for ${serviceId}: ${JSON.stringify(created)}`,
+        );
+
+        throw new BadRequestException(
+          `Paddle did not return a valid Price ID for ${label}.`,
+        );
+      }
+
+      return priceId;
+    };
+
+    const connectionPriceId = await createOneTimePrice(
+      'connection-setup',
+      'Connection Setup',
+      '14700',
+    );
+
+    const optimizationPriceId = await createOneTimePrice(
+      'website-optimization',
+      'Website Optimization',
+      '29700',
+    );
+
+    const transformationPriceId = await createOneTimePrice(
+      'full-transformation',
+      'Full Transformation',
+      '54700',
+    );
+
+    return {
+      success: true,
+      environment: this.environment,
+      productId,
+
+      prices: {
+        'connection-setup': connectionPriceId,
+        'website-optimization': optimizationPriceId,
+        'full-transformation': transformationPriceId,
+      },
+
+      env: {
+        PADDLE_WEB_SOLUTIONS_PRODUCT_ID: productId,
+        PADDLE_PRICE_WEB_CONNECTION: connectionPriceId,
+        PADDLE_PRICE_WEB_OPTIMIZATION: optimizationPriceId,
+        PADDLE_PRICE_WEB_TRANSFORMATION: transformationPriceId,
+      },
+
+      mapping: {
+        'connection-setup': '$147 one-time',
+        'website-optimization': '$297 one-time',
+        'full-transformation': '$547 one-time',
+      },
+
+      note:
+        'Save all four returned env values in Render and redeploy. Existing CRM subscription prices are untouched.',
     };
   }
 
@@ -694,16 +766,7 @@ export class PaddleService {
         unitPrice: { amount, currencyCode: 'USD' },
       });
 
-    const makeAnnual = (label: string, amount: string) =>
-      (this.paddle as any).prices.create({
-        productId,
-        description: `CORTEXA ${label} plan (annual, 14-day free trial)`,
-        unitPrice: { amount, currencyCode: 'USD' },
-        billingCycle: { interval: 'year', frequency: 1 },
-        trialPeriod: { interval: 'day', frequency: 14 },
-      });
-
-    // Existing recurring subscriptions (monthly).
+    // Existing recurring subscriptions.
     const solo: any = await makeMonthly('Solo', '19700');
     const team: any = await makeMonthly('Business', '34700');
     const growth: any = await makeMonthly('Scale', '49700');
@@ -713,22 +776,12 @@ export class PaddleService {
     const startTeam: any = await makeStartingPrice('Business', '1400');
     const startGrowth: any = await makeStartingPrice('Scale', '2100');
 
-    // Annual recurring subscriptions (20% off x12): 1891.20 / 3331.20 / 4771.20.
-    const soloYr: any = await makeAnnual('Solo', '189120');
-    const teamYr: any = await makeAnnual('Business', '333120');
-    const growthYr: any = await makeAnnual('Scale', '477120');
-
     return {
       productId,
       recurringPrices: {
         solo: solo.id,
         team: team.id,
         growth: growth.id,
-      },
-      annualPrices: {
-        solo: soloYr.id,
-        team: teamYr.id,
-        growth: growthYr.id,
       },
       startPrices: {
         solo: startSolo.id,
@@ -743,18 +796,14 @@ export class PaddleService {
         PADDLE_START_PRICE_SOLO: startSolo.id,
         PADDLE_START_PRICE_TEAM: startTeam.id,
         PADDLE_START_PRICE_GROWTH: startGrowth.id,
-
-        PADDLE_PRICE_SOLO_ANNUAL: soloYr.id,
-        PADDLE_PRICE_TEAM_ANNUAL: teamYr.id,
-        PADDLE_PRICE_GROWTH_ANNUAL: growthYr.id,
       },
       mapping: {
-        solo: '$7 now -> $197/month or $1,891.20/year',
-        team: '$14 now -> $347/month or $3,331.20/year',
-        growth: '$21 now -> $497/month or $4,771.20/year',
+        solo: '$7 now -> $197/month',
+        team: '$14 now -> $347/month',
+        growth: '$21 now -> $497/month',
       },
       note:
-        'Store all nine price IDs as env vars. Start prices are one-time; monthly/annual prices are recurring subscriptions.',
+        'Store all six price IDs as env vars. The start price IDs are one-time charges; the regular price IDs remain recurring subscriptions.',
     };
   }
 
@@ -863,130 +912,6 @@ export class PaddleService {
   }
 
   /**
-   * Change the next Paddle billing date. Paddle is the source of truth.
-   * The caller should mirror the returned subscription locally only after this succeeds.
-   */
-  async changeNextBillingDate(
-    subscriptionId: string,
-    nextBilledAt: string,
-    prorationBillingMode: string = 'prorated_next_billing_period',
-  ): Promise<any> {
-    if (!this.isConfigured || !this.paddle) {
-      throw new BadRequestException('Paddle service is not configured');
-    }
-    if (!subscriptionId) throw new BadRequestException('A subscription is required');
-
-    const date = new Date(nextBilledAt);
-    if (Number.isNaN(date.getTime())) {
-      throw new BadRequestException('Invalid next billing date');
-    }
-    if (date.getTime() <= Date.now()) {
-      throw new BadRequestException('Next billing date must be in the future');
-    }
-
-    try {
-      const updated = await (this.paddle as any).subscriptions.update(subscriptionId, {
-        nextBilledAt: date.toISOString(),
-        prorationBillingMode,
-      });
-      this.logger.log(`Changed next billing date for ${subscriptionId} to ${date.toISOString()}`);
-      return updated;
-    } catch (error: any) {
-      this.logger.error(`Failed to change Paddle billing date: ${error.message}`, error);
-      throw new BadRequestException(`Failed to change billing date: ${error.message}`);
-    }
-  }
-
-  /** Pause a Paddle subscription now or at the next billing period. */
-  async pauseSubscription(
-    subscriptionId: string,
-    immediately: boolean = false,
-    resumeAt?: string,
-  ): Promise<any> {
-    if (!this.isConfigured || !this.paddle) {
-      throw new BadRequestException('Paddle service is not configured');
-    }
-    if (!subscriptionId) throw new BadRequestException('A subscription is required');
-
-    const payload: any = {
-      effectiveFrom: immediately ? 'immediately' : 'next_billing_period',
-    };
-    if (resumeAt) {
-      const d = new Date(resumeAt);
-      if (Number.isNaN(d.getTime())) throw new BadRequestException('Invalid resumeAt');
-      payload.resumeAt = d.toISOString();
-    }
-
-    try {
-      const paddleAny = this.paddle as any;
-      if (!paddleAny.subscriptions?.pause) {
-        throw new Error('Installed Paddle SDK does not expose subscriptions.pause()');
-      }
-      const updated = await paddleAny.subscriptions.pause(subscriptionId, payload);
-      this.logger.log(`Paused subscription ${subscriptionId} (${payload.effectiveFrom})`);
-      return updated;
-    } catch (error: any) {
-      this.logger.error(`Failed to pause Paddle subscription: ${error.message}`, error);
-      throw new BadRequestException(`Failed to pause subscription: ${error.message}`);
-    }
-  }
-
-  /** Get a Paddle transaction, including line items used by partial refunds. */
-  async getTransaction(transactionId: string): Promise<any> {
-    if (!this.isConfigured || !this.paddle) {
-      throw new BadRequestException('Paddle service is not configured');
-    }
-    if (!transactionId) throw new BadRequestException('A transaction is required');
-    try {
-      return await (this.paddle as any).transactions.get(transactionId);
-    } catch (error: any) {
-      this.logger.error(`Failed to get Paddle transaction ${transactionId}: ${error.message}`, error);
-      throw new BadRequestException(`Failed to get transaction: ${error.message}`);
-    }
-  }
-
-  /**
-   * Create a Paddle refund adjustment. The existing transaction is never modified;
-   * Paddle returns an adjustment whose status is authoritative (often pending_approval
-   * in live accounts). No local refund is marked successful before Paddle responds.
-   */
-  async refundTransaction(
-    transactionId: string,
-    opts: { type: 'full' | 'partial'; reason: string; itemId?: string; amount?: string },
-  ): Promise<any> {
-    if (!this.isConfigured || !this.paddle) {
-      throw new BadRequestException('Paddle service is not configured');
-    }
-    if (!transactionId) throw new BadRequestException('A transaction is required');
-
-    const payload: any = {
-      action: 'refund',
-      transactionId,
-      reason: opts.reason || 'requested_by_admin',
-      type: opts.type || 'full',
-    };
-    if (payload.type === 'partial') {
-      if (!opts.itemId || !opts.amount) {
-        throw new BadRequestException('itemId and amount are required for a partial refund');
-      }
-      payload.items = [{ itemId: opts.itemId, type: 'partial', amount: String(opts.amount) }];
-    }
-
-    try {
-      const adjustments = (this.paddle as any).adjustments;
-      if (!adjustments?.create) {
-        throw new Error('Installed Paddle SDK does not expose adjustments.create()');
-      }
-      const adjustment = await adjustments.create(payload);
-      this.logger.log(`Paddle refund adjustment requested for ${transactionId}`);
-      return adjustment;
-    } catch (error: any) {
-      this.logger.error(`Failed to create Paddle refund: ${error.message}`, error);
-      throw new BadRequestException(`Failed to request refund: ${error.message}`);
-    }
-  }
-
-  /**
    * Verify a Paddle Billing webhook signature.
    * The Paddle-Signature header is "ts=<unix>;h1=<hex>". The signed payload is
    * "<ts>:<raw request body>" hashed with HMAC-SHA256 using the endpoint secret
@@ -1046,114 +971,8 @@ export class PaddleService {
    * `startPrices` are the NEW one-time starting charges.
    * The frontend requires both IDs for the selected plan before opening checkout.
    */
-  getPublicConfig() {
-    return {
-      clientToken: this.configService.get('PADDLE_CLIENT_TOKEN') || null,
-      environment: this.environment === 'production' ? 'production' : 'sandbox',
-
-      prices: {
-        solo: this.configService.get('PADDLE_PRICE_SOLO') || null,
-        team: this.configService.get('PADDLE_PRICE_TEAM') || null,
-        growth: this.configService.get('PADDLE_PRICE_GROWTH') || null,
-      },
-
-      startPrices: {
-        solo: this.configService.get('PADDLE_START_PRICE_SOLO') || null,
-        team: this.configService.get('PADDLE_START_PRICE_TEAM') || null,
-        growth: this.configService.get('PADDLE_START_PRICE_GROWTH') || null,
-      },
-
-      // Web Solutions: three ONE-TIME professional-service prices.
-      webSolutionsPrices: {
-        'connection-setup':
-          this.configService.get('PADDLE_PRICE_WEB_CONNECTION') || null,
-        'website-optimization':
-          this.configService.get('PADDLE_PRICE_WEB_OPTIMIZATION') || null,
-        'full-transformation':
-          this.configService.get('PADDLE_PRICE_WEB_TRANSFORMATION') || null,
-      },
-
-      // Paddle NATIVE PAID-TRIAL prices (single line item: "$7 for 14 days, then
-      // $197/month"). Present only once PADDLE_PRICE_*_PAIDTRIAL are provisioned
-      // (via setup-paid-trial-prices); until then these are null and the checkout
-      // uses the two-line-item start + recurring structure. Monthly only for now;
-      // annual continues to use start + recurring until an annual paid-trial price
-      // exists.
-      paidTrialPrices: {
-        solo: this.configService.get('PADDLE_PRICE_SOLO_PAIDTRIAL') || null,
-        team: this.configService.get('PADDLE_PRICE_TEAM_PAIDTRIAL') || null,
-        growth: this.configService.get('PADDLE_PRICE_GROWTH_PAIDTRIAL') || null,
-      },
-
-      // Annual recurring prices. Present only once the *_ANNUAL env vars are set;
-      // until then these are null and the frontend keeps using monthly, so annual
-      // is inert until the client provisions the yearly Paddle prices.
-      annualPrices: {
-        solo: this.configService.get('PADDLE_PRICE_SOLO_ANNUAL') || null,
-        team: this.configService.get('PADDLE_PRICE_TEAM_ANNUAL') || null,
-        growth: this.configService.get('PADDLE_PRICE_GROWTH_ANNUAL') || null,
-      },
-
-      mapping: {
-        solo: { startingCharge: 7, recurringMonthly: 197, recurringAnnual: 1891.2 },
-        team: { startingCharge: 14, recurringMonthly: 347, recurringAnnual: 3331.2 },
-        growth: { startingCharge: 21, recurringMonthly: 497, recurringAnnual: 4771.2 },
-      },
-
-      // Paid Workspace add-on: its OWN $97/month recurring Paddle subscription,
-      // separate from the base plan. `priceId` is null until PADDLE_PRICE_WORKSPACE
-      // is set, which keeps the Workspace purchase inert until the client provisions
-      // the price. `monthly` is the display amount only.
-      workspaceAddon: {
-        priceId: this.configService.get('PADDLE_PRICE_WORKSPACE') || null,
-        monthly: 97,
-      },
-
-      // Promotional Business offer ($257/month, 25% off $347): a single recurring
-      // Paddle price charged immediately, NO trial. Provisions the Business plan.
-      // Used ONLY by the bulk promo email CTA / /checkout-business-offer route.
-      // The env var overrides the client-provided default price id.
-      businessPromo257: {
-        priceId:
-          this.configService.get('PADDLE_PRICE_BUSINESS_PROMO257') ||
-          'pri_01m0v8vg783g3f1xfvdkeqb15w',
-        monthly: 257,
-        regular: 347,
-        plan: 'team',
-      },
-    };
-  }
-
-  /**
-   * Get configuration status
-   */
-  getConfigStatus() {
-    const apiKey = this.configService.get('PADDLE_API_KEY');
-    const vendorId = this.configService.get('PADDLE_VENDOR_ID');
-    const apiKeyPrefix = apiKey ? apiKey.substring(0, 5) : 'none';
-    
-    return {
-      isConfigured: this.isConfigured,
-      hasApiKey: !!apiKey,
-      hasVendorId: !!vendorId,
-      vendorId: vendorId || null, // Return vendor ID for frontend use
-      environment: this.environment,
-      apiKeyPrefix: apiKeyPrefix + '...',
-      // Support both old format (test_/live_) and new format (pdl_sdbx_/pdl_live_)
-      apiKeyFormatValid: apiKey ? (
-        apiKey.startsWith('test_') || 
-        apiKey.startsWith('live_') || 
-        apiKey.startsWith('pdl_sdbx_') || 
-        apiKey.startsWith('pdl_live_')
-      ) : false,
-    };
-  }
-
-  // ---- AI-credit purchase options (amount-verified, never guessed) ----
   private priceAmountCache = new Map<string, { v: number | null; at: number }>();
 
-  // Fetch a Paddle price's real unit amount in DOLLARS. Cached 10 min. Returns
-  // null if Paddle is unconfigured or the price can't be read.
   async getPriceAmount(priceId: string): Promise<number | null> {
     const id = String(priceId || '').trim();
     if (!id || !this.paddle) return null;
@@ -1176,10 +995,6 @@ export class PaddleService {
     return v;
   }
 
-  // AI purchase options for the popup, mapped by each price's REAL Paddle amount
-  // (so the $47/$67/$97 mapping is VERIFIED against Paddle, never guessed from
-  // env order) plus the recurring Unlimited AI subscription. Falls back to the
-  // env-slot values only if Paddle can't confirm the amount.
   async getAiPurchaseOptions(user: any): Promise<any> {
     const AMOUNT_UNITS: Array<[number, number]> = [
       [47, 100],
@@ -1232,6 +1047,69 @@ export class PaddleService {
       packs,
       unlimited,
       email: user?.email || null,
+    };
+  }
+
+  getPublicConfig() {
+    return {
+      clientToken: this.configService.get('PADDLE_CLIENT_TOKEN') || null,
+      environment: this.environment === 'production' ? 'production' : 'sandbox',
+
+      prices: {
+        solo: this.configService.get('PADDLE_PRICE_SOLO') || null,
+        team: this.configService.get('PADDLE_PRICE_TEAM') || null,
+        growth: this.configService.get('PADDLE_PRICE_GROWTH') || null,
+      },
+
+      startPrices: {
+        solo: this.configService.get('PADDLE_START_PRICE_SOLO') || null,
+        team: this.configService.get('PADDLE_START_PRICE_TEAM') || null,
+        growth: this.configService.get('PADDLE_START_PRICE_GROWTH') || null,
+      },
+
+      webSolutionsPrices: {
+        'connection-setup':
+          this.configService.get('PADDLE_PRICE_WEB_CONNECTION') || null,
+        'website-optimization':
+          this.configService.get('PADDLE_PRICE_WEB_OPTIMIZATION') || null,
+        'full-transformation':
+          this.configService.get('PADDLE_PRICE_WEB_TRANSFORMATION') || null,
+      },
+
+      mapping: {
+        solo: { startingCharge: 7, recurringMonthly: 197 },
+        team: { startingCharge: 14, recurringMonthly: 347 },
+        growth: { startingCharge: 21, recurringMonthly: 497 },
+      },
+    };
+  }
+
+  /**
+   * Get configuration status
+   */
+  getConfigStatus() {
+    const apiKey = this.configService.get('PADDLE_API_KEY');
+    const vendorId = this.configService.get('PADDLE_VENDOR_ID');
+    const apiKeyPrefix = apiKey ? apiKey.substring(0, 5) : 'none';
+    
+    return {
+      isConfigured: this.isConfigured,
+      hasApiKey: !!apiKey,
+      hasVendorId: !!vendorId,
+      vendorId: vendorId || null, // Return vendor ID for frontend use
+      environment: this.environment,
+      hasProductId: !!this.configService.get('PADDLE_PRODUCT_ID'),
+      productIdPrefix: this.configService.get('PADDLE_PRODUCT_ID')
+        ? String(this.configService.get('PADDLE_PRODUCT_ID')).substring(0, 4) + '...'
+        : null,
+      apiKeyPrefix: apiKeyPrefix + '...',
+      // Support both old format (test_/live_) and new format (pdl_sdbx_/pdl_live_)
+      apiKeyFormatValid: apiKey ? (
+        apiKey.startsWith('test_') || 
+        apiKey.startsWith('live_') || 
+        apiKey.startsWith('pdl_sdbx_') || 
+        apiKey.startsWith('pdl_live_')
+      ) : false,
     };
   }
 
