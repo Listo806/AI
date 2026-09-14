@@ -919,6 +919,219 @@ export class PaddleService {
    * passed unmodified (main.ts enables rawBody so req.rawBody is the Buffer).
    * Returns false (never true) whenever it cannot be positively verified.
    */
+
+  /**
+   * Change the next Paddle billing date. Paddle is the source of truth.
+   * The caller should mirror the returned subscription locally only after this succeeds.
+   */
+  async changeNextBillingDate(
+    subscriptionId: string,
+    nextBilledAt: string,
+    prorationBillingMode: string = 'prorated_next_billing_period',
+  ): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+    if (!subscriptionId) {
+      throw new BadRequestException('A subscription is required');
+    }
+
+    const date = new Date(nextBilledAt);
+
+    if (Number.isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid next billing date');
+    }
+
+    if (date.getTime() <= Date.now()) {
+      throw new BadRequestException('Next billing date must be in the future');
+    }
+
+    try {
+      const updated = await (this.paddle as any).subscriptions.update(
+        subscriptionId,
+        {
+          nextBilledAt: date.toISOString(),
+          prorationBillingMode,
+        },
+      );
+
+      this.logger.log(
+        `Changed next billing date for ${subscriptionId} to ${date.toISOString()}`,
+      );
+
+      return updated;
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to change Paddle billing date: ${error.message}`,
+        error,
+      );
+
+      throw new BadRequestException(
+        `Failed to change billing date: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Pause a Paddle subscription now or at the next billing period.
+   */
+  async pauseSubscription(
+    subscriptionId: string,
+    immediately: boolean = false,
+    resumeAt?: string,
+  ): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    if (!subscriptionId) {
+      throw new BadRequestException('A subscription is required');
+    }
+
+    const payload: any = {
+      effectiveFrom: immediately
+        ? 'immediately'
+        : 'next_billing_period',
+    };
+
+    if (resumeAt) {
+      const date = new Date(resumeAt);
+
+      if (Number.isNaN(date.getTime())) {
+        throw new BadRequestException('Invalid resumeAt');
+      }
+
+      payload.resumeAt = date.toISOString();
+    }
+
+    try {
+      const paddleAny = this.paddle as any;
+
+      if (!paddleAny.subscriptions?.pause) {
+        throw new Error(
+          'Installed Paddle SDK does not expose subscriptions.pause()',
+        );
+      }
+
+      const updated = await paddleAny.subscriptions.pause(
+        subscriptionId,
+        payload,
+      );
+
+      this.logger.log(
+        `Paused subscription ${subscriptionId} (${payload.effectiveFrom})`,
+      );
+
+      return updated;
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to pause Paddle subscription: ${error.message}`,
+        error,
+      );
+
+      throw new BadRequestException(
+        `Failed to pause subscription: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Get a Paddle transaction, including line items used by partial refunds.
+   */
+  async getTransaction(transactionId: string): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    if (!transactionId) {
+      throw new BadRequestException('A transaction is required');
+    }
+
+    try {
+      return await (this.paddle as any).transactions.get(transactionId);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to get Paddle transaction ${transactionId}: ${error.message}`,
+        error,
+      );
+
+      throw new BadRequestException(
+        `Failed to get transaction: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Create a Paddle refund adjustment.
+   */
+  async refundTransaction(
+    transactionId: string,
+    opts: {
+      type: 'full' | 'partial';
+      reason: string;
+      itemId?: string;
+      amount?: string;
+    },
+  ): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    if (!transactionId) {
+      throw new BadRequestException('A transaction is required');
+    }
+
+    const payload: any = {
+      action: 'refund',
+      transactionId,
+      reason: opts.reason || 'requested_by_admin',
+      type: opts.type || 'full',
+    };
+
+    if (payload.type === 'partial') {
+      if (!opts.itemId || !opts.amount) {
+        throw new BadRequestException(
+          'itemId and amount are required for a partial refund',
+        );
+      }
+
+      payload.items = [
+        {
+          itemId: opts.itemId,
+          type: 'partial',
+          amount: String(opts.amount),
+        },
+      ];
+    }
+
+    try {
+      const adjustments = (this.paddle as any).adjustments;
+
+      if (!adjustments?.create) {
+        throw new Error(
+          'Installed Paddle SDK does not expose adjustments.create()',
+        );
+      }
+
+      const adjustment = await adjustments.create(payload);
+
+      this.logger.log(
+        `Paddle refund adjustment requested for ${transactionId}`,
+      );
+
+      return adjustment;
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to create Paddle refund: ${error.message}`,
+        error,
+      );
+
+      throw new BadRequestException(
+        `Failed to request refund: ${error.message}`,
+      );
+    }
+  }
+
   verifyWebhookSignature(signature: string, payload: string | Buffer): boolean {
     const secret = this.configService.get('PADDLE_WEBHOOK_SECRET');
     if (!secret) {
