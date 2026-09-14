@@ -208,13 +208,10 @@
 }
 
 .wsc-payment-card {
-  padding: 24px!important;
+  padding: 24px;
   align-self: start;
-  text-align: left;
 }
-.wsc-left{
-  text-align: left;
-}
+
 .wsc-payment-heading {
   display: flex;
   align-items: center;
@@ -454,3 +451,34 @@
   font-size: 13px;
   line-height: 1.5;
 }
+
+
+/* Stripe Elements — Web Solutions */
+
+.wsc-stripe-field {
+  width: 100%;
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #bfcddd;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0 13px;
+}
+
+.wsc-stripe-field .StripeElement {
+  flex: 1;
+  width: 100%;
+}
+
+.wsc-stripe-field:focus-within {
+  border-color: #5b8cff;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+}
+
+.wsc-stripe-field > svg {
+  flex: 0 0 auto;
+  color: #66758d;
+}
+

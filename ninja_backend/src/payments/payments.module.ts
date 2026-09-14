@@ -9,11 +9,14 @@ import { User } from '../users/entities/user.entity';
 import { PlatformMailModule } from '../platform-mail/platform-mail.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AiUnitsModule } from '../ai-units/ai-units.module';
+import { DatabaseModule } from '../database/database.module';
+import { WebSolutionsPaymentsController } from './web-solutions-payments.controller';
+import { WebSolutionsPaymentService } from './web-solutions-payment.service';
 
 @Module({
-  imports: [ConfigModule, PlatformMailModule, WorkspacesModule, AiUnitsModule],
-  controllers: [PaddleController, PaymentsController],
-  providers: [PaddleService, PaymentsService, PayPalService],
+  imports: [ConfigModule, PlatformMailModule, WorkspacesModule, AiUnitsModule, DatabaseModule],
+  controllers: [PaddleController, PaymentsController, WebSolutionsPaymentsController],
+  providers: [PaddleService, PaymentsService, PayPalService, WebSolutionsPaymentService],
   exports: [PaddleService],
 })
 export class PaymentsModule {}
