@@ -571,6 +571,7 @@ export default function Landing() {
       topLine3:
         "for bussinesses tired of complicated, overpriced CRM software.",
       pricing: "Pricing",
+      webSolutions: "Web Solutions",
 
       finalTitle: "Connect Your Entire Workflow",
       finalDesc: "Leads. Opportunities. Deals. All in your",
@@ -1077,6 +1078,7 @@ export default function Landing() {
       topLine3:
         "simple para empresas cansadas de software CRM complicado y demasiado costoso.",
       pricing: "Precios",
+      webSolutions: "Soluciones Web",
 
       finalTitle: "Conecta Todo Tu Flujo de Trabajo",
       finalDesc: "Leads. Oportunidades. Negocios. Todo en tu ",
@@ -1554,6 +1556,7 @@ export default function Landing() {
       topLine3:
         "simples para empresas cansadas de softwares de CRM complicados e caros.",
       pricing: "Preços",
+      webSolutions: "Soluções Web",
 
       finalTitle: "Conecte Todo o Seu Fluxo de Trabalho",
       finalDesc: "Leads. Oportunidades. Negócios. Tudo no seu ",
@@ -1779,6 +1782,9 @@ export default function Landing() {
             </a>
             <a className="nav-menu" href="/editorial/the-end-of-legacy-crm">
               Cost Calculator
+            </a>
+            <a className="nav-menu" href="/web-solutions">
+              {tr.webSolutions}
             </a>
           </nav>
 

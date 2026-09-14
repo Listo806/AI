@@ -590,6 +590,7 @@ export default function LandingMobile() {
         "Testimonials",
       ],
       pricing: "Pricing",
+      webSolutions: "Web Solutions",
       watchDemo: "Watch Demo",
       trusted: "Built for businesses of all kinds.",
 
@@ -1000,6 +1001,7 @@ export default function LandingMobile() {
         "Testimonios",
       ],
       pricing: "Precios",
+      webSolutions: "Soluciones Web",
       watchDemo: "Ver Demo",
       trusted: "Diseñada para empresas de todo tipo.",
       benefitsSubtitle: "LO QUE CORTEXA HACE POR TI",
@@ -1413,6 +1415,7 @@ export default function LandingMobile() {
         "Depoimentos",
       ],
       pricing: "Preços",
+      webSolutions: "Soluções Web",
       watchDemo: "Ver Demo",
       trusted: "Desenvolvida para empresas de todos os tipos.",
       benefitsSubtitle: "O QUE A CORTEXA FAZ POR VOCÊ",
@@ -1923,6 +1926,7 @@ export default function LandingMobile() {
 
           <a href="/pricing">{tr.pricing}</a>
           <a href="/editorial/the-end-of-legacy-crm">Cost Calculator</a>
+          <a href="/web-solutions">{tr.webSolutions}</a>
           {isAuthenticated() ? (
             <Link to="/dashboard/home" className="m-login-btn">
               <LogIn /> Dashboard
@@ -3357,6 +3361,7 @@ export default function LandingMobile() {
             </HashLink>
             <a href="/pricing">{tr.fPricing}</a>
             <a href="/editorial/the-end-of-legacy-crm">Cost Calculator</a>
+            <a href="/web-solutions">{tr.webSolutions}</a>
           </div>
 
           <div className="m-footer-column">

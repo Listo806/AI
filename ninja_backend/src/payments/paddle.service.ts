@@ -26,26 +26,7 @@ export class PaddleService {
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get('PADDLE_API_KEY');
-    const configuredEnvironment = String(
-      this.configService.get('PADDLE_ENVIRONMENT') || 'sandbox',
-    )
-      .trim()
-      .toLowerCase();
-
-    /*
-     * Accept both common Render values:
-     *   live / production  -> Paddle live API
-     *   sandbox / test     -> Paddle sandbox API
-     *
-     * The old code treated anything other than exactly "production"
-     * as sandbox, so PADDLE_ENVIRONMENT=live accidentally called
-     * sandbox-api.paddle.com with live price IDs.
-     */
-    this.environment =
-      configuredEnvironment === 'live' ||
-      configuredEnvironment === 'production'
-        ? 'production'
-        : 'sandbox';
+    this.environment = this.configService.get('PADDLE_ENVIRONMENT') || 'sandbox';
 
     if (!apiKey) {
       this.logger.warn('Paddle not configured. Required: PADDLE_API_KEY');
@@ -518,6 +499,133 @@ export class PaddleService {
 
       note:
         'Add the three returned PADDLE_START_PRICE_* values to Render and redeploy. Existing recurring PADDLE_PRICE_* values are unchanged.',
+    };
+  }
+
+
+  /**
+   * One-time admin setup for Web Solutions.
+   *
+   * IMPORTANT:
+   * This intentionally uses the EXACT SAME Paddle SDK flow as the existing,
+   * production-working setupStartingPrices():
+   *
+   *   1) pick an existing recurring pri_...
+   *   2) this.paddle.prices.get(pri_...)
+   *   3) derive productId
+   *   4) this.paddle.prices.create(...) with NO billingCycle
+   *
+   * No REST fetch(), no products.create(), no Paddle-Version header,
+   * and no environment rewrite.
+   */
+  async setupWebSolutionsPrices(): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    const recurringPriceId =
+      this.configService.get('PADDLE_PRICE_TEAM') ||
+      this.configService.get('PADDLE_PRICE_SOLO') ||
+      this.configService.get('PADDLE_PRICE_GROWTH');
+
+    if (!recurringPriceId) {
+      throw new BadRequestException(
+        'At least one existing recurring Paddle Price ID is required: PADDLE_PRICE_TEAM, PADDLE_PRICE_SOLO, or PADDLE_PRICE_GROWTH.',
+      );
+    }
+
+    if (!String(recurringPriceId).startsWith('pri_')) {
+      throw new BadRequestException(
+        `Invalid recurring Paddle Price ID: '${recurringPriceId}'. Expected a pri_... Price ID.`,
+      );
+    }
+
+    /*
+     * EXACT same call that setupStartingPrices() already uses successfully.
+     */
+    const existingPrice: any = await (this.paddle as any).prices.get(
+      recurringPriceId,
+    );
+
+    const productId =
+      existingPrice?.productId ||
+      existingPrice?.product_id ||
+      existingPrice?.data?.productId ||
+      existingPrice?.data?.product_id;
+
+    if (!productId || !String(productId).startsWith('pro_')) {
+      this.logger.error(
+        `Web Solutions: could not derive Paddle product from recurring price ${recurringPriceId}: ${JSON.stringify(existingPrice)}`,
+      );
+
+      throw new BadRequestException(
+        `Could not resolve the Paddle Product ID from recurring price '${recurringPriceId}'.`,
+      );
+    }
+
+    this.logger.log(
+      `Web Solutions: resolved existing Paddle product ${productId} from recurring price ${recurringPriceId}`,
+    );
+
+    /*
+     * Again, identical structure to setupStartingPrices().
+     * No billingCycle => ONE-TIME Paddle price.
+     */
+    const makeWebSolutionPrice = (
+      label: string,
+      amount: string,
+    ) =>
+      (this.paddle as any).prices.create({
+        productId,
+        description: `CORTEXA Web Solutions - ${label}`,
+        unitPrice: {
+          amount,
+          currencyCode: 'USD',
+        },
+      });
+
+    const connection: any = await makeWebSolutionPrice(
+      'Connection Setup',
+      '14700',
+    );
+
+    const optimization: any = await makeWebSolutionPrice(
+      'Website Optimization',
+      '29700',
+    );
+
+    const transformation: any = await makeWebSolutionPrice(
+      'Full Transformation',
+      '54700',
+    );
+
+    return {
+      success: true,
+      environment: this.environment,
+
+      derivedFromRecurringPrice: recurringPriceId,
+      productId,
+
+      prices: {
+        'connection-setup': connection.id,
+        'website-optimization': optimization.id,
+        'full-transformation': transformation.id,
+      },
+
+      env: {
+        PADDLE_PRICE_WEB_CONNECTION: connection.id,
+        PADDLE_PRICE_WEB_OPTIMIZATION: optimization.id,
+        PADDLE_PRICE_WEB_TRANSFORMATION: transformation.id,
+      },
+
+      mapping: {
+        'connection-setup': '$147 one-time',
+        'website-optimization': '$297 one-time',
+        'full-transformation': '$547 one-time',
+      },
+
+      note:
+        'Add the three returned PADDLE_PRICE_WEB_* values to Render and redeploy. Existing recurring prices are unchanged.',
     };
   }
 
@@ -1044,340 +1152,6 @@ export class PaddleService {
    * `startPrices` are the NEW one-time starting charges.
    * The frontend requires both IDs for the selected plan before opening checkout.
    */
-
-  /**
-   * One-time admin setup for Web Solutions.
-   *
-   * This deliberately uses Paddle's REST API instead of the SDK for this
-   * admin-only catalog setup. The currently installed SDK can return
-   * "URL called is invalid." for catalog calls in some deployments even while
-   * checkout/webhook APIs continue to work.
-   *
-   * We reuse an EXISTING Cortexa product and create only three ONE-TIME prices:
-   *   connection-setup      -> $147
-   *   website-optimization -> $297
-   *   full-transformation  -> $547
-   */
-  async setupWebSolutionsPrices(): Promise<any> {
-    const apiKey = this.configService.get('PADDLE_API_KEY');
-
-    if (!apiKey) {
-      throw new BadRequestException(
-        'PADDLE_API_KEY is not configured.',
-      );
-    }
-
-    const recurringPriceId =
-      this.configService.get('PADDLE_PRICE_TEAM') ||
-      this.configService.get('PADDLE_PRICE_SOLO') ||
-      this.configService.get('PADDLE_PRICE_GROWTH');
-
-    if (!recurringPriceId) {
-      throw new BadRequestException(
-        'At least one existing recurring Paddle Price ID is required: PADDLE_PRICE_TEAM, PADDLE_PRICE_SOLO, or PADDLE_PRICE_GROWTH.',
-      );
-    }
-
-    if (!String(recurringPriceId).startsWith('pri_')) {
-      throw new BadRequestException(
-        `Invalid recurring Paddle Price ID: '${recurringPriceId}'. Expected a pri_... Price ID.`,
-      );
-    }
-
-    /*
-     * Prefer the API-key prefix as the source of truth.
-     *
-     * Paddle live keys contain "_live_" and sandbox keys contain "_sdbx_".
-     * This prevents a stale/misnamed PADDLE_ENVIRONMENT value from sending
-     * requests to the wrong Paddle host.
-     */
-    const apiKeyText = String(apiKey).trim();
-
-    const keyEnvironment =
-      apiKeyText.includes('_live_')
-        ? 'production'
-        : apiKeyText.includes('_sdbx_')
-          ? 'sandbox'
-          : this.environment;
-
-    const baseUrl =
-      keyEnvironment === 'production'
-        ? 'https://api.paddle.com'
-        : 'https://sandbox-api.paddle.com';
-
-    this.logger.log(
-      `Web Solutions Paddle environment: configured=${this.environment}, key=${keyEnvironment}, base=${baseUrl}, version=1`,
-    );
-
-    const paddleRest = async (
-      method: 'GET' | 'POST',
-      path: string,
-      body?: Record<string, any>,
-    ) => {
-      const url = `${baseUrl}${path}`;
-
-      this.logger.log(
-        `Web Solutions Paddle REST ${method} ${path}`,
-      );
-
-      let response: Response;
-
-      try {
-        response = await fetch(url, {
-          method,
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            Accept: 'application/json',
-
-            // Pin Paddle Billing API v1 explicitly.
-            // Some live accounts with an older/default API version can return
-            // invalid_url for Billing endpoints when Paddle-Version is omitted.
-            'Paddle-Version': '1',
-
-            ...(body
-              ? {
-                  'Content-Type': 'application/json',
-                }
-              : {}),
-          },
-          ...(body
-            ? {
-                body: JSON.stringify(body),
-              }
-            : {}),
-        });
-      } catch (error: any) {
-        this.logger.error(
-          `Paddle REST network error ${method} ${path}: ${error?.message || error}`,
-        );
-
-        throw new BadRequestException(
-          `Could not reach Paddle API: ${error?.message || 'network error'}`,
-        );
-      }
-
-      const rawText = await response.text();
-
-      let payload: any = null;
-
-      try {
-        payload = rawText ? JSON.parse(rawText) : null;
-      } catch (_e) {
-        payload = {
-          raw: rawText,
-        };
-      }
-
-      if (!response.ok) {
-        const paddleMessage =
-          payload?.error?.detail ||
-          payload?.error?.message ||
-          payload?.message ||
-          payload?.error?.code ||
-          rawText ||
-          `HTTP ${response.status}`;
-
-        this.logger.error(
-          `Paddle REST ${method} ${path} failed (${response.status}): ${rawText}`,
-        );
-
-        throw new BadRequestException(
-          `Paddle ${method} ${path} failed: ${paddleMessage}`,
-        );
-      }
-
-      return payload?.data ?? payload;
-    };
-
-    try {
-      /*
-       * Sanity-check the selected Paddle host first.
-       * /event-types requires no entity permissions and is the recommended
-       * Paddle connectivity test. If this fails, the problem is environment /
-       * API-key routing rather than the Web Solutions price setup itself.
-       */
-      await paddleRest('GET', '/event-types');
-
-      /*
-       * 1. Resolve the EXISTING product from one configured recurring price.
-       */
-      /*
-       * Some Paddle environments currently return invalid_url for
-       * GET /prices/{price_id}, even though list-prices works.
-       *
-       * Resolve the product through the documented list endpoint instead:
-       *   GET /prices?id=pri_xxx&per_page=1
-       */
-      const configuredProductId =
-        this.configService.get('PADDLE_PRODUCT_ID') ||
-        this.configService.get('PADDLE_WEB_SOLUTIONS_PRODUCT_ID') ||
-        null;
-
-      let productId =
-        configuredProductId && String(configuredProductId).startsWith('pro_')
-          ? String(configuredProductId)
-          : null;
-
-      if (!productId) {
-        const priceListPayload: any = await paddleRest(
-          'GET',
-          `/prices?id=${encodeURIComponent(
-            String(recurringPriceId),
-          )}&per_page=1`,
-        );
-
-        const prices = Array.isArray(priceListPayload)
-          ? priceListPayload
-          : Array.isArray(priceListPayload?.data)
-            ? priceListPayload.data
-            : [];
-
-        const existingPrice = prices[0] || null;
-
-        productId =
-          existingPrice?.product_id ||
-          existingPrice?.productId ||
-          null;
-
-        if (!productId || !String(productId).startsWith('pro_')) {
-          this.logger.error(
-            `Web Solutions: could not resolve product from recurring price ${recurringPriceId}: ${JSON.stringify(
-              priceListPayload,
-            )}`,
-          );
-
-          throw new BadRequestException(
-            `Could not resolve the Paddle Product ID from recurring price '${recurringPriceId}'.`,
-          );
-        }
-
-        this.logger.log(
-          `Web Solutions: resolved existing Paddle product ${productId} from recurring price ${recurringPriceId} using GET /prices?id=...`,
-        );
-      } else {
-        this.logger.log(
-          `Web Solutions: using configured Paddle product ${productId}`,
-        );
-      }
-
-      /*
-       * 2. Create ONE-TIME prices.
-       *
-       * Paddle REST uses snake_case field names.
-       * Omitting billing_cycle makes the price one-time.
-       */
-      const makeOneTimePrice = async (
-        serviceId: string,
-        label: string,
-        amount: string,
-      ): Promise<string> => {
-        const created: any = await paddleRest(
-          'POST',
-          '/prices',
-          {
-            product_id: productId,
-            description: `Cortexa Web Solutions — ${label}`,
-            name: label,
-            unit_price: {
-              amount,
-              currency_code: 'USD',
-            },
-            custom_data: {
-              purchase_type: 'web_solution',
-              service_id: serviceId,
-            },
-          },
-        );
-
-        const priceId =
-          created?.id ||
-          created?.data?.id ||
-          null;
-
-        if (!priceId || !String(priceId).startsWith('pri_')) {
-          this.logger.error(
-            `Web Solutions: invalid Paddle price response for ${serviceId}: ${JSON.stringify(created)}`,
-          );
-
-          throw new BadRequestException(
-            `Paddle did not return a valid Price ID for ${label}.`,
-          );
-        }
-
-        this.logger.log(
-          `Web Solutions: created ${serviceId} => ${priceId}`,
-        );
-
-        return priceId;
-      };
-
-      const connectionPriceId = await makeOneTimePrice(
-        'connection-setup',
-        'Connection Setup',
-        '14700',
-      );
-
-      const optimizationPriceId = await makeOneTimePrice(
-        'website-optimization',
-        'Website Optimization',
-        '29700',
-      );
-
-      const transformationPriceId = await makeOneTimePrice(
-        'full-transformation',
-        'Full Transformation',
-        '54700',
-      );
-
-      return {
-        success: true,
-        environment: keyEnvironment,
-        configuredEnvironment: this.environment,
-        apiBase: baseUrl,
-        derivedFromRecurringPrice: recurringPriceId,
-        productId,
-
-        prices: {
-          'connection-setup': connectionPriceId,
-          'website-optimization': optimizationPriceId,
-          'full-transformation': transformationPriceId,
-        },
-
-        env: {
-          PADDLE_PRICE_WEB_CONNECTION:
-            connectionPriceId,
-          PADDLE_PRICE_WEB_OPTIMIZATION:
-            optimizationPriceId,
-          PADDLE_PRICE_WEB_TRANSFORMATION:
-            transformationPriceId,
-        },
-
-        mapping: {
-          'connection-setup': '$147 one-time',
-          'website-optimization': '$297 one-time',
-          'full-transformation': '$547 one-time',
-        },
-
-        note:
-          'Add the three PADDLE_PRICE_WEB_* values to Render and redeploy. Existing subscription prices are unchanged.',
-      };
-    } catch (error: any) {
-      if (error?.getStatus) {
-        throw error;
-      }
-
-      this.logger.error(
-        `setupWebSolutionsPrices failed: ${error?.message || error}`,
-      );
-
-      throw new BadRequestException(
-        `Unable to create Web Solutions Paddle prices: ${
-          error?.message || 'Unknown Paddle error'
-        }`,
-      );
-    }
-  }
-
   getPublicConfig() {
     return {
       clientToken: this.configService.get('PADDLE_CLIENT_TOKEN') || null,
@@ -1395,6 +1169,7 @@ export class PaddleService {
         growth: this.configService.get('PADDLE_START_PRICE_GROWTH') || null,
       },
 
+      // Web Solutions: three ONE-TIME professional-service prices.
       webSolutionsPrices: {
         'connection-setup':
           this.configService.get('PADDLE_PRICE_WEB_CONNECTION') || null,

@@ -40,3 +40,18 @@ export async function fetchPaddleConfig() {
     return null;
   }
 }
+
+export async function fetchWebSolutionsPaddleConfig() {
+  try {
+    const config = await apiClient.request("/payments/paddle/config");
+    const data = config?.data ?? config;
+
+    return {
+      clientToken: data?.clientToken || null,
+      environment: data?.environment || "sandbox",
+      prices: data?.webSolutionsPrices || {},
+    };
+  } catch {
+    return null;
+  }
+}

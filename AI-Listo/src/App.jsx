@@ -150,6 +150,8 @@ import IntegrationsPage from "./pages/common/IntegrationsPage";
 import FeaturesPage from "./pages/common/FeaturesPage";
 import AdminBillingCalendar from "./pages/admin/AdminBillingCalendar";
 import AestheticWellnessWorkspace from "./pages/aesthetic-wellness/AestheticWellnessWorkspace";
+import WebSolutions from "./pages/web-solutions/WebSolutions";
+import WebSolutionsCheckout from "./pages/web-solutions/WebSolutionsCheckout";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -233,6 +235,12 @@ function publicRoutes(prefix) {
           element={<EditorialFunnelPt />}
         />
       </Route>
+      <Route path="/web-solutions" element={<WebSolutions />} />
+
+      <Route
+        path="/web-solutions/checkout"
+        element={<WebSolutionsCheckout />}
+      />
       <Route path="/editorial/business" element={<EditorialBusinessAI />} />
       <Route
         path="/editorial/business/es"
