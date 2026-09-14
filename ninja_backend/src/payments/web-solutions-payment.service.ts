@@ -71,11 +71,11 @@ export class WebSolutionsPaymentService {
   private getService(
     id: string,
   ) {
+    const serviceId =
+      String(id || '').trim() as ServiceId;
+
     const service =
-      CATALOG[
-        String(id || '').trim()
-          as ServiceId
-      ];
+      CATALOG[serviceId];
 
     if (!service) {
       throw new BadRequestException(
