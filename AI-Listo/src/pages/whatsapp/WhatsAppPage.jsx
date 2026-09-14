@@ -98,6 +98,72 @@ export default function WhatsAppPage() {
     generateAiAssistReply,
   } = useWhatsAppDashboard();
 
+  // One live source for both the KPI subtext and the Unread tab count.
+  const unreadConversationCount = React.useMemo(
+    () =>
+      (conversations || []).filter(
+        (conversation) => Number(conversation?.unread_count || 0) > 0,
+      ).length,
+    [conversations],
+  );
+
+  const responseMode =
+    selectedConversation?.owner_type === "shared"
+      ? "shared"
+      : selectedConversation?.ai_enabled
+        ? "ai"
+        : "human";
+
+  const changeLegacyResponseMode = React.useCallback(
+    async (mode) => {
+      if (!selectedConversation) return;
+
+      // AI/Human keep using the existing backend toggle and therefore preserve
+      // all current takeover/resume behavior.
+      if (mode === "ai") {
+        if (!selectedConversation.ai_enabled || selectedConversation.owner_type === "shared") {
+          await toggleSelectedAi();
+        }
+        return;
+      }
+
+      if (mode === "human") {
+        if (selectedConversation.ai_enabled || selectedConversation.owner_type === "shared") {
+          await toggleSelectedAi();
+        }
+        return;
+      }
+
+      // Shared is represented by owner_type when the backend supports it.
+      // Keep the selection mutually exclusive in the UI without changing
+      // existing message/send/history connections.
+      if (mode === "shared") {
+        setSelectedConversation((prev) =>
+          prev
+            ? {
+                ...prev,
+                owner_type: "shared",
+                ai_enabled: true,
+              }
+            : prev,
+        );
+      }
+    },
+    [selectedConversation, setSelectedConversation, toggleSelectedAi],
+  );
+
+  const genericNextAction = React.useMemo(() => {
+    const action = String(selectedIntelligence?.recommendedAction || "").trim();
+
+    // Never surface the old global real-estate fallback outside an actual
+    // real-estate context. Server-generated contextual actions still display.
+    if (!action || /property options|property details/i.test(action)) {
+      return t("whatsapp.reviewConversationNextAction");
+    }
+
+    return action;
+  }, [selectedIntelligence?.recommendedAction, t]);
+
   const [showAiAssist, setShowAiAssist] = React.useState(false);
   React.useEffect(() => {
     setVisibleConversations(10);
@@ -234,18 +300,18 @@ export default function WhatsAppPage() {
         <div>
           <div className="heading_page">
             <MessageCircle className="header-icon" size={20} />
-            <h1>
-              {t("whatsapp.inboxTitle")}{" "}
-              <CheckCircle2
-                size={16}
-                fill="#2563eb"
-                color="white"
-                className="verified-badge"
-              />
-            </h1>
+            <div className="wa-title-with-status">
+              <h1>{t("whatsapp.conversationsTitle")}</h1>
+              {status?.connected && (
+                <span className="wa-connected-badge">
+                  <i aria-hidden="true" />
+                  {t("whatsapp.whatsappConnected")}
+                </span>
+              )}
+            </div>
           </div>
           <p className="sub_head">
-            {t("whatsapp.subHeading")}
+            {t("whatsapp.conversationsSubHeading")}
           </p>
         </div>
 
@@ -338,7 +404,7 @@ export default function WhatsAppPage() {
             >
               <span>{t("whatsapp.tabUnread")}</span>
               <b>
-                {conversations.filter((i) => Number(i.unread_count || 0) > 0).length}
+                {unreadConversationCount}
               </b>
             </button>
 
@@ -486,7 +552,7 @@ export default function WhatsAppPage() {
                 </div>
 
                 <p>
-                  {selectedConversation?.contact_phone || "-"} • WhatsApp
+                  {selectedConversation?.contact_phone || "-"} • {t("whatsapp.channelWhatsApp")}
                   {selectedConversation?.lead_status
                     ? ` • ${selectedConversation.lead_status}`
                     : ""}
@@ -641,25 +707,32 @@ export default function WhatsAppPage() {
             <div className="whatsapp-mobile-response-controls">
               <button
                 type="button"
-                className={selectedConversation?.ai_enabled ? "active ai" : "ai"}
-                onClick={toggleSelectedAi}
+                className={`${responseMode === "ai" ? "active " : ""}ai`}
+                onClick={() => changeLegacyResponseMode("ai")}
+                disabled={!selectedConversation}
               >
                 <Bot size={17} />
-                <span>{t("whatsapp.aiActive")}</span>
+                <span>{t("whatsapp.responseModeAi")}</span>
               </button>
 
               <button
                 type="button"
-                className={!selectedConversation?.ai_enabled ? "active" : ""}
-                onClick={toggleSelectedAi}
+                className={responseMode === "human" ? "active" : ""}
+                onClick={() => changeLegacyResponseMode("human")}
+                disabled={!selectedConversation}
               >
                 <User size={17} />
-                <span>{t("whatsapp.humanActive")}</span>
+                <span>{t("whatsapp.responseModeHuman")}</span>
               </button>
 
-              <button type="button">
+              <button
+                type="button"
+                className={responseMode === "shared" ? "active shared" : "shared"}
+                onClick={() => changeLegacyResponseMode("shared")}
+                disabled={!selectedConversation}
+              >
                 <Users size={17} />
-                <span>{t("whatsapp.sharedMode")}</span>
+                <span>{t("whatsapp.responseModeShared")}</span>
               </button>
 
               <Info size={20} className="whatsapp-mobile-response-info" />
@@ -684,37 +757,26 @@ export default function WhatsAppPage() {
               <>
                 <button
                   type="button"
-                  onClick={() =>
-                    setMessageText(
-                      t("whatsapp.sendPropertyOptions") ||
-                        "Send property options",
-                    )
-                  }
+                  onClick={() => setMessageText(t("whatsapp.genericSuggestionThanks"))}
                 >
                   <Sparkles size={15} />
-                  <span>{t("whatsapp.sendPropertyOptions")}</span>
+                  <span>{t("whatsapp.genericSuggestionThanks")}</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setMessageText(
-                      t("whatsapp.bookAppointment") || "Book appointment",
-                    )
-                  }
+                  onClick={() => setMessageText(t("whatsapp.genericSuggestionServices"))}
                 >
                   <Sparkles size={15} />
-                  <span>{t("whatsapp.bookAppointment")}</span>
+                  <span>{t("whatsapp.genericSuggestionServices")}</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setMessageText(t("whatsapp.askBudget") || "Ask budget")
-                  }
+                  onClick={() => setMessageText(t("whatsapp.genericSuggestionFollowUp"))}
                 >
                   <Sparkles size={15} />
-                  <span>{t("whatsapp.askBudget")}</span>
+                  <span>{t("whatsapp.genericSuggestionFollowUp")}</span>
                 </button>
               </>
             )}
@@ -785,6 +847,25 @@ export default function WhatsAppPage() {
         </div>
       </section>
 
+      <div className="whatsapp-desktop-heading-row">
+        <div>
+          <div className="heading_page">
+            <div className="wa-title-with-status">
+              <h1>{t("whatsapp.conversationsTitle")}</h1>
+              {status?.connected && (
+                <span className="wa-connected-badge">
+                  <i aria-hidden="true" />
+                  {t("whatsapp.whatsappConnected")}
+                </span>
+              )}
+            </div>
+          </div>
+          <p className="sub_head">
+            {t("whatsapp.conversationsSubHeading")}
+          </p>
+        </div>
+      </div>
+
       {/* MAIN THREE-COLUMN WORKSPACE */}
       <div className="leads-layout main-workspace-layout">
         <div className="main-workspace-left">
@@ -828,7 +909,11 @@ export default function WhatsAppPage() {
                   <span className="metric-label">{item.label}</span>
                   <h3 className="metric-value">{item.value}</h3>
                   <span className={`metric-subtext ${item.className}`}>
-                    {item.subtext}
+                    {index === 0
+                      ? t("whatsapp.unreadConversationsCount", {
+                          count: unreadConversationCount,
+                        })
+                      : item.subtext}
                   </span>
                 </div>
               </div>
@@ -851,11 +936,7 @@ export default function WhatsAppPage() {
                 >
                   {t("whatsapp.tabUnread")}{" "}
                   <span className="tab-count">
-                    {
-                      conversations.filter(
-                        (i) => Number(i.unread_count || 0) > 0,
-                      ).length
-                    }
+                    {unreadConversationCount}
                   </span>
                 </button>
 
@@ -1016,7 +1097,7 @@ export default function WhatsAppPage() {
                       </span>
                     </div>
                     <p>
-                      {selectedConversation?.contact_phone || "-"} • WhatsApp
+                      {selectedConversation?.contact_phone || "-"} • {t("whatsapp.channelWhatsApp")}
                       {selectedConversation?.lead_status
                         ? ` • ${selectedConversation.lead_status}`
                         : ""}
@@ -1138,8 +1219,7 @@ export default function WhatsAppPage() {
                   <div className="metric-col">
                     <span className="metric-col-label">{t("whatsapp.nextAction")}</span>
                     <span className="metric-col-value action-text">
-                      {selectedIntelligence.recommendedAction ||
-                        t("whatsapp.sendPropertyDetails")}
+                      {genericNextAction}
                     </span>
                   </div>
                 </div>
@@ -1214,30 +1294,33 @@ export default function WhatsAppPage() {
 
                 <div className="mode-options-group">
                   <button
-                    className={`mode-btn ${
-                      selectedConversation?.ai_enabled
-                        ? "btn-ai active"
-                        : "btn-ai"
-                    }`}
+                    type="button"
+                    className={`mode-btn btn-ai ${responseMode === "ai" ? "active" : ""}`}
+                    onClick={() => changeLegacyResponseMode("ai")}
+                    disabled={!selectedConversation}
                   >
                     <Bot size={16} />
-                    <span>{t("whatsapp.aiActive")}</span>
+                    <span>{t("whatsapp.responseModeAi")}</span>
                   </button>
 
                   <button
-                    className={`mode-btn ${
-                      !selectedConversation?.ai_enabled
-                        ? "btn-human active"
-                        : "btn-human"
-                    }`}
+                    type="button"
+                    className={`mode-btn btn-human ${responseMode === "human" ? "active" : ""}`}
+                    onClick={() => changeLegacyResponseMode("human")}
+                    disabled={!selectedConversation}
                   >
                     <User size={16} />
-                    <span>{t("whatsapp.humanActive")}</span>
+                    <span>{t("whatsapp.responseModeHuman")}</span>
                   </button>
 
-                  <button className="mode-btn btn-shared">
+                  <button
+                    type="button"
+                    className={`mode-btn btn-shared ${responseMode === "shared" ? "active" : ""}`}
+                    onClick={() => changeLegacyResponseMode("shared")}
+                    disabled={!selectedConversation}
+                  >
                     <Users size={16} />
-                    <span>{t("whatsapp.sharedMode")}</span>
+                    <span>{t("whatsapp.responseModeShared")}</span>
                   </button>
                 </div>
 
@@ -1259,17 +1342,26 @@ export default function WhatsAppPage() {
                   ))
                 ) : (
                   <>
-                    <button className="utility-chip-action-btn">
-                      <Home size={12} /> {t("whatsapp.sendPropertyOptions")}
+                    <button
+                      type="button"
+                      className="utility-chip-action-btn"
+                      onClick={() => setMessageText(t("whatsapp.genericSuggestionThanks"))}
+                    >
+                      <Sparkles size={12} /> {t("whatsapp.genericSuggestionThanks")}
                     </button>
-                    <button className="utility-chip-action-btn">
-                      <Calendar size={12} /> {t("whatsapp.bookAppointment")}
+                    <button
+                      type="button"
+                      className="utility-chip-action-btn"
+                      onClick={() => setMessageText(t("whatsapp.genericSuggestionServices"))}
+                    >
+                      <Sparkles size={12} /> {t("whatsapp.genericSuggestionServices")}
                     </button>
-                    <button className="utility-chip-action-btn">
-                      <Brain size={12} /> {t("whatsapp.askBudget")}
-                    </button>
-                    <button className="utility-chip-action-btn">
-                      <Share2 size={12} /> {t("whatsapp.shareLocation")}
+                    <button
+                      type="button"
+                      className="utility-chip-action-btn"
+                      onClick={() => setMessageText(t("whatsapp.genericSuggestionFollowUp"))}
+                    >
+                      <Sparkles size={12} /> {t("whatsapp.genericSuggestionFollowUp")}
                     </button>
                   </>
                 )}

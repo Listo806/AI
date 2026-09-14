@@ -928,7 +928,7 @@ export default function Sidebar({
           {
             path: "/dashboard/whatsapp",
             icon: "whatsapp",
-            labelKey: "nav.whatsapp",
+            labelKey: "nav.conversations",
             isWhatsApp: true,
           },
           {
@@ -942,7 +942,7 @@ export default function Sidebar({
             {
               path: "/dashboard/whatsapp-qr",
               icon: "whatsapp",
-              labelKey: "nav.whatsapp",
+              labelKey: "nav.conversations",
               isWhatsApp: true,
             },
           ]
@@ -950,7 +950,7 @@ export default function Sidebar({
             {
               path: "/dashboard/whatsapp",
               icon: "whatsapp",
-              labelKey: "nav.whatsapp",
+              labelKey: "nav.conversations",
               isWhatsApp: true,
             },
           ];

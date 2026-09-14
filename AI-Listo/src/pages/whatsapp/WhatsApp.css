@@ -2006,7 +2006,9 @@ body .whatsapp-page .send-message-main-submit-btn {
         transform: rotate(360deg);
     }
 }
-
+.whatsapp-page .whatsapp-mobile-heading-row {
+    display: none;
+  }
 @media (max-width: 1024px) {
 
     .whatsapp-page .top-stats-row-grid {
@@ -3482,3 +3484,96 @@ body .whatsapp-page .send-message-main-submit-btn {
   }
 }
 
+
+
+/* =========================================================
+   TARGETED CONVERSATIONS UPDATE — 2026-09-14
+   ========================================================= */
+
+.whatsapp-page .whatsapp-desktop-heading-row {
+  display: block;
+  margin: 0 0 16px;
+}
+
+.whatsapp-page .wa-title-with-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.whatsapp-page .wa-title-with-status h1 {
+  margin: 0;
+}
+
+.whatsapp-page .wa-connected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 4px 10px;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.whatsapp-page .wa-connected-badge i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  flex: 0 0 auto;
+}
+
+.whatsapp-page .whatsapp-desktop-heading-row .sub_head {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.whatsapp-page .mode-btn.btn-human.active,
+.whatsapp-page .mode-btn.btn-shared.active {
+  background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
+  border-color: #6d28d9;
+  color: #fff;
+}
+
+.whatsapp-page .mode-btn:disabled,
+.whatsapp-page .whatsapp-mobile-response-controls button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+@media (max-width: 1024px) {
+  
+  .whatsapp-page .whatsapp-desktop-heading-row {
+    display: none;
+  }
+
+  .whatsapp-page .wa-title-with-status {
+    gap: 8px;
+  }
+
+  .whatsapp-page .wa-connected-badge {
+    min-height: 24px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .whatsapp-page .whatsapp-mobile-response-controls button.shared.active {
+    background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
+    border-color: #6d28d9;
+    color: #fff;
+  }
+}
+
+.crm-dark .whatsapp-page .wa-connected-badge {
+  border-color: rgba(16,185,129,.28);
+  background: rgba(16,185,129,.13);
+  color: #6ee7b7;
+}

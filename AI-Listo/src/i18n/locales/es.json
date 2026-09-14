@@ -292,7 +292,8 @@
     "generator": "Generador de leads",
     "adminSignups": "Registros",
     "adminCustomers": "Suscripciones",
-    "billingCalendar": "Calendario de facturación"
+    "billingCalendar": "Calendario de facturación",
+    "conversations": "Conversaciones"
   },
   "header": {
     "profile": "Perfil",
@@ -1419,7 +1420,20 @@
     "aiReplyPlaceholder": "La respuesta de AI aparecerá aquí...",
     "regenerate": "Regenerar",
     "copy": "Copiar",
-    "insertReply": "Insertar respuesta"
+    "insertReply": "Insertar respuesta",
+    "conversationsTitle": "Conversaciones",
+    "conversationsSubHeading": "Gestiona conversaciones con clientes, colabora con tu agente de IA y convierte más leads.",
+    "whatsappConnected": "WhatsApp conectado",
+    "channelWhatsApp": "WhatsApp",
+    "unreadConversationsCount_one": "{{count}} conversación sin leer",
+    "unreadConversationsCount_other": "{{count}} conversaciones sin leer",
+    "responseModeAi": "IA",
+    "responseModeHuman": "Humano",
+    "responseModeShared": "Compartido",
+    "reviewConversationNextAction": "Revisa la conversación y responde según la solicitud actual del cliente.",
+    "genericSuggestionThanks": "Gracias por tu mensaje. Puedo ayudarte con los próximos pasos.",
+    "genericSuggestionServices": "¿Te gustaría recibir más información sobre nuestros servicios?",
+    "genericSuggestionFollowUp": "¿Qué horario te viene bien para un seguimiento rápido?"
   },
   "whatsappQr": {
     "pageTitle": "Conecta tu cuenta de WhatsApp",

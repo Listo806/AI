@@ -292,7 +292,8 @@
     "teams": "Teams",
     "adminSignups": "Sign-ups",
     "adminCustomers": "Subscriptions",
-    "billingCalendar": "Billing Calendar"
+    "billingCalendar": "Billing Calendar",
+    "conversations": "Conversations"
   },
   "header": {
     "profile": "Profile",
@@ -1419,7 +1420,20 @@
     "aiReplyPlaceholder": "AI reply will appear here...",
     "regenerate": "Regenerate",
     "copy": "Copy",
-    "insertReply": "Insert Reply"
+    "insertReply": "Insert Reply",
+    "conversationsTitle": "Conversations",
+    "conversationsSubHeading": "Manage customer conversations, collaborate with your AI agent, and convert more leads.",
+    "whatsappConnected": "WhatsApp Connected",
+    "channelWhatsApp": "WhatsApp",
+    "unreadConversationsCount_one": "{{count}} unread conversation",
+    "unreadConversationsCount_other": "{{count}} unread conversations",
+    "responseModeAi": "AI",
+    "responseModeHuman": "Human",
+    "responseModeShared": "Shared",
+    "reviewConversationNextAction": "Review the conversation and respond based on the customer's current request.",
+    "genericSuggestionThanks": "Thanks for your message. I can help you with the next steps.",
+    "genericSuggestionServices": "Would you like more information about our services?",
+    "genericSuggestionFollowUp": "What time works best for a quick follow-up?"
   },
   "whatsappQr": {
     "pageTitle": "Connect Your WhatsApp Account",
