@@ -152,6 +152,8 @@ import IntegrationsPage from "./pages/common/IntegrationsPage";
 import FeaturesPage from "./pages/common/FeaturesPage";
 import AdminBillingCalendar from "./pages/admin/AdminBillingCalendar";
 import AestheticWellnessWorkspace from "./pages/aesthetic-wellness/AestheticWellnessWorkspace";
+import AestheticClients from "./pages/aesthetic-wellness/AestheticClients";
+import AestheticClientProfile from "./pages/aesthetic-wellness/AestheticClientProfile";
 import WebSolutions from "./pages/web-solutions/WebSolutions";
 import WebSolutionsCheckout from "./pages/web-solutions/WebSolutionsCheckout";
 import FreeWebsiteReview from "./pages/web-solutions/FreeWebsiteReview";
@@ -519,6 +521,22 @@ function AppRoutes() {
           element={
             <WorkspaceGate workspaceId="aesthetic-wellness">
               <AestheticWellnessWorkspace />
+            </WorkspaceGate>
+          }
+        />
+        <Route
+          path="aesthetic-wellness/clients"
+          element={
+            <WorkspaceGate workspaceId="aesthetic-wellness">
+              <AestheticClients />
+            </WorkspaceGate>
+          }
+        />
+        <Route
+          path="aesthetic-wellness/clients/:clientId"
+          element={
+            <WorkspaceGate workspaceId="aesthetic-wellness">
+              <AestheticClientProfile />
             </WorkspaceGate>
           }
         />

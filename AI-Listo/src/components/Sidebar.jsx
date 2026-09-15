@@ -1021,6 +1021,12 @@ export default function Sidebar({
   // (Listings/Users/Teams/Plans) now live in the profile dropdown, not here.
   // Order: Dashboard, WhatsApp, Leads, Pipeline, Contacts, Analytics, Properties,
   // then Setup/Calendar/AI Agent (AI_CENTER_ITEMS), then Team/Integrations/Generator.
+  // In Aesthetic & Wellness, "Clients" opens the clinic-specific directory.
+  // Outside that workspace, keep the existing generic Contacts route unchanged.
+  const clientsRoute = location.pathname.startsWith("/dashboard/aesthetic-wellness")
+    ? "/dashboard/aesthetic-wellness/clients"
+    : "/dashboard/contacts";
+
   const operationalNav = [
     {
       path: "/dashboard/home",
@@ -1047,7 +1053,7 @@ export default function Sidebar({
     },
 
     {
-      path: "/dashboard/contacts",
+      path: clientsRoute,
       icon: "contact",
       labelKey: "nav.contacts",
     },
