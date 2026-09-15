@@ -15,6 +15,16 @@ export async function fetchNuveiConfig() {
   }
 }
 
+// The signed-in user's latest Nuvei subscription (null if none).
+export async function fetchNuveiSubscription() {
+  try {
+    const res = await apiClient.request("/nuvei/subscription");
+    return (res?.data ?? res)?.subscription ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // Server-side Add Card (staging/test path). Returns { cardId, status }.
 export async function nuveiAddCard(card) {
   const res = await apiClient.request("/nuvei/card", {

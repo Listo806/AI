@@ -7,7 +7,7 @@ import {
 import { trackEvent, trackPurchase, setUserData } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
 import {
-  fetchNuveiConfig, nuveiSaveToken, nuveiActivate, collectBrowserInfo,
+  fetchNuveiConfig, fetchNuveiSubscription, nuveiSaveToken, nuveiActivate, collectBrowserInfo,
 } from "../../api/nuveiApi";
 import { mountNuveiForm } from "./nuveiSdk";
 import { clearSetupOffer } from "../../utils/offer";
@@ -48,6 +48,7 @@ const t = {
     errTerms: "Please agree to the Terms and Conditions to continue.",
     errServer: "Something went wrong. Please try again or use another card.",
     errDeclined: "The payment could not be completed. Please try another card.",
+    errAlreadySubscribed: "You already have an active {plan} subscription. To change plans, please contact support.",
     unavailable: "Payments are being finalized and are not available right now. Please contact support.",
   },
 };
@@ -82,6 +83,7 @@ export default function CheckoutPage() {
   // Bumped after a decline/error: Nuvei's SDK removes its form after every
   // tokenize response, so a fresh form must be mounted for the customer to retry.
   const [formGen, setFormGen] = useState(0);
+  const [blocked, setBlocked] = useState(false); // already has a live subscription
   const submitRef = useRef(null);
   const mountedRef = useRef(false);
   const consentRef = useRef(false);
@@ -124,9 +126,25 @@ export default function CheckoutPage() {
     navigate("/dashboard/ai-cortexa-setup", { replace: true });
   };
 
+  // Tell a customer who already has a live subscription BEFORE they type a card
+  // (the backend also refuses the charge). Uses the page's existing error box.
+  useEffect(() => {
+    if (authLoading || !user) return;
+    let c = false;
+    fetchNuveiSubscription().then((sub) => {
+      if (c || !sub) return;
+      if (["trialing", "active", "past_due"].includes(String(sub.status))) {
+        setBlocked(true);
+        setErrorMsg(tr.errAlreadySubscribed.replace("{plan}", String(sub.provision_plan || sub.plan_key || "")));
+      }
+    });
+    return () => { c = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
+
   // Mount Nuvei's secure card form as soon as the page is ready.
   useEffect(() => {
-    if (!config?.enabled || mountedRef.current) return;
+    if (!config?.enabled || mountedRef.current || blocked) return;
     const userId = customer.userId || user?.id;
     if (!userId) return;
     mountedRef.current = true;
@@ -154,7 +172,7 @@ export default function CheckoutPage() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, user, formGen]);
+  }, [config, user, formGen, blocked]);
 
   async function handleTokenized(card) {
     setProcessing(true);
@@ -190,6 +208,7 @@ export default function CheckoutPage() {
   }
 
   function payNow() {
+    if (blocked) return;
     setErrorMsg("");
     if (!consentRef.current) { setErrorMsg(tr.errTerms); return; }
     if (!formReady) return;
@@ -210,7 +229,7 @@ export default function CheckoutPage() {
               <div className="cxo-chead">
                 <div className="cxo-icon"><User size={20} /></div>
                 <div className="cxo-chead-copy"><h2>{tr.infoTitle}</h2><p>{tr.infoSub}</p></div>
-                <button className="cxo-editlink" onClick={() => go("/trial?plan=" + selectedPlan)}>{tr.edit} <Edit2 size={14} /></button>
+                <button className="cxo-editlink" onClick={() => navigate("/account/profile")}>{tr.edit} <Edit2 size={14} /></button>
               </div>
               <div className="cxo-fields">
                 <div><label className="cxo-label">{tr.fullName}</label><div className="cxo-input"><User size={17} /><input value={customer.name} readOnly /></div></div>
