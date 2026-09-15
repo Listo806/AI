@@ -1,557 +1,91 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
-  ArrowRight,
-  BarChart3,
-  Bot,
-  CalendarDays,
-  Check,
-  Database,
-  GitBranch,
-  Globe2,
-  MessageCircle,
-  Monitor,
-  Phone,
-  Settings,
-  UserRoundCheck,
-  UsersRound,
-  Workflow,
+  ArrowRight, BarChart3, Bot, CalendarDays, ChevronDown, FileSearch, Gift,
+  Globe2, MessageCircle, Monitor, Settings, Shield, SlidersHorizontal, UsersRound,
 } from "lucide-react";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import { useAuth } from "../../context/AuthContext";
 import "./WebSolutions.css";
 
-const COPY = {
-  en: {
-    nav: {
-      features: "Features",
-      aiAssistant: "AI Assistant",
-      aiWorkflows: "AI Workflows",
-      pipeline: "Pipeline",
-      analytics: "Analytics",
-      pricing: "Pricing",
-      costCalculator: "Cost Calculator",
-      webSolutions: "Web Solutions",
-      getStarted: "Get Started",
-      dashboard: "Dashboard",
-      login: "Log in",
-    },
-    hero: {
-      eyebrow: "CORTEXA WEB SOLUTIONS",
-      title1: "Connect your website to the systems",
-      title2: "that move your business forward.",
-      p1: "Your website is often where customer interest begins. Cortexa Web Solutions helps ensure those interactions continue directly into your AI agent, CRM, pipeline, appointments, checkout, quotes, viewings, demos, or support.",
-      p2: "If your website does not have the right WhatsApp, phone, tracking, or AI connections, our team can review the existing experience and configure the missing entry points.",
-    },
-    connect: {
-      title: "What we connect",
-      p1: "A website works best when every visitor has a clear path into your AI-assisted conversion flow. We connect your website to the right channels, systems, and workflows so no opportunity is lost.",
-      p2: "WhatsApp must enter the AI-assisted conversion flow rather than an unmanaged inbox. This ensures conversations are captured, qualified, and routed like every other lead.",
-    },
-    flow: {
-      title: "A complete connection, not just another button.",
-      desc: "From first click to final conversion, we make sure every touchpoint on your website is connected to the right system, with the right data, in the right order.",
-    },
-    plans: {
-      title: "Service levels based on what your website needs.",
-      desc: "Choose the right level of support for your goals. All services are one-time professional services, with a clear scope and deliverables.",
-      oneTime: "one-time",
-      request: "Request a Review",
-      disclaimer: "Cortexa Web Solutions are optional one-time professional services and are separate from your Cortexa software subscription. Custom implementation is quoted based on your website and connection requirements. Third-party costs are billed separately.",
-    },
-    footer: {
-      copyright: "© 2024 Cortexa. All rights reserved.",
-      privacy: "Privacy",
-      terms: "Terms",
-      contact: "Contact",
-    },
-    connections: [
-      ["Website and landing pages", "Connect your main website and campaign landing pages."],
-      ["Campaign and source tracking", "Track where enquiries come from across all channels."],
-      ["WhatsApp and business phone", "Integrate WhatsApp and phone into your AI-assisted conversion flow."],
-      ["Pipelines and workflows", "Route leads to the correct pipeline and automate next steps."],
-      ["Cortexa AI Agent", "Route website enquiries directly to your AI agent."],
-      ["Appointments, checkout and quotes", "Connect bookings, checkout, and quote requests to your CRM."],
-      ["CRM lead capture", "Capture and create leads in your CRM automatically."],
-      ["Human handoff", "Ensure a smooth handoff to your team when needed."],
-    ],
-    flowSteps: [
-      "Website, advertisement, phone or WhatsApp",
-      "Cortexa AI Agent",
-      "Contact captured",
-      "CRM record created",
-      "Source recorded",
-      "Correct pipeline",
-      "Conversion or human handoff",
-    ],
-    planData: [
-      ["connection-setup", "Connection Setup", 147, ["WhatsApp or phone CTA", "AI-agent connection", "Lead capture", "CRM routing", "Connection testing"]],
-      ["website-optimization", "Website Optimization", 297, ["Website review", "Several UX and CTA improvements", "Entry-point integration", "Tracking and pipeline routing", "Complete funnel testing"]],
-      ["full-transformation", "Full Transformation", 547, ["Substantial redesign", "New pages or sections", "Responsive optimization", "Complete AI/CRM integration", "Launch support"]],
-    ],
-  },
+const REVIEW_PATH="/web-solutions/free-review";
+const COPY={
+en:{
+nav:["Features","AI Assistant","AI Workflows","Pipeline","Analytics","Pricing","Cost Calculator","Web Solutions","Get Started"],
+hero:["CORTEXA WEB SOLUTIONS","Turn your website into a","connected business system.","Your website is often where customer interest begins. We help you connect your website to your CRM, AI agents, lead capture, communications, appointments, checkout, analytics, and workflows — so every visitor can become a customer, and no opportunity is lost.","Request a Website Review"],
+trust:[["Website-first assessment","We start with your website to understand your goals, audience, and current setup."],["Built around your business","Recommendations are tailored to your industry, tools, and growth goals."],["Clear scope before development","You’ll know exactly what we’ll build, why it matters, and what it will cost."]],
+improveTitle:"What we can improve.",improveLead:"We connect your website to the right systems and add the functionality your business needs to capture, convert, and serve more customers.",
+improvements:[["Website experience","Improve your design, content, and structure to create a clearer path to conversion."],["CRM integration","Connect your website directly to your Cortexa CRM so every lead is captured, organized, and routed correctly."],["AI agent integration","Connect your website to Cortexa AI agents for instant responses, lead qualification, and support."],["Lead capture","Capture and qualify leads through forms, chat, and AI-powered tools."],["Communications","Integrate WhatsApp, phone, email, and SMS to keep conversations in one place."],["Appointments","Enable customers to book meetings, service calls, or consultations directly from your website."],["Checkout and payments","Integrate secure checkout and payment solutions for products, services, or bookings."],["Automation","Automate follow-ups, task creation, lead routing, and more."],["Analytics and tracking","Set up proper tracking so you can see what’s working and make data-driven decisions."]],
+professional:["CORTEXA WEB SOLUTIONS","Professional web solutions built around what you need.","Whether you need a new website, integrations with your existing tools, or a complete conversion-focused redesign, we’ll create a solution that fits your website, your systems, your goals, and your technical needs.","A solution designed for you.","No two businesses are the same. We tailor every project to your website, your tools, your goals, and your technical requirements."],
+review:["Start with a free website review.","Send us your website URL and tell us what you want to improve. Our team will review your current experience, identify missing functionality and conversion opportunities, and recommend what should be improved, connected, or rebuilt.","Your website review is free.","If you choose to proceed, professional development services start at","Request Your Free Review"],
+reviewItems:[["Website assessment","A review of your current website and technology setup."],["Problems and opportunities","Key issues, gaps, and areas for improvement."],["Recommended improvements","Practical suggestions tailored to your business goals."],["Proposed scope and quotation","A clear plan with deliverables and a fixed cost."]],
+bottom:["Let us review your website — free.","Send us your website URL. There’s no payment required to submit your website, and no obligation to move forward. Just a clear, expert review of how to make it work harder for your business."],
+footer:["© 2024 Cortexa. All rights reserved.","Privacy","Terms","Contact","Dashboard","Log in"]
+},
+es:{
+nav:["Funciones","Asistente IA","Flujos de IA","Pipeline","Analítica","Precios","Calculadora de Costes","Soluciones Web","Comenzar"],
+hero:["SOLUCIONES WEB CORTEXA","Convierte tu sitio web en un","sistema empresarial conectado.","Tu sitio web suele ser donde comienza el interés del cliente. Te ayudamos a conectar tu sitio con tu CRM, agentes de IA, captura de leads, comunicaciones, citas, checkout, analítica y flujos de trabajo, para que cada visitante pueda convertirse en cliente y no se pierda ninguna oportunidad.","Solicitar una revisión del sitio web"],
+trust:[["Evaluación centrada en tu sitio web","Comenzamos con tu sitio web para entender tus objetivos, audiencia y configuración actual."],["Creado alrededor de tu negocio","Las recomendaciones se adaptan a tu industria, herramientas y objetivos de crecimiento."],["Alcance claro antes del desarrollo","Sabrás exactamente qué construiremos, por qué importa y cuánto costará."]],
+improveTitle:"Lo que podemos mejorar.",improveLead:"Conectamos tu sitio web con los sistemas adecuados y añadimos la funcionalidad que tu negocio necesita para captar, convertir y atender a más clientes.",
+improvements:[["Experiencia del sitio web","Mejora el diseño, el contenido y la estructura para crear un camino más claro hacia la conversión."],["Integración con CRM","Conecta tu sitio directamente con Cortexa CRM para que cada lead sea capturado, organizado y dirigido correctamente."],["Integración con agentes de IA","Conecta tu sitio con los agentes de IA de Cortexa para respuestas instantáneas, calificación de leads y soporte."],["Captura de leads","Captura y califica leads mediante formularios, chat y herramientas con IA."],["Comunicaciones","Integra WhatsApp, teléfono, email y SMS para mantener las conversaciones en un solo lugar."],["Citas","Permite a los clientes reservar reuniones, llamadas de servicio o consultas directamente desde tu sitio."],["Checkout y pagos","Integra checkout y pagos seguros para productos, servicios o reservas."],["Automatización","Automatiza seguimientos, creación de tareas, enrutamiento de leads y más."],["Analítica y seguimiento","Configura un seguimiento adecuado para saber qué funciona y tomar decisiones basadas en datos."]],
+professional:["SOLUCIONES WEB CORTEXA","Soluciones web profesionales creadas según lo que necesitas.","Ya sea que necesites un nuevo sitio web, integraciones con tus herramientas actuales o un rediseño completo enfocado en conversión, crearemos una solución adaptada a tu sitio, sistemas, objetivos y necesidades técnicas.","Una solución diseñada para ti.","No hay dos negocios iguales. Adaptamos cada proyecto a tu sitio web, herramientas, objetivos y requisitos técnicos."],
+review:["Comienza con una revisión gratuita de tu sitio web.","Envíanos la URL de tu sitio y cuéntanos qué quieres mejorar. Nuestro equipo revisará tu experiencia actual, identificará funcionalidades faltantes y oportunidades de conversión, y recomendará qué debe mejorarse, conectarse o reconstruirse.","La revisión de tu sitio web es gratuita.","Si decides continuar, los servicios profesionales de desarrollo comienzan desde","Solicita tu revisión gratuita"],
+reviewItems:[["Evaluación del sitio web","Una revisión de tu sitio web actual y de su configuración tecnológica."],["Problemas y oportunidades","Problemas clave, brechas y áreas de mejora."],["Mejoras recomendadas","Sugerencias prácticas adaptadas a los objetivos de tu negocio."],["Alcance y cotización propuestos","Un plan claro con entregables y un coste fijo."]],
+bottom:["Revisemos tu sitio web — gratis.","Envíanos la URL de tu sitio web. No se requiere ningún pago para enviarlo y no existe obligación de continuar. Solo recibirás una revisión clara y experta sobre cómo hacer que tu sitio trabaje mejor para tu negocio."],
+footer:["© 2024 Cortexa. Todos los derechos reservados.","Privacidad","Términos","Contacto","Panel","Iniciar sesión"]
+},
+pt:{
+nav:["Recursos","Assistente IA","Fluxos de IA","Pipeline","Análises","Preços","Calculadora de Custos","Soluções Web","Começar"],
+hero:["SOLUÇÕES WEB CORTEXA","Transforme seu site em um","sistema de negócios conectado.","Seu site costuma ser onde o interesse do cliente começa. Ajudamos você a conectar seu site ao CRM, agentes de IA, captura de leads, comunicações, agendamentos, checkout, análises e fluxos de trabalho — para que cada visitante possa se tornar cliente e nenhuma oportunidade seja perdida.","Solicitar uma análise do site"],
+trust:[["Avaliação focada no site","Começamos pelo seu site para entender seus objetivos, público e configuração atual."],["Criado em torno do seu negócio","As recomendações são adaptadas ao seu setor, ferramentas e objetivos de crescimento."],["Escopo claro antes do desenvolvimento","Você saberá exatamente o que construiremos, por que isso importa e quanto custará."]],
+improveTitle:"O que podemos melhorar.",improveLead:"Conectamos seu site aos sistemas certos e adicionamos a funcionalidade que sua empresa precisa para captar, converter e atender mais clientes.",
+improvements:[["Experiência do site","Melhore design, conteúdo e estrutura para criar um caminho mais claro para a conversão."],["Integração com CRM","Conecte seu site diretamente ao Cortexa CRM para que cada lead seja capturado, organizado e encaminhado corretamente."],["Integração com agentes de IA","Conecte seu site aos agentes de IA da Cortexa para respostas instantâneas, qualificação de leads e suporte."],["Captura de leads","Capture e qualifique leads por formulários, chat e ferramentas com IA."],["Comunicações","Integre WhatsApp, telefone, e-mail e SMS para manter as conversas em um só lugar."],["Agendamentos","Permita que clientes agendem reuniões, chamadas de serviço ou consultas diretamente pelo site."],["Checkout e pagamentos","Integre checkout e pagamentos seguros para produtos, serviços ou reservas."],["Automação","Automatize acompanhamentos, criação de tarefas, roteamento de leads e muito mais."],["Análises e rastreamento","Configure o rastreamento correto para entender o que funciona e tomar decisões baseadas em dados."]],
+professional:["SOLUÇÕES WEB CORTEXA","Soluções web profissionais criadas de acordo com o que você precisa.","Se você precisa de um novo site, integrações com suas ferramentas atuais ou um redesign completo focado em conversão, criaremos uma solução adequada ao seu site, sistemas, objetivos e necessidades técnicas.","Uma solução feita para você.","Nenhum negócio é igual ao outro. Adaptamos cada projeto ao seu site, ferramentas, objetivos e requisitos técnicos."],
+review:["Comece com uma análise gratuita do seu site.","Envie a URL do seu site e conte o que deseja melhorar. Nossa equipe analisará sua experiência atual, identificará funcionalidades ausentes e oportunidades de conversão e recomendará o que deve ser melhorado, conectado ou reconstruído.","A análise do seu site é gratuita.","Se você decidir prosseguir, os serviços profissionais de desenvolvimento começam em","Solicite sua análise gratuita"],
+reviewItems:[["Avaliação do site","Uma análise do seu site atual e da configuração tecnológica."],["Problemas e oportunidades","Principais problemas, lacunas e áreas de melhoria."],["Melhorias recomendadas","Sugestões práticas adaptadas aos objetivos do seu negócio."],["Escopo e orçamento propostos","Um plano claro com entregas e custo fixo."]],
+bottom:["Vamos analisar seu site — grátis.","Envie a URL do seu site. Não é necessário pagamento para enviar e não há obrigação de prosseguir. Apenas uma análise clara e especializada de como fazer seu site trabalhar melhor para o seu negócio."],
+footer:["© 2024 Cortexa. Todos os direitos reservados.","Privacidade","Termos","Contato","Painel","Entrar"]
+}};
 
-  es: {
-    nav: {
-      features: "Funciones",
-      aiAssistant: "Asistente IA",
-      aiWorkflows: "Flujos de IA",
-      pipeline: "Pipeline",
-      analytics: "Analítica",
-      pricing: "Precios",
-      costCalculator: "Calculadora de Costes",
-      webSolutions: "Soluciones Web",
-      getStarted: "Comenzar",
-      dashboard: "Panel",
-      login: "Iniciar sesión",
-    },
-    hero: {
-      eyebrow: "SOLUCIONES WEB CORTEXA",
-      title1: "Conecta tu sitio web con los sistemas",
-      title2: "que impulsan tu negocio.",
-      p1: "Tu sitio web suele ser el lugar donde comienza el interés del cliente. Cortexa Web Solutions ayuda a que esas interacciones continúen directamente hacia tu agente de IA, CRM, pipeline, citas, checkout, cotizaciones, visitas, demos o soporte.",
-      p2: "Si tu sitio web no cuenta con las conexiones correctas de WhatsApp, teléfono, seguimiento o IA, nuestro equipo puede revisar la experiencia actual y configurar los puntos de entrada que faltan.",
-    },
-    connect: {
-      title: "Lo que conectamos",
-      p1: "Un sitio web funciona mejor cuando cada visitante tiene un camino claro hacia tu flujo de conversión asistido por IA. Conectamos tu sitio web con los canales, sistemas y flujos adecuados para que no se pierda ninguna oportunidad.",
-      p2: "WhatsApp debe entrar en el flujo de conversión asistido por IA en lugar de funcionar como una bandeja sin gestionar. Así, las conversaciones se capturan, califican y enrutan como cualquier otro lead.",
-    },
-    flow: {
-      title: "Una conexión completa, no solo otro botón.",
-      desc: "Desde el primer clic hasta la conversión final, nos aseguramos de que cada punto de contacto de tu sitio web esté conectado al sistema correcto, con los datos correctos y en el orden correcto.",
-    },
-    plans: {
-      title: "Niveles de servicio según lo que necesita tu sitio web.",
-      desc: "Elige el nivel de soporte adecuado para tus objetivos. Todos los servicios son profesionales y de pago único, con alcance y entregables claros.",
-      oneTime: "pago único",
-      request: "Solicitar una revisión",
-      disclaimer: "Cortexa Web Solutions son servicios profesionales opcionales de pago único y están separados de tu suscripción de software Cortexa. La implementación personalizada se cotiza según los requisitos de tu sitio web y sus conexiones. Los costes de terceros se facturan por separado.",
-    },
-    footer: {
-      copyright: "© 2024 Cortexa. Todos los derechos reservados.",
-      privacy: "Privacidad",
-      terms: "Términos",
-      contact: "Contacto",
-    },
-    connections: [
-      ["Sitios web y landing pages", "Conecta tu sitio web principal y las landing pages de tus campañas."],
-      ["Seguimiento de campañas y fuentes", "Identifica de dónde provienen las consultas en todos tus canales."],
-      ["WhatsApp y teléfono empresarial", "Integra WhatsApp y teléfono en tu flujo de conversión asistido por IA."],
-      ["Pipelines y flujos de trabajo", "Dirige los leads al pipeline correcto y automatiza los siguientes pasos."],
-      ["Agente IA de Cortexa", "Dirige las consultas del sitio web directamente a tu agente de IA."],
-      ["Citas, checkout y cotizaciones", "Conecta reservas, checkout y solicitudes de cotización con tu CRM."],
-      ["Captura de leads en CRM", "Captura y crea leads automáticamente en tu CRM."],
-      ["Transferencia a una persona", "Garantiza una transferencia fluida a tu equipo cuando sea necesario."],
-    ],
-    flowSteps: [
-      "Sitio web, anuncio, teléfono o WhatsApp",
-      "Agente IA de Cortexa",
-      "Contacto capturado",
-      "Registro CRM creado",
-      "Fuente registrada",
-      "Pipeline correcto",
-      "Conversión o transferencia humana",
-    ],
-    planData: [
-      ["connection-setup", "Configuración de Conexión", 147, ["CTA de WhatsApp o teléfono", "Conexión con agente IA", "Captura de leads", "Enrutamiento CRM", "Pruebas de conexión"]],
-      ["website-optimization", "Optimización del Sitio Web", 297, ["Revisión del sitio web", "Mejoras de UX y CTA", "Integración de puntos de entrada", "Seguimiento y enrutamiento del pipeline", "Prueba completa del embudo"]],
-      ["full-transformation", "Transformación Completa", 547, ["Rediseño sustancial", "Nuevas páginas o secciones", "Optimización responsive", "Integración completa IA/CRM", "Soporte de lanzamiento"]],
-    ],
-  },
+const HREFS=["/#features","/#ai-assistant","/#automation","/#pipeline","/#analytics","/pricing","/editorial/the-end-of-legacy-crm","/web-solutions","/trial?flow=free-access&plan=free"];
+const IMP_ICONS=[Monitor,SlidersHorizontal,Bot,UsersRound,MessageCircle,CalendarDays,Settings,Settings,BarChart3];
+const REVIEW_ICONS=[FileSearch,FileSearch,Bot,FileSearch];
 
-  pt: {
-    nav: {
-      features: "Recursos",
-      aiAssistant: "Assistente IA",
-      aiWorkflows: "Fluxos de IA",
-      pipeline: "Pipeline",
-      analytics: "Análises",
-      pricing: "Preços",
-      costCalculator: "Calculadora de Custos",
-      webSolutions: "Soluções Web",
-      getStarted: "Começar",
-      dashboard: "Painel",
-      login: "Entrar",
-    },
-    hero: {
-      eyebrow: "SOLUÇÕES WEB CORTEXA",
-      title1: "Conecte seu site aos sistemas",
-      title2: "que impulsionam o seu negócio.",
-      p1: "Seu site costuma ser onde o interesse do cliente começa. O Cortexa Web Solutions ajuda a garantir que essas interações continuem diretamente para seu agente de IA, CRM, pipeline, agendamentos, checkout, orçamentos, visitas, demos ou suporte.",
-      p2: "Se o seu site não tiver as conexões corretas de WhatsApp, telefone, rastreamento ou IA, nossa equipe pode revisar a experiência atual e configurar os pontos de entrada que estão faltando.",
-    },
-    connect: {
-      title: "O que conectamos",
-      p1: "Um site funciona melhor quando cada visitante tem um caminho claro para o seu fluxo de conversão assistido por IA. Conectamos seu site aos canais, sistemas e fluxos corretos para que nenhuma oportunidade seja perdida.",
-      p2: "O WhatsApp deve entrar no fluxo de conversão assistido por IA, em vez de ficar em uma caixa de entrada sem gerenciamento. Assim, as conversas são capturadas, qualificadas e encaminhadas como qualquer outro lead.",
-    },
-    flow: {
-      title: "Uma conexão completa, não apenas mais um botão.",
-      desc: "Do primeiro clique à conversão final, garantimos que cada ponto de contato do seu site esteja conectado ao sistema certo, com os dados certos e na ordem certa.",
-    },
-    plans: {
-      title: "Níveis de serviço de acordo com o que seu site precisa.",
-      desc: "Escolha o nível de suporte ideal para seus objetivos. Todos os serviços são profissionais e de pagamento único, com escopo e entregas claramente definidos.",
-      oneTime: "pagamento único",
-      request: "Solicitar uma análise",
-      disclaimer: "Cortexa Web Solutions são serviços profissionais opcionais de pagamento único e separados da sua assinatura do software Cortexa. A implementação personalizada é cotada de acordo com os requisitos do seu site e das conexões. Custos de terceiros são cobrados separadamente.",
-    },
-    footer: {
-      copyright: "© 2024 Cortexa. Todos os direitos reservados.",
-      privacy: "Privacidade",
-      terms: "Termos",
-      contact: "Contato",
-    },
-    connections: [
-      ["Sites e landing pages", "Conecte seu site principal e as landing pages das campanhas."],
-      ["Rastreamento de campanhas e fontes", "Acompanhe de onde vêm as consultas em todos os canais."],
-      ["WhatsApp e telefone comercial", "Integre WhatsApp e telefone ao seu fluxo de conversão assistido por IA."],
-      ["Pipelines e fluxos de trabalho", "Direcione leads para o pipeline correto e automatize os próximos passos."],
-      ["Agente IA Cortexa", "Direcione consultas do site diretamente para seu agente de IA."],
-      ["Agendamentos, checkout e orçamentos", "Conecte reservas, checkout e solicitações de orçamento ao seu CRM."],
-      ["Captura de leads no CRM", "Capture e crie leads automaticamente no seu CRM."],
-      ["Transferência humana", "Garanta uma transferência tranquila para sua equipe quando necessário."],
-    ],
-    flowSteps: [
-      "Site, anúncio, telefone ou WhatsApp",
-      "Agente IA Cortexa",
-      "Contato capturado",
-      "Registro no CRM criado",
-      "Fonte registrada",
-      "Pipeline correto",
-      "Conversão ou transferência humana",
-    ],
-    planData: [
-      ["connection-setup", "Configuração de Conexão", 147, ["CTA de WhatsApp ou telefone", "Conexão com agente IA", "Captura de leads", "Roteamento no CRM", "Teste da conexão"]],
-      ["website-optimization", "Otimização do Site", 297, ["Revisão do site", "Melhorias de UX e CTA", "Integração dos pontos de entrada", "Rastreamento e roteamento do pipeline", "Teste completo do funil"]],
-      ["full-transformation", "Transformação Completa", 547, ["Redesign substancial", "Novas páginas ou seções", "Otimização responsiva", "Integração completa IA/CRM", "Suporte ao lançamento"]],
-    ],
-  },
-};
-
-const CONNECTION_ICONS = [
-  Monitor,
-  BarChart3,
-  MessageCircle,
-  GitBranch,
-  Bot,
-  CalendarDays,
-  Database,
-  UsersRound,
-];
-
-const PLAN_ICONS = [Settings, BarChart3, Workflow];
-
-export default function WebSolutions() {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const [lang, setLang] = useState(
-    () => localStorage.getItem("cortexa_lang") || "en",
-  );
-  const [langOpen, setLangOpen] = useState(false);
-
-  const tr = COPY[lang] || COPY.en;
-
-  const plans = tr.planData.map(([id, name, price, items], index) => ({
-    id,
-    name,
-    price,
-    items,
-    icon: PLAN_ICONS[index],
-  }));
-
-  const connectionItems = tr.connections.map(([title, text], index) => ({
-    title,
-    text,
-    icon: CONNECTION_ICONS[index],
-  }));
-
-  const flowSteps = tr.flowSteps;
-
-  const changeLanguage = (nextLang) => {
-    if (!COPY[nextLang]) return;
-
-    setLang(nextLang);
-    setLangOpen(false);
-
-    // Keep the visitor on /web-solutions. The global locale switch hook
-    // navigates to localized landing routes, so this page manages its own
-    // language state instead.
-    localStorage.setItem("cortexa_lang", nextLang);
-    localStorage.setItem("cortexa_locale", nextLang);
-
-    document.documentElement.lang =
-      nextLang === "pt" ? "pt-BR" : nextLang;
-  };
-
-  useEffect(() => {
-    const close = (event) => {
-      if (!event.target.closest(".ws-language")) {
-        setLangOpen(false);
-      }
-    };
-
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, []);
-
-  const choosePlan = (plan) => {
-    const params = new URLSearchParams({
-      plan: plan.id,
-      name: plan.name,
-      price: String(plan.price),
-    });
-
-    navigate(`/web-solutions/checkout?${params.toString()}`);
-  };
-
-  return (
-    <div className="ws-page">
-      <header className="ws-header">
-        <div className="ws-header-inner">
-          <Link to="/" className="ws-brand" aria-label="Cortexa home">
-            <img src={headlogoImg} alt="CORTEXA" />
-          </Link>
-
-          <nav className="ws-nav">
-            <a href="/#features">{tr.nav.features}</a>
-            <a href="/#ai-assistant">{tr.nav.aiAssistant}</a>
-            <a href="/#automation">{tr.nav.aiWorkflows}</a>
-            <a href="/#pipeline">{tr.nav.pipeline}</a>
-            <a href="/#analytics">{tr.nav.analytics}</a>
-            <a href="/pricing">{tr.nav.pricing}</a>
-            <a href="/editorial/the-end-of-legacy-crm">{tr.nav.costCalculator}</a>
-            <a className="active" href="/web-solutions">{tr.nav.webSolutions}</a>
-            <a href="/trial?flow=free-access&plan=free">{tr.nav.getStarted}</a>
-          </nav>
-
-          <div className="ws-header-actions">
-            <div className="ws-language">
-              <button
-                type="button"
-                className="ws-language-button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setLangOpen((open) => !open);
-                }}
-                aria-expanded={langOpen}
-                aria-label="Change language"
-              >
-                <Globe2 size={18} />
-              </button>
-
-              {langOpen && (
-                <div className="ws-language-menu">
-                  {["en", "es", "pt"].map((item) => (
-                    <button
-                      type="button"
-                      key={item}
-                      className={lang === item ? "active" : ""}
-                      onClick={() => changeLanguage(item)}
-                    >
-                      {item === "en"
-                        ? "English"
-                        : item === "es"
-                          ? "Español"
-                          : "Português"}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <a href={isAuthenticated ? "/dashboard/home" : "/sign-in"}>
-              {isAuthenticated ? tr.nav.dashboard : tr.nav.login}
-            </a>
-          </div>
-        </div>
-      </header>
-
-      <main>
-        <section className="ws-hero">
-          <div className="ws-container">
-            <span className="ws-eyebrow">{tr.hero.eyebrow}</span>
-            <h1>
-              {tr.hero.title1}
-              <br />
-              {tr.hero.title2}
-            </h1>
-            <p>
-{tr.hero.p1}
-            </p>
-            <p>
-{tr.hero.p2}
-            </p>
-          </div>
-        </section>
-
-        <section className="ws-connect-section">
-          <div className="ws-container ws-connect-grid">
-            <div className="ws-connect-copy">
-              <h2>{tr.connect.title}</h2>
-              <p>
-{tr.connect.p1}
-              </p>
-              <p>
-{tr.connect.p2}
-              </p>
-            </div>
-
-            <div className="ws-connection-list">
-              {connectionItems.map(({ icon: Icon, title, text }) => (
-                <article key={title} className="ws-connection-item">
-                  <div className="ws-connection-icon">
-                    <Icon size={28} />
-                  </div>
-                  <div>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="ws-flow-section">
-          <div className="ws-container">
-            <h2>{tr.flow.title}</h2>
-            <p className="ws-flow-lead">
-{tr.flow.desc}
-            </p>
-
-            <div className="ws-flow">
-              {flowSteps.map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="ws-flow-step">{step}</div>
-                  {index < flowSteps.length - 1 && (
-                    <ArrowRight className="ws-flow-arrow" size={22} />
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="ws-plans-section">
-          <div className="ws-container">
-            <h2>{tr.plans.title}</h2>
-            <p className="ws-plans-lead">
-{tr.plans.desc}
-            </p>
-
-            <div className="ws-plans-grid">
-              {plans.map((plan) => {
-                const Icon = plan.icon;
-                return (
-                  <article className="ws-plan-card" key={plan.id}>
-                    <div className="ws-plan-top">
-                      <div className="ws-plan-icon">
-                        <Icon size={30} />
-                      </div>
-                      <div>
-                        <h3>{plan.name}</h3>
-                        <div className="ws-plan-price">
-                          <strong>${plan.price}</strong>
-                          <span>{tr.plans.oneTime}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <ul>
-                      {plan.items.map((item) => (
-                        <li key={item}>
-                          <Check size={18} />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button type="button" onClick={() => choosePlan(plan)}>
-                      {tr.plans.request}
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
-
-            <p className="ws-disclaimer">
-{tr.plans.disclaimer}
-            </p>
-          </div>
-        </section>
-      </main>
-
-      <footer className="ws-footer">
-        <div className="ws-container ws-footer-inner">
-          <Link to="/" className="ws-footer-brand">
-            <img src={headlogoImg} alt="CORTEXA" />
-          </Link>
-
-          <nav>
-            <a href="/#features">{tr.nav.features}</a>
-            <a href="/#ai-assistant">{tr.nav.aiAssistant}</a>
-            <a href="/#automation">{tr.nav.aiWorkflows}</a>
-            <a href="/#pipeline">{tr.nav.pipeline}</a>
-            <a href="/#analytics">{tr.nav.analytics}</a>
-            <a href="/pricing">{tr.nav.pricing}</a>
-            <a href="/editorial/the-end-of-legacy-crm">{tr.nav.costCalculator}</a>
-            <a href="/web-solutions">{tr.nav.webSolutions}</a>
-            <a href="/trial?flow=free-access&plan=free">{tr.nav.getStarted}</a>
-          </nav>
-
-          <div className="ws-footer-actions">
-            <div className="ws-language ws-language-footer">
-              <button
-                type="button"
-                className="ws-language-button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setLangOpen((open) => !open);
-                }}
-              >
-                <Globe2 size={18} />
-              </button>
-
-              {langOpen && (
-                <div className="ws-language-menu ws-language-menu-footer">
-                  {["en", "es", "pt"].map((item) => (
-                    <button
-                      type="button"
-                      key={item}
-                      className={lang === item ? "active" : ""}
-                      onClick={() => changeLanguage(item)}
-                    >
-                      {item === "en"
-                        ? "English"
-                        : item === "es"
-                          ? "Español"
-                          : "Português"}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <a
-              className="ws-footer-dashboard"
-              href={isAuthenticated ? "/dashboard/home" : "/sign-in"}
-            >
-              {isAuthenticated ? tr.nav.dashboard : tr.nav.login}
-            </a>
-          </div>
-        </div>
-
-        <div className="ws-container ws-footer-bottom">
-          <span>{tr.footer.copyright}</span>
-          <div>
-            <a href="/privacy">{tr.footer.privacy}</a>
-            <a href="/terms">{tr.footer.terms}</a>
-            <a href="mailto:support@cortexaaicrm.com">{tr.footer.contact}</a>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
+function Language({lang,setLang,footer=false}){
+ const [open,setOpen]=useState(false);
+ return <div className={`ws-language ${footer?"ws-language-footer":""}`}>
+   <button type="button" className="ws-language-button" onClick={()=>setOpen(v=>!v)} aria-label="Language"><Globe2 size={18}/></button>
+   {open&&<div className="ws-language-menu">{[["en","English"],["es","Español"],["pt","Português"]].map(([v,l])=><button key={v} className={lang===v?"active":""} onClick={()=>{setLang(v);setOpen(false)}}>{l}</button>)}</div>}
+ </div>
+}
+function Header({tr,lang,setLang}){
+ const {isAuthenticated}=useAuth();
+ return <header className="ws-header"><div className="ws-header-inner">
+  <Link to="/" className="ws-brand"><img src={headlogoImg} alt="CORTEXA"/></Link>
+  <nav className="ws-nav">{tr.nav.map((l,i)=><a key={i} href={HREFS[i]} className={i===7?"active":""}>{l}</a>)}</nav>
+  <div className="ws-header-actions"><Language lang={lang} setLang={setLang}/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div>
+ </div></header>
+}
+function Footer({tr,lang,setLang}){
+ const {isAuthenticated}=useAuth();
+ return <footer className="ws-footer"><div className="ws-container ws-footer-inner">
+  <Link to="/" className="ws-footer-brand"><img src={headlogoImg} alt="CORTEXA"/></Link>
+  <nav>{tr.nav.map((l,i)=><a key={i} href={HREFS[i]}>{l}</a>)}</nav>
+  <div className="ws-footer-actions"><Language lang={lang} setLang={setLang} footer/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div>
+ </div><div className="ws-container ws-footer-bottom"><span>{tr.footer[0]}</span><div><a href="/privacy">{tr.footer[1]}</a><a href="/terms">{tr.footer[2]}</a><a href="mailto:support@cortexaaicrm.com">{tr.footer[3]}</a></div></div></footer>
+}
+function ReviewButton({children}){return <Link className="ws-review-btn" to={REVIEW_PATH}><span>{children}</span><ArrowRight size={19}/></Link>}
+export default function WebSolutions(){
+ const [lang,setLangState]=useState(()=>localStorage.getItem("cortexa_lang")||"en");
+ const setLang=(v)=>{setLangState(v);localStorage.setItem("cortexa_lang",v);localStorage.setItem("cortexa_locale",v);document.documentElement.lang=v==="pt"?"pt-BR":v};
+ useEffect(()=>{document.documentElement.lang=lang==="pt"?"pt-BR":lang},[lang]);
+ const tr=COPY[lang]||COPY.en;
+ return <div className="ws-page"><Header tr={tr} lang={lang} setLang={setLang}/><main>
+  <section className="ws-new-hero"><div className="ws-container"><div className="ws-eyebrow">{tr.hero[0]}</div><h1>{tr.hero[1]}<br/>{tr.hero[2]}</h1><p>{tr.hero[3]}</p><ReviewButton>{tr.hero[4]}</ReviewButton></div></section>
+  <section className="ws-trust-strip"><div className="ws-container ws-trust-grid">{tr.trust.map(([t,p],i)=>{const I=[FileSearch,Settings,Shield][i];return <article key={t}><I/><div><b>{t}</b><p>{p}</p></div></article>})}</div></section>
+  <section className="ws-improve"><div className="ws-container"><h2>{tr.improveTitle}</h2><p className="ws-section-lead">{tr.improveLead}</p><div className="ws-improve-grid">{tr.improvements.map(([t,p],i)=>{const I=IMP_ICONS[i];return <article key={t}><I size={31}/><div><h3>{t}</h3><p>{p}</p></div></article>})}</div></div></section>
+  <section className="ws-professional"><div className="ws-container ws-professional-card"><div><div className="ws-eyebrow">{tr.professional[0]}</div><h2>{tr.professional[1]}</h2><p>{tr.professional[2]}</p></div><div className="ws-tailored"><Monitor size={42}/><h3>{tr.professional[3]}</h3><p>{tr.professional[4]}</p></div></div></section>
+  <section className="ws-dark-review"><div className="ws-container"><div className="ws-dark-top"><div><h2>{tr.review[0]}</h2><p>{tr.review[1]}</p></div><aside><Gift size={45}/><div><h3>{tr.review[2]}</h3><p>{tr.review[3]} <strong>$147.</strong></p></div></aside></div><div className="ws-review-items">{tr.reviewItems.map(([t,p],i)=>{const I=REVIEW_ICONS[i];return <article key={t}><I size={32}/><h3>{t}</h3><p>{p}</p></article>})}</div><ReviewButton>{tr.review[4]}</ReviewButton></div></section>
+  <section className="ws-bottom-cta"><div className="ws-container"><h2>{tr.bottom[0]}</h2><p>{tr.bottom[1]}</p><ReviewButton>{tr.review[4]}</ReviewButton></div></section>
+ </main><Footer tr={tr} lang={lang} setLang={setLang}/></div>
 }

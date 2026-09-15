@@ -12,11 +12,13 @@ import { AiUnitsModule } from '../ai-units/ai-units.module';
 import { WebSolutionsPaymentService } from './web-solutions-payment.service';
 import { WebSolutionsPaymentController } from './web-solutions-payment.controller';
 import { DatabaseModule } from '../database/database.module';
+import { WebSolutionsReviewController } from './web-solutions-review.controller';
+import { WebSolutionsReviewService } from './web-solutions-review.service';
 
 @Module({
   imports: [ConfigModule, PlatformMailModule, WorkspacesModule, AiUnitsModule, DatabaseModule],
-  controllers: [PaddleController, PaymentsController, WebSolutionsPaymentController],
-  providers: [PaddleService, PaymentsService, PayPalService, WebSolutionsPaymentService],
+  controllers: [PaddleController, PaymentsController, WebSolutionsPaymentController, WebSolutionsReviewController],
+  providers: [PaddleService, PaymentsService, PayPalService, WebSolutionsPaymentService, WebSolutionsReviewService],
   exports: [PaddleService],
 })
 export class PaymentsModule {}

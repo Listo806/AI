@@ -154,6 +154,7 @@ import AdminBillingCalendar from "./pages/admin/AdminBillingCalendar";
 import AestheticWellnessWorkspace from "./pages/aesthetic-wellness/AestheticWellnessWorkspace";
 import WebSolutions from "./pages/web-solutions/WebSolutions";
 import WebSolutionsCheckout from "./pages/web-solutions/WebSolutionsCheckout";
+import FreeWebsiteReview from "./pages/web-solutions/FreeWebsiteReview";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -243,6 +244,7 @@ function publicRoutes(prefix) {
         path="/web-solutions/checkout"
         element={<WebSolutionsCheckout />}
       />
+      <Route path="/web-solutions/free-review" element={<FreeWebsiteReview />} />
       <Route path="/editorial/business" element={<EditorialBusinessAI />} />
       <Route
         path="/editorial/business/es"
