@@ -2594,16 +2594,26 @@ export class NuveiService {
     }
     const reference = String(input.reference || '').trim() || this.devRef('WS');
 
+    const nameParts = String(input.customerName || '').trim().split(/\s+/).filter(Boolean);
+    const site = this.frontendUrl();
     const res = await this.client.createLinkToPay({
       user: {
         id: `ws-${crypto.randomBytes(4).toString('hex')}`,
         email: input.customerEmail,
+        name: nameParts[0] || 'Customer',
+        last_name: nameParts.slice(1).join(' ') || '-',
       },
       order: {
         amount,
         description: input.description || 'Cortexa Web Solutions',
         dev_reference: reference,
         currency: 'USD',
+      },
+      configuration: {
+        success_url: `${site}/?payment=success&ref=${encodeURIComponent(reference)}`,
+        failure_url: `${site}/?payment=failure&ref=${encodeURIComponent(reference)}`,
+        pending_url: `${site}/?payment=pending&ref=${encodeURIComponent(reference)}`,
+        review_url: `${site}/?payment=review&ref=${encodeURIComponent(reference)}`,
       },
     });
 
@@ -2612,6 +2622,9 @@ export class NuveiService {
       res.body?.payment?.payment_url ||
       res.body?.payment_url ||
       null;
+    if (!payUrl) {
+      this.logger.error(`Nuvei Link-to-Pay failed: HTTP ${res.httpStatus} ${JSON.stringify(res.body || res.error || {}).slice(0, 500)}`);
+    }
 
     await this.db.query(
       `INSERT INTO nuvei_link_to_pay
@@ -2632,8 +2645,9 @@ export class NuveiService {
     );
 
     if (!payUrl) {
+      const why = res.body?.detail || res.body?.error?.description || res.body?.error?.type || res.error;
       throw new BadRequestException(
-        `Nuvei did not return a payment link: ${res.body?.detail || res.error || 'unknown error'}`,
+        `Nuvei did not return a payment link: ${typeof why === 'string' ? why : JSON.stringify(why || 'unknown error').slice(0, 300)}`,
       );
     }
     return { reference, payUrl, status: 'pending' };
