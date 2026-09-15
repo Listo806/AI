@@ -139,6 +139,7 @@ export class AuthService {
           paymentStatus: user.paymentStatus ?? null,
           plan: user.plan ?? null,
           selectedPlan: user.selectedPlan ?? null,
+          ...(await this.usersService.internalAccess(user.id)),
         },
         ...tokens,
       };

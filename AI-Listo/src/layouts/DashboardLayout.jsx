@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
+import { isInternalAccount } from "../utils/internalAccess";
 import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
 import LanguageSelector from "../components/LanguageSelector";
@@ -92,6 +93,9 @@ export default function DashboardLayout() {
   // Paddle webhook catches up and flips payment_status to active server-side.
   useEffect(() => {
     if (!user) return;
+    // Cortexa internal staff are never customers: no activation fee, no trial
+    // check, no subscription check, no checkout redirect.
+    if (isInternalAccount(user)) return;
     const status = String(user.paymentStatus || "").toLowerCase();
     // A subscription in its 14-day trial is a paid account (the backend's
     // resolveEffectivePlan treats "trialing" as paid); never bounce it to checkout.
