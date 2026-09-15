@@ -97,6 +97,9 @@ export default function DashboardLayout() {
     // resolveEffectivePlan treats "trialing" as paid); never bounce it to checkout.
     const paid = status === "active" || status === "paid" || status === "trialing";
     if (paid) return;
+    // An ended subscription (past due, suspended, canceled, refunded) drops the
+    // account to the Free tier; it is not an unfinished checkout to bounce to.
+    if (["past_due", "suspended", "canceled", "refunded"].includes(status)) return;
     // Free tier has CRM access without paying, so never bounce a Free owner.
     if (String(user.selectedPlan || "").toLowerCase() === "free") return;
     if (user.role !== "owner" || !user.selectedPlan || !status) return;

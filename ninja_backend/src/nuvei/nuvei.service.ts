@@ -275,8 +275,19 @@ export class NuveiService {
              WHERE table_name = 'nuvei_webhook_events' AND column_name = 'status') < 32 THEN
           ALTER TABLE nuvei_webhook_events ALTER COLUMN status TYPE VARCHAR(32);
         END IF;
+        IF (SELECT character_maximum_length FROM information_schema.columns
+             WHERE table_name = 'nuvei_transactions' AND column_name = 'period_key') < 64 THEN
+          ALTER TABLE nuvei_transactions ALTER COLUMN period_key TYPE VARCHAR(64);
+        END IF;
       END $$;
     `);
+    // The shared billing tables the mirror writes to (migration 162) — self-heal
+    // so the admin Next-Billing / LTV views work without a manual migration.
+    await this.db.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS nuvei_subscription_id UUID`);
+    await this.db.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS subscriptions_nuvei_sub_uidx
+         ON subscriptions (nuvei_subscription_id) WHERE nuvei_subscription_id IS NOT NULL`,
+    );
 
     this.schemaReady = true;
   }
@@ -306,14 +317,17 @@ export class NuveiService {
   async getUserSubscription(userId: string) {
     await this.ensureSchema();
     const { rows } = await this.db.query(
-      `SELECT id, plan_key, provision_plan, status, activation_amount,
-              monthly_amount, currency, trial_end, next_billing_date,
-              cancel_at_period_end, canceled_at, created_at
-         FROM nuvei_subscriptions
-        WHERE user_id = $1
-        ORDER BY (status IN ('trialing','active','past_due')) DESC,
-                 (status = 'pending_activation') DESC,
-                 created_at DESC
+      `SELECT s.id, s.plan_key, s.provision_plan, s.status, s.activation_amount,
+              s.monthly_amount, s.currency, s.trial_end, s.next_billing_date,
+              s.cancel_at_period_end, s.canceled_at, s.created_at,
+              (SELECT t.provider_transaction_id FROM nuvei_transactions t
+                WHERE t.subscription_id = s.id AND t.kind = 'activation'
+                ORDER BY t.created_at DESC LIMIT 1) AS activation_transaction_id
+         FROM nuvei_subscriptions s
+        WHERE s.user_id = $1
+        ORDER BY (s.status IN ('trialing','active')) DESC,
+                 (s.status = 'pending_activation' AND s.created_at > NOW() - interval '48 hours') DESC,
+                 s.created_at DESC
         LIMIT 1`,
       [userId],
     );
@@ -353,7 +367,17 @@ export class NuveiService {
     const sub = rows[0];
     if (!sub) return null;
     if (sub.status !== 'pending_activation') return sub.status;
-    if (!sub.provider_transaction_id) return sub.status;
+    if (!sub.provider_transaction_id) {
+      // Nothing to verify. After Nuvei's 48h callback window nothing can
+      // confirm it any more: close it (a later callback still activates or
+      // refunds through the payment_failed path).
+      const { rowCount } = await this.db.query(
+        `UPDATE nuvei_subscriptions SET status = 'payment_failed', updated_at = NOW()
+          WHERE id = $1 AND status = 'pending_activation' AND created_at < NOW() - interval '48 hours'`,
+        [sub.id],
+      );
+      return rowCount ? 'payment_failed' : sub.status;
+    }
 
     const info = await this.client.verifyTransaction(sub.provider_transaction_id);
     if (!info.ok || !info.body?.transaction) return sub.status;
@@ -542,7 +566,7 @@ export class NuveiService {
       status === '2' ||
       status === 'canceled' ||
       status === 'cancelled' ||
-      [7, 8, 29].includes(detail)
+      [7, 8, 29, 34].includes(detail)
     );
   }
 
@@ -869,7 +893,7 @@ export class NuveiService {
     // second subscription (double monthly billing) and overwrote the plan.
     const { rows: live } = await this.db.query(
       `SELECT id, plan_key, status FROM nuvei_subscriptions
-        WHERE user_id = $1 AND status IN ('trialing','active','past_due')
+        WHERE user_id = $1 AND status IN ('trialing','active')
         ORDER BY created_at DESC LIMIT 1`,
       [input.userId],
     );
@@ -897,9 +921,9 @@ export class NuveiService {
       const p = pendingRows[0];
       const st = await this.reconcilePendingActivation(p.id);
       if (st === 'trialing' || st === 'active') {
-        throw new BadRequestException(
-          `You already have an active ${plan.label} subscription. To change plans, please contact support.`,
-        );
+        // The earlier attempt just got confirmed: that IS the customer's
+        // activation, not an error.
+        return { status: st, subscriptionId: p.id };
       }
       if (st === 'pending_activation') {
         const ageMs = Date.now() - new Date(p.tx_at || Date.now()).getTime();
@@ -920,7 +944,11 @@ export class NuveiService {
           };
         }
         this.logger.warn(`Nuvei activation ${p.id} abandoned (${threeDs ? '3DS' : p.tx_status}, ${Math.round(ageMs / 1000)}s); allowing a new attempt`);
-        await this.setSubStatus(p.id, 'payment_failed');
+        await this.db.query(
+          `UPDATE nuvei_subscriptions SET status = 'payment_failed', updated_at = NOW()
+            WHERE id = $1 AND status = 'pending_activation'`,
+          [p.id],
+        );
       }
     }
 
@@ -1283,6 +1311,16 @@ export class NuveiService {
     );
     const sub = rows[0];
     if (!sub) return;
+
+    // A new subscription replaces an older one that was still being retried
+    // (past due / suspended): close it so it can never bill again.
+    await this.db.query(
+      `UPDATE nuvei_subscriptions
+          SET status = 'canceled', next_billing_date = NULL,
+              canceled_at = COALESCE(canceled_at, NOW()), updated_at = NOW()
+        WHERE user_id = $1 AND id <> $2 AND status IN ('past_due','suspended')`,
+      [sub.user_id, subscriptionId],
+    );
 
     await this.provisionAccount({
       userId: sub.user_id,
@@ -1686,21 +1724,22 @@ export class NuveiService {
       if (info.ok && info.body?.transaction) {
         const t = info.body.transaction;
         if (this.isApproved(info.body)) {
-          await this.db.query(
+          const { rowCount } = await this.db.query(
             `UPDATE nuvei_transactions SET status = 'success', status_detail = 3,
                     authorization_code = COALESCE($2, authorization_code), message = COALESCE($3, message)
-              WHERE id = $1`,
+              WHERE id = $1 AND status IN ('pending','unconfirmed')`,
             [row.id, t.authorization_code || null, t.message || null],
           );
-          await this.applyRecurringSuccess(sub, t, monthly);
+          if (rowCount) await this.applyRecurringSuccess(sub, t, monthly); // else the callback settled it
           return;
         }
         if (this.isDefinitiveFailure(info.body)) {
-          await this.db.query(
-            `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message) WHERE id = $1`,
+          const { rowCount } = await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message)
+              WHERE id = $1 AND status IN ('pending','unconfirmed')`,
             [row.id, Number.isFinite(Number(t.status_detail)) ? Number(t.status_detail) : null, t.message || null],
           );
-          await this.applyRecurringDecline(sub, t, monthly, t.message || 'declined');
+          if (rowCount) await this.applyRecurringDecline(sub, t, monthly, t.message || 'declined');
           return;
         }
       }
@@ -1796,7 +1835,12 @@ export class NuveiService {
    */
   private async applyRecurringSuccess(sub: any, tx: any, amount: number): Promise<void> {
     const plan = this.plan(sub.plan_key);
-    const next = this.addMonths(new Date(sub.next_billing_date || Date.now()), 1);
+    // Normally the anniversary advances one month. After a long lapse (billing
+    // paused, outage) the paid month starts today instead, so the customer is
+    // never charged for several missed months in consecutive hourly runs.
+    const scheduled = new Date(sub.next_billing_date || Date.now());
+    const base = scheduled.getTime() < Date.now() - 15 * 24 * 60 * 60 * 1000 ? new Date() : scheduled;
+    const next = this.addMonths(base, 1);
     const { rowCount } = await this.db.query(
       `UPDATE nuvei_subscriptions
          SET status = 'active', next_billing_date = $2, last_charge_at = NOW(), updated_at = NOW()
@@ -2066,9 +2110,15 @@ export class NuveiService {
     }
 
     if (sub) {
-      const isActivation = !!devReference && devReference === sub.dev_reference;
+      const isActivation =
+        (!!devReference && devReference === sub.dev_reference) ||
+        (!!txRow && String(txRow.kind) === 'activation');
 
       if (isActivation) {
+        if (confirmed && ['canceled', 'refunded'].includes(sub.status)) {
+          // Approved after the subscription ended: money without service.
+          return this.refundStrayCharge(sub, txRow, providerTxId, 'activation approved after the subscription ended');
+        }
         if (confirmed && ['pending_activation', 'payment_failed'].includes(sub.status)) {
           if (!this.amountMatches(tx?.amount, sub.activation_amount)) {
             this.logger.warn(
@@ -2197,8 +2247,10 @@ export class NuveiService {
               tx,
               Number(txRow.amount),
             );
+            return { handled: 'recurring_confirmed', verified: true };
           }
-          return { handled: 'recurring_confirmed', verified: true };
+          // Approved after the subscription ended: refund, never keep it.
+          return this.refundStrayCharge(sub, txRow, providerTxId, 'monthly charge approved after the subscription ended');
         }
         if (failed && ['pending', 'unconfirmed'].includes(String(txRow.status))) {
           const { rowCount } = await this.db.query(
@@ -2226,6 +2278,13 @@ export class NuveiService {
         [devReference],
       );
       if (ltp.rows[0]) {
+        if (reversal) {
+          await this.db.query(
+            `UPDATE nuvei_link_to_pay SET status = 'refunded' WHERE id = $1 AND status = 'paid'`,
+            [ltp.rows[0].id],
+          );
+          return { handled: 'link_to_pay_reversed', verified: true };
+        }
         if (confirmed) {
           await this.db.query(
             `UPDATE nuvei_link_to_pay
@@ -2241,6 +2300,58 @@ export class NuveiService {
     }
 
     return { handled: confirmed ? 'confirmed_no_match' : 'ignored', verified: false };
+  }
+
+  /**
+   * A charge Nuvei confirmed for a subscription that no longer exists (ended
+   * before the late confirmation arrived): refund it at Nuvei and record it.
+   */
+  private async refundStrayCharge(
+    sub: any,
+    txRow: any,
+    providerTxId: string | null,
+    reason: string,
+  ): Promise<{ handled: string; verified: boolean }> {
+    // Money already returned (admin refund / earlier reversal): nothing to do.
+    if (txRow && ['refunded', 'partially_refunded', 'refund_pending'].includes(String(txRow.status))) {
+      return { handled: 'already_processed', verified: true };
+    }
+    let refunded = false;
+    if (providerTxId) {
+      try {
+        const r = await this.client.refund(providerTxId);
+        refunded = String(r.body?.status || '').toLowerCase() === 'success';
+      } catch (err: any) {
+        this.logger.error(`stray charge refund call failed for ${providerTxId}: ${err?.message}`);
+      }
+    }
+    if (txRow) {
+      await this.db.query(
+        `UPDATE nuvei_transactions
+            SET status = CASE WHEN $2::boolean THEN 'refunded' ELSE 'success' END,
+                refunded_amount = CASE WHEN $2::boolean THEN amount ELSE refunded_amount END,
+                message = $3
+          WHERE id = $1`,
+        [txRow.id, refunded, refunded ? `${reason} — refunded automatically` : `${reason.toUpperCase()} — REFUND REQUIRED`],
+      );
+    }
+    this.logger.error(
+      `Nuvei stray charge on sub ${sub.id} (tx ${providerTxId || '-'}): ${reason}: ${refunded ? 'refunded automatically' : 'REFUND REQUIRED'}`,
+    );
+    if (refunded) {
+      await this.sendConfirmation({
+        to: sub.email,
+        userId: sub.user_id,
+        subject: 'Payment refunded',
+        lines: [
+          ['Amount refunded', this.money(Number(txRow?.amount ?? 0))],
+          ['Transaction', providerTxId || '—'],
+          ['Status', 'Refunded'],
+        ],
+        note: 'This payment was confirmed after your subscription had already ended, so it has been refunded.',
+      });
+    }
+    return { handled: refunded ? 'stray_refunded' : 'stray_needs_refund', verified: true };
   }
 
   /**
@@ -2608,7 +2719,7 @@ export class NuveiService {
       // aside (history kept) so the new card is tried right now.
       await this.db.query(
         `UPDATE nuvei_transactions
-            SET period_key = period_key || '#' || id
+            SET period_key = period_key || '#' || left(id::text, 8)
           WHERE subscription_id = $1 AND kind = 'recurring'
             AND period_key = $2 AND status IN ('failure','error')`,
         [sub.id, this.periodKey(new Date())],

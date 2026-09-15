@@ -48,6 +48,7 @@ const t = {
     next1: "Account activated today", next1s: "Get instant access to Cortexa.",
     next2: "Manage or cancel from Billing", next2s: "You're in control anytime.",
     errTerms: "Please agree to the Terms and Conditions to continue.",
+    errCard: "Please complete your card details.",
     errServer: "Something went wrong. Please try again or use another card.",
     errDeclined: "The payment could not be completed. Please try another card.",
     errAlreadySubscribed: "You already have an active {plan} subscription. To change plans, please contact support.",
@@ -94,6 +95,12 @@ export default function CheckoutPage() {
   const mountedRef = useRef(false);
   const consentRef = useRef(false);
   useEffect(() => { consentRef.current = consent; }, [consent]);
+  const payingRef = useRef(false);
+  const processingRef = useRef(false);
+  const formGenRef = useRef(0);
+  useEffect(() => { payingRef.current = paying; }, [paying]);
+  useEffect(() => { processingRef.current = processing; }, [processing]);
+  useEffect(() => { formGenRef.current = formGen; }, [formGen]);
   const remountCount = useRef(0);
   const remountForm = () => {
     if (remountCount.current >= 3) { setErrorMsg(tr.errConfig); return; } // stop looping on a dead SDK
@@ -172,10 +179,11 @@ export default function CheckoutPage() {
       // No attempt on record (or only one from before this Pay click): there
       // is nothing to wait for.
       const created = sub?.created_at ? new Date(sub.created_at).getTime() : 0;
-      const stale = payStartedRef.current && created && created < payStartedRef.current - 60000;
-      if (!sub || stale) { if (++tries >= 3) { fail(tr.errServer); return; } setTimeout(tick, 3000); return; }
-      const st = String(sub.status || "");
-      if (["trialing", "active"].includes(st)) { await completeActivation(sub.id); return; }
+      const st = String(sub?.status || "");
+      const oldFailed = ["payment_failed", "canceled", "refunded", "suspended"].includes(st)
+        && payStartedRef.current && created && created < payStartedRef.current - 60000;
+      if (!sub || oldFailed) { if (++tries >= 3) { fail(tr.errServer); return; } setTimeout(tick, 3000); return; }
+      if (["trialing", "active"].includes(st)) { await completeActivation(sub.activation_transaction_id || sub.id); return; }
       if (["payment_failed", "canceled", "suspended", "refunded"].includes(st) || ++tries >= 20) {
         fail(st === "payment_failed" ? tr.errDeclined : st === "refunded" ? tr.errServer : tr.errPending); return;
       }
@@ -223,10 +231,6 @@ export default function CheckoutPage() {
       if (c || !sub) return;
       const st = String(sub.status);
       if (["trialing", "active"].includes(st)) { setBlocked(true); finishAndLogin(); return; }
-      if (st === "past_due") {
-        setBlocked(true);
-        setErrorMsg(tr.errAlreadySubscribed.replace("{plan}", String(sub.provision_plan || sub.plan_key || "")));
-      }
     });
     return () => { c = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -249,7 +253,7 @@ export default function CheckoutPage() {
           user: { id: userId, email: customer.email || user?.email },
           country: "ECU",
           locale: lang,
-          onIncomplete: (msg) => { setPaying(false); setErrorMsg(msg); },
+          onIncomplete: () => { setPaying(false); setErrorMsg(tr.errCard); },
         });
         submitRef.current = form.submit;
         // If Nuvei's secure fields never appear, say so and mount a fresh form
@@ -294,7 +298,8 @@ export default function CheckoutPage() {
         if (doc) { doc.open(); doc.write(ch.hidden_iframe); doc.close(); }
       } catch (e) { /* ignore: the server-side continue still runs */ }
       await new Promise((r) => setTimeout(r, 5500));
-      const next = await nuveiThreeDsContinue(result.subscriptionId);
+      let next = null;
+      try { next = await nuveiThreeDsContinue(result.subscriptionId); } catch (e) { setAwaiting(true); return; }
       if (next?.requires3ds && next?.challenge) return runThreeDs(next);
       return finishActivation(next);
     }
@@ -355,7 +360,7 @@ export default function CheckoutPage() {
       await finishActivation(result);
     } catch (err) {
       if (/session expired/i.test(err?.message || "")) { goSignIn(); return; }
-      if (cardId && /failed to fetch|networkerror|load failed|timed? ?out/i.test(err?.message || "")) {
+      if (cardId && /failed to fetch|networkerror|load failed|timed? ?out|api error: 5\d\d|internal server|bad gateway|gateway time/i.test(err?.message || "")) {
         // The charge request left the browser but no answer came back: the
         // server may well have completed it. Poll instead of asking for a
         // second payment.
@@ -375,7 +380,14 @@ export default function CheckoutPage() {
     // Confirm the session is still valid before tokenizing (access tokens expire).
     try { await apiClient.request("/users/me"); } catch (e) { if (/session expired/i.test(e?.message || "")) { goSignIn(); return; } }
     const ok = submitRef.current && submitRef.current();
-    if (!ok) { setPaying(false); setErrorMsg(tr.errServer); }
+    if (!ok) { setPaying(false); setErrorMsg(tr.errServer); return; }
+    // If the secure form never answers the submit, do not leave a frozen button.
+    const gen = formGen;
+    setTimeout(() => {
+      if (!processingRef.current && payingRef.current && formGenRef.current === gen) {
+        setPaying(false); setErrorMsg(tr.errServer); remountForm();
+      }
+    }, 60000);
   }
 
   const go = (path) => navigate(buildLocalizedPath(path, lang));
