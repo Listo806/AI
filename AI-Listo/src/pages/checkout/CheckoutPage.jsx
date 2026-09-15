@@ -186,7 +186,7 @@ export default function CheckoutPage() {
   return (
     <main className="cxo-page">
       <header className="cxo-top">
-        <div className="cxo-brand"><ShieldCheck size={22} /> <b>Cortexa</b> <span>{tr.brand}</span></div>
+        <div className="cxo-brand"><b>Cortexa</b> <span>{tr.brand}</span></div>
         <div className="cxo-secure"><ShieldCheck size={18} /> {tr.secureCheckout}</div>
       </header>
 
@@ -240,14 +240,12 @@ export default function CheckoutPage() {
               <div className="cxo-chead">
                 <div className="cxo-icon"><CreditCard size={20} /></div>
                 <div className="cxo-chead-copy"><h2>{tr.payTitle}</h2><p>{tr.paySub}</p></div>
-                <CardBrands />
               </div>
 
               {config && !config.enabled ? (
                 <p className="cxo-err">{tr.unavailable}</p>
               ) : (
                 <>
-                  <p className="cxo-muted" style={{ margin: "16px 0 8px" }}>{tr.cardHint}</p>
                   <div id="nuvei-card-form" className="cxo-nuvei-host" />
 
                   <label className="cxo-consent">
