@@ -73,7 +73,12 @@ export class NuveiService {
       this.client.isConfigured() &&
       // Card tokens are sealed with this key before they touch the database;
       // without it no card can be saved or charged, so the engine is off.
-      !!String(this.config.get('NUVEI_TOKEN_ENC_KEY') || '').trim()
+      !!String(this.config.get('NUVEI_TOKEN_ENC_KEY') || '').trim() &&
+      // The gateway environment must be chosen on purpose: an unset value
+      // must never quietly run a production site against the test gateway.
+      ['staging', 'production', 'prod'].includes(
+        String(this.config.get('NUVEI_ENVIRONMENT') || '').trim().toLowerCase(),
+      )
     );
   }
 
@@ -299,7 +304,9 @@ export class NuveiService {
               cancel_at_period_end, canceled_at, created_at
          FROM nuvei_subscriptions
         WHERE user_id = $1
-        ORDER BY created_at DESC
+        ORDER BY (status IN ('trialing','active','past_due')) DESC,
+                 (status = 'pending_activation') DESC,
+                 created_at DESC
         LIMIT 1`,
       [userId],
     );
@@ -326,7 +333,7 @@ export class NuveiService {
    */
   private async reconcilePendingActivation(subscriptionId: string): Promise<SubStatus | null> {
     const { rows } = await this.db.query(
-      `SELECT s.id, s.status, s.plan_key, s.activation_amount,
+      `SELECT s.id, s.user_id, s.email, s.status, s.plan_key, s.activation_amount,
               t.provider_transaction_id
          FROM nuvei_subscriptions s
          LEFT JOIN nuvei_transactions t
@@ -851,28 +858,44 @@ export class NuveiService {
     // A previous attempt that is still awaiting a bank answer (3DS challenge
     // in progress / anti-fraud review) must not be charged a second time.
     const { rows: pendingRows } = await this.db.query(
-      `SELECT s.id FROM nuvei_subscriptions s
+      `SELECT s.id, t.status AS tx_status, t.status_detail, t.created_at AS tx_at
+         FROM nuvei_subscriptions s
+         JOIN nuvei_transactions t
+           ON t.subscription_id = s.id AND t.kind = 'activation'
         WHERE s.user_id = $1 AND s.status = 'pending_activation'
           AND s.created_at > NOW() - interval '2 hours'
-          AND EXISTS (SELECT 1 FROM nuvei_transactions t
-                       WHERE t.subscription_id = s.id AND t.kind = 'activation'
-                         AND t.status IN ('pending','unconfirmed'))
+          AND t.status IN ('pending','unconfirmed')
         ORDER BY s.created_at DESC LIMIT 1`,
       [input.userId],
     );
     if (pendingRows[0]) {
-      const st = await this.reconcilePendingActivation(pendingRows[0].id);
+      const p = pendingRows[0];
+      const st = await this.reconcilePendingActivation(p.id);
       if (st === 'trialing' || st === 'active') {
         throw new BadRequestException(
           `You already have an active ${plan.label} subscription. To change plans, please contact support.`,
         );
       }
       if (st === 'pending_activation') {
-        return {
-          status: 'pending_activation',
-          subscriptionId: pendingRows[0].id,
-          message: 'Your previous payment is still being verified. Your account will activate automatically once confirmed.',
-        };
+        const ageMs = Date.now() - new Date(p.tx_at || Date.now()).getTime();
+        const detail = Number(p.status_detail);
+        // An abandoned 3DS challenge (customer pressed Back, OTP never came)
+        // times out within minutes at the bank: let them try again after 3
+        // minutes instead of locking them out. A charge the gateway never
+        // answered gets 15 minutes for the callback; anything a late
+        // approval could still confirm is refunded as a duplicate
+        // (activateLate), so waiting longer protects nobody.
+        const threeDs = detail === 35 || detail === 36;
+        const limitMs = threeDs ? 3 * 60_000 : String(p.tx_status) === 'unconfirmed' ? 15 * 60_000 : 2 * 60 * 60_000;
+        if (ageMs < limitMs) {
+          return {
+            status: 'pending_activation',
+            subscriptionId: p.id,
+            message: 'Your previous payment is still being verified. Your account will activate automatically once confirmed.',
+          };
+        }
+        this.logger.warn(`Nuvei activation ${p.id} abandoned (${threeDs ? '3DS' : p.tx_status}, ${Math.round(ageMs / 1000)}s); allowing a new attempt`);
+        await this.setSubStatus(p.id, 'payment_failed');
       }
     }
 
@@ -969,7 +992,20 @@ export class NuveiService {
     }
 
     if (this.isApproved(res.body)) {
-      await this.markActivated(subscriptionId, plan, tx);
+      const outcome = await this.activateLate(
+        { id: subscriptionId, user_id: input.userId, email: user.email, plan_key: plan.key, activation_amount: activationAmount },
+        plan,
+        tx,
+      );
+      if (outcome !== 'activated') {
+        // Two activations raced each other; this one was refunded (or flagged).
+        return {
+          status: outcome === 'duplicate_refunded' ? 'refunded' : 'payment_failed',
+          subscriptionId,
+          transactionId: tx.id,
+          message: `You already have an active ${plan.label} subscription. This payment has been ${outcome === 'duplicate_refunded' ? 'refunded' : 'flagged for refund'}.`,
+        };
+      }
       return {
         status: plan.trialDays > 0 ? 'trialing' : 'active',
         subscriptionId,
@@ -1046,19 +1082,8 @@ export class NuveiService {
     if (!raw) return fallback;
     try {
       const u = new URL(raw);
-      const allowed = new Set(
-        [this.frontendUrl(), 'https://www.cortexaaicrm.com', 'https://cortexaaicrm.com']
-          .map((s) => {
-            try {
-              return new URL(s).origin;
-            } catch {
-              return '';
-            }
-          })
-          .filter(Boolean),
-      );
-      if (u.protocol !== 'https:' && u.hostname !== 'localhost') return fallback;
-      if (!allowed.has(u.origin) && u.hostname !== 'localhost') return fallback;
+      const allowed = new Set(this.frontendOrigins());
+      if (!allowed.has(u.origin)) return fallback;
       if (!u.searchParams.has('threeds')) u.searchParams.set('threeds', 'return');
       return u.toString();
     } catch {
@@ -1066,12 +1091,35 @@ export class NuveiService {
     }
   }
 
+  /** FRONTEND_URL may be a comma-separated CORS list; every entry is a
+   * trusted origin, the first public https one is the canonical site. */
+  private frontendOrigins(): string[] {
+    const raw = String(
+      this.config.get('FRONTEND_URL') || this.config.get('PUBLIC_FRONTEND_URL') || '',
+    );
+    const out: string[] = [];
+    for (const part of raw.split(',')) {
+      const v = part.trim().replace(/\/+$/, '');
+      if (!v) continue;
+      try {
+        out.push(new URL(v).origin);
+      } catch {
+        /* ignore malformed entries */
+      }
+    }
+    for (const o of ['https://www.cortexaaicrm.com', 'https://cortexaaicrm.com']) {
+      if (!out.includes(o)) out.push(o);
+    }
+    return out;
+  }
+
   private frontendUrl(): string {
-    return String(
-      this.config.get('FRONTEND_URL') ||
-        this.config.get('PUBLIC_FRONTEND_URL') ||
-        'https://www.cortexaaicrm.com',
-    ).replace(/\/+$/, '');
+    const origins = this.frontendOrigins();
+    return (
+      origins.find((o) => o.startsWith('https://') && !/localhost|127\.0\.0\.1/.test(o)) ||
+      origins[0] ||
+      'https://www.cortexaaicrm.com'
+    );
   }
 
   /**
@@ -1469,7 +1517,7 @@ export class NuveiService {
       return;
     }
 
-    await this.db.query(
+    const { rowCount: settledHere } = await this.db.query(
       `UPDATE nuvei_transactions
          SET provider_transaction_id = $2,
              authorization_code = $3,
@@ -1478,7 +1526,8 @@ export class NuveiService {
              current_status = $6,
              message = $7,
              raw = $8
-       WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $9`,
+       WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $9
+         AND status = 'pending'`,
       [
         sub.id,
         tx.id || null,
@@ -1491,6 +1540,9 @@ export class NuveiService {
         period,
       ],
     );
+    // Nuvei's callback can land before this response is processed; whichever
+    // side writes the outcome first applies it, the other side stops here.
+    if (!settledHere) return;
 
     if (this.isApproved(res.body)) {
       await this.applyRecurringSuccess(sub, tx, monthly);
@@ -1873,21 +1925,18 @@ export class NuveiService {
     const appCode = String(tx?.application_code || '').trim();
     if (!stoken || !txId) return false;
 
+    // Only the SERVER application (the one that moves money) can sign a
+    // callback we act on. The CLIENT app key is published to the browser SDK,
+    // so a signature with it proves nothing.
     const serverCode = this.client.serverAppCode();
-    const clientCode = String(this.config.get('NUVEI_CLIENT_APP_CODE') || '').trim();
-    const pairs: Array<[string, string | null]> = [];
-    if (appCode) pairs.push([appCode, this.client.appKeyFor(appCode)]);
-    pairs.push([serverCode, this.client.appKeyFor(serverCode)]);
-    if (clientCode) pairs.push([clientCode, this.client.appKeyFor(clientCode)]);
-    for (const [code, key] of pairs) {
-      if (!code || !key) continue;
-      const h = crypto
-        .createHash('md5')
-        .update(`${txId}_${code}_${userId}_${key}`)
-        .digest('hex');
-      if (this.safeEqual(h, stoken)) return true;
-    }
-    return false;
+    const serverKey = this.client.appKeyFor(serverCode);
+    if (!serverCode || !serverKey) return false;
+    if (appCode && appCode !== serverCode) return false;
+    const h = crypto
+      .createHash('md5')
+      .update(`${txId}_${serverCode}_${userId}_${serverKey}`)
+      .digest('hex');
+    return this.safeEqual(h, stoken);
   }
 
   private safeEqual(a: string, b: string): boolean {
@@ -1983,9 +2032,33 @@ export class NuveiService {
           return { handled: 'activation_declined', verified: true };
         }
         if (reversal) {
-          return this.applyReversal(sub, txRow, tx);
+          if (txRow && ['success', 'partially_refunded', 'refund_pending'].includes(String(txRow.status))) {
+            return this.applyReversal(sub, txRow, tx);
+          }
+          // Nothing was captured (abandoned 3DS / annulled authorization):
+          // note it, never "refund" money the customer never paid.
+          if (txRow) {
+            await this.db.query(
+              `UPDATE nuvei_transactions SET message = COALESCE($2, message) WHERE id = $1 AND status <> 'success'`,
+              [txRow.id, tx?.message || 'annulled by Nuvei'],
+            );
+          }
+          if (sub.status === 'pending_activation') await this.setSubStatus(sub.id, 'payment_failed');
+          return { handled: 'reversal_noted', verified: true };
         }
-        return { handled: confirmed ? 'already_processed' : 'ignored', verified: false };
+        if (confirmed && ['trialing', 'active'].includes(sub.status)) {
+          // Already activated; a retry after a half-done activation must still
+          // leave the account provisioned (provisionAccount is idempotent).
+          await this.provisionAccount({
+            userId: sub.user_id,
+            subscriptionId: sub.id,
+            plan: sub.provision_plan,
+            paymentStatus: sub.status,
+            trialEnd: null,
+          });
+          return { handled: 'already_processed', verified: true };
+        }
+        return { handled: 'ignored', verified: false };
       }
 
       if (txRow && txRow.kind === 'recurring') {
@@ -1998,14 +2071,15 @@ export class NuveiService {
             );
             return { handled: 'amount_mismatch', verified: false };
           }
-          await this.db.query(
+          const { rowCount } = await this.db.query(
             `UPDATE nuvei_transactions
                 SET status = 'success', status_detail = 3,
                     authorization_code = COALESCE($2, authorization_code),
                     message = COALESCE($3, message)
-              WHERE id = $1`,
+              WHERE id = $1 AND status IN ('pending','unconfirmed','error','failure')`,
             [txRow.id, tx?.authorization_code || null, tx?.message || null],
           );
+          if (!rowCount) return { handled: 'already_processed', verified: true }; // the sweep settled it first
           if (['trialing', 'active', 'past_due', 'suspended'].includes(sub.status)) {
             const base = sub.next_billing_date || new Date();
             await this.applyRecurringSuccess(
@@ -2017,10 +2091,12 @@ export class NuveiService {
           return { handled: 'recurring_confirmed', verified: true };
         }
         if (failed && ['pending', 'unconfirmed'].includes(String(txRow.status))) {
-          await this.db.query(
-            `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message) WHERE id = $1`,
+          const { rowCount } = await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message)
+              WHERE id = $1 AND status IN ('pending','unconfirmed')`,
             [txRow.id, Number.isFinite(Number(tx?.status_detail)) ? Number(tx.status_detail) : null, tx?.message || null],
           );
+          if (!rowCount) return { handled: 'already_processed', verified: true };
           if (['trialing', 'active', 'past_due'].includes(sub.status)) {
             await this.applyRecurringDecline(sub, tx, Number(txRow.amount), tx?.message || 'declined (callback)');
           }

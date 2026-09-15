@@ -44,9 +44,11 @@ export function loadNuveiSdk() {
     if (existing) {
       if (bridgeGlobal()) return resolve(window.PaymentGateway);
       existing.addEventListener("load", () => resolve(bridgeGlobal()));
-      existing.addEventListener("error", () =>
-        reject(new Error("Could not load the secure card form.")),
-      );
+      existing.addEventListener("error", () => {
+        try { existing.remove(); } catch (e) { /* ignore */ }
+        sdkPromise = null;
+        reject(new Error("Could not load the secure card form."));
+      });
       return;
     }
     const s = document.createElement("script");
@@ -54,7 +56,13 @@ export function loadNuveiSdk() {
     s.charset = "UTF-8";
     s.async = true;
     s.onload = () => resolve(bridgeGlobal());
-    s.onerror = () => reject(new Error("Could not load the secure card form."));
+    s.onerror = () => {
+      // Forget the failed attempt so the next mount injects the script again
+      // (a network blip must not require a hard reload).
+      try { s.remove(); } catch (e) { /* ignore */ }
+      sdkPromise = null;
+      reject(new Error("Could not load the secure card form."));
+    };
     document.head.appendChild(s);
   });
   return sdkPromise;

@@ -1199,7 +1199,7 @@ export default function PricingPage() {
   const pv3 = pricingV3[lang] || pricingV3.en;
 
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const cycle = billingCycle === "annually" ? "annual" : "monthly";
 
   const billingPrices = {
@@ -1364,9 +1364,10 @@ export default function PricingPage() {
 
         // A stale account id from an earlier visit with no live session: the
         // account exists, so sign in (never register twice) and come back.
-        if (!user && /session expired|unauthori[sz]ed|401/i.test(error?.message || "")) {
+        if (/session expired|unauthori[sz]ed|401/i.test(error?.message || "")) {
           localStorage.removeItem("trialUserId");
           localStorage.setItem("trialPlan", planKey);
+          try { setUser(null); } catch (e) { /* ignore */ }
           navigate("/sign-in?next=/pricing");
           return;
         }

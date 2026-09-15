@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   ConflictException,
   BadRequestException,
@@ -314,12 +315,14 @@ export class TrialService {
       );
       const ps = String(live[0]?.payment_status || '').toLowerCase();
       if (['trialing', 'active', 'paid'].includes(ps)) {
-        throw new ConflictException(
+        // 403 (not 409): the web client rewrites every 409 into an
+        // "email already registered" message.
+        throw new ForbiddenException(
           'You already have an active subscription. To change plans, please contact support.',
         );
       }
     } catch (err) {
-      if (err instanceof ConflictException) throw err;
+      if (err instanceof ForbiddenException) throw err;
       /* column may not exist yet in a fresh env */
     }
     const planId = normalizePlanId(dto?.plan);
