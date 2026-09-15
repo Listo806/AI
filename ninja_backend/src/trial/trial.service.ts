@@ -71,7 +71,8 @@ export class TrialService {
     geo?: { country?: string | null; ip?: string | null },
   ) {
     try {
-      console.log('DTO:', dto);
+      // Never log the raw payload: it carries the customer's password.
+      console.log('startTrial:', { email: dto?.email, plan: dto?.plan, source: dto?.source, language: dto?.language });
 
       // SECURITY: never read `role` from the signup payload. A public trial
       // signup must always create a plain team OWNER. Trusting a client-supplied
