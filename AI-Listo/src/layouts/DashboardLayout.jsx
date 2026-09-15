@@ -93,7 +93,9 @@ export default function DashboardLayout() {
   useEffect(() => {
     if (!user) return;
     const status = String(user.paymentStatus || "").toLowerCase();
-    const paid = status === "active" || status === "paid";
+    // A subscription in its 14-day trial is a paid account (the backend's
+    // resolveEffectivePlan treats "trialing" as paid); never bounce it to checkout.
+    const paid = status === "active" || status === "paid" || status === "trialing";
     if (paid) return;
     // Free tier has CRM access without paying, so never bounce a Free owner.
     if (String(user.selectedPlan || "").toLowerCase() === "free") return;

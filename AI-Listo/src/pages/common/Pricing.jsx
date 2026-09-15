@@ -1217,8 +1217,8 @@ export default function PricingPage() {
     },
     growth: {
       activation:33,
-      monthly: 397,
-      annual: 3811.2,
+      monthly: 497,
+      annual: 4771.2,
       monthlyAnnualized: 5964,
     },
   };

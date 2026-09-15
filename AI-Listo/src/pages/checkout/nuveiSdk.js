@@ -79,7 +79,10 @@ function mapCard(response) {
       transactionReference: card.transaction_reference,
     };
   }
-  throw new Error(card?.message || "The card could not be verified.");
+  // Never surface the raw provider string (e.g. "Response by mock") to a
+  // customer; log it for support and show a clear, friendly decline.
+  if (card?.message) console.warn("Nuvei card rejected:", card.message);
+  throw new Error("This card was declined. Please check the details or try another card.");
 }
 
 /**
@@ -146,7 +149,7 @@ export async function mountNuveiForm({
     const started = Date.now();
     const tick = () => {
       const el = document.querySelector(`${containerSelector} iframe`);
-      if (el || Date.now() - started > 20000) return resolve(!!el);
+      if (el || Date.now() - started > 40000) return resolve(!!el);
       setTimeout(tick, 300);
     };
     tick();
