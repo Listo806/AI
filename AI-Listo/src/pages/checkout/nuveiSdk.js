@@ -58,13 +58,33 @@ function envMode(env) {
   return String(env).toLowerCase().startsWith("prod") ? "prod" : "stg";
 }
 
+function mapCard(response) {
+  const card = response?.card;
+  if (card?.token && card?.status !== "rejected") {
+    return {
+      token: card.token,
+      bin: card.bin,
+      last4: card.number,
+      brand: card.type,
+      expiryMonth: card.expiry_month,
+      expiryYear: card.expiry_year,
+      status: card.status,
+      transactionReference: card.transaction_reference,
+    };
+  }
+  throw new Error(card?.message || "The card could not be verified.");
+}
+
 /**
- * Render the Nuvei tokenization form into `containerSelector` and resolve with
- * the card token when the customer submits it.
+ * Mount the Nuvei tokenization form into `containerSelector`.
  *
- * @returns Promise<{ token, bin, last4, brand, expiryMonth, expiryYear, transactionReference }>
+ * The Paymentez SDK renders only the card fields (in a secure iframe); the
+ * merchant must call `pg.tokenize()` to submit. So this returns:
+ *   - `ready`  : resolves once the secure iframe has rendered (enable "Pay")
+ *   - `submit` : call on the Pay click to tokenize the entered card
+ *   - `done`   : resolves with the card token (or rejects) after submit
  */
-export async function tokenizeCard({
+export async function mountNuveiForm({
   containerSelector,
   environment,
   appCode,
@@ -72,38 +92,64 @@ export async function tokenizeCard({
   user,
   country = "ECU",
   locale = "en",
+  onIncomplete,
 }) {
   const PaymentGateway = await loadNuveiSdk();
   if (!PaymentGateway) throw new Error("The secure card form is unavailable.");
 
   const pg = new PaymentGateway(envMode(environment), appCode, appKey);
 
-  return new Promise((resolve, reject) => {
-    pg.generate_tokenize(
-      {
-        locale,
-        user: { id: String(user?.id || ""), email: String(user?.email || "") },
-        configuration: { default_country: country },
-      },
-      containerSelector,
-      (response) => {
-        const card = response?.card;
-        if (card?.token && card?.status !== "rejected") {
-          resolve({
-            token: card.token,
-            bin: card.bin,
-            last4: card.number,
-            brand: card.type,
-            expiryMonth: card.expiry_month,
-            expiryYear: card.expiry_year,
-            status: card.status,
-            transactionReference: card.transaction_reference,
-          });
-        } else {
-          reject(new Error(card?.message || "The card could not be verified."));
-        }
-      },
-      (message) => reject(new Error(message || "Please complete the card form.")),
-    );
+  let resolveDone, rejectDone;
+  const done = new Promise((res, rej) => {
+    resolveDone = res;
+    rejectDone = rej;
   });
+
+  pg.generate_tokenize(
+    {
+      locale,
+      user: { id: String(user?.id || ""), email: String(user?.email || "") },
+      configuration: { default_country: country },
+    },
+    containerSelector,
+    (response) => {
+      try {
+        resolveDone(mapCard(response));
+      } catch (e) {
+        rejectDone(e);
+      }
+    },
+    (message) => {
+      // Incomplete form: let the customer fix and resubmit — don't tear it down.
+      if (typeof onIncomplete === "function") {
+        onIncomplete(message || "Please complete the card details.");
+      } else {
+        rejectDone(new Error(message || "Please complete the card form."));
+      }
+    },
+  );
+
+  // The iframe is created after an async handshake; resolve `ready` once it's up.
+  const ready = new Promise((resolve) => {
+    const started = Date.now();
+    const tick = () => {
+      const el = document.querySelector(`${containerSelector} iframe`);
+      if (el || Date.now() - started > 20000) return resolve(!!el);
+      setTimeout(tick, 300);
+    };
+    tick();
+  });
+
+  return {
+    ready,
+    done,
+    submit: () => {
+      try {
+        pg.tokenize();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+  };
 }
