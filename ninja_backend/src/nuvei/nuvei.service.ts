@@ -1073,10 +1073,13 @@ export class NuveiService {
       if (txRow.subscription_id) {
         await this.setSubStatus(txRow.subscription_id, 'refunded');
         await this.mirrorBilling(txRow.subscription_id, 'refunded', null);
-        // Drop plan access for a refunded subscription.
+        // Revoke the PAID plan for a refunded subscription. payment_status =
+        // 'refunded' is a terminated state in resolveEffectivePlan, so the
+        // account drops to Free; the login itself stays active (a refunded
+        // customer can still sign in, see billing, and re-subscribe).
         await this.db.query(
           `UPDATE users
-             SET payment_status = 'refunded', is_active = false, updated_at = NOW()
+             SET payment_status = 'refunded', updated_at = NOW()
            WHERE nuvei_subscription_id = $1`,
           [txRow.subscription_id],
         );
