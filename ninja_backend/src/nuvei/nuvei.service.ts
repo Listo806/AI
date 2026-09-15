@@ -1431,6 +1431,13 @@ export class NuveiService {
           WHERE s.status IN ('trialing','active','past_due')
             AND s.next_billing_date IS NOT NULL
             AND s.next_billing_date <= NOW()${only}
+            AND NOT EXISTS (
+              SELECT 1 FROM nuvei_transactions t
+               WHERE t.subscription_id = s.id AND t.kind = 'recurring'
+                 AND t.period_key = to_char(s.next_billing_date AT TIME ZONE 'UTC', 'YYYY-MM-DD')
+                 AND t.status IN ('pending','unconfirmed')
+                 AND t.provider_transaction_id IS NULL
+                 AND t.created_at > NOW() - interval '48 hours')
           ORDER BY s.next_billing_date ASC
           LIMIT 200`,
         params,
@@ -1703,11 +1710,20 @@ export class NuveiService {
 
     if (status === 'pending') {
       if (ageMs < 2 * 60 * 60 * 1000) return; // another run is charging it
-      this.logger.error(
-        `Nuvei recurring claim for sub ${sub.id} period ${period} has no outcome after 2h; marking error and retrying tomorrow`,
-      );
-      await this.markClaim(sub.id, period, 'error', 'no outcome recorded (process interrupted)');
-      await this.escalateBillingErrors(sub, monthly, 'process interrupted');
+      // The process died after the claim: the debit may or may not have been
+      // sent. Treat it exactly like an unanswered charge (wait for Nuvei's
+      // callback for its full 48h retry window before trying again).
+      if (ageMs < 48 * 60 * 60 * 1000) {
+        if (ageMs < 2 * 60 * 60 * 1000 + 60 * 60 * 1000) {
+          this.logger.error(
+            `Nuvei recurring claim for sub ${sub.id} period ${period} has no outcome after 2h; holding for Nuvei's callback`,
+          );
+          await this.markClaim(sub.id, period, 'unconfirmed', 'no outcome recorded (process interrupted)');
+        }
+        return;
+      }
+      await this.markClaim(sub.id, period, 'error', 'no outcome recorded (process interrupted), no callback in 48h');
+      await tomorrow();
       return;
     }
 
@@ -2128,6 +2144,52 @@ export class NuveiService {
             [txRow.id, tx?.authorization_code || null, tx?.message || null],
           );
           if (!rowCount) return { handled: 'already_processed', verified: true }; // the sweep settled it first
+          // If a LATER monthly charge already succeeded (the period was retried
+          // after Nuvei stayed silent), this late confirmation is a duplicate
+          // payment for the same month: refund it, do not credit a month.
+          const { rows: later } = await this.db.query(
+            `SELECT id FROM nuvei_transactions
+              WHERE subscription_id = $1 AND kind = 'recurring' AND status = 'success'
+                AND id <> $2 AND created_at > (SELECT created_at FROM nuvei_transactions WHERE id = $2)
+              LIMIT 1`,
+            [sub.id, txRow.id],
+          );
+          if (later[0]) {
+            let refunded = false;
+            if (providerTxId) {
+              try {
+                const r = await this.client.refund(providerTxId);
+                refunded = String(r.body?.status || '').toLowerCase() === 'success';
+              } catch (err: any) {
+                this.logger.error(`duplicate recurring refund call failed for ${providerTxId}: ${err?.message}`);
+              }
+            }
+            await this.db.query(
+              `UPDATE nuvei_transactions
+                  SET status = CASE WHEN $2::boolean THEN 'refunded' ELSE status END,
+                      refunded_amount = CASE WHEN $2::boolean THEN amount ELSE refunded_amount END,
+                      message = $3
+                WHERE id = $1`,
+              [txRow.id, refunded, refunded ? 'duplicate monthly charge — refunded automatically' : 'DUPLICATE MONTHLY CHARGE — REFUND REQUIRED'],
+            );
+            this.logger.error(
+              `Nuvei duplicate monthly charge on sub ${sub.id} (tx ${providerTxId || '-'}): ${refunded ? 'refunded automatically' : 'REFUND REQUIRED'}`,
+            );
+            if (refunded) {
+              await this.sendConfirmation({
+                to: sub.email,
+                userId: sub.user_id,
+                subject: 'Duplicate payment refunded',
+                lines: [
+                  ['Amount refunded', this.money(Number(txRow.amount))],
+                  ['Transaction', providerTxId || '—'],
+                  ['Status', 'Refunded'],
+                ],
+                note: 'A monthly payment was confirmed twice for the same period. The duplicate has been refunded; your subscription is unchanged.',
+              });
+            }
+            return { handled: refunded ? 'duplicate_refunded' : 'duplicate_needs_refund', verified: true };
+          }
           if (['trialing', 'active', 'past_due', 'suspended'].includes(sub.status)) {
             const base = sub.next_billing_date || new Date();
             await this.applyRecurringSuccess(
