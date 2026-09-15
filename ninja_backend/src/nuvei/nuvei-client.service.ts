@@ -203,16 +203,22 @@ export class NuveiClientService {
     token: string,
     extraParams?: any,
   ): Promise<NuveiCallResult> {
-    const payload: any = {
-      user,
-      order: {
-        installments: 1,
-        installments_type: 0,
-        vat: 0,
-        ...order,
-      },
-      card: { token },
-    };
+    const o: any = { installments: 1, installments_type: 0, ...order };
+    // `vat` is REQUIRED by this Datafast/Ecuador account and must be consistent
+    // with taxable_amount + the account's tax rate (IVA 15%): amount is tax-
+    // inclusive, so taxable_amount = amount / 1.15 and vat = amount - taxable.
+    // Rate is overridable via NUVEI_VAT_RATE for other tax configurations.
+    if (o.vat == null) {
+      const rate = Number(this.config.get('NUVEI_VAT_RATE') || '0.15');
+      const amt = Number(o.amount) || 0;
+      const taxable =
+        o.taxable_amount != null
+          ? Number(o.taxable_amount)
+          : Number((amt / (1 + rate)).toFixed(2));
+      o.taxable_amount = taxable;
+      o.vat = Number((amt - taxable).toFixed(2));
+    }
+    const payload: any = { user, order: o, card: { token } };
     if (extraParams) payload.extra_params = extraParams;
     return this.request(
       'POST',
