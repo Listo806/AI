@@ -157,6 +157,10 @@ import AestheticClientProfile from "./pages/aesthetic-wellness/AestheticClientPr
 import WebSolutions from "./pages/web-solutions/WebSolutions";
 import WebSolutionsCheckout from "./pages/web-solutions/WebSolutionsCheckout";
 import FreeWebsiteReview from "./pages/web-solutions/FreeWebsiteReview";
+import ClinicMedicalWorkspace from "./pages/clinic-medical/ClinicMedicalWorkspace";
+import ClinicPatients from "./pages/clinic-medical/ClinicPatients";
+import ClinicPatientProfile from "./pages/clinic-medical/ClinicPatientProfile";
+import ClinicalConsultation from "./pages/clinic-medical/ClinicalConsultation";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -537,6 +541,42 @@ function AppRoutes() {
           element={
             <WorkspaceGate workspaceId="aesthetic-wellness">
               <AestheticClientProfile />
+            </WorkspaceGate>
+          }
+        />
+        
+        <Route
+          path="clinic-medical"
+          element={
+            <WorkspaceGate workspaceId="clinic-medical">
+              <ClinicMedicalWorkspace />
+            </WorkspaceGate>
+          }
+        />
+
+        <Route
+          path="clinic-medical/patients"
+          element={
+            <WorkspaceGate workspaceId="clinic-medical">
+              <ClinicPatients />
+            </WorkspaceGate>
+          }
+        />
+
+        <Route
+          path="clinic-medical/patients/:patientId"
+          element={
+            <WorkspaceGate workspaceId="clinic-medical">
+              <ClinicPatientProfile />
+            </WorkspaceGate>
+          }
+        />
+
+        <Route
+          path="clinic-medical/consultations/:consultationId"
+          element={
+            <WorkspaceGate workspaceId="clinic-medical">
+              <ClinicalConsultation />
             </WorkspaceGate>
           }
         />

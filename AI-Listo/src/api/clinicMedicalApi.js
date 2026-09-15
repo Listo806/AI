@@ -1,26 +1,153 @@
 import apiClient from "./apiClient";
 
-const q = (params={}) => {
-  const s = new URLSearchParams();
-  Object.entries(params).forEach(([k,v]) => {
-    if (v !== undefined && v !== null && v !== "") s.set(k, String(v));
+const q = (params = {}) => {
+  const search = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (
+      value !== undefined &&
+      value !== null &&
+      value !== "" &&
+      value !== "all"
+    ) {
+      search.set(key, String(value));
+    }
   });
-  const x=s.toString();
-  return x ? `?${x}` : "";
+
+  const queryString = search.toString();
+
+  return queryString ? `?${queryString}` : "";
+};
+
+const request = (path, options = {}) => {
+  return apiClient.request(path, options);
 };
 
 export const clinicMedicalApi = {
-  dashboard: () => apiClient.get("/clinic-medical/dashboard"),
-  patients: (params) => apiClient.get(`/clinic-medical/patients${q(params)}`),
-  patientStats: () => apiClient.get("/clinic-medical/patients/stats"),
-  patient: (id) => apiClient.get(`/clinic-medical/patients/${id}`),
-  createPatient: (body) => apiClient.post("/clinic-medical/patients", body),
-  updatePatient: (id,body) => apiClient.patch(`/clinic-medical/patients/${id}`,body),
-  archivePatient: (id) => apiClient.patch(`/clinic-medical/patients/${id}/archive`,{}),
-  consultations: (patientId) => apiClient.get(`/clinic-medical/patients/${patientId}/consultations`),
-  consultation: (id) => apiClient.get(`/clinic-medical/consultations/${id}`),
-  createConsultation: (body) => apiClient.post("/clinic-medical/consultations",body),
-  saveConsultation: (id,body) => apiClient.patch(`/clinic-medical/consultations/${id}`,body),
-  completeConsultation: (id,body) => apiClient.post(`/clinic-medical/consultations/${id}/complete`,body),
-  providers: () => apiClient.get("/clinic-medical/providers"),
+  dashboard() {
+    return request("/clinic-medical/dashboard", {
+      method: "GET",
+    });
+  },
+
+  patients(params = {}) {
+    return request(`/clinic-medical/patients${q(params)}`, {
+      method: "GET",
+    });
+  },
+
+  patientStats() {
+    return request("/clinic-medical/patients/stats", {
+      method: "GET",
+    });
+  },
+
+  patient(id) {
+    return request(
+      `/clinic-medical/patients/${encodeURIComponent(id)}`,
+      {
+        method: "GET",
+      },
+    );
+  },
+
+  createPatient(body) {
+    return request("/clinic-medical/patients", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  },
+
+  updatePatient(id, body) {
+    return request(
+      `/clinic-medical/patients/${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      },
+    );
+  },
+
+  archivePatient(id) {
+    return request(
+      `/clinic-medical/patients/${encodeURIComponent(id)}/archive`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      },
+    );
+  },
+
+  consultations(patientId) {
+    return request(
+      `/clinic-medical/patients/${encodeURIComponent(
+        patientId,
+      )}/consultations`,
+      {
+        method: "GET",
+      },
+    );
+  },
+
+  consultation(id) {
+    return request(
+      `/clinic-medical/consultations/${encodeURIComponent(id)}`,
+      {
+        method: "GET",
+      },
+    );
+  },
+
+  createConsultation(body) {
+    return request("/clinic-medical/consultations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  },
+
+  saveConsultation(id, body) {
+    return request(
+      `/clinic-medical/consultations/${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      },
+    );
+  },
+
+  completeConsultation(id, body = {}) {
+    return request(
+      `/clinic-medical/consultations/${encodeURIComponent(id)}/complete`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      },
+    );
+  },
+
+  providers() {
+    return request("/clinic-medical/providers", {
+      method: "GET",
+    });
+  },
 };
+
+export default clinicMedicalApi;
