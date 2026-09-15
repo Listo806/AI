@@ -5,6 +5,7 @@ import {
   Get,
   Headers,
   HttpCode,
+  Param,
   Post,
   Req,
   UseGuards,
@@ -42,6 +43,28 @@ export class NuveiController {
   @UseGuards(JwtAuthGuard)
   async subscription(@CurrentUser() user: any) {
     return this.nuvei.getUserSubscription(user?.id);
+  }
+
+  // Audit view: card (last4), every transaction with transaction_ID +
+  // authorization_code, and the confirmation-email log. Owners: own sub only.
+  @Get('subscription/:id/details')
+  @UseGuards(JwtAuthGuard)
+  async subscriptionDetails(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.nuvei.subscriptionDetails(String(id), user?.id, this.isTrueAdmin(user));
+  }
+
+  // STAGING-ONLY test hook: simulate the 14-day trial ending and run the
+  // recurring sweep now. Refused when NUVEI_ENVIRONMENT is production.
+  @Post('subscription/:id/simulate-trial-end')
+  @UseGuards(JwtAuthGuard)
+  async simulateTrialEnd(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.nuvei.simulateTrialEnd(String(id), user?.id, this.isTrueAdmin(user));
+  }
+
+  private isTrueAdmin(user: any): boolean {
+    return ['admin', 'super_admin', 'developer'].includes(
+      String(user?.role || '').toLowerCase(),
+    );
   }
 
   /**
