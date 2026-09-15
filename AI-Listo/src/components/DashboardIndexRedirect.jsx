@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { isInternalAccount } from "../utils/internalAccess";
 
 /**
  * Redirects /dashboard to the default page based on user role.
@@ -9,7 +10,7 @@ export default function DashboardIndexRedirect() {
   const { user } = useAuth();
   const role = user?.role?.toLowerCase?.() || user?.role;
 
-  if (role === "super_admin" || role === "admin") {
+  if (isInternalAccount(user) || role === "super_admin" || role === "admin") {
     return <Navigate to="/dashboard/admin/listings" replace />;
   }
 
