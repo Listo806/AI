@@ -252,14 +252,37 @@ export class NuveiService {
 
     // One LIVE subscription per customer, enforced by the database: two
     // activations approved at the same instant cannot both become live.
-    await this.db.query(
-      `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_sub_one_live_uidx
-         ON nuvei_subscriptions (user_id)
-         WHERE status IN ('trialing','active')`,
-    ).catch((err: any) => {
-      // Pre-existing duplicates (if any) must not block startup.
+    // Any pre-existing duplicate (from before this rule) is retired first,
+    // keeping the one the account actually points at, otherwise the newest.
+    try {
+      const { rows: dupes } = await this.db.query(
+        `UPDATE nuvei_subscriptions s
+            SET status = 'canceled', next_billing_date = NULL,
+                canceled_at = COALESCE(canceled_at, NOW()), updated_at = NOW()
+          WHERE s.status IN ('trialing','active')
+            AND EXISTS (
+              SELECT 1 FROM nuvei_subscriptions o
+               WHERE o.user_id = s.user_id AND o.id <> s.id
+                 AND o.status IN ('trialing','active')
+                 AND (o.id = (SELECT u.nuvei_subscription_id FROM users u WHERE u.id = s.user_id)
+                      OR (s.id <> (SELECT u.nuvei_subscription_id FROM users u WHERE u.id = s.user_id) IS NOT FALSE
+                          AND (o.created_at, o.id::text) > (s.created_at, s.id::text))))
+          RETURNING s.id, s.user_id`,
+      );
+      if (dupes.length) {
+        this.logger.warn(
+          `retired ${dupes.length} duplicate live Nuvei subscription(s): ${dupes.map((d: any) => d.id).join(', ')}`,
+        );
+      }
+      await this.db.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_sub_one_live_uidx
+           ON nuvei_subscriptions (user_id)
+           WHERE status IN ('trialing','active')`,
+      );
+    } catch (err: any) {
+      // Never block startup on this hardening step.
       this.logger.warn(`one-live-subscription index not created: ${err?.message}`);
-    });
+    }
     // Cancel keeps access until the paid period ends; the sweep finalizes it.
     await this.db.query(
       `ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN NOT NULL DEFAULT false`,
