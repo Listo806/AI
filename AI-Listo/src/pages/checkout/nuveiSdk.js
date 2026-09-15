@@ -9,6 +9,13 @@ const SDK_SRC = "https://cdn.paymentez.com/ccapi/sdk/payment_sdk_stable.min.js";
 
 let sdkPromise = null;
 
+// One SDK instance per app code. Each `new PaymentGateway()` registers its own
+// window `message` listener, and every listener's callback removes the SDK's
+// iframe; with two instances the stale one removes it first and the live one
+// throws inside its listener, so a retry after a decline never gets a response.
+let pgInstance = null;
+let pgInstanceKey = null;
+
 // The SDK declares `class PaymentGateway` at the top level of a CLASSIC script.
 // A top-level class is a global *lexical* binding (bare `PaymentGateway`), NOT a
 // property of `window`, so module code can't see it directly. This inline
@@ -97,7 +104,12 @@ export async function mountNuveiForm({
   const PaymentGateway = await loadNuveiSdk();
   if (!PaymentGateway) throw new Error("The secure card form is unavailable.");
 
-  const pg = new PaymentGateway(envMode(environment), appCode, appKey);
+  const key = `${envMode(environment)}|${appCode}`;
+  if (!pgInstance || pgInstanceKey !== key) {
+    pgInstance = new PaymentGateway(envMode(environment), appCode, appKey);
+    pgInstanceKey = key;
+  }
+  const pg = pgInstance;
 
   let resolveDone, rejectDone;
   const done = new Promise((res, rej) => {
