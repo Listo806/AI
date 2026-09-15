@@ -250,6 +250,16 @@ export class NuveiService {
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS nuvei_subscription_id UUID`,
     );
 
+    // One LIVE subscription per customer, enforced by the database: two
+    // activations approved at the same instant cannot both become live.
+    await this.db.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_sub_one_live_uidx
+         ON nuvei_subscriptions (user_id)
+         WHERE status IN ('trialing','active')`,
+    ).catch((err: any) => {
+      // Pre-existing duplicates (if any) must not block startup.
+      this.logger.warn(`one-live-subscription index not created: ${err?.message}`);
+    });
     // Cancel keeps access until the paid period ends; the sweep finalizes it.
     await this.db.query(
       `ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN NOT NULL DEFAULT false`,
@@ -1370,8 +1380,15 @@ export class NuveiService {
       [sub.user_id, sub.id],
     );
     if (!live[0]) {
-      await this.markActivated(sub.id, plan, tx);
-      return 'activated';
+      try {
+        await this.markActivated(sub.id, plan, tx);
+        return 'activated';
+      } catch (err: any) {
+        // The database refused a second live subscription (a concurrent
+        // activation won the race): fall through and refund this charge.
+        if (err?.code !== '23505') throw err;
+        this.logger.warn(`concurrent activation lost the race for user ${sub.user_id}; refunding this charge`);
+      }
     }
     const txId = tx?.id ? String(tx.id) : null;
     let refunded = false;
@@ -2371,8 +2388,14 @@ export class NuveiService {
       return { handled: 'partial_refund_noted', verified: true };
     }
     if (txRow) {
+      // Do not overwrite a refund we already recorded (an admin refund, or an
+      // earlier reversal): keep the original amounts and message.
       await this.db.query(
-        `UPDATE nuvei_transactions SET status = 'refunded', refunded_amount = amount WHERE id = $1`,
+        `UPDATE nuvei_transactions
+            SET status = 'refunded',
+                refunded_amount = GREATEST(refunded_amount, amount),
+                message = COALESCE(message, 'refunded by Nuvei')
+          WHERE id = $1 AND status <> 'refunded'`,
         [txRow.id],
       );
     }
