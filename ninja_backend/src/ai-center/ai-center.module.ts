@@ -9,6 +9,7 @@ import { S3Service } from '../common/aws/s3.service';
 import { AiAgentSetupCompleteGuard } from "./guards/ai-agent-setup-complete.guard";
 import { PaymentGuard } from "../auth/guards/payment.guard";
 import { AestheticWellnessModule } from '../aesthetic-wellness/aesthetic-wellness.module';
+import { WorkspaceAiSetupService } from '../aesthetic-wellness/workspace-ai-setup.service';
 @Module({
   imports: [DatabaseModule, SubscriptionsModule, PlansModule, AiUnitsModule, AestheticWellnessModule],
   controllers: [AiCenterController],
@@ -17,6 +18,7 @@ import { AestheticWellnessModule } from '../aesthetic-wellness/aesthetic-wellnes
     AiCenterService,
     S3Service,
     AiAgentSetupCompleteGuard,
+    WorkspaceAiSetupService,
   ],
   exports: [AiCenterService, AiAgentSetupCompleteGuard],
 })
