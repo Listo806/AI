@@ -100,12 +100,15 @@ export default function DashboardLayout() {
     // Free tier has CRM access without paying, so never bounce a Free owner.
     if (String(user.selectedPlan || "").toLowerCase() === "free") return;
     if (user.role !== "owner" || !user.selectedPlan || !status) return;
+    // The account pages (profile / billing / settings) stay reachable while a
+    // checkout is unfinished: the checkout's "Edit" link points here.
+    if (location.pathname.startsWith("/account")) return;
     const paidAt = Number(localStorage.getItem("cortexa_paid_at") || 0);
     if (paidAt && Date.now() - paidAt < 30 * 60 * 1000) return;
     navigate(`/checkout?plan=${encodeURIComponent(user.selectedPlan)}`, {
       replace: true,
     });
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]);
 
   // Tự động kiểm tra cấu hình theme mặc định dựa trên thiết bị (chỉ kích hoạt khi thay đổi kích thước/thiết bị)
   useEffect(() => {

@@ -304,6 +304,24 @@ export class TrialService {
   async selectPlan(userId: string, dto: any) {
     if (!userId) throw new ConflictException('Not authenticated');
     await this.ensureSignupColumns();
+    // A customer with a live paid subscription (Nuvei trial or active) must
+    // never have it overwritten by clicking a plan on the pricing page: that
+    // would flip payment_status / selected_plan and lock them out or re-bill.
+    try {
+      const { rows: live } = await this.db.query(
+        `SELECT payment_status FROM users WHERE id = $1`,
+        [userId],
+      );
+      const ps = String(live[0]?.payment_status || '').toLowerCase();
+      if (['trialing', 'active', 'paid'].includes(ps)) {
+        throw new ConflictException(
+          'You already have an active subscription. To change plans, please contact support.',
+        );
+      }
+    } catch (err) {
+      if (err instanceof ConflictException) throw err;
+      /* column may not exist yet in a fresh env */
+    }
     const planId = normalizePlanId(dto?.plan);
     const isFree = planId === 'free';
     const billingCycle = ['monthly', 'annual'].includes(String(dto?.billingCycle))

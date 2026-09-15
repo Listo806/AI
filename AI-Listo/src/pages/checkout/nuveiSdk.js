@@ -67,6 +67,16 @@ function envMode(env) {
 
 function mapCard(response) {
   const card = response?.card;
+  // The same card typed again for the same customer: Nuvei keeps one token per
+  // card and answers "already added" instead of a new token. Tell the checkout
+  // to charge the stored card rather than reporting a decline.
+  const errText = [
+    response?.error?.type, response?.error?.description, response?.error?.help,
+    card?.message, response?.message,
+  ].filter(Boolean).join(" | ");
+  if (/already\s*(added|exist|registered)/i.test(errText)) {
+    return { reuseSavedCard: true, last4: card?.number, bin: card?.bin, brand: card?.type };
+  }
   if (card?.token && card?.status !== "rejected") {
     return {
       token: card.token,
@@ -81,7 +91,7 @@ function mapCard(response) {
   }
   // Never surface the raw provider string (e.g. "Response by mock") to a
   // customer; log it for support and show a clear, friendly decline.
-  if (card?.message) console.warn("Nuvei card rejected:", card.message);
+  if (errText) console.warn("Nuvei card rejected:", errText);
   throw new Error("This card was declined. Please check the details or try another card.");
 }
 
@@ -149,7 +159,7 @@ export async function mountNuveiForm({
     const started = Date.now();
     const tick = () => {
       const el = document.querySelector(`${containerSelector} iframe`);
-      if (el || Date.now() - started > 40000) return resolve(!!el);
+      if (el || Date.now() - started > 90000) return resolve(!!el);
       setTimeout(tick, 300);
     };
     tick();

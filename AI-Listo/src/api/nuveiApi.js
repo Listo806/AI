@@ -52,10 +52,25 @@ export async function nuveiActivate(payload) {
   return res?.data ?? res;
 }
 
-export async function nuveiCancel(subscriptionId) {
-  const res = await apiClient.request("/nuvei/cancel", {
+// 3DS: after the hidden "method" iframe was shown, continue the authentication.
+export async function nuveiThreeDsContinue(subscriptionId) {
+  const res = await apiClient.request("/nuvei/3ds/continue", {
     method: "POST",
     body: JSON.stringify({ subscriptionId }),
+  });
+  return res?.data ?? res;
+}
+
+// The signed-in user's saved cards (id + last4/brand; never the token).
+export async function nuveiListCards() {
+  const res = await apiClient.request("/nuvei/cards");
+  return res?.data ?? res;
+}
+
+export async function nuveiCancel(subscriptionId, immediately = false) {
+  const res = await apiClient.request("/nuvei/cancel", {
+    method: "POST",
+    body: JSON.stringify({ subscriptionId, immediately }),
   });
   return res?.data ?? res;
 }

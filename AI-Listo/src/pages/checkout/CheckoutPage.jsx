@@ -8,6 +8,7 @@ import { trackEvent, trackPurchase, setUserData } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
 import {
   fetchNuveiConfig, fetchNuveiSubscription, nuveiSaveToken, nuveiActivate, collectBrowserInfo,
+  nuveiThreeDsContinue, nuveiListCards,
 } from "../../api/nuveiApi";
 import { mountNuveiForm } from "./nuveiSdk";
 import apiClient from "../../api/apiClient";
@@ -216,7 +217,9 @@ export default function CheckoutPage() {
           onIncomplete: (msg) => { setPaying(false); setErrorMsg(msg); },
         });
         submitRef.current = form.submit;
-        form.ready.then((ok) => setFormReady(!!ok));
+        // If Nuvei's secure fields never appear, say so and mount a fresh form
+        // instead of leaving a dead Pay button.
+        form.ready.then((ok) => { if (ok) setFormReady(true); else { setErrorMsg(tr.errConfig); remountForm(); } });
         const card = await form.done; // resolves after "Pay" click + valid card
         await handleTokenized(card);
       } catch (err) {
@@ -228,36 +231,94 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, user, formGen, blocked]);
 
+  // The bank asked the cardholder to authenticate (3D Secure). Nuvei returns
+  // HTML, not URLs: `hidden_iframe` (device fingerprint) is rendered invisibly
+  // for ~5s and then the authentication continues server-side;
+  // `challenge_request` is the bank's own page, which takes over the window.
+  // The bank posts the result to our server, which sends the browser back to
+  // this page with ?threeds=return, where the poll above finishes the job.
+  async function runThreeDs(result) {
+    const ch = result?.challenge || {};
+    const req = String(ch.challenge_request || "");
+    if (/^https?:\/\//i.test(req.trim())) { window.location.href = req.trim(); return; }
+    if (req.trim()) {
+      try {
+        document.open();
+        document.write(req);
+        document.close();
+        return;
+      } catch (e) { /* fall through */ }
+    }
+    if (ch.hidden_iframe) {
+      try {
+        const frame = document.createElement("iframe");
+        frame.setAttribute("aria-hidden", "true");
+        frame.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden;";
+        document.body.appendChild(frame);
+        const doc = frame.contentDocument || frame.contentWindow?.document;
+        if (doc) { doc.open(); doc.write(ch.hidden_iframe); doc.close(); }
+      } catch (e) { /* ignore: the server-side continue still runs */ }
+      await new Promise((r) => setTimeout(r, 5500));
+      const next = await nuveiThreeDsContinue(result.subscriptionId);
+      if (next?.requires3ds && next?.challenge) return runThreeDs(next);
+      return finishActivation(next);
+    }
+    // 3DS content we cannot render: let the server-side reconcile finish it.
+    setAwaiting(true);
+  }
+
+  async function finishActivation(result) {
+    if (result?.requires3ds && result?.challenge) return runThreeDs(result);
+    if (result?.status === "pending_activation") {
+      // Anti-fraud / bank review / 3DS in flight: the server finalizes it and
+      // this page keeps polling until the account is live.
+      setAwaiting(true); return;
+    }
+    if (result?.status === "trialing" || result?.status === "active") {
+      setUserData({ email: customer.email, phone: customer.phone });
+      trackPurchase({ value: setupFee, currency: "USD", offer: `$${setupFee}`, plan: selectedPlan, transactionId: result.transactionId });
+      trackEvent("trial_activated", { plan: selectedPlan, value: setupFee, currency: "USD" });
+      await finishAndLogin();
+      return;
+    }
+    setProcessing(false); setPaying(false); setErrorMsg(result?.message || tr.errDeclined); remountForm();
+  }
+
   async function handleTokenized(card) {
     setProcessing(true);
     setErrorMsg("");
+    let cardId = null;
     try {
-      const saved = await nuveiSaveToken(card);
-      if (!saved?.cardId) throw new Error(tr.errServer);
+      if (card?.reuseSavedCard) {
+        // Nuvei reported this exact card as already stored for this customer
+        // (a retry with the same card): charge the saved card instead of
+        // telling the customer it was declined.
+        const list = await nuveiListCards();
+        const cards = list?.cards || [];
+        const match = cards.find((c) => card.last4 && c.last4 === card.last4) || cards[0];
+        if (!match?.id) throw new Error(tr.errDeclined);
+        cardId = match.id;
+      } else {
+        const saved = await nuveiSaveToken(card);
+        if (!saved?.cardId) throw new Error(tr.errServer);
+        cardId = saved.cardId;
+      }
+      const testScenario = searchParams.get("test3ds") || undefined; // staging-only hook, ignored in production
       const result = await nuveiActivate({
-        planKey: nuveiPlanKey, cardId: saved.cardId,
+        planKey: nuveiPlanKey, cardId,
         browserInfo: collectBrowserInfo(),
         termUrl: `${window.location.origin}/checkout?plan=${selectedPlan}&threeds=return`,
+        ...(testScenario ? { testScenario } : {}),
       });
-      if (result?.requires3ds && result?.challenge) {
-        const url = result.challenge.challenge_request || result.challenge.acs_url || result.challenge.url;
-        if (url && /^https?:\/\//i.test(url)) { window.location.href = url; return; }
-        setProcessing(false); setPaying(false); setErrorMsg(tr.errDeclined); remountForm(); return;
-      }
-      if (result?.status === "pending_activation" && !result?.requires3ds) {
-        // Anti-fraud / bank review: the verified callback will activate the account.
-        setAwaiting(true); return;
-      }
-      if (result?.status === "trialing" || result?.status === "active") {
-        setUserData({ email: customer.email, phone: customer.phone });
-        trackPurchase({ value: setupFee, currency: "USD", offer: `$${setupFee}`, plan: selectedPlan, transactionId: result.transactionId });
-        trackEvent("trial_activated", { plan: selectedPlan, value: setupFee, currency: "USD" });
-        await finishAndLogin();
-        return;
-      }
-      setProcessing(false); setPaying(false); setErrorMsg(result?.message || tr.errDeclined); remountForm();
+      await finishActivation(result);
     } catch (err) {
       if (/session expired/i.test(err?.message || "")) { goSignIn(); return; }
+      if (cardId && /failed to fetch|networkerror|load failed|timed? ?out/i.test(err?.message || "")) {
+        // The charge request left the browser but no answer came back: the
+        // server may well have completed it. Poll instead of asking for a
+        // second payment.
+        setAwaiting(true); return;
+      }
       setProcessing(false); setPaying(false); setErrorMsg(err?.message || tr.errServer); remountForm();
     }
   }
