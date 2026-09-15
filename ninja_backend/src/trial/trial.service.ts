@@ -335,14 +335,31 @@ export class TrialService {
         : 'monthly';
 
     if (isFree) {
+      // `plan` must drop to free too: resolveEffectivePlan grandfathers a
+      // non-terminated account by its `plan` column, so leaving the old paid
+      // tier there would hand a canceled/refunded customer premium for free.
       await this.db.query(
         `UPDATE users
-            SET selected_plan = 'free', billing_cycle = NULL,
+            SET selected_plan = 'free', plan = 'free', billing_cycle = NULL,
                 payment_status = 'free', checkout_status = 'free',
                 plan_status = 'active', updated_at = NOW()
           WHERE id = $1`,
         [userId],
       );
+      // Choosing Free ends a subscription that was still being retried after
+      // failed payments; otherwise a later successful retry would silently
+      // re-provision the paid tier.
+      try {
+        await this.db.query(
+          `UPDATE nuvei_subscriptions
+              SET status = 'canceled', next_billing_date = NULL,
+                  canceled_at = COALESCE(canceled_at, NOW()), updated_at = NOW()
+            WHERE user_id = $1 AND status IN ('past_due','suspended')`,
+          [userId],
+        );
+      } catch (_e) {
+        /* table may not exist in a fresh env */
+      }
       try {
         await this.mailer.cancelScheduled(userId);
       } catch (_e) {

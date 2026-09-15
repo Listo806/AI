@@ -65,7 +65,6 @@ import Pricing from "./pages/common/Pricing";
 import Trial from "./pages/common/Trial";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
 import PromoBusinessCheckout from "./pages/checkout/PromoBusinessCheckout";
-import NuveiCheckout from "./pages/checkout/NuveiCheckout";
 import NuveiLinkToPay from "./pages/admin/NuveiLinkToPay";
 import EditorialFunnel from "./pages/editorial/EditorialFunnel";
 import EditorialFunnelEs from "./pages/editorial/EditorialFunnelEs";
@@ -277,7 +276,6 @@ function publicRoutes(prefix) {
         path={`${p}/checkout-business-offer`}
         element={<PromoBusinessCheckout />}
       />
-      <Route path={`${p}/nuvei-checkout`} element={<NuveiCheckout />} />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
       <Route path={`${p}/onboarding`} element={<Onboarding />} />
     </>
