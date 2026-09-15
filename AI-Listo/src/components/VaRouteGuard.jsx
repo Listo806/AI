@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isInternalAccount } from '../utils/internalAccess';
 
 /**
  * Route guard for restricted roles:
@@ -40,7 +41,11 @@ export default function VaRouteGuard({ children }) {
   // their own dashboard. The backend already blocks the data with a 403; this
   // stops even the empty admin page shell from rendering for a regular customer.
   if (path.startsWith('/dashboard/admin')) {
+    // Internal access is granted by internal_user_access and is independent of
+    // the customer-side role, so an administrator whose account is also a
+    // normal team owner must still reach the admin area.
     const isAdmin =
+      isInternalAccount(user) ||
       role === 'super_admin' || role === 'admin' || role === 'developer';
     if (!isAdmin) {
       return <Navigate to="/dashboard" replace />;
