@@ -1199,7 +1199,7 @@ export default function PricingPage() {
   const pv3 = pricingV3[lang] || pricingV3.en;
 
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const cycle = billingCycle === "annually" ? "annual" : "monthly";
 
   const billingPrices = {
@@ -1361,6 +1361,16 @@ export default function PricingPage() {
         );
       } catch (error) {
         console.error("PLAN SELECTION ERROR:", error);
+
+        // A stale account id from an earlier visit with no live session: the
+        // account exists, so sign in (never register twice) and come back.
+        if (/session expired|unauthori[sz]ed|401/i.test(error?.message || "")) {
+          localStorage.removeItem("trialUserId");
+          localStorage.setItem("trialPlan", planKey);
+          try { setUser(null); } catch (e) { /* ignore */ }
+          navigate("/sign-in?next=/pricing");
+          return;
+        }
 
         // Do not create a second registration. If the account exists but the
         // authenticated plan-update failed, keep the visitor on Pricing.

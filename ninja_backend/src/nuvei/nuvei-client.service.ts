@@ -127,12 +127,38 @@ export class NuveiClientService {
     return this.authToken(code, key);
   }
 
+  /** SERVER application code (the one that signs debits / refunds). */
+  serverAppCode(): string {
+    return String(this.config.get('NUVEI_SERVER_APP_CODE') || '').trim();
+  }
+
+  /**
+   * Key for a given application code, used to check the `stoken` Nuvei sends
+   * in its webhook (md5 of transaction_id_app_code_user_id_app_key). Both the
+   * SERVER and the CLIENT (browser tokenization) apps can originate events.
+   */
+  appKeyFor(appCode: string): string | null {
+    const code = String(appCode || '').trim();
+    if (!code) return null;
+    if (code === this.serverAppCode()) {
+      return String(this.config.get('NUVEI_SERVER_APP_KEY') || '').trim() || null;
+    }
+    if (code === String(this.config.get('NUVEI_CLIENT_APP_CODE') || '').trim()) {
+      return String(this.config.get('NUVEI_CLIENT_APP_KEY') || '').trim() || null;
+    }
+    return null;
+  }
+
   private async request(
     method: 'POST' | 'GET',
     url: string,
     payload?: any,
   ): Promise<NuveiCallResult> {
     let res: Response;
+    // A hung gateway must never hang a checkout: fail the call after 45s so
+    // the caller can treat it as "unconfirmed" instead of waiting forever.
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 45_000);
     try {
       res = await fetch(url, {
         method,
@@ -141,11 +167,14 @@ export class NuveiClientService {
           'Auth-Token': this.serverAuthToken(),
         },
         body: method === 'POST' ? JSON.stringify(payload ?? {}) : undefined,
+        signal: ac.signal,
       });
     } catch (err: any) {
+      clearTimeout(timer);
       this.logger.error(`Nuvei request to ${url} failed: ${err?.message}`);
       return { ok: false, httpStatus: 0, body: null, error: err?.message };
     }
+    clearTimeout(timer);
     const text = await res.text().catch(() => '');
     let body: any = null;
     try {
@@ -244,16 +273,39 @@ export class NuveiClientService {
   }
 
   /**
-   * Best-effort server-side verification of a card transaction by id.
-   * The card-transaction status query is not fully documented for staging, so
-   * callers must treat a non-ok result as "could not verify" (never as failure)
-   * and fall back to the recorded order + webhook body match.
+   * GET /v2/transaction/<id>/ — "Transaction Info": the authoritative current
+   * status of a card transaction (success / failure / pending / expired /
+   * canceled + status_detail). Used to finalize 3DS / review flows and to
+   * double-check a callback. Callers must treat a non-ok result as "could not
+   * verify" (never as a decline).
    */
   async verifyTransaction(transactionId: string): Promise<NuveiCallResult> {
     return this.request(
       'GET',
-      `${this.cardsBase()}/v2/transaction/${encodeURIComponent(transactionId)}`,
+      `${this.cardsBase()}/v2/transaction/${encodeURIComponent(transactionId)}/`,
     );
+  }
+
+  /**
+   * POST /v2/3ds/auth_continue/ — after the 3DS "method" (fingerprint) iframe
+   * has been rendered for ~5s (authentication return_code 50 / status_detail
+   * 35), continue the authentication. May answer with a challenge.
+   */
+  async threeDsContinue(transactionId: string): Promise<NuveiCallResult> {
+    return this.request('POST', `${this.cardsBase()}/v2/3ds/auth_continue/`, {
+      transaction: { id: transactionId },
+    });
+  }
+
+  /**
+   * POST /v2/3ds/auth_verify/ — submit the CRes the ACS posted to our term_url
+   * so Nuvei can validate the challenge result and complete the debit.
+   */
+  async threeDsVerify(transactionId: string, cres: string): Promise<NuveiCallResult> {
+    return this.request('POST', `${this.cardsBase()}/v2/3ds/auth_verify/`, {
+      transaction: { id: transactionId },
+      cres,
+    });
   }
 
   /**
