@@ -35,9 +35,11 @@ export function AuthProvider({ children }) {
             try {
               const currentUser = await apiClient.request('/users/me');
 
-              if (currentUser?.user) {
-                setUser(currentUser.user);
-                localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser.user));
+              // Accept both the bare user object and a { user } wrapper.
+              const u = currentUser?.user ?? currentUser;
+              if (u && u.id) {
+                setUser(u);
+                localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(u));
               }
             } catch (error) {
               console.error('❌ /users/me FAILED:', error);
@@ -141,8 +143,14 @@ export function AuthProvider({ children }) {
     if (!apiClient.accessToken) return;
     try {
       const currentUser = await apiClient.request('/users/me');
-      setUser(currentUser.user);
-      localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser.user));
+      // /users/me returns the user object directly (no { user } wrapper).
+      // Previously `currentUser.user` was undefined here, which logged the
+      // customer out right after a successful payment.
+      const u = currentUser?.user ?? currentUser;
+      if (u && u.id) {
+        setUser(u);
+        localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(u));
+      }
     } catch (err) {
       console.error('Failed to refresh user:', err);
     }

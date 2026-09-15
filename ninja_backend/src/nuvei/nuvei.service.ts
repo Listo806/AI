@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -277,6 +278,98 @@ export class NuveiService {
       [userId],
     );
     return { subscription: rows[0] || null };
+  }
+
+  // ---- test / audit hooks ---------------------------------------------
+
+  /**
+   * Full audit view of one subscription: the stored card (last4/brand), every
+   * transaction with its provider transaction_ID + authorization_code, and the
+   * confirmation-email log. Owners may view only their own subscription.
+   */
+  async subscriptionDetails(
+    subscriptionId: string,
+    userId: string,
+    isAdmin: boolean,
+  ) {
+    await this.ensureSchema();
+    const { rows } = await this.db.query(
+      `SELECT s.id, s.user_id, s.email, s.plan_key, s.provision_plan, s.status,
+              s.activation_amount, s.monthly_amount, s.currency, s.card_id,
+              s.trial_end, s.next_billing_date, s.last_charge_at, s.canceled_at,
+              s.created_at, c.last4, c.brand, c.bin
+         FROM nuvei_subscriptions s
+         LEFT JOIN nuvei_cards c ON c.id = s.card_id
+        WHERE s.id = $1`,
+      [subscriptionId],
+    );
+    const sub = rows[0];
+    if (!sub) throw new NotFoundException('Subscription not found');
+    if (!isAdmin && String(sub.user_id) !== String(userId)) {
+      throw new ForbiddenException();
+    }
+    const tx = await this.db.query(
+      `SELECT kind, period_key, provider_transaction_id, authorization_code,
+              dev_reference, amount, currency, status, status_detail, message, created_at
+         FROM nuvei_transactions
+        WHERE subscription_id = $1
+        ORDER BY created_at ASC`,
+      [subscriptionId],
+    );
+    let emails: any[] = [];
+    try {
+      const e = await this.db.query(
+        `SELECT subject, status, provider, error, sent_at
+           FROM email_log WHERE user_id = $1
+          ORDER BY sent_at DESC NULLS LAST LIMIT 10`,
+        [sub.user_id],
+      );
+      emails = e.rows;
+    } catch {
+      /* email_log may not exist in a fresh env */
+    }
+    const { last4, brand, bin, ...subscription } = sub;
+    return { subscription, card: { last4, brand, bin }, transactions: tx.rows, emails };
+  }
+
+  /**
+   * STAGING-ONLY test hook: fast-forward a subscription's trial so the next
+   * monthly charge is due now, then run the recurring sweep once. Calling it a
+   * second time on the same day exercises duplicate-charge prevention (the
+   * period is already claimed, so no second debit is sent). Refuses to run
+   * unless NUVEI_ENVIRONMENT is staging.
+   */
+  async simulateTrialEnd(
+    subscriptionId: string,
+    userId: string,
+    isAdmin: boolean,
+  ) {
+    if (this.client.environment() !== 'staging') {
+      throw new ForbiddenException('Trial simulation is only available in staging.');
+    }
+    await this.ensureSchema();
+    const { rows } = await this.db.query(
+      `SELECT id, user_id, status FROM nuvei_subscriptions WHERE id = $1`,
+      [subscriptionId],
+    );
+    const sub = rows[0];
+    if (!sub) throw new NotFoundException('Subscription not found');
+    if (!isAdmin && String(sub.user_id) !== String(userId)) {
+      throw new ForbiddenException();
+    }
+    if (!['trialing', 'active', 'past_due'].includes(sub.status)) {
+      throw new BadRequestException(
+        `Subscription is ${sub.status}; recurring billing does not apply.`,
+      );
+    }
+    await this.db.query(
+      `UPDATE nuvei_subscriptions
+         SET next_billing_date = NOW() - interval '1 minute', updated_at = NOW()
+       WHERE id = $1`,
+      [subscriptionId],
+    );
+    await this.debitDue();
+    return this.subscriptionDetails(subscriptionId, userId, isAdmin);
   }
 
   // ---- helpers ---------------------------------------------------------
