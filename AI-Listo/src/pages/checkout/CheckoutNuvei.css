@@ -13,7 +13,6 @@
 
 .cxo-page {
   min-height: 100vh;
-  background: var(--cxo-bg);
   color: var(--cxo-navy);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
@@ -51,8 +50,8 @@
 .cxo-col { display: flex; flex-direction: column; gap: 22px; }
 
 .cxo-card {
-  background: #fff; border: 1px solid var(--cxo-line); border-radius: 16px; padding: 22px 24px;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  background: #fff; border: 1px solid var(--cxo-line); border-radius: 16px; padding: 22px 24px!important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);text-align: left;
 }
 .cxo-chead { display: flex; align-items: flex-start; gap: 12px; }
 .cxo-icon { width: 40px; height: 40px; border-radius: 11px; background: var(--cxo-iconbg); color: var(--cxo-blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -115,7 +114,8 @@
 .cxo-next-item small { display: block; font-size: 12.5px; color: var(--cxo-gray); margin-top: 2px; }
 
 .cxo-muted { color: var(--cxo-gray); font-size: 13px; }
-
+#pg_js_sdk_content{min-height: 200px;}
+#pg_js_sdk_content .payment-panel{background: #fff;}
 @media (max-width: 900px) {
   .cxo-grid { grid-template-columns: 1fr; }
   .cxo-next { grid-template-columns: 1fr; gap: 14px; }
