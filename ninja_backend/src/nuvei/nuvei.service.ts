@@ -264,12 +264,19 @@ export class NuveiService {
     );
     // Statuses such as 'partially_refunded' / 'refund_pending' need more than
     // the original VARCHAR(16).
-    await this.db.query(
-      `ALTER TABLE nuvei_transactions ALTER COLUMN status TYPE VARCHAR(32)`,
-    );
-    await this.db.query(
-      `ALTER TABLE nuvei_webhook_events ALTER COLUMN status TYPE VARCHAR(32)`,
-    );
+    await this.db.query(`
+      DO $$
+      BEGIN
+        IF (SELECT character_maximum_length FROM information_schema.columns
+             WHERE table_name = 'nuvei_transactions' AND column_name = 'status') < 32 THEN
+          ALTER TABLE nuvei_transactions ALTER COLUMN status TYPE VARCHAR(32);
+        END IF;
+        IF (SELECT character_maximum_length FROM information_schema.columns
+             WHERE table_name = 'nuvei_webhook_events' AND column_name = 'status') < 32 THEN
+          ALTER TABLE nuvei_webhook_events ALTER COLUMN status TYPE VARCHAR(32);
+        END IF;
+      END $$;
+    `);
 
     this.schemaReady = true;
   }
@@ -1367,6 +1374,24 @@ export class NuveiService {
    */
   @Cron(CronExpression.EVERY_HOUR)
   async debitDue(subscriptionId?: string): Promise<void> {
+    if (!this.enabled()) return;
+    await this.ensureSchema();
+    // Scheduled cancellations close on their date even while charging is
+    // paused (NUVEI_RECURRING_ENABLED=false must never keep access open).
+    try {
+      const { rows: ending } = await this.db.query(
+        `SELECT id FROM nuvei_subscriptions
+          WHERE cancel_at_period_end = true
+            AND status IN ('trialing','active','past_due')
+            AND next_billing_date IS NOT NULL AND next_billing_date <= NOW()
+            ${subscriptionId ? 'AND id = $1' : ''}
+          LIMIT 200`,
+        subscriptionId ? [subscriptionId] : [],
+      );
+      for (const row of ending) await this.finalizeCancellation(row.id);
+    } catch (err: any) {
+      this.logger.error(`scheduled cancellation pass failed: ${err?.message}`);
+    }
     if (!this.recurringEnabled()) return;
     // A targeted run (one subscription) never waits on the hourly sweep; the
     // per-period claim keeps the two from charging twice.
@@ -1375,7 +1400,6 @@ export class NuveiService {
       this.sweeping = true;
     }
     try {
-      await this.ensureSchema();
       const params: any[] = [];
       let only = '';
       if (subscriptionId) {
@@ -1692,7 +1716,7 @@ export class NuveiService {
     const { rows: fails } = await this.db.query(
       `SELECT COUNT(*)::int AS n FROM nuvei_transactions
         WHERE subscription_id = $1 AND kind = 'recurring'
-          AND status = 'failure' AND created_at > NOW() - interval '30 days'`,
+          AND status IN ('failure','error') AND created_at > NOW() - interval '30 days'`,
       [sub.id],
     );
     const failures = Math.max(1, Number(fails[0]?.n || 0));
@@ -2102,7 +2126,7 @@ export class NuveiService {
           }
           return { handled: 'recurring_declined', verified: true };
         }
-        if (reversal && String(txRow.status) === 'success') {
+        if (reversal && ['success', 'partially_refunded', 'refund_pending'].includes(String(txRow.status))) {
           return this.applyReversal(sub, txRow, tx);
         }
         return { handled: confirmed ? 'already_processed' : 'ignored', verified: false };
