@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Navigate, useSearchParams } from "react-router-dom";
 
@@ -24,6 +24,8 @@ export default function SignIn({ variant = 'crm' }) {
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const hasNext = !!searchParams.get('next');
   // Where to land after login. Used by email CTAs (e.g. the $257 promo checkout)
   // so a logged-out customer returns to the offer instead of the dashboard.
   const nextPath = safeNext(searchParams.get('next'));
@@ -59,7 +61,10 @@ export default function SignIn({ variant = 'crm' }) {
 
     try {
       // Normalize so a capitalized/spaced email still matches the stored one.
-      await login(email.trim().toLowerCase(), password);
+      // When the visitor was sent here with ?next= (e.g. from checkout), return
+      // them there instead of the default role-based landing.
+      await login(email.trim().toLowerCase(), password, { redirect: !hasNext });
+      if (hasNext) navigate(nextPath, { replace: true });
       // Funnel: successful login. Fire first_login once per device so the first
       // login after signup is distinguishable from repeat logins.
       if (!localStorage.getItem('listo_has_logged_in')) {
