@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   User, Mail, Phone, Layers, CreditCard, Calendar, Lock, ShieldCheck,
-  Check, Edit2, ExternalLink, HelpCircle, Zap,
+  Edit2, ExternalLink, HelpCircle, Zap,
 } from "lucide-react";
 import { trackEvent, trackPurchase, setUserData } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
@@ -185,23 +185,10 @@ export default function CheckoutPage() {
 
   return (
     <main className="cxo-page">
-      <header className="cxo-top">
-        <div className="cxo-brand"><ShieldCheck size={22} /> <b>Cortexa</b> <span>{tr.brand}</span></div>
-        <div className="cxo-secure"><ShieldCheck size={18} /> {tr.secureCheckout}</div>
-      </header>
-
-      <div className="cxo-steps">
-        <div className="cxo-step"><div className="cxo-step-dot"><Check size={16} /></div><div className="cxo-step-txt"><b>1. {tr.s1}</b><small>{tr.s1s}</small></div></div>
-        <div className="cxo-step-line" />
-        <div className="cxo-step"><div className="cxo-step-dot"><Check size={16} /></div><div className="cxo-step-txt"><b>2. {tr.s2}</b><small>{tr.s2s}</small></div></div>
-        <div className="cxo-step-line" />
-        <div className="cxo-step"><div className="cxo-step-dot">3</div><div className="cxo-step-txt"><b>3. {tr.s3}</b><small>{tr.s3s}</small></div></div>
-      </div>
-
       <div className="cxo-wrap">
         <div className="cxo-grid">
           {/* LEFT */}
-          <div className="cxo-col">
+          <div className="cxo-col cxo-left-col">
             <section className="cxo-card">
               <div className="cxo-chead">
                 <div className="cxo-icon"><User size={20} /></div>
@@ -235,8 +222,8 @@ export default function CheckoutPage() {
           </div>
 
           {/* RIGHT */}
-          <div className="cxo-col">
-            <section className="cxo-card">
+          <div className="cxo-col cxo-right-col">
+            <section className="cxo-card cxo-payment-card">
               <div className="cxo-chead">
                 <div className="cxo-icon"><CreditCard size={20} /></div>
                 <div className="cxo-chead-copy"><h2>{tr.payTitle}</h2><p>{tr.paySub}</p></div>
@@ -247,7 +234,7 @@ export default function CheckoutPage() {
                 <p className="cxo-err">{tr.unavailable}</p>
               ) : (
                 <>
-                  <p className="cxo-muted" style={{ margin: "16px 0 8px" }}>{tr.cardHint}</p>
+                  
                   <div id="nuvei-card-form" className="cxo-nuvei-host" />
 
                   <label className="cxo-consent">
