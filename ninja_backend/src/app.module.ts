@@ -43,6 +43,7 @@ import { AiUnitsModule } from './ai-units/ai-units.module';
 import { BusinessSuiteModule } from './business-suite/business-suite.module';
 import { AestheticWellnessModule } from './aesthetic-wellness/aesthetic-wellness.module';
 import { NuveiModule } from './nuvei/nuvei.module';
+import { ClinicMedicalModule } from "./clinic-medical/clinic-medical.module";
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { NuveiModule } from './nuvei/nuvei.module';
     AiUnitsModule,
     BusinessSuiteModule,
     AestheticWellnessModule,
+    ClinicMedicalModule,
   ],
   controllers: [AppController],
 })

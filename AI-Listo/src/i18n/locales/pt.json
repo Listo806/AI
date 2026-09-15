@@ -232,6 +232,23 @@
             "Pontuação de qualidade dos leads"
           ],
           "connected": "Conectado diretamente ao seu pipeline, contatos, IA e automações do Cortexa."
+        },
+        "clinic_medical": {
+          "label": "Clínica e Medicina",
+          "description": "Gerencie pacientes, consultas, agendamentos, documentação clínica, planos de cuidados, acompanhamentos e fluxos da equipe em um espaço seguro.",
+          "capabilities": [
+            "Registros e histórico do paciente",
+            "Agendamento de consultas",
+            "Consultas e notas clínicas",
+            "Sinais vitais e avaliações",
+            "Diagnósticos e planos de cuidados",
+            "Prescrições e pedidos de laboratório",
+            "Alertas e alergias do paciente",
+            "Instruções de acompanhamento",
+            "Colaboração segura da equipe",
+            "Suporte a fluxos de trabalho assistido por IA"
+          ],
+          "connected": "Conectado ao seu CRM, conversas, leads, calendário, equipe, IA, automações, análises, assinaturas e administração do Cortexa."
         }
       }
     },
@@ -293,7 +310,8 @@
     "adminSignups": "Cadastros",
     "adminCustomers": "Assinaturas",
     "billingCalendar": "Calendário de faturamento",
-    "conversations": "Conversas"
+    "conversations": "Conversas",
+    "patients": "Pacientes"
   },
   "header": {
     "profile": "Perfil",

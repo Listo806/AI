@@ -1,0 +1,26 @@
+import React,{useEffect,useMemo,useState} from "react";
+import {useNavigate,useParams} from "react-router-dom";
+import {CalendarDays,Save,FileText,AlertTriangle,CheckCircle2,UserRound,HeartPulse,Plus} from "lucide-react";
+import {clinicMedicalApi} from "../../api/clinicMedicalApi";
+import "./ClinicMedical.css";
+export default function ClinicalConsultation(){
+ const {consultationId}=useParams(),nav=useNavigate(),[x,setX]=useState(null),[saving,setSaving]=useState(false);
+ useEffect(()=>{clinicMedicalApi.consultation(consultationId).then(r=>setX(r?.data??r))},[consultationId]);
+ const set=(k,v)=>setX(s=>({...s,consultation:{...s.consultation,[k]:v}}));
+ const save=async()=>{setSaving(true);try{await clinicMedicalApi.saveConsultation(consultationId,x.consultation)}finally{setSaving(false)}};
+ if(!x)return <div className="cm"><div className="cm-empty">Loading consultation…</div></div>;
+ const c=x.consultation,p=x.patient, vit=c.vitals||{};
+ const setVital=(k,v)=>set("vitals",{...vit,[k]:v});
+ const completion=[c.visitReason,c.symptoms,c.clinicalObservations,c.assessment,c.carePlan,c.signatureName].filter(Boolean).length;
+ return <div className="cm consultation">
+  <div className="cm-top"><div className="cm-heading"><CalendarDays/><div><h1>Clinical Consultation</h1><p>Document today's patient encounter.</p></div></div><div className="cm-actions"><button onClick={save}><Save/>{saving?"Saving…":"Save Draft"}</button><button><FileText/>Preview Summary</button><button className="primary" onClick={async()=>{await clinicMedicalApi.completeConsultation(consultationId,{...c,status:"completed"});nav(`/dashboard/clinic-medical/patients/${p.id}`)}}>✎ Complete &amp; Sign</button></div></div>
+  <div className="consult-patient"><i>{p.initials}</i><div><h2>{p.name}</h2><b>MRN {p.medicalRecordNo}</b></div><span>{p.gender||"—"} · {p.age??"—"} years</span><span><UserRound/>{c.providerName||"Unassigned"}</span><span><CalendarDays/>{new Date(c.encounterAt).toLocaleString()}</span>{x.alerts?.[0]&&<em><AlertTriangle/> {x.alerts[0].label}</em>}</div>
+  <div className="consult-grid"><div>
+   <div className="two"><section className="cm-panel form-panel"><h3><FileText/>Visit Details</h3><div className="two fields"><label>Encounter Type<select value={c.encounterType||""} onChange={e=>set("encounterType",e.target.value)}><option>Follow-up Visit</option><option>General Consultation</option><option>Preventive Care</option><option>Chronic Care</option></select></label><label>Reason for Visit<input value={c.visitReason||""} onChange={e=>set("visitReason",e.target.value)}/></label></div><label>Symptoms / History<textarea value={c.symptoms||""} onChange={e=>set("symptoms",e.target.value)}/></label></section>
+   <section className="cm-panel form-panel"><h3><HeartPulse/>Vital Signs</h3><div className="three fields">{[["bloodPressure","Blood Pressure"],["heartRate","Heart Rate"],["temperature","Temperature"],["respiratoryRate","Respiratory Rate"],["oxygenSaturation","O₂ Saturation"],["weight","Weight"]].map(([k,l])=><label key={k}>{l}<input value={vit[k]||""} onChange={e=>setVital(k,e.target.value)}/></label>)}</div></section></div>
+   <section className="cm-panel form-panel"><h3><UserRound/>Clinical Notes &amp; Examination</h3><div className="two fields"><label>Clinical Observations<textarea value={c.clinicalObservations||""} onChange={e=>set("clinicalObservations",e.target.value)}/></label><label>Physical Examination<textarea value={c.physicalExamination||""} onChange={e=>set("physicalExamination",e.target.value)}/></label></div></section>
+   <section className="cm-panel form-panel"><h3><HeartPulse/>Assessment &amp; Diagnosis</h3><div className="three fields"><label>Assessment<textarea value={c.assessment||""} onChange={e=>set("assessment",e.target.value)}/></label><label>Diagnosis<input value={c.diagnosis||""} onChange={e=>set("diagnosis",e.target.value)}/></label><label>ICD-10<input value={c.icd10||""} onChange={e=>set("icd10",e.target.value)}/></label></div></section>
+   <div className="two"><section className="cm-panel form-panel"><h3><FileText/>Care Plan</h3><label>Treatment Plan<textarea value={c.carePlan||""} onChange={e=>set("carePlan",e.target.value)}/></label></section><section className="cm-panel form-panel"><h3><CalendarDays/>Follow-Up &amp; Patient Instructions</h3><div className="two fields"><label>Follow-up Timeframe<input value={c.followUpTimeframe||""} onChange={e=>set("followUpTimeframe",e.target.value)}/></label><label>Patient Instructions<textarea value={c.patientInstructions||""} onChange={e=>set("patientInstructions",e.target.value)}/></label></div></section></div>
+  </div><aside><section className="cm-panel completion"><h3>⚙ Encounter Completion</h3><strong>{Math.round(completion/6*100)}%</strong><progress value={completion} max="6"/>{["Visit Details","Vital Signs","Clinical Notes","Assessment","Care Plan","Signature"].map((s,i)=><p key={s}>{i<completion?<CheckCircle2/>:"○"}{s}</p>)}</section><section className="cm-panel alerts"><h3><AlertTriangle/>Patient Alerts</h3>{(x.alerts||[]).map(a=><div key={a.id}><b>{a.label}</b><span>{a.reaction}</span></div>)}</section></aside></div>
+ </div>
+}

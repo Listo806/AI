@@ -763,6 +763,59 @@ export default function Sidebar({
       price: 97,
       path: "/dashboard/aesthetic-wellness",
     },
+    {
+      id: "clinic-medical",
+      feature: "clinicMedicalWorkspace",
+      label: "Clinic & Medical",
+      flyoutTitle: "Clinic & Medical Workspace",
+      icon: "stethoscope",
+      tone: "purple",
+      description:
+        "Manage patients, consultations, appointments, clinical documentation, care plans, follow-ups, and team workflows from one secure workspace.",
+      capabilities: [
+        "Patient records and history",
+        "Appointment scheduling",
+        "Clinical consultations and notes",
+        "Vital signs and assessments",
+        "Diagnoses and care plans",
+        "Prescriptions and lab orders",
+        "Patient alerts and allergies",
+        "Follow-up instructions",
+        "Secure team collaboration",
+        "AI-assisted workflow support",
+      ],
+      perfectFor: [
+        "Medical Clinics",
+        "Primary Care Practices",
+        "Specialty Clinics",
+        "Outpatient Practices",
+        "Wellness & Medical Teams",
+      ],
+      benefits: [
+        [
+          "stethoscope",
+          "CONNECTED CLINICAL WORKFLOWS",
+          "Manage patients, consultations, appointments, documentation, care plans, follow-ups, and team activity in one secure workspace.",
+        ],
+        [
+          "clipboard-plus",
+          "PATIENT RECORDS & CONSULTATIONS",
+          "Keep patient history, clinical notes, assessments, diagnoses, care plans, and follow-up instructions connected to the patient record.",
+        ],
+        [
+          "calendar-check",
+          "APPOINTMENTS & FOLLOW-UP",
+          "Coordinate appointments, providers, follow-ups, and patient communication from the existing Cortexa calendar and conversations tools.",
+        ],
+        [
+          "shield-check",
+          "CONNECTED TO CORTEXA",
+          "Works with your existing Cortexa CRM, conversations, leads, calendar, team, AI, automation, analytics, subscriptions, and administration.",
+        ],
+      ],
+      price: 97,
+      path: "/dashboard/clinic-medical",
+    },
   ];
   const getWorkspaceI18nKey = (workspace) =>
     String(workspace?.id || "").replace(/-/g, "_");
@@ -1023,9 +1076,12 @@ export default function Sidebar({
   // then Setup/Calendar/AI Agent (AI_CENTER_ITEMS), then Team/Integrations/Generator.
   // In Aesthetic & Wellness, "Clients" opens the clinic-specific directory.
   // Outside that workspace, keep the existing generic Contacts route unchanged.
+  const isClinicMedical = location.pathname.startsWith("/dashboard/clinic-medical");
   const clientsRoute = location.pathname.startsWith("/dashboard/aesthetic-wellness")
     ? "/dashboard/aesthetic-wellness/clients"
-    : "/dashboard/contacts";
+    : isClinicMedical
+      ? "/dashboard/clinic-medical/patients"
+      : "/dashboard/contacts";
 
   const operationalNav = [
     {
@@ -1055,7 +1111,7 @@ export default function Sidebar({
     {
       path: clientsRoute,
       icon: "contact",
-      labelKey: "nav.contacts",
+      labelKey: isClinicMedical ? "nav.patients" : "nav.contacts",
     },
 
     {
@@ -1617,7 +1673,7 @@ export default function Sidebar({
               </span>
 
               <div className="crm-workspace-detail-title">
-                <h3>{getWorkspaceLabel(hoveredWorkspace)}</h3>
+                <h3>{hoveredWorkspace.flyoutTitle || getWorkspaceLabel(hoveredWorkspace)}</h3>
                 <p>{getWorkspaceDescription(hoveredWorkspace)}</p>
               </div>
 
@@ -1686,7 +1742,9 @@ export default function Sidebar({
                         )} ${t("nav.workspaces.activeSuffix")}`
                     : wsBusy
                       ? t("nav.workspaces.activating", "Adding to your plan...")
-                      : t("nav.workspaces.addToPlan", "Add to My Plan")}
+                      : hoveredWorkspace.id === "clinic-medical"
+                        ? "Choose Clinic & Medical"
+                        : t("nav.workspaces.addToPlan", "Add to My Plan")}
                 </button>
 
                 {wsError && !isWorkspaceActive(hoveredWorkspace) ? (

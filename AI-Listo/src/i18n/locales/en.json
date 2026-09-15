@@ -232,6 +232,23 @@
             "Lead Quality Scoring"
           ],
           "connected": "Connected directly to your Cortexa pipeline, contacts, AI, and automation."
+        },
+        "clinic_medical": {
+          "label": "Clinic & Medical",
+          "description": "Manage patients, consultations, appointments, clinical documentation, care plans, follow-ups, and team workflows from one secure workspace.",
+          "capabilities": [
+            "Patient records and history",
+            "Appointment scheduling",
+            "Clinical consultations and notes",
+            "Vital signs and assessments",
+            "Diagnoses and care plans",
+            "Prescriptions and lab orders",
+            "Patient alerts and allergies",
+            "Follow-up instructions",
+            "Secure team collaboration",
+            "AI-assisted workflow support"
+          ],
+          "connected": "Connected to your Cortexa CRM, conversations, leads, calendar, team, AI, automation, analytics, subscriptions, and administration."
         }
       }
     },
@@ -293,7 +310,8 @@
     "adminSignups": "Sign-ups",
     "adminCustomers": "Subscriptions",
     "billingCalendar": "Billing Calendar",
-    "conversations": "Conversations"
+    "conversations": "Conversations",
+    "patients": "Patients"
   },
   "header": {
     "profile": "Profile",
