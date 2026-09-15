@@ -257,6 +257,14 @@ export class NuveiService {
     await this.db.query(
       `ALTER TABLE nuvei_transactions ADD COLUMN IF NOT EXISTS refunded_amount NUMERIC(12,2) NOT NULL DEFAULT 0`,
     );
+    // Statuses such as 'partially_refunded' / 'refund_pending' need more than
+    // the original VARCHAR(16).
+    await this.db.query(
+      `ALTER TABLE nuvei_transactions ALTER COLUMN status TYPE VARCHAR(32)`,
+    );
+    await this.db.query(
+      `ALTER TABLE nuvei_webhook_events ALTER COLUMN status TYPE VARCHAR(32)`,
+    );
 
     this.schemaReady = true;
   }
@@ -338,10 +346,7 @@ export class NuveiService {
     const tx = info.body.transaction;
 
     if (this.isApproved(info.body)) {
-      if (
-        tx.amount != null &&
-        Math.abs(Number(tx.amount) - Number(sub.activation_amount)) > 0.01
-      ) {
+      if (!this.amountMatches(tx.amount, sub.activation_amount)) {
         this.logger.warn(
           `Nuvei activation amount mismatch for sub ${sub.id}: got ${tx.amount}, expected ${sub.activation_amount}`,
         );
@@ -466,7 +471,7 @@ export class NuveiService {
        WHERE id = $1`,
       [subscriptionId],
     );
-    await this.debitDue();
+    await this.debitDue(subscriptionId);
     return this.subscriptionDetails(subscriptionId, userId, isAdmin);
   }
 
@@ -490,6 +495,18 @@ export class NuveiService {
       (status === 'success' || status === '1') &&
       Number(t?.status_detail) === APPROVED_STATUS_DETAIL
     );
+  }
+
+  /**
+   * Amount tamper check that fails CLOSED: a missing amount is accepted (not
+   * every callback carries it) but a non-numeric or different one is not.
+   */
+  private amountMatches(got: any, expected: any): boolean {
+    if (got === undefined || got === null || got === '') return true;
+    const g = Number(got);
+    const e = Number(expected);
+    if (!Number.isFinite(g) || !Number.isFinite(e)) return false;
+    return Math.abs(g - e) <= 0.01;
   }
 
   /** A final decline / rejection (never a pending or review state). */
@@ -836,11 +853,10 @@ export class NuveiService {
     const { rows: pendingRows } = await this.db.query(
       `SELECT s.id FROM nuvei_subscriptions s
         WHERE s.user_id = $1 AND s.status = 'pending_activation'
-          AND s.created_at > NOW() - interval '30 minutes'
+          AND s.created_at > NOW() - interval '2 hours'
           AND EXISTS (SELECT 1 FROM nuvei_transactions t
                        WHERE t.subscription_id = s.id AND t.kind = 'activation'
-                         AND t.provider_transaction_id IS NOT NULL
-                         AND t.status = 'pending')
+                         AND t.status IN ('pending','unconfirmed'))
         ORDER BY s.created_at DESC LIMIT 1`,
       [input.userId],
     );
@@ -906,6 +922,15 @@ export class NuveiService {
       ...(browserInfo ? { browser_info: browserInfo } : {}),
     };
 
+    // The charge row exists BEFORE the bank is asked, so a second click or
+    // second tab during the (up to 45s) call sees an in-flight attempt.
+    await this.db.query(
+      `INSERT INTO nuvei_transactions
+         (subscription_id, user_id, kind, dev_reference, amount, status, message)
+       VALUES ($1,$2,'activation',$3,$4,'pending','charge in progress')`,
+      [subscriptionId, input.userId, dev_reference, activationAmount],
+    );
+
     const res = await this.client.debit(
       this.toNuveiUser(user),
       {
@@ -918,6 +943,10 @@ export class NuveiService {
     );
 
     const tx = res.body?.transaction || {};
+    // No answer (timeout / network) or a gateway-side 5xx: the charge may or
+    // may not have reached the bank. Leave it awaiting confirmation — never
+    // call it declined (a retry could double charge), never activate unpaid.
+    const unconfirmed = res.httpStatus === 0 || !res.body || (res.httpStatus >= 500 && !tx?.status);
     await this.recordTransaction({
       subscriptionId,
       userId: input.userId,
@@ -925,14 +954,12 @@ export class NuveiService {
       dev_reference,
       amount: activationAmount,
       body: res.body,
+      statusOverride: unconfirmed ? 'unconfirmed' : undefined,
     });
 
-    // No answer at all (timeout / network): the charge may or may not have
-    // reached the bank. Leave it awaiting confirmation — never call it
-    // declined (a retry could double charge) and never activate unpaid.
-    if (res.httpStatus === 0 || !res.body) {
+    if (unconfirmed) {
       this.logger.error(
-        `Nuvei activation unconfirmed for sub ${subscriptionId}: ${res.error || 'no response'}`,
+        `Nuvei activation unconfirmed for sub ${subscriptionId}: HTTP ${res.httpStatus} ${res.error || JSON.stringify(res.body || {}).slice(0, 200)}`,
       );
       return {
         status: 'pending_activation',
@@ -1138,12 +1165,14 @@ export class NuveiService {
 
   /** Add calendar months without day overflow (Jan 31 + 1 -> Feb 28/29). */
   private addMonths(d: Date, months: number): Date {
+    // UTC throughout: period keys are UTC dates, so the stepped calendar day
+    // and the key always agree regardless of the server's timezone.
     const r = new Date(d);
-    const day = r.getDate();
-    r.setDate(1);
-    r.setMonth(r.getMonth() + months);
-    const last = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
-    r.setDate(Math.min(day, last));
+    const day = r.getUTCDate();
+    r.setUTCDate(1);
+    r.setUTCMonth(r.getUTCMonth() + months);
+    const last = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + 1, 0)).getUTCDate();
+    r.setUTCDate(Math.min(day, last));
     return r;
   }
 
@@ -1175,7 +1204,7 @@ export class NuveiService {
              next_billing_date = $4,
              last_charge_at = NOW(),
              updated_at = NOW()
-       WHERE id = $1 AND status = 'pending_activation'
+       WHERE id = $1 AND status IN ('pending_activation','payment_failed')
        RETURNING user_id, email, plan_key, provision_plan, activation_amount, monthly_amount`,
       [subscriptionId, status, trialEnd, nextBilling],
     );
@@ -1279,35 +1308,54 @@ export class NuveiService {
 
   // ---- recurring billing ----------------------------------------------
 
+  private sweeping = false;
+
   /**
-   * Daily sweep: charge every subscription whose next monthly payment is due.
+   * Hourly sweep: charge every subscription whose next monthly payment is due.
    * Idempotent per (subscription, billing period). Never charges a canceled,
-   * suspended, or refunded subscription (those states are excluded by the WHERE).
+   * suspended, or refunded subscription (those states are excluded by the
+   * WHERE), and skips rows whose current period already has an open claim
+   * (in flight / awaiting Nuvei's answer) so they cannot starve the batch.
    */
   @Cron(CronExpression.EVERY_HOUR)
-  async debitDue(): Promise<void> {
+  async debitDue(subscriptionId?: string): Promise<void> {
     if (!this.recurringEnabled()) return;
-    await this.ensureSchema();
-
-    const { rows } = await this.db.query(
-      `SELECT id, user_id, email, plan_key, provision_plan, monthly_amount,
-              card_id, next_billing_date, cancel_at_period_end
-         FROM nuvei_subscriptions
-        WHERE status IN ('trialing','active','past_due')
-          AND next_billing_date IS NOT NULL
-          AND next_billing_date <= NOW()
-        ORDER BY next_billing_date ASC
-        LIMIT 100`,
-    );
-
-    for (const sub of rows) {
-      try {
-        await this.chargeRecurring(sub);
-      } catch (err: any) {
-        this.logger.error(
-          `Recurring charge failed for subscription ${sub.id}: ${err?.message}`,
-        );
+    // A targeted run (one subscription) never waits on the hourly sweep; the
+    // per-period claim keeps the two from charging twice.
+    if (!subscriptionId) {
+      if (this.sweeping) return; // a slow previous run is still going
+      this.sweeping = true;
+    }
+    try {
+      await this.ensureSchema();
+      const params: any[] = [];
+      let only = '';
+      if (subscriptionId) {
+        params.push(subscriptionId);
+        only = ` AND s.id = $1`;
       }
+      const { rows } = await this.db.query(
+        `SELECT s.id, s.user_id, s.email, s.plan_key, s.provision_plan, s.monthly_amount,
+                s.card_id, s.next_billing_date, s.cancel_at_period_end, s.status
+           FROM nuvei_subscriptions s
+          WHERE s.status IN ('trialing','active','past_due')
+            AND s.next_billing_date IS NOT NULL
+            AND s.next_billing_date <= NOW()${only}
+          ORDER BY s.next_billing_date ASC
+          LIMIT 200`,
+        params,
+      );
+      for (const sub of rows) {
+        try {
+          await this.chargeRecurring(sub);
+        } catch (err: any) {
+          this.logger.error(
+            `Recurring charge failed for subscription ${sub.id}: ${err?.message}`,
+          );
+        }
+      }
+    } finally {
+      if (!subscriptionId) this.sweeping = false;
     }
   }
 
@@ -1315,8 +1363,32 @@ export class NuveiService {
     return new Date(d).toISOString().slice(0, 10);
   }
 
-  private async chargeRecurring(sub: any): Promise<void> {
-    const plan = this.plan(sub.plan_key);
+  private async chargeRecurring(snapshot: any): Promise<void> {
+    // Re-read right before acting: the batch snapshot may be minutes old and
+    // the customer may have canceled / been refunded meanwhile.
+    const { rows: fresh } = await this.db.query(
+      `SELECT id, user_id, email, plan_key, provision_plan, monthly_amount,
+              card_id, next_billing_date, cancel_at_period_end, status
+         FROM nuvei_subscriptions WHERE id = $1`,
+      [snapshot.id],
+    );
+    const sub = fresh[0];
+    if (!sub) return;
+    if (!['trialing', 'active', 'past_due'].includes(sub.status)) return;
+    if (!sub.next_billing_date || new Date(sub.next_billing_date).getTime() > Date.now()) return;
+
+    let plan: NuveiPlan;
+    try {
+      plan = this.plan(sub.plan_key);
+    } catch (err: any) {
+      // Unknown catalog key: never charge, never loop every hour on it.
+      this.logger.error(`Recurring: unknown plan_key '${sub.plan_key}' on sub ${sub.id}; deferring one day`);
+      await this.db.query(
+        `UPDATE nuvei_subscriptions SET next_billing_date = NOW() + interval '1 day', updated_at = NOW() WHERE id = $1`,
+        [sub.id],
+      );
+      return;
+    }
     // Charge the price the customer consented to at checkout, never a later
     // catalog change.
     const monthly = Number(sub.monthly_amount) > 0 ? Number(sub.monthly_amount) : plan.monthly;
@@ -1331,59 +1403,20 @@ export class NuveiService {
     }
 
     // Claim this billing period atomically; if the row already exists another
-    // run has (or is) charging it, so skip to avoid a duplicate charge.
+    // run has (or is) charging it, so settle from that row instead of sending
+    // a second debit.
     let claimed = false;
     try {
       await this.db.query(
         `INSERT INTO nuvei_transactions
-           (subscription_id, user_id, kind, period_key, dev_reference, amount, status)
-         VALUES ($1,$2,'recurring',$3,$4,$5,'pending')`,
+           (subscription_id, user_id, kind, period_key, dev_reference, amount, status, message)
+         VALUES ($1,$2,'recurring',$3,$4,$5,'pending','charge in progress')`,
         [sub.id, sub.user_id, period, dev_reference, monthly],
       );
       claimed = true;
     } catch (err: any) {
       if (err?.code !== '23505') throw err;
-      // Period already claimed. Self-heal instead of stalling: if that attempt
-      // succeeded, move the next charge a month out; if it failed, retry
-      // tomorrow; if it is still in flight, leave it alone.
-      const { rows: prev } = await this.db.query(
-        `SELECT status, created_at FROM nuvei_transactions
-          WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $2`,
-        [sub.id, period],
-      );
-      const prevStatus = String(prev[0]?.status || '');
-      const ageMs = Date.now() - new Date(prev[0]?.created_at || Date.now()).getTime();
-      if (prevStatus === 'pending') {
-        if (ageMs < 2 * 60 * 60 * 1000) return; // another run is charging it
-        // A claim older than 2h with no outcome: the process died mid-charge.
-        // Flag it for review and try again tomorrow (a fresh period key).
-        this.logger.error(
-          `Nuvei recurring claim for sub ${sub.id} period ${period} has no outcome after 2h; marking error and retrying tomorrow`,
-        );
-        await this.db.query(
-          `UPDATE nuvei_transactions SET status = 'error', message = 'no outcome recorded (process interrupted)'
-            WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $2 AND status = 'pending'`,
-          [sub.id, period],
-        );
-      }
-      if (prevStatus === 'unconfirmed') {
-        // The gateway never answered. Nuvei's callback for that dev_reference
-        // settles it (see handleCallback); only after 24h of silence is the
-        // charge attempted again.
-        if (ageMs < 24 * 60 * 60 * 1000) return;
-        this.logger.error(
-          `Nuvei recurring charge for sub ${sub.id} period ${period} unconfirmed for 24h; retrying tomorrow`,
-        );
-      }
-      const wasSuccess = prevStatus === 'success';
-      const base = new Date(sub.next_billing_date);
-      const nextDate = wasSuccess
-        ? this.addMonths(base, 1)
-        : new Date(Date.now() + 24 * 60 * 60 * 1000);
-      await this.db.query(
-        `UPDATE nuvei_subscriptions SET next_billing_date = $2, updated_at = NOW() WHERE id = $1`,
-        [sub.id, nextDate],
-      );
+      await this.settleClaimedPeriod(sub, period, monthly);
       return;
     }
     if (!claimed) return;
@@ -1405,35 +1438,36 @@ export class NuveiService {
         token,
       );
     } catch (err: any) {
-      // Nothing was sent to the bank: release the claim so the customer is
-      // retried tomorrow instead of being stuck behind a dead period key.
-      await this.db.query(
-        `UPDATE nuvei_transactions SET status = 'error', message = $3
-          WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $2 AND status = 'pending'`,
-        [sub.id, period, String(err?.message || 'error before charge').slice(0, 500)],
-      );
-      await this.db.query(
-        `UPDATE nuvei_subscriptions SET next_billing_date = NOW() + interval '1 day', updated_at = NOW() WHERE id = $1`,
-        [sub.id],
-      );
+      // Nothing was sent to the bank (no card row, undecryptable token, user
+      // gone): release the claim and retry tomorrow; after repeated errors
+      // treat it like a decline so paid access does not continue unpaid.
+      await this.markClaim(sub.id, period, 'error', String(err?.message || 'error before charge'));
+      await this.escalateBillingErrors(sub, monthly, String(err?.message || 'error before charge'));
       throw err;
     }
-    if (res.httpStatus === 0 || !res.body) {
-      // No answer from the gateway: the charge may or may not have gone
-      // through. Keep the claim (so nothing is re-sent blindly) and wait for
-      // Nuvei's callback for this dev_reference; the claim handler above
-      // only retries after 24h without an outcome.
+
+    const tx = res.body?.transaction || {};
+    const gatewayError = !res.ok && !tx?.status;
+    if (res.httpStatus === 0 || !res.body || (gatewayError && res.httpStatus >= 500)) {
+      // No usable answer: the charge may or may not have gone through. Keep
+      // the claim (nothing is re-sent blindly); Nuvei's callback for this
+      // dev_reference settles it, see settleClaimedPeriod for the silence rule.
       this.logger.error(
-        `Nuvei recurring charge unconfirmed for sub ${sub.id} period ${period}: ${res.error || 'no response'}`,
+        `Nuvei recurring charge unconfirmed for sub ${sub.id} period ${period}: HTTP ${res.httpStatus} ${res.error || JSON.stringify(res.body || {}).slice(0, 200)}`,
       );
-      await this.db.query(
-        `UPDATE nuvei_transactions SET status = 'unconfirmed', message = $3
-          WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $2`,
-        [sub.id, period, String(res.error || 'no response from gateway').slice(0, 500)],
-      );
+      await this.markClaim(sub.id, period, 'unconfirmed', String(res.error || `HTTP ${res.httpStatus}`).slice(0, 500), res.body);
       return;
     }
-    const tx = res.body?.transaction || {};
+    if (gatewayError) {
+      // 4xx from the gateway (credentials, validation): an integration
+      // problem, not the customer's card. Retry tomorrow; escalate if it keeps
+      // happening.
+      const detail = JSON.stringify(res.body?.error || res.body || {}).slice(0, 500);
+      this.logger.error(`Nuvei recurring gateway error for sub ${sub.id} period ${period}: HTTP ${res.httpStatus} ${detail}`);
+      await this.markClaim(sub.id, period, 'error', `HTTP ${res.httpStatus} ${detail}`, res.body);
+      await this.escalateBillingErrors(sub, monthly, `HTTP ${res.httpStatus}`);
+      return;
+    }
 
     await this.db.query(
       `UPDATE nuvei_transactions
@@ -1450,7 +1484,7 @@ export class NuveiService {
         tx.id || null,
         tx.authorization_code || null,
         String(tx.status || 'failure'),
-        tx.status_detail ?? null,
+        Number.isFinite(Number(tx.status_detail)) ? Number(tx.status_detail) : null,
         tx.current_status || null,
         tx.message || res.error || null,
         JSON.stringify(res.body || {}),
@@ -1460,33 +1494,166 @@ export class NuveiService {
 
     if (this.isApproved(res.body)) {
       await this.applyRecurringSuccess(sub, tx, monthly);
+    } else if (String(tx.status || '').toLowerCase() === 'pending') {
+      // Bank / anti-fraud review of a recurring charge: not a decline. The
+      // claim stays 'pending'; the callback or the next sweep's verification
+      // (settleClaimedPeriod) finishes it.
+      this.logger.warn(`Nuvei recurring charge pending review for sub ${sub.id} period ${period} (tx ${tx.id || '-'})`);
     } else {
       await this.applyRecurringDecline(sub, tx, monthly, tx.message || res.error || 'no message');
     }
   }
 
+  private async markClaim(subscriptionId: string, period: string, status: string, message: string, raw?: any): Promise<void> {
+    await this.db.query(
+      `UPDATE nuvei_transactions
+          SET status = $3, message = $4, raw = COALESCE($5::jsonb, raw)
+        WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $2`,
+      [subscriptionId, period, status, String(message || '').slice(0, 500), raw ? JSON.stringify(raw) : null],
+    );
+  }
+
+  /**
+   * Repeated integration errors (no card row, bad credentials, validation)
+   * must not leave a customer on a paid plan without paying: retry tomorrow
+   * with a fresh period key, and after 3 errors in 7 days treat it like a
+   * decline (past_due + "update your card" email + daily retries).
+   */
+  private async escalateBillingErrors(sub: any, monthly: number, reason: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM nuvei_transactions
+        WHERE subscription_id = $1 AND kind = 'recurring' AND status = 'error'
+          AND created_at > NOW() - interval '7 days'`,
+      [sub.id],
+    );
+    if (Number(rows[0]?.n || 0) >= 3) {
+      await this.applyRecurringDecline(sub, {}, monthly, `billing error: ${reason}`);
+      return;
+    }
+    await this.db.query(
+      `UPDATE nuvei_subscriptions SET next_billing_date = NOW() + interval '1 day', updated_at = NOW() WHERE id = $1`,
+      [sub.id],
+    );
+  }
+
+  /**
+   * The current period already has a claim row. Settle from what we know:
+   *  - success recorded -> make sure the subscription reflects it
+   *  - a provider id is known -> ask Nuvei (Transaction Info) for the outcome
+   *  - in flight (< 2h, no id) -> leave it alone
+   *  - unconfirmed with no id -> wait for the callback up to 48h (Nuvei's own
+   *    retry horizon), then retry with a fresh period key
+   *  - failure / error -> retry tomorrow (fresh period key)
+   */
+  private async settleClaimedPeriod(sub: any, period: string, monthly: number): Promise<void> {
+    const { rows: prev } = await this.db.query(
+      `SELECT id, status, provider_transaction_id, authorization_code, created_at
+         FROM nuvei_transactions
+        WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $2`,
+      [sub.id, period],
+    );
+    const row = prev[0];
+    if (!row) return;
+    const status = String(row.status || '');
+    const ageMs = Date.now() - new Date(row.created_at || Date.now()).getTime();
+    const tomorrow = async () =>
+      this.db.query(
+        `UPDATE nuvei_subscriptions SET next_billing_date = NOW() + interval '1 day', updated_at = NOW() WHERE id = $1`,
+        [sub.id],
+      );
+
+    if (status === 'success') {
+      if (sub.status !== 'active') {
+        // The charge went through but the subscription was never updated
+        // (interrupted run): finish the job now.
+        await this.applyRecurringSuccess(
+          sub,
+          { id: row.provider_transaction_id, authorization_code: row.authorization_code },
+          monthly,
+        );
+      } else {
+        await this.db.query(
+          `UPDATE nuvei_subscriptions SET next_billing_date = $2, updated_at = NOW() WHERE id = $1`,
+          [sub.id, this.addMonths(new Date(sub.next_billing_date), 1)],
+        );
+      }
+      return;
+    }
+
+    if ((status === 'pending' || status === 'unconfirmed') && row.provider_transaction_id) {
+      const info = await this.client.verifyTransaction(row.provider_transaction_id);
+      if (info.ok && info.body?.transaction) {
+        const t = info.body.transaction;
+        if (this.isApproved(info.body)) {
+          await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'success', status_detail = 3,
+                    authorization_code = COALESCE($2, authorization_code), message = COALESCE($3, message)
+              WHERE id = $1`,
+            [row.id, t.authorization_code || null, t.message || null],
+          );
+          await this.applyRecurringSuccess(sub, t, monthly);
+          return;
+        }
+        if (this.isDefinitiveFailure(info.body)) {
+          await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message) WHERE id = $1`,
+            [row.id, Number.isFinite(Number(t.status_detail)) ? Number(t.status_detail) : null, t.message || null],
+          );
+          await this.applyRecurringDecline(sub, t, monthly, t.message || 'declined');
+          return;
+        }
+      }
+      // Still pending at Nuvei (or could not verify): wait.
+      return;
+    }
+
+    if (status === 'pending') {
+      if (ageMs < 2 * 60 * 60 * 1000) return; // another run is charging it
+      this.logger.error(
+        `Nuvei recurring claim for sub ${sub.id} period ${period} has no outcome after 2h; marking error and retrying tomorrow`,
+      );
+      await this.markClaim(sub.id, period, 'error', 'no outcome recorded (process interrupted)');
+      await this.escalateBillingErrors(sub, monthly, 'process interrupted');
+      return;
+    }
+
+    if (status === 'unconfirmed') {
+      if (ageMs < 48 * 60 * 60 * 1000) return; // Nuvei's callback may still arrive
+      this.logger.error(
+        `Nuvei recurring charge for sub ${sub.id} period ${period} unconfirmed for 48h with no callback; retrying tomorrow`,
+      );
+      await this.markClaim(sub.id, period, 'error', 'unconfirmed for 48h, no callback received');
+      await tomorrow();
+      return;
+    }
+
+    // failure / error / anything else: retry with a fresh period key tomorrow.
+    await tomorrow();
+  }
+
   /**
    * A monthly charge was declined: pause paid access (past_due), retry daily
-   * with a fresh period key, and suspend after 5 failures in 30 days.
+   * with a fresh period key, and suspend after 5 real declines in 30 days.
    */
   private async applyRecurringDecline(sub: any, tx: any, amount: number, reason: string): Promise<void> {
     const plan = this.plan(sub.plan_key);
     const { rows: fails } = await this.db.query(
       `SELECT COUNT(*)::int AS n FROM nuvei_transactions
         WHERE subscription_id = $1 AND kind = 'recurring'
-          AND status NOT IN ('success','pending','unconfirmed') AND created_at > NOW() - interval '30 days'`,
+          AND status = 'failure' AND created_at > NOW() - interval '30 days'`,
       [sub.id],
     );
-    const failures = Number(fails[0]?.n || 0);
+    const failures = Math.max(1, Number(fails[0]?.n || 0));
     const suspend = failures >= 5;
-    await this.db.query(
+    const { rowCount } = await this.db.query(
       `UPDATE nuvei_subscriptions
          SET status = $2,
              next_billing_date = CASE WHEN $3::boolean THEN NULL ELSE NOW() + interval '1 day' END,
              updated_at = NOW()
-       WHERE id = $1`,
+       WHERE id = $1 AND status IN ('trialing','active','past_due')`,
       [sub.id, suspend ? 'suspended' : 'past_due', suspend],
     );
+    if (!rowCount) return; // already canceled / refunded meanwhile
     // Paid access pauses while past due (resolveEffectivePlan drops past_due /
     // suspended to Free); a later successful retry restores 'active'.
     await this.db.query(
@@ -1519,13 +1686,37 @@ export class NuveiService {
    */
   private async applyRecurringSuccess(sub: any, tx: any, amount: number): Promise<void> {
     const plan = this.plan(sub.plan_key);
-    const next = this.addMonths(new Date(sub.next_billing_date), 1);
-    await this.db.query(
+    const next = this.addMonths(new Date(sub.next_billing_date || Date.now()), 1);
+    const { rowCount } = await this.db.query(
       `UPDATE nuvei_subscriptions
          SET status = 'active', next_billing_date = $2, last_charge_at = NOW(), updated_at = NOW()
-       WHERE id = $1`,
+       WHERE id = $1 AND status IN ('trialing','active','past_due','suspended')`,
       [sub.id, next],
     );
+    if (!rowCount) {
+      // The subscription ended (canceled / refunded) while this charge was in
+      // flight: the money must go back, never a resurrected subscription.
+      const txId = tx?.id ? String(tx.id) : null;
+      let refunded = false;
+      if (txId) {
+        try {
+          const r = await this.client.refund(txId);
+          refunded = String(r.body?.status || '').toLowerCase() === 'success';
+          if (refunded) {
+            await this.db.query(
+              `UPDATE nuvei_transactions SET status = 'refunded', refunded_amount = amount, message = 'charged after cancellation — refunded automatically' WHERE provider_transaction_id = $1`,
+              [txId],
+            );
+          }
+        } catch (err: any) {
+          this.logger.error(`refund of post-cancellation charge ${txId} failed: ${err?.message}`);
+        }
+      }
+      this.logger.error(
+        `Nuvei recurring charge landed on a non-live sub ${sub.id} (tx ${txId || '-'}): ${refunded ? 'refunded automatically' : 'REFUND REQUIRED'}`,
+      );
+      return;
+    }
     await this.provisionAccount({
       userId: sub.user_id,
       subscriptionId: sub.id,
@@ -1600,6 +1791,19 @@ export class NuveiService {
    *    the record and answers 409 so Nuvei retries it.
    */
   async handleCallback(
+    payload: any,
+    headerToken?: string,
+  ): Promise<{ ok: boolean; handled: string; httpStatus?: number }> {
+    try {
+      return await this.handleCallbackInner(payload, headerToken);
+    } catch (err: any) {
+      // Nuvei retries any non-200 below 500 for 48h; a 500 would stop retries.
+      this.logger.error(`Nuvei callback failed before processing: ${err?.message}`);
+      return { ok: false, handled: 'error', httpStatus: 409 };
+    }
+  }
+
+  private async handleCallbackInner(
     payload: any,
     headerToken?: string,
   ): Promise<{ ok: boolean; handled: string; httpStatus?: number }> {
@@ -1752,11 +1956,8 @@ export class NuveiService {
       const isActivation = !!devReference && devReference === sub.dev_reference;
 
       if (isActivation) {
-        if (confirmed && sub.status === 'pending_activation') {
-          if (
-            tx?.amount != null &&
-            Math.abs(Number(tx.amount) - Number(sub.activation_amount)) > 0.01
-          ) {
+        if (confirmed && ['pending_activation', 'payment_failed'].includes(sub.status)) {
+          if (!this.amountMatches(tx?.amount, sub.activation_amount)) {
             this.logger.warn(
               `Nuvei callback amount mismatch for ${devReference}: got ${tx.amount}, expected ${sub.activation_amount}`,
             );
@@ -1791,10 +1992,7 @@ export class NuveiService {
         if (confirmed && ['pending', 'unconfirmed', 'error', 'failure'].includes(String(txRow.status))) {
           // A charge the gateway never answered (or a late approval) is now
           // confirmed by Nuvei: settle it exactly like a successful sweep.
-          if (
-            tx?.amount != null &&
-            Math.abs(Number(tx.amount) - Number(txRow.amount)) > 0.01
-          ) {
+          if (!this.amountMatches(tx?.amount, txRow.amount)) {
             this.logger.warn(
               `Nuvei recurring callback amount mismatch for ${devReference}: got ${tx.amount}, expected ${txRow.amount}`,
             );
@@ -1980,20 +2178,53 @@ export class NuveiService {
     if (!(amount > 0)) throw new BadRequestException('Nothing left to refund.');
     const full = Math.abs(amount - remaining) < 0.005;
 
+    // Claim the refund atomically BEFORE asking Nuvei so two admins (or an
+    // admin and a reversal callback) can never refund the same money twice.
+    const { rows: claimed } = await this.db.query(
+      `UPDATE nuvei_transactions
+          SET refunded_amount = refunded_amount + $2,
+              status = CASE WHEN refunded_amount + $2 >= amount - 0.005 THEN 'refunded' ELSE 'partially_refunded' END,
+              message = 'refund in progress'
+        WHERE id = $1
+          AND status IN ('success','partially_refunded')
+          AND refunded_amount + $2 <= amount + 0.005
+        RETURNING refunded_amount, status`,
+      [txRow.id, amount],
+    );
+    if (!claimed[0]) {
+      throw new BadRequestException('This transaction is already being refunded or has nothing left to refund.');
+    }
+
     const res = await this.client.refund(transactionId, full && already === 0 ? undefined : amount);
     const ok = String(res.body?.status || '').toLowerCase() === 'success';
     if (!ok) {
+      if (res.httpStatus === 0 || !res.body) {
+        // Unknown outcome: keep the claim so nobody retries blindly; an admin
+        // must check the Nuvei console (the reversal callback will settle it).
+        await this.db.query(
+          `UPDATE nuvei_transactions SET status = 'refund_pending', message = 'REFUND UNCONFIRMED — verify in the Nuvei console before retrying' WHERE id = $1`,
+          [txRow.id],
+        );
+        throw new BadRequestException(
+          'The refund result is unknown (no answer from Nuvei). Please verify it in the Nuvei console before retrying.',
+        );
+      }
+      // Nuvei refused: release the claim.
+      await this.db.query(
+        `UPDATE nuvei_transactions
+            SET refunded_amount = GREATEST(0, refunded_amount - $2),
+                status = CASE WHEN refunded_amount - $2 > 0.005 THEN 'partially_refunded' ELSE 'success' END,
+                message = $3
+          WHERE id = $1`,
+        [txRow.id, amount, String(res.body?.detail || res.body?.error?.description || res.body?.error?.type || res.error || 'refund refused').slice(0, 300)],
+      );
       throw new BadRequestException(
         `Refund failed: ${res.body?.detail || res.body?.error?.description || res.body?.error?.type || res.error || 'unknown error'}`,
       );
     }
-
-    const newRefunded = Number((already + amount).toFixed(2));
     await this.db.query(
-      `UPDATE nuvei_transactions
-          SET refunded_amount = $2, status = $3
-        WHERE id = $1`,
-      [txRow.id, newRefunded, full ? 'refunded' : 'partially_refunded'],
+      `UPDATE nuvei_transactions SET message = $2 WHERE id = $1`,
+      [txRow.id, full ? 'refunded' : `partially refunded ${this.money(Number(claimed[0].refunded_amount))}`],
     );
     // Only a FULL refund of a charge ends the subscription; a partial refund
     // (goodwill credit) keeps the customer's plan.
@@ -2069,6 +2300,21 @@ export class NuveiService {
     if (['canceled', 'refunded'].includes(sub.status)) {
       return { ok: true, endsAt: null, immediate: true };
     }
+    // A charge that is still being confirmed (3DS / bank review / no answer
+    // yet) must settle first, or an approval could land on a canceled
+    // subscription: money taken, no service.
+    const { rows: inflight } = await this.db.query(
+      `SELECT 1 FROM nuvei_transactions
+        WHERE subscription_id = $1 AND status IN ('pending','unconfirmed')
+          AND created_at > NOW() - interval '48 hours'
+        LIMIT 1`,
+      [sub.id],
+    );
+    if (inflight[0]) {
+      throw new BadRequestException(
+        'A payment on this subscription is still being confirmed. Please try again in a few minutes.',
+      );
+    }
 
     const paidAhead =
       ['trialing', 'active'].includes(sub.status) &&
@@ -2130,6 +2376,74 @@ export class NuveiService {
       ],
     });
     return { ok: true, endsAt: new Date().toISOString(), immediate: true };
+  }
+
+  /**
+   * Replace the card a subscription is billed to (e.g. after a decline). The
+   * card must belong to the same customer. A past_due / suspended subscription
+   * is retried right away with the new card so access is restored on success.
+   */
+  async updateCard(
+    subscriptionId: string,
+    userId: string,
+    cardId: string,
+    isAdmin: boolean,
+  ): Promise<{ ok: boolean; status: SubStatus; message?: string }> {
+    this.assertEnabled();
+    await this.ensureSchema();
+    const { rows } = await this.db.query(
+      `SELECT id, user_id, status FROM nuvei_subscriptions WHERE id = $1`,
+      [subscriptionId],
+    );
+    const sub = rows[0];
+    if (!sub) throw new NotFoundException('Subscription not found');
+    if (!isAdmin && String(sub.user_id) !== String(userId)) throw new ForbiddenException();
+    if (!['trialing', 'active', 'past_due', 'suspended'].includes(sub.status)) {
+      throw new BadRequestException(`Subscription is ${sub.status}; its card cannot be changed.`);
+    }
+    const { rows: card } = await this.db.query(
+      `SELECT id FROM nuvei_cards WHERE id = $1 AND user_id = $2 AND status <> 'rejected'`,
+      [cardId, sub.user_id],
+    );
+    if (!card[0]) throw new BadRequestException('A saved card of this customer is required.');
+
+    const retryNow = sub.status === 'past_due' || sub.status === 'suspended';
+    await this.db.query(
+      `UPDATE nuvei_subscriptions
+          SET card_id = $2,
+              status = CASE WHEN status = 'suspended' THEN 'past_due' ELSE status END,
+              next_billing_date = CASE WHEN $3::boolean THEN NOW() ELSE next_billing_date END,
+              updated_at = NOW()
+        WHERE id = $1`,
+      [sub.id, cardId, retryNow],
+    );
+    if (retryNow) {
+      // Today's period may already hold the declined attempt; move that claim
+      // aside (history kept) so the new card is tried right now.
+      await this.db.query(
+        `UPDATE nuvei_transactions
+            SET period_key = period_key || '#' || id
+          WHERE subscription_id = $1 AND kind = 'recurring'
+            AND period_key = $2 AND status IN ('failure','error')`,
+        [sub.id, this.periodKey(new Date())],
+      );
+      await this.debitDue(sub.id);
+    }
+    const { rows: after } = await this.db.query(
+      `SELECT status FROM nuvei_subscriptions WHERE id = $1`,
+      [sub.id],
+    );
+    const status = after[0]?.status as SubStatus;
+    return {
+      ok: true,
+      status,
+      message:
+        status === 'active'
+          ? 'Payment received. Your access has been restored.'
+          : status === 'past_due'
+            ? 'The new card was saved but the payment did not go through yet. We will retry automatically.'
+            : undefined,
+    };
   }
 
   // ---- Link to Pay (custom Web Solutions quotations) -------------------
@@ -2295,9 +2609,35 @@ export class NuveiService {
     dev_reference: string;
     amount: number;
     body: any;
+    statusOverride?: string;
   }): Promise<void> {
     const tx = input.body?.transaction || {};
+    const status = input.statusOverride || String(tx.status || 'failure');
+    const detail = Number.isFinite(Number(tx.status_detail)) ? Number(tx.status_detail) : null;
+    const message = tx.message || input.body?.error?.description || input.body?.error?.type || input.body?.error || null;
     try {
+      // The row may already exist as an in-flight claim (written before the
+      // charge was sent): complete it instead of inserting a second one.
+      const { rowCount } = await this.db.query(
+        `UPDATE nuvei_transactions
+            SET provider_transaction_id = COALESCE($2, provider_transaction_id),
+                authorization_code = COALESCE($3, authorization_code),
+                status = $4, status_detail = $5, current_status = $6,
+                message = $7, raw = $8
+          WHERE dev_reference = $1 AND kind = $9`,
+        [
+          input.dev_reference,
+          tx.id || null,
+          tx.authorization_code || null,
+          status,
+          detail,
+          tx.current_status || null,
+          typeof message === 'string' ? message : JSON.stringify(message),
+          JSON.stringify(input.body || {}),
+          input.kind,
+        ],
+      );
+      if (rowCount) return;
       await this.db.query(
         `INSERT INTO nuvei_transactions
            (subscription_id, user_id, kind, dev_reference, provider_transaction_id,
@@ -2311,10 +2651,10 @@ export class NuveiService {
           tx.id || null,
           tx.authorization_code || null,
           input.amount,
-          String(tx.status || 'failure'),
-          tx.status_detail ?? null,
+          status,
+          detail,
           tx.current_status || null,
-          tx.message || input.body?.error || null,
+          typeof message === 'string' ? message : JSON.stringify(message),
           JSON.stringify(input.body || {}),
         ],
       );

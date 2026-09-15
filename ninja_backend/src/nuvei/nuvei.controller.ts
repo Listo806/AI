@@ -194,6 +194,19 @@ export class NuveiController {
     res.redirect(302, redirect);
   }
 
+  // Replace the billed card (own subscription; admins any). A past_due or
+  // suspended subscription is retried immediately with the new card.
+  @Post('subscription/:id/card')
+  @UseGuards(JwtAuthGuard)
+  async updateCard(@CurrentUser() user: any, @Param('id') id: string, @Body() body: any) {
+    return this.nuvei.updateCard(
+      requireUuid(id, 'subscription id'),
+      user?.id,
+      requireUuid(body?.cardId, 'card id'),
+      this.isTrueAdmin(user),
+    );
+  }
+
   // Cancel the user's own subscription (access continues until the paid
   // period ends unless `immediately` is true).
   @Post('cancel')
