@@ -56,6 +56,7 @@ export class PaymentGuard implements CanActivate {
   private static readonly EXEMPT_ROLES: string[] = [
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
+    UserRole.DEVELOPER,
     UserRole.VA,
     UserRole.VA_UPLOADER,
   ];
@@ -73,6 +74,12 @@ export class PaymentGuard implements CanActivate {
 
     // Roles that never pay are always allowed.
     if (user.role && PaymentGuard.EXEMPT_ROLES.includes(user.role)) {
+      return true;
+    }
+
+    // Cortexa internal staff are never customers, whatever their customer-side
+    // role happens to be. JwtStrategy sets internalRole while access is active.
+    if (user.internalRole) {
       return true;
     }
 

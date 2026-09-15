@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
+import { isInternalAccount } from '../utils/internalAccess';
 
 const AuthContext = createContext(null);
 const STORAGE_PREFIX = 'listo_';
@@ -101,8 +102,23 @@ export function AuthProvider({ children }) {
           // Free tier has CRM access without paying — never bounce a Free owner to
           // checkout (matches the DashboardLayout exemption). Only an owner who
           // picked a PAID plan and hasn't paid is sent back to finish checkout.
-          if (!paid && !isFreePlan && u.selectedPlan && (u.role === 'owner' || !u.role)) {
+          // Only a CUSTOMER account that picked a paid plan and has not paid is
+          // sent back to finish checkout. Internal staff never are, and an
+          // account with no role is never assumed to be an unpaid customer.
+          if (
+            !paid &&
+            !isFreePlan &&
+            u.selectedPlan &&
+            u.role === 'owner' &&
+            !isInternalAccount(u)
+          ) {
             navigate(`/checkout?plan=${encodeURIComponent(u.selectedPlan)}`);
+            return response;
+          }
+
+          // Internal staff land in the admin area whatever their customer role is.
+          if (isInternalAccount(u)) {
+            navigate('/dashboard/admin/listings');
             return response;
           }
 

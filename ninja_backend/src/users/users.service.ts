@@ -55,6 +55,42 @@ export class UsersService {
     return rows[0] || null;
   }
 
+  /**
+   * Cortexa INTERNAL access for an account: the active internal_user_access
+   * role, or the legacy privileged users.role while that table is absent.
+   * Internal staff are never customers: no activation fee, no trial checks,
+   * no subscription checks, no checkout redirects.
+   */
+  async internalAccess(id: string): Promise<{ internalRole: string | null; isInternal: boolean }> {
+    const legacy = async () => {
+      try {
+        const { rows } = await this.db.query(`SELECT role FROM users WHERE id = $1`, [id]);
+        const role = String(rows[0]?.role || '').toLowerCase();
+        return ['super_admin', 'admin', 'developer'].includes(role) ? role : null;
+      } catch {
+        return null;
+      }
+    };
+    try {
+      const { rows } = await this.db.query(
+        `SELECT internal_role, status FROM internal_user_access WHERE user_id = $1`,
+        [id],
+      );
+      const row = rows[0];
+      if (row && String(row.status) === 'active' && row.internal_role) {
+        return { internalRole: String(row.internal_role), isInternal: true };
+      }
+      // A row that exists but is not active is a deliberate revocation.
+      if (row) return { internalRole: null, isInternal: false };
+      const l = await legacy();
+      return { internalRole: l, isInternal: !!l };
+    } catch (err: any) {
+      // Table not present yet (fresh environment): fall back to the legacy role.
+      const l = await legacy();
+      return { internalRole: l, isInternal: !!l };
+    }
+  }
+
   async findById(id: string): Promise<User | null> {
     const { rows } = await this.db.query(
       `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt", payment_status as "paymentStatus", plan, selected_plan as "selectedPlan"

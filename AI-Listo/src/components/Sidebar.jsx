@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { isInternalAccount } from "../utils/internalAccess";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { usePlan } from "../context/PlanContext";
@@ -888,9 +889,9 @@ export default function Sidebar({
     );
   };
 
-  const isSuperAdminAccount = ["super_admin", "super-admin"].includes(
-    String(user?.role || "").toLowerCase(),
-  );
+  const isSuperAdminAccount =
+    ["super_admin", "super-admin"].includes(String(user?.internalRole || "").toLowerCase()) ||
+    ["super_admin", "super-admin"].includes(String(user?.role || "").toLowerCase());
 
   // Sidebar workspace id -> backend catalog id. The only divergence is Financial
   // (sidebar "financial" vs catalog "financial_services").
@@ -1065,12 +1066,17 @@ export default function Sidebar({
   const role =
     typeof user?.role === "string" ? user.role.toLowerCase() : user?.role;
   const isDeveloper = role === "developer";
-  const isFullAccessRole = ["super_admin", "admin", "developer"].includes(role);
+  const isFullAccessRole =
+    isInternalAccount(user) || ["super_admin", "admin", "developer"].includes(role);
 
   const canSeeAiCenter =
     role &&
     ["super_admin", "admin", "owner", "agent", "developer"].includes(role);
-  const canSeeAdmin = role === "super_admin" || role === "admin" || isDeveloper;
+  // Internal staff see the Admin area even when their customer-side role is a
+  // normal one (admin access is granted by internal_user_access).
+  const isInternal = isInternalAccount(user);
+  const canSeeAdmin =
+    isInternal || role === "super_admin" || role === "admin" || isDeveloper;
   const canSeePlatformListings = [
     "agent",
     "owner",

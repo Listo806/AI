@@ -22,6 +22,9 @@ export class UsersController {
   async getProfile(@CurrentUser() user: any) {
     // Fetch fresh user data to ensure teamId is up to date
     const freshUser = await this.usersService.findById(user.id);
+    // Cortexa internal staff must never be treated as a paying customer by the
+    // web app (no checkout redirect, no paywall, admin area visible).
+    const access = await this.usersService.internalAccess(user.id);
     return {
       id: freshUser?.id,
       email: freshUser?.email,
@@ -33,6 +36,8 @@ export class UsersController {
       paymentStatus: freshUser?.paymentStatus ?? null,
       plan: freshUser?.plan ?? null,
       selectedPlan: freshUser?.selectedPlan ?? null,
+      internalRole: access.internalRole,
+      isInternal: access.isInternal,
     };
   }
 
