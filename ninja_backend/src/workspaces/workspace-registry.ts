@@ -91,6 +91,12 @@ export const WORKSPACE_CATALOG: WorkspaceDef[] = [
     featureKey: 'aestheticWellnessWorkspace',
     route: '/dashboard/aesthetic-wellness',
   },
+  {
+    id: 'clinic-medical',
+    name: 'Clinic & Medical',
+    featureKey: 'clinicMedicalWorkspace',
+    route: '/dashboard/clinic-medical',
+  },
 ];
 
 const BY_ID: Record<string, WorkspaceDef> = WORKSPACE_CATALOG.reduce(

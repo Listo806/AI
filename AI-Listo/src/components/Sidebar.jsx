@@ -199,9 +199,17 @@ export default function Sidebar({
         setWsError(null);
         setHoveredWorkspace(null);
 
-        // Requirement: once selected, the workspace should immediately load inside
-        // the customer's CRM. Prefer the backend route, then the sidebar route.
-        const nextRoute = result?.route || ws.path;
+        // Always open the route defined by the sidebar catalog.
+        // Do not trust a generic/fallback backend route (for example "/"),
+        // because a newly-added workspace may not yet have its route registered
+        // in the backend workspace registry.
+        const backendRoute =
+          typeof result?.route === "string" ? result.route.trim() : "";
+        const nextRoute =
+          backendRoute.startsWith("/dashboard/clinic-medical")
+            ? backendRoute
+            : ws.path;
+
         if (nextRoute) {
           window.location.href = nextRoute;
         }
