@@ -136,7 +136,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     popular: false,
     seats: 1,
     entersCrmImmediately: false,
-    pricing: { introCents: 700, monthlyCents: 19700, annualCents: 189120 },
+    pricing: { introCents: 1100, monthlyCents: 12700, annualCents: 121920 },
     limits: UNLIMITED,
     features: {
       crm: true,
@@ -164,7 +164,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     popular: true,
     seats: 3,
     entersCrmImmediately: false,
-    pricing: { introCents: 1400, monthlyCents: 34700, annualCents: 333120 },
+    pricing: { introCents: 2200, monthlyCents: 29700, annualCents: 285120 },
     limits: UNLIMITED,
     features: {
       crm: true,
@@ -199,7 +199,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     popular: false,
     seats: 5,
     entersCrmImmediately: false,
-    pricing: { introCents: 2100, monthlyCents: 49700, annualCents: 477120 },
+    pricing: { introCents: 3300, monthlyCents: 49700, annualCents: 477120 },
     limits: UNLIMITED,
     features: {
       crm: true,
