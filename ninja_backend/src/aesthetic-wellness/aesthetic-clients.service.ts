@@ -153,8 +153,8 @@ export class AestheticClientsService {
   async create(user:any,b:any){
     this.require(user,"create");await this.ensureSchema();const team=this.teamId(user);
     if(!String(b.name||"").trim()||!String(b.email||"").trim())throw new BadRequestException("Name and email are required.");
-    const {rows}=await this.db.query(`INSERT INTO contacts(team_id,created_by,name,email,phone,status,source,workspace_id,interest,created_at,updated_at)
-      VALUES($1,$2,$3,$4,$5,'active','aesthetic-wellness',$6,$7,now(),now()) RETURNING id,name,email,phone`,
+    const {rows}=await this.db.query(`INSERT INTO contacts(team_id,created_by,name,email,phone,source,workspace_id,interest,created_at,updated_at)
+      VALUES($1,$2,$3,$4,$5,'aesthetic-wellness',$6,$7,now(),now()) RETURNING id,name,email,phone`,
       [team,user.id,String(b.name).trim(),String(b.email).trim(),b.phone||null,WS,b.treatmentInterest||null]);
     const c=rows[0];await this.db.query(`INSERT INTO aesthetic_client_profiles(contact_id,team_id,provider_id,treatment_interest) VALUES($1,$2,$3,$4)`,
       [c.id,team,b.providerId||null,b.treatmentInterest||null]);await this.audit(user,c.id,"client_created",{name:c.name});return c;
