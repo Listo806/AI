@@ -306,7 +306,7 @@ export class NuveiService {
 
   private async userRow(userId: string): Promise<any> {
     const { rows } = await this.db.query(
-      `SELECT id, email, first_name, last_name, team_id FROM users WHERE id = $1`,
+      `SELECT id, email, name, team_id FROM users WHERE id = $1`,
       [userId],
     );
     if (!rows[0]) throw new NotFoundException('User not found');
@@ -314,11 +314,14 @@ export class NuveiService {
   }
 
   private toNuveiUser(row: any): NuveiUser {
+    // The users table stores a single `name`; split it into first/last for
+    // Nuvei (both optional on the debit/tokenize calls).
+    const parts = String(row.name || '').trim().split(/\s+/).filter(Boolean);
     return {
       id: String(row.id),
       email: String(row.email || ''),
-      first_name: row.first_name || undefined,
-      last_name: row.last_name || undefined,
+      first_name: parts[0] || undefined,
+      last_name: parts.length > 1 ? parts.slice(1).join(' ') : undefined,
     };
   }
 
