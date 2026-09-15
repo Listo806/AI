@@ -620,7 +620,13 @@ export class NuveiService {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        ON CONFLICT (user_id, token_fp)
        DO UPDATE SET token_enc = EXCLUDED.token_enc,
-                     status = EXCLUDED.status,
+                     status = COALESCE(EXCLUDED.status, nuvei_cards.status),
+                     bin = COALESCE(EXCLUDED.bin, nuvei_cards.bin),
+                     last4 = COALESCE(EXCLUDED.last4, nuvei_cards.last4),
+                     brand = COALESCE(EXCLUDED.brand, nuvei_cards.brand),
+                     holder_name = COALESCE(EXCLUDED.holder_name, nuvei_cards.holder_name),
+                     expiry_month = COALESCE(EXCLUDED.expiry_month, nuvei_cards.expiry_month),
+                     expiry_year = COALESCE(EXCLUDED.expiry_year, nuvei_cards.expiry_year),
                      updated_at = NOW()
        RETURNING id`,
       [
@@ -709,18 +715,30 @@ export class NuveiService {
     const token = String(input.token || '').trim();
     if (!token) throw new BadRequestException('A card token is required.');
     const user = await this.userRow(input.userId);
+    let details: any = {};
+    if (!input.last4 || !input.bin) {
+      // The SDK's "already added" answer carries only the token: look the
+      // card up at Nuvei so last4 / brand / expiry are stored correctly.
+      try {
+        const res = await this.client.listCards(String(input.userId));
+        const list: any[] = Array.isArray(res.body?.cards) ? res.body.cards : [];
+        details = list.find((c) => String(c?.token || '') === token) || {};
+      } catch (err: any) {
+        this.logger.warn(`Nuvei card lookup failed for ${input.userId}: ${err?.message}`);
+      }
+    }
     const cardId = await this.saveCard({
       userId: input.userId,
       email: user.email,
       token,
-      bin: input.bin,
-      last4: input.last4,
-      brand: input.brand,
-      holderName: input.holderName,
-      expiryMonth: input.expiryMonth,
-      expiryYear: input.expiryYear,
-      status: input.status,
-      transactionReference: input.transactionReference,
+      bin: input.bin || details.bin,
+      last4: input.last4 || details.number,
+      brand: input.brand || details.type,
+      holderName: input.holderName || details.holder_name,
+      expiryMonth: input.expiryMonth || (details.expiry_month != null ? String(details.expiry_month) : undefined),
+      expiryYear: input.expiryYear || (details.expiry_year != null ? String(details.expiry_year) : undefined),
+      status: input.status || details.status,
+      transactionReference: input.transactionReference || details.transaction_reference,
     });
     return { cardId };
   }
@@ -1901,7 +1919,7 @@ export class NuveiService {
     // Idempotent event record.
     const dedupe = crypto
       .createHash('sha256')
-      .update(`${providerTxId}|${status}|${statusDetail}|${devReference}`)
+      .update(`${providerTxId}|${status}|${statusDetail}|${devReference}|${tx?.amount ?? ''}`)
       .digest('hex');
     try {
       await this.db.query(
@@ -1925,6 +1943,12 @@ export class NuveiService {
     try {
       const handled = await this.processCallback(payload, tx, providerTxId, devReference);
       if (handled.verified) await this.markEventVerified(dedupe);
+      if (handled.handled === 'amount_mismatch') {
+        // A rejected event must not shadow a genuine one for the same order.
+        await this.db
+          .query(`DELETE FROM nuvei_webhook_events WHERE dedupe_key = $1 AND verified = false`, [dedupe])
+          .catch(() => undefined);
+      }
       return { ok: true, handled: handled.handled };
     } catch (err: any) {
       // Release the event so Nuvei's retry (any non-200 below 500) is processed.
