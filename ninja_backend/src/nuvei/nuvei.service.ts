@@ -799,6 +799,12 @@ export class NuveiService {
       } else if (scenario === '3ds_frictionless') {
         activationAmount = 150;
         activationDescription = '3DS FrictionLess';
+      } else if (scenario === 'review') {
+        // Nuvei staging: this description answers status=pending, detail=1
+        // (bank/anti-fraud review) — exercises the pending -> callback path.
+        activationDescription = 'Reviewed transaction';
+      } else if (scenario === 'denied') {
+        activationDescription = 'Denied transaction';
       }
     }
 
