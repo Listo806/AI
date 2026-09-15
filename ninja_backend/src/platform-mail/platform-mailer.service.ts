@@ -524,10 +524,10 @@ export class PlatformMailerService {
         await this.db.query(
           `INSERT INTO email_log
              (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
-           SELECT $1, $2, $3, $4, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW()
+           SELECT $1::uuid, $2::text, $3::text, $4::text, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW()
             WHERE NOT EXISTS (
               SELECT 1 FROM email_log
-               WHERE user_id = $1 AND template = $3
+               WHERE user_id = $1::uuid AND template = $3::text
                  AND status IN ('scheduled', 'sent')
             )`,
           [userId, email, template, String(lang || 'en').slice(0, 5)],
@@ -565,10 +565,10 @@ export class PlatformMailerService {
       await this.db.query(
         `INSERT INTO email_log
            (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
-         SELECT $1, $2, 'recovery', $3, 'scheduled', NOW() + INTERVAL '2 minutes', gen_random_uuid(), NOW()
+         SELECT $1::uuid, $2::text, 'recovery', $3::text, 'scheduled', NOW() + INTERVAL '2 minutes', gen_random_uuid(), NOW()
           WHERE NOT EXISTS (
             SELECT 1 FROM email_log
-             WHERE user_id = $1 AND template = 'recovery'
+             WHERE user_id = $1::uuid AND template = 'recovery'
                AND status IN ('scheduled', 'sending', 'sent')
           )`,
         [userId, email, String(lang || 'en').slice(0, 5)],
@@ -670,7 +670,7 @@ export class PlatformMailerService {
           : 'error';
       await this.db.query(
         `UPDATE email_log
-            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+            SET status = $2::text, subject = $3, provider = $4, error = $5, track_token = $6,
                 sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
@@ -892,10 +892,10 @@ export class PlatformMailerService {
         await this.db.query(
           `INSERT INTO email_log
              (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
-           SELECT $1, $2, $3, $4, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW()
+           SELECT $1::uuid, $2::text, $3::text, $4::text, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW()
             WHERE NOT EXISTS (
               SELECT 1 FROM email_log
-               WHERE user_id = $1 AND template = $3
+               WHERE user_id = $1::uuid AND template = $3::text
                  AND status IN ('scheduled', 'sending', 'sent'))
            ON CONFLICT DO NOTHING`,
           [userId, email, template, String(lang || 'en').slice(0, 5)],
@@ -1014,7 +1014,7 @@ export class PlatformMailerService {
           : 'error';
       await this.db.query(
         `UPDATE email_log
-            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+            SET status = $2::text, subject = $3, provider = $4, error = $5, track_token = $6,
                 sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
@@ -1132,10 +1132,10 @@ export class PlatformMailerService {
       await this.db.query(
         `INSERT INTO email_log
            (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
-         SELECT $1, $2, 'checkout_recovery', $3, 'scheduled', NOW() + INTERVAL '30 minutes', gen_random_uuid(), NOW()
+         SELECT $1::uuid, $2::text, 'checkout_recovery', $3::text, 'scheduled', NOW() + INTERVAL '30 minutes', gen_random_uuid(), NOW()
           WHERE NOT EXISTS (
             SELECT 1 FROM email_log
-             WHERE user_id = $1 AND template = 'checkout_recovery'
+             WHERE user_id = $1::uuid AND template = 'checkout_recovery'
                AND send_type = 'auto' AND status IN ('scheduled','sending','sent'))`,
         [userId, email, String(lang || 'en').slice(0, 5)],
       );
@@ -1221,7 +1221,7 @@ export class PlatformMailerService {
           : 'error';
       await this.db.query(
         `UPDATE email_log
-            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+            SET status = $2::text, subject = $3, provider = $4, error = $5, track_token = $6,
                 sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
@@ -1424,7 +1424,7 @@ export class PlatformMailerService {
           : 'error';
       await this.db.query(
         `UPDATE email_log
-            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+            SET status = $2::text, subject = $3, provider = $4, error = $5, track_token = $6,
                 sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
@@ -1506,10 +1506,10 @@ export class PlatformMailerService {
         await this.db.query(
           `INSERT INTO email_log
              (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
-           SELECT $1, $2, $3, $4, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW()
+           SELECT $1::uuid, $2::text, $3::text, $4::text, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW()
             WHERE NOT EXISTS (
               SELECT 1 FROM email_log
-               WHERE user_id = $1 AND template = $3
+               WHERE user_id = $1::uuid AND template = $3::text
                  AND status IN ('scheduled', 'sending', 'sent'))
            ON CONFLICT DO NOTHING`,
           [userId, email, template, String(lang || 'en').slice(0, 5)],
@@ -1616,7 +1616,7 @@ export class PlatformMailerService {
           : 'error';
       await this.db.query(
         `UPDATE email_log
-            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+            SET status = $2::text, subject = $3, provider = $4, error = $5, track_token = $6,
                 sent_at = CASE WHEN $2::text = 'sent' THEN NOW() ELSE sent_at END
           WHERE id = $1`,
         [
@@ -2436,7 +2436,7 @@ export class PlatformMailerService {
         // column issue can never flip an email SendGrid actually accepted into a
         // false 'error' (which would risk a duplicate on retry). sent_at is
         // precomputed and passed as its own parameter: reusing $2 in both
-        // `status = $2` and a `CASE WHEN $2 = 'sent'` made Postgres deduce
+        // `status = $2` and a `CASE WHEN $2::text = 'sent'` made Postgres deduce
         // inconsistent types for $2 and throw ("inconsistent types deduced for
         // parameter $2"), which is exactly what failed the live delivery step.
         const sentAt = result.ok ? new Date() : null;

@@ -239,8 +239,8 @@ export class AdminUsersService {
       const { rows: accessRows } = await client.query(
         `INSERT INTO internal_user_access
           (user_id, internal_role, status, permissions, granted_by, granted_at, deactivated_at, updated_at)
-         VALUES ($1, $2, $3, $4::jsonb, $5, NOW(),
-                 CASE WHEN $3 = 'inactive' THEN NOW() ELSE NULL END,
+         VALUES ($1, $2, $3::text, $4::jsonb, $5, NOW(),
+                 CASE WHEN $3::text = 'inactive' THEN NOW() ELSE NULL END,
                  NOW())
          RETURNING id`,
         [userId, dto.role, status, JSON.stringify(permissions), actorUserId ?? null],

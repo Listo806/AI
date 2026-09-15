@@ -2148,7 +2148,7 @@ export class MarketingService {
     const status = dto.status === 'not_connected' ? 'not_connected' : 'connected';
     await this.db.query(
       `INSERT INTO mkt_integrations (team_id, provider, status, external_account, config, connected_by, connected_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5::jsonb,$6, CASE WHEN $3 = 'connected' THEN NOW() ELSE NULL END, NOW())
+       VALUES ($1,$2,$3,$4,$5::jsonb,$6, CASE WHEN $3::text = 'connected' THEN NOW() ELSE NULL END, NOW())
        ON CONFLICT (team_id, provider) DO UPDATE SET
          status = EXCLUDED.status,
          external_account = EXCLUDED.external_account,
