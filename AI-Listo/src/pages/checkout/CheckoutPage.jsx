@@ -202,7 +202,7 @@ export default function CheckoutPage() {
         <div className="cxo-grid">
           {/* LEFT */}
           <div className="cxo-col">
-            <section className="cxo-card">
+            <div className="cxo-card">
               <div className="cxo-chead">
                 <div className="cxo-icon"><User size={20} /></div>
                 <div className="cxo-chead-copy"><h2>{tr.infoTitle}</h2><p>{tr.infoSub}</p></div>
@@ -213,9 +213,9 @@ export default function CheckoutPage() {
                 <div><label className="cxo-label">{tr.email}</label><div className="cxo-input"><Mail size={17} /><input value={customer.email} readOnly /></div></div>
                 <div><label className="cxo-label">{tr.phone}</label><div className="cxo-input"><Phone size={17} /><input value={customer.phone} readOnly /></div></div>
               </div>
-            </section>
+            </div>
 
-            <section className="cxo-card">
+            <div className="cxo-card">
               <div className="cxo-chead">
                 <div className="cxo-icon"><Layers size={20} /></div>
                 <div className="cxo-chead-copy"><h2>{tr.planTitle}</h2><p>{tr.planSub}</p></div>
@@ -231,12 +231,12 @@ export default function CheckoutPage() {
               <p className="cxo-note">{tr.thenMonthly.replace("{p}", money(monthly))}</p>
               <div className="cxo-divider" />
               <div className="cxo-total"><strong>{tr.dueToday}</strong><div className="amt"><em>USD</em><b>${money(setupFee)}</b></div></div>
-            </section>
+            </div>
           </div>
 
           {/* RIGHT */}
           <div className="cxo-col">
-            <section className="cxo-card">
+            <div className="cxo-card">
               <div className="cxo-chead">
                 <div className="cxo-icon"><CreditCard size={20} /></div>
                 <div className="cxo-chead-copy"><h2>{tr.payTitle}</h2><p>{tr.paySub}</p></div>
@@ -262,13 +262,14 @@ export default function CheckoutPage() {
                   </button>
 
                   <div className="cxo-badges">
-                    <div className="cxo-badge"><ShieldCheck size={18} /> {tr.tokenization}</div>
-                    <div className="cxo-badge"><Lock size={18} /> {tr.threeds}</div>
+                    <div className="cxo-badge"><ShieldCheck size={17} /> {tr.tokenization}</div>
+                    <div className="cxo-badge-sep" />
+                    <div className="cxo-badge"><Lock size={17} /> {tr.threeds}</div>
                   </div>
                   <div className="cxo-processedby">{tr.processedBy}</div>
                 </>
               )}
-            </section>
+            </div>
           </div>
         </div>
 
