@@ -362,8 +362,9 @@ export class NuveiService {
         ],
       );
       const plan = this.plan(sub.plan_key);
-      await this.markActivated(sub.id, plan, tx);
-      return plan.trialDays > 0 ? 'trialing' : 'active';
+      const outcome = await this.activateLate(sub, plan, tx);
+      if (outcome === 'activated') return plan.trialDays > 0 ? 'trialing' : 'active';
+      return outcome === 'duplicate_refunded' ? 'refunded' : 'payment_failed';
     }
     if (this.isDefinitiveFailure(info.body)) {
       await this.setSubStatus(sub.id, 'payment_failed');
@@ -1210,6 +1211,72 @@ export class NuveiService {
     });
   }
 
+  /**
+   * A LATE confirmation (callback / Transaction Info) of an activation charge.
+   * If the customer meanwhile paid again and already holds a live
+   * subscription, this charge is a duplicate: refund it at Nuvei right away
+   * instead of creating a second subscription that would bill twice. If the
+   * refund call fails the charge is left visible for an admin refund.
+   */
+  private async activateLate(
+    sub: any,
+    plan: NuveiPlan,
+    tx: any,
+  ): Promise<'activated' | 'duplicate_refunded' | 'duplicate_needs_refund'> {
+    const { rows: live } = await this.db.query(
+      `SELECT id FROM nuvei_subscriptions
+        WHERE user_id = $1 AND id <> $2 AND status IN ('trialing','active','past_due')
+        LIMIT 1`,
+      [sub.user_id, sub.id],
+    );
+    if (!live[0]) {
+      await this.markActivated(sub.id, plan, tx);
+      return 'activated';
+    }
+    const txId = tx?.id ? String(tx.id) : null;
+    let refunded = false;
+    if (txId) {
+      try {
+        const r = await this.client.refund(txId);
+        refunded = String(r.body?.status || '').toLowerCase() === 'success';
+      } catch (err: any) {
+        this.logger.error(`duplicate activation refund call failed for ${txId}: ${err?.message}`);
+      }
+    }
+    await this.db.query(
+      `UPDATE nuvei_subscriptions SET status = $2, next_billing_date = NULL, updated_at = NOW() WHERE id = $1`,
+      [sub.id, refunded ? 'refunded' : 'payment_failed'],
+    );
+    if (txId) {
+      await this.db.query(
+        `UPDATE nuvei_transactions
+            SET status = CASE WHEN $2::boolean THEN 'refunded' ELSE status END,
+                refunded_amount = CASE WHEN $2::boolean THEN amount ELSE refunded_amount END,
+                message = $3
+          WHERE provider_transaction_id = $1`,
+        [txId, refunded, refunded ? 'duplicate activation — refunded automatically' : 'DUPLICATE ACTIVATION — REFUND REQUIRED'],
+      );
+    }
+    this.logger.error(
+      `Nuvei duplicate activation for user ${sub.user_id} (sub ${sub.id}, tx ${txId || '-'}): ${refunded ? 'refunded automatically' : 'REFUND REQUIRED'}`,
+    );
+    if (refunded) {
+      await this.sendConfirmation({
+        to: sub.email,
+        userId: sub.user_id,
+        subject: 'Duplicate payment refunded',
+        lines: [
+          ['Plan', plan.label],
+          ['Amount refunded', this.money(Number(tx?.amount ?? sub.activation_amount ?? 0))],
+          ['Transaction', txId || '—'],
+          ['Status', 'Refunded'],
+        ],
+        note: 'A second activation payment was received for an account that is already active. It has been refunded; your existing subscription is unchanged.',
+      });
+    }
+    return refunded ? 'duplicate_refunded' : 'duplicate_needs_refund';
+  }
+
   // ---- recurring billing ----------------------------------------------
 
   /**
@@ -1701,8 +1768,8 @@ export class NuveiService {
               [txRow.id],
             );
           }
-          await this.markActivated(sub.id, this.plan(sub.plan_key), tx);
-          return { handled: 'activated', verified: true };
+          const outcome = await this.activateLate(sub, this.plan(sub.plan_key), tx);
+          return { handled: outcome, verified: true };
         }
         if (failed && sub.status === 'pending_activation') {
           await this.setSubStatus(sub.id, 'payment_failed');
