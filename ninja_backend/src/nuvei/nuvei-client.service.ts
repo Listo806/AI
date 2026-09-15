@@ -213,11 +213,11 @@ export class NuveiClientService {
     });
   }
 
-  /** GET /v2/card/list/{uid} — list a user's stored cards. */
+  /** GET /v2/card/list?uid=... — list a user's stored cards. */
   async listCards(userId: string): Promise<NuveiCallResult> {
     return this.request(
       'GET',
-      `${this.cardsBase()}/v2/card/list/${encodeURIComponent(userId)}`,
+      `${this.cardsBase()}/v2/card/list?uid=${encodeURIComponent(userId)}`,
     );
   }
 
