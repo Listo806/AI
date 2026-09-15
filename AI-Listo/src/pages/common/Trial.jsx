@@ -504,12 +504,12 @@ export default function StartTrial() {
                   <>
                     <span className="trial-v3-desktop-copy">
                       {isFreeAccessFlow
-                        ? "CREATE MY FREE ACCOUNT"
+                        ? "CREATE MY ACCOUNT"
                         : tr.continueBtn}
                     </span>
                     <span className="trial-v3-mobile-copy">
                       {isFreeAccessFlow
-                        ? "Create My Free Account"
+                        ? "Create My Account"
                         : tr.mobileContinueBtn}
                     </span>
                   </>
