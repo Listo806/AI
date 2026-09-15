@@ -589,7 +589,30 @@ export class NuveiService {
     await this.ensureSchema();
     const plan = this.plan(input.planKey);
     const user = await this.userRow(input.userId);
-    const token = await this.cardToken(input.cardId, input.userId);
+
+    // A saved card id is required and must be a UUID (otherwise the lookup
+    // below would surface a raw database error as a 500).
+    const cardId = String(input.cardId || '').trim();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cardId)) {
+      throw new BadRequestException('A saved card is required.');
+    }
+
+    // One live subscription per account. Without this, paying again created a
+    // second subscription (double monthly billing) and overwrote the plan.
+    const { rows: live } = await this.db.query(
+      `SELECT id, plan_key, status FROM nuvei_subscriptions
+        WHERE user_id = $1 AND status IN ('trialing','active','past_due')
+        ORDER BY created_at DESC LIMIT 1`,
+      [input.userId],
+    );
+    if (live[0]) {
+      const current = this.plan(live[0].plan_key).label;
+      throw new BadRequestException(
+        `You already have an active ${current} subscription. To change plans, please contact support.`,
+      );
+    }
+
+    const token = await this.cardToken(cardId, input.userId);
     const dev_reference = this.devRef('ACT');
 
     const teamId = await this.resolveTeamId(input.userId);

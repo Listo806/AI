@@ -54,7 +54,7 @@ const t = {
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { refreshUser, user } = useAuth();
+  const { refreshUser, user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const [lang] = useState(() => localStorage.getItem("cortexa_lang") || "en");
   const tr = t[lang] || t.en;
@@ -103,6 +103,15 @@ export default function CheckoutPage() {
   }, [selectedPlan, planIsValid, setupFee]);
 
   useEffect(() => { let c = false; fetchNuveiConfig().then((cf) => { if (!c) setConfig(cf); }); return () => { c = true; }; }, []);
+
+  // A visitor with no session (fresh browser, expired login) must sign in first;
+  // otherwise the checkout renders with no form and a disabled Pay button.
+  useEffect(() => {
+    if (authLoading || !planIsValid) return;
+    if (!user) {
+      navigate(`/sign-in?next=${encodeURIComponent(`/checkout?plan=${selectedPlan}`)}`, { replace: true });
+    }
+  }, [authLoading, user, planIsValid, selectedPlan, navigate]);
 
   const usersText = plan.users === 1 ? tr.userOne : tr.userMany.replace("{n}", String(plan.users));
 
@@ -172,6 +181,10 @@ export default function CheckoutPage() {
       }
       setProcessing(false); setPaying(false); setErrorMsg(result?.message || tr.errDeclined); remountForm();
     } catch (err) {
+      if (/session expired/i.test(err?.message || "")) {
+        navigate(`/sign-in?next=${encodeURIComponent(`/checkout?plan=${selectedPlan}`)}`, { replace: true });
+        return;
+      }
       setProcessing(false); setPaying(false); setErrorMsg(err?.message || tr.errServer); remountForm();
     }
   }
