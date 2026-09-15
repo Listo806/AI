@@ -79,10 +79,14 @@ export default function CheckoutPage() {
   const [paying, setPaying] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  // Bumped after a decline/error: Nuvei's SDK removes its form after every
+  // tokenize response, so a fresh form must be mounted for the customer to retry.
+  const [formGen, setFormGen] = useState(0);
   const submitRef = useRef(null);
   const mountedRef = useRef(false);
   const consentRef = useRef(false);
   useEffect(() => { consentRef.current = consent; }, [consent]);
+  const remountForm = () => { mountedRef.current = false; setFormReady(false); setFormGen((g) => g + 1); };
 
   const nuveiPlan = (config?.plans || []).find((p) => p.key === nuveiPlanKey) || null;
   const setupFee = nuveiPlan ? nuveiPlan.activation : plan.startPrice;
@@ -136,12 +140,12 @@ export default function CheckoutPage() {
         await handleTokenized(card);
       } catch (err) {
         setPaying(false);
-        mountedRef.current = false;
         setErrorMsg(err?.message || tr.errServer);
+        remountForm();
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, user]);
+  }, [config, user, formGen]);
 
   async function handleTokenized(card) {
     setProcessing(true);
@@ -157,7 +161,7 @@ export default function CheckoutPage() {
       if (result?.requires3ds && result?.challenge) {
         const url = result.challenge.challenge_request || result.challenge.acs_url || result.challenge.url;
         if (url && /^https?:\/\//i.test(url)) { window.location.href = url; return; }
-        setProcessing(false); setPaying(false); setErrorMsg(tr.errDeclined); return;
+        setProcessing(false); setPaying(false); setErrorMsg(tr.errDeclined); remountForm(); return;
       }
       if (result?.status === "trialing" || result?.status === "active") {
         setUserData({ email: customer.email, phone: customer.phone });
@@ -166,9 +170,9 @@ export default function CheckoutPage() {
         await finishAndLogin();
         return;
       }
-      setProcessing(false); setPaying(false); setErrorMsg(result?.message || tr.errDeclined);
+      setProcessing(false); setPaying(false); setErrorMsg(result?.message || tr.errDeclined); remountForm();
     } catch (err) {
-      setProcessing(false); setPaying(false); setErrorMsg(err?.message || tr.errServer);
+      setProcessing(false); setPaying(false); setErrorMsg(err?.message || tr.errServer); remountForm();
     }
   }
 
