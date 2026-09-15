@@ -75,7 +75,10 @@ function mapCard(response) {
     card?.message, response?.message,
   ].filter(Boolean).join(" | ");
   if (/already\s*(added|exist|registered)/i.test(errText)) {
-    return { reuseSavedCard: true, last4: card?.number, bin: card?.bin, brand: card?.type };
+    // Nuvei's answer carries the existing token ("Card already added: <token>"),
+    // so the stored card can be charged directly.
+    const m = errText.match(/already\s*added[:\s]*([0-9A-Za-z_-]{6,})/i);
+    return { reuseSavedCard: true, token: m ? m[1] : undefined, last4: card?.number, bin: card?.bin, brand: card?.type };
   }
   if (card?.token && card?.status !== "rejected") {
     return {

@@ -289,16 +289,18 @@ export default function CheckoutPage() {
     setErrorMsg("");
     let cardId = null;
     try {
-      if (card?.reuseSavedCard) {
+      if (card?.reuseSavedCard && !card?.token) {
         // Nuvei reported this exact card as already stored for this customer
-        // (a retry with the same card): charge the saved card instead of
-        // telling the customer it was declined.
+        // (a retry with the same card) without echoing its token: charge the
+        // stored card instead of telling the customer it was declined.
         const list = await nuveiListCards();
         const cards = list?.cards || [];
         const match = cards.find((c) => card.last4 && c.last4 === card.last4) || cards[0];
         if (!match?.id) throw new Error(tr.errDeclined);
         cardId = match.id;
       } else {
+        // A fresh token, or the existing token Nuvei echoed for an already
+        // stored card (save-token is idempotent per token).
         const saved = await nuveiSaveToken(card);
         if (!saved?.cardId) throw new Error(tr.errServer);
         cardId = saved.cardId;
