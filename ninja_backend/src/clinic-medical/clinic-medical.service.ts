@@ -48,7 +48,24 @@ export class ClinicMedicalService implements OnModuleInit{
   const {rows:reasons}=await this.db.query(`SELECT COALESCE(NULLIF(title,''),'Other') label,count(*)::int n FROM appointments WHERE team_id=$1 AND workspace_id=$2 AND start_at>=now()-interval '30 days' GROUP BY 1 ORDER BY n DESC LIMIT 4`,[team,WS]);
   const total=reasons.reduce((x:any,r:any)=>x+Number(r.n),0)||1;
   const {rows:providers}=await this.db.query(`SELECT u.id,COALESCE(u.name,u.email) name,count(a.id)::int appointments,count(a.id) FILTER(WHERE a.status='completed')::int "patientsSeen",CASE WHEN count(a.id)=0 THEN 0 ELSE round(100.0*count(a.id) FILTER(WHERE a.status='completed')/count(a.id)) END::int attendance FROM team_members tm JOIN users u ON u.id=tm.user_id LEFT JOIN appointments a ON a.assigned_to=u.id AND a.team_id=tm.team_id AND a.workspace_id=$2 AND a.start_at>=date_trunc('week',now()) WHERE tm.team_id=$1 AND tm.status='active' AND u.is_active=true GROUP BY u.id,u.name,u.email ORDER BY appointments DESC LIMIT 5`,[team,WS]);
-  const {rows:rev}=await this.db.query(`WITH d AS(SELECT generate_series(CURRENT_DATE-6,CURRENT_DATE,'1 day')::date day) SELECT d.day,COALESCE(sum(p.amount),0)::float value FROM d LEFT JOIN clinic_payments p ON p.team_id=$1 AND COALESCE(p.paid_at,p.created_at)::date=d.day AND p.status IN('paid','completed','succeeded') GROUP BY d.day ORDER BY d.day`,[team]);
+  const {rows:rev}=await this.db.query(`WITH d AS (
+    SELECT gs::date AS revenue_day
+    FROM generate_series(
+      CURRENT_DATE - INTERVAL '6 days',
+      CURRENT_DATE,
+      INTERVAL '1 day'
+    ) AS gs
+  )
+  SELECT
+    d.revenue_day AS day,
+    COALESCE(SUM(p.amount), 0)::float AS value
+  FROM d
+  LEFT JOIN clinic_payments p
+    ON p.team_id = $1
+   AND COALESCE(p.paid_at, p.created_at)::date = d.revenue_day
+   AND p.status IN ('paid', 'completed', 'succeeded')
+  GROUP BY d.revenue_day
+  ORDER BY d.revenue_day`,[team]);
   const {rows:ai}=await this.db.query(`SELECT id,action,channel,outcome,metadata,created_at "createdAt" FROM ai_activity WHERE team_id=$1 ORDER BY created_at DESC LIMIT 5`,[team]);
   const {rows:[aiStats]}=await this.db.query(`SELECT (SELECT COALESCE(launched,false) AND NOT COALESCE(paused,false) FROM ai_agent_settings WHERE team_id=$1 LIMIT 1) "active",count(*) FILTER(WHERE action IN('cortexa_chat','auto_reply','follow_up_sent') AND created_at>=CURRENT_DATE)::int "conversationsToday",count(*) FILTER(WHERE action IN('appointment_booked','booked_appointment','booked') AND created_at>=CURRENT_DATE)::int "appointmentsBooked" FROM ai_activity WHERE team_id=$1`,[team]);
   const series=rev.map((r:any)=>Number(r.value||0)); const t=(x:any,y:any)=>this.trend(Number(x||0),Number(y||0));
