@@ -313,21 +313,44 @@ export class NuveiClientService {
    * custom (manually-quoted) amount. Used only for Web Solutions quotations.
    */
   async createLinkToPay(input: {
-    user: NuveiUser;
+    user: NuveiUser & { name?: string; last_name?: string };
     order: NuveiOrder;
-    confVars?: any;
+    configuration: {
+      partial_payment?: boolean;
+      expiration_days?: number;
+      allowed_payment_methods?: string[];
+      success_url: string;
+      failure_url: string;
+      pending_url: string;
+      review_url: string;
+    };
   }): Promise<NuveiCallResult> {
+    const o: any = { installments_type: 0, currency: 'USD', ...input.order };
+    // Same tax rule as card debits: amount is tax-inclusive (IVA 15%).
+    if (o.vat == null) {
+      const rate = Number(this.config.get('NUVEI_VAT_RATE') || '0.15');
+      const amt = Number(o.amount) || 0;
+      const taxable = Number((amt / (1 + rate)).toFixed(2));
+      o.taxable_amount = taxable;
+      o.vat = Number((amt - taxable).toFixed(2));
+    }
     return this.request(
       'POST',
       `${this.nonCardsBase()}/linktopay/init_order/`,
       {
-        user: input.user,
-        order: {
-          installments_type: 0,
-          currency: 'USD',
-          ...input.order,
+        user: {
+          id: input.user.id,
+          email: input.user.email,
+          name: input.user.name || input.user.first_name || 'Customer',
+          last_name: input.user.last_name || '-',
         },
-        ...(input.confVars ? { conf: input.confVars } : {}),
+        order: o,
+        configuration: {
+          partial_payment: false,
+          expiration_days: 7,
+          allowed_payment_methods: ['Card'],
+          ...input.configuration,
+        },
       },
     );
   }
