@@ -8,7 +8,7 @@ import {
   nuveiActivate,
   collectBrowserInfo,
 } from "../../api/nuveiApi";
-import { tokenizeCard } from "./nuveiSdk";
+import { mountNuveiForm } from "./nuveiSdk";
 
 // Nuvei / Datafast (Paymentez) subscription checkout — /nuvei-checkout?plan=business.
 //
@@ -42,7 +42,10 @@ export default function NuveiCheckout() {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(null);
+  const [formReady, setFormReady] = useState(false);
+  const [paying, setPaying] = useState(false);
   const formMounted = useRef(false);
+  const submitRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -65,9 +68,10 @@ export default function NuveiCheckout() {
   useEffect(() => {
     if (step !== "card" || !config || !plan || formMounted.current) return;
     formMounted.current = true;
+    setFormReady(false);
     (async () => {
       try {
-        const card = await tokenizeCard({
+        const form = await mountNuveiForm({
           containerSelector: "#nuvei-card-form",
           environment: config.environment,
           appCode: config.clientAppCode,
@@ -75,9 +79,14 @@ export default function NuveiCheckout() {
           user: { id: user?.id, email: user?.email },
           country: "ECU",
           locale: "en",
+          onIncomplete: (msg) => { setPaying(false); setError(msg); },
         });
+        submitRef.current = form.submit;
+        form.ready.then((ok) => setFormReady(!!ok));
+        const card = await form.done;
         await handleTokenized(card);
       } catch (err) {
+        setPaying(false);
         formMounted.current = false;
         setError(err?.message || "The card could not be processed.");
         setStep("review");
@@ -85,6 +94,13 @@ export default function NuveiCheckout() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, config, plan]);
+
+  function payNow() {
+    setError("");
+    setPaying(true);
+    const ok = submitRef.current && submitRef.current();
+    if (!ok) { setPaying(false); setError("Something went wrong. Please try again."); }
+  }
 
   async function handleTokenized(card) {
     setStep("processing");
@@ -212,6 +228,19 @@ export default function NuveiCheckout() {
             <>
               {/* The Nuvei SDK renders its PCI-safe card form into this container. */}
               <div id="nuvei-card-form" style={{ display: step === "card" ? "block" : "none" }} />
+
+              {step === "card" && (
+                <>
+                  {error && <div style={S.error}>{error}</div>}
+                  <button
+                    style={{ ...S.btnPrimary, marginTop: 12, background: formReady && !paying ? "#4f46e5" : "#9ca3af", cursor: formReady && !paying ? "pointer" : "not-allowed" }}
+                    disabled={!formReady || paying}
+                    onClick={payNow}
+                  >
+                    {paying ? "Processing…" : `Pay ${money(plan.activation)} and start`}
+                  </button>
+                </>
+              )}
 
               {step === "review" && (
                 <>
