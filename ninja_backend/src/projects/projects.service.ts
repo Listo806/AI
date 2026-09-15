@@ -1341,7 +1341,7 @@ export class ProjectsService {
          assigned_to, created_by, due_date, progress, estimated_minutes, labels, completed_at,
          created_at, updated_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
-         CASE WHEN $5 = 'completed' THEN NOW() ELSE NULL END, NOW(), NOW())
+         CASE WHEN $5::text = 'completed' THEN NOW() ELSE NULL END, NOW(), NOW())
        RETURNING id`,
       [
         teamId,
@@ -1554,7 +1554,7 @@ export class ProjectsService {
     const { rows } = await this.db.query(
       `INSERT INTO project_milestones
         (team_id, project_id, title, description, status, due_date, sort_order, completed_at, created_by, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7, CASE WHEN $5 = 'completed' THEN NOW() ELSE NULL END, $8, NOW(), NOW())
+       VALUES ($1,$2,$3,$4,$5,$6,$7, CASE WHEN $5::text = 'completed' THEN NOW() ELSE NULL END, $8, NOW(), NOW())
        RETURNING id`,
       [
         teamId,

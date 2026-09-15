@@ -3387,7 +3387,7 @@ export class TeamsService {
       )
       VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
-        CASE WHEN $5 = 'completed' THEN NOW() ELSE NULL END,
+        CASE WHEN $5::text = 'completed' THEN NOW() ELSE NULL END,
         NOW(),NOW()
       )
       RETURNING *
