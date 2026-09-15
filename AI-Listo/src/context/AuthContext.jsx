@@ -95,7 +95,8 @@ export function AuthProvider({ children }) {
           // Resume checkout: an unpaid owner with a selected plan is sent back to
           // the checkout page instead of the dashboard so they can finish paying.
           const u = response.user || {};
-          const paid = ['active', 'paid'].includes(String(u.paymentStatus || '').toLowerCase());
+          // 'trialing' = paid subscription in its trial; must not be sent back to checkout.
+          const paid = ['active', 'paid', 'trialing'].includes(String(u.paymentStatus || '').toLowerCase());
           const isFreePlan = String(u.selectedPlan || '').toLowerCase() === 'free';
           // Free tier has CRM access without paying — never bounce a Free owner to
           // checkout (matches the DashboardLayout exemption). Only an owner who

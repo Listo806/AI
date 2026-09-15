@@ -10,6 +10,7 @@ import {
   fetchNuveiConfig, fetchNuveiSubscription, nuveiSaveToken, nuveiActivate, collectBrowserInfo,
 } from "../../api/nuveiApi";
 import { mountNuveiForm } from "./nuveiSdk";
+import apiClient from "../../api/apiClient";
 import { clearSetupOffer } from "../../utils/offer";
 import { buildLocalizedPath } from "../../i18n/locales";
 import "./CheckoutNuvei.css";
@@ -49,6 +50,8 @@ const t = {
     errServer: "Something went wrong. Please try again or use another card.",
     errDeclined: "The payment could not be completed. Please try another card.",
     errAlreadySubscribed: "You already have an active {plan} subscription. To change plans, please contact support.",
+    errConfig: "We could not load the payment form. Please refresh the page or try again in a moment.",
+    errPending: "Your payment is still being verified. Please wait a moment and refresh, or contact support if this continues.",
     unavailable: "Payments are being finalized and are not available right now. Please contact support.",
   },
 };
@@ -66,12 +69,14 @@ export default function CheckoutPage() {
   const plan = PLAN_DATA[selectedPlan];
   const nuveiPlanKey = NUVEI_KEY[selectedPlan];
 
-  const [customer] = useState(() => ({
-    name: localStorage.getItem("name") || "",
-    email: localStorage.getItem("email") || "",
-    phone: localStorage.getItem("phone") || "",
-    userId: localStorage.getItem("trialUserId") || "",
-  }));
+  // Identity comes from the signed-in user first; localStorage is only a fallback
+  // (it can hold a PREVIOUS person's details on a shared browser).
+  const customer = {
+    name: user?.name || localStorage.getItem("name") || "",
+    email: user?.email || localStorage.getItem("email") || "",
+    phone: user?.phone || localStorage.getItem("phone") || "",
+    userId: user?.id || localStorage.getItem("trialUserId") || "",
+  };
   useEffect(() => { if (user?.id) { localStorage.setItem("trialUserId", user.id); if (user.email) localStorage.setItem("email", user.email); } }, [user]);
 
   const [config, setConfig] = useState(null);
@@ -88,7 +93,12 @@ export default function CheckoutPage() {
   const mountedRef = useRef(false);
   const consentRef = useRef(false);
   useEffect(() => { consentRef.current = consent; }, [consent]);
-  const remountForm = () => { mountedRef.current = false; setFormReady(false); setFormGen((g) => g + 1); };
+  const remountCount = useRef(0);
+  const remountForm = () => {
+    if (remountCount.current >= 3) { setErrorMsg(tr.errConfig); return; } // stop looping on a dead SDK
+    remountCount.current += 1;
+    mountedRef.current = false; setFormReady(false); setFormGen((g) => g + 1);
+  };
 
   const nuveiPlan = (config?.plans || []).find((p) => p.key === nuveiPlanKey) || null;
   const setupFee = nuveiPlan ? nuveiPlan.activation : plan.startPrice;
@@ -108,12 +118,56 @@ export default function CheckoutPage() {
 
   // A visitor with no session (fresh browser, expired login) must sign in first;
   // otherwise the checkout renders with no form and a disabled Pay button.
+  const goSignIn = () => {
+    // The sign-in return path may not carry a query string; the checkout reads
+    // the plan back from localStorage.
+    localStorage.setItem("trialPlan", selectedPlan);
+    navigate("/sign-in?next=/checkout", { replace: true });
+  };
   useEffect(() => {
     if (authLoading || !planIsValid) return;
-    if (!user) {
-      navigate(`/sign-in?next=${encodeURIComponent(`/checkout?plan=${selectedPlan}`)}`, { replace: true });
-    }
-  }, [authLoading, user, planIsValid, selectedPlan, navigate]);
+    if (!user) goSignIn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user, planIsValid]);
+
+  // Payment options could not be loaded (offline, blocked): say so instead of
+  // showing an empty box with a dead Pay button.
+  const [configFailed, setConfigFailed] = useState(false);
+  useEffect(() => {
+    if (config === null) { const t = setTimeout(() => setConfigFailed(true), 15000); return () => clearTimeout(t); }
+    setConfigFailed(false);
+  }, [config]);
+  useEffect(() => { if (configFailed && !config) setErrorMsg(tr.errConfig); }, [configFailed, config]);
+
+  // Returning from a bank 3D Secure challenge, or waiting on a pending
+  // verification: the backend callback finalizes the activation, so poll the
+  // subscription and finish once it is live.
+  const [awaiting, setAwaiting] = useState(false);
+  useEffect(() => {
+    if (authLoading || !user || !planIsValid) return;
+    if (searchParams.get("threeds") !== "return") return;
+    setAwaiting(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user, planIsValid]);
+  useEffect(() => {
+    if (!awaiting) return;
+    let stop = false, tries = 0;
+    setProcessing(true); setErrorMsg("");
+    const tick = async () => {
+      if (stop) return;
+      const sub = await fetchNuveiSubscription();
+      const st = String(sub?.status || "");
+      if (["trialing", "active"].includes(st)) { await finishAndLogin(); return; }
+      if (["payment_failed"].includes(st) || ++tries >= 20) {
+        stop = true; setAwaiting(false); setProcessing(false); setPaying(false);
+        setErrorMsg(st === "payment_failed" ? tr.errDeclined : tr.errPending); remountForm(); return;
+      }
+      setTimeout(tick, 3000);
+    };
+    tick();
+    return () => { stop = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaiting]);
 
   const usersText = plan.users === 1 ? tr.userOne : tr.userMany.replace("{n}", String(plan.users));
 
@@ -190,6 +244,10 @@ export default function CheckoutPage() {
         if (url && /^https?:\/\//i.test(url)) { window.location.href = url; return; }
         setProcessing(false); setPaying(false); setErrorMsg(tr.errDeclined); remountForm(); return;
       }
+      if (result?.status === "pending_activation" && !result?.requires3ds) {
+        // Anti-fraud / bank review: the verified callback will activate the account.
+        setAwaiting(true); return;
+      }
       if (result?.status === "trialing" || result?.status === "active") {
         setUserData({ email: customer.email, phone: customer.phone });
         trackPurchase({ value: setupFee, currency: "USD", offer: `$${setupFee}`, plan: selectedPlan, transactionId: result.transactionId });
@@ -199,20 +257,19 @@ export default function CheckoutPage() {
       }
       setProcessing(false); setPaying(false); setErrorMsg(result?.message || tr.errDeclined); remountForm();
     } catch (err) {
-      if (/session expired/i.test(err?.message || "")) {
-        navigate(`/sign-in?next=${encodeURIComponent(`/checkout?plan=${selectedPlan}`)}`, { replace: true });
-        return;
-      }
+      if (/session expired/i.test(err?.message || "")) { goSignIn(); return; }
       setProcessing(false); setPaying(false); setErrorMsg(err?.message || tr.errServer); remountForm();
     }
   }
 
-  function payNow() {
+  async function payNow() {
     if (blocked) return;
     setErrorMsg("");
     if (!consentRef.current) { setErrorMsg(tr.errTerms); return; }
     if (!formReady) return;
     setPaying(true);
+    // Confirm the session is still valid before tokenizing (access tokens expire).
+    try { await apiClient.request("/users/me"); } catch (e) { if (/session expired/i.test(e?.message || "")) { goSignIn(); return; } }
     const ok = submitRef.current && submitRef.current();
     if (!ok) { setPaying(false); setErrorMsg(tr.errServer); }
   }

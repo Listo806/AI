@@ -694,14 +694,40 @@ export class NuveiService {
       };
     }
 
-    // Declined.
+    // Pending WITHOUT a 3DS challenge (anti-fraud / bank review): the verified
+    // callback will finalize it. Leave the subscription awaiting activation
+    // rather than marking it failed, or the later callback could not activate.
+    if (String(tx?.status || '').toLowerCase() === 'pending') {
+      return {
+        status: 'pending_activation',
+        subscriptionId,
+        transactionId: tx.id,
+        message: 'Your payment is being verified. Your account will activate automatically once confirmed.',
+      };
+    }
+
+    // Declined. Never surface a raw provider string to the customer.
     await this.setSubStatus(subscriptionId, 'payment_failed');
+    this.logger.warn(
+      `Nuvei activation declined for sub ${subscriptionId}: ${tx.message || res.error || 'no message'}`,
+    );
     return {
       status: 'payment_failed',
       subscriptionId,
       transactionId: tx.id,
-      message: tx.message || res.error || 'Activation payment declined.',
+      message: 'The payment could not be completed. Please try another card.',
     };
+  }
+
+  /** Add calendar months without day overflow (Jan 31 + 1 -> Feb 28/29). */
+  private addMonths(d: Date, months: number): Date {
+    const r = new Date(d);
+    const day = r.getDate();
+    r.setDate(1);
+    r.setMonth(r.getMonth() + months);
+    const last = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
+    r.setDate(Math.min(day, last));
+    return r;
   }
 
   /** Flip a subscription to trialing/active and grant plan access + email. */
@@ -718,8 +744,7 @@ export class NuveiService {
     if (plan.trialDays > 0) {
       nextBilling = new Date(now.getTime() + plan.trialDays * 24 * 60 * 60 * 1000);
     } else {
-      nextBilling = new Date(now);
-      nextBilling.setMonth(nextBilling.getMonth() + 1);
+      nextBilling = this.addMonths(now, 1);
     }
     const trialEnd = plan.trialDays > 0 ? nextBilling : null;
     const status: SubStatus = plan.trialDays > 0 ? 'trialing' : 'active';
@@ -821,8 +846,24 @@ export class NuveiService {
       );
       claimed = true;
     } catch (err: any) {
-      if (err?.code === '23505') return; // period already claimed
-      throw err;
+      if (err?.code !== '23505') throw err;
+      // Period already claimed. Self-heal instead of stalling: if that attempt
+      // succeeded, move the next charge a month out; if it failed, retry tomorrow.
+      const { rows: prev } = await this.db.query(
+        `SELECT status FROM nuvei_transactions
+          WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $2`,
+        [sub.id, period],
+      );
+      const wasSuccess = String(prev[0]?.status || '') === 'success';
+      const base = new Date(sub.next_billing_date);
+      const nextDate = wasSuccess
+        ? this.addMonths(base, 1)
+        : new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await this.db.query(
+        `UPDATE nuvei_subscriptions SET next_billing_date = $2, updated_at = NOW() WHERE id = $1`,
+        [sub.id, nextDate],
+      );
+      return;
     }
     if (!claimed) return;
 
@@ -866,8 +907,7 @@ export class NuveiService {
     );
 
     if (this.isApproved(res.body)) {
-      const next = new Date(sub.next_billing_date);
-      next.setMonth(next.getMonth() + 1);
+      const next = this.addMonths(new Date(sub.next_billing_date), 1);
       await this.db.query(
         `UPDATE nuvei_subscriptions
            SET status = 'active', next_billing_date = $2, last_charge_at = NOW(), updated_at = NOW()
@@ -896,14 +936,34 @@ export class NuveiService {
         ],
       });
     } else {
-      // Declined: mark past_due and retry on the next sweep (bounded).
-      await this.db.query(
-        `UPDATE nuvei_subscriptions
-           SET status = 'past_due', updated_at = NOW()
-         WHERE id = $1`,
+      // Declined. Retry daily (a new period_key each day so the claim never
+      // blocks the retry); after 5 failed attempts in 30 days, suspend.
+      const { rows: fails } = await this.db.query(
+        `SELECT COUNT(*)::int AS n FROM nuvei_transactions
+          WHERE subscription_id = $1 AND kind = 'recurring'
+            AND status <> 'success' AND created_at > NOW() - interval '30 days'`,
         [sub.id],
       );
-      await this.mirrorBilling(sub.id, 'past_due', null);
+      const failures = Number(fails[0]?.n || 0);
+      const suspend = failures >= 5;
+      await this.db.query(
+        `UPDATE nuvei_subscriptions
+           SET status = $2,
+               next_billing_date = CASE WHEN $3::boolean THEN NULL ELSE NOW() + interval '1 day' END,
+               updated_at = NOW()
+         WHERE id = $1`,
+        [sub.id, suspend ? 'suspended' : 'past_due', suspend],
+      );
+      // Paid access pauses while past due (resolveEffectivePlan drops past_due /
+      // suspended to Free); a later successful retry restores 'active'.
+      await this.db.query(
+        `UPDATE users SET payment_status = $2, updated_at = NOW() WHERE nuvei_subscription_id = $1`,
+        [sub.id, suspend ? 'suspended' : 'past_due'],
+      );
+      this.logger.warn(
+        `Recurring charge declined for sub ${sub.id} (${failures} failure(s) in 30d${suspend ? ', SUSPENDED' : ', retry tomorrow'}): ${tx.message || res.error || 'no message'}`,
+      );
+      await this.mirrorBilling(sub.id, suspend ? 'suspended' : 'past_due', null);
       await this.sendConfirmation({
         to: sub.email,
         userId: sub.user_id,
@@ -912,7 +972,9 @@ export class NuveiService {
           ['Plan', plan.label],
           ['Amount', this.money(plan.monthly)],
           ['Status', 'Declined'],
-          ['What happens next', 'We will retry automatically. Please check your card.'],
+          ['What happens next', suspend
+            ? 'Your subscription has been suspended after repeated failed payments. Please update your card to restore access.'
+            : 'We will retry automatically tomorrow. Please check your card or update it to keep your access.'],
         ],
       });
     }

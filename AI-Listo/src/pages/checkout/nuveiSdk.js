@@ -149,7 +149,7 @@ export async function mountNuveiForm({
     const started = Date.now();
     const tick = () => {
       const el = document.querySelector(`${containerSelector} iframe`);
-      if (el || Date.now() - started > 20000) return resolve(!!el);
+      if (el || Date.now() - started > 40000) return resolve(!!el);
       setTimeout(tick, 300);
     };
     tick();
