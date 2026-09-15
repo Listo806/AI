@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '../config/config.service';
 
 type FreeReviewPayload = {
   fullName: string;
@@ -41,10 +41,10 @@ export class WebSolutionsReviewService {
     if (body?.authorized !== true) throw new BadRequestException('Authorization is required.');
     if (!/^\S+@\S+\.\S+$/.test(body.email.trim())) throw new BadRequestException('A valid email is required.');
 
-    const apiKey = this.config.get<string>('SENDGRID_API_KEY');
+    const apiKey = this.config.get('SENDGRID_API_KEY');
     const fromEmail =
-      this.config.get<string>('SENDGRID_FROM_EMAIL') ||
-      this.config.get<string>('PLATFORM_FROM_EMAIL') ||
+      this.config.get('SENDGRID_FROM_EMAIL') ||
+      this.config.get('PLATFORM_FROM_EMAIL') ||
       'support@cortexaaicrm.com';
 
     if (!apiKey) {
