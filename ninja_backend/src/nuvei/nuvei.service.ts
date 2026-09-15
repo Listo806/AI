@@ -1091,6 +1091,7 @@ export class NuveiService {
     if (email) {
       await this.sendConfirmation({
         to: email,
+        userId: txRow?.user_id || undefined,
         subject: 'Your Cortexa refund has been processed',
         lines: [
           ['Amount refunded', this.money(input.amount ?? Number(txRow?.amount || 0))],
