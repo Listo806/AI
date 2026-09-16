@@ -31,6 +31,14 @@ export function stripLocaleFromPath(pathname) {
   return "/" + parts.join("/");
 }
 
+// The language a URL asks for: "/es/checkout" -> "es", "/pt" -> "pt",
+// "/checkout" -> "en". The URL is the single source of truth for the language
+// of a public page, ahead of any stored preference.
+export function localeCodeFromPath(pathname) {
+  const first = String(pathname || "/").split("/").filter(Boolean)[0];
+  return (first && byPrefix[first] && byPrefix[first].code) || "en";
+}
+
 // Build the localized path for a base path in a given locale code.
 // ("/pricing","en") -> "/pricing", ("/pricing","es") -> "/es/pricing",
 // ("/","es") -> "/es", ("/","en") -> "/".
