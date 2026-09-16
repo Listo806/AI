@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   User, Mail, Phone, Layers, CreditCard, Calendar, Lock, ShieldCheck,
   Edit2, ExternalLink, HelpCircle, Zap,
@@ -13,7 +13,7 @@ import {
 import { mountNuveiForm } from "./nuveiSdk";
 import apiClient from "../../api/apiClient";
 import { clearSetupOffer } from "../../utils/offer";
-import { buildLocalizedPath } from "../../i18n/locales";
+import { buildLocalizedPath, localeCodeFromPath } from "../../i18n/locales";
 import "./CheckoutNuvei.css";
 
 const PLAN_DATA = {
@@ -56,13 +56,74 @@ const t = {
     errPending: "Your payment is still being verified. Please wait a moment and refresh, or contact support if this continues.",
     unavailable: "Payments are being finalized and are not available right now. Please contact support.",
   },
+  es: {
+    secureCheckout: "Pago seguro", brand: "CRM Agéntico",
+    s1: "Cuenta", s1s: "Completado", s2: "Plan", s2s: "Completado", s3: "Pago seguro", s3s: "Datos de tu tarjeta",
+    infoTitle: "Tu información", infoSub: "Esta es la cuenta que crearemos para tu suscripción.", edit: "Editar",
+    fullName: "Nombre completo", email: "Correo electrónico", phone: "Número de teléfono",
+    planTitle: "Tu plan seleccionado", planSub: "Revisa los detalles de tu plan.", changePlan: "Cambiar plan",
+    planNames: { solo: "Plan Solo", team: "Plan Business", growth: "Plan Scale" },
+    userOne: "1 usuario", userMany: "{n} usuarios", workspace: "Un espacio de trabajo incluido",
+    activationFee: "Cuota de activación — a pagar hoy", trial: "Prueba de 14 días", included: "Incluida",
+    firstPayment: "Primer pago mensual — {date}", thenMonthly: "Luego ${p}/mes hasta que canceles",
+    dueToday: "Total a pagar hoy",
+    payTitle: "Pago seguro con tarjeta", paySub: "Activa tu cuenta y comienza tu prueba de 14 días.",
+    cardHint: "Ingresa tu tarjeta en el formulario seguro de Nuvei:",
+    agreePrefix: "Acepto los", terms: "Términos y Condiciones", and: "y", privacy: "Política de Privacidad",
+    paySecurely: "Pagar ${a} de forma segura", processing: "Activando tu cuenta...",
+    tokenization: "Tokenización segura", threeds: "Protegido con 3DS",
+    processedBy: "Pagos seguros procesados por Nuvei / Datafast.",
+    nextTitle: "¿Qué sigue?", nextSub: "Ya casi está. Esto es lo que puedes esperar:",
+    next1: "Cuenta activada hoy", next1s: "Acceso inmediato a Cortexa.",
+    next2: "Administra o cancela desde Facturación", next2s: "Tú tienes el control en todo momento.",
+    errTerms: "Acepta los Términos y Condiciones para continuar.",
+    errCard: "Completa los datos de tu tarjeta.",
+    errServer: "Algo salió mal. Inténtalo de nuevo o usa otra tarjeta.",
+    errDeclined: "No se pudo completar el pago. Prueba con otra tarjeta.",
+    errAlreadySubscribed: "Ya tienes una suscripción {plan} activa. Para cambiar de plan, contacta con soporte.",
+    errConfig: "No pudimos cargar el formulario de pago. Actualiza la página o inténtalo en un momento.",
+    errPending: "Tu pago aún se está verificando. Espera un momento y actualiza, o contacta con soporte si continúa.",
+    unavailable: "Los pagos se están finalizando y no están disponibles en este momento. Contacta con soporte.",
+  },
+  pt: {
+    secureCheckout: "Pagamento seguro", brand: "CRM Agêntico",
+    s1: "Conta", s1s: "Concluído", s2: "Plano", s2s: "Concluído", s3: "Pagamento seguro", s3s: "Dados do seu cartão",
+    infoTitle: "Suas informações", infoSub: "Esta é a conta que criaremos para a sua assinatura.", edit: "Editar",
+    fullName: "Nome completo", email: "Endereço de e-mail", phone: "Número de telefone",
+    planTitle: "Seu plano selecionado", planSub: "Confira os detalhes do seu plano.", changePlan: "Trocar plano",
+    planNames: { solo: "Plano Solo", team: "Plano Business", growth: "Plano Scale" },
+    userOne: "1 usuário", userMany: "{n} usuários", workspace: "Um workspace incluído",
+    activationFee: "Taxa de ativação — a pagar hoje", trial: "Teste de 14 dias", included: "Incluído",
+    firstPayment: "Primeiro pagamento mensal — {date}", thenMonthly: "Depois ${p}/mês até cancelar",
+    dueToday: "Total a pagar hoje",
+    payTitle: "Pagamento seguro com cartão", paySub: "Ative sua conta e comece seu teste de 14 dias.",
+    cardHint: "Informe seu cartão no formulário seguro da Nuvei:",
+    agreePrefix: "Concordo com os", terms: "Termos e Condições", and: "e", privacy: "Política de Privacidade",
+    paySecurely: "Pagar ${a} com segurança", processing: "Ativando sua conta...",
+    tokenization: "Tokenização segura", threeds: "Protegido por 3DS",
+    processedBy: "Pagamentos seguros processados pela Nuvei / Datafast.",
+    nextTitle: "O que acontece agora?", nextSub: "Está quase pronto. Veja o que esperar:",
+    next1: "Conta ativada hoje", next1s: "Acesso imediato ao Cortexa.",
+    next2: "Gerencie ou cancele em Faturamento", next2s: "Você tem o controle a qualquer momento.",
+    errTerms: "Aceite os Termos e Condições para continuar.",
+    errCard: "Preencha os dados do seu cartão.",
+    errServer: "Algo deu errado. Tente novamente ou use outro cartão.",
+    errDeclined: "Não foi possível concluir o pagamento. Tente outro cartão.",
+    errAlreadySubscribed: "Você já tem uma assinatura {plan} ativa. Para trocar de plano, fale com o suporte.",
+    errConfig: "Não conseguimos carregar o formulário de pagamento. Atualize a página ou tente novamente em instantes.",
+    errPending: "Seu pagamento ainda está sendo verificado. Aguarde um momento e atualize, ou fale com o suporte se continuar.",
+    unavailable: "Os pagamentos estão sendo finalizados e não estão disponíveis no momento. Fale com o suporte.",
+  },
 };
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { refreshUser, user, loading: authLoading, setUser } = useAuth();
   const [searchParams] = useSearchParams();
-  const [lang] = useState(() => localStorage.getItem("cortexa_lang") || "en");
+  // The URL decides the language: /checkout is English, /es/checkout Spanish,
+  // /pt/checkout Portuguese.
+  const { pathname } = useLocation();
+  const [lang] = useState(() => localeCodeFromPath(pathname));
   const tr = t[lang] || t.en;
 
   const resolvedPlan = normalizePlan(searchParams.get("plan") || localStorage.getItem("trialPlan"));
@@ -133,7 +194,9 @@ export default function CheckoutPage() {
     // Drop the stale in-memory user too, or the sign-in page bounces a
     // "logged-in" visitor straight back here without showing the form.
     try { setUser(null); } catch (e) { /* ignore */ }
-    navigate("/sign-in?next=/checkout", { replace: true });
+    // Keep the customer in their language when they come back.
+    const back = buildLocalizedPath("/checkout", lang);
+    navigate(`${buildLocalizedPath("/sign-in", lang)}?next=${encodeURIComponent(back)}`, { replace: true });
   };
   useEffect(() => {
     if (authLoading || !planIsValid) return;

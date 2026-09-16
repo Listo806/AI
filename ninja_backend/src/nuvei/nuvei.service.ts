@@ -3137,7 +3137,11 @@ export class NuveiService {
         dev_reference: reference,
         currency: 'USD',
       },
-      locale: input.locale || 'en',
+      // Nuvei's hosted Checkout takes the page language; send only a code it
+      // knows, defaulting to English.
+      locale: ['en', 'es', 'pt'].includes(String(input.locale || '').toLowerCase())
+        ? String(input.locale).toLowerCase()
+        : 'en',
     });
     const checkoutUrl =
       res.body?.checkout_url || res.body?.data?.checkout_url || res.body?.payment?.checkout_url || null;
