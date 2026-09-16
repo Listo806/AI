@@ -5,3 +5,6 @@ ALTER TABLE nuvei_webhook_events ALTER COLUMN status TYPE VARCHAR(32);
 ALTER TABLE nuvei_transactions ADD COLUMN IF NOT EXISTS refunded_amount NUMERIC(12,2) NOT NULL DEFAULT 0;
 ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS return_url TEXT;
+
+-- Link to Pay: Nuvei's own order id (data.order.id) and the order currency.
+ALTER TABLE nuvei_link_to_pay ADD COLUMN IF NOT EXISTS ltp_id TEXT;
