@@ -2606,7 +2606,7 @@ export class NuveiService {
     if (!transactionId) throw new BadRequestException('A transaction id is required.');
 
     const { rows } = await this.db.query(
-      `SELECT id, subscription_id, user_id, amount, status, refunded_amount
+      `SELECT id, subscription_id, user_id, kind, amount, status, refunded_amount
          FROM nuvei_transactions WHERE provider_transaction_id = $1`,
       [transactionId],
     );
@@ -2662,7 +2662,24 @@ export class NuveiService {
       throw new BadRequestException('This transaction is already being refunded or has nothing left to refund.');
     }
 
-    const res = await this.client.refund(transactionId, full && already === 0 ? undefined : amount);
+    // A Link to Pay payment belongs to the Link to Pay application once Nuvei
+    // activates a separate one; links created before that belong to the cards
+    // application. Try the likely owner first and, only if Nuvei rejects the
+    // request outright (4xx, nothing refunded), the other one.
+    const refundAmount = full && already === 0 ? undefined : amount;
+    const apps: Array<'server' | 'linktopay'> =
+      txRow.kind === 'link_to_pay' && this.client.hasSeparateLinkToPayApp()
+        ? ['linktopay', 'server']
+        : ['server'];
+    let res = await this.client.refund(transactionId, refundAmount, apps[0]);
+    if (
+      apps[1] &&
+      String(res.body?.status || '').toLowerCase() !== 'success' &&
+      res.httpStatus >= 400 &&
+      res.httpStatus < 500
+    ) {
+      res = await this.client.refund(transactionId, refundAmount, apps[1]);
+    }
     const ok = String(res.body?.status || '').toLowerCase() === 'success';
     if (!ok) {
       if (res.httpStatus === 0 || !res.body) {
