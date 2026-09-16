@@ -2117,7 +2117,7 @@ export class NuveiService {
     // Match to an order we created: the activation (subscription dev_reference)
     // or any charge row (activation / recurring) by dev_reference or tx id.
     const txRowRes = await this.db.query(
-      `SELECT id, subscription_id, user_id, kind, period_key, amount, status,
+      `SELECT id, subscription_id, user_id, kind, period_key, amount, currency, status, message,
               provider_transaction_id, dev_reference
          FROM nuvei_transactions
         WHERE ($1::text IS NOT NULL AND dev_reference = $1)
@@ -2754,11 +2754,18 @@ export class NuveiService {
     providerTxId: string | null,
   ): Promise<{ handled: string; verified: boolean }> {
     const approved = this.isApproved({ transaction: tx });
-    if (approved && ['pending', 'unconfirmed'].includes(String(txRow.status))) {
+    const failed = this.isDefinitiveFailure({ transaction: tx });
+    const reversal = this.isReversal({ transaction: tx });
+    const open = ['pending', 'unconfirmed'].includes(String(txRow.status));
+
+    if (approved && open) {
       if (!this.amountMatches(tx?.amount, txRow.amount)) {
+        this.logger.warn(
+          `Nuvei ${txRow.kind} amount mismatch for ${txRow.dev_reference}: got ${tx?.amount}, expected ${txRow.amount}`,
+        );
         return { handled: 'amount_mismatch', verified: false };
       }
-      await this.db.query(
+      const { rowCount } = await this.db.query(
         `UPDATE nuvei_transactions
             SET status = 'success', status_detail = 3,
                 provider_transaction_id = COALESCE($2, provider_transaction_id),
@@ -2766,7 +2773,40 @@ export class NuveiService {
           WHERE id = $1 AND status IN ('pending','unconfirmed')`,
         [txRow.id, providerTxId, tx?.authorization_code || null],
       );
-      return { handled: 'standalone_paid', verified: true };
+      if (!rowCount) return { handled: 'already_processed', verified: true };
+      // Nuvei requires a payment confirmation email after EVERY successful
+      // transaction, one-time payments included.
+      const email = await this.emailForUser(txRow.user_id);
+      if (email) {
+        await this.sendConfirmation({
+          to: email,
+          userId: txRow.user_id,
+          subject: 'Your Cortexa payment has been received',
+          lines: [
+            ['Description', txRow.message || 'Cortexa payment'],
+            ['Amount', this.money(Number(txRow.amount), txRow.currency)],
+            ['Transaction ID', providerTxId || '—'],
+            ['Authorization code', tx?.authorization_code || '—'],
+            ['Status', 'Paid'],
+          ],
+        });
+      }
+      return { handled: txRow.kind === 'checkout' ? 'checkout_paid' : 'standalone_paid', verified: true };
+    }
+    if (failed && open) {
+      await this.db.query(
+        `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message)
+          WHERE id = $1 AND status IN ('pending','unconfirmed')`,
+        [txRow.id, Number.isFinite(Number(tx?.status_detail)) ? Number(tx.status_detail) : null, tx?.message || null],
+      );
+      return { handled: 'checkout_declined', verified: true };
+    }
+    if (reversal && String(txRow.status) === 'success') {
+      await this.db.query(
+        `UPDATE nuvei_transactions SET status = 'refunded', refunded_amount = amount WHERE id = $1`,
+        [txRow.id],
+      );
+      return { handled: 'checkout_reversed', verified: true };
     }
     return { handled: 'already_processed', verified: false };
   }
