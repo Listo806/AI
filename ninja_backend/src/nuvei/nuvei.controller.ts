@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Headers,
@@ -205,6 +206,39 @@ export class NuveiController {
       requireUuid(body?.cardId, 'card id'),
       this.isTrueAdmin(user),
     );
+  }
+
+  // Nuvei's MANDATORY verification step (one-time password / authorization
+  // code / amount) for cards whose issuer asks for it, Diners group included.
+  @Post('subscription/:id/verify')
+  @UseGuards(JwtAuthGuard)
+  async verifyPayment(@CurrentUser() user: any, @Param('id') id: string, @Body() body: any) {
+    return this.nuvei.verifyPayment({
+      subscriptionId: requireUuid(id, 'subscription id'),
+      userId: user?.id,
+      isAdmin: this.isTrueAdmin(user),
+      type: String(body?.type || 'BY_OTP'),
+      value: String(body?.value || body?.code || ''),
+    });
+  }
+
+  // Forget a stored card (Nuvei Delete Card + the local record).
+  @Delete('cards/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteCard(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.nuvei.deleteSavedCard(requireUuid(id, 'card id'), user?.id);
+  }
+
+  // Nuvei hosted Checkout for a ONE-TIME payment: returns the checkout URL.
+  @Post('checkout-reference')
+  @UseGuards(JwtAuthGuard)
+  async checkoutReference(@CurrentUser() user: any, @Body() body: any) {
+    return this.nuvei.createCheckoutReference({
+      userId: user?.id,
+      amount: Number(body?.amount),
+      description: String(body?.description || 'Cortexa payment'),
+      locale: body?.locale,
+    });
   }
 
   // Cancel the user's own subscription (access continues until the paid

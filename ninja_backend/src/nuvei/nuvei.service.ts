@@ -291,6 +291,10 @@ export class NuveiService {
     await this.db.query(
       `ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS return_url TEXT`,
     );
+    // Nuvei's own Link-to-Pay order id, returned as data.order.id.
+    await this.db.query(
+      `ALTER TABLE nuvei_link_to_pay ADD COLUMN IF NOT EXISTS ltp_id TEXT`,
+    );
     // Running total of partial refunds on a charge.
     await this.db.query(
       `ALTER TABLE nuvei_transactions ADD COLUMN IF NOT EXISTS refunded_amount NUMERIC(12,2) NOT NULL DEFAULT 0`,
@@ -2076,15 +2080,23 @@ export class NuveiService {
     // Only the SERVER application (the one that moves money) can sign a
     // callback we act on. The CLIENT app key is published to the browser SDK,
     // so a signature with it proves nothing.
-    const serverCode = this.client.serverAppCode();
-    const serverKey = this.client.appKeyFor(serverCode);
-    if (!serverCode || !serverKey) return false;
-    if (appCode && appCode !== serverCode) return false;
-    const h = crypto
-      .createHash('md5')
-      .update(`${txId}_${serverCode}_${userId}_${serverKey}`)
-      .digest('hex');
-    return this.safeEqual(h, stoken);
+    // Only an application that can move money may sign a callback we act on:
+    // the cards SERVER application, or the separate Link-to-Pay application.
+    // Never the CLIENT application, whose key is published to the browser.
+    const codes = [this.client.serverAppCode(), this.client.linkToPayAppCode()]
+      .filter(Boolean)
+      .filter((c, i, a) => a.indexOf(c) === i);
+    for (const code of codes) {
+      if (appCode && appCode !== code) continue;
+      const key = this.client.appKeyFor(code);
+      if (!key) continue;
+      const h = crypto
+        .createHash('md5')
+        .update(`${txId}_${code}_${userId}_${key}`)
+        .digest('hex');
+      if (this.safeEqual(h, stoken)) return true;
+    }
+    return false;
   }
 
   private safeEqual(a: string, b: string): boolean {
@@ -2124,6 +2136,12 @@ export class NuveiService {
       [devReference, txRow?.subscription_id || null],
     );
     const sub = subRes.rows[0] || null;
+
+    // A one-time payment (hosted Checkout) or a Link-to-Pay order has no
+    // subscription; it is settled from its own transaction row below.
+    if (!sub && txRow && ['checkout', 'link_to_pay'].includes(String(txRow.kind))) {
+      return this.settleStandaloneCharge(txRow, tx, providerTxId);
+    }
 
     const approved = this.isApproved(payload);
     const failed = this.isDefinitiveFailure(payload);
@@ -2213,6 +2231,53 @@ export class NuveiService {
           return { handled: 'already_processed', verified: true };
         }
         return { handled: 'ignored', verified: false };
+      }
+
+      if (txRow && txRow.kind === 'checkout') {
+        if (confirmed && ['pending', 'unconfirmed'].includes(String(txRow.status))) {
+          if (!this.amountMatches(tx?.amount, txRow.amount)) {
+            return { handled: 'amount_mismatch', verified: false };
+          }
+          await this.db.query(
+            `UPDATE nuvei_transactions
+                SET status = 'success', status_detail = 3,
+                    provider_transaction_id = COALESCE($2, provider_transaction_id),
+                    authorization_code = COALESCE($3, authorization_code)
+              WHERE id = $1 AND status IN ('pending','unconfirmed')`,
+            [txRow.id, providerTxId, tx?.authorization_code || null],
+          );
+          const email = await this.emailForUser(txRow.user_id);
+          if (email) {
+            await this.sendConfirmation({
+              to: email,
+              userId: txRow.user_id,
+              subject: 'Your Cortexa payment has been received',
+              lines: [
+                ['Description', txRow.message || 'Cortexa payment'],
+                ['Amount', this.money(Number(txRow.amount), txRow.currency)],
+                ['Transaction ID', providerTxId || '—'],
+                ['Authorization code', tx?.authorization_code || '—'],
+                ['Status', 'Paid'],
+              ],
+            });
+          }
+          return { handled: 'checkout_paid', verified: true };
+        }
+        if (failed && ['pending', 'unconfirmed'].includes(String(txRow.status))) {
+          await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2 WHERE id = $1`,
+            [txRow.id, Number.isFinite(Number(tx?.status_detail)) ? Number(tx.status_detail) : null],
+          );
+          return { handled: 'checkout_declined', verified: true };
+        }
+        if (reversal && String(txRow.status) === 'success') {
+          await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'refunded', refunded_amount = amount WHERE id = $1`,
+            [txRow.id],
+          );
+          return { handled: 'checkout_reversed', verified: true };
+        }
+        return { handled: 'already_processed', verified: false };
       }
 
       if (txRow && txRow.kind === 'recurring') {
@@ -2314,25 +2379,84 @@ export class NuveiService {
     // Link-to-Pay callbacks.
     if (devReference) {
       const ltp = await this.db.query(
-        `SELECT id FROM nuvei_link_to_pay WHERE reference = $1`,
+        `SELECT id, amount, currency, description, customer_email, customer_name, status
+           FROM nuvei_link_to_pay WHERE reference = $1`,
         [devReference],
       );
       if (ltp.rows[0]) {
         if (reversal) {
-          await this.db.query(
+          const { rowCount } = await this.db.query(
             `UPDATE nuvei_link_to_pay SET status = 'refunded' WHERE id = $1 AND status = 'paid'`,
             [ltp.rows[0].id],
           );
+          await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'refunded', refunded_amount = amount
+              WHERE dev_reference = $1 AND kind = 'link_to_pay' AND status <> 'refunded'`,
+            [devReference],
+          );
+          if (rowCount) {
+            await this.sendConfirmation({
+              to: ltp.rows[0].customer_email,
+              subject: 'Your Cortexa refund has been processed',
+              lines: [
+                ['Description', ltp.rows[0].description || 'Cortexa Web Solutions'],
+                ['Amount refunded', this.money(Number(ltp.rows[0].amount), ltp.rows[0].currency)],
+                ['Reference', devReference || '—'],
+                ['Status', 'Refunded'],
+              ],
+            });
+          }
           return { handled: 'link_to_pay_reversed', verified: true };
         }
         if (confirmed) {
-          await this.db.query(
+          const row = ltp.rows[0];
+          if (!this.amountMatches(tx?.amount, row.amount)) {
+            this.logger.warn(
+              `Nuvei Link-to-Pay amount mismatch for ${devReference}: got ${tx?.amount}, expected ${row.amount}`,
+            );
+            return { handled: 'amount_mismatch', verified: false };
+          }
+          const { rowCount } = await this.db.query(
             `UPDATE nuvei_link_to_pay
                SET status = 'paid', provider_transaction_id = $2,
                    authorization_code = $3, paid_at = NOW()
-             WHERE id = $1`,
-            [ltp.rows[0].id, providerTxId, tx?.authorization_code || null],
+             WHERE id = $1 AND status <> 'paid'`,
+            [row.id, providerTxId, tx?.authorization_code || null],
           );
+          if (!rowCount) return { handled: 'already_processed', verified: true };
+          // Record it as a transaction so the mandatory Refund method can be
+          // used on a Link-to-Pay payment exactly like any card charge.
+          await this.db
+            .query(
+              `INSERT INTO nuvei_transactions
+                 (subscription_id, user_id, kind, dev_reference, provider_transaction_id,
+                  authorization_code, amount, currency, status, status_detail, message)
+               VALUES (NULL, NULL, 'link_to_pay', $1, $2, $3, $4, $5, 'success', 3, $6)`,
+              [
+                devReference,
+                providerTxId,
+                tx?.authorization_code || null,
+                row.amount,
+                row.currency || 'USD',
+                row.description || 'Link to Pay',
+              ],
+            )
+            .catch((err: any) => {
+              if (err?.code !== '23505') this.logger.warn(`link-to-pay transaction row failed: ${err?.message}`);
+            });
+          // Payment confirmation email, as Nuvei requires after every payment.
+          await this.sendConfirmation({
+            to: row.customer_email,
+            subject: 'Your Cortexa payment has been received',
+            lines: [
+              ['Description', row.description || 'Cortexa Web Solutions'],
+              ['Amount', this.money(Number(row.amount), row.currency)],
+              ['Reference', devReference || '—'],
+              ['Transaction ID', providerTxId || '—'],
+              ['Authorization code', tx?.authorization_code || '—'],
+              ['Status', 'Paid'],
+            ],
+          });
           return { handled: 'link_to_pay_paid', verified: true };
         }
         return { handled: 'link_to_pay_unconfirmed', verified: false };
@@ -2574,6 +2698,15 @@ export class NuveiService {
     if (full && txRow.subscription_id) {
       await this.revokeForRefund(txRow.subscription_id);
     }
+    if (full && !txRow.subscription_id) {
+      await this.db
+        .query(
+          `UPDATE nuvei_link_to_pay SET status = 'refunded'
+            WHERE provider_transaction_id = $1 AND status = 'paid'`,
+          [transactionId],
+        )
+        .catch(() => undefined);
+    }
 
     // Refund confirmation email.
     const email = await this.emailForTransaction(transactionId);
@@ -2599,6 +2732,43 @@ export class NuveiService {
       refundedAmount: amount,
       full,
     };
+  }
+
+  private async emailForUser(userId: string | null): Promise<string | null> {
+    if (!userId) return null;
+    try {
+      const { rows } = await this.db.query(`SELECT email FROM users WHERE id = $1`, [userId]);
+      return rows[0]?.email || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Settle a charge that belongs to no subscription (hosted Checkout or a
+   * Link-to-Pay order matched by transaction id rather than reference).
+   */
+  private async settleStandaloneCharge(
+    txRow: any,
+    tx: any,
+    providerTxId: string | null,
+  ): Promise<{ handled: string; verified: boolean }> {
+    const approved = this.isApproved({ transaction: tx });
+    if (approved && ['pending', 'unconfirmed'].includes(String(txRow.status))) {
+      if (!this.amountMatches(tx?.amount, txRow.amount)) {
+        return { handled: 'amount_mismatch', verified: false };
+      }
+      await this.db.query(
+        `UPDATE nuvei_transactions
+            SET status = 'success', status_detail = 3,
+                provider_transaction_id = COALESCE($2, provider_transaction_id),
+                authorization_code = COALESCE($3, authorization_code)
+          WHERE id = $1 AND status IN ('pending','unconfirmed')`,
+        [txRow.id, providerTxId, tx?.authorization_code || null],
+      );
+      return { handled: 'standalone_paid', verified: true };
+    }
+    return { handled: 'already_processed', verified: false };
   }
 
   private async emailForTransaction(providerTxId: string): Promise<string | null> {
@@ -2789,6 +2959,161 @@ export class NuveiService {
     };
   }
 
+  /**
+   * Nuvei's MANDATORY verification method (POST /v2/transaction/verify), used
+   * when the issuer asks for an extra check before a charge can be approved:
+   * a one-time password (Diners group in Ecuador, status_detail 31), an
+   * authorization code, or a deposited amount.
+   *
+   * On success the activation is finalized from the transaction's real status,
+   * so the customer ends up activated exactly as in the normal flow.
+   */
+  async verifyPayment(input: {
+    subscriptionId: string;
+    userId: string;
+    isAdmin: boolean;
+    type: string;
+    value: string;
+  }): Promise<{ status: SubStatus; subscriptionId: string; message?: string }> {
+    this.assertEnabled();
+    await this.ensureSchema();
+    const type = String(input.type || 'BY_OTP').trim().toUpperCase();
+    if (!['BY_OTP', 'BY_AUTH_CODE', 'BY_AMOUNT'].includes(type)) {
+      throw new BadRequestException('Unsupported verification type.');
+    }
+    const value = String(input.value || '').trim();
+    if (!value) throw new BadRequestException('A verification value is required.');
+
+    const { rows } = await this.db.query(
+      `SELECT s.id, s.user_id, s.status, t.provider_transaction_id
+         FROM nuvei_subscriptions s
+         LEFT JOIN nuvei_transactions t
+           ON t.subscription_id = s.id AND t.kind = 'activation'
+        WHERE s.id = $1
+        ORDER BY t.created_at DESC LIMIT 1`,
+      [input.subscriptionId],
+    );
+    const sub = rows[0];
+    if (!sub) throw new NotFoundException('Subscription not found');
+    if (!input.isAdmin && String(sub.user_id) !== String(input.userId)) {
+      throw new ForbiddenException();
+    }
+    if (!sub.provider_transaction_id) {
+      throw new BadRequestException('This payment has no transaction to verify yet.');
+    }
+
+    const res = await this.client.verifyWithValue(
+      String(sub.user_id),
+      String(sub.provider_transaction_id),
+      type,
+      value,
+    );
+    if (!res.ok) {
+      const why = res.body?.error?.description || res.body?.error?.type || res.body?.detail || res.error;
+      this.logger.warn(`Nuvei verify failed for sub ${sub.id}: HTTP ${res.httpStatus} ${JSON.stringify(why || {}).slice(0, 200)}`);
+      throw new BadRequestException(
+        'The code could not be verified. Please check it and try again.',
+      );
+    }
+    const status = (await this.reconcilePendingActivation(sub.id)) || sub.status;
+    return {
+      status,
+      subscriptionId: sub.id,
+      message:
+        status === 'payment_failed'
+          ? 'The payment could not be completed. Please try another card.'
+          : status === 'pending_activation'
+            ? 'Your payment is still being verified. Your account will activate automatically once confirmed.'
+            : undefined,
+    };
+  }
+
+  /**
+   * Forget a stored card at Nuvei and locally (Nuvei's Delete Card method). A
+   * card a live subscription bills to cannot be removed, or its recurring
+   * charge would be orphaned.
+   */
+  async deleteSavedCard(cardId: string, userId: string): Promise<{ ok: boolean; message: string }> {
+    this.assertEnabled();
+    await this.ensureSchema();
+    const { rows } = await this.db.query(
+      `SELECT id, token_enc FROM nuvei_cards WHERE id = $1 AND user_id = $2`,
+      [cardId, userId],
+    );
+    if (!rows[0]) throw new NotFoundException('Saved card not found');
+    const { rows: inUse } = await this.db.query(
+      `SELECT id FROM nuvei_subscriptions
+        WHERE card_id = $1 AND status IN ('trialing','active','past_due')
+        LIMIT 1`,
+      [cardId],
+    );
+    if (inUse[0]) {
+      throw new BadRequestException(
+        'This card pays for an active subscription. Add another card first, or cancel the subscription.',
+      );
+    }
+    const token = decryptToken(rows[0].token_enc, this.config.get('NUVEI_TOKEN_ENC_KEY'));
+    const res = await this.client.deleteCard(String(userId), token);
+    const ok = res.ok || res.body?.message === 'card deleted' || res.httpStatus === 404;
+    if (!ok) {
+      throw new BadRequestException(
+        `The card could not be removed: ${res.body?.error?.description || res.body?.detail || res.error || 'unknown error'}`,
+      );
+    }
+    await this.db.query(`DELETE FROM nuvei_cards WHERE id = $1 AND user_id = $2`, [cardId, userId]);
+    return { ok: true, message: 'Card removed.' };
+  }
+
+  /**
+   * Nuvei's hosted Checkout for a ONE-TIME payment: creates a reference and
+   * returns the checkout URL to send the customer to. The verified callback
+   * confirms it, exactly like every other charge.
+   */
+  async createCheckoutReference(input: {
+    userId: string;
+    amount: number;
+    description: string;
+    locale?: string;
+  }): Promise<{ reference: string; checkoutUrl: string | null; transactionId?: string }> {
+    this.assertEnabled();
+    await this.ensureSchema();
+    const amount = Number(input.amount);
+    if (!(amount > 0)) throw new BadRequestException('A positive amount is required.');
+    const user = await this.userRow(input.userId);
+    const reference = this.devRef('CHK');
+
+    await this.db.query(
+      `INSERT INTO nuvei_transactions
+         (subscription_id, user_id, kind, dev_reference, amount, status, message)
+       VALUES (NULL,$1,'checkout',$2,$3,'pending',$4)`,
+      [input.userId, reference, amount, input.description || 'Cortexa payment'],
+    );
+
+    const res = await this.client.initReference({
+      user: this.toNuveiUser(user),
+      order: {
+        amount,
+        description: input.description || 'Cortexa payment',
+        dev_reference: reference,
+        currency: 'USD',
+      },
+      locale: input.locale || 'en',
+    });
+    const checkoutUrl =
+      res.body?.checkout_url || res.body?.data?.checkout_url || res.body?.payment?.checkout_url || null;
+    if (!checkoutUrl) {
+      await this.db.query(
+        `UPDATE nuvei_transactions SET status = 'error', message = $2 WHERE dev_reference = $1`,
+        [reference, String(res.body?.error?.description || res.error || 'no checkout url').slice(0, 300)],
+      );
+      this.logger.error(`Nuvei Checkout init_reference failed: HTTP ${res.httpStatus} ${JSON.stringify(res.body || {}).slice(0, 300)}`);
+      throw new BadRequestException(
+        `Nuvei did not return a checkout link: ${res.body?.error?.description || res.body?.detail || res.error || 'unknown error'}`,
+      );
+    }
+    return { reference, checkoutUrl, transactionId: res.body?.reference || undefined };
+  }
+
   // ---- Link to Pay (custom Web Solutions quotations) -------------------
 
   /**
@@ -2847,19 +3172,21 @@ export class NuveiService {
 
     await this.db.query(
       `INSERT INTO nuvei_link_to_pay
-         (reference, customer_name, customer_email, description, amount, status, pay_url, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+         (reference, customer_name, customer_email, description, amount, currency, status, pay_url, created_by, ltp_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        ON CONFLICT (reference)
-       DO UPDATE SET pay_url = EXCLUDED.pay_url`,
+       DO UPDATE SET pay_url = EXCLUDED.pay_url, ltp_id = EXCLUDED.ltp_id`,
       [
         reference,
         input.customerName || null,
         input.customerEmail,
         input.description || null,
         amount,
+        'USD',
         payUrl ? 'pending' : 'error',
         payUrl,
         input.adminId || null,
+        res.body?.data?.order?.id || null,
       ],
     );
 
@@ -3022,8 +3349,8 @@ export class NuveiService {
     }
   }
 
-  private money(n: number): string {
-    return `$${Number(n).toFixed(2)}`;
+  private money(n: number, currency = 'USD'): string {
+    return `$${Number(n).toFixed(2)} ${String(currency || 'USD').toUpperCase()}`;
   }
 
   private backendUrl(): string {

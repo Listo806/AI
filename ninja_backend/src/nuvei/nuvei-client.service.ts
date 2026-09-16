@@ -42,6 +42,8 @@ export interface NuveiOrder {
   description: string;
   dev_reference: string;
   vat?: number;
+  taxable_amount?: number;
+  tax_percentage?: number;
   installments?: number;
   installments_type?: number;
   currency?: string;
@@ -133,6 +135,26 @@ export class NuveiClientService {
   }
 
   /**
+   * Link-to-Pay application. Nuvei issues a SEPARATE application for Link to
+   * Pay (a different code and key from the cards application), so its requests
+   * must be signed with it and its callbacks verified against it. Falls back to
+   * the cards server application while the dedicated pair is not configured.
+   */
+  linkToPayAppCode(): string {
+    return (
+      String(this.config.get('NUVEI_LTP_APP_CODE') || '').trim() ||
+      this.serverAppCode()
+    );
+  }
+
+  private linkToPayAppKey(): string {
+    return (
+      String(this.config.get('NUVEI_LTP_APP_KEY') || '').trim() ||
+      String(this.config.get('NUVEI_SERVER_APP_KEY') || '').trim()
+    );
+  }
+
+  /**
    * Key for a given application code, used to check the `stoken` Nuvei sends
    * in its webhook (md5 of transaction_id_app_code_user_id_app_key). Both the
    * SERVER and the CLIENT (browser tokenization) apps can originate events.
@@ -142,6 +164,9 @@ export class NuveiClientService {
     if (!code) return null;
     if (code === this.serverAppCode()) {
       return String(this.config.get('NUVEI_SERVER_APP_KEY') || '').trim() || null;
+    }
+    if (code === this.linkToPayAppCode()) {
+      return this.linkToPayAppKey() || null;
     }
     if (code === String(this.config.get('NUVEI_CLIENT_APP_CODE') || '').trim()) {
       return String(this.config.get('NUVEI_CLIENT_APP_KEY') || '').trim() || null;
@@ -153,6 +178,7 @@ export class NuveiClientService {
     method: 'POST' | 'GET',
     url: string,
     payload?: any,
+    app: 'server' | 'linktopay' = 'server',
   ): Promise<NuveiCallResult> {
     let res: Response;
     // A hung gateway must never hang a checkout: fail the call after 45s so
@@ -164,7 +190,10 @@ export class NuveiClientService {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Auth-Token': this.serverAuthToken(),
+          'Auth-Token':
+            app === 'linktopay'
+              ? this.authToken(this.linkToPayAppCode(), this.linkToPayAppKey())
+              : this.serverAuthToken(),
         },
         body: method === 'POST' ? JSON.stringify(payload ?? {}) : undefined,
         signal: ac.signal,
@@ -325,14 +354,19 @@ export class NuveiClientService {
       review_url: string;
     };
   }): Promise<NuveiCallResult> {
+    const rate = Number(this.config.get('NUVEI_VAT_RATE') || '0.15');
     const o: any = { installments_type: 0, currency: 'USD', ...input.order };
-    // Same tax rule as card debits: amount is tax-inclusive (IVA 15%).
+    // Same tax rule as card debits: the amount is tax inclusive (IVA 15%), and
+    // Nuvei's documented Link-to-Pay body carries vat, taxable_amount and
+    // tax_percentage together.
     if (o.vat == null) {
-      const rate = Number(this.config.get('NUVEI_VAT_RATE') || '0.15');
       const amt = Number(o.amount) || 0;
       const taxable = Number((amt / (1 + rate)).toFixed(2));
       o.taxable_amount = taxable;
       o.vat = Number((amt - taxable).toFixed(2));
+    }
+    if (o.tax_percentage == null) {
+      o.tax_percentage = Number((rate * 100).toFixed(2));
     }
     return this.request(
       'POST',
@@ -347,11 +381,62 @@ export class NuveiClientService {
         order: o,
         configuration: {
           partial_payment: false,
-          expiration_days: 7,
-          allowed_payment_methods: ['Card'],
+          expiration_time: 36000,
+          allowed_payment_methods: ['All'],
           ...input.configuration,
         },
       },
+      'linktopay',
     );
+  }
+
+  /**
+   * POST /v2/transaction/verify — Nuvei's MANDATORY verification method for
+   * Diners-group cards and any card whose issuer asks for an extra check
+   * (one-time password, authorization code, amount). `type` is one of
+   * BY_AMOUNT, BY_AUTH_CODE, BY_OTP.
+   */
+  async verifyWithValue(
+    userId: string,
+    transactionId: string,
+    type: string,
+    value: string,
+    moreInfo = true,
+  ): Promise<NuveiCallResult> {
+    return this.request('POST', `${this.cardsBase()}/v2/transaction/verify`, {
+      user: { id: String(userId) },
+      transaction: { id: String(transactionId) },
+      type,
+      value,
+      more_info: moreInfo,
+    });
+  }
+
+  /**
+   * POST /v2/transaction/init_reference/ — Nuvei's hosted Checkout for a
+   * one-time payment: returns a checkout_url to send the customer to, plus the
+   * reference the callback will carry.
+   */
+  async initReference(input: {
+    user: NuveiUser;
+    order: NuveiOrder;
+    locale?: string;
+  }): Promise<NuveiCallResult> {
+    const rate = Number(this.config.get('NUVEI_VAT_RATE') || '0.15');
+    const o: any = { installments_type: 0, currency: 'USD', ...input.order };
+    if (o.vat == null) {
+      const amt = Number(o.amount) || 0;
+      const taxable = Number((amt / (1 + rate)).toFixed(2));
+      o.taxable_amount = taxable;
+      o.vat = Number((amt - taxable).toFixed(2));
+    }
+    if (o.tax_percentage == null) {
+      o.tax_percentage = Number((rate * 100).toFixed(2));
+    }
+    return this.request('POST', `${this.cardsBase()}/v2/transaction/init_reference/`, {
+      locale: String(input.locale || 'en'),
+      user: input.user,
+      order: o,
+    });
   }
 }
