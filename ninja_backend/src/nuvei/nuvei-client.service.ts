@@ -147,6 +147,12 @@ export class NuveiClientService {
     );
   }
 
+  /** True once a dedicated Link to Pay application is configured. */
+  hasSeparateLinkToPayApp(): boolean {
+    const code = String(this.config.get('NUVEI_LTP_APP_CODE') || '').trim();
+    return !!code && code !== this.serverAppCode();
+  }
+
   private linkToPayAppKey(): string {
     return (
       String(this.config.get('NUVEI_LTP_APP_KEY') || '').trim() ||
@@ -289,6 +295,7 @@ export class NuveiClientService {
   async refund(
     transactionId: string,
     amount?: number,
+    app: 'server' | 'linktopay' = 'server',
   ): Promise<NuveiCallResult> {
     const payload: any = { transaction: { id: transactionId } };
     if (typeof amount === 'number' && amount > 0) {
@@ -298,6 +305,7 @@ export class NuveiClientService {
       'POST',
       `${this.cardsBase()}/v2/transaction/refund/`,
       payload,
+      app,
     );
   }
 
