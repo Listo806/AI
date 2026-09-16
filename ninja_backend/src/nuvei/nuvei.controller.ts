@@ -6,6 +6,7 @@ import {
   ForbiddenException,
   Get,
   Headers,
+  Logger,
   Param,
   Post,
   Query,
@@ -43,6 +44,8 @@ function requireUuid(value: any, what = 'id'): string {
 
 @Controller('nuvei')
 export class NuveiController {
+  private readonly logger = new Logger(NuveiController.name);
+
   constructor(private readonly nuvei: NuveiService) {}
 
   // Public config for the checkout page (environment + CLIENT app code + plans).
@@ -264,9 +267,16 @@ export class NuveiController {
     @Body() body: any,
     @Headers('x-nuvei-token') token: string,
     @Headers('auth-token') authToken: string,
+    @Req() req: any,
     @Res({ passthrough: true }) res: any,
   ) {
     const out = await this.nuvei.handleCallback(body, token || authToken);
+    // One line per delivery, so support can confirm Nuvei is reaching us.
+    const tx = body?.transaction || body || {};
+    this.logger.log(
+      `Nuvei callback from ${clientIp(req) || '-'}: tx ${tx?.id || '-'} ref ${tx?.dev_reference || '-'} ` +
+        `status ${tx?.status ?? '-'}/${tx?.status_detail ?? '-'} -> ${out.handled} (${out.httpStatus || 200})`,
+    );
     res.status(out.httpStatus || 200);
     return out;
   }
