@@ -14,11 +14,13 @@ What is still missing is on Nuvei's side and is listed at the end of this docume
 
 Everything you asked for is implemented. What remains untested is also listed at the end, with the reason.
 
+The subscription flow, activation now and monthly charges after the trial, uses Add Card tokenization and debit with the stored token. Nuvei Checkout is used for one time payments.
+
 ## Components and their state
 
 | Component | State | Evidence |
 |---|---|---|
-| Nuvei Checkout for one time payments, init a reference | WORKING | hosted page renders with our application code, description and amount, screenshot HOSTED_checkout |
+| Nuvei Checkout for one time payments, init a reference | WORKING | hosted page renders with our application, the description and the amount, screenshot nuvei-hosted-checkout-payment |
 | Checkout payment confirmed by the signed callback | PASS | |
 | Checkout payment with a tampered amount refused | PASS | |
 | Checkout payment declined is recorded as declined | PASS | |
@@ -46,24 +48,27 @@ Everything you asked for is implemented. What remains untested is also listed at
 | Link to Pay, refundable through the Refund method | PASS | recorded as a transaction |
 | Credentials only in backend environment variables | PASS | the browser receives only the publishable tokenization key |
 | Access control, administrators exempt from all customer billing checks | PASS | each role tested separately |
+| Checkout text follows the address, English, Spanish and Portuguese | PASS | /checkout, /es/checkout and /pt/checkout, screenshots checkout-english, checkout-spanish, checkout-portuguese |
+| Page language sent to Nuvei Checkout and to Nuvei's card form | PASS | Nuvei serves its card form page marked with the language we send |
+| Card holder and card number labels in the page language | BLOCKED BY NUVEI | fixed in Spanish inside Nuvei's form script, see below |
 
 Automated suite on the final build: 37 of 37 payment checks, plus the Checkout, Link to Pay, Verify, Delete Card and access control checks.
 
 ## The two hosted pages, tested by paying on them
 
-Nuvei Checkout. Our backend creates the reference and Nuvei returns the hosted page. The page renders correctly with the application code, the order description and the amount. A test card was entered on that page and submitted, and Nuvei's own processing endpoint accepted it and answered 200. The page then waits for Nuvei to notify the merchant, which happens through the callback URL. Until Nuvei registers our callback URL on the application, that last notification cannot reach us. Our side of it is already proven: a correctly signed callback for a Checkout payment marks it paid, sends the payer the confirmation email, rejects a tampered amount and ignores a replay. Screenshot HOSTED_checkout_filled.
+Nuvei Checkout. Our backend creates the reference and Nuvei returns the hosted page. The page renders correctly with our application, the order description and the amount. A test card was entered on that page and submitted, and Nuvei's own processing endpoint accepted it and answered 200. The page then waits for Nuvei to notify the merchant, which happens through the callback URL. Until Nuvei registers our callback URL on the application, that last notification cannot reach us. Our side of it is already proven: a correctly signed callback for a Checkout payment marks it paid, sends the payer the confirmation email, rejects a tampered amount and ignores a replay. Screenshot nuvei-hosted-checkout-payment.
 
-Link to Pay. Our backend creates the order and Nuvei returns an order id and a payment URL. Opening that URL on Nuvei's own site returns a 404 page, "Página no encontrada". This was checked repeatedly with fresh links and also by calling Nuvei directly rather than through our code. The reason is almost certainly that the Link to Pay application in your email, FFWSTG-EC-SERVER, is not activated, so the order is created under the cards application, which is not provisioned to serve the link. Screenshot LINKTOPAY_404.
+Link to Pay. Our backend creates the order and Nuvei returns an order id and a payment URL. Opening that URL on Nuvei's own site returns a 404 page, "Página no encontrada". This was checked repeatedly with fresh links and also by calling Nuvei directly rather than through our code. The reason is almost certainly that the Link to Pay application from your email is not activated, so the order is created under the cards application, which is not provisioned to serve the link. Screenshot link-to-pay-404.
 
 ## Still needed from Nuvei
 
-The Link to Pay credentials in your email, application FFWSTG-EC-SERVER, are rejected by Nuvei with the message Application not found, and the links created under the cards application return a 404 page. This was tested directly against Nuvei's Link to Pay endpoint. Link to Pay works today through the cards application, which Nuvei accepts. Please ask Nuvei to activate the Link to Pay application; the code already supports a separate application and switching takes one minute.
+The Link to Pay credentials in your email are rejected by Nuvei with the message Application not found, and the links created under the cards application return a 404 page. This was tested directly against Nuvei's Link to Pay endpoint. Link to Pay works today through the cards application, which Nuvei accepts. Please ask Nuvei to activate the Link to Pay application; the code already supports a separate application and switching takes one minute.
 
 The 3D Secure challenge screen cannot be triggered on this staging application. Nuvei's own 3D Secure test cards return a plain approval. Nuvei needs to enable 3D Secure on the staging application or provide a card that is enrolled.
 
-Nuvei's compatibility table marks Add Card as 3D Secure compatible, but their browser tokenization library exposes no 3D Secure parameters. Please ask Nuvei whether Add Card 3D Secure is required for this account and how they expect it to be called.
+Nuvei's compatibility table marks Add Card as 3D Secure compatible. On Add Card, Nuvei's own card form sends the 3D Secure browser data and runs any verification step inside the form, so there is nothing for the merchant to pass. Please ask Nuvei to confirm it is active for this account.
 
-The card form labels are in Spanish. This is a setting on the Nuvei merchant account.
+The card holder and card number labels read Spanish on every checkout language. Our checkout sends the page language, en, es or pt, to Nuvei's card form, and Nuvei serves the form page marked with that language. The labels stay Spanish because Nuvei's form script, payment_2.14.9, has them fixed as "Nombre del titular" and "Número de tarjeta" and does not translate them. Only Nuvei can change that script. The form sits inside Nuvei's secure frame, so we cannot change it from our side.
 
 Production credentials and Nuvei's production approval are required before any real card is charged.
 
