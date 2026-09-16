@@ -66,6 +66,21 @@ import {
   BriefcaseBusiness,
   BadgePercent,
   CalendarDays,
+  Stethoscope,
+  ShoppingCart,
+  Headphones,
+  HeartPulse,
+  ClipboardList,
+  BellRing,
+  Building2,
+  Landmark,
+  Magnet,
+  Globe2,
+  ChevronDown,
+  Phone,
+  BookOpen,
+  Play,
+  LifeBuoy,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -674,6 +689,66 @@ export default function Landing() {
         "Manage everything from one place in Apps & Integrations.",
       btnText: "See Integrations",
 
+      workspaceSection: {
+        eyebrow: "CORTEXA WORKSPACES",
+        titleLead: "Specialized Workspaces.",
+        titleAccent: "One Connected Intelligent CRM.",
+        subtitle: "Cortexa includes dedicated workspaces for different industries and business operations. Each workspace brings the appropriate tools, terminology, customer journey, and workflows into one connected intelligent CRM.",
+        includesTitle: "EVERY WORKSPACE INCLUDES",
+        includes: ["AI Conversations", "Leads", "Clients or Patients", "Pipeline", "Calendar", "Automations", "Analytics", "Integrations"],
+        findLead: "Find the workspace designed for",
+        findAccent: "how your business operates.",
+        workspaces: ["Business Suite", "Sales", "Insurance", "Financial Services", "E-Commerce", "Customer Service", "Real Estate", "Team Workspace", "Lead Generator", "Aesthetic & Wellness", "Clinic & Medical"],
+        clinicTitle: "Clinic & Medical",
+        clinicDescription: "Manage patient inquiries, consultations, appointments, clinical activity, care plans, follow-up, and clinic operations from one connected workspace.",
+        clinicFeatures: ["Patients", "Consultations", "Clinical Notes", "Follow-Up"],
+        preview: "Preview Workspace",
+        connected: "Your workspace connects directly to your CRM, AI agent, customer data, appointments, workflows, and revenue operation.",
+        explore: "Explore Cortexa Workspaces",
+        note: "One workspace included. Add more as your business grows.",
+      },
+
+      guidedSetup: {
+        eyebrow: "GUIDED CORTEXA SETUP",
+        titleLead: "Get your workspace",
+        titleAccent: "configured, connected,",
+        titleEnd: "and ready to work.",
+        subtitle: "Cortexa guides you through the essential setup steps inside your account, so your AI agent, customer entry points, CRM, pipeline, appointments, and team handoff work together correctly.",
+        steps: [
+          { title: "Configure Your Business", desc: "Add your business details, services, hours, team, and conversion goals." },
+          { title: "Connect Customer Entry Points", desc: "Connect your website, business phone, WhatsApp, forms, and marketing pages." },
+          { title: "Train Your AI Agent", desc: "Define how it responds, qualifies, schedules, and transfers conversations." },
+          { title: "Test and Launch", desc: "Verify lead capture, source tracking, CRM records, pipeline routing, appointments, and conversions." },
+        ],
+        panelTitle: "Put Your AI Agent to Work",
+        panelSubtitle: "Connect your tools, train your agent, and start turning customer conversations into revenue.",
+        progress: "2 of 4 steps complete",
+        complete: "50% complete",
+        panelSteps: [
+          { title: "Connect Your AI Agent Number", desc: "Use an existing business number or activate a new one for customer calls and messages.", status: "Connected", action: "" },
+          { title: "Train Your AI Agent", desc: "Teach your agent about your business, services, tone, qualification rules, and when to transfer to a human.", status: "In Progress", action: "Continue Training" },
+          { title: "Configure Appointments & Lead Flow", desc: "Set availability, lead routing, follow-up, and pipeline behavior.", status: "Not Configured", action: "Configure" },
+          { title: "Test & Launch", desc: "Run a real conversation, confirm the lead flow, and activate your AI agent.", status: "Ready to Test", action: "Test My AI Agent" },
+        ],
+        assistanceTitle: "Setup & Website Assistance",
+        assistanceDesc: "Request help with AI agent setup, website connections, phone, WhatsApp, tracking, or customer entry points.",
+        assistanceAction: "Request Assistance",
+        helpTitle: "Need help getting connected?",
+        helpDesc: "Submit an assistance request directly from Setup. Our team can review your configuration and help connect your AI agent, website, phone, WhatsApp, CRM, appointments, checkout, tracking, and human handoff.",
+        helpNote: "Custom setup and website implementation are optional paid services quoted separately based on your requirements.",
+        requestSetup: "Request Setup Assistance",
+        viewGuide: "View Setup Guide",
+      },
+
+      webSolutionsSection: {
+        titleLead: "You have the right workspace.",
+        titleSecond: "Now let’s make it",
+        titleAccent: "work for your business.",
+        body: "Once your workspace is selected, Cortexa walks you through the setup inside your account. You tell us how your business operates, what you offer, when you are available, how customers reach you, and what should happen when someone is ready to buy, book, request a quote, schedule a viewing, ask for support, or speak with your team. We help you connect those decisions to your AI agent, CRM, pipeline, appointments, checkout, follow-up, and human handoff so the entire experience works together. You can complete the guided setup yourself, and if your website needs to be updated or connected to your workspace, our Web Solutions team can review what you have, explain what is needed, and provide a separate implementation quote.",
+        cta: "Explore Web Solutions",
+        note: "Optional setup and website services are quoted separately.",
+      },
+
       workspacelang1: "Team",
       workspacelang2: "Revenue",
       workspacelang3: "Workspace",
@@ -1184,6 +1259,56 @@ export default function Landing() {
         "Gestiona todo desde un solo lugar en Apps e Integraciones.",
       btnText: "Ver Integraciones",
 
+      workspaceSection: {
+        eyebrow: "ESPACIOS DE TRABAJO CORTEXA",
+        titleLead: "Espacios de trabajo especializados.",
+        titleAccent: "Un CRM inteligente y conectado.",
+        subtitle: "Cortexa incluye espacios de trabajo dedicados para diferentes industrias y operaciones empresariales. Cada espacio reúne las herramientas, la terminología, el recorrido del cliente y los flujos de trabajo adecuados en un CRM inteligente y conectado.",
+        includesTitle: "CADA ESPACIO DE TRABAJO INCLUYE",
+        includes: ["Conversaciones con IA", "Leads", "Clientes o pacientes", "Pipeline", "Calendario", "Automatizaciones", "Analítica", "Integraciones"],
+        findLead: "Encuentra el espacio diseñado para",
+        findAccent: "la forma en que opera tu negocio.",
+        workspaces: ["Suite Empresarial", "Ventas", "Seguros", "Servicios Financieros", "Comercio Electrónico", "Servicio al Cliente", "Bienes Raíces", "Espacio de Equipo", "Generador de Leads", "Estética y Bienestar", "Clínica y Medicina"],
+        clinicTitle: "Clínica y Medicina",
+        clinicDescription: "Gestiona consultas de pacientes, consultas médicas, citas, actividad clínica, planes de atención, seguimiento y operaciones de la clínica desde un espacio conectado.",
+        clinicFeatures: ["Pacientes", "Consultas", "Notas Clínicas", "Seguimiento"],
+        preview: "Vista previa",
+        connected: "Tu espacio se conecta directamente con tu CRM, agente de IA, datos de clientes, citas, flujos de trabajo y operación de ingresos.",
+        explore: "Explorar espacios Cortexa",
+        note: "Un espacio de trabajo incluido. Agrega más a medida que crece tu negocio.",
+      },
+
+      guidedSetup: {
+        eyebrow: "CONFIGURACIÓN GUIADA DE CORTEXA",
+        titleLead: "Configura y conecta",
+        titleAccent: "tu espacio de trabajo",
+        titleEnd: "para empezar a trabajar.",
+        subtitle: "Cortexa te guía por los pasos esenciales de configuración dentro de tu cuenta para que tu agente de IA, los puntos de entrada de clientes, el CRM, el pipeline, las citas y la transferencia a tu equipo funcionen correctamente juntos.",
+        steps: [
+          { title: "Configura tu negocio", desc: "Añade los datos de tu negocio, servicios, horarios, equipo y objetivos de conversión." },
+          { title: "Conecta los puntos de entrada de clientes", desc: "Conecta tu sitio web, teléfono empresarial, WhatsApp, formularios y páginas de marketing." },
+          { title: "Entrena tu agente de IA", desc: "Define cómo responde, califica, programa citas y transfiere conversaciones." },
+          { title: "Prueba y lanza", desc: "Verifica la captación de leads, el seguimiento de fuentes, los registros del CRM, el pipeline, las citas y las conversiones." },
+        ],
+        panelTitle: "Pon tu agente de IA a trabajar",
+        panelSubtitle: "Conecta tus herramientas, entrena tu agente y empieza a convertir conversaciones con clientes en ingresos.",
+        progress: "2 de 4 pasos completados", complete: "50% completado",
+        panelSteps: [
+          { title: "Conecta el número de tu agente de IA", desc: "Usa un número empresarial existente o activa uno nuevo para llamadas y mensajes de clientes.", status: "Conectado", action: "" },
+          { title: "Entrena tu agente de IA", desc: "Enséñale sobre tu negocio, servicios, tono, reglas de calificación y cuándo transferir a una persona.", status: "En progreso", action: "Continuar entrenamiento" },
+          { title: "Configura citas y flujo de leads", desc: "Define disponibilidad, enrutamiento de leads, seguimiento y comportamiento del pipeline.", status: "Sin configurar", action: "Configurar" },
+          { title: "Prueba y lanza", desc: "Realiza una conversación real, confirma el flujo del lead y activa tu agente de IA.", status: "Listo para probar", action: "Probar mi agente de IA" },
+        ],
+        assistanceTitle: "Asistencia de configuración y sitio web", assistanceDesc: "Solicita ayuda con la configuración del agente de IA, conexiones del sitio web, teléfono, WhatsApp, seguimiento o puntos de entrada de clientes.", assistanceAction: "Solicitar asistencia",
+        helpTitle: "¿Necesitas ayuda para conectarte?", helpDesc: "Envía una solicitud de asistencia directamente desde Configuración. Nuestro equipo puede revisar tu configuración y ayudarte a conectar tu agente de IA, sitio web, teléfono, WhatsApp, CRM, citas, checkout, seguimiento y transferencia humana.", helpNote: "La configuración personalizada y la implementación web son servicios opcionales de pago cotizados por separado según tus necesidades.", requestSetup: "Solicitar asistencia de configuración", viewGuide: "Ver guía de configuración",
+      },
+
+      webSolutionsSection: {
+        titleLead: "Ya tienes el espacio de trabajo adecuado.", titleSecond: "Ahora hagamos que", titleAccent: "funcione para tu negocio.",
+        body: "Una vez seleccionado tu espacio de trabajo, Cortexa te guía por la configuración dentro de tu cuenta. Nos indicas cómo funciona tu negocio, qué ofreces, cuándo estás disponible, cómo llegan los clientes y qué debe suceder cuando alguien está listo para comprar, reservar, solicitar una cotización, programar una visita, pedir soporte o hablar con tu equipo. Te ayudamos a conectar esas decisiones con tu agente de IA, CRM, pipeline, citas, checkout, seguimiento y transferencia humana para que toda la experiencia funcione de forma integrada. Puedes completar la configuración guiada por tu cuenta y, si tu sitio web necesita actualizarse o conectarse a tu espacio de trabajo, nuestro equipo de Web Solutions puede revisar lo que tienes, explicar lo necesario y proporcionar una cotización de implementación por separado.",
+        cta: "Explorar Web Solutions", note: "Los servicios opcionales de configuración y sitio web se cotizan por separado.",
+      },
+
       workspacelang1: "Equipo",
       workspacelang2: "Ingresos",
       workspacelang3: "Espacio de trabajo",
@@ -1659,6 +1784,52 @@ export default function Landing() {
       footerTextPost: "Gerencie tudo em um só lugar em Apps e Integrações.",
       btnText: "Ver Integrações",
 
+      workspaceSection: {
+        eyebrow: "ESPAÇOS DE TRABALHO CORTEXA",
+        titleLead: "Espaços de trabalho especializados.",
+        titleAccent: "Um CRM inteligente e conectado.",
+        subtitle: "A Cortexa inclui espaços de trabalho dedicados para diferentes setores e operações empresariais. Cada espaço reúne as ferramentas, a terminologia, a jornada do cliente e os fluxos de trabalho adequados em um CRM inteligente e conectado.",
+        includesTitle: "CADA ESPAÇO DE TRABALHO INCLUI",
+        includes: ["Conversas com IA", "Leads", "Clientes ou pacientes", "Pipeline", "Calendário", "Automações", "Análises", "Integrações"],
+        findLead: "Encontre o espaço desenvolvido para",
+        findAccent: "a forma como sua empresa opera.",
+        workspaces: ["Suíte Empresarial", "Vendas", "Seguros", "Serviços Financeiros", "E-Commerce", "Atendimento ao Cliente", "Imobiliário", "Espaço da Equipe", "Gerador de Leads", "Estética e Bem-Estar", "Clínica e Medicina"],
+        clinicTitle: "Clínica e Medicina",
+        clinicDescription: "Gerencie contatos de pacientes, consultas, agendamentos, atividade clínica, planos de cuidados, acompanhamento e operações da clínica em um espaço conectado.",
+        clinicFeatures: ["Pacientes", "Consultas", "Notas Clínicas", "Acompanhamento"],
+        preview: "Visualizar espaço",
+        connected: "Seu espaço se conecta diretamente ao CRM, agente de IA, dados de clientes, agendamentos, fluxos de trabalho e operação de receita.",
+        explore: "Explorar espaços Cortexa",
+        note: "Um espaço de trabalho incluído. Adicione mais conforme sua empresa cresce.",
+      },
+
+      guidedSetup: {
+        eyebrow: "CONFIGURAÇÃO GUIADA CORTEXA",
+        titleLead: "Configure e conecte", titleAccent: "seu espaço de trabalho", titleEnd: "para começar a trabalhar.",
+        subtitle: "A Cortexa orienta você pelas etapas essenciais de configuração dentro da sua conta para que seu agente de IA, pontos de entrada de clientes, CRM, pipeline, agendamentos e transferência para a equipe funcionem corretamente em conjunto.",
+        steps: [
+          { title: "Configure sua empresa", desc: "Adicione os dados da empresa, serviços, horários, equipe e metas de conversão." },
+          { title: "Conecte os pontos de entrada dos clientes", desc: "Conecte seu site, telefone comercial, WhatsApp, formulários e páginas de marketing." },
+          { title: "Treine seu agente de IA", desc: "Defina como ele responde, qualifica, agenda e transfere conversas." },
+          { title: "Teste e lance", desc: "Verifique a captura de leads, origem, registros do CRM, roteamento do pipeline, agendamentos e conversões." },
+        ],
+        panelTitle: "Coloque seu agente de IA para trabalhar", panelSubtitle: "Conecte suas ferramentas, treine seu agente e comece a transformar conversas com clientes em receita.", progress: "2 de 4 etapas concluídas", complete: "50% concluído",
+        panelSteps: [
+          { title: "Conecte o número do seu agente de IA", desc: "Use um número comercial existente ou ative um novo para chamadas e mensagens de clientes.", status: "Conectado", action: "" },
+          { title: "Treine seu agente de IA", desc: "Ensine sobre sua empresa, serviços, tom, regras de qualificação e quando transferir para uma pessoa.", status: "Em andamento", action: "Continuar treinamento" },
+          { title: "Configure agendamentos e fluxo de leads", desc: "Defina disponibilidade, roteamento de leads, acompanhamento e comportamento do pipeline.", status: "Não configurado", action: "Configurar" },
+          { title: "Teste e lance", desc: "Faça uma conversa real, confirme o fluxo do lead e ative seu agente de IA.", status: "Pronto para testar", action: "Testar meu agente de IA" },
+        ],
+        assistanceTitle: "Assistência de configuração e site", assistanceDesc: "Solicite ajuda com a configuração do agente de IA, conexões do site, telefone, WhatsApp, rastreamento ou pontos de entrada de clientes.", assistanceAction: "Solicitar assistência",
+        helpTitle: "Precisa de ajuda para se conectar?", helpDesc: "Envie uma solicitação de assistência diretamente pela Configuração. Nossa equipe pode revisar sua configuração e ajudar a conectar seu agente de IA, site, telefone, WhatsApp, CRM, agendamentos, checkout, rastreamento e transferência humana.", helpNote: "A configuração personalizada e a implementação do site são serviços opcionais pagos, cotados separadamente conforme suas necessidades.", requestSetup: "Solicitar assistência de configuração", viewGuide: "Ver guia de configuração",
+      },
+
+      webSolutionsSection: {
+        titleLead: "Você tem o espaço de trabalho certo.", titleSecond: "Agora vamos fazê-lo", titleAccent: "funcionar para o seu negócio.",
+        body: "Depois que seu espaço de trabalho é selecionado, a Cortexa orienta você pela configuração dentro da sua conta. Você nos informa como sua empresa funciona, o que oferece, quando está disponível, como os clientes entram em contato e o que deve acontecer quando alguém está pronto para comprar, reservar, solicitar uma cotação, agendar uma visita, pedir suporte ou falar com sua equipe. Ajudamos você a conectar essas decisões ao seu agente de IA, CRM, pipeline, agendamentos, checkout, acompanhamento e transferência humana para que toda a experiência funcione em conjunto. Você pode concluir a configuração guiada por conta própria e, se seu site precisar ser atualizado ou conectado ao seu espaço de trabalho, nossa equipe de Web Solutions pode revisar o que você tem, explicar o que é necessário e fornecer uma cotação de implementação separada.",
+        cta: "Explorar Web Solutions", note: "Serviços opcionais de configuração e site são cotados separadamente.",
+      },
+
       workspacelang1: "Equipe",
       workspacelang2: "Receita",
       workspacelang3: "Espaço de trabalho",
@@ -1951,13 +2122,174 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* SECTION ONE CONNECTED WORKSPACE */}
-      <section
-        id="features"
-        className="cx-aios-workspace cx-comp cx-center pt-50"
-      >
-        <img src={currentSect2} alt="features" />
+      {/* CORTEXA SPECIALIZED WORKSPACES */}
+      <section id="features" className="cx-workspaces-showcase">
+        <div className="cx-ws-decor cx-ws-decor-left" aria-hidden="true" />
+        <div className="cx-ws-decor cx-ws-decor-right" aria-hidden="true" />
+
+        <div className="cx-ws-shell">
+          <div className="cx-ws-eyebrow">
+            <span />
+            <b>{tr.workspaceSection.eyebrow}</b>
+            <span />
+          </div>
+
+          <h2 className="cx-ws-title">
+            {tr.workspaceSection.titleLead}{" "}
+            <strong>{tr.workspaceSection.titleAccent}</strong>
+          </h2>
+          <p className="cx-ws-subtitle">{tr.workspaceSection.subtitle}</p>
+
+          <div className="cx-ws-includes-title">{tr.workspaceSection.includesTitle}</div>
+          <div className="cx-ws-includes">
+            {[
+              MessageSquare,
+              UserPlus,
+              Users,
+              BarChart3,
+              CalendarDays,
+              Workflow,
+              PieChart,
+              Puzzle,
+            ].map((Icon, index) => (
+              <div className="cx-ws-include" key={tr.workspaceSection.includes[index]}>
+                <span className={`cx-ws-icon cx-ws-icon-${index + 1}`}>
+                  <Icon size={30} strokeWidth={2} />
+                </span>
+                <span>{tr.workspaceSection.includes[index]}</span>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="cx-ws-find-title">
+            {tr.workspaceSection.findLead}{" "}
+            <strong>{tr.workspaceSection.findAccent}</strong>
+          </h3>
+
+          <div className="cx-ws-grid">
+            {[
+              Building2,
+              TrendingUp,
+              ShieldCheck,
+              Landmark,
+              ShoppingCart,
+              Headphones,
+              Home,
+              Users2,
+              Magnet,
+              HeartPulse,
+              Stethoscope,
+            ].map((Icon, index) => {
+              const isClinic = index === 10;
+              return (
+                <div
+                  className={`cx-ws-choice ${isClinic ? "is-active" : ""}`}
+                  key={tr.workspaceSection.workspaces[index]}
+                >
+                  <span className={`cx-ws-choice-icon cx-ws-choice-icon-${index + 1}`}>
+                    <Icon size={35} strokeWidth={2} />
+                  </span>
+                  <span>{tr.workspaceSection.workspaces[index]}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="cx-ws-detail">
+            <div className="cx-ws-detail-brand">
+              <span className="cx-ws-detail-main-icon"><Stethoscope size={46} strokeWidth={2} /></span>
+              <b>{tr.workspaceSection.clinicTitle}</b>
+            </div>
+
+            <p className="cx-ws-detail-copy">{tr.workspaceSection.clinicDescription}</p>
+
+            <div className="cx-ws-detail-features">
+              {[User, ClipboardList, FileText, BellRing].map((Icon, index) => (
+                <div className="cx-ws-detail-feature" key={tr.workspaceSection.clinicFeatures[index]}>
+                  <span><Icon size={23} strokeWidth={2} /></span>
+                  <small>{tr.workspaceSection.clinicFeatures[index]}</small>
+                </div>
+              ))}
+              <a className="cx-ws-preview" href="/dashboard/clinic-medical">
+                {tr.workspaceSection.preview} <ArrowRight size={17} />
+              </a>
+            </div>
+          </div>
+
+          <p className="cx-ws-connected">{tr.workspaceSection.connected}</p>
+          <a className="cx-ws-explore" href="/trial?flow=free-access&plan=free">
+            {tr.workspaceSection.explore} <ArrowRight size={18} />
+          </a>
+          <p className="cx-ws-note">{tr.workspaceSection.note}</p>
+        </div>
       </section>
+      {/* GUIDED CORTEXA SETUP */}
+      <section className="cx-guided-setup">
+        <div className="cx-setup-decor cx-setup-decor-left" aria-hidden="true" />
+        <div className="cx-setup-decor cx-setup-decor-right" aria-hidden="true" />
+        <div className="cx-setup-shell">
+          <div className="cx-setup-main">
+            <div className="cx-setup-copy">
+              <div className="cx-setup-eyebrow"><span /><b>{tr.guidedSetup.eyebrow}</b><span /></div>
+              <h2>{tr.guidedSetup.titleLead}<br/><strong>{tr.guidedSetup.titleAccent}</strong><br/>{tr.guidedSetup.titleEnd}</h2>
+              <p className="cx-setup-intro">{tr.guidedSetup.subtitle}</p>
+              <div className="cx-setup-left-steps">
+                {tr.guidedSetup.steps.map((step, index) => {
+                  const Icons = [Building2, Link2, Bot, Play];
+                  const Icon = Icons[index];
+                  return <div className="cx-setup-left-step" key={step.title}>
+                    <span className="cx-setup-number">{index + 1}</span>
+                    <span className={`cx-setup-step-icon s${index + 1}`}><Icon size={27} /></span>
+                    <div><b>{step.title}</b><p>{step.desc}</p></div>
+                  </div>;
+                })}
+              </div>
+            </div>
+
+            <div className="cx-setup-panel">
+              <div className="cx-setup-panel-head">
+                <span className="cx-setup-spark"><Sparkles size={28}/></span>
+                <div><h3>{tr.guidedSetup.panelTitle}</h3><p>{tr.guidedSetup.panelSubtitle}</p></div>
+                <div className="cx-setup-panel-lang"><Globe2 size={17}/> EN <ChevronDown size={14}/><span>A</span></div>
+              </div>
+              <div className="cx-setup-progress"><b>{tr.guidedSetup.progress}</b><span><i /></span><small>{tr.guidedSetup.complete}</small></div>
+              <div className="cx-setup-panel-steps">
+                {tr.guidedSetup.panelSteps.map((step,index)=>{
+                  const Icons=[Phone,BookOpen,CalendarDays,Play]; const Icon=Icons[index];
+                  return <div className="cx-setup-panel-step" key={step.title}>
+                    <span className="cx-setup-row-num">{index+1}</span><span className={`cx-setup-row-icon r${index+1}`}><Icon size={24}/></span>
+                    <div className="cx-setup-row-copy"><b>{step.title}</b><p>{step.desc}</p></div>
+                    <span className={`cx-setup-status status-${index+1}`}>{index===0||index===3?<CheckCircle2 size={14}/>:null}{step.status}</span>
+                    {step.action && <a href="/dashboard/ai-cortexa-setup" className={`cx-setup-row-action a${index+1}`}>{step.action}</a>}
+                    <ChevronDown className="cx-setup-chevron" size={17}/>
+                  </div>
+                })}
+              </div>
+              <div className="cx-setup-assistance">
+                <span><Headphones size={30}/></span><div><b>{tr.guidedSetup.assistanceTitle}</b><p>{tr.guidedSetup.assistanceDesc}</p></div>
+                <a href="/web-solutions">{tr.guidedSetup.assistanceAction}<ArrowRight size={16}/></a>
+              </div>
+            </div>
+          </div>
+
+          <div className="cx-setup-help">
+            <span className="cx-setup-help-icon"><LifeBuoy size={43}/></span>
+            <div><h3>{tr.guidedSetup.helpTitle}</h3><p>{tr.guidedSetup.helpDesc}</p><small>{tr.guidedSetup.helpNote}</small></div>
+            <div className="cx-setup-help-actions"><a href="/web-solutions">{tr.guidedSetup.requestSetup}<ArrowRight size={18}/></a><a href="/dashboard/ai-cortexa-setup">{tr.guidedSetup.viewGuide}</a></div>
+          </div>
+        </div>
+      </section>
+
+      {/* WEB SOLUTIONS BRIDGE */}
+      <section className="cx-web-solutions-bridge">
+        <div className="cx-web-bridge-shell">
+          <h2>{tr.webSolutionsSection.titleLead}<br/>{tr.webSolutionsSection.titleSecond} <strong>{tr.webSolutionsSection.titleAccent}</strong></h2>
+          <p>{tr.webSolutionsSection.body}</p>
+          <a href="/web-solutions">{tr.webSolutionsSection.cta}</a>
+          <small>{tr.webSolutionsSection.note}</small>
+        </div>
+      </section>
+
       <section id="analytics" className="cx-hero pt-50">
         <img src={currentSec2} alt="analytics" />
         <i>
