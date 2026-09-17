@@ -76,6 +76,7 @@ import clinicOperationsManagerImg from "../../assets/cortexa/mobile/clinic-opera
 import salesDirectorImg from "../../assets/cortexa/mobile/sales-director.png";
 import businessOwnerImg from "../../assets/cortexa/mobile/business-owner.png";
 import connectedCustomerJourneyImg from "../../assets/cortexa/mobile/cortexa-connected-customer-journey.png";
+import cortexaAiAgentIcon from "../../assets/cortexa/mobile/cortexa-ai-agent-icon.png";
 
 export default function LandingMobile() {
   const [lang, setLang] = useState(() => {
@@ -133,40 +134,48 @@ export default function LandingMobile() {
           "ctaButtonText": "Get Started!",
           "heroNoCard": "14-Day Free Trial",
           "heroFreeForever": "Starting at $11",
-          "faqSubtitle": "FAQS",
-          "faqTitle": "Everything you need to know",
+          "faqSubtitle": "Straight answers about the AI agent, workspaces, setup, connections, your team, and getting started.",
+          "faqTitle": "Frequently Asked Questions",
           "faq": [
               {
-                  "q": "What does CORTEXA actually do?",
-                  "a": "CORTEXA brings your leads, contacts, pipeline, tasks, properties, analytics, team activity, and connected business tools into one centralized CRM workspace. It helps businesses organize customer relationships, manage opportunities, monitor performance, and keep their sales operation connected."
+                  "q": "What is Cortexa, and what does its AI agent do?",
+                  "a": "Cortexa is an intelligent CRM and business operating system. Its AI agent can respond to customer inquiries, capture contact information, qualify interest, schedule appointments, support follow-up, and move each conversation into the correct CRM and pipeline process based on the rules you configure."
               },
               {
-                  "q": "How does the AI Assistant work?",
-                  "a": "The CORTEXA AI Assistant helps users work with information already available in their workspace. It can help surface useful information, summarize activity, provide insights, and assist users with everyday CRM and business tasks while keeping the user in control."
+                  "q": "Which Cortexa workspace should I use for my business?",
+                  "a": "Choose the workspace that most closely matches how your business operates. Each workspace includes the appropriate terminology, customer records, workflows, pipelines, and operating tools for that type of business. One workspace is included with your account. Additional workspaces may be added separately if your business requires them."
               },
               {
-                  "q": "Can I manage all my leads in one place?",
-                  "a": "Yes. Leads, contacts, notes, activities, pipeline stages, and related customer information can be organized in one centralized workspace, making it easier for your team to manage opportunities without switching between multiple systems."
+                  "q": "How does the guided setup work after I choose a workspace?",
+                  "a": "After selecting your workspace, Cortexa guides you through the essential setup inside your account. You will enter your business information, services or products, hours, team responsibilities, customer entry points, qualification rules, conversion goals, appointment settings, follow-up requirements, and human-handoff instructions. You can save your progress and return to complete the setup at any time."
               },
               {
-                  "q": "How do I manage my sales pipeline?",
-                  "a": "CORTEXA provides a visual pipeline where you can organize opportunities, move deals between stages, assign responsibilities, create tasks and reminders, and monitor progress from one workspace."
+                  "q": "Can Cortexa connect with my website, business phone, WhatsApp, forms, and marketing pages?",
+                  "a": "Yes. Cortexa can connect supported customer entry points to your AI agent and CRM workflow. This can include your website, business phone, WhatsApp, forms, landing pages, and advertising-traffic pages. The objective is to capture the contact, record the source, create the correct CRM record, select the appropriate pipeline, and move the customer toward a conversion or human handoff."
               },
               {
-                  "q": "Can I connect the business tools I already use?",
-                  "a": "Yes. CORTEXA supports integrations with compatible third-party business tools and services. Available integrations may vary, and customers remain responsible for their own third-party accounts, permissions, and applicable provider terms."
+                  "q": "What are Cortexa Web Solutions, and when would I need them?",
+                  "a": "Cortexa Web Solutions are optional professional services for businesses that need help updating, improving, building, or connecting their website to Cortexa. Our team can review your current website, recommend the necessary changes, and help connect customer entry points to your AI agent, CRM, campaign tracking, pipeline, appointments, checkout, quotes, demos, support, and human handoff. Web Solutions and custom implementation are quoted separately according to your requirements."
               },
               {
-                  "q": "Can my team use CORTEXA together?",
-                  "a": "Yes. CORTEXA provides team workspace capabilities that help users share CRM information, assign tasks and leads, monitor activity, and coordinate work from the same platform. Available team capacity depends on the customer's plan."
+                  "q": "Can my team manage assignments, follow-ups, notes, and customer handoffs together?",
+                  "a": "Yes. The Team Workspace gives authorized team members a shared place to manage assignments, priorities, internal notes, customer follow-ups, deadlines, and department handoffs. Everyone works from the same current customer information while permissions determine what each person can access or change."
               },
               {
-                  "q": "What kind of businesses is CORTEXA for?",
-                  "a": "CORTEXA is designed for businesses and professional teams that need a centralized system for managing leads, contacts, sales pipelines, customer information, tasks, reporting, and day-to-day CRM operations."
+                  "q": "Does the AI agent replace my staff or transfer conversations when a person is needed?",
+                  "a": "The AI agent handles the customer interactions and routine work you authorize it to manage. It can answer common questions, capture information, qualify interest, schedule appointments, and support follow-up. When a conversation requires judgment, approval, specialized assistance, or personal attention, Cortexa can transfer it to the appropriate team member according to your configured rules."
               },
               {
-                  "q": "What happens after a lead is added to CORTEXA?",
-                  "a": "The lead becomes part of your centralized CRM workspace, where your team can organize the record, assign responsibility, add notes and tasks, manage its pipeline stage, and track activity and progress."
+                  "q": "Can I connect the applications and tools my business already uses?",
+                  "a": "Cortexa supports a growing directory of applications and connection methods, including supported integrations, APIs, webhooks, Zapier, and other supported automation tools. Available functionality depends on the application and your Cortexa plan. Visit Apps & Integrations inside your account to review the available connections."
+              },
+              {
+                  "q": "How do the activation fee and 14-day trial work?",
+                  "a": "A non-refundable activation fee is required to activate your account and begin the 14-day trial. The applicable activation fee, trial period, first recurring billing date, and monthly subscription price are displayed before you complete checkout. If you cancel before the first recurring billing date, the monthly subscription will not be charged. The activation fee remains non-refundable."
+              },
+              {
+                  "q": "What happens if I need help configuring or connecting everything?",
+                  "a": "The guided setup is available inside your account, and you may submit an assistance request whenever you need help. Our team can review your configuration, identify missing information, and respond through your account. Custom configuration, website work, and technical implementation are optional paid services and will be quoted separately before any paid work begins."
               }
           ],
           "finalCtaTitle1": "Connect Your",
@@ -343,8 +352,7 @@ export default function LandingMobile() {
                   ],
                   "ctaTitle": "Ready to build a more connected way to operate?",
                   "cta": "Get Started",
-                  "explore": "Explore Cortexa Workspaces",
-                  "note": "Replace sample testimonial copy with verified customer statements before publishing."
+                  "explore": "Explore Cortexa Workspaces"
               },
               "connectedJourney": {
                   "eyebrow": "ONE CONNECTED CUSTOMER JOURNEY",
@@ -352,6 +360,16 @@ export default function LandingMobile() {
                   "description": "Cortexa connects how customers discover you, communicate with your business, enter your CRM, move through the correct workspace, and reach the right conversion or human handoff.",
                   "closing": "From first contact to the next best action—everything stays connected.",
                   "cta": "Explore the Cortexa Platform"
+              },
+              "appointmentAutomation": {
+                  "eyebrow": "APPOINTMENT AUTOMATION",
+                  "title": "Your AI Agent Books Appointments 24/7.",
+                  "description": "Cortexa checks your real-time availability, offers appropriate times, books or reschedules appointments, updates your calendar and CRM, and keeps your team informed—even when no one is available to respond.",
+                  "customer": "Customer", "agent": "Cortexa AI Agent",
+                  "messages": ["I’d like to schedule a consultation Friday afternoon.", "I have 2:30 PM or 4:00 PM available. Which works better?", "2:30 PM.", "You’re booked for Friday at 2:30 PM."],
+                  "confirmed": "Appointment Confirmed", "time": "Friday • 2:30 PM",
+                  "meta": "Calendar updated • CRM updated • Confirmation sent",
+                  "benefits": ["Checks your availability in real time", "Books, reschedules, and confirms appointments", "Sends reminders and keeps customer records updated"]
               }
       },
       "es": {
@@ -376,40 +394,48 @@ export default function LandingMobile() {
           "ctaButtonText": "¡Comenzar!",
           "heroNoCard": "Prueba gratuita de 14 días",
           "heroFreeForever": "Desde $11",
-          "faqSubtitle": "PREGUNTAS FRECUENTES",
-          "faqTitle": "Todo lo que necesitas saber",
+          "faqSubtitle": "Respuestas claras sobre el agente de IA, los espacios de trabajo, la configuración, las conexiones, tu equipo y cómo comenzar.",
+          "faqTitle": "Preguntas Frecuentes",
           "faq": [
               {
-                  "q": "¿Qué hace exactamente CORTEXA?",
-                  "a": "CORTEXA reúne tus leads, contactos, pipeline, tareas, propiedades, analítica, actividad del equipo y herramientas empresariales conectadas en un espacio de trabajo CRM centralizado. Ayuda a las empresas a organizar las relaciones con los clientes, gestionar oportunidades, supervisar el rendimiento y mantener conectadas sus operaciones de ventas."
+                  "q": "¿Qué es Cortexa y qué hace su agente de IA?",
+                  "a": "Cortexa es un CRM inteligente y un sistema operativo empresarial. Su agente de IA puede responder consultas de clientes, capturar información de contacto, calificar el interés, programar citas, apoyar el seguimiento y mover cada conversación al proceso correcto de CRM y pipeline según las reglas que configures."
               },
               {
-                  "q": "¿Cómo funciona el Asistente de IA?",
-                  "a": "El Asistente de IA de CORTEXA ayuda a los usuarios a trabajar con la información que ya está disponible en su espacio de trabajo. Puede ayudar a mostrar información útil, resumir actividades, proporcionar insights y asistir a los usuarios con tareas cotidianas de CRM y del negocio, manteniendo siempre al usuario en control."
+                  "q": "¿Qué espacio de trabajo de Cortexa debo usar para mi negocio?",
+                  "a": "Elige el espacio de trabajo que mejor se adapte a la forma en que opera tu negocio. Cada espacio incluye la terminología, los registros de clientes, los flujos de trabajo, los pipelines y las herramientas operativas apropiadas para ese tipo de negocio. Se incluye un espacio de trabajo con tu cuenta. Se pueden agregar espacios adicionales por separado si tu negocio los necesita."
               },
               {
-                  "q": "¿Puedo gestionar todos mis leads en un solo lugar?",
-                  "a": "Sí. Los leads, contactos, notas, actividades, etapas del pipeline y la información relacionada con los clientes pueden organizarse en un espacio de trabajo centralizado, facilitando que tu equipo gestione oportunidades sin cambiar entre múltiples sistemas."
+                  "q": "¿Cómo funciona la configuración guiada después de elegir un espacio de trabajo?",
+                  "a": "Después de seleccionar tu espacio de trabajo, Cortexa te guía por la configuración esencial dentro de tu cuenta. Introducirás la información de tu negocio, servicios o productos, horarios, responsabilidades del equipo, puntos de entrada de clientes, reglas de calificación, objetivos de conversión, configuración de citas, requisitos de seguimiento e instrucciones de transferencia humana. Puedes guardar tu progreso y volver para completar la configuración en cualquier momento."
               },
               {
-                  "q": "¿Cómo gestiono mi pipeline de ventas?",
-                  "a": "CORTEXA proporciona un pipeline visual donde puedes organizar oportunidades, mover negocios entre etapas, asignar responsabilidades, crear tareas y recordatorios, y supervisar el progreso desde un solo espacio de trabajo."
+                  "q": "¿Puede Cortexa conectarse con mi sitio web, teléfono comercial, WhatsApp, formularios y páginas de marketing?",
+                  "a": "Sí. Cortexa puede conectar los puntos de entrada de clientes compatibles con tu agente de IA y el flujo de trabajo del CRM. Esto puede incluir tu sitio web, teléfono comercial, WhatsApp, formularios, landing pages y páginas de tráfico publicitario. El objetivo es capturar el contacto, registrar la fuente, crear el registro correcto en el CRM, seleccionar el pipeline adecuado y llevar al cliente hacia una conversión o una transferencia humana."
               },
               {
-                  "q": "¿Puedo conectar las herramientas empresariales que ya utilizo?",
-                  "a": "Sí. CORTEXA admite integraciones con herramientas y servicios empresariales de terceros compatibles. Las integraciones disponibles pueden variar, y los clientes siguen siendo responsables de sus propias cuentas de terceros, permisos y términos aplicables de cada proveedor."
+                  "q": "¿Qué son Cortexa Web Solutions y cuándo las necesitaría?",
+                  "a": "Cortexa Web Solutions son servicios profesionales opcionales para empresas que necesitan ayuda para actualizar, mejorar, crear o conectar su sitio web con Cortexa. Nuestro equipo puede revisar tu sitio actual, recomendar los cambios necesarios y ayudar a conectar los puntos de entrada de clientes con tu agente de IA, CRM, seguimiento de campañas, pipeline, citas, checkout, cotizaciones, demos, soporte y transferencia humana. Web Solutions y la implementación personalizada se cotizan por separado según tus requisitos."
               },
               {
-                  "q": "¿Puede mi equipo utilizar CORTEXA en conjunto?",
-                  "a": "Sí. CORTEXA ofrece funciones de espacio de trabajo para equipos que permiten compartir información del CRM, asignar tareas y leads, supervisar la actividad y coordinar el trabajo desde la misma plataforma. La capacidad disponible para el equipo depende del plan del cliente."
+                  "q": "¿Puede mi equipo gestionar asignaciones, seguimientos, notas y transferencias de clientes en conjunto?",
+                  "a": "Sí. Team Workspace ofrece a los miembros autorizados del equipo un lugar compartido para gestionar asignaciones, prioridades, notas internas, seguimientos de clientes, plazos y transferencias entre departamentos. Todos trabajan con la misma información actual del cliente, mientras que los permisos determinan a qué puede acceder o qué puede cambiar cada persona."
               },
               {
-                  "q": "¿Para qué tipo de empresas está diseñado CORTEXA?",
-                  "a": "CORTEXA está diseñado para empresas y equipos profesionales que necesitan un sistema centralizado para gestionar leads, contactos, pipelines de ventas, información de clientes, tareas, informes y operaciones diarias de CRM."
+                  "q": "¿El agente de IA reemplaza a mi personal o transfiere conversaciones cuando se necesita una persona?",
+                  "a": "El agente de IA gestiona las interacciones con clientes y el trabajo rutinario que autorices. Puede responder preguntas comunes, capturar información, calificar el interés, programar citas y apoyar el seguimiento. Cuando una conversación requiere criterio, aprobación, asistencia especializada o atención personal, Cortexa puede transferirla al miembro adecuado del equipo según las reglas configuradas."
               },
               {
-                  "q": "¿Qué sucede después de añadir un lead a CORTEXA?",
-                  "a": "El lead pasa a formar parte de tu espacio de trabajo CRM centralizado, donde tu equipo puede organizar el registro, asignar responsabilidades, añadir notas y tareas, gestionar su etapa del pipeline y realizar un seguimiento de la actividad y el progreso."
+                  "q": "¿Puedo conectar las aplicaciones y herramientas que mi negocio ya utiliza?",
+                  "a": "Cortexa admite un directorio creciente de aplicaciones y métodos de conexión, incluidas integraciones compatibles, APIs, webhooks, Zapier y otras herramientas de automatización compatibles. La funcionalidad disponible depende de la aplicación y de tu plan de Cortexa. Visita Apps & Integrations dentro de tu cuenta para revisar las conexiones disponibles."
+              },
+              {
+                  "q": "¿Cómo funcionan la tarifa de activación y la prueba de 14 días?",
+                  "a": "Se requiere una tarifa de activación no reembolsable para activar tu cuenta y comenzar la prueba de 14 días. La tarifa de activación aplicable, el período de prueba, la primera fecha de facturación recurrente y el precio de la suscripción mensual se muestran antes de completar el checkout. Si cancelas antes de la primera fecha de facturación recurrente, no se cobrará la suscripción mensual. La tarifa de activación sigue siendo no reembolsable."
+              },
+              {
+                  "q": "¿Qué sucede si necesito ayuda para configurar o conectar todo?",
+                  "a": "La configuración guiada está disponible dentro de tu cuenta y puedes enviar una solicitud de asistencia cuando necesites ayuda. Nuestro equipo puede revisar tu configuración, identificar información faltante y responder a través de tu cuenta. La configuración personalizada, el trabajo del sitio web y la implementación técnica son servicios opcionales de pago y se cotizarán por separado antes de comenzar cualquier trabajo pagado."
               }
           ],
           "finalCtaTitle1": "Conecta Tu",
@@ -595,6 +621,16 @@ export default function LandingMobile() {
                   "description": "Cortexa conecta cómo los clientes te descubren, se comunican con tu negocio, ingresan a tu CRM, avanzan por el espacio de trabajo correcto y llegan a la conversión adecuada o a una transferencia humana.",
                   "closing": "Desde el primer contacto hasta la siguiente mejor acción, todo permanece conectado.",
                   "cta": "Explorar la Plataforma Cortexa"
+              },
+              "appointmentAutomation": {
+                  "eyebrow": "AUTOMATIZACIÓN DE CITAS",
+                  "title": "Tu Agente de IA Reserva Citas 24/7.",
+                  "description": "Cortexa consulta tu disponibilidad en tiempo real, ofrece horarios adecuados, reserva o reprograma citas, actualiza tu calendario y CRM, y mantiene informado a tu equipo incluso cuando nadie está disponible para responder.",
+                  "customer": "Cliente", "agent": "Agente de IA Cortexa",
+                  "messages": ["Me gustaría programar una consulta el viernes por la tarde.", "Tengo disponibilidad a las 2:30 PM o 4:00 PM. ¿Qué horario te conviene más?", "2:30 PM.", "Tu cita está reservada para el viernes a las 2:30 PM."],
+                  "confirmed": "Cita Confirmada", "time": "Viernes • 2:30 PM",
+                  "meta": "Calendario actualizado • CRM actualizado • Confirmación enviada",
+                  "benefits": ["Consulta tu disponibilidad en tiempo real", "Reserva, reprograma y confirma citas", "Envía recordatorios y mantiene actualizados los registros de clientes"]
               }
       },
       "pt": {
@@ -622,40 +658,48 @@ export default function LandingMobile() {
           "ctaButtonText": "Começar!",
           "heroNoCard": "Teste grátis de 14 dias",
           "heroFreeForever": "A partir de US$ 11",
-          "faqSubtitle": "PERGUNTAS FREQUENTES",
-          "faqTitle": "Tudo o que você precisa saber",
+          "faqSubtitle": "Respostas diretas sobre o agente de IA, espaços de trabalho, configuração, conexões, sua equipe e como começar.",
+          "faqTitle": "Perguntas Frequentes",
           "faq": [
               {
-                  "q": "O que a CORTEXA realmente faz?",
-                  "a": "A CORTEXA reúne seus leads, contatos, pipeline, tarefas, propriedades, análises, atividades da equipe e ferramentas de negócios conectadas em um único espaço de trabalho CRM centralizado. Ela ajuda empresas a organizar relacionamentos com clientes, gerenciar oportunidades, monitorar o desempenho e manter suas operações de vendas conectadas."
+                  "q": "O que é a Cortexa e o que seu agente de IA faz?",
+                  "a": "A Cortexa é um CRM inteligente e um sistema operacional empresarial. Seu agente de IA pode responder a dúvidas de clientes, capturar informações de contato, qualificar o interesse, agendar compromissos, apoiar o acompanhamento e direcionar cada conversa para o processo correto de CRM e pipeline com base nas regras que você configurar."
               },
               {
-                  "q": "Como funciona o Assistente de IA?",
-                  "a": "O Assistente de IA da CORTEXA ajuda os usuários a trabalhar com informações que já estão disponíveis em seu espaço de trabalho. Ele pode ajudar a destacar informações úteis, resumir atividades, fornecer insights e auxiliar os usuários em tarefas diárias de CRM e negócios, mantendo o usuário no controle."
+                  "q": "Qual espaço de trabalho da Cortexa devo usar para o meu negócio?",
+                  "a": "Escolha o espaço de trabalho que mais se aproxima da forma como sua empresa opera. Cada espaço inclui a terminologia, os registros de clientes, os fluxos de trabalho, os pipelines e as ferramentas operacionais adequadas para esse tipo de negócio. Um espaço de trabalho está incluído na sua conta. Espaços adicionais podem ser adicionados separadamente se sua empresa precisar deles."
               },
               {
-                  "q": "Posso gerenciar todos os meus leads em um só lugar?",
-                  "a": "Sim. Leads, contatos, notas, atividades, etapas do pipeline e informações relacionadas aos clientes podem ser organizados em um espaço de trabalho centralizado, facilitando para sua equipe gerenciar oportunidades sem precisar alternar entre vários sistemas."
+                  "q": "Como funciona a configuração guiada depois que escolho um espaço de trabalho?",
+                  "a": "Depois de selecionar seu espaço de trabalho, a Cortexa orienta você pela configuração essencial dentro da sua conta. Você informará os dados da empresa, serviços ou produtos, horários, responsabilidades da equipe, pontos de entrada de clientes, regras de qualificação, metas de conversão, configurações de compromissos, requisitos de acompanhamento e instruções de transferência para atendimento humano. Você pode salvar seu progresso e voltar para concluir a configuração a qualquer momento."
               },
               {
-                  "q": "Como gerencio meu pipeline de vendas?",
-                  "a": "A CORTEXA oferece um pipeline visual onde você pode organizar oportunidades, mover negócios entre etapas, atribuir responsabilidades, criar tarefas e lembretes e monitorar o progresso em um único espaço de trabalho."
+                  "q": "A Cortexa pode se conectar ao meu site, telefone comercial, WhatsApp, formulários e páginas de marketing?",
+                  "a": "Sim. A Cortexa pode conectar pontos de entrada de clientes compatíveis ao seu agente de IA e ao fluxo de trabalho do CRM. Isso pode incluir seu site, telefone comercial, WhatsApp, formulários, landing pages e páginas de tráfego publicitário. O objetivo é capturar o contato, registrar a origem, criar o registro correto no CRM, selecionar o pipeline apropriado e conduzir o cliente até uma conversão ou transferência para atendimento humano."
               },
               {
-                  "q": "Posso conectar as ferramentas de negócios que já utilizo?",
-                  "a": "Sim. A CORTEXA oferece suporte a integrações com ferramentas e serviços empresariais de terceiros compatíveis. As integrações disponíveis podem variar, e os clientes continuam responsáveis por suas próprias contas de terceiros, permissões e termos aplicáveis dos provedores."
+                  "q": "O que são as Cortexa Web Solutions e quando eu precisaria delas?",
+                  "a": "Cortexa Web Solutions são serviços profissionais opcionais para empresas que precisam de ajuda para atualizar, melhorar, criar ou conectar seu site à Cortexa. Nossa equipe pode analisar seu site atual, recomendar as mudanças necessárias e ajudar a conectar os pontos de entrada de clientes ao seu agente de IA, CRM, rastreamento de campanhas, pipeline, compromissos, checkout, orçamentos, demos, suporte e transferência para atendimento humano. Web Solutions e implementações personalizadas são orçadas separadamente de acordo com suas necessidades."
               },
               {
-                  "q": "Minha equipe pode usar a CORTEXA em conjunto?",
-                  "a": "Sim. A CORTEXA oferece recursos de espaço de trabalho em equipe que ajudam os usuários a compartilhar informações do CRM, atribuir tarefas e leads, monitorar atividades e coordenar o trabalho na mesma plataforma. A capacidade disponível para a equipe depende do plano do cliente."
+                  "q": "Minha equipe pode gerenciar atribuições, acompanhamentos, notas e transferências de clientes em conjunto?",
+                  "a": "Sim. O Team Workspace oferece aos membros autorizados da equipe um local compartilhado para gerenciar atribuições, prioridades, notas internas, acompanhamentos de clientes, prazos e transferências entre departamentos. Todos trabalham com as mesmas informações atualizadas do cliente, enquanto as permissões determinam o que cada pessoa pode acessar ou alterar."
               },
               {
-                  "q": "Para que tipo de empresas a CORTEXA foi criada?",
-                  "a": "A CORTEXA foi desenvolvida para empresas e equipes profissionais que precisam de um sistema centralizado para gerenciar leads, contatos, pipelines de vendas, informações de clientes, tarefas, relatórios e operações diárias de CRM."
+                  "q": "O agente de IA substitui minha equipe ou transfere conversas quando uma pessoa é necessária?",
+                  "a": "O agente de IA cuida das interações com clientes e do trabalho rotineiro que você autorizar. Ele pode responder a perguntas comuns, capturar informações, qualificar o interesse, agendar compromissos e apoiar o acompanhamento. Quando uma conversa exige julgamento, aprovação, assistência especializada ou atenção pessoal, a Cortexa pode transferi-la para o membro apropriado da equipe de acordo com as regras configuradas."
               },
               {
-                  "q": "O que acontece depois que um lead é adicionado à CORTEXA?",
-                  "a": "O lead passa a fazer parte do seu espaço de trabalho CRM centralizado, onde sua equipe pode organizar o registro, atribuir responsabilidades, adicionar notas e tarefas, gerenciar sua etapa no pipeline e acompanhar atividades e progresso."
+                  "q": "Posso conectar os aplicativos e ferramentas que minha empresa já utiliza?",
+                  "a": "A Cortexa oferece suporte a um diretório crescente de aplicativos e métodos de conexão, incluindo integrações compatíveis, APIs, webhooks, Zapier e outras ferramentas de automação compatíveis. A funcionalidade disponível depende do aplicativo e do seu plano Cortexa. Visite Apps & Integrations dentro da sua conta para revisar as conexões disponíveis."
+              },
+              {
+                  "q": "Como funcionam a taxa de ativação e o teste de 14 dias?",
+                  "a": "Uma taxa de ativação não reembolsável é necessária para ativar sua conta e iniciar o teste de 14 dias. A taxa de ativação aplicável, o período de teste, a primeira data de cobrança recorrente e o preço da assinatura mensal são exibidos antes de você concluir o checkout. Se você cancelar antes da primeira data de cobrança recorrente, a assinatura mensal não será cobrada. A taxa de ativação permanece não reembolsável."
+              },
+              {
+                  "q": "O que acontece se eu precisar de ajuda para configurar ou conectar tudo?",
+                  "a": "A configuração guiada está disponível dentro da sua conta, e você pode enviar uma solicitação de assistência sempre que precisar de ajuda. Nossa equipe pode revisar sua configuração, identificar informações ausentes e responder pela sua conta. Configuração personalizada, trabalho no site e implementação técnica são serviços pagos opcionais e serão orçados separadamente antes do início de qualquer trabalho pago."
               }
           ],
           "finalCtaTitle1": "Conecte Seu",
@@ -841,6 +885,16 @@ export default function LandingMobile() {
                   "description": "A Cortexa conecta como os clientes descobrem sua empresa, se comunicam com ela, entram no seu CRM, avançam pelo espaço de trabalho correto e chegam à conversão certa ou ao atendimento humano.",
                   "closing": "Do primeiro contato à próxima melhor ação, tudo permanece conectado.",
                   "cta": "Explorar a Plataforma Cortexa"
+              },
+              "appointmentAutomation": {
+                  "eyebrow": "AUTOMAÇÃO DE AGENDAMENTOS",
+                  "title": "Seu Agente de IA Agenda Compromissos 24/7.",
+                  "description": "A Cortexa verifica sua disponibilidade em tempo real, oferece horários adequados, agenda ou remarca compromissos, atualiza seu calendário e CRM e mantém sua equipe informada mesmo quando ninguém está disponível para responder.",
+                  "customer": "Cliente", "agent": "Agente de IA Cortexa",
+                  "messages": ["Gostaria de agendar uma consulta na sexta-feira à tarde.", "Tenho 14:30 ou 16:00 disponíveis. Qual horário funciona melhor?", "14:30.", "Seu horário está confirmado para sexta-feira às 14:30."],
+                  "confirmed": "Agendamento Confirmado", "time": "Sexta-feira • 14:30",
+                  "meta": "Calendário atualizado • CRM atualizado • Confirmação enviada",
+                  "benefits": ["Verifica sua disponibilidade em tempo real", "Agenda, remarca e confirma compromissos", "Envia lembretes e mantém os registros dos clientes atualizados"]
               }
       }
   };
@@ -1614,9 +1668,6 @@ export default function LandingMobile() {
               {tr.customerExperiences.explore}
             </a>
 
-            <p className="m-customer-experiences-note">
-              {tr.customerExperiences.note}
-            </p>
           </div>
         </div>
       </section>
@@ -1668,6 +1719,66 @@ export default function LandingMobile() {
         </div>
       </section>
       
+
+      {/* APPOINTMENT AUTOMATION */}
+      <section className="m-appointment-automation">
+        <div className="m-appointment-automation-inner">
+          <p className="m-appointment-automation-eyebrow">{tr.appointmentAutomation.eyebrow}</p>
+          <h2 className="m-appointment-automation-title">{tr.appointmentAutomation.title}</h2>
+          <p className="m-appointment-automation-description">{tr.appointmentAutomation.description}</p>
+
+          <div className="m-appointment-chat">
+            {tr.appointmentAutomation.messages.map((message, index) => {
+              const isAgent = index === 1 || index === 3;
+              return (
+                <div className={`m-appointment-message ${isAgent ? "agent" : "customer"}`} key={index}>
+                  <div className={`m-appointment-avatar ${isAgent ? "agent" : "customer"}`}>
+                    {isAgent ? (
+                      <img
+                        src={cortexaAiAgentIcon}
+                        alt=""
+                        aria-hidden="true"
+                        className="m-appointment-agent-icon"
+                      />
+                    ) : (
+                      <UserCheck size={25} strokeWidth={2.2} />
+                    )}
+                  </div>
+                  <div className="m-appointment-bubble">
+                    <span className="m-appointment-speaker">
+                      {isAgent ? tr.appointmentAutomation.agent : tr.appointmentAutomation.customer}
+                    </span>
+                    <p>{message}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="m-appointment-confirmed">
+            <div className="m-appointment-confirmed-icon"><Check size={36} strokeWidth={3} /></div>
+            <div className="m-appointment-confirmed-divider" />
+            <div className="m-appointment-confirmed-copy">
+              <h3>{tr.appointmentAutomation.confirmed}</h3>
+              <p>{tr.appointmentAutomation.time}</p>
+              <span>{tr.appointmentAutomation.meta}</span>
+            </div>
+          </div>
+
+          <div className="m-appointment-benefits">
+            {tr.appointmentAutomation.benefits.map((item, index) => {
+              const BenefitIcon = index === 0 ? CalendarDays : index === 1 ? Workflow : ClipboardList;
+              return (
+                <div className="m-appointment-benefit" key={item}>
+                  <div className="m-appointment-benefit-icon"><BenefitIcon size={36} strokeWidth={1.8} /></div>
+                  <p>{item}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section className="m-powerful">
         <div className="cx-mp-wrapper">
           <div className="cx-mp-badge-container">

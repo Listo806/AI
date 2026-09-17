@@ -3609,3 +3609,58 @@ body .cx-reporting-footer .fdes{
   }
 }
 
+
+/* =========================================================
+   APPOINTMENT AUTOMATION
+========================================================= */
+.mobile-landing .m-appointment-automation{width:100%;box-sizing:border-box;padding:70px 20px 82px!important;background:#000;color:#fff;overflow:hidden}
+.mobile-landing .m-appointment-automation-inner{width:100%;max-width:480px;margin:0 auto}
+.mobile-landing .m-appointment-automation-eyebrow{margin:0;text-align:center;color:#8d86ff;font-size:13px;line-height:1.2;font-weight:600;letter-spacing:.18em;text-transform:uppercase}
+.mobile-landing .m-appointment-automation-title{max-width:455px;margin:20px auto 0;text-align:center;color:#fff;font-size:33px;line-height:1.08;font-weight:700;letter-spacing:-.035em}
+.mobile-landing .m-appointment-automation-description{max-width:455px;margin:22px auto 0;text-align:center;color:#d1d1d8;font-size:15px;line-height:1.55}
+.mobile-landing .m-appointment-chat{margin-top:31px;display:flex;flex-direction:column;gap:14px}
+.mobile-landing .m-appointment-message{width:100%;display:flex;align-items:center;gap:13px;box-sizing:border-box}
+.mobile-landing .m-appointment-message.customer{justify-content:flex-start}
+.mobile-landing .m-appointment-message.agent{justify-content:flex-end}
+.mobile-landing .m-appointment-avatar{width:52px;height:52px;flex:0 0 52px;box-sizing:border-box;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.mobile-landing .m-appointment-avatar.customer{order:1;color:#c8cad4;border:1px solid #454856;background:radial-gradient(circle at 50% 35%,#181b24 0%,#080a10 72%)}
+.mobile-landing .m-appointment-avatar.agent{order:2;padding:0;border:0;background:transparent;box-shadow:none;overflow:visible}
+.mobile-landing .m-appointment-agent-icon{display:block;width:52px;height:52px;border-radius:50%;object-fit:cover}
+.mobile-landing .m-appointment-bubble{min-height:76px;box-sizing:border-box;padding:12px 17px 13px;border-radius:16px;background:#090a0f;border:1px solid #333640;text-align:left}
+.mobile-landing .m-appointment-message.customer .m-appointment-bubble{order:2;width:calc(100% - 69px);margin-right:34px}
+.mobile-landing .m-appointment-message.agent .m-appointment-bubble{order:1;width:calc(100% - 69px);margin-left:34px;border-color:#3830ff;background:linear-gradient(110deg,#07091a,#060812)}
+.mobile-landing .m-appointment-speaker{display:block;margin-bottom:4px;color:#aeb5c5;font-size:14px;line-height:1.2;font-weight:500}
+.mobile-landing .m-appointment-message.agent .m-appointment-speaker{color:#797cff}
+.mobile-landing .m-appointment-bubble p{margin:0;color:#f5f5f7;font-size:15px;line-height:1.34}
+.mobile-landing .m-appointment-confirmed{margin-top:22px;min-height:104px;box-sizing:border-box;padding:13px;border:1px solid #312cff;border-radius:17px;display:grid;grid-template-columns:57px 1px minmax(0,1fr);align-items:center;gap:15px;background:linear-gradient(105deg,rgba(12,14,36,.92),rgba(3,5,14,.96))}
+.mobile-landing .m-appointment-confirmed-icon{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,#2637ff,#1018df);box-shadow:0 0 22px rgba(35,46,255,.22)}
+.mobile-landing .m-appointment-confirmed-divider{width:1px;height:56px;background:rgba(255,255,255,.15)}
+.mobile-landing .m-appointment-confirmed-copy{text-align:left;min-width:0}
+.mobile-landing .m-appointment-confirmed-copy h3{margin:0;color:#fff;font-size:20px;line-height:1.2;font-weight:500}
+.mobile-landing .m-appointment-confirmed-copy p{margin:7px 0 0;color:#c4c8d3;font-size:17px;line-height:1.25}
+.mobile-landing .m-appointment-confirmed-copy span{display:block;margin-top:7px;color:#a7acbb;font-size:12px;line-height:1.35}
+.mobile-landing .m-appointment-benefits{margin-top:24px}
+.mobile-landing .m-appointment-benefit{min-height:82px;box-sizing:border-box;display:grid;grid-template-columns:58px minmax(0,1fr);align-items:center;gap:14px;padding:17px 8px;border-bottom:1px solid rgba(255,255,255,.13)}
+.mobile-landing .m-appointment-benefit:last-child{border-bottom:0}
+.mobile-landing .m-appointment-benefit-icon{width:50px;display:flex;align-items:center;justify-content:center;color:#666dff}
+.mobile-landing .m-appointment-benefit p{margin:0;color:#f4f4f7;font-size:15px;line-height:1.34;text-align:left}
+@media(max-width:390px){
+.mobile-landing .m-appointment-automation{padding:62px 15px 72px!important}
+.mobile-landing .m-appointment-automation-eyebrow{font-size:11px;letter-spacing:.16em}
+.mobile-landing .m-appointment-automation-title{font-size:33px}
+.mobile-landing .m-appointment-automation-description{font-size:16px}
+.mobile-landing .m-appointment-message{gap:10px}
+.mobile-landing .m-appointment-avatar{width:46px;height:46px;flex-basis:46px}
+.mobile-landing .m-appointment-agent-icon{width:46px;height:46px}
+.mobile-landing .m-appointment-message.customer .m-appointment-bubble{width:calc(100% - 56px);margin-right:20px}
+.mobile-landing .m-appointment-message.agent .m-appointment-bubble{width:calc(100% - 56px);margin-left:20px}
+.mobile-landing .m-appointment-bubble{padding:11px 14px 12px}
+.mobile-landing .m-appointment-bubble p{font-size:15px}
+.mobile-landing .m-appointment-confirmed{padding:15px 13px;grid-template-columns:48px 1px minmax(0,1fr);gap:11px}
+.mobile-landing .m-appointment-confirmed-icon{width:46px;height:46px}
+.mobile-landing .m-appointment-confirmed-copy h3{font-size:17px}
+.mobile-landing .m-appointment-confirmed-copy p{font-size:15px}
+.mobile-landing .m-appointment-confirmed-copy span{font-size:10.5px}
+.mobile-landing .m-appointment-benefit{grid-template-columns:50px minmax(0,1fr);gap:10px}
+.mobile-landing .m-appointment-benefit p{font-size:16px}
+}
