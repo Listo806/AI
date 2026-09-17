@@ -1441,3 +1441,18 @@
 }
 
 .aw-filter-wrap{position:relative}.aw-filter-popover{position:absolute;right:0;top:42px;z-index:40;width:250px;padding:12px;border:1px solid #dce1eb;border-radius:9px;background:#fff;box-shadow:0 14px 34px rgba(25,31,70,.12);display:flex;flex-direction:column;gap:10px}.aw-filter-popover label{display:flex;flex-direction:column;gap:5px;color:#59617d;font-size:10px;font-weight:500}.aw-filter-popover select{width:100%;height:34px;border:1px solid #d8dde8;border-radius:6px;background:#fff;color:#171b45;padding:0 9px;font-size:10px;outline:none}.aw-filter-popover>button{height:32px;border:1px solid #d8dde8;border-radius:6px;background:#f8f9fc;color:#4f5672;font-size:10px;cursor:pointer}.aw-filter-popover>button:hover{background:#f1f2f8}@media(max-width:760px){.aw-filter-popover{left:0;right:auto;width:min(280px,calc(100vw - 28px))}}
+
+
+/* ============================================================
+   HEADER — CLIENTS NAVIGATION
+   ============================================================ */
+.aw-clients-control {
+    min-width: 139px;
+    white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+    .aw-clients-control {
+        min-width: 0;
+    }
+}

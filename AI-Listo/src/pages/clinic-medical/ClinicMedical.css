@@ -1422,7 +1422,16 @@
   border-radius: 8px;
   text-align: left;
 }
-
+.cm-selection-banner{
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+ .cm-selection-banner div{
+  display: flex;
+  gap: 7px;
+  flex-direction: column;
+}
 .cm-dashboard-reference .cmd-ai-icon {
   width: 66px;
   height: 66px;
@@ -2204,3 +2213,7 @@
  .cm-profile-reference .medical-three>div { padding:9px 0; border-right:0; border-bottom:1px solid #e5e7f0; }
  .cm-profile-reference .follow-card { grid-template-columns:1fr; }
 }
+/* Clinic dashboard top page navigation */
+.cmd-actions>button{white-space:nowrap}
+@media(max-width:900px){.cmd-actions{flex-wrap:wrap;justify-content:flex-end}}
+@media(max-width:640px){.cmd-actions{width:100%;justify-content:flex-start}.cmd-actions>button{flex:1 1 auto}}

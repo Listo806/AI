@@ -197,6 +197,15 @@ export default function AestheticWellnessWorkspace() {
         </div>
 
         <div className="aw-header-actions">
+          <button
+            type="button"
+            className="aw-top-control aw-clients-control"
+            onClick={() => navigate("/dashboard/aesthetic-wellness/clients")}
+          >
+            <UsersRound size={15} />
+            <span>Clients</span>
+          </button>
+
           <button type="button" className="aw-top-control aw-date-control" onClick={() => setRange((v) => v === "today" ? "7d" : "today")}>
             <CalendarDays size={15} /><span>{range === "today" ? "Today" : "Last 7 Days"}</span><ChevronDown size={14} />
           </button>

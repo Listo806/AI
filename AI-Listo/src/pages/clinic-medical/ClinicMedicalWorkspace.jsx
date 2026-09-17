@@ -4,6 +4,7 @@ import {
   Activity,
   Bot,
   CalendarDays,
+  ClipboardList,
   Clock3,
   DollarSign,
   Download,
@@ -167,6 +168,14 @@ export default function ClinicMedicalWorkspace() {
         </div>
 
         <div className="cm-actions cmd-actions">
+          <button onClick={() => nav("/dashboard/clinic-medical/patients")}>
+            <Users />
+            Patients
+          </button>
+          <button onClick={() => nav("/dashboard/clinic-medical/patients?action=start-consultation")}>
+            <ClipboardList />
+            Clinical Consultations
+          </button>
           <button onClick={() => nav("/dashboard/calendar?workspace_id=clinic-medical")}>
             <CalendarDays />
             Today
