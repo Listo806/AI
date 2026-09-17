@@ -7,15 +7,12 @@ import {
   RefreshCcw,
   DollarSign,
   BarChart3,
-  Brain,
-  Plug,
   ArrowRight,
   CheckCircle,
   Zap,
   MessageCircleCheck,
   ShieldX,
   ChartColumn,
-  XCircle,
   Clock,
   EyeOff,
   Flame,
@@ -28,29 +25,16 @@ import {
   UserCheck,
   MessagesSquare,
   Eye,
-  ChartNoAxesColumn,
-  MessageSquareMore,
-  Rocket,
   FileText,
-  GitFork,
   PieChart,
   ShieldCheck,
-  MoveRight,
-  LockKeyhole,
-  RotateCcw,
-  Clock4,
-  ChartNoAxesCombined,
   User,
   Bot,
   Send,
   Home,
   Workflow,
-  TriangleAlert,
-  LayoutDashboard,
   MessageSquare,
-  Hourglass,
   Sparkles,
-  Contact2,
   Users2,
   Puzzle,
   CheckCircle2,
@@ -58,13 +42,8 @@ import {
   Check,
   Grid,
   ChevronRight,
-  CircleDollarSign,
   CreditCard,
   Infinity,
-  BadgeDollarSign,
-  UserRoundPlus,
-  BriefcaseBusiness,
-  BadgePercent,
   CalendarDays,
   Stethoscope,
   ShoppingCart,
@@ -86,12 +65,9 @@ import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
 
 import footdarklogo from "../../assets/cortexa/footlogo.png";
-import footlogo from "../../assets/cortexa/p-flogo.png";
 import CountriesCitiesSection from "./CountriesCitiesSection";
 import herorightImg from "../../assets/cortexa/hero_right.png";
 import trialmobileImg from "../../assets/cortexa/img_desktop_none.png";
-import headlogotranImg from "../../assets/cortexa/headlogotran.png";
-import logotranImg from "../../assets/cortexa/logotran.png";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import logoImg from "../../assets/cortexa/logo.png";
 import heroImg from "../../assets/cortexa/Cortexa Hero 1.png";
@@ -118,17 +94,13 @@ import customerJourneyEN from "../../assets/cortexa/customer-journey-en.png";
 import customerJourneyES from "../../assets/cortexa/customer-journey-es.png";
 import customerJourneyPT from "../../assets/cortexa/customer-journey-pt.png";
 
-import feaImg1 from "../../assets/cortexa/featured1.png";
-import feaImg2 from "../../assets/cortexa/featured2.png";
-import feaImg3 from "../../assets/cortexa/featured3.png";
-import feaImg4 from "../../assets/cortexa/featured4.png";
-import finalImg from "../../assets/cortexa/final.png";
-
 import aiSetterImg from "../../assets/cortexa/aiSetter.png";
 import aiSetterImgES from "../../assets/cortexa/aiSetterES.png";
 import aiSetterImgPT from "../../assets/cortexa/aiSetterPT.png";
+import customerClinicManagerImg from "../../assets/cortexa/customer-clinic-manager.jpg";
+import customerSalesDirectorImg from "../../assets/cortexa/customer-sales-director.jpg";
+import customerBusinessOwnerImg from "../../assets/cortexa/customer-business-owner.jpg";
 
-import x3xImg from "../../assets/cortexa/3x.png";
 import powerfulImg from "../../assets/cortexa/powerful.png";
 import workspaceImg from "../../assets/cortexa/workspace.png";
 import workspaceImgES from "../../assets/cortexa/workspaceES.png";
@@ -137,13 +109,6 @@ import workspaceImgPT from "../../assets/cortexa/workspacePT.png";
 import sect2 from "../../assets/cortexa/sect2.png";
 import sect2ES from "../../assets/cortexa/sect2es.png";
 import sect2PT from "../../assets/cortexa/sect2pt.png";
-
-import aiosIntegrationSalesforce from "../../assets/cortexa/aios-integration-salesforce.png";
-import aiosIntegrationGoogle from "../../assets/cortexa/aios-integration-google.png";
-import aiosIntegrationMicrosoft from "../../assets/cortexa/aios-integration-microsoft.png";
-import aiosIntegrationWhatsapp from "../../assets/cortexa/aios-integration-whatsapp.png";
-import aiosIntegrationMail from "../../assets/cortexa/aios-integration-mail.png";
-import aiosIntegrationMore from "../../assets/cortexa/aios-integration-more.png";
 
 const IconRenderer = ({ name, className }) => {
   const icons = {
@@ -168,6 +133,106 @@ const trustIcons = [
   <TrendingUp className="cx-icon" stroke="url(#icon-gradient)" />,
   <Zap className="cx-icon" stroke="url(#icon-gradient)" />,
 ];
+
+const CUSTOMER_EXPERIENCES_COPY = {
+  en: {
+    eyebrow: "CUSTOMER EXPERIENCES",
+    titleLead: "Put Cortexa to Work",
+    titleAccent: "Across Your Business.",
+    subtitle:
+      "Choose the right workspace, configure your AI agent, connect your customer entry points, and give your team one intelligent system for managing what happens next.",
+    sampleLabel: "SAMPLE TESTIMONIAL",
+    testimonials: [
+      {
+        quote:
+          "Cortexa brought our customer inquiries, appointments, and follow-up into one clear process. Our team can see what needs attention without moving between disconnected systems.",
+        role: "Clinic Operations Manager",
+        workspace: "Clinic & Medical Workspace",
+      },
+      {
+        quote:
+          "The AI agent gives customers an immediate response and captures the information our team needs before a person steps in. That has made every conversation more organized.",
+        role: "Sales Director",
+        workspace: "Sales Workspace",
+      },
+      {
+        quote:
+          "We finally have a workspace that reflects how our business actually operates. The guided setup made it clear what to connect and how every customer should move forward.",
+        role: "Business Owner",
+        workspace: "Business Suite",
+      },
+    ],
+    ready: "Ready to build a more connected way to operate?",
+    cta: "Get Started",
+    explore: "Explore Cortexa Workspaces",
+    note: "Replace sample testimonial copy with verified customer statements before publishing.",
+  },
+  es: {
+    eyebrow: "EXPERIENCIAS DE CLIENTES",
+    titleLead: "Pon Cortexa a Trabajar",
+    titleAccent: "En Todo Tu Negocio.",
+    subtitle:
+      "Elige el workspace adecuado, configura tu agente de IA, conecta los puntos de entrada de tus clientes y brinda a tu equipo un sistema inteligente para gestionar lo que sucede después.",
+    sampleLabel: "TESTIMONIO DE EJEMPLO",
+    testimonials: [
+      {
+        quote:
+          "Cortexa reunió nuestras consultas de clientes, citas y seguimientos en un proceso claro. Nuestro equipo puede ver qué necesita atención sin cambiar entre sistemas desconectados.",
+        role: "Gerente de Operaciones de Clínica",
+        workspace: "Workspace de Clínica y Medicina",
+      },
+      {
+        quote:
+          "El agente de IA ofrece a los clientes una respuesta inmediata y recopila la información que nuestro equipo necesita antes de que intervenga una persona. Esto ha hecho que cada conversación sea más organizada.",
+        role: "Director de Ventas",
+        workspace: "Workspace de Ventas",
+      },
+      {
+        quote:
+          "Por fin tenemos un workspace que refleja cómo funciona realmente nuestro negocio. La configuración guiada dejó claro qué conectar y cómo debe avanzar cada cliente.",
+        role: "Propietario de Negocio",
+        workspace: "Business Suite",
+      },
+    ],
+    ready: "¿Listo para crear una forma de operar más conectada?",
+    cta: "Comenzar",
+    explore: "Explorar Workspaces de Cortexa",
+    note: "Reemplaza los testimonios de ejemplo con declaraciones verificadas de clientes antes de publicar.",
+  },
+  pt: {
+    eyebrow: "EXPERIÊNCIAS DE CLIENTES",
+    titleLead: "Coloque a Cortexa para Trabalhar",
+    titleAccent: "Em Todo o Seu Negócio.",
+    subtitle:
+      "Escolha o workspace certo, configure seu agente de IA, conecte os pontos de entrada dos clientes e dê à sua equipe um sistema inteligente para gerenciar o que acontece a seguir.",
+    sampleLabel: "DEPOIMENTO DE EXEMPLO",
+    testimonials: [
+      {
+        quote:
+          "A Cortexa reuniu nossas consultas de clientes, agendamentos e acompanhamentos em um processo claro. Nossa equipe consegue ver o que precisa de atenção sem alternar entre sistemas desconectados.",
+        role: "Gerente de Operações da Clínica",
+        workspace: "Workspace Clínica e Médica",
+      },
+      {
+        quote:
+          "O agente de IA oferece aos clientes uma resposta imediata e captura as informações de que nossa equipe precisa antes que uma pessoa intervenha. Isso tornou cada conversa mais organizada.",
+        role: "Diretor de Vendas",
+        workspace: "Workspace de Vendas",
+      },
+      {
+        quote:
+          "Finalmente temos um workspace que reflete como nosso negócio realmente funciona. A configuração guiada deixou claro o que conectar e como cada cliente deve avançar.",
+        role: "Proprietário de Negócio",
+        workspace: "Business Suite",
+      },
+    ],
+    ready: "Pronto para criar uma forma mais conectada de operar?",
+    cta: "Começar",
+    explore: "Explorar Workspaces da Cortexa",
+    note: "Substitua os depoimentos de exemplo por declarações verificadas de clientes antes de publicar.",
+  },
+};
+
 export default function Landing() {
   const [lang, setLang] = useState(() => {
     return localStorage.getItem("cortexa_lang") || "en";
@@ -583,9 +648,13 @@ export default function Landing() {
         titleLead: "You have the right workspace.",
         titleSecond: "Now let’s make it",
         titleAccent: "work for your business.",
-        body: "Once your workspace is selected, Cortexa walks you through the setup inside your account. You tell us how your business operates, what you offer, when you are available, how customers reach you, and what should happen when someone is ready to buy, book, request a quote, schedule a viewing, ask for support, or speak with your team. We help you connect those decisions to your AI agent, CRM, pipeline, appointments, checkout, follow-up, and human handoff so the entire experience works together. You can complete the guided setup yourself, and if your website needs to be updated or connected to your workspace, our Web Solutions team can review what you have, explain what is needed, and provide a separate implementation quote.",
+        intro: "A workspace is the part of Cortexa built around the way a specific type of business operates. It brings the customer records, workflows, pipeline, appointments, automation, and AI-agent tools that business needs into one connected place.",
+        quote: "Choose the workspace that fits your business. Then make it yours.",
+        paragraph1: "Once selected, the guided setup helps you define your services, hours, team responsibilities, customer entry points, qualification rules, conversion goals, appointments, follow-up, and human handoff.",
+        paragraph2: "Your website, business phone, forms, advertising traffic, and WhatsApp can connect to the same managed process so the AI agent, CRM, pipeline, checkout, appointments, and team work together from the first conversation to the next appropriate action.",
+        paragraph3: "You can complete the setup yourself. If your website needs to be updated, built, or connected to your workspace, our Web Solutions team can review what you have and provide a separate implementation quote.",
         cta: "Explore Web Solutions",
-        note: "Optional setup and website services are quoted separately.",
+        note: "Optional setup and website implementation services are quoted separately.",
       },
 
       webShowcaseV3: {
@@ -1000,9 +1069,16 @@ export default function Landing() {
       },
 
       webSolutionsSection: {
-        titleLead: "Ya tienes el espacio de trabajo adecuado.", titleSecond: "Ahora hagamos que", titleAccent: "funcione para tu negocio.",
-        body: "Una vez seleccionado tu espacio de trabajo, Cortexa te guía por la configuración dentro de tu cuenta. Nos indicas cómo funciona tu negocio, qué ofreces, cuándo estás disponible, cómo llegan los clientes y qué debe suceder cuando alguien está listo para comprar, reservar, solicitar una cotización, programar una visita, pedir soporte o hablar con tu equipo. Te ayudamos a conectar esas decisiones con tu agente de IA, CRM, pipeline, citas, checkout, seguimiento y transferencia humana para que toda la experiencia funcione de forma integrada. Puedes completar la configuración guiada por tu cuenta y, si tu sitio web necesita actualizarse o conectarse a tu espacio de trabajo, nuestro equipo de Web Solutions puede revisar lo que tienes, explicar lo necesario y proporcionar una cotización de implementación por separado.",
-        cta: "Explorar Web Solutions", note: "Los servicios opcionales de configuración y sitio web se cotizan por separado.",
+        titleLead: "Ya tienes el workspace adecuado.",
+        titleSecond: "Ahora hagamos que",
+        titleAccent: "funcione para tu negocio.",
+        intro: "Un workspace es la parte de Cortexa creada en torno a la forma en que opera un tipo específico de negocio. Reúne los registros de clientes, workflows, pipeline, citas, automatización y herramientas del agente de IA que ese negocio necesita en un solo lugar conectado.",
+        quote: "Elige el workspace que se adapte a tu negocio. Luego hazlo tuyo.",
+        paragraph1: "Una vez seleccionado, la configuración guiada te ayuda a definir tus servicios, horarios, responsabilidades del equipo, puntos de entrada de clientes, reglas de calificación, objetivos de conversión, citas, seguimiento y transferencia humana.",
+        paragraph2: "Tu sitio web, teléfono empresarial, formularios, tráfico publicitario y WhatsApp pueden conectarse al mismo proceso administrado para que el agente de IA, CRM, pipeline, checkout, citas y equipo trabajen juntos desde la primera conversación hasta la siguiente acción adecuada.",
+        paragraph3: "Puedes completar la configuración por tu cuenta. Si tu sitio web necesita actualizarse, construirse o conectarse a tu workspace, nuestro equipo de Web Solutions puede revisar lo que tienes y proporcionar una cotización de implementación por separado.",
+        cta: "Explorar Web Solutions",
+        note: "Los servicios opcionales de configuración e implementación del sitio web se cotizan por separado.",
       },
 
       webShowcaseV3: {
@@ -1412,9 +1488,16 @@ export default function Landing() {
       },
 
       webSolutionsSection: {
-        titleLead: "Você tem o espaço de trabalho certo.", titleSecond: "Agora vamos fazê-lo", titleAccent: "funcionar para o seu negócio.",
-        body: "Depois que seu espaço de trabalho é selecionado, a Cortexa orienta você pela configuração dentro da sua conta. Você nos informa como sua empresa funciona, o que oferece, quando está disponível, como os clientes entram em contato e o que deve acontecer quando alguém está pronto para comprar, reservar, solicitar uma cotação, agendar uma visita, pedir suporte ou falar com sua equipe. Ajudamos você a conectar essas decisões ao seu agente de IA, CRM, pipeline, agendamentos, checkout, acompanhamento e transferência humana para que toda a experiência funcione em conjunto. Você pode concluir a configuração guiada por conta própria e, se seu site precisar ser atualizado ou conectado ao seu espaço de trabalho, nossa equipe de Web Solutions pode revisar o que você tem, explicar o que é necessário e fornecer uma cotação de implementação separada.",
-        cta: "Explorar Web Solutions", note: "Serviços opcionais de configuração e site são cotados separadamente.",
+        titleLead: "Você tem o workspace certo.",
+        titleSecond: "Agora vamos fazê-lo",
+        titleAccent: "funcionar para o seu negócio.",
+        intro: "Um workspace é a parte da Cortexa criada em torno da forma como um tipo específico de negócio opera. Ele reúne registros de clientes, workflows, pipeline, agendamentos, automação e ferramentas do agente de IA que esse negócio precisa em um único lugar conectado.",
+        quote: "Escolha o workspace que se adapta ao seu negócio. Depois, torne-o seu.",
+        paragraph1: "Depois de selecionado, a configuração guiada ajuda você a definir seus serviços, horários, responsabilidades da equipe, pontos de entrada dos clientes, regras de qualificação, metas de conversão, agendamentos, acompanhamento e transferência humana.",
+        paragraph2: "Seu site, telefone comercial, formulários, tráfego de publicidade e WhatsApp podem se conectar ao mesmo processo gerenciado para que o agente de IA, CRM, pipeline, checkout, agendamentos e equipe trabalhem juntos desde a primeira conversa até a próxima ação apropriada.",
+        paragraph3: "Você pode concluir a configuração por conta própria. Se o seu site precisar ser atualizado, criado ou conectado ao seu workspace, nossa equipe de Web Solutions pode revisar o que você tem e fornecer uma cotação de implementação separada.",
+        cta: "Explorar Web Solutions",
+        note: "Serviços opcionais de configuração e implementação do site são cotados separadamente.",
       },
 
       webShowcaseV3: {
@@ -1446,6 +1529,7 @@ export default function Landing() {
   };
 
   const tr = t[lang];
+  const customerExperience = CUSTOMER_EXPERIENCES_COPY[lang] || CUSTOMER_EXPERIENCES_COPY.en;
 
   const scrollTo = (id) => {
     const el = document.getElementById(id);
@@ -1887,19 +1971,36 @@ export default function Landing() {
       {/* WEB SOLUTIONS BRIDGE */}
       <section className="cx-web-solutions-bridge">
         <div className="cx-web-bridge-shell">
-          <h2>{tr.webSolutionsSection.titleLead}<br/>{tr.webSolutionsSection.titleSecond} <strong>{tr.webSolutionsSection.titleAccent}</strong></h2>
-          <p>{tr.webSolutionsSection.body}</p>
-          <a href="/web-solutions">{tr.webSolutionsSection.cta}</a>
+          <h2>
+            {tr.webSolutionsSection.titleLead}
+            <br />
+            {tr.webSolutionsSection.titleSecond}{" "}
+            <strong>{tr.webSolutionsSection.titleAccent}</strong>
+          </h2>
+
+          <p className="cx-web-bridge-intro">{tr.webSolutionsSection.intro}</p>
+
+          <blockquote className="cx-web-bridge-quote">
+            <span className="cx-web-bridge-quote-mark cx-web-bridge-quote-left">“</span>
+            <strong>{tr.webSolutionsSection.quote}</strong>
+            <span className="cx-web-bridge-quote-mark cx-web-bridge-quote-right">”</span>
+          </blockquote>
+
+          <div className="cx-web-bridge-copy">
+            <p>{tr.webSolutionsSection.paragraph1}</p>
+            <p>{tr.webSolutionsSection.paragraph2}</p>
+            <p>{tr.webSolutionsSection.paragraph3}</p>
+          </div>
+
+          <a className="cx-web-bridge-cta" href="/web-solutions">
+            {tr.webSolutionsSection.cta}
+          </a>
           <small>{tr.webSolutionsSection.note}</small>
         </div>
       </section>
 
       <section id="analytics" className="cx-hero pt-50">
         <img src={currentSec2} alt="analytics" />
-        <i>
-          Product demo — the names, numbers, and activity shown are sample data
-          for illustration only, not real customer results.
-        </i>
       </section>
       <section id="workspace" className="cx-team-showcase">
         <div className="cx-team-shell">
@@ -2063,263 +2164,6 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="smart smart-v2">
-        <div className="smart-v2-container">
-          <div className="smart-v2-head">
-            <span className="smart-v2-badge">{tr.smartV2Badge}</span>
-
-            <h2 className="smart-v2-title">
-              <span>{tr.smartV2Title1}</span>
-              <br />
-              <span>{tr.smartV2Title2} </span>
-              <strong>{tr.smartV2TitleAccent}</strong>
-            </h2>
-
-            <p className="smart-v2-subtitle">{tr.smartV2Subtitle}</p>
-          </div>
-
-          <div className="smart-v2-steps">
-            {tr.smartV2Steps.map((step, index) => (
-              <div className="smart-v2-step-wrap" key={step.title}>
-                <div className="smart-v2-step">
-                  <div className="smart-v2-step-number">{index + 1}</div>
-                  <div className="smart-v2-step-copy">
-                    <h3>{step.title}</h3>
-                    <p>{step.desc}</p>
-                  </div>
-                </div>
-
-                {index < tr.smartV2Steps.length - 1 && (
-                  <div className="smart-v2-step-arrow">
-                    <span />
-                    <ChevronRight size={22} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="smart-v2-main-grid">
-            <article className="smart-v2-panel smart-v2-source-panel">
-              <h3>Lead Source Overview</h3>
-
-              <div className="smart-v2-source-content">
-                <div className="smart-v2-source-list">
-                  {[
-                    ["Website", "1,248", "globe"],
-                    ["Google Ads", "842", "google"],
-                    ["Facebook Ads", "624", "facebook"],
-                    ["Referrals", "312", "referral"],
-                    ["Other Sources", "198", "other"],
-                  ].map(([label, value, type]) => (
-                    <div className="smart-v2-source-row" key={label}>
-                      <span className={`smart-v2-source-icon ${type}`}>
-                        {type === "google"
-                          ? "G"
-                          : type === "facebook"
-                            ? "f"
-                            : "◉"}
-                      </span>
-                      <b>{label}</b>
-                      <strong>{value}</strong>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="smart-v2-leads-donut-wrap">
-                  <div className="smart-v2-leads-donut">
-                    <div>
-                      <strong>3,224</strong>
-                      <span>Total Leads</span>
-                    </div>
-                  </div>
-                  <p className="smart-v2-leads-growth">▣ +28%</p>
-                  <small>vs last 30 days</small>
-                </div>
-              </div>
-            </article>
-
-            <article className="smart-v2-panel smart-v2-pipeline-panel">
-              <div className="smart-v2-panel-top">
-                <div>
-                  <h3>Pipeline Overview</h3>
-                  <span>Total Pipeline Value</span>
-                  <strong>$2.48M</strong>
-                </div>
-                <div className="smart-v2-growth">
-                  <b>+32.9% ↑</b>
-                  <small>vs last 30 days</small>
-                </div>
-              </div>
-
-              <div className="smart-v2-pipeline-stages">
-                {[
-                  ["New Leads", "128", "$320K"],
-                  ["Qualified", "64", "$540K"],
-                  ["Proposal", "32", "$680K"],
-                  ["Negotiation", "16", "$420K"],
-                  ["Closed Won", "8", "$520K"],
-                ].map(([label, value, amount]) => (
-                  <div key={label}>
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                    <small>{amount}</small>
-                  </div>
-                ))}
-              </div>
-
-              <div className="smart-v2-pipeline-chart">
-                <span className="smart-v2-chart-label">$3M</span>
-                <span className="smart-v2-chart-label l2">$2M</span>
-                <span className="smart-v2-chart-label l3">$1M</span>
-
-                <svg
-                  viewBox="0 0 520 160"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <linearGradient
-                      id="smartRevenueArea"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor="#7c3aed"
-                        stopOpacity="0.38"
-                      />
-                      <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-
-                  <polygon
-                    points="15,132 65,108 115,95 165,84 215,73 265,98 315,76 365,91 415,61 465,78 510,43 510,150 15,150"
-                    fill="url(#smartRevenueArea)"
-                  />
-
-                  <polyline
-                    points="15,132 65,108 115,95 165,84 215,73 265,98 315,76 365,91 415,61 465,78 510,43"
-                    fill="none"
-                    stroke="#7c4dff"
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-
-                  {[
-                    [15, 132],
-                    [65, 108],
-                    [115, 95],
-                    [165, 84],
-                    [215, 73],
-                    [265, 98],
-                    [315, 76],
-                    [365, 91],
-                    [415, 61],
-                    [465, 78],
-                    [510, 43],
-                  ].map(([cx, cy], i) => (
-                    <circle key={i} cx={cx} cy={cy} r="3.5" fill="#9b6cff" />
-                  ))}
-                </svg>
-
-                <div className="smart-v2-months">
-                  <span>Jan</span>
-                  <span>Feb</span>
-                  <span>Mar</span>
-                  <span>Apr</span>
-                  <span>May</span>
-                  <span>Jun</span>
-                </div>
-              </div>
-            </article>
-
-            <article className="smart-v2-panel smart-v2-task-panel">
-              <h3>Upcoming & Tasks</h3>
-
-              <div className="smart-v2-task-columns">
-                <div className="smart-v2-upcoming-card">
-                  <h4>Upcoming Appointments</h4>
-
-                  {[
-                    ["Project Discovery Call", "Today, 10:00 AM"],
-                    ["Demo Presentation", "Tomorrow, 2:00 PM"],
-                    ["Proposal Review", "May 16, 11:00 AM"],
-                  ].map(([title, time]) => (
-                    <div className="smart-v2-appointment" key={title}>
-                      <span>
-                        <Clock4 size={15} />
-                      </span>
-                      <p>
-                        <b>{title}</b>
-                        <small>{time}</small>
-                      </p>
-                    </div>
-                  ))}
-
-                  <a href="#calendar">
-                    View Calendar <ChevronRight size={15} />
-                  </a>
-                </div>
-
-                <div className="smart-v2-tasks-card">
-                  <div className="smart-v2-tasks-head">
-                    <h4>Tasks</h4>
-                    <span>12</span>
-                  </div>
-
-                  {[
-                    ["Follow up with John S.", "High", "high"],
-                    ["Send proposal to ACME", "High", "high"],
-                    ["Prepare demo", "Medium", "medium"],
-                    ["Contract review", "Medium", "medium"],
-                    ["Check in with Sarah", "Low", "low"],
-                  ].map(([task, priority, tone]) => (
-                    <div className="smart-v2-task-row" key={task}>
-                      <i />
-                      <span>{task}</span>
-                      <small className={tone}>● {priority}</small>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </article>
-          </div>
-
-          <div className="smart-v2-benefits">
-            {tr.smartV2Benefits.map((item, index) => {
-              const BenefitIcon = [Eye, GitMerge, Workflow, ChartNoAxesColumn][
-                index
-              ];
-
-              return (
-                <div className="smart-v2-benefit" key={item.title}>
-                  <div className="smart-v2-benefit-icon">
-                    <BenefitIcon size={29} strokeWidth={2.2} />
-                  </div>
-                  <div>
-                    <h4>{item.title}</h4>
-                    <p>{item.desc}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="smart-v2-cta">
-            <a href="/trial?flow=free-access&plan=free">
-              {tr.smartV2Cta}
-              <ArrowRight size={20} />
-            </a>
-          </div>
-
-          <p className="smart-v2-bottom">{tr.smartV2Bottom}</p>
-        </div>
-      </section>
-
       <section id="pipeline" className="cx-hero pt-50">
         <img src={currentSec4} alt="" />
         <i>
@@ -2344,253 +2188,70 @@ export default function Landing() {
             </a>
           </div>
 
-          <div className="revenue-action-benefits">
-            {tr.revenueActionBenefits.map((item, index) => {
-              const RevenueIcon = [
-                Target,
-                CircleDollarSign,
-                Workflow,
-                ChartNoAxesColumn,
-              ][index];
+        </div>
+      </section>
+
+      <section id="ai-assistant" className="cx-customer-experiences">
+        <div className="cx-customer-experiences-shell">
+          <div className="cx-customer-experiences-eyebrow">
+            <span />
+            {customerExperience.eyebrow}
+            <span />
+          </div>
+
+          <h2 className="cx-customer-experiences-title">
+            {customerExperience.titleLead}{" "}
+            <span>{customerExperience.titleAccent}</span>
+          </h2>
+
+          <p className="cx-customer-experiences-subtitle">
+            {customerExperience.subtitle}
+          </p>
+
+          <div className="cx-customer-testimonials">
+            {customerExperience.testimonials.map((item, index) => {
+              const avatars = [
+                customerClinicManagerImg,
+                customerSalesDirectorImg,
+                customerBusinessOwnerImg,
+              ];
+
               return (
-                <div className="revenue-action-benefit" key={item.title}>
-                  <div className="revenue-action-icon">
-                    <RevenueIcon size={30} strokeWidth={2.1} />
+                <article className="cx-customer-testimonial" key={`${item.role}-${index}`}>
+                  <div className="cx-customer-sample-label">
+                    {customerExperience.sampleLabel}
                   </div>
-                  <h3>{item.title}</h3>
-                  <p>{item.desc}</p>
-                </div>
+
+                  <div className="cx-customer-quote-mark">“</div>
+
+                  <blockquote>{item.quote}</blockquote>
+
+                  <div className="cx-customer-quote-line" />
+
+                  <div className="cx-customer-person">
+                    <img src={avatars[index]} alt="" />
+                    <div>
+                      <strong>{item.role}</strong>
+                      <span>{item.workspace}</span>
+                    </div>
+                  </div>
+                </article>
               );
             })}
           </div>
-        </div>
-      </section>
 
-      <section className="cx-strip revenue-overview-section">
-        <div className="revenue-overview-shell">
-          <div className="revenue-overview-copy">
-            <span className="revenue-overview-eyebrow">
-              {tr.revenueOverviewEyebrow}
-            </span>
-            <h2>{tr.revenueOverviewTitle}</h2>
-            <p>{tr.revenueOverviewSub}</p>
-            <a href="/trial?flow=free-access&plan=free" className="revenue-overview-btn">
-              {tr.revenueOverviewCta} <ArrowRight size={18} />
+          <div className="cx-customer-experiences-cta">
+            <p>{customerExperience.ready}</p>
+            <a href="/trial?flow=free-access&plan=free" className="cx-customer-get-started">
+              <span>{customerExperience.cta}</span>
+              <ArrowRight size={24} />
             </a>
-            <div className="revenue-overview-checks">
-              <span>
-                <CheckCircle2 size={16} />
-                {tr.revenueOverviewCancel}
-              </span>
-            </div>
-          </div>
-
-          <div className="revenue-dashboard">
-            <aside className="revenue-dashboard-sidebar">
-              <div className="revenue-dashboard-brand">
-                <span>⬡</span>CORTEXA
-              </div>
-              {[
-                ["⌂", "Overview", true],
-                ["♙", "Leads"],
-                ["⌘", "Pipeline"],
-                ["◎", "Contacts"],
-                ["✓", "Tasks"],
-                ["▣", "Appointments"],
-                ["▥", "Reports"],
-                ["◇", "Documents"],
-                ["⌘", "Integrations"],
-                ["⚙", "Settings"],
-              ].map(([icon, label, active]) => (
-                <div
-                  className={`revenue-dashboard-nav ${active ? "active" : ""}`}
-                  key={label}
-                >
-                  <span>{icon}</span>
-                  {label}
-                </div>
-              ))}
-
-              <div className="revenue-sidebar-team-card">
-                <span>Team Members</span>
-                <strong>24</strong>
-                <small>Active users</small>
-                <Users2 size={14} />
-              </div>
-            </aside>
-
-            <div className="revenue-dashboard-main">
-              <div className="revenue-dashboard-top">
-                <h3>Dashboard Overview</h3>
-                <span className="revenue-dashboard-date">
-                  <Clock4 size={13} /> May 1 – May 31, 2025{" "}
-                  <ChevronRight size={12} />
-                </span>
-              </div>
-
-              <div className="revenue-dashboard-kpis">
-                {[
-                  [
-                    "Total Revenue",
-                    "$2,742,500",
-                    "+22%",
-                    "green",
-                    BadgeDollarSign,
-                  ],
-                  ["New Leads", "1,325", "+10%", "purple", UserRoundPlus],
-                  ["Opportunities", "87", "+15%", "blue", BriefcaseBusiness],
-                  ["Win Rate", "24%", "+6%", "green", BadgePercent],
-                ].map(([label, value, growth, tone, KpiIcon], index) => (
-                  <div className="revenue-dashboard-kpi" key={label}>
-                    <div className={`revenue-kpi-icon ${tone}`}>
-                      <KpiIcon size={14} strokeWidth={2} />
-                    </div>
-
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                    <small>▲ {growth} vs last month</small>
-
-                    <div className={`revenue-mini-line ${tone}`}>
-                      <svg
-                        viewBox="0 0 150 42"
-                        preserveAspectRatio="none"
-                        aria-hidden="true"
-                      >
-                        <defs>
-                          <linearGradient
-                            id={`kpiArea-${index}`}
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="currentColor"
-                              stopOpacity="0.24"
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="currentColor"
-                              stopOpacity="0"
-                            />
-                          </linearGradient>
-                        </defs>
-
-                        <polygon
-                          points="2,34 18,29 33,31 48,24 64,27 80,18 95,23 110,15 126,18 148,7 148,42 2,42"
-                          fill={`url(#kpiArea-${index})`}
-                        />
-                        <polyline
-                          points="2,34 18,29 33,31 48,24 64,27 80,18 95,23 110,15 126,18 148,7"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="revenue-dashboard-middle">
-                <div className="revenue-pipeline-card">
-                  <h4>Pipeline Overview</h4>
-                  <span>Total Pipeline Value</span>
-                  <strong>$5,630,000</strong>
-                  <div className="revenue-bars">
-                    {[
-                      ["New", "38%", 38],
-                      ["Qualified", "24%", 60],
-                      ["Proposal", "33%", 82],
-                      ["Negotiation", "17%", 56],
-                      ["Closed Won", "8%", 32],
-                    ].map(([label, percent, height]) => (
-                      <div key={label}>
-                        <i style={{ height: `${height}%` }} />
-                        <span>{label}</span>
-                        <b>{percent}</b>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="revenue-task-card">
-                  <h4>Tasks Overview</h4>
-                  <div className="revenue-task-content">
-                    <div className="revenue-task-donut">
-                      <div>
-                        <strong>128</strong>
-                        <span>Total Tasks</span>
-                      </div>
-                    </div>
-                    <div className="revenue-task-legend">
-                      <span>
-                        <i className="done" />
-                        Completed <b>58</b>
-                      </span>
-                      <span>
-                        <i className="progress" />
-                        In Progress <b>36</b>
-                      </span>
-                      <span>
-                        <i className="pending" />
-                        Pending <b>24</b>
-                      </span>
-                      <span>
-                        <i className="overdue" />
-                        Overdue <b>10</b>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="revenue-dashboard-bottom">
-                <div className="revenue-bottom-card revenue-appointments-card">
-                  <div className="revenue-bottom-title">
-                    <span>Appointments</span>
-                    <CalendarDays size={13} />
-                  </div>
-                  <small>Upcoming This Week</small>
-                  <strong>14</strong>
-                  <small>Meetings & Appointments</small>
-                </div>
-
-                <div className="revenue-bottom-card">
-                  <span>Top Activities</span>
-                  <small>
-                    Calls <b>48 ▲ 12%</b>
-                  </small>
-                  <small>
-                    Emails <b>126 ▲ 20%</b>
-                  </small>
-                  <small>
-                    Meetings <b>24 ▲ 8%</b>
-                  </small>
-                </div>
-
-                <div className="revenue-bottom-card revenue-performance-card">
-                  <span>Team Performance</span>
-                  <small>This Month</small>
-                  <strong>92%</strong>
-                  <div className="revenue-goal-row">
-                    <small>Goal Progress</small>
-                    <i className="revenue-progress">
-                      <b />
-                    </i>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <a href="#workspaces" className="cx-customer-explore">
+              {customerExperience.explore}
+            </a>
+            <small>{customerExperience.note}</small>
           </div>
         </div>
-      </section>
-
-      <section id="ai-assistant" className="cx-hero pt-50">
-        <img src={currentaiSetterImg} alt="" />
       </section>
       {/* TRUST */}
       <section className="cx-trust cx-center pt-50 cx-customer-journey-image-section">

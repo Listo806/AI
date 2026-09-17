@@ -356,28 +356,6 @@ i {
   background: rgba(255, 255, 255, 0.82);
 }
 
-#cortexa-ai-crm-landing .cx-strip {
-  padding: 0 0 66px;
-}
-
-#cortexa-ai-crm-landing .cx-strip-inner {
-  background: radial-gradient(circle at left top, rgba(37, 99, 235, .12), transparent 32%), linear-gradient(135deg, #030b18, #071833 60%, #0a1e40);
-  border-radius: 30px;
-  color: #fff;
-  padding: 42px;
-  display: grid;
-  grid-template-columns: 1.2fr .9fr;
-  gap: 30px;
-  align-items: center;
-  overflow: hidden;
-}
-
-#cortexa-ai-crm-landing .cx-strip .cx-sub {
-  color: rgba(255, 255, 255, .74);
-  margin-top: 16px;
-  max-width: 520px;
-}
-
 #cortexa-ai-crm-landing .cx-phone {
   max-width: 360px;
   margin-left: auto;
@@ -3687,614 +3665,6 @@ section#footer {
 
 }
 
-/* =========================================================
-   SMART V2 — Revenue Operation / One Connected System
-   ========================================================= */
-
-#cortexa-ai-crm-landing .smart.smart-v2 {
-  position: relative;
-  padding: 34px 28px 46px !important;
-  background:
-    radial-gradient(circle at 50% -15%, rgba(93, 45, 245, 0.11), transparent 30%),
-    #000;
-  overflow: hidden;
-}
-
-#cortexa-ai-crm-landing .smart-v2-container {
-  width: min(1320px, 100%);
-  margin: 0 auto;
-  max-width: 1264px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-head {
-  max-width: 900px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-#cortexa-ai-crm-landing .smart-v2-badge {
-  display: inline-block;
-  color: #7f5cff;
-  font-size: 12px;
-  line-height: 1;
-  font-weight: 700;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-}
-
-#cortexa-ai-crm-landing .smart-v2-title {
-  margin: 18px 0 0;
-  color: #f7f7fa;
-  font-size: clamp(40px, 4.6vw, 54px);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  font-weight: 700;
-}
-
-#cortexa-ai-crm-landing .smart-v2-title {
-  font-weight: 700;
-}
-
-#cortexa-ai-crm-landing .smart-v2-title strong {
-  background: linear-gradient(90deg, #7c3aed 0%, #556fff 65%, #4c8cff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-#cortexa-ai-crm-landing .smart-v2-subtitle {
-  max-width: 460px;
-  margin: 20px auto 0 !important;
-  color: #b9bac3;
-  font-size: 15px;
-  line-height: 1.5;
-}
-
-#cortexa-ai-crm-landing .smart-v2-steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 28px;
-  gap: 86px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-step-wrap {
-  position: relative;
-}
-
-#cortexa-ai-crm-landing .smart-v2-step {
-  display: grid;
-  grid-template-columns: 54px 1fr;
-  gap: 14px;
-  align-items: start;
-  text-align: left;
-}
-
-#cortexa-ai-crm-landing .smart-v2-step-number {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  border: 1px solid #6d42ff;
-  background: radial-gradient(circle, rgba(111, 61, 245, 0.2), rgba(68, 32, 128, 0.15));
-  box-shadow:
-    inset 0 0 0 4px rgba(109, 66, 255, 0.06),
-    0 0 18px rgba(109, 66, 255, 0.15);
-  font-size: 20px;
-  font-weight: 700;
-}
-
-#cortexa-ai-crm-landing .smart-v2-step-copy h3 {
-  margin: 4px 0 6px;
-  color: #fff;
-  font-size: 17px;
-  line-height: 1.1;
-  font-weight: 700;
-}
-
-#cortexa-ai-crm-landing .smart-v2-step-copy p {
-  max-width: 255px;
-  margin: 0 !important;
-  color: #c4c4ca;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-#cortexa-ai-crm-landing .smart-v2-step-arrow {
-  position: absolute;
-  top: 16px;
-  right: -66px;
-  width: 58px;
-  display: flex;
-  align-items: center;
-  color: #6437f1;
-}
-
-#cortexa-ai-crm-landing .smart-v2-step-arrow span {
-  height: 2px;
-  flex: 1;
-  background: linear-gradient(90deg, #6335f1, #7f52ff);
-}
-
-#cortexa-ai-crm-landing .smart-v2-main-grid {
-  display: grid;
-  grid-template-columns: 0.92fr 1.38fr 1.12fr;
-  gap: 16px;
-  margin-top: 32px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-panel {
-  min-width: 0;
-  min-height: 325px;
-  padding: 18px;
-  border: 1px solid #282832;
-  border-radius: 13px;
-  background: #020203;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.012);
-  text-align: left;
-}
-
-#cortexa-ai-crm-landing .smart-v2-panel h3 {
-  margin: 0 0 16px;
-  color: #f3f3f6;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-#cortexa-ai-crm-landing .smart-v2-source-content {
-  display: grid;
-  grid-template-columns: 1fr 1.05fr;
-  gap: 14px;
-  align-items: center;
-}
-
-#cortexa-ai-crm-landing .smart-v2-source-list {
-  display: grid;
-  gap: 7px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-source-row {
-  min-height: 40px;
-  display: grid;
-  grid-template-columns: 24px 1fr auto;
-  align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  border: 1px solid #24242d;
-  border-radius: 7px;
-  background: #101014;
-  color: #eeeef2;
-}
-
-#cortexa-ai-crm-landing .smart-v2-source-icon {
-  width: 20px;
-  height: 20px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #9b65ff;
-  border: 1px solid rgba(155, 101, 255, 0.45);
-  font-size: 11px;
-  font-weight: 800;
-}
-
-#cortexa-ai-crm-landing .smart-v2-source-icon.google {
-  color: #4285f4;
-  border-color: rgba(66, 133, 244, .4);
-}
-
-#cortexa-ai-crm-landing .smart-v2-source-icon.facebook {
-  color: #4f8cff;
-  border-color: rgba(79, 140, 255, .4);
-}
-
-#cortexa-ai-crm-landing .smart-v2-source-row b {
-  font-size: 10px;
-  font-weight: 600;
-}
-
-#cortexa-ai-crm-landing .smart-v2-source-row strong {
-  font-size: 9px;
-  font-weight: 500;
-}
-
-#cortexa-ai-crm-landing .smart-v2-leads-donut-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#cortexa-ai-crm-landing .smart-v2-leads-donut {
-  width: 145px;
-  height: 145px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: conic-gradient(#7a45ff 0 79%, #20202a 79% 100%);
-  position: relative;
-}
-
-#cortexa-ai-crm-landing .smart-v2-leads-donut::before {
-  content: "";
-  width: 107px;
-  height: 107px;
-  position: absolute;
-  border-radius: 50%;
-  background: #020203;
-}
-
-#cortexa-ai-crm-landing .smart-v2-leads-donut>div {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-}
-
-#cortexa-ai-crm-landing .smart-v2-leads-donut strong {
-  display: block;
-  color: #fff;
-  font-size: 23px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-leads-donut span {
-  display: block;
-  margin-top: 2px;
-  color: #d0d0d5;
-  font-size: 10px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-leads-growth {
-  margin: 12px 0 2px !important;
-  color: #8a56ff;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-#cortexa-ai-crm-landing .smart-v2-leads-donut-wrap>small {
-  color: #9e9ea8;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-panel-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-#cortexa-ai-crm-landing .smart-v2-panel-top h3 {
-  margin-bottom: 10px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-panel-top span {
-  display: block;
-  color: #8f8f9a;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-panel-top strong {
-  display: block;
-  margin-top: 3px;
-  color: #7d4cff;
-  font-size: 21px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-growth {
-  text-align: right;
-}
-
-#cortexa-ai-crm-landing .smart-v2-growth b {
-  display: block;
-  color: #36cc87;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-growth small {
-  color: #7d7d87;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-pipeline-stages {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
-  margin-top: 13px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-pipeline-stages>div {
-  padding: 8px 4px;
-  text-align: center;
-  border: 1px solid #23232c;
-  border-radius: 7px;
-  background: #070709;
-}
-
-#cortexa-ai-crm-landing .smart-v2-pipeline-stages span,
-#cortexa-ai-crm-landing .smart-v2-pipeline-stages small {
-  display: block;
-  color: #a7a7b0;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-pipeline-stages strong {
-  display: block;
-  margin: 4px 0;
-  color: #fff;
-  font-size: 15px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-pipeline-chart {
-  position: relative;
-  height: 145px;
-  margin-top: 14px;
-  padding-left: 27px;
-  border-top: 1px solid #18181f;
-  background:
-    repeating-linear-gradient(to bottom,
-      transparent 0,
-      transparent 34px,
-      rgba(255, 255, 255, .045) 35px);
-}
-
-#cortexa-ai-crm-landing .smart-v2-pipeline-chart svg {
-  position: absolute;
-  left: 27px;
-  right: 0;
-  top: 2px;
-  width: calc(100% - 27px);
-  height: 124px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-chart-label {
-  position: absolute;
-  left: 0;
-  top: 16px;
-  color: #74747e;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-chart-label.l2 {
-  top: 51px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-chart-label.l3 {
-  top: 86px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-months {
-  position: absolute;
-  left: 39px;
-  right: 6px;
-  bottom: 1px;
-  display: flex;
-  justify-content: space-between;
-  color: #7d7d86;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-columns {
-  display: grid;
-  grid-template-columns: 1fr 1.07fr;
-  gap: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-upcoming-card,
-#cortexa-ai-crm-landing .smart-v2-tasks-card {
-  padding: 10px;
-  border: 1px solid #1d1d25;
-  border-radius: 8px;
-  background: #0b0b0e;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-columns h4 {
-  margin: 0 0 10px;
-  color: #e9e9ed;
-  font-size: 9px;
-  font-weight: 700;
-}
-
-#cortexa-ai-crm-landing .smart-v2-appointment {
-  display: grid;
-  grid-template-columns: 27px 1fr;
-  gap: 7px;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #1d1d24;
-}
-
-#cortexa-ai-crm-landing .smart-v2-appointment>span {
-  width: 25px;
-  height: 25px;
-  display: grid;
-  place-items: center;
-  border-radius: 6px;
-  color: #8253ff;
-  background: rgba(113, 72, 246, 0.1);
-}
-
-#cortexa-ai-crm-landing .smart-v2-appointment p {
-  margin: 0 !important;
-}
-
-#cortexa-ai-crm-landing .smart-v2-appointment b {
-  display: block;
-  color: #dedee4;
-  font-size: 9px;
-  font-weight: 600;
-}
-
-#cortexa-ai-crm-landing .smart-v2-appointment small {
-  display: block;
-  margin-top: 2px;
-  color: #9d9da6;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-upcoming-card>a {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 13px;
-  color: #8f63ff;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-tasks-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-#cortexa-ai-crm-landing .smart-v2-tasks-head>span {
-  min-width: 24px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #ddd;
-  background: #23232d;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-row {
-  min-height: 35px;
-  display: grid;
-  grid-template-columns: 12px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 4px;
-  border-bottom: 1px solid #1d1d24;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-row>i {
-  width: 10px;
-  height: 10px;
-  border: 1px solid #565660;
-  border-radius: 2px;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-row>span {
-  min-width: 0;
-  overflow: hidden;
-  color: #d8d8de;
-  font-size: 9px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-row small {
-  font-size: 9px;
-  white-space: nowrap;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-row small.high {
-  color: #ef4d67;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-row small.medium {
-  color: #e78f3b;
-}
-
-#cortexa-ai-crm-landing .smart-v2-task-row small.low {
-  color: #36c77d;
-}
-
-#cortexa-ai-crm-landing .smart-v2-benefits {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin-top: 52px;
-  padding: 20px 18px;
-  border: 1px solid #25252e;
-  border-radius: 12px;
-  background: #020203;
-}
-
-#cortexa-ai-crm-landing .smart-v2-benefit {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 58px 1fr;
-  gap: 13px;
-  align-items: center;
-  padding: 0 22px;
-  border-right: 1px solid #24242c;
-  text-align: left;
-}
-
-#cortexa-ai-crm-landing .smart-v2-benefit:first-child {
-  padding-left: 0;
-}
-
-#cortexa-ai-crm-landing .smart-v2-benefit:last-child {
-  border-right: 0;
-  padding-right: 0;
-}
-
-#cortexa-ai-crm-landing .smart-v2-benefit-icon {
-  width: 54px;
-  height: 54px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #6d42ff;
-  border-radius: 50%;
-  color: #8759ff;
-  background: radial-gradient(circle, rgba(111, 61, 245, .14), rgba(111, 61, 245, .02));
-}
-
-#cortexa-ai-crm-landing .smart-v2-benefit h4 {
-  margin: 0 0 5px;
-  color: #f0f0f4;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-#cortexa-ai-crm-landing .smart-v2-benefit p {
-  margin: 0 !important;
-  color: #b9b9c0;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-#cortexa-ai-crm-landing .smart-v2-cta {
-  margin-top: 40px;
-  text-align: center;
-}
-
-#cortexa-ai-crm-landing .smart-v2-cta a {
-  min-width: 480px;
-  min-height: 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  padding: 0 28px;
-  border-radius: 999px;
-  color: #fff;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 700;
-  background: linear-gradient(90deg, #6e2df1 0%, #6a59f6 48%, #4d8af7 100%);
-  box-shadow: 0 14px 34px rgba(91, 72, 246, 0.25);
-}
-
-#cortexa-ai-crm-landing .smart-v2-bottom {
-  margin: 13px 0 0 !important;
-  color: #b6b6bd;
-  text-align: center;
-  font-size: 13px;
-}
-
-@media (max-width: 1200px) {
-  #cortexa-ai-crm-landing .smart-v2-main-grid {
-    grid-template-columns: 1fr 1.25fr;
-  }
-
-  #cortexa-ai-crm-landing .smart-v2-task-panel {
-    grid-column: 1 / -1;
-  }
-
-  #cortexa-ai-crm-landing .smart-v2-benefit {
-    padding: 0 12px;
-  }
-}
-
 /* ROI + CX STRIP V2 */
 #cortexa-ai-crm-landing .revenue-action-section {
   background: #fff;
@@ -4364,21 +3734,6 @@ section#footer {
   text-decoration: none
 }
 
-#cortexa-ai-crm-landing .revenue-action-benefits {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin-top: 30px
-}
-
-#cortexa-ai-crm-landing .revenue-action-benefit {
-  padding: 0 30px;
-  text-align: center
-}
-
-#cortexa-ai-crm-landing .revenue-action-benefit+.revenue-action-benefit {
-  border-left: 1px solid #e2e2e7
-}
-
 #cortexa-ai-crm-landing .revenue-action-icon {
   width: 54px;
   height: 54px;
@@ -4388,665 +3743,6 @@ section#footer {
   border-radius: 50%;
   color: #6241f0;
   background: #f0edff
-}
-
-#cortexa-ai-crm-landing .revenue-action-benefit h3 {
-  margin: 0 0 7px;
-  color: #111217;
-  font-size: 13px;
-  font-weight: 700
-}
-
-#cortexa-ai-crm-landing .revenue-action-benefit p {
-  max-width: 210px;
-  margin: 0 auto !important;
-  color: #3e414b;
-  font-size: 14px;
-  line-height: 1.45
-}
-
-#cortexa-ai-crm-landing .revenue-overview-section.cx-strip {
-  padding: 0 !important;
-  background: #fff
-}
-
-#cortexa-ai-crm-landing .revenue-overview-shell {
-  min-height: 505px;
-  display: grid;
-  grid-template-columns: 31% 69%;
-  align-items: center;
-  gap: 26px;
-  padding: 28px max(7vw, 38px);
-  border-radius: 32px 32px 0 0;
-  overflow: hidden;
-  background: radial-gradient(circle at 27% 42%, rgba(74, 38, 189, .12), transparent 30%), linear-gradient(135deg, #030306, #06060b 55%, #050509);
-  color: #fff
-}
-
-#cortexa-ai-crm-landing .revenue-overview-copy {
-  max-width: 330px;
-  text-align: left
-}
-
-#cortexa-ai-crm-landing .revenue-overview-eyebrow {
-  color: #7455ff;
-  font-size: 11px;
-  letter-spacing: .18em
-}
-
-#cortexa-ai-crm-landing .revenue-overview-copy h2 {
-  margin: 17px 0 0;
-  color: #fff;
-  font-size: clamp(34px, 3vw, 47px);
-  line-height: 1.08;
-  letter-spacing: -.04em;
-  font-weight: 700
-}
-
-#cortexa-ai-crm-landing .revenue-overview-copy>p {
-  margin: 17px 0 0 !important;
-  color: #b8b8c4;
-  font-size: 14px;
-  line-height: 1.55
-}
-
-#cortexa-ai-crm-landing .revenue-overview-btn {
-  min-width: 205px;
-  min-height: 43px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 26px;
-  padding: 0 22px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #6731ed, #7b32ff);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 12px 30px rgba(101, 49, 237, .22)
-}
-
-#cortexa-ai-crm-landing .revenue-overview-checks {
-  display: grid;
-  gap: 10px;
-  margin-top: 20px
-}
-
-#cortexa-ai-crm-landing .revenue-overview-checks span {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #d0d0d8;
-  font-size: 11px
-}
-
-#cortexa-ai-crm-landing .revenue-overview-checks svg {
-  color: #7550ff
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 128px 1fr;
-  height: 448px;
-  overflow: hidden;
-  border: 1px solid #30303c;
-  border-radius: 12px;
-  background: #08080c;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, .42);
-  text-align: left
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-sidebar {
-  padding: 14px 0;
-  border-right: 1px solid #24242d;
-  background: #09090d
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-brand {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 13px 13px;
-  color: #f0f0f4;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .04em
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-brand span {
-  color: #754cff;
-  font-size: 17px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-nav {
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 13px;
-  color: #b5b5be;
-  font-size: 10px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-nav.active {
-  color: #fff;
-  background: linear-gradient(90deg, rgba(105, 53, 239, .75), rgba(105, 53, 239, .32));
-  border-left: 2px solid #8c61ff
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-main {
-  min-width: 0;
-  padding: 14px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-top h3 {
-  color: #eeeef3;
-  font-size: 13px;
-  font-weight: 700
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-date {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 9px;
-  border: 1px solid #25252e;
-  border-radius: 6px;
-  color: #c6c6ce;
-  background: #101014;
-  font-size: 7px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-kpis {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-kpi,
-#cortexa-ai-crm-landing .revenue-pipeline-card,
-#cortexa-ai-crm-landing .revenue-task-card,
-#cortexa-ai-crm-landing .revenue-dashboard-bottom>div {
-  border: 1px solid #202029;
-  border-radius: 7px;
-  background: #101014
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-kpi {
-  min-width: 0;
-  overflow: hidden
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-kpi>span {
-  display: block;
-  color: #b8b8c0;
-  font-size: 10px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-kpi>strong {
-  display: block;
-  margin: 5px 0 4px;
-  color: #f3f3f5;
-  font-size: 14px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-kpi>small {
-  color: #55c97b;
-  font-size: 9px
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line {
-  height: 25px;
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  margin-top: 4px
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line i {
-  width: 14%;
-  border-top: 1px solid #56c978;
-  transform: rotate(-10deg)
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line i:nth-child(2) {
-  height: 8px;
-  transform: rotate(12deg)
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line i:nth-child(3) {
-  height: 11px
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line i:nth-child(4) {
-  height: 7px;
-  transform: rotate(15deg)
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line i:nth-child(5) {
-  height: 15px
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line i:nth-child(6) {
-  height: 12px;
-  transform: rotate(10deg)
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line i:nth-child(7) {
-  height: 20px
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line.purple i {
-  border-color: #754dff
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line.blue i {
-  border-color: #398ee9
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-middle {
-  display: grid;
-  grid-template-columns: 1.22fr 1fr;
-  gap: 8px;
-  margin-top: 8px
-}
-
-#cortexa-ai-crm-landing .revenue-pipeline-card,
-#cortexa-ai-crm-landing .revenue-task-card {
-  height: 172px;
-  padding: 11px
-}
-
-#cortexa-ai-crm-landing .revenue-pipeline-card h4,
-#cortexa-ai-crm-landing .revenue-task-card h4 {
-  margin: 0 0 7px;
-  color: #e8e8ed;
-  font-size: 10px
-}
-
-#cortexa-ai-crm-landing .revenue-pipeline-card>span {
-  display: block;
-  color: #9696a1;
-  font-size: 9px
-}
-
-#cortexa-ai-crm-landing .revenue-pipeline-card>strong {
-  display: block;
-  margin-top: 3px;
-  color: #744aff;
-  font-size: 15px
-}
-
-#cortexa-ai-crm-landing .revenue-bars {
-  height: 100px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-  gap: 8px;
-  padding-top: 8px
-}
-
-#cortexa-ai-crm-landing .revenue-bars>div {
-  width: 18%;
-  height: 78px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  text-align: center
-}
-
-#cortexa-ai-crm-landing .revenue-bars i {
-  width: 70%;
-  min-height: 15px;
-  display: block;
-  margin: 0 auto 4px;
-  border-radius: 2px 2px 0 0;
-  background: linear-gradient(180deg, #6b3be9, #31215d);
-  border-top: 1px solid #9b72ff
-}
-
-#cortexa-ai-crm-landing .revenue-bars>div:nth-child(3) i {
-  background: linear-gradient(180deg, #268be2, #163b72)
-}
-
-#cortexa-ai-crm-landing .revenue-bars>div:nth-child(4) i {
-  background: linear-gradient(180deg, #29aaa5, #155d5a)
-}
-
-#cortexa-ai-crm-landing .revenue-bars>div:nth-child(5) i {
-  background: linear-gradient(180deg, #54b55d, #275d2c)
-}
-
-#cortexa-ai-crm-landing .revenue-bars span,
-#cortexa-ai-crm-landing .revenue-bars b {
-  display: block;
-  color: #a7a7b0;
-  font-size: 9px;
-  font-style: normal
-}
-
-#cortexa-ai-crm-landing .revenue-bars b {
-  margin-top: 2px;
-  color: #dddde2;
-  font-size: 10px
-}
-
-#cortexa-ai-crm-landing .revenue-task-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  height: 125px
-}
-
-#cortexa-ai-crm-landing .revenue-task-donut {
-  width: 91px;
-  height: 91px;
-  display: grid;
-  place-items: center;
-  margin: auto;
-  border-radius: 50%;
-  background: conic-gradient(#4db84f 0 45%, #2d82e8 45% 73%, #f29a27 73% 92%, #e34b4b 92%);
-  position: relative
-}
-
-#cortexa-ai-crm-landing .revenue-task-donut:before {
-  content: "";
-  position: absolute;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #101014
-}
-
-#cortexa-ai-crm-landing .revenue-task-donut>div {
-  position: relative;
-  z-index: 1;
-  text-align: center
-}
-
-#cortexa-ai-crm-landing .revenue-task-donut strong {
-  display: block;
-  color: #fff;
-  font-size: 13px
-}
-
-#cortexa-ai-crm-landing .revenue-task-donut span {
-  color: #a8a8b0;
-  font-size: 10px
-}
-
-#cortexa-ai-crm-landing .revenue-task-legend {
-  display: grid;
-  gap: 9px
-}
-
-#cortexa-ai-crm-landing .revenue-task-legend>span {
-  display: grid;
-  grid-template-columns: 7px 1fr auto;
-  align-items: center;
-  gap: 5px;
-  color: #bdbdc5;
-  font-size: 9px
-}
-
-#cortexa-ai-crm-landing .revenue-task-legend i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #4db84f
-}
-
-#cortexa-ai-crm-landing .revenue-task-legend i.progress {
-  background: #2d82e8
-}
-
-#cortexa-ai-crm-landing .revenue-task-legend i.pending {
-  background: #f29a27
-}
-
-#cortexa-ai-crm-landing .revenue-task-legend i.overdue {
-  background: #e34b4b
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-bottom {
-  display: grid;
-  grid-template-columns: .75fr 1.15fr 1.4fr 1.35fr;
-  gap: 8px;
-  margin-top: 8px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-bottom>div {
-  height: 86px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 10px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-bottom span {
-  color: #bcbcc4;
-  font-size: 10px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-bottom strong {
-  margin: 5px 0;
-  color: #f2f2f5;
-  font-size: 15px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-bottom small {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 3px;
-  color: #9696a0;
-  font-size: 9px
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-bottom small b {
-  color: #54c87b
-}
-
-#cortexa-ai-crm-landing .revenue-progress {
-  height: 4px;
-  display: block;
-  margin-top: 7px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: #292934
-}
-
-#cortexa-ai-crm-landing .revenue-progress b {
-  width: 78%;
-  height: 100%;
-  display: block;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #6636ed, #814fff)
-}
-
-@media(max-width:1100px) {
-  #cortexa-ai-crm-landing .revenue-overview-shell {
-    grid-template-columns: 1fr;
-    padding: 42px 28px
-  }
-
-  #cortexa-ai-crm-landing .revenue-overview-copy {
-    max-width: 650px;
-    margin: 0 auto;
-    text-align: center
-  }
-
-  #cortexa-ai-crm-landing .revenue-overview-checks span {
-    justify-content: center
-  }
-
-  #cortexa-ai-crm-landing .revenue-dashboard {
-    width: min(900px, 100%);
-    margin: 0 auto
-  }
-}
-
-/* =========================================================
-   Revenue Dashboard refinements
-   ========================================================= */
-
-#cortexa-ai-crm-landing .revenue-dashboard-sidebar {
-  display: flex;
-  flex-direction: column;
-}
-
-#cortexa-ai-crm-landing .revenue-sidebar-team-card {
-  position: relative;
-  margin: auto 10px 10px;
-  padding: 10px 11px;
-  border: 1px solid #202029;
-  border-radius: 7px;
-  background: #101014;
-  color: #fff;
-}
-
-#cortexa-ai-crm-landing .revenue-sidebar-team-card span {
-  display: block;
-  color: #bcbcc4;
-  font-size: 10px;
-}
-
-#cortexa-ai-crm-landing .revenue-sidebar-team-card strong {
-  display: block;
-  margin: 6px 0 3px;
-  font-size: 16px;
-  line-height: 1;
-}
-
-#cortexa-ai-crm-landing .revenue-sidebar-team-card small {
-  color: #9696a0;
-  font-size: 9px;
-}
-
-#cortexa-ai-crm-landing .revenue-sidebar-team-card svg {
-  position: absolute;
-  right: 10px;
-  bottom: 9px;
-  color: #a6a6b0;
-}
-
-/* KPI icon positioning */
-#cortexa-ai-crm-landing .revenue-dashboard-kpi {
-  position: relative;
-  padding: 10px 10px 7px 34px;
-}
-
-#cortexa-ai-crm-landing .revenue-kpi-icon {
-  position: absolute;
-  top: 9px;
-  left: 9px;
-  width: 19px;
-  height: 19px;
-  display: grid;
-  place-items: center;
-  border-radius: 5px;
-  background: rgba(80, 200, 120, 0.1);
-  color: #56c978;
-}
-
-#cortexa-ai-crm-landing .revenue-kpi-icon.purple {
-  color: #8c5cff;
-  background: rgba(140, 92, 255, 0.11);
-}
-
-#cortexa-ai-crm-landing .revenue-kpi-icon.blue {
-  color: #4d9cf6;
-  background: rgba(77, 156, 246, 0.11);
-}
-
-/* Real mini line/area chart */
-#cortexa-ai-crm-landing .revenue-mini-line {
-  position: relative;
-  height: 29px;
-  margin-top: 3px;
-  color: #56c978;
-  overflow: hidden;
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line.purple {
-  color: #8056ff;
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line.blue {
-  color: #4d9cf6;
-}
-
-#cortexa-ai-crm-landing .revenue-mini-line svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* remove old fake <i> bar-line implementation if it still exists */
-#cortexa-ai-crm-landing .revenue-mini-line > i {
-  display: none !important;
-}
-
-/* Bottom row now mirrors the reference: appointments + activities + performance */
-#cortexa-ai-crm-landing .revenue-dashboard-bottom {
-  grid-template-columns: 1fr 1.25fr 1.2fr;
-}
-
-#cortexa-ai-crm-landing .revenue-dashboard-bottom > div {
-  height: 86px;
-}
-
-#cortexa-ai-crm-landing .revenue-bottom-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-#cortexa-ai-crm-landing .revenue-bottom-title svg {
-  color: #7c5bff;
-}
-
-#cortexa-ai-crm-landing .revenue-appointments-card > strong {
-  margin: 3px 0;
-}
-
-#cortexa-ai-crm-landing .revenue-performance-card {
-  justify-content: flex-start !important;
-}
-
-#cortexa-ai-crm-landing .revenue-performance-card > strong {
-  margin: 4px 0 5px;
-}
-
-#cortexa-ai-crm-landing .revenue-goal-row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 7px;
-}
-
-#cortexa-ai-crm-landing .revenue-goal-row small {
-  margin: 0;
-  white-space: nowrap;
-}
-
-#cortexa-ai-crm-landing .revenue-goal-row .revenue-progress {
-  width: 100%;
-  height: 5px;
-  margin: 0;
-}
-
-#cortexa-ai-crm-landing .revenue-goal-row .revenue-progress b {
-  width: 78%;
 }
 
 /* =========================================================
@@ -5435,9 +4131,6 @@ section#footer {
 .cx-setup-assistance{margin-top:14px;border:1px solid #dde7f5;border-radius:7px;min-height:77px;display:grid;grid-template-columns:50px 1fr auto;align-items:center;gap:12px;padding:10px 18px}.cx-setup-assistance>span{width:48px;height:48px;border-radius:11px;display:grid;place-items:center;background:#f3efff;color:#5b25eb}.cx-setup-assistance b{display:block;font-size:12px;color:#0a1244;margin-bottom:3px}.cx-setup-assistance p{font-size:10.5px;line-height:1.35;color:#6570b6;max-width:410px}.cx-setup-assistance>a{min-width:155px;height:34px;border:1px solid #7245ef;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:12px;color:#5726e9;text-decoration:none;font-size:10px;font-weight:700}
 .cx-setup-help{display:grid;grid-template-columns:90px 1fr 285px;align-items:center;gap:25px;margin-top:32px;padding:18px 42px;border:1px solid #93c8ff;border-radius:12px;background:linear-gradient(90deg,#f2fbff,#f5faff)}.cx-setup-help-icon{width:75px;height:75px;border-radius:17px;display:grid;place-items:center;background:#e3f2ff;color:#1163f3;border-right:1px solid #a6cdf8}.cx-setup-help h3{font-size:20px;color:#081044;margin:0 0 4px}.cx-setup-help p{font-size:12.5px;color:#6570b6;line-height:1.35}.cx-setup-help small{display:block;margin-top:5px;color:#6570b6;font-size:10.5px}.cx-setup-help-actions{display:flex;flex-direction:column;align-items:center;gap:9px}.cx-setup-help-actions>a:first-child{width:100%;height:43px;border-radius:99px;background:linear-gradient(90deg,#0762f4,#0869f7);color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:15px;font-size:12px;font-weight:600}.cx-setup-help-actions>a:last-child{color:#075ff5;font-size:11.5px;text-decoration:underline}
 .cx-setup-decor{position:absolute;pointer-events:none;border-radius:50%}.cx-setup-decor-left{left:-170px;bottom:-140px;width:330px;height:330px;background:radial-gradient(circle,rgba(187,212,255,.55),transparent 70%)}.cx-setup-decor-right{right:-110px;top:-130px;width:330px;height:330px;background:radial-gradient(circle,rgba(206,218,255,.6),transparent 70%)}
-
-#cortexa-ai-crm-landing .cx-web-solutions-bridge{position:relative;padding:92px 24px 88px !important;background:radial-gradient(circle at 100% 50%,rgba(213,232,255,.32),transparent 25%),radial-gradient(circle at 0% 100%,rgba(221,212,255,.24),transparent 25%),#fff;text-align:center!important;overflow:hidden}
-.cx-web-bridge-shell{width:min(1160px,100%);margin:0 auto}.cx-web-bridge-shell h2{margin:0 auto 35px!important;font-size:clamp(42px,3.2vw,65px);line-height:1.07;letter-spacing:-.045em;color:#070d3c;font-weight:700}.cx-web-bridge-shell h2 strong{font-weight:700;background:linear-gradient(90deg,#1269f7,#5b45ed,#9b35ee);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}.cx-web-bridge-shell>p{max-width:1110px;margin:0 auto 35px!important;color:#29304c;font-size:22px;line-height:1.5;font-weight:400}.cx-web-bridge-shell>a{display:inline-flex;align-items:center;justify-content:center;min-width:330px;height:58px;padding:0 36px;border-radius:99px;background:linear-gradient(90deg,#1268f6,#7d2cf0);color:#fff!important;text-decoration:none;font-size:22px;font-weight:700;box-shadow:0 10px 24px rgba(80,55,238,.14)}.cx-web-bridge-shell>small{display:block;margin-top:17px;color:#4c5574;font-size:14px}
 
 @media(max-width:1050px){.cx-guided-setup .cx-setup-main{grid-template-columns:1fr;gap:35px}.cx-setup-copy{max-width:720px;margin:0 auto}.cx-setup-panel{max-width:850px;margin:0 auto}.cx-setup-help{grid-template-columns:75px 1fr}.cx-setup-help-actions{grid-column:1/-1;max-width:330px;width:100%;justify-self:center}.cx-web-bridge-shell>p{font-size:18px}}
 @media(max-width:700px){#cortexa-ai-crm-landing .cx-guided-setup{padding:48px 16px 20px!important}.cx-guided-setup .cx-setup-eyebrow span{width:25px}.cx-guided-setup .cx-setup-eyebrow{font-size:9px;gap:8px}.cx-setup-left-step{grid-template-columns:34px 45px 1fr}.cx-setup-step-icon{width:43px;height:43px}.cx-setup-panel{padding:16px 10px}.cx-setup-panel-head{grid-template-columns:34px 1fr}.cx-setup-panel-lang{grid-column:1/-1;justify-content:flex-end}.cx-setup-progress{grid-template-columns:1fr 60px;height:auto;padding:10px}.cx-setup-progress>span{grid-column:1/-1;grid-row:2}.cx-setup-panel-step{grid-template-columns:30px 38px 1fr 16px;padding:9px 7px}.cx-setup-row-copy{grid-column:3/4}.cx-setup-status{grid-column:3/4;justify-self:start}.cx-setup-row-action{grid-column:3/4;justify-self:start}.cx-setup-chevron{grid-column:4;grid-row:1}.cx-setup-assistance{grid-template-columns:45px 1fr}.cx-setup-assistance>a{grid-column:1/-1;width:100%}.cx-setup-help{grid-template-columns:1fr;text-align:center;padding:20px}.cx-setup-help-icon{margin:auto}.cx-setup-help-actions{grid-column:auto}.cx-web-solutions-bridge{padding:60px 18px!important}.cx-web-bridge-shell h2{font-size:38px;margin-bottom:25px!important}.cx-web-bridge-shell>p{font-size:16px;line-height:1.55}.cx-web-bridge-shell>a{min-width:0;width:100%;font-size:18px;height:52px}}
@@ -6046,3 +4739,371 @@ section#footer {
   #cortexa-ai-crm-landing .cx-faq-contact { padding-top: 30px; }
   #cortexa-ai-crm-landing .cx-faq-contact-btn { min-width: 200px; }
 }
+
+
+/* =========================================================
+   CUSTOMER EXPERIENCES — replaces old #ai-assistant image
+   Maximum font-weight in this section: 700
+   ========================================================= */
+#cortexa-ai-crm-landing .cx-customer-experiences {
+  position: relative;
+  overflow: hidden;
+  padding: 74px 24px 58px !important;
+  background:
+    radial-gradient(circle at 0 0, rgba(210, 230, 255, .78) 0, rgba(236, 245, 255, .42) 10%, transparent 24%),
+    radial-gradient(circle at 100% 100%, rgba(228, 221, 255, .72) 0, rgba(241, 238, 255, .34) 13%, transparent 29%),
+    #fff;
+  color: #07155d;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences::before,
+#cortexa-ai-crm-landing .cx-customer-experiences::after {
+  content: "";
+  position: absolute;
+  width: 86px;
+  height: 86px;
+  opacity: .48;
+  background-image: radial-gradient(circle, #557bff 2px, transparent 2.3px);
+  background-size: 25px 25px;
+  pointer-events: none;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences::before {
+  top: 17px;
+  right: 26px;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences::after {
+  left: 22px;
+  bottom: 21px;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1390px, 100%);
+  margin: 0 auto;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 38px;
+  color: #0d56ff;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-eyebrow span {
+  width: 58px;
+  height: 2px;
+  background: #4f62ff;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-title {
+  margin: 30px auto 12px;
+  max-width: 1300px;
+  color: #080f62;
+  font-size: clamp(43px, 4.25vw, 67px);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+  font-weight: 700;
+  text-align: center;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-title span {
+  background: linear-gradient(90deg, #0875ef 0%, #2d72f5 36%, #8632f4 77%, #9428ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #315ff2;
+  font-weight: 700;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-subtitle {
+  max-width: 930px;
+  margin: 0 auto;
+  color: #314c9a;
+  font-size: 20px;
+  line-height: 1.42;
+  text-align: center;
+}
+
+#cortexa-ai-crm-landing .cx-customer-testimonials {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 51px;
+}
+
+#cortexa-ai-crm-landing .cx-customer-testimonial {
+  position: relative;
+  min-width: 0;
+  padding: 0 46px 5px;
+  text-align: center;
+}
+
+#cortexa-ai-crm-landing .cx-customer-testimonial + .cx-customer-testimonial {
+  border-left: 1px solid #b7c8ff;
+}
+
+#cortexa-ai-crm-landing .cx-customer-sample-label {
+  margin-bottom: 22px;
+  color: #075cff;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: .30em;
+}
+
+#cortexa-ai-crm-landing .cx-customer-quote-mark {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  color: #c7baff;
+  font-family: Georgia, serif;
+  font-size: 70px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+#cortexa-ai-crm-landing .cx-customer-testimonial blockquote {
+  max-width: 365px;
+  min-height: 174px;
+  margin: 0 auto;
+  color: #07145f;
+  font-size: 19px;
+  line-height: 1.42;
+  font-weight: 400;
+}
+
+#cortexa-ai-crm-landing .cx-customer-quote-line {
+  width: 40px;
+  height: 2px;
+  margin: 4px auto 10px;
+  background: linear-gradient(90deg, #145dff, #8734ff);
+}
+
+#cortexa-ai-crm-landing .cx-customer-person {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  min-height: 86px;
+  text-align: left;
+}
+
+#cortexa-ai-crm-landing .cx-customer-person img {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+
+#cortexa-ai-crm-landing .cx-customer-person strong,
+#cortexa-ai-crm-landing .cx-customer-person span {
+  display: block;
+}
+
+#cortexa-ai-crm-landing .cx-customer-person strong {
+  color: #07145f;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+#cortexa-ai-crm-landing .cx-customer-person span {
+  margin-top: 4px;
+  color: #4964b4;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-cta {
+  margin-top: 23px;
+  text-align: center;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-cta > p {
+  color: #07145f;
+  font-size: 19px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+#cortexa-ai-crm-landing .cx-customer-get-started {
+  width: min(330px, 100%);
+  min-height: 52px;
+  margin: 17px auto 15px;
+  padding: 0 38px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: linear-gradient(100deg, #1495f4 0%, #0758f7 43%, #9b38ef 100%);
+  box-shadow: 0 13px 30px rgba(44, 83, 239, .18);
+  color: #fff !important;
+  text-decoration: none;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+#cortexa-ai-crm-landing .cx-customer-get-started svg {
+  flex: 0 0 auto;
+}
+
+#cortexa-ai-crm-landing .cx-customer-explore {
+  display: table;
+  margin: 0 auto;
+  color: #10145f !important;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+#cortexa-ai-crm-landing .cx-customer-experiences-cta small {
+  display: block;
+  margin-top: 34px;
+  color: #8198d8;
+  font-size: 12px;
+  line-height: 1.4;
+  font-style: italic;
+  font-weight: 400;
+}
+
+@media (max-width: 980px) {
+  #cortexa-ai-crm-landing .cx-customer-experiences {
+    padding: 62px 20px 50px !important;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-experiences-title {
+    font-size: clamp(38px, 6vw, 54px);
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-experiences-subtitle {
+    max-width: 760px;
+    font-size: 18px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-testimonial {
+    padding: 0 24px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-testimonial blockquote {
+    min-height: 205px;
+    font-size: 17px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-quote-mark {
+    left: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  #cortexa-ai-crm-landing .cx-customer-experiences {
+    padding: 50px 18px 42px !important;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-experiences-eyebrow {
+    gap: 14px;
+    font-size: 10px;
+    letter-spacing: .22em;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-experiences-eyebrow span {
+    width: 30px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-experiences-title {
+    margin-top: 22px;
+    font-size: 38px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-experiences-subtitle {
+    font-size: 16px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-testimonials {
+    grid-template-columns: 1fr;
+    margin-top: 38px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-testimonial {
+    padding: 28px 10px 30px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-testimonial:first-child {
+    padding-top: 0;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-testimonial + .cx-customer-testimonial {
+    border-left: 0;
+    border-top: 1px solid #d5dfff;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-testimonial blockquote {
+    min-height: 0;
+    max-width: 520px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-quote-mark {
+    position: static;
+    height: 45px;
+    margin-bottom: -7px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-person {
+    margin-top: 10px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-experiences-cta {
+    margin-top: 7px;
+  }
+}
+
+@media (max-width: 480px) {
+  #cortexa-ai-crm-landing .cx-customer-experiences-title {
+    font-size: 32px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-experiences-cta > p {
+    font-size: 17px;
+  }
+
+  #cortexa-ai-crm-landing .cx-customer-get-started {
+    min-height: 56px;
+    font-size: 18px;
+  }
+}
+
+
+/* WEB SOLUTIONS BRIDGE — approved reference 2026-09-17 */
+#cortexa-ai-crm-landing .cx-web-solutions-bridge{position:relative;overflow:hidden;padding:64px 24px 54px!important;background:#fff;text-align:center}
+#cortexa-ai-crm-landing .cx-web-bridge-shell{width:min(1000px,100%);margin:0 auto}
+#cortexa-ai-crm-landing .cx-web-bridge-shell h2{max-width:1180px;margin:0 auto 38px!important;color:#050609;font-size:clamp(46px,3.2vw,66px);line-height:1.03;letter-spacing:-.045em;font-weight:700}
+#cortexa-ai-crm-landing .cx-web-bridge-shell h2 strong{background:linear-gradient(90deg,#4b80e5,#2e65ca);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#3f73d7;font-weight:700}
+#cortexa-ai-crm-landing .cx-web-bridge-intro{max-width:1280px;margin:0 auto!important;color:#181b22;font-size:18px;line-height:1.48;font-weight:400}
+#cortexa-ai-crm-landing .cx-web-bridge-quote{position:relative;display:flex;align-items:center;justify-content:center;max-width:740px;margin:30px auto 32px;padding:0 72px;border:0}
+#cortexa-ai-crm-landing .cx-web-bridge-quote strong{max-width:760px;color:#050609;font-size:27px;line-height:1.35;font-weight:700}
+#cortexa-ai-crm-landing .cx-web-bridge-quote-mark{position:absolute;top:-8px;color:#c4cbd3;font-family:Georgia,"Times New Roman",serif;font-size:78px;line-height:1;font-weight:700}
+#cortexa-ai-crm-landing .cx-web-bridge-quote-left{left:5px}
+#cortexa-ai-crm-landing .cx-web-bridge-quote-right{right:5px}
+#cortexa-ai-crm-landing .cx-web-bridge-copy{display:grid;gap:23px;max-width:1280px;margin:0 auto}
+#cortexa-ai-crm-landing .cx-web-bridge-copy p{margin:0!important;color:#20232a;font-size:19px;line-height:1.48;font-weight:400}
+#cortexa-ai-crm-landing .cx-web-bridge-cta{display:flex;align-items:center;justify-content:center;width:min(340px,100%);min-height:52px;margin:31px auto 14px;padding:0 30px;border-radius:999px;background:linear-gradient(180deg,#17181b,#08090b);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 7px 18px rgba(0,0,0,.12);color:#fff!important;text-decoration:none;font-size:20px;line-height:1;font-weight:700;transition:.2s ease}
+#cortexa-ai-crm-landing .cx-web-bridge-cta:hover{transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.16)}
+#cortexa-ai-crm-landing .cx-web-bridge-shell>small{display:block;color:#697183;font-size:12px;line-height:1.4;font-weight:400}
+@media(max-width:1050px){#cortexa-ai-crm-landing .cx-web-solutions-bridge{padding:58px 22px 50px!important}#cortexa-ai-crm-landing .cx-web-bridge-shell h2{font-size:clamp(42px,5.5vw,58px)}#cortexa-ai-crm-landing .cx-web-bridge-intro,#cortexa-ai-crm-landing .cx-web-bridge-copy p{font-size:18px}#cortexa-ai-crm-landing .cx-web-bridge-quote strong{font-size:24px}}
+@media(max-width:700px){#cortexa-ai-crm-landing .cx-web-solutions-bridge{padding:46px 18px 42px!important}#cortexa-ai-crm-landing .cx-web-bridge-shell h2{margin-bottom:25px!important;font-size:38px;line-height:1.06}#cortexa-ai-crm-landing .cx-web-bridge-intro,#cortexa-ai-crm-landing .cx-web-bridge-copy p{font-size:16px;line-height:1.55}#cortexa-ai-crm-landing .cx-web-bridge-quote{min-height:0;margin:25px auto 28px;padding:24px 30px 4px}#cortexa-ai-crm-landing .cx-web-bridge-quote strong{font-size:21px}#cortexa-ai-crm-landing .cx-web-bridge-quote-mark{top:-3px;font-size:58px}#cortexa-ai-crm-landing .cx-web-bridge-quote-left{left:0}#cortexa-ai-crm-landing .cx-web-bridge-quote-right{right:0}#cortexa-ai-crm-landing .cx-web-bridge-copy{gap:18px}#cortexa-ai-crm-landing .cx-web-bridge-cta{width:100%;min-height:54px;margin-top:26px;font-size:18px}}
+@media(max-width:430px){#cortexa-ai-crm-landing .cx-web-bridge-shell h2{font-size:33px}#cortexa-ai-crm-landing .cx-web-bridge-quote{padding-left:20px;padding-right:20px}#cortexa-ai-crm-landing .cx-web-bridge-quote strong{font-size:19px}}
+

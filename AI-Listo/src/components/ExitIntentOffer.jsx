@@ -571,10 +571,10 @@ export default function ExitIntentOffer() {
         =============================== */
         @media (min-width: 769px) {
           .exit-offer-card {
-            max-width: 615px;
-            max-height: 92vh;
+            max-width: 560px;
+            max-height: 90vh;
             overflow-y: auto;
-            padding: 44px 46px 28px;
+            padding: 20px;
             border-radius: 28px;
             background: #fff;
             color: #111;
@@ -594,7 +594,7 @@ export default function ExitIntentOffer() {
 
           .exit-offer-title {
             margin: 0 0 10px;
-            font-size: 76px;
+            font-size: 56px;
             line-height: .95;
             font-weight: 900;
             letter-spacing: -0.055em;
@@ -602,16 +602,16 @@ export default function ExitIntentOffer() {
           }
 
           .exit-offer-subtitle {
-            margin: 0 0 12px;
-            font-size: 26px;
+            margin: 0 0 6px;
+            font-size: 20px;
             line-height: 1.15;
-            font-weight: 800;
+            font-weight: 700;
             color: #000;
           }
 
           .exit-offer-desc {
             max-width: 475px;
-            margin: 0 auto 26px;
+            margin: 0 auto 12px;
             font-size: 15px;
             line-height: 1.5;
             color: #5b6472;
@@ -622,7 +622,7 @@ export default function ExitIntentOffer() {
           }
 
           .exit-offer-input-wrap {
-            min-height: 54px;
+            min-height: 42px;
             padding: 0 16px;
             gap: 11px;
             border: 1px solid #d8dde5;
@@ -632,7 +632,7 @@ export default function ExitIntentOffer() {
           }
 
           .exit-offer-input-wrap input {
-            height: 52px;
+            height: 40px;
             font-size: 15px;
             color: #111827;
           }
@@ -650,12 +650,9 @@ export default function ExitIntentOffer() {
 
           .exit-offer-benefits {
             margin-top: 8px;
-            padding: 18px 18px 16px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            border-radius: 12px;
-            background: #f8f9fb;
+            gap: 5px;
             text-align: left;
           }
 
@@ -737,9 +734,8 @@ export default function ExitIntentOffer() {
           }
 
           .exit-offer-submit {
-            min-height: 58px;
-            margin-top: 9px;
-            padding: 0 20px 0 28px;
+            min-height: 46px;
+            padding: 0 14px 0 16px;
             border-radius: 11px;
             background: #000;
             color: #fff;
@@ -747,7 +743,7 @@ export default function ExitIntentOffer() {
 
           .exit-offer-submit span {
             padding-left: 20px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800;
             text-align: center;
           }
@@ -818,10 +814,9 @@ export default function ExitIntentOffer() {
 
           .exit-offer-desc {
             max-width: 265px;
-            margin: 0 auto 19px;
+            margin: 0 auto 10px;
             color: #d1d1d1;
             font-size: 12px;
-            line-height: 1.5;
           }
 
           .exit-offer-form {
