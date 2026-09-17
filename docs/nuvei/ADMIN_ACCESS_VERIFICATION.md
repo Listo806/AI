@@ -17,17 +17,17 @@ Method: a clean browser session, no cached data, signing in with the account its
 | 6 | Deployed to the live frontend and backend | PASS | the live bundle on www.cortexaaicrm.com and cortexaaicrm.com contains the fix |
 | 7 | Logging out, signing in again, refreshing and opening the Admin URL do not trigger checkout | PASS | every step below |
 
-## The exact steps and URLs
+## The exact steps
 
-Signed in at https://www.cortexaaicrm.com/sign-in and landed on https://www.cortexaaicrm.com/dashboard/admin/listings. No checkout.
+Signed in on the live site and landed on the admin listings page. No checkout.
 
-Opened https://www.cortexaaicrm.com/dashboard/admin/customers. The Admin area opened with the live customer list and figures. Screenshot [admin-area-working](screenshots/admin-area-working.png), with the data hidden.
+Opened the admin customers page. The Admin area opened with the live customer list and figures. Screenshot [admin-area-working](screenshots/admin-area-working.png), with the data hidden.
 
-Refreshed that page. Stayed on https://www.cortexaaicrm.com/dashboard/admin/customers.
+Refreshed that page. Stayed on the admin customers page.
 
-Cleared the recent payment marker and opened https://www.cortexaaicrm.com/dashboard. Landed on the admin listings page. No checkout.
+Cleared the recent payment marker and opened the dashboard. Landed on the admin listings page. No checkout.
 
-Signed out completely, cleared the browser storage, and signed in again. Landed on https://www.cortexaaicrm.com/dashboard/admin/listings. No checkout. Screenshot [admin-after-relogin](screenshots/admin-after-relogin.png), with owner details hidden.
+Signed out completely, cleared the browser storage, and signed in again. Landed on the admin listings page. No checkout. Screenshot [admin-after-relogin](screenshots/admin-after-relogin.png), with the listing rows hidden.
 
 Eleven checks, eleven passed.
 
@@ -37,6 +37,6 @@ Two possible reasons, both easy to rule out.
 
 First, an old page still open in your browser. The application only loads new code on a fresh page load, so please sign out, press control and F5 together to force a reload, then sign in again.
 
-Second, the address you are using. The fix is live on www.cortexaaicrm.com and on cortexaaicrm.com. There is a second site at listoqasa.netlify.app that is still running an older build and does not have the fix. If you or your team reach the admin area through that address, you would still see the old behaviour. That site is not in the accounts we were given, so whoever manages it needs to redeploy it from the main branch, or retire it.
+Second, the address you are using. The fix is live on www.cortexaaicrm.com and on cortexaaicrm.com. There is a second, older deployment of the site at a different address which has not been rebuilt, so it still shows the old behaviour. That address was sent to you privately. It is not in the accounts we were given, so whoever manages it needs to redeploy it from the main branch, or retire it.
 
 If neither applies, send me a screenshot of the address bar at the moment you are redirected and I will trace that exact request.
