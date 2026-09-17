@@ -40,6 +40,23 @@ import {
   Workflow,
   CircleDollarSign,
   Check,
+  PieChart,
+  Building2,
+  Shield,
+  Landmark,
+  ShoppingCart,
+  Headphones,
+  ChevronRight,
+  HeartPulse,
+  Stethoscope,
+  Magnet,
+  Bell,
+  UsersRound,
+  ClipboardList,
+  CircleCheckBig,
+  Target,
+  Phone,
+  MessagesSquare
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { HashLink } from "react-router-hash-link";
@@ -54,6 +71,11 @@ import workspaceImg from "../../assets/cortexa/mobile/workspaceM.png";
 import workspaceImgES from "../../assets/cortexa/mobile/workspaceESM.png";
 import workspaceImgPT from "../../assets/cortexa/mobile/workspacePTM.png";
 import bgreportingImg from "../../assets/cortexa/mobile/bg_reporting.png";
+import webSolutionsPhoneImg from "../../assets/cortexa/mobile/cortexa-web-solutions-phone.png";
+import clinicOperationsManagerImg from "../../assets/cortexa/mobile/clinic-operations-manager.png";
+import salesDirectorImg from "../../assets/cortexa/mobile/sales-director.png";
+import businessOwnerImg from "../../assets/cortexa/mobile/business-owner.png";
+import connectedCustomerJourneyImg from "../../assets/cortexa/mobile/cortexa-connected-customer-journey.png";
 
 export default function LandingMobile() {
   const [lang, setLang] = useState(() => {
@@ -86,1244 +108,741 @@ export default function LandingMobile() {
   };
 
   const t = {
-    en: {
-      heroTitle1: "Agentic CRM built to",
-      heroTitle11: "automate and track",
-      heroTitle2: "your business",
-      heroTitle3: "workflow.",
-      heroTitle4: "Into Revenue.",
-      heroDesc: "AI organizes. AI qualifies. You follow up. You close.",
-      heroTopBanner1: "Agentic AI",
-      heroTopBanner2:
-        "revenue operating system for businesses tired of complicated, overpriced CRM software.",
-      login: "Log in",
-      trial: "Get Started",
-      nav: [
-        "Features",
-        "AI Assistant",
-        "AI Workflows",
-        "Pipeline",
-        "Analytics",
-        "Testimonials",
-      ],
-      pricing: "Pricing",
-      webSolutions: "Web Solutions",
-      watchDemo: "Watch Demo",
-      trusted: "Built for businesses of all kinds.",
-
-      benefitsSubtitle: "WHAT CORTEXA DOES FOR YOU",
-      benefitsTitle1: "Everything You Need.",
-      benefitsTitle2: "All in One Place.",
-      followUpTitle: "Follow-Up Management",
-      followUpDesc:
-        "Organize follow-up tasks and keep track of every opportunity.",
-      setterTitle: "Appointment Management",
-      setterDesc:
-        "Manage scheduling, appointments, and related customer activity in one place.",
-      pipelineTitle: "Pipeline Management",
-      pipelineDesc:
-        "See your entire pipeline at a glance and never lose track of a deal.",
-      analyticsTitle: "Real-Time Analytics",
-      analyticsDesc:
-        "Track performance in real time and make data-driven decisions.",
-      whatsappTitle: "WhatsApp Integration",
-      whatsappDesc: "Chat with leads where they are and close faster.",
-
-      platformSubtitle: "A POWERFUL PLATFORM",
-      platformTitle: "Built for Businesses",
-      platformTitle1: "That Are Looking to",
-      platformTitle2: "Maximize Their Revenue",
-      platformDesc:
-        "CORTEXA brings your leads, conversations, listings, appointments, and deals together in one smart system — powered by AI.",
-      captureTitle: "Capture Leads",
-      captureDesc: "From ads, websites, portals & more",
-      engageTitle: "AI Engages Instantly",
-      engageDesc: "Answers, qualifies & nurtures 24/7",
-      syncTitle: "Data Syncs",
-      syncDesc: "Everything organized in one place",
-      pipelineMoveTitle: "Pipeline Moves Forward",
-      pipelineMoveDesc: "AI + your team close more deals",
-      closedDealsTitle: "More Closed Deals",
-      closedDealsDesc: "Predictable growth on autopilot",
-
-      howSubtitle: "HOW IT WORKS",
-      howTitle: "Simple. Powerful. Automatically.",
-      step1Title: "Lead Comes In",
-      step1Desc: "From ads, website, listings, or referrals.",
-      step2Title: "AI Responds Instantly",
-      step2Desc: "Answers questions, qualifies and starts the conversation.",
-      step3Title: "AI Nurtures & Follows Up",
-      step3Desc:
-        "Sends messages, books appointments, and keeps your pipeline warm.",
-      step4Title: "Pipeline Updates",
-      step4Desc: "Everything is tracked in real time.",
-      step5Title: "You Close More Deals",
-      step5Desc: "AI handles the busy work. You focus on closing.",
-
-      flowNewTitle1: "DON’T GET",
-      flowNewTitle2: "LEFT BEHIND.",
-      flowNewDescription:
-        "See how our integrated Revenue Operating System helps businesses automate faster, close more opportunities, and increase revenue.",
-      flowNewButton: "Start Your Free Trial",
-
-      aiosSectionTitle: "Team ",
-      aiosSectionTitle1: "Revenue ",
-      aiosSectionTitle2: "Workspace",
-
-      setterSectionSubtitle: "APPOINTMENT MANAGEMENT",
-      setterSectionTitle1: "Manage Your",
-      setterSectionTitle2: "Appointments in One",
-      setterSectionTitle3: "Connected Workspace.",
-      setterSectionDesc:
-        "Organize availability, bookings, and scheduling from one connected workspace. Keep appointments and customer activity easy to manage.",
-      bookAppointmentTitle: "Book Appointment",
-      confirmBtnText: "Confirm Appointment",
-
-      ctaTitle1: "Built for",
-      ctaTitle2: "businesses",
-      ctaTitle3: "of every size",
-      ctaTitle4: "and industry.",
-      pipelinecta1: "Whether you run a",
-      pipelinecta2: "and more",
-      ctaTitleSub1: "Real Estate Company,",
-      ctaTitleSub2: "E-commerce Store,",
-      ctaTitleSub3: "Agency,",
-      ctaTitleSub4: "Consulting Firm,",
-      ctaTitleSub5: "Insurance,",
-      ctaTitleSub6: "Finalcial Business,",
-      ctaready: "Already using Cortexa?",
-      ctaStat1Label: "ROI",
-      ctaStat2Label: "REVENUE INCREASE",
-      ctaStat3Label: "AGENTS GROWING",
-      ctaButtonText: "Get Started!",
-      heroFreeAccess: "Sign Up? — Get Free Access!",
-      heroNoCard: "14-Day Free Trial",
-      heroFreeForever: "Starting at $11",
-
-      faqSubtitle: "FAQS",
-      faqTitle: "Everything you need to know",
-      faq: [
+      "en": {
+          "heroTitle1": "Agentic CRM built to",
+          "heroTitle11": "automate and track",
+          "heroTitle2": "your business",
+          "heroTitle3": "workflow.",
+          "heroDesc": "AI organizes. AI qualifies. You follow up. You close.",
+          "heroTopBanner1": "Agentic AI",
+          "heroTopBanner2": "revenue operating system for businesses tired of complicated, overpriced CRM software.",
+          "login": "Log in",
+          "nav": [
+              "Features",
+              "AI Assistant",
+              "AI Workflows",
+              "Pipeline",
+              "Analytics",
+              "Testimonials"
+          ],
+          "pricing": "Pricing",
+          "webSolutions": "Web Solutions",
+          "aiosSectionTitle": "Team ",
+          "aiosSectionTitle1": "Revenue ",
+          "aiosSectionTitle2": "Workspace",
+          "ctaButtonText": "Get Started!",
+          "heroNoCard": "14-Day Free Trial",
+          "heroFreeForever": "Starting at $11",
+          "faqSubtitle": "FAQS",
+          "faqTitle": "Everything you need to know",
+          "faq": [
               {
-                q: "What does CORTEXA actually do?",
-                a: "CORTEXA brings your leads, contacts, pipeline, tasks, properties, analytics, team activity, and connected business tools into one centralized CRM workspace. It helps businesses organize customer relationships, manage opportunities, monitor performance, and keep their sales operation connected.",
+                  "q": "What does CORTEXA actually do?",
+                  "a": "CORTEXA brings your leads, contacts, pipeline, tasks, properties, analytics, team activity, and connected business tools into one centralized CRM workspace. It helps businesses organize customer relationships, manage opportunities, monitor performance, and keep their sales operation connected."
               },
               {
-                q: "How does the AI Assistant work?",
-                a: "The CORTEXA AI Assistant helps users work with information already available in their workspace. It can help surface useful information, summarize activity, provide insights, and assist users with everyday CRM and business tasks while keeping the user in control.",
+                  "q": "How does the AI Assistant work?",
+                  "a": "The CORTEXA AI Assistant helps users work with information already available in their workspace. It can help surface useful information, summarize activity, provide insights, and assist users with everyday CRM and business tasks while keeping the user in control."
               },
               {
-                q: "Can I manage all my leads in one place?",
-                a: "Yes. Leads, contacts, notes, activities, pipeline stages, and related customer information can be organized in one centralized workspace, making it easier for your team to manage opportunities without switching between multiple systems.",
+                  "q": "Can I manage all my leads in one place?",
+                  "a": "Yes. Leads, contacts, notes, activities, pipeline stages, and related customer information can be organized in one centralized workspace, making it easier for your team to manage opportunities without switching between multiple systems."
               },
               {
-                q: "How do I manage my sales pipeline?",
-                a: "CORTEXA provides a visual pipeline where you can organize opportunities, move deals between stages, assign responsibilities, create tasks and reminders, and monitor progress from one workspace.",
+                  "q": "How do I manage my sales pipeline?",
+                  "a": "CORTEXA provides a visual pipeline where you can organize opportunities, move deals between stages, assign responsibilities, create tasks and reminders, and monitor progress from one workspace."
               },
               {
-                q: "Can I connect the business tools I already use?",
-                a: "Yes. CORTEXA supports integrations with compatible third-party business tools and services. Available integrations may vary, and customers remain responsible for their own third-party accounts, permissions, and applicable provider terms.",
+                  "q": "Can I connect the business tools I already use?",
+                  "a": "Yes. CORTEXA supports integrations with compatible third-party business tools and services. Available integrations may vary, and customers remain responsible for their own third-party accounts, permissions, and applicable provider terms."
               },
               {
-                q: "Can my team use CORTEXA together?",
-                a: "Yes. CORTEXA provides team workspace capabilities that help users share CRM information, assign tasks and leads, monitor activity, and coordinate work from the same platform. Available team capacity depends on the customer's plan.",
+                  "q": "Can my team use CORTEXA together?",
+                  "a": "Yes. CORTEXA provides team workspace capabilities that help users share CRM information, assign tasks and leads, monitor activity, and coordinate work from the same platform. Available team capacity depends on the customer's plan."
               },
               {
-                q: "What kind of businesses is CORTEXA for?",
-                a: "CORTEXA is designed for businesses and professional teams that need a centralized system for managing leads, contacts, sales pipelines, customer information, tasks, reporting, and day-to-day CRM operations.",
+                  "q": "What kind of businesses is CORTEXA for?",
+                  "a": "CORTEXA is designed for businesses and professional teams that need a centralized system for managing leads, contacts, sales pipelines, customer information, tasks, reporting, and day-to-day CRM operations."
               },
               {
-                q: "What happens after a lead is added to CORTEXA?",
-                a: "The lead becomes part of your centralized CRM workspace, where your team can organize the record, assign responsibility, add notes and tasks, manage its pipeline stage, and track activity and progress.",
-              },
-            ],
-
-      finalCtaSubtitle: "AUTOMATE YOUR SUCCESS",
-      finalCtaTitle1: "Connect Your",
-      finalCtaTitle2: "Entire Workflow",
-      finalCtaTitle3: "",
-      finalCtaDesc: "AI Leads. AI Qualifies. AI Closes. All in your ",
-      finalCtaBtn: "Start Your Free Trial",
-      finalCtaSubBtn: "",
-      finalCtaSubBtn1: "Unlock potential today",
-
-      marketsSubtitle: "EXPLORE OUR MARKETS",
-      marketsTitle1: "We're helping agents",
-      marketsTitle2: "close more deals",
-      marketsTitle3: "across Latin America",
-      marketsTitle4: "and the world.",
-      marketsRegionLabel: "Our Regions",
-      viewAllCountriesText: "View All Countries",
-      regionLatAm: "Latin America",
-      regionUSA: "USA",
-      regionEurope: "Europe",
-      regionEuropeUs: "Europe & United States",
-
-      footerDesc:
-        "The all-in-one AI platform that captures leads, automates follow-ups and closes more deals — 24/7.",
-      colProduct: "Product",
-      colGetStarted: "Get Started",
-      colConnect: "Connect",
-      colSupport: "Support",
-      colLegal: "Legal",
-      fFeatures: "Features",
-      fAiAssistant: "AI Assistant",
-      fAutomations: "Automations",
-      fIntegrations: "Integrations",
-      fAnalytics: "Analytics",
-      fPricing: "Pricing",
-      fStart: "Get Started",
-      fLogin: "Login",
-      fSetup: "Setup Guide",
-      fConnectApps: "Connect Your Apps",
-      fImportCrm: "Import Your CRM",
-      fImportCsv: "Import CSV / Excel",
-      fZapier: "Zapier & Automations",
-      fApiWebhooks: "API & Webhooks",
-      fSupport247: "24/7 Support",
-      fHelpCenter: "Help Center",
-      fContact: "Contact Us",
-      fAbout: "About Us",
-      fTerms: "Terms & Conditions",
-      fPrivacy: "Privacy Policy",
-      fRefund: "Refund Policy",
-      fCancel: "Cancellation Policy",
-      copyright: "© 2026 Cortexa AI. All rights reserved.",
-      termsOfService: "Terms of Service",
-
-      heroTitlePre: "Built to ",
-      heroTitleActive: "Grow Revenue",
-      heroTitlePost: " — Not Manage Software.",
-      heroSubPre: "We bring it all into ",
-      heroSubActive: "one connected workspace.",
-      nodeAgent: "AI AGENT",
-      nodeWhatsapp: "WHATSAPP",
-      nodeDashboard: "DASHBOARD",
-      nodePipeline: "PIPELINE",
-      nodeHybrid: "HYBRID CONNECTS",
-      nodeLeads: "LEADS",
-      nodeContacts: "CONTACTS",
-      nodeProperties: "PROPERTIES",
-      stat1Title: "",
-      stat1Desc:
-        "Everything you need to manage leads, listings, and clients in one place.",
-
-      stat2Title: "",
-
-      thCustomer: "Customer",
-      thDeals: "Deals",
-      thRevenue: "Revenue",
-      thStage: "Stage",
-      stageNew: "New Lead",
-      stageContacted: "Contacted",
-      stageQualified: "Qualified",
-      stageProposal: "Proposal",
-      stageClosed: "Closed Won",
-
-      heroCheck6:
-        "Capture, organize, and manage leads in one connected workspace",
-      heroCheck7: "Connect your business tools and communication channels",
-      heroCheck8: "Manage follow-up tasks, scheduling, and appointments in one place",
-      heroCheck9:
-        "Pipeline Intelligence, revenue forecasting, one connected dashboard.",
-
-      powerbadge: "INTEGRATION",
-      powertitle: "Connect your apps",
-
-      workspacelang1: "Team",
-      workspacelang2: "Revenue",
-      workspacelang3: "Workspace",
-      reportingSection: {
-        eyebrow: "REPORTING & WORKFLOW",
-        titleLine1: "Reporting",
-        titleLine2: "Turns to ",
-        titleHighlight: "Revenue.",
-        description:
-          "Track leads, conversions, response times, and team performance in real time. No more scattered data. Just clarity.",
-        features: [
-          {
-            title: "Analytics",
-            description: "Track leads and team performance in real time.",
+                  "q": "What happens after a lead is added to CORTEXA?",
+                  "a": "The lead becomes part of your centralized CRM workspace, where your team can organize the record, assign responsibility, add notes and tasks, manage its pipeline stage, and track activity and progress."
+              }
+          ],
+          "finalCtaTitle1": "Connect Your",
+          "finalCtaTitle2": "Entire Workflow",
+          "finalCtaDesc": "AI Leads. AI Qualifies. AI Closes. All in your ",
+          "marketsSubtitle": "EXPLORE OUR MARKETS",
+          "marketsRegionLabel": "Our Regions",
+          "viewAllCountriesText": "View All Countries",
+          "regionLatAm": "Latin America",
+          "regionUSA": "USA",
+          "regionEurope": "Europe",
+          "regionEuropeUs": "Europe & United States",
+          "footerDesc": "The all-in-one AI platform that captures leads, automates follow-ups and closes more deals — 24/7.",
+          "colProduct": "Product",
+          "colGetStarted": "Get Started",
+          "colConnect": "Connect",
+          "colSupport": "Support",
+          "colLegal": "Legal",
+          "fFeatures": "Features",
+          "fAiAssistant": "AI Assistant",
+          "fAutomations": "Automations",
+          "fIntegrations": "Integrations",
+          "fAnalytics": "Analytics",
+          "fPricing": "Pricing",
+          "fStart": "Get Started",
+          "fLogin": "Login",
+          "fSetup": "Setup Guide",
+          "fConnectApps": "Connect Your Apps",
+          "fImportCrm": "Import Your CRM",
+          "fImportCsv": "Import CSV / Excel",
+          "fZapier": "Zapier & Automations",
+          "fApiWebhooks": "API & Webhooks",
+          "fSupport247": "24/7 Support",
+          "fHelpCenter": "Help Center",
+          "fContact": "Contact Us",
+          "fAbout": "About Us",
+          "fTerms": "Terms & Conditions",
+          "fPrivacy": "Privacy Policy",
+          "fRefund": "Refund Policy",
+          "fCancel": "Cancellation Policy",
+          "copyright": "© 2026 Cortexa AI. All rights reserved.",
+          "termsOfService": "Terms of Service",
+          "powerbadge": "INTEGRATION",
+          "powertitle": "Connect your apps",
+          "workspacesSection": {
+              "eyebrow": "CORTEXA WORKSPACES",
+              "titleLine1": "Specialized Workspaces.",
+              "titleLine2": "One Connected",
+              "titleLine3": "Intelligent CRM.",
+              "description": "Cortexa includes dedicated workspaces for different industries and business operations. Each workspace brings the appropriate tools, terminology, customer journey, and workflows into one connected intelligent CRM.",
+              "includesTitle": "EVERY WORKSPACE INCLUDES",
+              "items": [
+                  "AI Conversations",
+                  "Leads",
+                  "Clients or Patients",
+                  "Pipeline",
+                  "Calendar",
+                  "Automations",
+                  "Analytics",
+                  "Integrations"
+              ]
           },
-          {
-            title: "Pipeline",
-            description: "Manage every deal from one workspace.",
-          },
-          {
-            title: "Team Visibility",
-            description: "See what your team is doing instantly.",
-          },
-          {
-            title: "Reports",
-            description: "Custom reports that drive revenue.",
-          },
-        ],
-        performanceTitle: "Performance Overview",
-        conversionRate: "Conversion Rate",
-        revenueGenerated: "Revenue Generated",
-        responseTime: "Response Time",
-        lastSevenDays: "vs last 7 days",
-        aiInsight: "AI Insight",
-        insightText: "Response times are improving. Keep it up!",
-        pipelineTitle: "Pipeline",
-        deals: "deals",
-        stageNew: "New Lead",
-        stageContacted: "Contacted",
-        stageProposal: "Proposal",
-        stageWon: "Closed Won",
-        viewPipeline: "View Pipeline",
-        teamActivityTitle: "Team Activity",
-        invite: "Invite",
-        updatedDeal: "Updated a deal",
-        addedNote: "Added a note",
-        commented: "Commented",
-        changedStage: "Changed stage",
-        viewActivity: "View all activity",
-        revenueReportTitle: "Revenue Report",
-        thisMonth: "This Month",
-        totalRevenue: "Total Revenue",
-        dealsClosed: "Deals Closed",
-        averageDeal: "Avg. Deal Value",
-        downloadReport: "Download Report",
-        footerTitle: "CONNECT YOUR BUSINESSES.",
-        footerTitle1: "START AUTOMATING",
-        footerTitle2: "IN MINUTES.",
-        footerDescription: "Your AI Agent is ready to work.",
-        disclaimer:
-          "Product demo — names, numbers, and activity shown are sample data for illustration only, not real customer results.",
+                    "workspaceChooser": {
+                  "title": "Find the workspace designed for how your business operates.",
+                  "items": [
+                      "Business Suite",
+                      "Sales",
+                      "Insurance",
+                      "Financial Services",
+                      "E-Commerce",
+                      "Customer Service"
+                  ]
+              },
+              "moreWorkspaces": {
+                  "eyebrow": "MORE SPECIALIZED WORKSPACES",
+                  "items": ["Real Estate", "Team Workspace", "Lead Generator", "Aesthetic & Wellness", "Clinic & Medical"],
+                  "selected": "SELECTED"
+              },
+              "selectedWorkspaceDetail": {
+                  "eyebrow": "SELECTED WORKSPACE",
+                  "title": "Clinic & Medical",
+                  "description": "Manage patient inquiries, consultations, appointments, clinical activity, care plans, follow-up, and clinic operations from one connected workspace.",
+                  "items": ["Patients", "Consultations", "Clinical Notes", "Follow-Up"],
+                  "preview": "Preview Workspace",
+                  "connected": "Your workspace connects directly to your CRM, AI agent, customer data, appointments, workflows, and revenue operation.",
+                  "explore": "Explore Cortexa Workspaces",
+                  "note": "One workspace included. Add more as your business grows."
+              },
+              "guidedSetup": {
+                  "eyebrow": "GUIDED CORTEXA SETUP",
+                  "title": "Get your workspace configured, connected, and ready to work.",
+                  "description": "Cortexa guides you through the essential setup steps inside your account, so your AI agent, customer entry points, CRM, pipeline, appointments, and team handoff work together correctly.",
+                  "steps": [
+                      {"title": "Configure Your Business", "description": "Add your business details, services, hours, team, and conversion goals."},
+                      {"title": "Connect Customer Entry Points", "description": "Connect your website, business phone, WhatsApp, forms, and marketing pages."},
+                      {"title": "Train Your AI Agent", "description": "Define how it responds, qualifies, schedules, and transfers conversations."},
+                      {"title": "Test and Launch", "description": "Verify lead capture, source tracking, CRM records, pipeline routing, appointments, and conversions."}
+                  ],
+                  "helpTitle": "Need help getting connected?",
+                  "helpDescription": "Our team can review your setup and help connect your AI agent, website, phone, WhatsApp, CRM, appointments, checkout, tracking, and human handoff.",
+                  "request": "Request Setup Assistance",
+                  "guide": "View Setup Guide",
+                  "note": "Optional setup and website services are quoted separately."
+              },
+              "workspaceClosing": {
+                  "title1": "You have the right workspace.",
+                  "title2": "Now let’s make it",
+                  "titleAccent": "work for your business.",
+                  "description": "A workspace is the part of Cortexa built around the way a specific type of business operates. It brings the customer records, workflows, pipeline, appointments, automation, and AI-agent tools that business needs into one connected place.",
+                  "quote": "Choose the workspace that fits your business. Then make it yours.",
+                  "eyebrow": "FROM SELECTION TO A CONNECTED SYSTEM",
+                  "paragraph1": "Once selected, the guided setup helps you define your services, hours, team responsibilities, customer entry points, qualification rules, conversion goals, appointments, follow-up, and human handoff.",
+                  "paragraph2": "Your website, business phone, forms, advertising traffic, and WhatsApp can connect to the same managed process so the AI agent, CRM, pipeline, checkout, appointments, and team work together from the first conversation to the next appropriate action.",
+                  "paragraph3a": "You can complete the setup yourself. If your website needs to be updated, built, or connected to your workspace, our",
+                  "webSolutions": "Web Solutions",
+                  "paragraph3b": "team can review what you have and provide a separate implementation quote.",
+                  "cta": "Explore Web Solutions",
+                  "note": "Optional setup and website implementation services are quoted separately."
+              },
+              "teamWorkspaceShowcase": {
+                  "eyebrow": "CORTEXA TEAM WORKSPACE",
+                  "title": "Keep your team aligned, accountable, and working from the same information.",
+                  "description": "Manage assignments, customer follow-ups, priorities, internal communication, and handoffs from one shared workspace—without losing customer context.",
+                  "benefits": [
+                      {"title": "Clear ownership", "desc": "Assign work and know who is responsible."},
+                      {"title": "Shared customer context", "desc": "Keep conversations, notes, status, and next steps visible."},
+                      {"title": "Stronger execution", "desc": "Coordinate follow-ups, approvals, deadlines, and handoffs."}
+                  ],
+                  "closing": "One team. One shared customer record.",
+                  "cta": "Explore Team Workspace",
+                  "note": "Built for owners, managers, sales, customer service, and operations."
+              },
+              "webSolutionsShowcase": {
+                  "eyebrow": "CORTEXA WEB SOLUTIONS",
+                  "title": "Connect your website to the way your business works.",
+                  "description": "Your website should do more than display information. Cortexa Web Solutions can connect it directly to your AI agent, CRM, pipeline, appointments, checkout, tracking, support, and team—so every customer reaches the right next step.",
+                  "benefits": [
+                      {"title": "Lead with your AI agent", "desc": "Give customers immediate assistance, capture their information, understand what they need, and guide them toward the correct action."},
+                      {"title": "Build around your conversion goals", "desc": "Create clear paths for purchases, appointments, quotes, viewings, demos, support requests, and human handoffs."},
+                      {"title": "Connect every customer entry point", "desc": "Bring website forms, advertising traffic, business phone, and WhatsApp into the same managed Cortexa process."}
+                  ]
+              },
+              "webSolutionsConnected": {
+                  "eyebrow": "CORTEXA WEB SOLUTIONS",
+                  "title": "Connect your website to the way your business works.",
+                  "description": "Your website should do more than display information. Cortexa Web Solutions can connect it directly to your AI agent, CRM, pipeline, appointments, checkout, tracking, support, and team—so every customer reaches the right next step.",
+                  "entryEyebrow": "CONNECTED CUSTOMER ENTRY POINTS",
+                  "entries": ["Website Forms", "Phone", "Advertising", "WhatsApp"],
+                  "existingTitle": "Already have a website?",
+                  "existingDescription": "We can improve it, connect it, and make it work with your selected Cortexa workspace.",
+                  "cta": "Explore Web Solutions",
+                  "note": "Custom website and implementation services are quoted separately."
+              },
+              "customerExperiences": {
+                  "eyebrow": "CUSTOMER EXPERIENCES",
+                  "title": "Put Cortexa to Work Across Your Business.",
+                  "description": "Choose the right workspace, configure your AI agent, connect your customer entry points, and give your team one intelligent system for managing what happens next.",
+                  "testimonials": [
+                      {
+                          "quote": "Cortexa brought our customer inquiries, appointments, and follow-up into one clear process. Our team can see what needs attention without moving between disconnected systems.",
+                          "role": "Clinic Operations Manager",
+                          "workspace": "Clinic & Medical Workspace"
+                      },
+                      {
+                          "quote": "The AI agent gives customers an immediate response and captures the information our team needs before a person steps in. That has made every conversation more organized.",
+                          "role": "Sales Director",
+                          "workspace": "Sales Workspace"
+                      },
+                      {
+                          "quote": "We finally have a workspace that reflects how our business actually operates. The guided setup made it clear what to connect and how every customer should move forward.",
+                          "role": "Business Owner",
+                          "workspace": "Business Suite"
+                      }
+                  ],
+                  "ctaTitle": "Ready to build a more connected way to operate?",
+                  "cta": "Get Started",
+                  "explore": "Explore Cortexa Workspaces",
+                  "note": "Replace sample testimonial copy with verified customer statements before publishing."
+              },
+              "connectedJourney": {
+                  "eyebrow": "ONE CONNECTED CUSTOMER JOURNEY",
+                  "title": "Every customer entry point. One intelligent business flow.",
+                  "description": "Cortexa connects how customers discover you, communicate with your business, enter your CRM, move through the correct workspace, and reach the right conversion or human handoff.",
+                  "closing": "From first contact to the next best action—everything stays connected.",
+                  "cta": "Explore the Cortexa Platform"
+              }
       },
-      unlimitedAISection: {
-        usageLabel: "AI Usage",
-        usageAvailable: "100% Available",
-        usageDescription: "Unlimited AI usage included in your plan",
-        titleLine1: "Unlimited AI",
-        titleHighlight: "Usage Included",
-        titleLine3: "in Every Plan",
-
-        descriptionLine1: "No AI credits. No credit packs. No usage limits.",
-        descriptionLine2:
-          "No surprise AI bills. Use Cortexa as much as your business needs —",
-        descriptionHighlight: "your monthly price stays predictable.",
-
-        unlimitedTitle: "Unlimited AI",
-        unlimitedDescription: "Use AI tools as much as you need.",
-
-        noCreditsTitle: "No Credits",
-        noCreditsDescription: "No credit packs. No top-ups.",
-
-        noBillsTitle: "No Surprise Bills",
-        noBillsDescription: "One predictable monthly price.",
-
-        growthTitle: "Built for Growth",
-        growthDescription: "Scale your business without limits.",
-
-        footerTitle: "Powerful AI. Predictable pricing.",
-        footerHighlight: "That’s the Cortexa way.",
+      "es": {
+          "heroTitle1": "CRM agéntico creado para",
+          "heroTitle11": "automatizar y hacer seguimiento de ",
+          "heroTitle2": "tu negocio",
+          "heroTitle3": "flujo de trabajo.",
+          "heroDesc": "La IA organiza. La IA califica. Tú haces seguimiento. Tú cierras.",
+          "heroTopBanner1": "Agentic AI",
+          "heroTopBanner2": "sistema operativo de ingresos impulsado por IA para empresas cansadas de CRM complicados y demasiado costosos.",
+          "login": "Iniciar sesión",
+          "nav": [
+              "Funciones",
+              "Asistente IA",
+              "Flujos de trabajo IA",
+              "Pipeline",
+              "Analítica",
+              "Testimonios"
+          ],
+          "pricing": "Precios",
+          "webSolutions": "Soluciones Web",
+          "ctaButtonText": "¡Comenzar!",
+          "heroNoCard": "Prueba gratuita de 14 días",
+          "heroFreeForever": "Desde $11",
+          "faqSubtitle": "PREGUNTAS FRECUENTES",
+          "faqTitle": "Todo lo que necesitas saber",
+          "faq": [
+              {
+                  "q": "¿Qué hace exactamente CORTEXA?",
+                  "a": "CORTEXA reúne tus leads, contactos, pipeline, tareas, propiedades, analítica, actividad del equipo y herramientas empresariales conectadas en un espacio de trabajo CRM centralizado. Ayuda a las empresas a organizar las relaciones con los clientes, gestionar oportunidades, supervisar el rendimiento y mantener conectadas sus operaciones de ventas."
+              },
+              {
+                  "q": "¿Cómo funciona el Asistente de IA?",
+                  "a": "El Asistente de IA de CORTEXA ayuda a los usuarios a trabajar con la información que ya está disponible en su espacio de trabajo. Puede ayudar a mostrar información útil, resumir actividades, proporcionar insights y asistir a los usuarios con tareas cotidianas de CRM y del negocio, manteniendo siempre al usuario en control."
+              },
+              {
+                  "q": "¿Puedo gestionar todos mis leads en un solo lugar?",
+                  "a": "Sí. Los leads, contactos, notas, actividades, etapas del pipeline y la información relacionada con los clientes pueden organizarse en un espacio de trabajo centralizado, facilitando que tu equipo gestione oportunidades sin cambiar entre múltiples sistemas."
+              },
+              {
+                  "q": "¿Cómo gestiono mi pipeline de ventas?",
+                  "a": "CORTEXA proporciona un pipeline visual donde puedes organizar oportunidades, mover negocios entre etapas, asignar responsabilidades, crear tareas y recordatorios, y supervisar el progreso desde un solo espacio de trabajo."
+              },
+              {
+                  "q": "¿Puedo conectar las herramientas empresariales que ya utilizo?",
+                  "a": "Sí. CORTEXA admite integraciones con herramientas y servicios empresariales de terceros compatibles. Las integraciones disponibles pueden variar, y los clientes siguen siendo responsables de sus propias cuentas de terceros, permisos y términos aplicables de cada proveedor."
+              },
+              {
+                  "q": "¿Puede mi equipo utilizar CORTEXA en conjunto?",
+                  "a": "Sí. CORTEXA ofrece funciones de espacio de trabajo para equipos que permiten compartir información del CRM, asignar tareas y leads, supervisar la actividad y coordinar el trabajo desde la misma plataforma. La capacidad disponible para el equipo depende del plan del cliente."
+              },
+              {
+                  "q": "¿Para qué tipo de empresas está diseñado CORTEXA?",
+                  "a": "CORTEXA está diseñado para empresas y equipos profesionales que necesitan un sistema centralizado para gestionar leads, contactos, pipelines de ventas, información de clientes, tareas, informes y operaciones diarias de CRM."
+              },
+              {
+                  "q": "¿Qué sucede después de añadir un lead a CORTEXA?",
+                  "a": "El lead pasa a formar parte de tu espacio de trabajo CRM centralizado, donde tu equipo puede organizar el registro, asignar responsabilidades, añadir notas y tareas, gestionar su etapa del pipeline y realizar un seguimiento de la actividad y el progreso."
+              }
+          ],
+          "finalCtaTitle1": "Conecta Tu",
+          "finalCtaTitle2": "Tu Flujo de Trabajo",
+          "finalCtaDesc": "La IA capta leads. La IA califica. La IA cierra. Todo en tu ",
+          "marketsSubtitle": "EXPLORA NUESTROS MERCADOS",
+          "marketsRegionLabel": "Nuestras Regiones",
+          "viewAllCountriesText": "Ver Todos los Países",
+          "regionLatAm": "América Latina",
+          "regionUSA": "EE. UU.",
+          "regionEurope": "Europa",
+          "regionEuropeUs": "Europa y Estados Unidos",
+          "footerDesc": "La plataforma de IA todo en uno que captura leads, automatiza el seguimiento y cierra más tratos, 24/7.",
+          "colProduct": "Producto",
+          "colGetStarted": "Comenzar",
+          "colConnect": "Conectar",
+          "colSupport": "Soporte",
+          "colLegal": "Legal",
+          "fFeatures": "Características",
+          "fAiAssistant": "Asistente de IA",
+          "fAutomations": "Automatizaciones",
+          "fIntegrations": "Integraciones",
+          "fAnalytics": "Analítica",
+          "fPricing": "Precios",
+          "fStart": "Comenzar",
+          "fLogin": "Iniciar Sesión",
+          "fSetup": "Guía de Configuración",
+          "fConnectApps": "Conectar tus Apps",
+          "fImportCrm": "Importar tu CRM",
+          "fImportCsv": "Importar CSV / Excel",
+          "fZapier": "Zapier y Automatizaciones",
+          "fApiWebhooks": "API y Webhooks",
+          "fSupport247": "Soporte 24/7",
+          "fHelpCenter": "Centro de Ayuda",
+          "fContact": "Contáctanos",
+          "fAbout": "Nosotros",
+          "fTerms": "Términos y Condiciones",
+          "fPrivacy": "Política de Privacidad",
+          "fRefund": "Política de Reembolso",
+          "fCancel": "Política de Cancelación",
+          "copyright": "© 2026 Cortexa AI. Todos los derechos reservados.",
+          "termsOfService": "Términos de Servicio",
+          "powerbadge": "INTEGRACIÓN",
+          "powertitle": "Conecta tus aplicaciones",
+          "workspacesSection": {
+              "eyebrow": "ESPACIOS DE TRABAJO CORTEXA",
+              "titleLine1": "Espacios Especializados.",
+              "titleLine2": "Un CRM Inteligente",
+              "titleLine3": "Totalmente Conectado.",
+              "description": "Cortexa incluye espacios de trabajo dedicados para diferentes industrias y operaciones empresariales. Cada espacio incorpora las herramientas, la terminología, el recorrido del cliente y los flujos de trabajo adecuados en un CRM inteligente y conectado.",
+              "includesTitle": "CADA ESPACIO DE TRABAJO INCLUYE",
+              "items": [
+                  "Conversaciones con IA",
+                  "Leads",
+                  "Clientes o Pacientes",
+                  "Pipeline",
+                  "Calendario",
+                  "Automatizaciones",
+                  "Analítica",
+                  "Integraciones"
+              ]
+          },
+                    "workspaceChooser": {
+                  "title": "Encuentra el espacio de trabajo diseñado para la forma en que opera tu negocio.",
+                  "items": [
+                      "Suite Empresarial",
+                      "Ventas",
+                      "Seguros",
+                      "Servicios Financieros",
+                      "Comercio Electrónico",
+                      "Servicio al Cliente"
+                  ]
+              },
+              "moreWorkspaces": {
+                  "eyebrow": "MÁS ESPACIOS DE TRABAJO ESPECIALIZADOS",
+                  "items": ["Bienes Raíces", "Espacio de Equipo", "Generador de Leads", "Estética y Bienestar", "Clínica y Medicina"],
+                  "selected": "SELECCIONADO"
+              },
+              "selectedWorkspaceDetail": {
+                  "eyebrow": "ESPACIO DE TRABAJO SELECCIONADO",
+                  "title": "Clínica y Medicina",
+                  "description": "Gestiona consultas de pacientes, consultas médicas, citas, actividad clínica, planes de atención, seguimiento y operaciones de la clínica desde un espacio de trabajo conectado.",
+                  "items": ["Pacientes", "Consultas", "Notas Clínicas", "Seguimiento"],
+                  "preview": "Vista Previa del Espacio",
+                  "connected": "Tu espacio de trabajo se conecta directamente con tu CRM, agente de IA, datos de clientes, citas, flujos de trabajo y operaciones de ingresos.",
+                  "explore": "Explorar Espacios de Cortexa",
+                  "note": "Un espacio de trabajo incluido. Agrega más a medida que tu negocio crece."
+              },
+              "guidedSetup": {
+                  "eyebrow": "CONFIGURACIÓN GUIADA DE CORTEXA",
+                  "title": "Configura y conecta tu espacio de trabajo para empezar a trabajar.",
+                  "description": "Cortexa te guía por los pasos esenciales de configuración dentro de tu cuenta para que tu agente de IA, puntos de entrada de clientes, CRM, pipeline, citas y transferencia al equipo funcionen correctamente.",
+                  "steps": [
+                      {"title": "Configura Tu Negocio", "description": "Agrega los datos de tu negocio, servicios, horarios, equipo y objetivos de conversión."},
+                      {"title": "Conecta los Puntos de Entrada", "description": "Conecta tu sitio web, teléfono comercial, WhatsApp, formularios y páginas de marketing."},
+                      {"title": "Entrena Tu Agente de IA", "description": "Define cómo responde, califica, programa y transfiere conversaciones."},
+                      {"title": "Prueba y Lanza", "description": "Verifica la captura de leads, seguimiento de fuentes, registros del CRM, enrutamiento del pipeline, citas y conversiones."}
+                  ],
+                  "helpTitle": "¿Necesitas ayuda para conectarte?",
+                  "helpDescription": "Nuestro equipo puede revisar tu configuración y ayudarte a conectar tu agente de IA, sitio web, teléfono, WhatsApp, CRM, citas, checkout, seguimiento y transferencia humana.",
+                  "request": "Solicitar Ayuda de Configuración",
+                  "guide": "Ver Guía de Configuración",
+                  "note": "Los servicios opcionales de configuración y sitio web se cotizan por separado."
+              },
+              "workspaceClosing": {
+                  "title1": "Tienes el espacio de trabajo adecuado.",
+                  "title2": "Ahora hagamos que",
+                  "titleAccent": "funcione para tu negocio.",
+                  "description": "Un espacio de trabajo es la parte de Cortexa creada alrededor de la forma en que opera un tipo específico de negocio. Reúne los registros de clientes, flujos de trabajo, pipeline, citas, automatización y herramientas del agente de IA que ese negocio necesita en un solo lugar conectado.",
+                  "quote": "Elige el espacio de trabajo que se adapte a tu negocio. Luego hazlo tuyo.",
+                  "eyebrow": "DE LA SELECCIÓN A UN SISTEMA CONECTADO",
+                  "paragraph1": "Una vez seleccionado, la configuración guiada te ayuda a definir tus servicios, horarios, responsabilidades del equipo, puntos de entrada de clientes, reglas de calificación, objetivos de conversión, citas, seguimiento y transferencia humana.",
+                  "paragraph2": "Tu sitio web, teléfono comercial, formularios, tráfico publicitario y WhatsApp pueden conectarse al mismo proceso gestionado para que el agente de IA, CRM, pipeline, checkout, citas y equipo trabajen juntos desde la primera conversación hasta la siguiente acción adecuada.",
+                  "paragraph3a": "Puedes completar la configuración por tu cuenta. Si tu sitio web necesita actualizarse, crearse o conectarse a tu espacio de trabajo, nuestro equipo de",
+                  "webSolutions": "Soluciones Web",
+                  "paragraph3b": "puede revisar lo que tienes y proporcionar una cotización de implementación por separado.",
+                  "cta": "Explorar Soluciones Web",
+                  "note": "Los servicios opcionales de configuración e implementación web se cotizan por separado."
+              },
+              "teamWorkspaceShowcase": {
+                  "eyebrow": "ESPACIO DE TRABAJO EN EQUIPO CORTEXA",
+                  "title": "Mantén a tu equipo alineado, responsable y trabajando con la misma información.",
+                  "description": "Gestiona asignaciones, seguimientos de clientes, prioridades, comunicación interna y transferencias desde un espacio de trabajo compartido, sin perder el contexto del cliente.",
+                  "benefits": [
+                      {"title": "Responsabilidad clara", "desc": "Asigna el trabajo y sabe quién es responsable."},
+                      {"title": "Contexto compartido del cliente", "desc": "Mantén visibles las conversaciones, notas, estados y próximos pasos."},
+                      {"title": "Mejor ejecución", "desc": "Coordina seguimientos, aprobaciones, fechas límite y transferencias."}
+                  ],
+                  "closing": "Un equipo. Un registro de cliente compartido.",
+                  "cta": "Explorar Espacio de Equipo",
+                  "note": "Creado para propietarios, gerentes, ventas, servicio al cliente y operaciones."
+              },
+              "webSolutionsShowcase": {
+                  "eyebrow": "SOLUCIONES WEB CORTEXA",
+                  "title": "Conecta tu sitio web con la forma en que funciona tu negocio.",
+                  "description": "Tu sitio web debería hacer más que mostrar información. Cortexa Web Solutions puede conectarlo directamente con tu agente de IA, CRM, pipeline, citas, checkout, seguimiento, soporte y equipo, para que cada cliente llegue al siguiente paso correcto.",
+                  "benefits": [
+                      {"title": "Lidera con tu agente de IA", "desc": "Brinda asistencia inmediata a los clientes, captura su información, comprende lo que necesitan y guíalos hacia la acción correcta."},
+                      {"title": "Construye alrededor de tus objetivos de conversión", "desc": "Crea rutas claras para compras, citas, cotizaciones, visitas, demostraciones, solicitudes de soporte y transferencias humanas."},
+                      {"title": "Conecta cada punto de entrada del cliente", "desc": "Integra formularios web, tráfico publicitario, teléfono comercial y WhatsApp en el mismo proceso gestionado de Cortexa."}
+                  ]
+              },
+              "webSolutionsConnected": {
+                  "eyebrow": "SOLUCIONES WEB CORTEXA",
+                  "title": "Conecta tu sitio web con la forma en que funciona tu negocio.",
+                  "description": "Tu sitio web debería hacer más que mostrar información. Cortexa Web Solutions puede conectarlo directamente con tu agente de IA, CRM, pipeline, citas, checkout, seguimiento, soporte y equipo, para que cada cliente llegue al siguiente paso correcto.",
+                  "entryEyebrow": "PUNTOS DE ENTRADA DEL CLIENTE CONECTADOS",
+                  "entries": ["Formularios web", "Teléfono", "Publicidad", "WhatsApp"],
+                  "existingTitle": "¿Ya tienes un sitio web?",
+                  "existingDescription": "Podemos mejorarlo, conectarlo y hacer que funcione con tu espacio de trabajo Cortexa seleccionado.",
+                  "cta": "Explorar Soluciones Web",
+                  "note": "Los servicios personalizados de sitio web e implementación se cotizan por separado."
+              },
+              "customerExperiences": {
+                  "eyebrow": "EXPERIENCIAS DE CLIENTES",
+                  "title": "Pon Cortexa a Trabajar en Todo Tu Negocio.",
+                  "description": "Elige el espacio de trabajo adecuado, configura tu agente de IA, conecta los puntos de entrada de clientes y brinda a tu equipo un sistema inteligente para gestionar lo que sucede después.",
+                  "testimonials": [
+                      {
+                          "quote": "Cortexa reunió nuestras consultas de clientes, citas y seguimientos en un proceso claro. Nuestro equipo puede ver qué necesita atención sin moverse entre sistemas desconectados.",
+                          "role": "Gerente de Operaciones Clínicas",
+                          "workspace": "Espacio Clínica y Medicina"
+                      },
+                      {
+                          "quote": "El agente de IA brinda a los clientes una respuesta inmediata y captura la información que nuestro equipo necesita antes de que intervenga una persona. Eso ha hecho que cada conversación sea más organizada.",
+                          "role": "Director de Ventas",
+                          "workspace": "Espacio de Ventas"
+                      },
+                      {
+                          "quote": "Finalmente tenemos un espacio de trabajo que refleja cómo funciona realmente nuestro negocio. La configuración guiada dejó claro qué conectar y cómo debe avanzar cada cliente.",
+                          "role": "Propietario del Negocio",
+                          "workspace": "Business Suite"
+                      }
+                  ],
+                  "ctaTitle": "¿Listo para crear una forma de operar más conectada?",
+                  "cta": "Comenzar",
+                  "explore": "Explorar Espacios de Cortexa",
+                  "note": "Reemplaza los testimonios de ejemplo con declaraciones verificadas de clientes antes de publicar."
+              },
+              "connectedJourney": {
+                  "eyebrow": "UN RECORRIDO DEL CLIENTE CONECTADO",
+                  "title": "Cada punto de entrada del cliente. Un flujo empresarial inteligente.",
+                  "description": "Cortexa conecta cómo los clientes te descubren, se comunican con tu negocio, ingresan a tu CRM, avanzan por el espacio de trabajo correcto y llegan a la conversión adecuada o a una transferencia humana.",
+                  "closing": "Desde el primer contacto hasta la siguiente mejor acción, todo permanece conectado.",
+                  "cta": "Explorar la Plataforma Cortexa"
+              }
       },
-      everythingIncludedSection: {
-        eyebrow: "EVERYTHING INCLUDED. NOTHING EXTRA.",
-
-        titleLine1: "See",
-        titleHighlight: "Exactly",
-        titleLine2: "What You Get",
-
-        description:
-          "Other platforms charge extra for the tools and features your team actually needs. Cortexa includes everything—so you can focus on what matters: closing deals.",
-
-        columnFeature: "WHAT YOU GET",
-        columnOthers: "WITH OTHERS",
-
-        rows: [
-          {
-            feature: "CRM & Contact Management",
-            other: "Add-on or higher plan",
-            included: "Included",
-          },
-          {
-            feature: "Leads & Pipeline Management",
-            other: "Add-on or separate tool",
-            included: "Included",
-          },
-          {
-            feature: "Email & SMS Campaigns",
-            other: "Add-on or separate tool",
-            included: "Included",
-          },
-          {
-            feature: "AI Agent (24/7)",
-            other: "Add-on or separate platform",
-            included: "Included",
-          },
-          {
-            feature: "WhatsApp Automation",
-            other: "Add-on or extra integration",
-            included: "Included",
-          },
-          {
-            feature: "Appointment Booking",
-            other: "Add-on or higher plan",
-            included: "Included",
-          },
-          {
-            feature: "Reporting & Analytics",
-            other: "Add-on or higher tier",
-            included: "Included",
-          },
-          {
-            feature: "Team Collaboration",
-            other: "Add-on or higher plan",
-            included: "Included",
-          },
-          {
-            feature: "Workflow Automation",
-            other: "Add-on or separate tool",
-            included: "Included",
-          },
-          {
-            feature: "Unlimited AI Usage",
-            other: "Usage limits or extra cost",
-            included: "Unlimited. No extra cost.",
-          },
-          {
-            feature: "Marketing Contact Fees",
-            other: "Billed separately as usage grows",
-            included: "No extra fees. Ever.",
-          },
-        ],
-
-        footerTitle: "One platform. Everything included.",
-        footerDescription: "No add-ons. No surprises. Just results.",
-      },
-    },
-
-    es: {
-      
-      heroTitle1: "CRM agéntico creado para",
-      heroTitle11: "automatizar y hacer seguimiento de ",
-      heroTitle2: "tu negocio",
-      heroTitle3: "flujo de trabajo.",
-      heroTitle4: "en Ingresos.",
-      heroDesc:
-        "La IA organiza. La IA califica. Tú haces seguimiento. Tú cierras.",
-      heroTopBanner1: "Agentic AI",
-      heroTopBanner2:
-        "sistema operativo de ingresos impulsado por IA para empresas cansadas de CRM complicados y demasiado costosos.",
-      login: "Iniciar sesión",
-      trial: "Comenzar",
-      nav: [
-        "Funciones",
-        "Asistente IA",
-        "Flujos de trabajo IA",
-        "Pipeline",
-        "Analítica",
-        "Testimonios",
-      ],
-      pricing: "Precios",
-      webSolutions: "Soluciones Web",
-      watchDemo: "Ver Demo",
-      trusted: "Diseñada para empresas de todo tipo.",
-      benefitsSubtitle: "LO QUE CORTEXA HACE POR TI",
-      benefitsTitle1: "Todo lo que necesitas.",
-      benefitsTitle2: "En un solo lugar.",
-      followUpTitle: "Gestión de Seguimientos",
-      followUpDesc:
-        "Organiza las tareas de seguimiento y mantén el control de cada oportunidad.",
-      setterTitle: "Gestión de Citas",
-      setterDesc: "Gestiona la programación, las citas y la actividad relacionada con los clientes en un solo lugar.",
-      pipelineTitle: "Gestión de Pipeline",
-      pipelineDesc:
-        "Mira todo tu pipeline de un vistazo y nunca pierdas el rastro de un trato.",
-      analyticsTitle: "Analítica en Tiempo Real",
-      analyticsDesc:
-        "Realiza un seguimiento del rendimiento en tiempo real y toma decisiones basadas en datos.",
-      whatsappTitle: "Integración con WhatsApp",
-      whatsappDesc:
-        "Chatea con tus leads donde ellos estén y cierra ventas más rápido.",
-
-      platformSubtitle: "UNA PLATAFORMA POTENTE",
-      platformTitle: "Diseñado para Empresas",
-      platformTitle1: "Que Buscan",
-      platformTitle2: "Maximizar sus Ingresos",
-      platformDesc:
-        "CORTEXA reúne tus leads, conversaciones, propiedades, citas y tratos en un solo sistema inteligente, impulsado por IA.",
-      captureTitle: "Captura de Leads",
-      captureDesc: "Desde anuncios, sitios web, portales y más",
-      engageTitle: "IA Interactúa al Instante",
-      engageDesc:
-        "Responde, califica y nutre las 24 horas, los 7 días de la semana",
-      syncTitle: "Sincronización de Datos",
-      syncDesc: "Todo organizado en un solo lugar",
-      pipelineMoveTitle: "El Pipeline Avanza",
-      pipelineMoveDesc: "La IA y tu equipo cierran más tratos",
-      closedDealsTitle: "Más Tratos Cerrados",
-      closedDealsDesc: "Crecimiento predecible en piloto automático",
-
-      howSubtitle: "CÓMO FUNCIONA",
-      howTitle: "Simple. Potente. Automático.",
-      step1Title: "Entrada de Leads",
-      step1Desc: "Desde anuncios, sitio web, propiedades o referidos.",
-      step2Title: "La IA Responde al Instante",
-      step2Desc: "Responde preguntas, califica e inicia la conversación.",
-      step3Title: "La IA Nutre y Hace Seguimiento",
-      step3Desc: "Envía mensajes, agenda citas y mantiene tu pipeline activo.",
-      step4Title: "Actualizaciones del Pipeline",
-      step4Desc: "Todo se rastrea en tiempo real.",
-      step5Title: "Tú Cierras Más Tratos",
-      step5Desc:
-        "La IA se encarga del trabajo pesado. Tú te enfocas en cerrar.",
-
-      flowNewTitle1: "NO TE QUEDES",
-      flowNewTitle2: "ATRÁS.",
-      flowNewDescription:
-        "Descubre cómo nuestro Sistema Operativo de Ingresos integrado ayuda a las empresas a automatizar más rápido, cerrar más oportunidades y aumentar sus ingresos.",
-      flowNewButton: "Comienza Tu Prueba Gratis",
-
-      setterSectionSubtitle: "GESTIÓN DE CITAS",
-      setterSectionTitle1: "Gestiona Tus Citas",
-      setterSectionTitle2: "en un Espacio de",
-      setterSectionTitle3: "Trabajo Conectado.",
-      setterSectionDesc:
-        "Organiza la disponibilidad, las reservas y la programación desde un espacio de trabajo conectado. Mantén las citas y la actividad de los clientes fáciles de gestionar.",
-      bookAppointmentTitle: "Agendar Cita",
-      confirmBtnText: "Confirmar Cita",
-
-      ctaTitle1: "Diseñado para",
-      ctaTitle2: "empresas",
-      ctaTitle3: "de todos los tamaños",
-      ctaTitle4: "y sectores.",
-      pipelinecta1: "Ya sea que dirijas una",
-      pipelinecta2: "y mucho más",
-      ctaTitleSub1: "Empresa Inmobiliaria,",
-      ctaTitleSub2: "Tienda de Comercio Electrónico,",
-      ctaTitleSub3: "Agencia,",
-      ctaTitleSub4: "Consultora,",
-      ctaTitleSub5: "Seguros,",
-      ctaTitleSub6: "Empresa de Servicios Financieros,",
-      ctaready: "¿Ya utilizas Cortexa?",
-      ctaStat1Label: "ROI",
-      ctaStat2Label: "AUMENTO DE INGRESOS",
-      ctaStat3Label: "AGENTES CRECIENDO",
-      ctaButtonText: "¡Comenzar!",
-      heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
-      heroNoCard: "Prueba gratuita de 14 días",
-      heroFreeForever: "Desde $11",
-
-      faqSubtitle: "PREGUNTAS FRECUENTES",
-      faqTitle: "Todo lo que necesitas saber",
-      faq: [
+      "pt": {
+          "heroTitle1": "CRM agêntico criado para",
+          "heroTitle11": "automatizar e acompanhar ",
+          "heroTitle2": "o seu negócio",
+          "heroTitle3": "fluxo de trabalho.",
+          "heroDesc": "A IA organiza. A IA qualifica. Você faz o acompanhamento. Você fecha.",
+          "heroTopBanner1": "Agentic AI",
+          "heroTopBanner2": "sistema operacional de receita com IA para empresas cansadas de CRMs complicados e caros.",
+          "login": "Entrar",
+          "nav": [
+              "Recursos",
+              "Assistente IA",
+              "Fluxos de trabalho IA",
+              "Pipeline",
+              "Analytics",
+              "Depoimentos"
+          ],
+          "pricing": "Preços",
+          "webSolutions": "Soluções Web",
+          "aiosSectionTitle": "Espaço de Trabalho",
+          "aiosSectionTitle1": "de Receita",
+          "aiosSectionTitle2": "para Equipes",
+          "ctaButtonText": "Começar!",
+          "heroNoCard": "Teste grátis de 14 dias",
+          "heroFreeForever": "A partir de US$ 11",
+          "faqSubtitle": "PERGUNTAS FREQUENTES",
+          "faqTitle": "Tudo o que você precisa saber",
+          "faq": [
               {
-                q: "¿Qué hace exactamente CORTEXA?",
-                a: "CORTEXA reúne tus leads, contactos, pipeline, tareas, propiedades, analítica, actividad del equipo y herramientas empresariales conectadas en un espacio de trabajo CRM centralizado. Ayuda a las empresas a organizar las relaciones con los clientes, gestionar oportunidades, supervisar el rendimiento y mantener conectadas sus operaciones de ventas.",
+                  "q": "O que a CORTEXA realmente faz?",
+                  "a": "A CORTEXA reúne seus leads, contatos, pipeline, tarefas, propriedades, análises, atividades da equipe e ferramentas de negócios conectadas em um único espaço de trabalho CRM centralizado. Ela ajuda empresas a organizar relacionamentos com clientes, gerenciar oportunidades, monitorar o desempenho e manter suas operações de vendas conectadas."
               },
               {
-                q: "¿Cómo funciona el Asistente de IA?",
-                a: "El Asistente de IA de CORTEXA ayuda a los usuarios a trabajar con la información que ya está disponible en su espacio de trabajo. Puede ayudar a mostrar información útil, resumir actividades, proporcionar insights y asistir a los usuarios con tareas cotidianas de CRM y del negocio, manteniendo siempre al usuario en control.",
+                  "q": "Como funciona o Assistente de IA?",
+                  "a": "O Assistente de IA da CORTEXA ajuda os usuários a trabalhar com informações que já estão disponíveis em seu espaço de trabalho. Ele pode ajudar a destacar informações úteis, resumir atividades, fornecer insights e auxiliar os usuários em tarefas diárias de CRM e negócios, mantendo o usuário no controle."
               },
               {
-                q: "¿Puedo gestionar todos mis leads en un solo lugar?",
-                a: "Sí. Los leads, contactos, notas, actividades, etapas del pipeline y la información relacionada con los clientes pueden organizarse en un espacio de trabajo centralizado, facilitando que tu equipo gestione oportunidades sin cambiar entre múltiples sistemas.",
+                  "q": "Posso gerenciar todos os meus leads em um só lugar?",
+                  "a": "Sim. Leads, contatos, notas, atividades, etapas do pipeline e informações relacionadas aos clientes podem ser organizados em um espaço de trabalho centralizado, facilitando para sua equipe gerenciar oportunidades sem precisar alternar entre vários sistemas."
               },
               {
-                q: "¿Cómo gestiono mi pipeline de ventas?",
-                a: "CORTEXA proporciona un pipeline visual donde puedes organizar oportunidades, mover negocios entre etapas, asignar responsabilidades, crear tareas y recordatorios, y supervisar el progreso desde un solo espacio de trabajo.",
+                  "q": "Como gerencio meu pipeline de vendas?",
+                  "a": "A CORTEXA oferece um pipeline visual onde você pode organizar oportunidades, mover negócios entre etapas, atribuir responsabilidades, criar tarefas e lembretes e monitorar o progresso em um único espaço de trabalho."
               },
               {
-                q: "¿Puedo conectar las herramientas empresariales que ya utilizo?",
-                a: "Sí. CORTEXA admite integraciones con herramientas y servicios empresariales de terceros compatibles. Las integraciones disponibles pueden variar, y los clientes siguen siendo responsables de sus propias cuentas de terceros, permisos y términos aplicables de cada proveedor.",
+                  "q": "Posso conectar as ferramentas de negócios que já utilizo?",
+                  "a": "Sim. A CORTEXA oferece suporte a integrações com ferramentas e serviços empresariais de terceiros compatíveis. As integrações disponíveis podem variar, e os clientes continuam responsáveis por suas próprias contas de terceiros, permissões e termos aplicáveis dos provedores."
               },
               {
-                q: "¿Puede mi equipo utilizar CORTEXA en conjunto?",
-                a: "Sí. CORTEXA ofrece funciones de espacio de trabajo para equipos que permiten compartir información del CRM, asignar tareas y leads, supervisar la actividad y coordinar el trabajo desde la misma plataforma. La capacidad disponible para el equipo depende del plan del cliente.",
+                  "q": "Minha equipe pode usar a CORTEXA em conjunto?",
+                  "a": "Sim. A CORTEXA oferece recursos de espaço de trabalho em equipe que ajudam os usuários a compartilhar informações do CRM, atribuir tarefas e leads, monitorar atividades e coordenar o trabalho na mesma plataforma. A capacidade disponível para a equipe depende do plano do cliente."
               },
               {
-                q: "¿Para qué tipo de empresas está diseñado CORTEXA?",
-                a: "CORTEXA está diseñado para empresas y equipos profesionales que necesitan un sistema centralizado para gestionar leads, contactos, pipelines de ventas, información de clientes, tareas, informes y operaciones diarias de CRM.",
+                  "q": "Para que tipo de empresas a CORTEXA foi criada?",
+                  "a": "A CORTEXA foi desenvolvida para empresas e equipes profissionais que precisam de um sistema centralizado para gerenciar leads, contatos, pipelines de vendas, informações de clientes, tarefas, relatórios e operações diárias de CRM."
               },
               {
-                q: "¿Qué sucede después de añadir un lead a CORTEXA?",
-                a: "El lead pasa a formar parte de tu espacio de trabajo CRM centralizado, donde tu equipo puede organizar el registro, asignar responsabilidades, añadir notas y tareas, gestionar su etapa del pipeline y realizar un seguimiento de la actividad y el progreso.",
+                  "q": "O que acontece depois que um lead é adicionado à CORTEXA?",
+                  "a": "O lead passa a fazer parte do seu espaço de trabalho CRM centralizado, onde sua equipe pode organizar o registro, atribuir responsabilidades, adicionar notas e tarefas, gerenciar sua etapa no pipeline e acompanhar atividades e progresso."
+              }
+          ],
+          "finalCtaTitle1": "Conecte Seu",
+          "finalCtaTitle2": "Seu Fluxo de Trabalho",
+          "finalCtaDesc": "A IA gera leads. A IA qualifica. A IA fecha. Tudo no seu ",
+          "marketsSubtitle": "EXPLORE NOSSOS MERCADOS",
+          "marketsRegionLabel": "Nossas Regiões",
+          "viewAllCountriesText": "Ver Todos os Países",
+          "regionLatAm": "América Latina",
+          "regionUSA": "EUA",
+          "regionEurope": "Europa",
+          "regionEuropeUs": "Europa e Estados Unidos",
+          "footerDesc": "A plataforma de IA tudo-em-um que captura leads, automatiza acompanhamentos e fecha mais negócios — 24/7.",
+          "colProduct": "Produto",
+          "colGetStarted": "Começar",
+          "colConnect": "Conectar",
+          "colSupport": "Suporte",
+          "colLegal": "Legal",
+          "fFeatures": "Recursos",
+          "fAiAssistant": "Assistente de IA",
+          "fAutomations": "Automatizações",
+          "fIntegrations": "Integrações",
+          "fAnalytics": "Análise",
+          "fPricing": "Preços",
+          "fStart": "Começar",
+          "fLogin": "Login",
+          "fSetup": "Guia de Configuração",
+          "fConnectApps": "Conectar Seus Apps",
+          "fImportCrm": "Importar Seu CRM",
+          "fImportCsv": "Importar CSV / Excel",
+          "fZapier": "Zapier & Automatizações",
+          "fApiWebhooks": "API & Webhooks",
+          "fSupport247": "Suporte 24/7",
+          "fHelpCenter": "Central de Ajuda",
+          "fContact": "Fale Conosco",
+          "fAbout": "Sobre Nós",
+          "fTerms": "Termos & Condições",
+          "fPrivacy": "Política de Privacidade",
+          "fRefund": "Política de Reembolso",
+          "fCancel": "Política de Cancelamento",
+          "copyright": "© 2026 Cortexa AI. Todos os direitos reservados.",
+          "termsOfService": "Termos de Serviço",
+          "powerbadge": "INTEGRAÇÃO",
+          "powertitle": "Conecte seus aplicativos",
+          "workspacesSection": {
+              "eyebrow": "ESPAÇOS DE TRABALHO CORTEXA",
+              "titleLine1": "Espaços Especializados.",
+              "titleLine2": "Um CRM Inteligente",
+              "titleLine3": "Totalmente Conectado.",
+              "description": "A Cortexa inclui espaços de trabalho dedicados para diferentes setores e operações empresariais. Cada espaço reúne as ferramentas, a terminologia, a jornada do cliente e os fluxos de trabalho adequados em um CRM inteligente e conectado.",
+              "includesTitle": "CADA ESPAÇO DE TRABALHO INCLUI",
+              "items": [
+                  "Conversas com IA",
+                  "Leads",
+                  "Clientes ou Pacientes",
+                  "Pipeline",
+                  "Calendário",
+                  "Automações",
+                  "Análises",
+                  "Integrações"
+              ]
+          },
+                    "workspaceChooser": {
+                  "title": "Encontre o espaço de trabalho desenvolvido para a forma como sua empresa opera.",
+                  "items": [
+                      "Suíte Empresarial",
+                      "Vendas",
+                      "Seguros",
+                      "Serviços Financeiros",
+                      "E-Commerce",
+                      "Atendimento ao Cliente"
+                  ]
               },
-            ],
-
-      finalCtaSubtitle: "AUTOMATIZA TU ÉXITO",
-      finalCtaTitle1: "Conecta Tu",
-      finalCtaTitle2: "Tu Flujo de Trabajo",
-      finalCtaTitle3: "",
-      finalCtaDesc:
-        "La IA capta leads. La IA califica. La IA cierra. Todo en tu ",
-      finalCtaBtn: "Comienza Tu Prueba Gratis",
-      finalCtaSubBtn: "",
-      finalCtaSubBtn1: "Desbloquea tu potencial hoy",
-
-      marketsSubtitle: "EXPLORA NUESTROS MERCADOS",
-      marketsTitle1: "Ayudamos a los agentes a",
-      marketsTitle2: "cerrar más tratos",
-      marketsTitle3: "en América Latina",
-      marketsTitle4: "y el mundo.",
-      marketsRegionLabel: "Nuestras Regiones",
-      viewAllCountriesText: "Ver Todos los Países",
-      regionLatAm: "América Latina",
-      regionUSA: "EE. UU.",
-      regionEurope: "Europa",
-      regionEuropeUs: "Europa y Estados Unidos",
-
-      footerDesc:
-        "La plataforma de IA todo en uno que captura leads, automatiza el seguimiento y cierra más tratos, 24/7.",
-      colProduct: "Producto",
-      colGetStarted: "Comenzar",
-      colConnect: "Conectar",
-      colSupport: "Soporte",
-      colLegal: "Legal",
-      fFeatures: "Características",
-      fAiAssistant: "Asistente de IA",
-      fAutomations: "Automatizaciones",
-      fIntegrations: "Integraciones",
-      fAnalytics: "Analítica",
-      fPricing: "Precios",
-      fStart: "Comenzar",
-      fLogin: "Iniciar Sesión",
-      fSetup: "Guía de Configuración",
-      fConnectApps: "Conectar tus Apps",
-      fImportCrm: "Importar tu CRM",
-      fImportCsv: "Importar CSV / Excel",
-      fZapier: "Zapier y Automatizaciones",
-      fApiWebhooks: "API y Webhooks",
-      fSupport247: "Soporte 24/7",
-      fHelpCenter: "Centro de Ayuda",
-      fContact: "Contáctanos",
-      fAbout: "Nosotros",
-      fTerms: "Términos y Condiciones",
-      fPrivacy: "Política de Privacidad",
-      fRefund: "Política de Reembolso",
-      fCancel: "Política de Cancelación",
-      copyright: "© 2026 Cortexa AI. Todos los derechos reservados.",
-      termsOfService: "Términos de Servicio",
-
-      heroTitlePre: "Creado para ",
-      heroTitleActive: "Aumentar Ingresos",
-      heroTitlePost: " — No para Administrar Software.",
-      heroSubPre: "Lo traemos todo en ",
-      heroSubActive: "un espacio de trabajo conectado.",
-      nodeAgent: "AGENTE DE IA",
-      nodeWhatsapp: "WHATSAPP",
-      nodeDashboard: "PANEL",
-      nodePipeline: "PIPELINE",
-      nodeHybrid: "CONEXIONES HÍBRIDAS",
-      nodeLeads: "CLIENTES POTENCIALES",
-      nodeContacts: "CONTACTOS",
-      nodeProperties: "PROPIEDADES",
-      stat1Title: "",
-      stat1Desc:
-        "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
-
-      stat2Title: "",
-
-      thCustomer: "Cliente",
-      thDeals: "Tratos",
-      thRevenue: "Ingresos",
-      thStage: "Etapa",
-      stageNew: "Nuevo Lead",
-      stageContacted: "Contactado",
-      stageQualified: "Calificado",
-      stageProposal: "Propuesta",
-      stageClosed: "Cerrado Ganado",
-
-      heroCheck6:
-        "Captura, organiza y gestiona leads en un espacio de trabajo conectado.",
-      heroCheck7:
-        "Conecta tus herramientas empresariales y canales de comunicación.",
-      heroCheck8:
-        "Gestiona tareas de seguimiento, programación y citas en un solo lugar.",
-      heroCheck9:
-        "Inteligencia de pipeline, previsión de ingresos y un panel de control unificado.",
-
-      powerbadge: "INTEGRACIÓN",
-      powertitle: "Conecta tus aplicaciones",
-
-      workspacelang1: "Equipo",
-      workspacelang2: "Ingresos",
-      workspacelang3: "Espacio de trabajo",
-
-      reportingSection: {
-        eyebrow: "INFORMES Y FLUJO DE TRABAJO",
-        titleLine1: "Los informes",
-        titleLine2: "se convierten en",
-        titleHighlight: "ingresos.",
-        description:
-          "Controla clientes potenciales, conversiones, tiempos de respuesta y rendimiento del equipo en tiempo real. Sin datos dispersos. Solo claridad.",
-        features: [
-          {
-            title: "Analítica",
-            description:
-              "Controla clientes potenciales y el rendimiento del equipo en tiempo real.",
-          },
-          {
-            title: "Pipeline",
-            description:
-              "Gestiona cada negocio desde un solo espacio de trabajo.",
-          },
-          {
-            title: "Visibilidad del equipo",
-            description: "Ve al instante lo que está haciendo tu equipo.",
-          },
-          {
-            title: "Informes",
-            description: "Informes personalizados que impulsan los ingresos.",
-          },
-        ],
-        performanceTitle: "Resumen de rendimiento",
-        conversionRate: "Tasa de conversión",
-        revenueGenerated: "Ingresos generados",
-        responseTime: "Tiempo de respuesta",
-        lastSevenDays: "vs últimos 7 días",
-        aiInsight: "Insight de IA",
-        insightText: "Los tiempos de respuesta están mejorando. ¡Sigue así!",
-        pipelineTitle: "Pipeline",
-        deals: "negocios",
-        stageNew: "Nuevo lead",
-        stageContacted: "Contactado",
-        stageProposal: "Propuesta",
-        stageWon: "Cerrado ganado",
-        viewPipeline: "Ver pipeline",
-        teamActivityTitle: "Actividad del equipo",
-        invite: "Invitar",
-        updatedDeal: "Actualizó un negocio",
-        addedNote: "Añadió una nota",
-        commented: "Comentó",
-        changedStage: "Cambió la etapa",
-        viewActivity: "Ver toda la actividad",
-        revenueReportTitle: "Informe de ingresos",
-        thisMonth: "Este mes",
-        totalRevenue: "Ingresos totales",
-        dealsClosed: "Negocios cerrados",
-        averageDeal: "Valor medio",
-        downloadReport: "Descargar informe",
-        footerTitle: "CONECTA TU EMPRESA.",
-        footerTitle1: "COMIENZA A AUTOMATIZAR",
-        footerTitle2: "EN MINUTOS.",
-        footerDescription: "Tu agente de IA está listo para trabajar.",
-        disclaimer:
-          "Demostración del producto: los nombres, cifras y actividades son datos de ejemplo, no resultados reales de clientes.",
-      },
-      unlimitedAISection: {
-        usageLabel: "Uso de IA",
-        usageAvailable: "100% Disponible",
-        usageDescription: "Uso ilimitado de IA incluido en tu plan",
-        titleLine1: "Uso Ilimitado de IA",
-        titleHighlight: "Incluido",
-        titleLine3: "en Todos los Planes",
-
-        descriptionLine1:
-          "Sin créditos de IA. Sin paquetes de créditos. Sin límites de uso.",
-        descriptionLine2:
-          "Sin facturas sorpresa por IA. Usa Cortexa tanto como tu negocio lo necesite —",
-        descriptionHighlight: "tu precio mensual siempre será predecible.",
-
-        unlimitedTitle: "IA Ilimitada",
-        unlimitedDescription:
-          "Utiliza las herramientas de IA tanto como necesites.",
-
-        noCreditsTitle: "Sin Créditos",
-        noCreditsDescription: "Sin paquetes de créditos. Sin recargas.",
-
-        noBillsTitle: "Sin Facturas Sorpresa",
-        noBillsDescription: "Un precio mensual predecible.",
-
-        growthTitle: "Creado para Crecer",
-        growthDescription: "Escala tu negocio sin límites.",
-
-        footerTitle: "IA potente. Precios predecibles.",
-        footerHighlight: "Así funciona Cortexa.",
-      },
-      everythingIncludedSection: {
-        eyebrow: "TODO INCLUIDO. NADA EXTRA.",
-
-        titleLine1: "Mira",
-        titleHighlight: "Exactamente",
-        titleLine2: "Lo Que Obtienes",
-
-        description:
-          "Otras plataformas cobran extra por las herramientas y funciones que tu equipo realmente necesita. Cortexa incluye todo para que puedas enfocarte en lo importante: cerrar negocios.",
-
-        columnFeature: "LO QUE OBTIENES",
-        columnOthers: "CON OTROS",
-
-        rows: [
-          {
-            feature: "CRM y Gestión de Contactos",
-            other: "Complemento o plan superior",
-            included: "Incluido",
-          },
-          {
-            feature: "Leads y Gestión de Pipeline",
-            other: "Complemento o herramienta separada",
-            included: "Incluido",
-          },
-          {
-            feature: "Campañas de Email y SMS",
-            other: "Complemento o herramienta separada",
-            included: "Incluido",
-          },
-          {
-            feature: "Agente de IA 24/7",
-            other: "Complemento o plataforma separada",
-            included: "Incluido",
-          },
-          {
-            feature: "Automatización de WhatsApp",
-            other: "Complemento o integración adicional",
-            included: "Incluido",
-          },
-          {
-            feature: "Gestiona Tus Citas",
-            other: "Complemento o plan superior",
-            included: "Incluido",
-          },
-          {
-            feature: "Informes y Analítica",
-            other: "Complemento o nivel superior",
-            included: "Incluido",
-          },
-          {
-            feature: "Colaboración de Equipo",
-            other: "Complemento o plan superior",
-            included: "Incluido",
-          },
-          {
-            feature: "Automatización de Flujos",
-            other: "Complemento o herramienta separada",
-            included: "Incluido",
-          },
-          {
-            feature: "Uso Ilimitado de IA",
-            other: "Límites de uso o costo adicional",
-            included: "Ilimitado. Sin costo extra.",
-          },
-          {
-            feature: "Tarifas de Contactos de Marketing",
-            other: "Cobrado por separado según el uso",
-            included: "Sin tarifas adicionales.",
-          },
-        ],
-
-        footerTitle: "Una plataforma. Todo incluido.",
-        footerDescription: "Sin complementos. Sin sorpresas. Solo resultados.",
-      },
-    },
-
-    pt: {
-      heroTitle1: "CRM agêntico criado para",
-      heroTitle11: "automatizar e acompanhar ",
-      heroTitle2: "o seu negócio",
-      heroTitle3: "fluxo de trabalho.",
-
-      heroTitle4: "em Receita.",
-      heroDesc: "A IA organiza. A IA qualifica. Você faz o acompanhamento. Você fecha.",
-      heroTopBanner1: "Agentic AI",
-      heroTopBanner2:
-        "sistema operacional de receita com IA para empresas cansadas de CRMs complicados e caros.",
-      login: "Entrar",
-      trial: "Começar",
-      nav: [
-        "Recursos",
-        "Assistente IA",
-        "Fluxos de trabalho IA",
-        "Pipeline",
-        "Analytics",
-        "Depoimentos",
-      ],
-      pricing: "Preços",
-      webSolutions: "Soluções Web",
-      watchDemo: "Ver Demo",
-      trusted: "Desenvolvida para empresas de todos os tipos.",
-      benefitsSubtitle: "O QUE A CORTEXA FAZ POR VOCÊ",
-      benefitsTitle1: "Tudo o que você precisa.",
-      benefitsTitle2: "Em um só lugar.",
-      followUpTitle: "Gestão de Acompanhamentos",
-      followUpDesc:
-        "Organize tarefas de acompanhamento e mantenha o controle de cada oportunidade.",
-      setterTitle: "Gestão de Compromissos",
-      setterDesc:
-        "Gerencie agendamentos, compromissos e atividades relacionadas aos clientes em um só lugar.",
-      pipelineTitle: "Gestão de Pipeline",
-      pipelineDesc:
-        "Visualize todo o seu pipeline em um relance e nunca perca um negócio de vista.",
-      analyticsTitle: "Analytics em Tempo Real",
-      analyticsDesc:
-        "Acompanhe o desempenho em tempo real e tome decisões baseadas em dados.",
-      whatsappTitle: "Integração com WhatsApp",
-      whatsappDesc:
-        "Converse com os leads onde eles estão e feche negócios mais rápido.",
-
-      platformSubtitle: "UMA PLATAFORMA PODEROSA",
-      platformTitle: "Desenvolvido para Empresas",
-      platformTitle1: "Que Buscam",
-      platformTitle2: "Maximizar sua Receita",
-      platformDesc:
-        "A CORTEXA reúne seus leads, conversas, imóveis, reuniões e negócios em um único sistema inteligente — alimentado por IA.",
-      captureTitle: "Capturar Leads",
-      captureDesc: "De anúncios, sites, portais e muito mais",
-      engageTitle: "IA Engaja Instantaneamente",
-      engageDesc: "Responde, qualifica e cultiva 24/7",
-      syncTitle: "Sincronização de Dados",
-      syncDesc: "Tudo organizado em um só lugar",
-      pipelineMoveTitle: "Pipeline Avança",
-      pipelineMoveDesc: "IA + sua equipe fecham mais negócios",
-      closedDealsTitle: "Mais Negócios Fechados",
-      closedDealsDesc: "Crescimento previsível no piloto automático",
-
-      howSubtitle: "COMO FUNCIONA",
-      howTitle: "Simples. Poderoso. Automático.",
-      step1Title: "O Lead Entra",
-      step1Desc: "De anúncios, site, imóveis ou indicações.",
-      step2Title: "A IA Responde Instantaneamente",
-      step2Desc: "Responde perguntas, qualifica e inicia a conversa.",
-      step3Title: "A IA Nutre & Acompanha",
-      step3Desc:
-        "Envia mensagens, agenda reuniões e mantém seu pipeline aquecido.",
-      step4Title: "Atualizações do Pipeline",
-      step4Desc: "Tudo é acompanhado em tempo real.",
-      step5Title: "Você Fecha Mais Negócios",
-      step5Desc: "A IA cuida do trabalho repetitivo. Você foca em fechar.",
-
-      flowNewTitle1: "NÃO FIQUE",
-      flowNewTitle2: "PARA TRÁS.",
-      flowNewDescription:
-        "Veja como nosso Sistema Operacional de Receita integrado ajuda empresas a automatizar mais rápido, fechar mais oportunidades e aumentar a receita.",
-      flowNewButton: "Comece Seu Teste Grátis",
-
-      aiosSectionTitle: "Espaço de Trabalho",
-      aiosSectionTitle1: "de Receita",
-      aiosSectionTitle2: "para Equipes",
-
-      setterSectionSubtitle: "GESTÃO DE COMPROMISSOS",
-      setterSectionTitle1: "Gerencie Seus Compromissos",
-      setterSectionTitle2: "em um Espaço de Trabalho",
-      setterSectionTitle3: "Conectado.",
-      setterSectionDesc:
-        "Organize disponibilidade, reservas e agendamentos em um espaço de trabalho conectado. Mantenha compromissos e atividades dos clientes fáceis de gerenciar.",
-      bookAppointmentTitle: "Agendar Reunião",
-      confirmBtnText: "Confirmar Reunião",
-
-      ctaTitle1: "Desenvolvido para",
-      ctaTitle2: "empresas",
-      ctaTitle3: "de todos os tamanhos",
-      ctaTitle4: "e setores.",
-      pipelinecta1: "Seja você proprietário de uma",
-      pipelinecta2: "e muito mais",
-      ctaTitleSub1: "Imobiliária,",
-      ctaTitleSub2: "Loja de E-commerce,",
-      ctaTitleSub3: "Agência,",
-      ctaTitleSub4: "Consultoria,",
-      ctaTitleSub5: "Seguros,",
-      ctaTitleSub6: "Empresa de Serviços Financeiros,",
-      ctaready: "Já utiliza o Cortexa?",
-      ctaStat1Label: "ROI",
-      ctaStat2Label: "AUMENTO DE RECEITA",
-      ctaStat3Label: "AGENTES CRESCENDO",
-      ctaButtonText: "Começar!",
-      heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
-      heroNoCard: "Teste grátis de 14 dias",
-      heroFreeForever: "A partir de US$ 11",
-
-      faqSubtitle: "PERGUNTAS FREQUENTES",
-      faqTitle: "Tudo o que você precisa saber",
-      faq: [
-              {
-                q: "O que a CORTEXA realmente faz?",
-                a: "A CORTEXA reúne seus leads, contatos, pipeline, tarefas, propriedades, análises, atividades da equipe e ferramentas de negócios conectadas em um único espaço de trabalho CRM centralizado. Ela ajuda empresas a organizar relacionamentos com clientes, gerenciar oportunidades, monitorar o desempenho e manter suas operações de vendas conectadas.",
+              "moreWorkspaces": {
+                  "eyebrow": "MAIS ESPAÇOS DE TRABALHO ESPECIALIZADOS",
+                  "items": ["Imobiliário", "Espaço da Equipe", "Gerador de Leads", "Estética e Bem-Estar", "Clínica e Medicina"],
+                  "selected": "SELECIONADO"
               },
-              {
-                q: "Como funciona o Assistente de IA?",
-                a: "O Assistente de IA da CORTEXA ajuda os usuários a trabalhar com informações que já estão disponíveis em seu espaço de trabalho. Ele pode ajudar a destacar informações úteis, resumir atividades, fornecer insights e auxiliar os usuários em tarefas diárias de CRM e negócios, mantendo o usuário no controle.",
+              "selectedWorkspaceDetail": {
+                  "eyebrow": "ESPAÇO DE TRABALHO SELECIONADO",
+                  "title": "Clínica e Medicina",
+                  "description": "Gerencie consultas de pacientes, consultas médicas, agendamentos, atividades clínicas, planos de cuidados, acompanhamento e operações da clínica em um único espaço de trabalho conectado.",
+                  "items": ["Pacientes", "Consultas", "Notas Clínicas", "Acompanhamento"],
+                  "preview": "Visualizar Espaço de Trabalho",
+                  "connected": "Seu espaço de trabalho se conecta diretamente ao CRM, agente de IA, dados de clientes, agendamentos, fluxos de trabalho e operações de receita.",
+                  "explore": "Explorar Espaços da Cortexa",
+                  "note": "Um espaço de trabalho incluído. Adicione mais conforme sua empresa cresce."
               },
-              {
-                q: "Posso gerenciar todos os meus leads em um só lugar?",
-                a: "Sim. Leads, contatos, notas, atividades, etapas do pipeline e informações relacionadas aos clientes podem ser organizados em um espaço de trabalho centralizado, facilitando para sua equipe gerenciar oportunidades sem precisar alternar entre vários sistemas.",
+              "guidedSetup": {
+                  "eyebrow": "CONFIGURAÇÃO GUIADA CORTEXA",
+                  "title": "Configure e conecte seu espaço de trabalho para começar.",
+                  "description": "A Cortexa orienta você pelas etapas essenciais de configuração dentro da sua conta para que seu agente de IA, pontos de entrada de clientes, CRM, pipeline, agendamentos e transferência para a equipe funcionem corretamente.",
+                  "steps": [
+                      {"title": "Configure Sua Empresa", "description": "Adicione os dados da empresa, serviços, horários, equipe e metas de conversão."},
+                      {"title": "Conecte os Pontos de Entrada", "description": "Conecte seu site, telefone comercial, WhatsApp, formulários e páginas de marketing."},
+                      {"title": "Treine Seu Agente de IA", "description": "Defina como ele responde, qualifica, agenda e transfere conversas."},
+                      {"title": "Teste e Lance", "description": "Verifique a captura de leads, rastreamento de origem, registros do CRM, roteamento do pipeline, agendamentos e conversões."}
+                  ],
+                  "helpTitle": "Precisa de ajuda para conectar?",
+                  "helpDescription": "Nossa equipe pode revisar sua configuração e ajudar a conectar seu agente de IA, site, telefone, WhatsApp, CRM, agendamentos, checkout, rastreamento e transferência humana.",
+                  "request": "Solicitar Ajuda de Configuração",
+                  "guide": "Ver Guia de Configuração",
+                  "note": "Serviços opcionais de configuração e site são cotados separadamente."
               },
-              {
-                q: "Como gerencio meu pipeline de vendas?",
-                a: "A CORTEXA oferece um pipeline visual onde você pode organizar oportunidades, mover negócios entre etapas, atribuir responsabilidades, criar tarefas e lembretes e monitorar o progresso em um único espaço de trabalho.",
+              "workspaceClosing": {
+                  "title1": "Você tem o espaço de trabalho certo.",
+                  "title2": "Agora vamos fazê-lo",
+                  "titleAccent": "funcionar para sua empresa.",
+                  "description": "Um espaço de trabalho é a parte da Cortexa criada em torno da forma como um tipo específico de empresa opera. Ele reúne registros de clientes, fluxos de trabalho, pipeline, agendamentos, automação e ferramentas do agente de IA de que essa empresa precisa em um único lugar conectado.",
+                  "quote": "Escolha o espaço de trabalho que combina com sua empresa. Depois, torne-o seu.",
+                  "eyebrow": "DA SELEÇÃO A UM SISTEMA CONECTADO",
+                  "paragraph1": "Depois de selecionado, a configuração guiada ajuda você a definir serviços, horários, responsabilidades da equipe, pontos de entrada de clientes, regras de qualificação, metas de conversão, agendamentos, acompanhamento e transferência humana.",
+                  "paragraph2": "Seu site, telefone comercial, formulários, tráfego de publicidade e WhatsApp podem se conectar ao mesmo processo gerenciado para que o agente de IA, CRM, pipeline, checkout, agendamentos e equipe trabalhem juntos desde a primeira conversa até a próxima ação adequada.",
+                  "paragraph3a": "Você pode concluir a configuração por conta própria. Se o seu site precisar ser atualizado, criado ou conectado ao seu espaço de trabalho, nossa equipe de",
+                  "webSolutions": "Soluções Web",
+                  "paragraph3b": "pode revisar o que você tem e fornecer uma cotação de implementação separada.",
+                  "cta": "Explorar Soluções Web",
+                  "note": "Serviços opcionais de configuração e implementação de site são cotados separadamente."
               },
-              {
-                q: "Posso conectar as ferramentas de negócios que já utilizo?",
-                a: "Sim. A CORTEXA oferece suporte a integrações com ferramentas e serviços empresariais de terceiros compatíveis. As integrações disponíveis podem variar, e os clientes continuam responsáveis por suas próprias contas de terceiros, permissões e termos aplicáveis dos provedores.",
+              "teamWorkspaceShowcase": {
+                  "eyebrow": "ESPAÇO DE TRABALHO EM EQUIPE CORTEXA",
+                  "title": "Mantenha sua equipe alinhada, responsável e trabalhando com as mesmas informações.",
+                  "description": "Gerencie atribuições, acompanhamentos de clientes, prioridades, comunicação interna e transferências em um espaço de trabalho compartilhado, sem perder o contexto do cliente.",
+                  "benefits": [
+                      {"title": "Responsabilidade clara", "desc": "Atribua o trabalho e saiba quem é responsável."},
+                      {"title": "Contexto compartilhado do cliente", "desc": "Mantenha conversas, notas, status e próximos passos visíveis."},
+                      {"title": "Execução mais forte", "desc": "Coordene acompanhamentos, aprovações, prazos e transferências."}
+                  ],
+                  "closing": "Uma equipe. Um registro de cliente compartilhado.",
+                  "cta": "Explorar Espaço de Equipe",
+                  "note": "Criado para proprietários, gerentes, vendas, atendimento ao cliente e operações."
               },
-              {
-                q: "Minha equipe pode usar a CORTEXA em conjunto?",
-                a: "Sim. A CORTEXA oferece recursos de espaço de trabalho em equipe que ajudam os usuários a compartilhar informações do CRM, atribuir tarefas e leads, monitorar atividades e coordenar o trabalho na mesma plataforma. A capacidade disponível para a equipe depende do plano do cliente.",
+              "webSolutionsShowcase": {
+                  "eyebrow": "SOLUÇÕES WEB CORTEXA",
+                  "title": "Conecte seu site à forma como sua empresa funciona.",
+                  "description": "Seu site deve fazer mais do que exibir informações. A Cortexa Web Solutions pode conectá-lo diretamente ao seu agente de IA, CRM, pipeline, agendamentos, checkout, rastreamento, suporte e equipe, para que cada cliente chegue à próxima etapa correta.",
+                  "benefits": [
+                      {"title": "Lidere com seu agente de IA", "desc": "Ofereça assistência imediata aos clientes, capture suas informações, entenda o que precisam e oriente-os para a ação correta."},
+                      {"title": "Construa em torno de suas metas de conversão", "desc": "Crie caminhos claros para compras, agendamentos, cotações, visitas, demonstrações, solicitações de suporte e transferências humanas."},
+                      {"title": "Conecte cada ponto de entrada do cliente", "desc": "Reúna formulários do site, tráfego de publicidade, telefone comercial e WhatsApp no mesmo processo gerenciado da Cortexa."}
+                  ]
               },
-              {
-                q: "Para que tipo de empresas a CORTEXA foi criada?",
-                a: "A CORTEXA foi desenvolvida para empresas e equipes profissionais que precisam de um sistema centralizado para gerenciar leads, contatos, pipelines de vendas, informações de clientes, tarefas, relatórios e operações diárias de CRM.",
+              "webSolutionsConnected": {
+                  "eyebrow": "SOLUÇÕES WEB CORTEXA",
+                  "title": "Conecte seu site à forma como sua empresa funciona.",
+                  "description": "Seu site deve fazer mais do que exibir informações. A Cortexa Web Solutions pode conectá-lo diretamente ao seu agente de IA, CRM, pipeline, agendamentos, checkout, rastreamento, suporte e equipe, para que cada cliente chegue à próxima etapa correta.",
+                  "entryEyebrow": "PONTOS DE ENTRADA DO CLIENTE CONECTADOS",
+                  "entries": ["Formulários do site", "Telefone", "Publicidade", "WhatsApp"],
+                  "existingTitle": "Já tem um site?",
+                  "existingDescription": "Podemos melhorá-lo, conectá-lo e fazê-lo funcionar com o espaço de trabalho Cortexa selecionado.",
+                  "cta": "Explorar Soluções Web",
+                  "note": "Serviços personalizados de site e implementação são cotados separadamente."
               },
-              {
-                q: "O que acontece depois que um lead é adicionado à CORTEXA?",
-                a: "O lead passa a fazer parte do seu espaço de trabalho CRM centralizado, onde sua equipe pode organizar o registro, atribuir responsabilidades, adicionar notas e tarefas, gerenciar sua etapa no pipeline e acompanhar atividades e progresso.",
+              "customerExperiences": {
+                  "eyebrow": "EXPERIÊNCIAS DE CLIENTES",
+                  "title": "Coloque a Cortexa para Trabalhar em Toda a Sua Empresa.",
+                  "description": "Escolha o espaço de trabalho certo, configure seu agente de IA, conecte os pontos de entrada de clientes e ofereça à sua equipe um sistema inteligente para gerenciar o que acontece em seguida.",
+                  "testimonials": [
+                      {
+                          "quote": "A Cortexa reuniu nossas consultas de clientes, agendamentos e acompanhamentos em um processo claro. Nossa equipe consegue ver o que precisa de atenção sem alternar entre sistemas desconectados.",
+                          "role": "Gerente de Operações Clínicas",
+                          "workspace": "Espaço Clínica e Medicina"
+                      },
+                      {
+                          "quote": "O agente de IA oferece aos clientes uma resposta imediata e captura as informações de que nossa equipe precisa antes que uma pessoa intervenha. Isso tornou cada conversa mais organizada.",
+                          "role": "Diretor de Vendas",
+                          "workspace": "Espaço de Vendas"
+                      },
+                      {
+                          "quote": "Finalmente temos um espaço de trabalho que reflete como nossa empresa realmente funciona. A configuração guiada deixou claro o que conectar e como cada cliente deve avançar.",
+                          "role": "Proprietário da Empresa",
+                          "workspace": "Business Suite"
+                      }
+                  ],
+                  "ctaTitle": "Pronto para criar uma forma mais conectada de operar?",
+                  "cta": "Começar",
+                  "explore": "Explorar Espaços da Cortexa",
+                  "note": "Substitua os depoimentos de exemplo por declarações verificadas de clientes antes de publicar."
               },
-            ],
-
-      finalCtaSubtitle: "AUTOMATIZE SEU SUCESSO",
-      finalCtaTitle1: "Conecte Seu",
-      finalCtaTitle2: "Seu Fluxo de Trabalho",
-      finalCtaTitle3: "",
-      finalCtaDesc: "A IA gera leads. A IA qualifica. A IA fecha. Tudo no seu ",
-      finalCtaBtn: "Comece Seu Teste Grátis",
-      finalCtaSubBtn: "",
-      finalCtaSubBtn1: "Desbloqueie seu potencial hoje",
-
-      marketsSubtitle: "EXPLORE NOSSOS MERCADOS",
-      marketsTitle1: "Ajudamos corretores a",
-      marketsTitle2: "fechar mais negócios",
-      marketsTitle3: "na América Latina",
-      marketsTitle4: "e no mundo.",
-      marketsRegionLabel: "Nossas Regiões",
-      viewAllCountriesText: "Ver Todos os Países",
-      regionLatAm: "América Latina",
-      regionUSA: "EUA",
-      regionEurope: "Europa",
-      regionEuropeUs: "Europa e Estados Unidos",
-
-      footerDesc:
-        "A plataforma de IA tudo-em-um que captura leads, automatiza acompanhamentos e fecha mais negócios — 24/7.",
-      colProduct: "Produto",
-      colGetStarted: "Começar",
-      colConnect: "Conectar",
-      colSupport: "Suporte",
-      colLegal: "Legal",
-      fFeatures: "Recursos",
-      fAiAssistant: "Assistente de IA",
-      fAutomations: "Automatizações",
-      fIntegrations: "Integrações",
-      fAnalytics: "Análise",
-      fPricing: "Preços",
-      fStart: "Começar",
-      fLogin: "Login",
-      fSetup: "Guia de Configuração",
-      fConnectApps: "Conectar Seus Apps",
-      fImportCrm: "Importar Seu CRM",
-      fImportCsv: "Importar CSV / Excel",
-      fZapier: "Zapier & Automatizações",
-      fApiWebhooks: "API & Webhooks",
-      fSupport247: "Suporte 24/7",
-      fHelpCenter: "Central de Ajuda",
-      fContact: "Fale Conosco",
-      fAbout: "Sobre Nós",
-      fTerms: "Termos & Condições",
-      fPrivacy: "Política de Privacidade",
-      fRefund: "Política de Reembolso",
-      fCancel: "Política de Cancelamento",
-      copyright: "© 2026 Cortexa AI. Todos os direitos reservados.",
-      termsOfService: "Termos de Serviço",
-
-      heroTitlePre: "Feito para ",
-      heroTitleActive: "Aumentar a Receita",
-      heroTitlePost: " — Não para Gerenciar Software.",
-      heroSubPre: "Nós trazemos tudo para ",
-      heroSubActive: "um espaço de trabalho conectado.",
-      nodeAgent: "AGENTE DE IA",
-      nodeWhatsapp: "WHATSAPP",
-      nodeDashboard: "PAINEL",
-      nodePipeline: "PIPELINE",
-      nodeHybrid: "CONEXÕES HÍBRIDAS",
-      nodeLeads: "LEADS",
-      nodeContacts: "CONTATOS",
-      nodeProperties: "PROPRIEDADES",
-      stat1Title: "",
-      stat1Desc:
-        "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
-
-      stat2Title: "",
-
-      thCustomer: "Cliente",
-      thDeals: "Negócios",
-      thRevenue: "Receita",
-      thStage: "Etapa",
-      stageNew: "Novo Lead",
-      stageContacted: "Contatado",
-      stageQualified: "Qualificado",
-      stageProposal: "Proposta",
-      stageClosed: "Ganho Fechado",
-
-      heroCheck6:
-        "Capture, organize e gerencie leads em um espaço de trabalho conectado",
-      heroCheck7:
-        "Conecte suas ferramentas de negócios e canais de comunicação",
-      heroCheck8:
-        "Gerencie tarefas de acompanhamento, agendamentos e compromissos em um só lugar",
-      heroCheck9:
-        "Inteligência de pipeline, previsão de receita e um painel de controle unificado.",
-
-      powerbadge: "INTEGRAÇÃO",
-      powertitle: "Conecte seus aplicativos",
-
-      workspacelang1: "Equipe",
-      workspacelang2: "Receita",
-      workspacelang3: "Espaço de trabalho",
-
-      reportingSection: {
-        eyebrow: "RELATÓRIOS E FLUXO DE TRABALHO",
-        titleLine1: "Relatórios",
-        titleLine2: "viram",
-        titleHighlight: "receita.",
-        description:
-          "Acompanhe leads, conversões, tempos de resposta e desempenho da equipe em tempo real. Chega de dados espalhados. Apenas clareza.",
-        features: [
-          {
-            title: "Análises",
-            description:
-              "Acompanhe leads e o desempenho da equipe em tempo real.",
-          },
-          {
-            title: "Pipeline",
-            description: "Gerencie cada negócio em um só espaço de trabalho.",
-          },
-          {
-            title: "Visibilidade da equipe",
-            description: "Veja instantaneamente o que sua equipe está fazendo.",
-          },
-          {
-            title: "Relatórios",
-            description: "Relatórios personalizados que geram receita.",
-          },
-        ],
-        performanceTitle: "Visão geral do desempenho",
-        conversionRate: "Taxa de conversão",
-        revenueGenerated: "Receita gerada",
-        responseTime: "Tempo de resposta",
-        lastSevenDays: "vs últimos 7 dias",
-        aiInsight: "Insight de IA",
-        insightText: "Os tempos de resposta estão melhorando. Continue assim!",
-        pipelineTitle: "Pipeline",
-        deals: "negócios",
-        stageNew: "Novo lead",
-        stageContacted: "Contatado",
-        stageProposal: "Proposta",
-        stageWon: "Fechado ganho",
-        viewPipeline: "Ver pipeline",
-        teamActivityTitle: "Atividade da equipe",
-        invite: "Convidar",
-        updatedDeal: "Atualizou um negócio",
-        addedNote: "Adicionou uma nota",
-        commented: "Comentou",
-        changedStage: "Alterou a etapa",
-        viewActivity: "Ver toda a atividade",
-        revenueReportTitle: "Relatório de receita",
-        thisMonth: "Este mês",
-        totalRevenue: "Receita total",
-        dealsClosed: "Negócios fechados",
-        averageDeal: "Valor médio",
-        downloadReport: "Baixar relatório",
-        footerTitle: "CONECTE SUA EMPRESA.",
-        footerTitle1: "COMECE A AUTOMATIZAR",
-        footerTitle2: "EM MINUTOS.",
-        footerDescription: "Seu agente de IA está pronto para trabalhar.",
-        disclaimer:
-          "Demonstração do produto: nomes, números e atividades são dados de exemplo, não resultados reais de clientes.",
-      },
-      unlimitedAISection: {
-        usageLabel: "Uso de IA",
-        usageAvailable: "100% Disponível",
-        usageDescription: "Uso ilimitado de IA incluído no seu plano",
-        titleLine1: "Uso Ilimitado de IA",
-        titleHighlight: "Incluído",
-        titleLine3: "em Todos os Planos",
-
-        descriptionLine1:
-          "Sem créditos de IA. Sem pacotes de créditos. Sem limites de uso.",
-        descriptionLine2:
-          "Sem cobranças inesperadas de IA. Use o Cortexa o quanto sua empresa precisar —",
-        descriptionHighlight: "seu preço mensal permanece previsível.",
-
-        unlimitedTitle: "IA Ilimitada",
-        unlimitedDescription: "Use as ferramentas de IA o quanto precisar.",
-
-        noCreditsTitle: "Sem Créditos",
-        noCreditsDescription: "Sem pacotes de créditos. Sem recargas.",
-
-        noBillsTitle: "Sem Cobranças Surpresa",
-        noBillsDescription: "Um preço mensal previsível.",
-
-        growthTitle: "Criado para Crescer",
-        growthDescription: "Escale sua empresa sem limites.",
-
-        footerTitle: "IA poderosa. Preço previsível.",
-        footerHighlight: "Esse é o jeito Cortexa.",
-      },
-      everythingIncludedSection: {
-        eyebrow: "TUDO INCLUÍDO. NADA EXTRA.",
-
-        titleLine1: "Veja",
-        titleHighlight: "Exatamente",
-        titleLine2: "O Que Você Recebe",
-
-        description:
-          "Outras plataformas cobram à parte pelas ferramentas e recursos que sua equipe realmente precisa. O Cortexa inclui tudo para que você possa focar no que importa: fechar negócios.",
-
-        columnFeature: "O QUE VOCÊ RECEBE",
-        columnOthers: "COM OUTROS",
-
-        rows: [
-          {
-            feature: "CRM e Gestão de Contatos",
-            other: "Complemento ou plano superior",
-            included: "Incluído",
-          },
-          {
-            feature: "Leads e Gestão de Pipeline",
-            other: "Complemento ou ferramenta separada",
-            included: "Incluído",
-          },
-          {
-            feature: "Campanhas de E-mail e SMS",
-            other: "Complemento ou ferramenta separada",
-            included: "Incluído",
-          },
-          {
-            feature: "Agente de IA 24/7",
-            other: "Complemento ou plataforma separada",
-            included: "Incluído",
-          },
-          {
-            feature: "Automação do WhatsApp",
-            other: "Complemento ou integração adicional",
-            included: "Incluído",
-          },
-          {
-            feature: "Agendamento de Compromissos",
-            other: "Complemento ou plano superior",
-            included: "Incluído",
-          },
-          {
-            feature: "Relatórios e Análises",
-            other: "Complemento ou nível superior",
-            included: "Incluído",
-          },
-          {
-            feature: "Colaboração em Equipe",
-            other: "Complemento ou plano superior",
-            included: "Incluído",
-          },
-          {
-            feature: "Automação de Fluxos",
-            other: "Complemento ou ferramenta separada",
-            included: "Incluído",
-          },
-          {
-            feature: "Uso Ilimitado de IA",
-            other: "Limites de uso ou custo adicional",
-            included: "Ilimitado. Sem custo extra.",
-          },
-          {
-            feature: "Taxas de Contatos de Marketing",
-            other: "Cobrado separadamente conforme o uso",
-            included: "Sem taxas extras.",
-          },
-        ],
-
-        footerTitle: "Uma plataforma. Tudo incluído.",
-        footerDescription: "Sem adicionais. Sem surpresas. Apenas resultados.",
-      },
-    },
+              "connectedJourney": {
+                  "eyebrow": "UMA JORNADA DO CLIENTE CONECTADA",
+                  "title": "Cada ponto de entrada do cliente. Um fluxo empresarial inteligente.",
+                  "description": "A Cortexa conecta como os clientes descobrem sua empresa, se comunicam com ela, entram no seu CRM, avançam pelo espaço de trabalho correto e chegam à conversão certa ou ao atendimento humano.",
+                  "closing": "Do primeiro contato à próxima melhor ação, tudo permanece conectado.",
+                  "cta": "Explorar a Plataforma Cortexa"
+              }
+      }
   };
   const switchLocale = useLocaleSwitch();
   const handleLangChange = (newLang) => {
@@ -1338,6 +857,80 @@ export default function LandingMobile() {
       : lang === "pt"
         ? workspaceImgPT
         : workspaceImg;
+
+  const workspaceIncludeIcons = [
+    MessageCircle,
+    UserCheck,
+    Users2,
+    BarChart3,
+    CalendarDays,
+    Workflow,
+    PieChart,
+    Link2,
+  ];
+
+  const workspaceIncludeClasses = [
+    "blue",
+    "cyan",
+    "purple",
+    "royal",
+    "sky",
+    "violet",
+    "blue",
+    "royal",
+  ];
+
+  const workspaceChooserIcons = [
+    Building2,
+    TrendingUp,
+    Shield,
+    Landmark,
+    ShoppingCart,
+    Headphones,
+  ];
+
+  const workspaceChooserColors = [
+    "blue",
+    "purple",
+    "green",
+    "pink",
+    "royal",
+    "orange",
+  ];
+
+  const moreWorkspaceIcons = [
+    Home,
+    Users2,
+    Magnet,
+    HeartPulse,
+    Stethoscope,
+  ];
+
+  const selectedWorkspaceIcons = [
+    UserCheck,
+    CalendarDays,
+    FileText,
+    Bell,
+  ];
+
+  const selectedWorkspaceColors = ["cyan", "blue", "violet", "purple"];
+
+  const guidedSetupIcons = [
+    Building2,
+    Link2,
+    Bot,
+    Play,
+  ];
+
+  const guidedSetupColors = ["blue", "purple", "cyan", "pink"];
+
+  const moreWorkspaceColors = [
+    "green",
+    "purple",
+    "blue",
+    "pink",
+    "cyan",
+  ];
 
   const avatars = [
     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
@@ -1508,16 +1101,557 @@ export default function LandingMobile() {
 
         </div>
 
-        <div className="m-trust">
-          <div className="m-trust-text">{tr.trusted}</div>
-        </div>
         {/* dashboard image */}
         <div className="m-dashboard">
           <img src={landingDashImg} alt="" />
-          <i>
-            Product demo — the names, numbers, and activity shown are sample
-            data for illustration only, not real customer results.
-          </i>
+        </div>
+      </section>
+
+      {/* SPECIALIZED WORKSPACES */}
+      <section className="m-specialized-workspaces">
+        <div className="m-specialized-workspaces-inner">
+          <div className="m-specialized-eyebrow">
+            <span className="m-specialized-line" />
+            <span className="m-specialized-eyebrow-text">
+              {tr.workspacesSection.eyebrow}
+            </span>
+            <span className="m-specialized-line" />
+          </div>
+
+          <h2 className="m-specialized-title">
+            <span>{tr.workspacesSection.titleLine1}</span>
+            <span>{tr.workspacesSection.titleLine2}</span>
+            <span>{tr.workspacesSection.titleLine3}</span>
+          </h2>
+
+          <p className="m-specialized-description">
+            {tr.workspacesSection.description}
+          </p>
+
+          <h3 className="m-specialized-includes-title">
+            {tr.workspacesSection.includesTitle}
+          </h3>
+
+          <div className="m-specialized-list">
+            {tr.workspacesSection.items.map((item, index) => {
+              const Icon = workspaceIncludeIcons[index];
+
+              return (
+                <div className="m-specialized-item" key={item}>
+                  <div
+                    className={`m-specialized-icon m-specialized-icon-${workspaceIncludeClasses[index]}`}
+                  >
+                    <Icon size={34} strokeWidth={1.9} aria-hidden="true" />
+                  </div>
+
+                  <span className="m-specialized-item-label">{item}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* WORKSPACE CHOOSER */}
+      <section className="m-workspace-chooser">
+        <div className="m-workspace-chooser-inner">
+          <h2 className="m-workspace-chooser-title">
+            {tr.workspaceChooser.title}
+          </h2>
+
+          <div className="m-workspace-chooser-list">
+            {tr.workspaceChooser.items.map((item, index) => {
+              const Icon = workspaceChooserIcons[index];
+
+              return (
+                <div className="m-workspace-chooser-item" key={item}>
+                  <div className="m-workspace-chooser-left">
+                    <div
+                      className={`m-workspace-chooser-icon m-workspace-chooser-icon-${workspaceChooserColors[index]}`}
+                    >
+                      <Icon size={35} strokeWidth={1.9} aria-hidden="true" />
+                    </div>
+
+                    <span className="m-workspace-chooser-label">{item}</span>
+                  </div>
+
+                  <ChevronRight
+                    className="m-workspace-chooser-arrow"
+                    size={32}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* MORE SPECIALIZED WORKSPACES */}
+      <section className="m-more-workspaces">
+        <div className="m-more-workspaces-inner">
+          <p className="m-more-workspaces-eyebrow">{tr.moreWorkspaces.eyebrow}</p>
+
+          <div className="m-more-workspaces-list">
+            {tr.moreWorkspaces.items.map((item, index) => {
+              const Icon = moreWorkspaceIcons[index];
+              const isSelected = index === 4;
+
+              return (
+                <div
+                  className={`m-more-workspaces-item ${isSelected ? "selected" : ""}`}
+                  key={item}
+                >
+                  <div className="m-more-workspaces-left">
+                    <div
+                      className={`m-more-workspaces-icon m-more-workspaces-icon-${moreWorkspaceColors[index]}`}
+                    >
+                      <Icon size={35} strokeWidth={1.9} aria-hidden="true" />
+                    </div>
+
+                    <div className="m-more-workspaces-copy">
+                      <span className="m-more-workspaces-label">{item}</span>
+                      {isSelected && (
+                        <span className="m-more-workspaces-selected">
+                          {tr.moreWorkspaces.selected}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <ChevronRight
+                    className="m-more-workspaces-arrow"
+                    size={32}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* SELECTED WORKSPACE DETAIL */}
+      <section className="m-selected-workspace-detail">
+        <div className="m-selected-workspace-detail-inner">
+          <div className="m-selected-workspace-hero-icon">
+            <Stethoscope size={70} strokeWidth={1.75} aria-hidden="true" />
+          </div>
+
+          <p className="m-selected-workspace-eyebrow">
+            {tr.selectedWorkspaceDetail.eyebrow}
+          </p>
+
+          <h2 className="m-selected-workspace-title">
+            {tr.selectedWorkspaceDetail.title}
+          </h2>
+
+          <p className="m-selected-workspace-description">
+            {tr.selectedWorkspaceDetail.description}
+          </p>
+
+          <div className="m-selected-workspace-links">
+            {tr.selectedWorkspaceDetail.items.map((item, index) => {
+              const Icon = selectedWorkspaceIcons[index];
+
+              return (
+                <div className="m-selected-workspace-link" key={item}>
+                  <div className="m-selected-workspace-link-left">
+                    <Icon
+                      className={`m-selected-workspace-link-icon m-selected-workspace-link-icon-${selectedWorkspaceColors[index]}`}
+                      size={34}
+                      strokeWidth={1.9}
+                      aria-hidden="true"
+                    />
+                    <span>{item}</span>
+                  </div>
+                  <ChevronRight size={28} strokeWidth={1.8} aria-hidden="true" />
+                </div>
+              );
+            })}
+          </div>
+
+          <a className="m-selected-workspace-preview" href="#m-workspace">
+            {tr.selectedWorkspaceDetail.preview}
+            <ArrowRight size={22} strokeWidth={2} aria-hidden="true" />
+          </a>
+
+          <div className="m-selected-workspace-divider" />
+
+          <p className="m-selected-workspace-connected">
+            {tr.selectedWorkspaceDetail.connected}
+          </p>
+
+          <a className="m-selected-workspace-explore" href="#m-workspace">
+            <span>{tr.selectedWorkspaceDetail.explore}</span>
+            <ArrowRight size={22} strokeWidth={2.2} aria-hidden="true" />
+          </a>
+
+          <p className="m-selected-workspace-note">
+            {tr.selectedWorkspaceDetail.note}
+          </p>
+        </div>
+      </section>
+
+      {/* GUIDED CORTEXA SETUP */}
+      <section className="m-guided-setup">
+        <div className="m-guided-setup-inner">
+          <div className="m-guided-setup-eyebrow">
+            <span />
+            <strong>{tr.guidedSetup.eyebrow}</strong>
+            <span />
+          </div>
+
+          <h2 className="m-guided-setup-title">{tr.guidedSetup.title}</h2>
+
+          <p className="m-guided-setup-description">
+            {tr.guidedSetup.description}
+          </p>
+
+          <div className="m-guided-setup-steps">
+            {tr.guidedSetup.steps.map((step, index) => {
+              const Icon = guidedSetupIcons[index];
+
+              return (
+                <div className="m-guided-setup-step" key={step.title}>
+                  <div className="m-guided-setup-number">{index + 1}</div>
+
+                  <div
+                    className={`m-guided-setup-icon m-guided-setup-icon-${guidedSetupColors[index]}`}
+                  >
+                    <Icon size={34} strokeWidth={1.9} aria-hidden="true" />
+                  </div>
+
+                  <div className="m-guided-setup-copy">
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="m-guided-setup-help">
+            <h3>{tr.guidedSetup.helpTitle}</h3>
+            <p>{tr.guidedSetup.helpDescription}</p>
+
+            <a className="m-guided-setup-request" href="/contact">
+              <span>{tr.guidedSetup.request}</span>
+              <ArrowRight size={22} strokeWidth={2.2} aria-hidden="true" />
+            </a>
+
+            <a className="m-guided-setup-guide" href="/setup-guide">
+              {tr.guidedSetup.guide}
+            </a>
+
+            <p className="m-guided-setup-note">{tr.guidedSetup.note}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* WORKSPACE CLOSING / CONNECTED SYSTEM */}
+      <section className="m-workspace-closing">
+        <div className="m-workspace-closing-inner">
+          <h2 className="m-workspace-closing-title">
+            <span>{tr.workspaceClosing.title1}</span>
+            <span>{tr.workspaceClosing.title2}</span>
+            <span className="m-workspace-closing-accent">
+              {tr.workspaceClosing.titleAccent}
+            </span>
+          </h2>
+
+          <p className="m-workspace-closing-description">
+            {tr.workspaceClosing.description}
+          </p>
+
+          <div className="m-workspace-closing-short-divider" />
+
+          <blockquote className="m-workspace-closing-quote">
+            <span className="m-workspace-quote-mark m-workspace-quote-open">“</span>
+            <p>{tr.workspaceClosing.quote}</p>
+            <span className="m-workspace-quote-mark m-workspace-quote-close">”</span>
+          </blockquote>
+
+          <div className="m-workspace-connected-system">
+            <p className="m-workspace-connected-eyebrow">
+              {tr.workspaceClosing.eyebrow}
+            </p>
+
+            <p className="m-workspace-connected-paragraph">
+              {tr.workspaceClosing.paragraph1}
+            </p>
+
+            <div className="m-workspace-connected-divider" />
+
+            <p className="m-workspace-connected-paragraph">
+              {tr.workspaceClosing.paragraph2}
+            </p>
+
+            <div className="m-workspace-connected-divider" />
+
+            <p className="m-workspace-connected-paragraph">
+              {tr.workspaceClosing.paragraph3a}{" "}
+              <a href="/web-solutions" className="m-workspace-web-link">
+                {tr.workspaceClosing.webSolutions}
+              </a>{" "}
+              {tr.workspaceClosing.paragraph3b}
+            </p>
+
+            <a href="/web-solutions" className="m-workspace-web-cta">
+              <span>{tr.workspaceClosing.cta}</span>
+              <ArrowRight size={22} strokeWidth={2.2} aria-hidden="true" />
+            </a>
+
+            <p className="m-workspace-web-note">
+              {tr.workspaceClosing.note}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* TEAM WORKSPACE + WEB SOLUTIONS SHOWCASE */}
+      <section className="m-team-workspace-showcase">
+        <div className="m-team-workspace-showcase-inner">
+          <div className="m-showcase-eyebrow m-team-showcase-eyebrow">
+            <span className="m-showcase-eyebrow-line" />
+            <span>{tr.teamWorkspaceShowcase.eyebrow}</span>
+            <span className="m-showcase-eyebrow-line" />
+          </div>
+
+          <h2 className="m-team-showcase-title">
+            {tr.teamWorkspaceShowcase.title}
+          </h2>
+
+          <p className="m-team-showcase-description">
+            {tr.teamWorkspaceShowcase.description}
+          </p>
+
+          <div className="m-team-showcase-benefits">
+            {tr.teamWorkspaceShowcase.benefits.map((item, index) => {
+              const Icon = [UsersRound, ClipboardList, CircleCheckBig][index];
+              const tone = ["blue", "purple", "teal"][index];
+
+              return (
+                <div className="m-team-showcase-benefit" key={item.title}>
+                  <div className={`m-team-showcase-icon m-team-showcase-icon-${tone}`}>
+                    <Icon size={36} strokeWidth={1.9} aria-hidden="true" />
+                  </div>
+
+                  <div className="m-team-showcase-benefit-copy">
+                    <h3>{item.title}</h3>
+                    <p>{item.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <h2 className="m-team-showcase-closing">
+            {tr.teamWorkspaceShowcase.closing}
+          </h2>
+
+          <a href="/dashboard/team" className="m-team-showcase-cta">
+            <span>{tr.teamWorkspaceShowcase.cta}</span>
+            <ArrowRight size={24} strokeWidth={2} aria-hidden="true" />
+          </a>
+
+          <p className="m-team-showcase-note">
+            {tr.teamWorkspaceShowcase.note}
+          </p>
+        </div>
+      </section>
+
+      <section className="m-web-solutions-showcase">
+        <div className="m-web-solutions-showcase-inner">
+          <p className="m-web-solutions-showcase-eyebrow">
+            {tr.webSolutionsShowcase.eyebrow}
+          </p>
+
+          <h2 className="m-web-solutions-showcase-title">
+            {tr.webSolutionsShowcase.title}
+          </h2>
+
+          <p className="m-web-solutions-showcase-description">
+            {tr.webSolutionsShowcase.description}
+          </p>
+
+          <div className="m-web-solutions-showcase-benefits">
+            {tr.webSolutionsShowcase.benefits.map((item, index) => {
+              const Icon = [Sparkles, Target, Link2][index];
+              const tone = ["purple", "blue", "purple"][index];
+
+              return (
+                <div className="m-web-solutions-showcase-benefit" key={item.title}>
+                  <div className={`m-web-solutions-showcase-icon m-web-solutions-showcase-icon-${tone}`}>
+                    <Icon size={38} strokeWidth={1.9} aria-hidden="true" />
+                  </div>
+
+                  <div className="m-web-solutions-showcase-copy">
+                    <h3>{item.title}</h3>
+                    <p>{item.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="m-web-connected-showcase">
+        <div className="m-web-connected-showcase-inner">
+          <div className="m-showcase-eyebrow m-web-connected-eyebrow">
+            <span className="m-showcase-eyebrow-line" aria-hidden="true" />
+            <span>{tr.webSolutionsConnected.eyebrow}</span>
+            <span className="m-showcase-eyebrow-line" aria-hidden="true" />
+          </div>
+
+          <h2 className="m-web-connected-title">{tr.webSolutionsConnected.title}</h2>
+          <p className="m-web-connected-description">{tr.webSolutionsConnected.description}</p>
+
+          <div className="m-web-connected-phone">
+            <img src={webSolutionsPhoneImg} alt="Cortexa Web Solutions mobile website with AI Agent" />
+          </div>
+
+          <p className="m-web-connected-entry-eyebrow">{tr.webSolutionsConnected.entryEyebrow}</p>
+
+          <div className="m-web-connected-entry-grid">
+            {tr.webSolutionsConnected.entries.map((label, index) => {
+              const Icon = [FileText, Phone, MessagesSquare, MessageCircle][index];
+              return (
+                <div className="m-web-connected-entry" key={label}>
+                  <Icon size={30} strokeWidth={1.9} aria-hidden="true" />
+                  <span>{label}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="m-web-connected-existing">
+            <h3>{tr.webSolutionsConnected.existingTitle}</h3>
+            <p>{tr.webSolutionsConnected.existingDescription}</p>
+          </div>
+
+          <a href="/web-solutions" className="m-web-connected-cta">
+            <span>{tr.webSolutionsConnected.cta}</span>
+            <ArrowRight size={25} strokeWidth={1.8} aria-hidden="true" />
+          </a>
+
+          <p className="m-web-connected-note">{tr.webSolutionsConnected.note}</p>
+        </div>
+      </section>
+
+      {/* CUSTOMER EXPERIENCES */}
+      <section className="m-customer-experiences">
+        <div className="m-customer-experiences-inner">
+          <div className="m-customer-experiences-topline" aria-hidden="true" />
+
+          <p className="m-customer-experiences-eyebrow">
+            {tr.customerExperiences.eyebrow}
+          </p>
+
+          <h2 className="m-customer-experiences-title">
+            {tr.customerExperiences.title}
+          </h2>
+
+          <p className="m-customer-experiences-description">
+            {tr.customerExperiences.description}
+          </p>
+
+          <div className="m-customer-testimonials">
+            {tr.customerExperiences.testimonials.map((item, index) => {
+              const avatar = [
+                clinicOperationsManagerImg,
+                salesDirectorImg,
+                businessOwnerImg,
+              ][index];
+
+              return (
+                <article className="m-customer-testimonial" key={item.role}>
+                  {index > 0 && (
+                    <div
+                      className="m-customer-testimonial-divider"
+                      aria-hidden="true"
+                    />
+                  )}
+
+                  <div className="m-customer-quote-mark" aria-hidden="true">
+                    “
+                  </div>
+
+                  <blockquote className="m-customer-testimonial-quote">
+                    {item.quote}
+                  </blockquote>
+
+                  <img
+                    className="m-customer-testimonial-avatar"
+                    src={avatar}
+                    alt=""
+                    aria-hidden="true"
+                  />
+
+                  <h3 className="m-customer-testimonial-role">{item.role}</h3>
+                  <p className="m-customer-testimonial-workspace">
+                    {item.workspace}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="m-customer-experiences-cta-block">
+            <h2 className="m-customer-experiences-cta-title">
+              {tr.customerExperiences.ctaTitle}
+            </h2>
+
+            <Link to="/sign-up" className="m-customer-experiences-cta">
+              <span>{tr.customerExperiences.cta}</span>
+              <ArrowRight size={28} strokeWidth={1.8} aria-hidden="true" />
+            </Link>
+
+            <a href="#m-specialized-workspaces" className="m-customer-experiences-explore">
+              {tr.customerExperiences.explore}
+            </a>
+
+            <p className="m-customer-experiences-note">
+              {tr.customerExperiences.note}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ONE CONNECTED CUSTOMER JOURNEY */}
+      <section className="m-connected-journey">
+        <div className="m-connected-journey-inner">
+          <p className="m-connected-journey-eyebrow">
+            {tr.connectedJourney.eyebrow}
+          </p>
+
+          <h2 className="m-connected-journey-title">
+            {tr.connectedJourney.title}
+          </h2>
+
+          <p className="m-connected-journey-description">
+            {tr.connectedJourney.description}
+          </p>
+
+          <div className="m-connected-journey-diagram">
+            <img
+              src={connectedCustomerJourneyImg}
+              alt=""
+              aria-hidden="true"
+            />
+          </div>
+
+          <h2 className="m-connected-journey-closing">
+            {tr.connectedJourney.closing}
+          </h2>
+
+          <Link to="/#platform" className="m-connected-journey-cta">
+            <span>{tr.connectedJourney.cta}</span>
+            <ArrowRight size={28} strokeWidth={1.8} aria-hidden="true" />
+          </Link>
         </div>
       </section>
 
@@ -1533,98 +1667,7 @@ export default function LandingMobile() {
           <img src={workspace} alt="workspace" />
         </div>
       </section>
-      {/* AI APPOINTMENT SETTER SECTION */}
-      <section className="m-appointment-setter" id="ai-assistant">
-        <div className="m-setter-header">
-          <p className="m-setter-subtitle">{tr.setterSectionSubtitle}</p>
-          <h2 className="m-setter-title">
-            {tr.setterSectionTitle1}
-            <br />
-            <span>{tr.setterSectionTitle2}</span>
-            <br />
-            {tr.setterSectionTitle3}
-          </h2>
-          <p className="m-setter-desc">{tr.setterSectionDesc}</p>
-        </div>
-
-        <div className="m-calendar-card">
-          <div className="m-calendar-card-header">
-            <h3>{tr.bookAppointmentTitle}</h3>
-            <CalendarDays size={15} />
-          </div>
-
-          <div className="m-calendar-body-layout">
-            <div className="m-cal-left">
-              <div className="m-cal-month-nav">
-                <span className="m-cal-arrow">‹</span>
-                <span className="m-cal-month-year">May 2024</span>
-                <span className="m-cal-arrow">›</span>
-              </div>
-
-              <div className="m-cal-days-grid">
-                <span className="m-day-name">Mo</span>
-                <span className="m-day-name">Tu</span>
-                <span className="m-day-name">We</span>
-                <span className="m-day-name">Th</span>
-                <span className="m-day-name">Fr</span>
-                <span className="m-day-name">Sa</span>
-                <span className="m-day-name">Su</span>
-
-                <span className="m-day-num empty"></span>
-                <span className="m-day-num empty"></span>
-                <span className="m-day-num empty"></span>
-                <span className="m-day-num empty"></span>
-                <span className="m-day-num empty"></span>
-                <span className="m-day-num empty"></span>
-                <span className="m-day-num empty"></span>
-                <span className="m-day-num text-muted">3</span>
-                <span className="m-day-num text-muted">4</span>
-                <span className="m-day-num text-muted">5</span>
-                <span className="m-day-num text-muted">6</span>
-                <span className="m-day-num text-muted">7</span>
-                <span className="m-day-num text-muted">8</span>
-                <span className="m-day-num text-muted">9</span>
-                <span className="m-day-num">10</span>
-                <span className="m-day-num">11</span>
-                <span className="m-day-num">12</span>
-                <span className="m-day-num">13</span>
-                <span className="m-day-num">14</span>
-                <span className="m-day-num">15</span>
-                <span className="m-day-num active">16</span>
-                <span className="m-day-num">17</span>
-                <span className="m-day-num">18</span>
-                <span className="m-day-num">19</span>
-                <span className="m-day-num">20</span>
-                <span className="m-day-num">21</span>
-                <span className="m-day-num">22</span>
-                <span className="m-day-num">23</span>
-                <span className="m-day-num">24</span>
-                <span className="m-day-num">25</span>
-                <span className="m-day-num">26</span>
-                <span className="m-day-num">27</span>
-                <span className="m-day-num text-muted">28</span>
-                <span className="m-day-num text-muted">29</span>
-                <span className="m-day-num text-muted">30</span>
-              </div>
-            </div>
-
-            <div className="m-cal-right">
-              <div className="m-time-slots">
-                <div className="m-time-slot">9:00 AM</div>
-                <div className="m-time-slot active">10:00 AM</div>
-                <div className="m-time-slot">11:00 AM</div>
-                <div className="m-time-slot">12:00 PM</div>
-                <div className="m-time-slot">1:00 PM</div>
-              </div>
-            </div>
-          </div>
-
-          <button className="m-calendar-confirm-btn">
-            {tr.confirmBtnText}
-          </button>
-        </div>
-      </section>
-
+      
       <section className="m-powerful">
         <div className="cx-mp-wrapper">
           <div className="cx-mp-badge-container">
@@ -1758,15 +1801,6 @@ export default function LandingMobile() {
       <section className="m-markets">
         <div className="m-markets-header">
           <p className="m-markets-subtitle">{tr.marketsSubtitle}</p>
-          <h2 className="m-markets-title">
-            {tr.marketsTitle1}
-            <br />
-            {tr.marketsTitle2}
-            <br />
-            {tr.marketsTitle3}
-            <br />
-            <span>{tr.marketsTitle4}</span>
-          </h2>
         </div>
 
         <div className="m-markets-body">
