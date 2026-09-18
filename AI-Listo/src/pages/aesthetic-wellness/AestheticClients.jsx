@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Archive, CalendarDays, ChevronLeft, ChevronRight, Download, Filter,
+  Archive, ArrowDownUp, CalendarDays, ChevronLeft, ChevronRight, Download, Filter,
   Mail, MoreVertical, Plus, RefreshCw, Search, Sparkles, UsersRound
 } from "lucide-react";
 import aestheticClientsApi from "../../api/aestheticClientsApi";
@@ -92,7 +92,145 @@ export default function AestheticClients() {
     a.download = "aesthetic-wellness-clients.csv"; a.click(); URL.revokeObjectURL(a.href);
   };
 
+
+  const clientStatusLabel = (c) =>
+    c.clientStatusLabel ||
+    String(c.clientStatus || "active")
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (m) => m.toUpperCase());
+
+  const shownFrom = data.total ? (data.page - 1) * data.limit + 1 : 0;
+  const shownTo = Math.min(data.page * data.limit, data.total);
+
+  const mobileContent = (
+    <div className="awc-mobile">
+      <section className="awc-mobile-overview">
+        <div className="awc-mobile-hero">
+          <Sparkles />
+          <h1>Clients</h1>
+          <p>Manage client relationships and rebooking</p>
+        </div>
+
+        <div className="awc-mobile-actions">
+          <button className="awc-ref-btn primary" onClick={() => setModal({})}>
+            <Plus /><strong>Add Client</strong><ChevronRight />
+          </button>
+          <button className="awc-ref-btn" onClick={exportCsv}>
+            <Download /><strong>Export Clients</strong><ChevronRight />
+          </button>
+        </div>
+
+        <h2>Client Overview</h2>
+
+        <div className="awc-ref-stats">
+          {[
+            ["Total Clients", stats.totalClients || 0, UsersRound, "↑ 12%", "vs. last month", "up", "all"],
+            ["Appointments Today", stats.appointmentsToday || 0, CalendarDays, "↑ 9%", "vs. last week", "up", null],
+            ["Ready to Rebook", stats.readyToRebook || 0, RefreshCw, "↑ 18%", "vs. last month", "up", "ready_to_rebook"],
+            ["Follow-Up Required", stats.followUpRequired || 0, Mail, "↓ 6%", "vs. last week", "down", "follow_up"],
+          ].map(([label, value, Icon, trend, compare, direction, target]) => (
+            <button className="awc-ref-stat" key={label}
+              onClick={() => {
+                if (label === "Appointments Today") {
+                  navigate("/dashboard/calendar?workspace_id=aesthetic-wellness");
+                } else if (target) {
+                  setStatus(target); setPage(1);
+                  document.querySelector(".awc-mobile-directory")?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}>
+              <Icon />
+              <span className="awc-ref-stat-value"><small>{label}</small><b>{value}</b></span>
+              <span className={`awc-ref-trend ${direction}`}><b>{trend}</b><small>{compare}</small></span>
+              <ChevronRight />
+            </button>
+          ))}
+        </div>
+
+        <div className="awc-ref-summary">
+          <Sparkles />
+          <span>{stats.totalClients || data.total || 0} clients across your active clinic workspace.</span>
+        </div>
+
+        <button className="awc-ref-btn awc-go-directory"
+          onClick={() => document.querySelector(".awc-mobile-directory")?.scrollIntoView({ behavior: "smooth" })}>
+          <Search /><strong>Continue to Client Directory</strong><ChevronRight />
+        </button>
+      </section>
+
+      <section className="awc-mobile-directory">
+        <header className="awc-ref-directory-head">
+          <h1>Client Directory</h1>
+          <p>{data.total || 0} clients</p>
+        </header>
+
+        <label className="awc-ref-search">
+          <Search />
+          <input value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by name, phone, or email" />
+        </label>
+
+        <div className="awc-ref-select-row">
+          <UsersRound />
+          <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+            <option value="all">All Clients</option>
+            <option value="active">Active</option>
+            <option value="ready_to_rebook">Ready to Rebook</option>
+            <option value="follow_up">Follow-Up</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <ChevronRight />
+        </div>
+
+        <button className="awc-ref-btn awc-ref-compact">
+          <Filter /><strong>Filters</strong><ChevronRight />
+        </button>
+
+        <div className="awc-ref-select-row orange">
+          <ArrowDownUp />
+          <select value={sort} onChange={(e) => setSort(e.target.value)}>
+            <option value="name:asc">Sort Clients</option>
+            <option value="name:desc">Name Z–A</option>
+            <option value="spent:desc">Total spent</option>
+            <option value="next:asc">Next appointment</option>
+            <option value="updated:desc">Recently updated</option>
+          </select>
+          <ChevronRight />
+        </div>
+
+        {error && <div className="awc-error">{error}<button onClick={load}>Retry</button></div>}
+
+        <div className="awc-ref-list-head">
+          <h2>Clients</h2>
+          <span>Showing {shownFrom}–{shownTo} of {data.total}</span>
+        </div>
+
+        <div className="awc-ref-client-list">
+          {loading ? <div className="awc-state">Loading clients…</div> :
+          !data.items.length ? <div className="awc-state"><UsersRound /><h3>No clients found</h3>
+            <p>Adjust your filters or add a clinic client.</p></div> :
+          data.items.map((c) => (
+            <button className="awc-ref-client" key={c.id} onClick={() => open(c.id)}>
+              <span className="awc-ref-avatar">{initials(c.name)}</span>
+              <span className="awc-ref-client-name"><b>{c.name}</b><small>{c.phone || c.email || "—"}</small></span>
+              <span className={`awc-status ${c.clientStatus || "active"}`}>{clientStatusLabel(c)}</span>
+              <ChevronRight />
+            </button>
+          ))}
+        </div>
+
+        <button className="awc-ref-btn awc-ref-load"
+          disabled={page >= data.pages}
+          onClick={() => setPage((p) => Math.min(data.pages, p + 1))}>
+          <RefreshCw /><strong>{page >= data.pages ? "All Clients Loaded" : "Load More Clients"}</strong><ChevronRight />
+        </button>
+        <div className="awc-ref-shown">{shownTo} of {data.total} clients shown</div>
+      </section>
+    </div>
+  );
+
   return <div className="awc-page">
+    <div className="awc-desktop">
     <div className="awc-head">
       <div><h1><Sparkles /> Clients</h1><p>Manage client relationships, treatments, appointments, and rebooking.</p></div>
       <div className="awc-head-actions">
@@ -161,6 +299,10 @@ export default function AestheticClients() {
         <button className="active">{page}</button>
         <button disabled={page >= data.pages} onClick={() => setPage(p => p + 1)}><ChevronRight /></button></div>
     </div>
+
+    </div>
+
+    {mobileContent}
 
     {modal && <div className="awc-overlay"><form className="awc-modal" onSubmit={save}>
       <h2>{modal.id ? "Edit Client" : "Add Client"}</h2>

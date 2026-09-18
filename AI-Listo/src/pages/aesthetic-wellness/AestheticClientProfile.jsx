@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Activity, ArrowLeft, CalendarDays, CreditCard, Edit2, FileText, Image,
-  Mail, MessageCircle, Package, Phone, RefreshCw, Settings, Sparkles, User, Wallet
+  Activity, ArrowLeft, CalendarDays, ChevronRight, CircleAlert, Clock3, CreditCard,
+  Edit2, FileText, History, Image, Mail, MessageCircle, Package, Phone, RefreshCw,
+  Send, Settings, SlidersHorizontal, Sparkles, Sun, User, Wallet
 } from "lucide-react";
 import aestheticClientsApi from "../../api/aestheticClientsApi";
 import "./AestheticClients.css";
@@ -41,7 +42,179 @@ export default function AestheticClientProfile(){
     catch(e){setError(e?.message||"Unable to update client.");}finally{setSaving(false);}
   };
 
+
+  const shortDate = v => v ? new Date(v).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric"
+  }) : "—";
+  const birthAge = c.dateOfBirth
+    ? Math.max(0, Math.floor((Date.now() - new Date(c.dateOfBirth).getTime()) / 31557600000))
+    : null;
+  const treatmentRows = treatments.slice(0, 5);
+  const activityRows = activity.slice(0, 4);
+
+  const mobileProfile = (
+    <div className="awp-mobile">
+      {/* SCREEN 1 — Client profile / summary */}
+      <section className="awpm-screen awpm-profile">
+        <button className="awpm-back" onClick={() => navigate("/dashboard/aesthetic-wellness/clients")}>
+          <ArrowLeft /> Client Directory
+        </button>
+
+        <div className="awpm-person">
+          <span className="awpm-avatar">{initials(c.name)}</span>
+          <h1>{c.name}</h1>
+          <span className={`awc-status ${c.status || "active"}`}>{c.statusLabel || "Active"}</span>
+          <p>{c.phone || "—"}</p>
+          <p>{c.email || "—"}</p>
+          <p className="awpm-provider">Assigned Provider: {c.providerName || "Unassigned"}</p>
+        </div>
+
+        <div className="awpm-actions">
+          <button className="awpm-action" onClick={message}>
+            <MessageCircle /><strong>Send Message</strong><ChevronRight />
+          </button>
+          <button className="awpm-action primary" onClick={book}>
+            <CalendarDays /><strong>Book Appointment</strong><ChevronRight />
+          </button>
+          {perms.canEdit !== false && <button className="awpm-action" onClick={() => setEdit(true)}>
+            <Edit2 /><strong>Edit Client</strong><ChevronRight />
+          </button>}
+        </div>
+
+        <h2 className="awpm-heading">Profile Summary</h2>
+        <div className="awpm-detail-list">
+          <button><Wallet /><b>Total Spent</b><span>{money(summary.totalSpent)}</span><ChevronRight /></button>
+          <button><CalendarDays /><b>Appointments</b><span>{summary.appointmentCount || 0}</span><ChevronRight /></button>
+          <button onClick={() => setTab("Appointments")}><CalendarDays /><b>Next Appointment</b><span>{next ? shortDate(next.startAt) : "—"}</span><ChevronRight /></button>
+          <button><RefreshCw /><b>Rebooking</b><span className="orange">{summary.rebookingText || "Not due"}</span><ChevronRight /></button>
+        </div>
+
+        <h2 className="awpm-heading">Client Information</h2>
+        <div className="awpm-detail-list">
+          <button><CalendarDays /><b>Date of Birth</b><span>{c.dateOfBirth ? <>{shortDate(c.dateOfBirth)}{birthAge !== null && <small>{birthAge} years old</small>}</> : "—"}</span><ChevronRight /></button>
+          <button><Phone /><b>Phone</b><span>{c.phone || "—"}</span><ChevronRight /></button>
+          <button><Mail /><b>Email</b><span>{c.email || "—"}</span><ChevronRight /></button>
+          <button><MessageCircle /><b>Preferred Contact</b><span>{c.preferredContact || "—"}</span><ChevronRight /></button>
+          <button><User /><b>Referral Source</b><span>{c.referralSource || "—"}</span><ChevronRight /></button>
+          <button><CalendarDays /><b>Client Since</b><span>{c.createdAt ? shortDate(c.createdAt) : "—"}</span><ChevronRight /></button>
+        </div>
+
+        <button className="awpm-action awpm-continue" onClick={() => {
+          document.querySelector(".awpm-appointments")?.scrollIntoView({ behavior: "smooth" });
+        }}>
+          <CalendarDays /><strong>Continue to Appointments &amp; Treatments</strong><ChevronRight />
+        </button>
+      </section>
+
+      {/* SCREEN 2 — Appointments & Treatments */}
+      <section className="awpm-screen awpm-appointments">
+        
+        <div className="awpm-screen-title">
+          <span className="awpm-avatar">{initials(c.name)}</span>
+          <h1>Appointments &amp; Treatments</h1>
+          <p>{c.name}</p>
+        </div>
+
+        <h2 className="awpm-heading">Upcoming Appointment</h2>
+        {next ? <div className="awpm-upcoming">
+          <span className="awpm-upcoming-icon"><CalendarDays /></span>
+          <div>
+            <b>{next.title || next.treatmentName || "Appointment"}</b>
+            <p>{dt(next.startAt)}</p>
+            <p>{next.providerName || "Unassigned"}</p>
+          </div>
+          <span className="awc-status active">{next.status || "Confirmed"}</span>
+        </div> : <div className="awpm-empty">No upcoming appointment.</div>}
+
+        <div className="awpm-actions">
+          <button className="awpm-action" onClick={() => setTab("Appointments")}>
+            <CalendarDays /><strong>View Appointment</strong><ChevronRight />
+          </button>
+          <button className="awpm-action" onClick={() => setTab("Appointments")}>
+            <CalendarDays /><strong>View All Appointments</strong><ChevronRight />
+          </button>
+        </div>
+
+        <h2 className="awpm-heading awpm-treatment-title">Recent Treatments</h2>
+        <p className="awpm-count">{treatments.length} treatments</p>
+
+        <div className="awpm-treatment-list">
+          {treatmentRows.length ? treatmentRows.map((t, i) => (
+            <button key={t.id || i}>
+              <Sparkles />
+              <span><b>{t.treatmentName || "Treatment"}</b><small>{t.providerName || "Unassigned"} &nbsp;·&nbsp; {shortDate(t.completedAt)}</small></span>
+              <strong>{money(t.revenue)}</strong>
+              <ChevronRight />
+            </button>
+          )) : <div className="awpm-empty">No treatments recorded.</div>}
+        </div>
+
+        <button className="awpm-action awpm-view-all" onClick={() => setTab("Treatments")}>
+          <History /><strong>View All Treatments</strong><ChevronRight />
+        </button>
+        <button className="awpm-action primary awpm-continue" onClick={() => {
+          document.querySelector(".awpm-preferences")?.scrollIntoView({ behavior: "smooth" });
+        }}>
+          <SlidersHorizontal /><strong>Continue to Preferences &amp; Activity</strong><ChevronRight />
+        </button>
+      </section>
+
+      {/* SCREEN 3 — Preferences & Activity */}
+      <section className="awpm-screen awpm-preferences">
+        
+        <div className="awpm-screen-title">
+          <span className="awpm-avatar">{initials(c.name)}</span>
+          <h1>Preferences &amp; Activity</h1>
+          <p>{c.name}</p>
+        </div>
+
+        <section className="awpm-box">
+          <div className="awpm-box-title">
+            <Settings /><h2>Client Preferences &amp; Alerts</h2>
+            {perms.canEdit !== false && <button onClick={() => setEdit(true)}>Edit</button>}
+          </div>
+          <div className="awpm-detail-list nested">
+            <button><MessageCircle /><div><b>Preferred Contact</b><span>{c.preferredContact || "—"}</span></div><ChevronRight /></button>
+            <button><Sun /><div><b>Appointment Preference</b><span>{(c.preferences || [])[0] || "—"}</span></div><ChevronRight /></button>
+            <button><CircleAlert /><div><b>Client Alert</b><span>{(c.alerts || [])[0] || "—"}</span></div><ChevronRight /></button>
+          </div>
+        </section>
+
+        <section className="awpm-box awpm-note-box">
+          <div className="awpm-box-title"><FileText /><h2>Internal Note</h2></div>
+          <p className="awpm-note">{c.internalNotes || "No internal note."}</p>
+          <button className="awpm-action" onClick={() => setEdit(true)}>
+            <Edit2 /><strong>Edit Internal Note</strong><ChevronRight />
+          </button>
+        </section>
+
+        <section className="awpm-box">
+          <div className="awpm-box-title"><Activity /><h2>Recent Activity</h2></div>
+          <div className="awpm-activity-list">
+            {activityRows.length ? activityRows.map((a, i) => (
+              <button key={a.id || i}>
+                <span className={`awpm-activity-icon i${i % 4}`}>
+                  {i % 4 === 0 ? <CalendarDays /> : i % 4 === 1 ? <Send /> : i % 4 === 2 ? <CreditCard /> : <Clock3 />}
+                </span>
+                <span><b>{a.title || a.action}</b><small>{dt(a.createdAt)}</small><p>{a.sub || ""}</p></span>
+                <ChevronRight />
+              </button>
+            )) : <div className="awpm-empty">No activity recorded.</div>}
+          </div>
+
+          <button className="awpm-action awpm-view-all" onClick={() => setTab("Activity")}>
+            <History /><strong>View All Activity</strong><ChevronRight />
+          </button>
+          <button className="awpm-action awpm-back-clients" onClick={() => navigate("/dashboard/aesthetic-wellness/clients")}>
+            <ArrowLeft /><strong>Back to Clients</strong><ChevronRight />
+          </button>
+        </section>
+      </section>
+    </div>
+  );
+
   return <div className="awc-page awp-page">
+    <div className="awp-desktop">
     <button className="awp-back" onClick={()=>navigate("/dashboard/aesthetic-wellness/clients")}><ArrowLeft/>Back to Clients</button>
     <div className="awp-head"><div className="awp-person"><span className="awp-avatar">{initials(c.name)}</span>
       <div><div className="awp-name"><h1>{c.name}</h1><span className={`awc-status ${c.status||"active"}`}>{c.statusLabel||"Active"}</span></div>
@@ -94,6 +267,10 @@ export default function AestheticClientProfile(){
     {tab==="Billing"&&<Linked icon={CreditCard} title="Billing" text={`Recorded treatment spend: ${money(summary.totalSpent)}`} action="Open Billing" onAction={billing}/>}
     {tab==="Notes"&&<Linked icon={FileText} title="Internal Notes" text={c.internalNotes||"No internal notes yet."} action="Edit Notes" onAction={()=>setEdit(true)}/>}
     {tab==="Activity"&&<Tab title="Activity History">{activity.length?activity.map((a,i)=><div className="awp-activity" key={a.id||i}><span/><div><b>{a.title||a.action}</b><small>{dt(a.createdAt)}</small><p>{a.sub||""}</p></div></div>):<p className="muted">No activity recorded.</p>}</Tab>}
+
+    </div>
+
+    {mobileProfile}
 
     {edit&&<div className="awc-overlay"><form className="awc-modal" onSubmit={save}><h2>Edit Client</h2>
       <div className="awc-form-grid"><label>Full name *<input name="name" defaultValue={c.name||""}/></label>

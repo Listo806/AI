@@ -1,5 +1,6 @@
 import {
   ArrowUp,
+  ChevronRight,
   Bot,
   CalendarDays,
   CalendarPlus,
@@ -191,8 +192,8 @@ export default function AestheticWellnessWorkspace() {
         <div className="aw-title-wrap">
           <div className="aw-title-icon"><Sparkles size={34} strokeWidth={1.8} /></div>
           <div>
-            <h1>Aesthetic &amp; Wellness Workspace</h1>
-            <p>Manage inquiries, consultations, appointments, treatments, follow-ups, and returning clients.</p>
+            <h1><span>Aesthetic &amp; Wellness</span><span className="aw-desktop-title-suffix"> Workspace</span></h1>
+            <p><span className="aw-mobile-subtitle">Clinic workspace</span><span className="aw-desktop-subtitle">Manage inquiries, consultations, appointments, treatments, follow-ups, and returning clients.</span></p>
           </div>
         </div>
 
@@ -255,6 +256,7 @@ export default function AestheticWellnessWorkspace() {
         <div className="aw-agent-actions"><button className="aw-primary-btn" onClick={viewConversations}>View Conversations</button><button className="aw-secondary-btn" onClick={manageAgent}>Manage AI Agent</button></div>
       </section>
 
+      <h2 className="aw-mobile-section-heading">Today’s Overview</h2>
       <section className="aw-stats-grid">
         <StatCard icon={UsersRound} title="New Inquiries" value={dashboard.metrics?.newInquiries?.value ?? 0} trend={dashboard.metrics?.newInquiries?.trendPercent} comparison="vs. yesterday" />
         <StatCard icon={CalendarPlus} title="Consultations Booked" value={dashboard.metrics?.consultationsBooked?.value ?? 0} trend={dashboard.metrics?.consultationsBooked?.trendPercent} comparison="vs. yesterday" />
@@ -264,7 +266,10 @@ export default function AestheticWellnessWorkspace() {
         <StatCard icon={RefreshCw} title="Rebooking Due" value={dashboard.metrics?.rebookingDue?.value ?? 0} trend={dashboard.metrics?.rebookingDue?.trendPercent} comparison="vs. yesterday" />
       </section>
 
+      <button type="button" className="aw-mobile-flow-button aw-mobile-overview-next" onClick={viewCalendar}><CalendarDays size={22} /> <span>Continue to Schedule &amp; Appointments</span><ChevronRight size={22} /></button>
+
       <section className="aw-dashboard-main">
+        <div className="aw-mobile-flow-title aw-schedule-flow-title"><CalendarDays /><div><h2>Schedule &amp; Appointments</h2><p>Today’s clinic activity</p></div></div>
         <article className="aw-panel aw-schedule">
           <SectionHeader icon={CalendarDays} title="Today's Schedule" action="View All" onAction={viewCalendar} />
           <div className="aw-schedule-list">
@@ -273,8 +278,11 @@ export default function AestheticWellnessWorkspace() {
           <div className="aw-schedule-actions"><button className="aw-secondary-btn" onClick={viewCalendar}><CalendarDays size={15} /> View Calendar</button><button className="aw-primary-btn" onClick={addAppointment}><CalendarPlus size={15} /> Add Appointment</button></div>
         </article>
 
+        <button type="button" className="aw-mobile-flow-button aw-schedule-next" onClick={viewPipeline}><Filter size={22} /><span>Continue to Pipeline &amp; Follow-Ups</span><ChevronRight size={22} /></button>
+
         <div className="aw-center-column">
-          <article className="aw-panel">
+          <div className="aw-mobile-flow-title aw-pipeline-flow-title"><Filter /><div><h2>Pipeline &amp; Follow-Ups</h2><p>Move clients from inquiry to completed treatment</p></div></div>
+          <article className="aw-panel aw-pipeline-panel">
             <SectionHeader icon={Filter} title="Clinic Pipeline" action="View Pipeline" onAction={viewPipeline} />
             <div className="aw-pipeline">{dashboard.pipeline.length ? dashboard.pipeline.map((stage) => <div className="aw-pipeline-stage" key={stage.id}><span>{stage.name}</span><strong>{stage.count || 0}</strong></div>) : <div className="aw-empty">No clinic pipeline activity.</div>}</div>
           </article>
@@ -284,6 +292,9 @@ export default function AestheticWellnessWorkspace() {
           </div>
         </div>
 
+        <button type="button" className="aw-mobile-flow-button aw-performance-next"><TrendingUp size={22} /><span>Continue to Performance &amp; Activity</span><ChevronRight size={22} /></button>
+
+        <div className="aw-mobile-flow-title aw-performance-flow-title"><TrendingUp /><div><h2>Performance &amp; Activity</h2><p>Monitor treatments, providers, revenue, and AI actions</p></div></div>
         <article className="aw-panel aw-treatment-panel">
           <SectionHeader icon={TrendingUp} title="Treatment Interest" right={<span className="aw-section-range">Last 30 Days</span>} />
           <div className="aw-treatment-list">{dashboard.treatmentInterest.length ? dashboard.treatmentInterest.slice(0, 5).map((item) => <div className="aw-treatment-row" key={item.name}><span>{item.name}</span><div className="aw-treatment-track"><i style={{ width: `${Math.min(Number(item.percent || 0), 100)}%` }} /></div><strong>{item.percent || 0}%</strong></div>) : <div className="aw-empty">No treatment interest yet.</div>}</div>
