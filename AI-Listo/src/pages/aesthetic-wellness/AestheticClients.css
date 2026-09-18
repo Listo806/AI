@@ -764,7 +764,7 @@
      ========================================================== */
   .crm-dark .awc-page .awc-modal{background: #080b0d;border: 1px solid #343b3e !important}
   .crm-dark .awc-page {
-    background: #080b0d;
+    background: #0b0f19;
     color: #f7f7f8;
   }
 
@@ -800,7 +800,7 @@
   .crm-dark .awc-ref-search,
   .crm-dark .awc-ref-select-row,
   .crm-dark .awc-ref-client {
-    background: #0b0e10;
+    background: #0b0f19;
     border-color: #303438;
     color: #f7f7f8;
   }
