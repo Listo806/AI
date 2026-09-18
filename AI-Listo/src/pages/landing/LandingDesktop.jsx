@@ -2166,10 +2166,6 @@ export default function Landing() {
 
       <section id="pipeline" className="cx-hero pt-50">
         <img src={currentSec4} alt="" />
-        <i>
-          Product demo — the names, numbers, and activity shown are sample data
-          for illustration only, not real customer results.
-        </i>
       </section>
 
       <section className="roi-section revenue-action-section pt-50">
@@ -2249,7 +2245,6 @@ export default function Landing() {
             <a href="#workspaces" className="cx-customer-explore">
               {customerExperience.explore}
             </a>
-            <small>{customerExperience.note}</small>
           </div>
         </div>
       </section>
