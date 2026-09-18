@@ -319,6 +319,14 @@ export function captureClickIds() {
         window.location.pathname + window.location.search,
       );
     }
+    // The first visit this browser ever made, recorded as one record so the
+    // source, the route and the time always describe the same visit.
+    recordFirstTouch({
+      source: params.get("utm_source"),
+      medium: params.get("utm_medium"),
+      campaign: params.get("utm_campaign"),
+      landingRoute: window.location.pathname,
+    });
     for (const key of [
       "utm_source",
       "utm_medium",
@@ -336,22 +344,76 @@ export function captureClickIds() {
   }
 }
 
+// The visitor's very first visit, kept as a single record under one key.
+//
+// One key, written once, is what makes the original source trustworthy: the
+// source, the landing route and the time can never come from different visits,
+// and a later visit through another channel cannot replace any part of it.
+const FIRST_TOUCH_KEY = "attr_first_touch";
+
+export function recordFirstTouch(visit) {
+  if (typeof window === "undefined") return;
+  try {
+    if (localStorage.getItem(FIRST_TOUCH_KEY)) return; // already have one
+    localStorage.setItem(
+      FIRST_TOUCH_KEY,
+      JSON.stringify({
+        source: visit?.source || null,
+        medium: visit?.medium || null,
+        campaign: visit?.campaign || null,
+        landingRoute: visit?.landingRoute || window.location.pathname,
+        firstVisitAt: new Date().toISOString(),
+      }),
+    );
+  } catch (_e) {
+    /* best-effort: a visitor with storage blocked still browses normally */
+  }
+}
+
+function readFirstTouch() {
+  try {
+    const raw = localStorage.getItem(FIRST_TOUCH_KEY);
+    if (raw) return JSON.parse(raw);
+    // Visitors from before this record existed: fall back to what was stored
+    // then, so their original source is not lost.
+    const g = (k) => localStorage.getItem(k) || null;
+    const source = g("attr_utm_source");
+    if (!source && !g("attr_landing_page")) return null;
+    return {
+      source,
+      medium: g("attr_utm_medium"),
+      campaign: g("attr_utm_campaign"),
+      landingRoute: g("attr_landing_page"),
+      firstVisitAt: null,
+    };
+  } catch (_e) {
+    return null;
+  }
+}
+
 // Attribution snapshot passed to the sign-up API: landing page, UTM params, and
 // the Google Click ID. All best-effort (null when not captured).
 export function getAttribution() {
   if (typeof window === "undefined") return {};
   try {
     const g = (k) => localStorage.getItem(k) || null;
+    const source = g("attr_utm_source");
+    const medium = g("attr_utm_medium");
+    const campaign = g("attr_utm_campaign");
     return {
       landingPage: g("attr_landing_page"),
       gclid: g("ads_gclid"),
       utm: {
-        source: g("attr_utm_source"),
-        medium: g("attr_utm_medium"),
-        campaign: g("attr_utm_campaign"),
+        source,
+        medium,
+        campaign,
         term: g("attr_utm_term"),
         content: g("attr_utm_content"),
       },
+      // Where this visitor originally came from. Sent with every sign-up and
+      // stored once, so it survives the whole journey to payment and is never
+      // replaced when the customer comes back another way.
+      firstTouch: readFirstTouch(),
     };
   } catch (_e) {
     return {};

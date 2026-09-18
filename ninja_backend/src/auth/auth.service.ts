@@ -18,6 +18,7 @@ import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '../config/config.service';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
 import { captureSignupCountry } from '../common/signup-geo.util';
+import { captureFirstTouch } from '../common/acquisition.util';
 
 @Injectable()
 export class AuthService {
@@ -80,6 +81,10 @@ export class AuthService {
     // Registration country (best-effort, non-blocking): Cloudflare country header
     // first, IP fallback. Never blocks or fails signup; missing shows as Unknown.
     void captureSignupCountry(this.db, user.id, geo || {});
+
+    // Where this customer originally came from, when the browser sends it.
+    // Write-once, so a later visit through another channel cannot replace it.
+    void captureFirstTouch(this.db, user.id, signupDto);
 
     // Generate tokens
     const tokens = await this.generateTokens(user);

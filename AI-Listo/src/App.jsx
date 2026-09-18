@@ -50,6 +50,7 @@ import Pipeline from "./pages/pipeline/Pipeline";
 import Properties from "./pages/properties/PropertiesList";
 import Contacts from "./pages/contacts/Contacts";
 
+import CardRedirect from "./pages/common/CardRedirect";
 import Privacy from "./pages/common/Privacy";
 import Refund from "./pages/common/Refund";
 import Terms from "./pages/common/Terms";
@@ -210,6 +211,9 @@ function publicRoutes(prefix) {
   return (
     <>
       <Route path={p || "/"} element={<RootRoute />} />
+      {/* Printed business card: marks the visit, then sends the visitor to the
+          normal landing page like any other visitor. */}
+      <Route path={`${p}/card`} element={<CardRedirect />} />
       <Route path={`${p}/sign-in`} element={<SignIn variant="crm" />} />
       <Route path={`${p}/sign-up`} element={<SignUp />} />
       <Route path={`${p}/forgot-password`} element={<ForgotPassword />} />

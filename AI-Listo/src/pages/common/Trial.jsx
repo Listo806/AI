@@ -264,6 +264,10 @@ export default function StartTrial() {
         utm: attribution.utm || {},
         gclid: attribution.gclid || null,
 
+        // Where this customer originally came from. Stored once and never
+        // changed, so it stays with them through checkout and beyond.
+        firstTouch: attribution.firstTouch || null,
+
         offer: getSetupOffer() === "exit7" ? "exit7" : "standard",
       };
 

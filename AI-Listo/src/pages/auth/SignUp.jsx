@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
-import { trackEvent, trackSignupConversion } from '../../utils/track';
+import { getAttribution, trackEvent, trackSignupConversion } from '../../utils/track';
 import './Auth.css';
 
 const ROLE_OPTIONS = [
@@ -36,22 +36,36 @@ export default function SignUp() {
       // anything else is dropped and the backend defaults to English.
       const lang = (i18n.language || 'en').slice(0, 2).toLowerCase();
       const language = ['en', 'es', 'pt'].includes(lang) ? lang : 'en';
+      // Where this visitor originally came from, so an account created here
+      // carries the same acquisition source as one created on the trial form.
+      const firstTouch = getAttribution().firstTouch || null;
       let res;
       try {
         res = await apiClient.request('/auth/signup', {
           method: 'POST',
-          body: JSON.stringify({ email, password, role, language }),
+          body: JSON.stringify({ email, password, role, language, firstTouch }),
         });
       } catch (err) {
-        // Resilience: an older backend that predates the `language` field
-        // rejects unknown properties with a 400. Retry once without it so
-        // signup can never break while the backend is being updated; the
-        // language just isn't captured until then. Any other error is real.
+        // Resilience: an older backend that predates the `language` or
+        // `firstTouch` fields rejects unknown properties with a 400. Step back
+        // one field at a time so signup can never break while the backend is
+        // being updated; only the extra detail is lost. Any other error is real.
         if (err && err.status === 400) {
-          res = await apiClient.request('/auth/signup', {
-            method: 'POST',
-            body: JSON.stringify({ email, password, role }),
-          });
+          try {
+            res = await apiClient.request('/auth/signup', {
+              method: 'POST',
+              body: JSON.stringify({ email, password, role, language }),
+            });
+          } catch (err2) {
+            if (err2 && err2.status === 400) {
+              res = await apiClient.request('/auth/signup', {
+                method: 'POST',
+                body: JSON.stringify({ email, password, role }),
+              });
+            } else {
+              throw err2;
+            }
+          }
         } else {
           throw err;
         }

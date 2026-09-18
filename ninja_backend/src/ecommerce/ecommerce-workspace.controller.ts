@@ -27,7 +27,12 @@ const CSV_FIELDS = [
   'recurring_amount',
   'status',
   'payment_status',
+  // Acquisition: where the customer originally came from, and from where.
   'source_label',
+  'first_touch_medium',
+  'first_touch_campaign',
+  'first_touch_landing_route',
+  'first_visit_at',
   'country',
   'seat_count',
   'seats_limit',
@@ -38,7 +43,9 @@ const CSV_FIELDS = [
 
 function csvCell(value: any): string {
   if (value == null) return '';
-  const s = String(value);
+  // Keep a cell that starts with =, +, - or @ as plain text: spreadsheets would
+  // otherwise run it as a formula, and some of these columns are visitor input.
+  const s = /^[=+\-@]/.test(String(value)) ? `'${String(value)}` : String(value);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

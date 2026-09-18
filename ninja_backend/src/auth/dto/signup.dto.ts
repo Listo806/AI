@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsEmail,
   IsEnum,
+  IsObject,
   IsOptional,
   IsIn,
 } from 'class-validator';
@@ -33,5 +34,15 @@ export class SignupDto {
   @IsString()
   @IsIn(['en', 'es', 'pt'])
   language?: string;
+
+  // Where the visitor originally came from, as recorded by the browser on their
+  // first visit. Optional, and stored once: a later visit never replaces it.
+  @ApiPropertyOptional({
+    description:
+      'First-touch acquisition: { source, medium, campaign, landingRoute, firstVisitAt }',
+  })
+  @IsOptional()
+  @IsObject()
+  firstTouch?: Record<string, any>;
 }
 
