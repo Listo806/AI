@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
-import { trackEvent, trackSignupConversion } from '../../utils/track';
+import { getAttribution, trackEvent, trackSignupConversion } from '../../utils/track';
 import './Auth.css';
 
 const ROLE_OPTIONS = [
@@ -36,11 +36,14 @@ export default function SignUp() {
       // anything else is dropped and the backend defaults to English.
       const lang = (i18n.language || 'en').slice(0, 2).toLowerCase();
       const language = ['en', 'es', 'pt'].includes(lang) ? lang : 'en';
+      // Where this visitor originally came from, so an account created here
+      // carries the same acquisition source as one created on the trial form.
+      const firstTouch = getAttribution().firstTouch || null;
       let res;
       try {
         res = await apiClient.request('/auth/signup', {
           method: 'POST',
-          body: JSON.stringify({ email, password, role, language }),
+          body: JSON.stringify({ email, password, role, language, firstTouch }),
         });
       } catch (err) {
         // Resilience: an older backend that predates the `language` field

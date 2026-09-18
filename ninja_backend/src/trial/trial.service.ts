@@ -11,6 +11,7 @@ import { AuthService } from '../auth/auth.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import { normalizePlanId } from '../plans/plan-config';
 import { captureSignupCountry } from '../common/signup-geo.util';
+import { firstTouchFromDto } from '../common/acquisition.util';
 
 @Injectable()
 export class TrialService {
@@ -59,6 +60,15 @@ export class TrialService {
       `plan_status VARCHAR(24) DEFAULT 'active'`,
       `signup_source VARCHAR(32)`,
       `signup_country VARCHAR(2)`,
+      // First-touch acquisition: where the customer originally came from. Written
+      // once at sign-up and never changed afterwards, so a later visit through
+      // Google, social or direct traffic cannot rewrite the original source. Kept
+      // separate from signup_country, which the geo helper owns.
+      `first_touch_source TEXT`,
+      `first_touch_medium TEXT`,
+      `first_touch_campaign TEXT`,
+      `first_touch_landing_route TEXT`,
+      `first_visit_at TIMESTAMPTZ`,
     ];
     for (const c of cols) {
       await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
@@ -136,6 +146,7 @@ export class TrialService {
       const lang = this.resolveLanguage(dto);
       const utm = dto.utm || {};
       const offerUsed = dto.offer === 'exit7' ? 'exit7' : 'standard';
+      const firstTouch = firstTouchFromDto(dto);
 
       // Plan may be unknown at signup: Create Account creates the account first
       // and the plan is chosen on the next (pricing) step. Free is created active
@@ -185,6 +196,11 @@ export class TrialService {
           gclid,
           offer_used,
           signup_source,
+          first_touch_source,
+          first_touch_medium,
+          first_touch_campaign,
+          first_touch_landing_route,
+          first_visit_at,
           registered_at,
           created_at,
           updated_at
@@ -193,6 +209,7 @@ export class TrialService {
         (
           $1, $2, $3, $4, $5, 'TRIAL', $6, true, $7, $8,
           $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+          $21, $22, $23, $24, $25,
           NOW(), NOW(), NOW()
         )
         RETURNING id
@@ -218,6 +235,11 @@ export class TrialService {
           dto.gclid || null,
           offerUsed,
           source,
+          firstTouch.source,
+          firstTouch.medium,
+          firstTouch.campaign,
+          firstTouch.landingRoute,
+          firstTouch.firstVisitAt,
         ],
       );
 

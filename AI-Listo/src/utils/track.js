@@ -319,6 +319,15 @@ export function captureClickIds() {
         window.location.pathname + window.location.search,
       );
     }
+    // The route the visitor actually arrived on, without the query string, and
+    // the moment they first arrived. Both written once, so a later visit through
+    // another channel never replaces where this customer came from originally.
+    if (!localStorage.getItem("attr_landing_route")) {
+      localStorage.setItem("attr_landing_route", window.location.pathname);
+    }
+    if (!localStorage.getItem("attr_first_visit_at")) {
+      localStorage.setItem("attr_first_visit_at", new Date().toISOString());
+    }
     for (const key of [
       "utm_source",
       "utm_medium",
@@ -336,21 +345,46 @@ export function captureClickIds() {
   }
 }
 
+// Offline channels we label by name in reports. The printed business card sends
+// visitors through /card, which tags the visit before handing them to the
+// landing page like any other visitor.
+const CHANNEL_LABELS = {
+  business_card: { source: "Business Card", medium: "QR Code", campaign: "Offline" },
+};
+
+// Readable channel for a raw utm_source, or null when it is an ordinary source.
+export function channelLabels(source) {
+  return CHANNEL_LABELS[String(source || "").trim().toLowerCase()] || null;
+}
+
 // Attribution snapshot passed to the sign-up API: landing page, UTM params, and
 // the Google Click ID. All best-effort (null when not captured).
 export function getAttribution() {
   if (typeof window === "undefined") return {};
   try {
     const g = (k) => localStorage.getItem(k) || null;
+    const source = g("attr_utm_source");
+    const medium = g("attr_utm_medium");
+    const campaign = g("attr_utm_campaign");
     return {
       landingPage: g("attr_landing_page"),
       gclid: g("ads_gclid"),
       utm: {
-        source: g("attr_utm_source"),
-        medium: g("attr_utm_medium"),
-        campaign: g("attr_utm_campaign"),
+        source,
+        medium,
+        campaign,
         term: g("attr_utm_term"),
         content: g("attr_utm_content"),
+      },
+      // Where this visitor originally came from. Sent with every sign-up and
+      // stored once, so it survives the whole journey to payment and is never
+      // replaced when the customer comes back another way.
+      firstTouch: {
+        source,
+        medium,
+        campaign,
+        landingRoute: g("attr_landing_route"),
+        firstVisitAt: g("attr_first_visit_at"),
       },
     };
   } catch (_e) {

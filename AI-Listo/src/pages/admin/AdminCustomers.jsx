@@ -759,6 +759,9 @@ export default function AdminCustomers() {
   // country never collapses the dropdown to only that country (this filter exists
   // to compare countries, so you must be able to switch between them freely).
   const [countryOpts, setCountryOpts] = useState([]);
+  // Same idea for the acquisition Source filter: keep the full option list even
+  // once a source is selected, so sources can be compared freely.
+  const [sourceOpts, setSourceOpts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
   const [filters, setFilters] = useState({
@@ -811,6 +814,10 @@ export default function AdminCustomers() {
         if ((filters.country || "all") === "all") {
           const cs = sum?.breakdowns?.country;
           if (Array.isArray(cs)) setCountryOpts(cs);
+        }
+        if ((filters.source || "all") === "all") {
+          const ss = sum?.breakdowns?.source;
+          if (Array.isArray(ss)) setSourceOpts(ss);
         }
       })
       .catch(() => {
@@ -961,7 +968,13 @@ export default function AdminCustomers() {
       "plan_label",
       "billing",
       "status",
+      // Acquisition, matching the full export on the server.
       "source_label",
+      "first_touch_medium",
+      "first_touch_campaign",
+      "first_touch_landing_route",
+      "first_visit_at",
+      "country",
       "ltv",
     ];
     const header = fields.join(",");
@@ -1551,6 +1564,26 @@ export default function AdminCustomers() {
 
             {moreFilters && (
               <>
+                {/* Acquisition source. Business Card is always offered, so the
+                    printed card can be filtered on before its first customer
+                    arrives; the rest come from what customers actually have. */}
+                <select
+                  className="cxc-select"
+                  value={filters.source}
+                  onChange={(e) => setFilter("source", e.target.value)}
+                  title="Source"
+                >
+                  <option value="all">All Sources</option>
+                  <option value="Business Card">Business Card</option>
+                  {sourceOpts
+                    .map((s) => (typeof s === "string" ? s : s?.key || s?.name))
+                    .filter((s) => s && s !== "Business Card")
+                    .map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                </select>
                 <input
                   className="cxc-select"
                   type="date"
@@ -2706,9 +2739,34 @@ function CustomerModal({
                           <Info size={17} /> ACCOUNT / REGISTRATION
                         </div>
                         <div className="cxc-overview-main-label">
-                          Acquisition Source
+                          Original Source
                         </div>
                         <strong>{c.source_label || "Unknown"}</strong>
+                        <div className="cxc-overview-main-label">Medium</div>
+                        <strong>
+                          {c.first_touch_medium || c.utm_medium || "—"}
+                        </strong>
+                        <div className="cxc-overview-main-label">Campaign</div>
+                        <strong>
+                          {c.first_touch_campaign || c.utm_campaign || "—"}
+                        </strong>
+                        <div className="cxc-overview-main-label">
+                          Original Landing Route
+                        </div>
+                        <strong>
+                          {c.first_touch_landing_route || c.landing_page || "—"}
+                        </strong>
+                        <div className="cxc-overview-main-label">First Visit</div>
+                        <strong>
+                          {c.first_visit_at ? (
+                            <>
+                              {fmtDate(c.first_visit_at)}
+                              <small>{fmtTime(c.first_visit_at)}</small>
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </strong>
                         <div className="cxc-overview-main-label">Country</div>
                         <strong>
                           <CountryCell code={c.country} />
@@ -2908,6 +2966,15 @@ function CustomerModal({
                           <strong>{fmtDateTime(sub.startDate)}</strong>
                           <span>Next Billing</span>
                           <strong>{fmtDateTime(sub.nextBillingDate)}</strong>
+                          {/* Where this subscription originally came from. */}
+                          <span>Original Source</span>
+                          <strong>
+                            {sub.originalSource || c.source_label || "Unknown"}
+                          </strong>
+                          <span>Campaign</span>
+                          <strong>
+                            {sub.originalCampaign || c.utm_campaign || "—"}
+                          </strong>
                         </div>
                         <button
                           className="cxc-btn cxc-btn-primary"
@@ -2924,6 +2991,12 @@ function CustomerModal({
                 {activeTab === "payments" && (
                   <div className="cxc-new-tab-panel">
                     <h3>Payments</h3>
+                    {/* Payments carry no source of their own, so show the
+                        customer's original source above them. */}
+                    <div className="cxc-new-kv">
+                      <span>Original Source</span>
+                      <strong>{c.source_label || "Unknown"}</strong>
+                    </div>
                     {payments.length === 0 ? (
                       <div className="cxc-new-empty">No recorded payments.</div>
                     ) : (
@@ -3130,8 +3203,18 @@ function CustomerModal({
                       </strong>
                       <span>Payment Method</span>
                       <strong>{paymentMethod}</strong>
-                      <span>Acquisition Source</span>
+                      <span>Original Source</span>
                       <strong>{c.source_label || "Unknown"}</strong>
+                      <span>Medium</span>
+                      <strong>{c.first_touch_medium || c.utm_medium || "—"}</strong>
+                      <span>Campaign</span>
+                      <strong>
+                        {c.first_touch_campaign || c.utm_campaign || "—"}
+                      </strong>
+                      <span>Original Landing Route</span>
+                      <strong>
+                        {c.first_touch_landing_route || c.landing_page || "—"}
+                      </strong>
                       <span>Lifetime Value</span>
                       <strong className="green">{usd(c.ltv)}</strong>
                       <span>Registered</span>

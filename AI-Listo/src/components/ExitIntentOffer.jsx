@@ -238,6 +238,9 @@ export default function ExitIntentOffer() {
             landingPage: attribution.landingPage || null,
             utm: attribution.utm || {},
             gclid: attribution.gclid || null,
+            // Original acquisition source, kept even when the customer signs up
+            // through this popup rather than the normal form.
+            firstTouch: attribution.firstTouch || null,
           }),
         });
         const data = await res.json().catch(() => ({}));

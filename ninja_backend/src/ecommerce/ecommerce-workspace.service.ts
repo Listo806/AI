@@ -90,6 +90,17 @@ export class EcommerceWorkspaceService {
         ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ
       `);
 
+      // First-touch acquisition, written once at sign-up and never changed.
+      for (const col of [
+        'first_touch_source TEXT',
+        'first_touch_medium TEXT',
+        'first_touch_campaign TEXT',
+        'first_touch_landing_route TEXT',
+        'first_visit_at TIMESTAMPTZ',
+      ]) {
+        await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
+      }
+
       await this.db.query(`
         CREATE TABLE IF NOT EXISTS customer_notes (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -119,6 +130,8 @@ export class EcommerceWorkspaceService {
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
     signup_source, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
     gclid, landing_page, signup_country, trial_ends_at,
+    first_touch_source, first_touch_medium, first_touch_campaign,
+    first_touch_landing_route, first_visit_at,
     created_at, registered_at, upgraded_at, last_seen_at,
     team_id, ecommerce_workspace_id, is_active, deleted_at,
     (SELECT COUNT(*)::int
@@ -139,6 +152,8 @@ export class EcommerceWorkspaceService {
 
   private readonly sourceExpr = `
     CASE
+      WHEN LOWER(COALESCE(first_touch_source,'')) = 'business_card'
+        OR LOWER(COALESCE(utm_source,'')) = 'business_card' THEN 'Business Card'
       WHEN COALESCE(gclid,'') <> '' THEN 'Google Ads'
       WHEN LOWER(COALESCE(utm_source,'')) LIKE '%google%' THEN 'Google Ads'
       WHEN LOWER(COALESCE(signup_source,'')) = 'exit_popup' THEN 'Exit Popup'

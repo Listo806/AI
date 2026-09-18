@@ -27,7 +27,12 @@ const CSV_FIELDS = [
   'recurring_amount',
   'status',
   'payment_status',
+  // Acquisition: where the customer originally came from, and from where.
   'source_label',
+  'first_touch_medium',
+  'first_touch_campaign',
+  'first_touch_landing_route',
+  'first_visit_at',
   'country',
   'seat_count',
   'seats_limit',

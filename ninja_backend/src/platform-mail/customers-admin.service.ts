@@ -103,6 +103,17 @@ export class CustomersAdminService {
     await this.db.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ`,
     );
+    // First-touch acquisition, written once at sign-up and never changed. Read by
+    // the source filter, the customer detail and the CSV export.
+    for (const col of [
+      `first_touch_source TEXT`,
+      `first_touch_medium TEXT`,
+      `first_touch_campaign TEXT`,
+      `first_touch_landing_route TEXT`,
+      `first_visit_at TIMESTAMPTZ`,
+    ]) {
+      await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
+    }
     this.countryColReady = true;
   }
 
@@ -366,6 +377,8 @@ export class CustomersAdminService {
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
     signup_source, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
     gclid, landing_page, signup_country, trial_ends_at, created_at, registered_at, upgraded_at, last_seen_at,
+    first_touch_source, first_touch_medium, first_touch_campaign,
+    first_touch_landing_route, first_visit_at,
     team_id,
     (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id) AS seat_count,
     (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id AND tm.status = 'active') AS seats_used,
@@ -380,6 +393,8 @@ export class CustomersAdminService {
   // breakdown so they always agree.
   private readonly sourceExpr = `
     CASE
+      WHEN LOWER(COALESCE(first_touch_source,'')) = 'business_card'
+        OR LOWER(COALESCE(utm_source,'')) = 'business_card' THEN 'Business Card'
       WHEN COALESCE(gclid,'') <> '' THEN 'Google Ads'
       WHEN LOWER(COALESCE(utm_source,'')) LIKE '%google%' THEN 'Google Ads'
       WHEN LOWER(COALESCE(signup_source,'')) = 'exit_popup' THEN 'Exit Popup'
@@ -840,7 +855,10 @@ export class CustomersAdminService {
     const listParams = params.slice();
     listParams.push(lim, off);
     const { rows } = await this.db.query(
-      `SELECT ${this.cols} FROM users
+      // source_label travels with every row so the acquisition source is there
+      // for the detail panel and the "export selected" download without adding
+      // a column to the table itself.
+      `SELECT ${this.cols}, ${this.sourceExpr} AS source_label FROM users
         WHERE ${where}
         ORDER BY created_at DESC
         LIMIT $${listParams.length - 1} OFFSET $${listParams.length}`,
@@ -1350,6 +1368,14 @@ export class CustomersAdminService {
       nextBillingDate: nextBilling,
       paddleCustomerId: row.paddle_customer_id || null,
       paddleSubscriptionId: row.paddle_subscription_id || null,
+      // Where this customer originally came from, carried onto the subscription
+      // so it is visible next to the plan and the payments.
+      originalSource: row.source_label || null,
+      originalMedium: row.first_touch_medium || row.utm_medium || null,
+      originalCampaign: row.first_touch_campaign || row.utm_campaign || null,
+      originalLandingRoute:
+        row.first_touch_landing_route || row.landing_page || null,
+      firstVisitAt: row.first_visit_at || null,
     };
   }
 
@@ -1707,7 +1733,9 @@ export class CustomersAdminService {
                name = COALESCE($2, name),
                phone = COALESCE($3, phone),
                preferred_language = COALESCE($4, preferred_language),
-               signup_source = COALESCE(NULLIF($5, ''), signup_source),
+               -- Never change where an existing customer originally came from:
+               -- an import only fills the source in when it is still empty.
+               signup_source = COALESCE(NULLIF(signup_source, ''), NULLIF($5, '')),
                updated_at = NOW()
              WHERE id = $1`,
             [existing[0].id, name, phone, language, source],

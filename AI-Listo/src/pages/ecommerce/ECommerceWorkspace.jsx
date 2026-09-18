@@ -823,7 +823,12 @@ function ECommerceSubscriptionsUI() {
             <Send className="cxc-mobile-filter-icon" size={18} aria-hidden="true" />
             <select className="cxc-select" value={filters.source} onChange={(e) => setFilter("source", e.target.value)}>
               <option value="all">All Sources</option>
-              {(summary?.breakdowns?.source || []).map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
+              {/* Always selectable, so the printed business card can be filtered
+                  on before its first customer arrives. */}
+              <option value="Business Card">Business Card</option>
+              {(summary?.breakdowns?.source || [])
+                .filter((s) => s.key !== "Business Card")
+                .map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
             </select>
           </div>
 
