@@ -13,6 +13,7 @@ import {
   Save,
   Stethoscope,
   UserRound,
+  ChevronRight,
 } from "lucide-react";
 import { clinicMedicalApi } from "../../api/clinicMedicalApi";
 import "./ClinicMedical.css";
@@ -240,7 +241,7 @@ export default function ClinicalConsultation() {
           </div>
         </div>
 
-        <div className="cm-actions cmc3-actions">
+        <div className="cm-actions cmc3-actions desktop">
           <button type="button" onClick={save} disabled={saving}>
             <Save />
             {saving ? "Saving…" : "Save Draft"}
@@ -620,6 +621,33 @@ export default function ClinicalConsultation() {
             </div>
           </section>
         </aside>
+      </div>
+      <div className="cm-actions cmc3-actions mobile">
+        <button type="button" onClick={save} disabled={saving}>
+          <div><Save />
+          {saving ? "Saving…" : "Save Draft"}
+          </div>
+          <ChevronRight />
+        </button>
+        <button type="button" onClick={() => setPreviewOpen(true)}>
+          <div>
+          <FileText />
+          Preview Summary
+          </div>
+          <ChevronRight />
+        </button>
+        <button
+          type="button"
+          className="primary"
+          onClick={complete}
+          disabled={saving}
+        >
+          <div>
+          <Stethoscope />
+          Complete &amp; Sign
+          </div>
+          <ChevronRight />
+        </button>
       </div>
 
       {previewOpen && (
