@@ -1,6 +1,11 @@
 [build]
-  command = "npm run build"
+  command = "echo '===== GIT COMMIT =====' && git rev-parse HEAD && echo '===== MAIN.JSX =====' && cat src/main.jsx && echo '===== SEARCH BUY =====' && grep -Rni --exclude-dir=node_modules --exclude-dir=.git \"Buy.jsx\\|components/Buy\\|from.*Buy\" . || true && echo '===== BUILD =====' && npm run build"
   publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 
 [[redirects]]
