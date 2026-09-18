@@ -1,6 +1,6 @@
 # Cortexa, Nuvei and Datafast integration, test results
 
-Date: 17 September 2026
+Date: 18 September 2026
 Environment: live site www.cortexaaicrm.com, backend connected to the Nuvei staging gateway with the development credentials supplied in your documentation email. Those credentials are installed on the backend now. No real card was charged.
 Checkout: your approved design, unchanged. Only the technical payment connection behind it was built and tested.
 
@@ -42,8 +42,10 @@ The subscription flow, activation now and monthly charges after the trial, uses 
 | Partial refund | NOT SUPPORTED BY DATAFAST | Nuvei answers that partial refunds are not supported by the carrier |
 | Payment confirmation emails with purchase details, amount and currency, transaction id and authorization code | PASS | currency now shown on every amount |
 | Link to Pay, link creation with the documented request body | PASS | Nuvei returns an order id and a link |
-| Link to Pay, a card payment completed on the payment page | PASS | 23.00 USD test payment on 17 September, approved by Nuvei, payer emailed, refund accepted; the transaction and authorization codes were sent privately |
-| Link to Pay, the link address Nuvei returns opens | BLOCKED BY NUVEI | that address answers 404 for every order, while the address in Nuvei's documentation opens the same order and takes the payment |
+| Link to Pay, a card payment completed on the payment page | PASS | 23.00 USD test payments on 17 and 18 September, approved by Nuvei, payer emailed, refund accepted; the transaction and authorization codes were sent privately |
+| Link to Pay, the link Cortexa hands out opens | PASS | with the dedicated Link to Pay application Nuvei supplied on 18 September, the link opens straight from our backend |
+| Link to Pay, notification signed by the Link to Pay application | PASS | accepted once, repeat ignored, wrong signature answered 203 |
+| Link to Pay, refund through the application that owns the payment | PASS | the payment belongs to the Link to Pay application and the cards application is refused access to it |
 | Nuvei Checkout, a card payment submitted on the hosted page | PASS | Nuvei accepted the payment, answered 200 |
 | Link to Pay, callback verified, amount checked, payer emailed | PASS | |
 | Link to Pay, refundable through the Refund method | PASS | recorded as a transaction |
@@ -59,17 +61,17 @@ Automated suite on the final build: 37 of 37 payment checks, plus the Checkout, 
 
 Nuvei Checkout. Our backend creates the reference and Nuvei returns the hosted page. The page renders correctly with our application, the order description and the amount. A test card was entered on that page and submitted, and Nuvei's own processing endpoint accepted it and answered 200. The page then waits for Nuvei to notify the merchant, which happens through the callback URL. Until Nuvei registers our callback URL on the application, that last notification cannot reach us. Our side of it is already proven: a correctly signed callback for a Checkout payment marks it paid, sends the payer the confirmation email, rejects a tampered amount and ignores a replay. Screenshot nuvei-hosted-checkout-payment.
 
-Link to Pay. Our backend creates the order with the server credentials from your documentation, which Nuvei has confirmed are the correct ones, and Nuvei returns an order id and a payment URL. That URL answers 404 for every order, including new ones, and it does the same when Nuvei is called directly rather than through our code. Screenshot link-to-pay-404.
+Link to Pay. This is now working. Until 18 September the payment address Nuvei returned for our application answered 404 for every order, which is the screenshot link-to-pay-404. Nuvei then supplied a dedicated Link to Pay application, it was installed on the backend, and the links our backend hands out now open directly on Nuvei's payment page.
 
-The orders themselves are correct. The same order opens on the payment address published in Nuvei's documentation, showing the purchase details and taking the payment. On 17 September a complete Link to Pay payment was made that way: our backend created the link, 23.00 USD was paid with a test card and Nuvei approved it. The same notification Nuvei would send, signed the way Nuvei signs it, then marked the payment as received, sent the payer the confirmation email and was ignored when repeated, and a refund through the Refund method was accepted by Nuvei. So the orders, the payment, the notification handling, the email and the refund all work, and the only fault is the link address Nuvei has configured for this application. The transaction and authorization codes were sent to you privately.
+Both halves were tested by paying. On 17 September a payment was completed on the address published in Nuvei's documentation, and on 18 September a payment was completed on the link our backend produced with the new application. In each case the link showed the purchase details, 23.00 USD was paid with a test card and Nuvei approved it, the payment was recorded and the payer received the confirmation email, a repeated notification was ignored, a wrongly signed one was refused with 203, and a refund through the Refund method was accepted by Nuvei. The payment belongs to the Link to Pay application, and the cards application is refused access to it, so refunds are sent through the application that owns the payment.
 
-That test also confirmed the callback URL is not registered yet, because Nuvei sent no notification for a real, approved payment. The handling was proven by delivering the same message signed exactly as Nuvei signs it.
+The callback URL is still not registered. Nuvei sent no notification for either approved payment. The handling was proven by delivering the same message signed exactly as Nuvei signs it, once for each application.
 
 ## Still needed from Nuvei
 
-The Link to Pay link address. Nuvei has confirmed that the server credentials in the documentation are the correct ones and that the separate Link to Pay credentials in the same email are not to be used. With the correct credentials the orders are created and can be paid, but the link address Nuvei returns for this application answers 404. Nuvei needs to correct that address for the application and confirm the address for production.
+The callback URL still needs to be registered on the applications. Two real approved payments produced no notification.
 
-The callback URL still needs to be registered on the application. A real approved payment produced no notification.
+The production credentials for the Link to Pay application, alongside the production cards credentials.
 
 The 3D Secure challenge screen cannot be triggered on this staging application. Nuvei's own 3D Secure test cards return a plain approval. Nuvei needs to enable 3D Secure on the staging application or provide a card that is enrolled.
 
