@@ -2224,6 +2224,7 @@
    Dark theme is scoped to .crm-dark only.
    ========================================================= */
 @media (max-width: 1024px) {
+  
   .cm-profile-reference .profile-head{flex-direction: row;}
   .crm-dark .cm-dashboard-reference .cmd-panel header button{color: #ff5a00 !important;}
   .cm-dashboard-reference .cmd-stages span{justify-content: flex-start;}
@@ -2362,6 +2363,7 @@
 .consultation .mobile{display: none!important;}
 /* -------------------- DARK THEME -------------------- */
 @media (max-width: 1024px) {
+  body #root .crm-root .cm-patient-modal label{border: 0!important;}
   body.crm-dark .cm-consult-v3 .cmc3-actions button{
     color: #ff5a00!important;
     border-color:#ff5a00 !important;
@@ -2422,7 +2424,9 @@
   body.crm-dark .profile-kpis>div,
   body.crm-dark .cm-consult-v3 .cmc3-ring::after,
   body.crm-dark .cm-consult-v3 .cmc3-empty-alert,
-  body.crm-dark .cm-consult-v3 .cmc3-preview{background: #0b0f19 !important;}
+  body.crm-dark .cm-consult-v3 .cmc3-preview,
+  .crm-dark .cm-modal{background: #0b0f19 !important;}
+
   .crm-dark .cm-dashboard-reference .cmd-note, 
   body.crm-dark .patient-kpis>div,
   body.crm-dark .cm-ai, 
