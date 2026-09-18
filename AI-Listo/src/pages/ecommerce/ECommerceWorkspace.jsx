@@ -531,7 +531,10 @@ function ECommerceSubscriptionsUI() {
   };
   const bulkExportSelected = () => {
     if (!selectedRows.length) return;
-    const fields = ["email", "name", "phone", "language", "plan_label", "billing", "status", "source_label", "ltv"];
+    const fields = ["email", "name", "phone", "language", "plan_label", "billing", "status",
+      // Acquisition, matching the full export on the server.
+      "source_label", "first_touch_medium", "first_touch_campaign", "first_touch_landing_route",
+      "first_visit_at", "country", "ltv"];
     const header = fields.join(",");
     const body = selectedRows.map((r) => fields.map((f) => {
       const v = r[f] == null ? "" : String(r[f]);
@@ -1574,11 +1577,22 @@ function CustomerModal({
                         </div>
                         <strong>{paymentMethod}</strong>
                         <div className="cxc-overview-main-label">
-                          Source / Offer
+                          Original Source
+                        </div>
+                        <strong>{c.source_label || "—"}</strong>
+                        <div className="cxc-overview-main-label">
+                          Medium / Campaign
                         </div>
                         <strong>
-                          {c.source_label || "—"} / {c.offer_used || "standard"}
+                          {c.first_touch_medium || "—"} /{" "}
+                          {c.first_touch_campaign || "—"}
                         </strong>
+                        <div className="cxc-overview-main-label">
+                          Original Landing Route
+                        </div>
+                        <strong>{c.first_touch_landing_route || "—"}</strong>
+                        <div className="cxc-overview-main-label">Offer</div>
+                        <strong>{c.offer_used || "standard"}</strong>
                         <button onClick={updatePayment}>
                           Update Payment Method <ChevronRight size={14} />
                         </button>

@@ -9,6 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
+import { acquisitionView } from '../common/acquisition.util';
 import {
   getPlan,
   normalizePlanId,
@@ -152,8 +153,11 @@ export class EcommerceWorkspaceService {
 
   private readonly sourceExpr = `
     CASE
-      WHEN LOWER(COALESCE(first_touch_source,'')) = 'business_card'
-        OR LOWER(COALESCE(utm_source,'')) = 'business_card' THEN 'Business Card'
+      WHEN LOWER(COALESCE(first_touch_source,'')) = 'business_card' THEN 'Business Card'
+      -- Older customers, recorded before the first visit was kept, still read
+      -- from utm; once a first visit exists it decides the source.
+      WHEN first_visit_at IS NULL
+        AND LOWER(COALESCE(utm_source,'')) = 'business_card' THEN 'Business Card'
       WHEN COALESCE(gclid,'') <> '' THEN 'Google Ads'
       WHEN LOWER(COALESCE(utm_source,'')) LIKE '%google%' THEN 'Google Ads'
       WHEN LOWER(COALESCE(signup_source,'')) = 'exit_popup' THEN 'Exit Popup'
@@ -213,6 +217,7 @@ export class EcommerceWorkspaceService {
         recurring_amount: recurringCents / 100,
         seats_limit: cfg.seats,
         country: row.signup_country || null,
+        ...acquisitionView(row),
         source_label: row.source_label || 'Direct / Organic',
         next_billing: row.next_billing || null,
         ltv: Number(row.ltv || 0),
@@ -237,6 +242,7 @@ export class EcommerceWorkspaceService {
       recurring_amount: 0,
       seats_limit: 1,
       country: row.signup_country || null,
+      ...acquisitionView(row),
       source_label: row.source_label || 'Direct / Organic',
       next_billing: row.next_billing || null,
       ltv: Number(row.ltv || 0),

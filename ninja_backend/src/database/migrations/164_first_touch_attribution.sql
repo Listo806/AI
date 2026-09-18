@@ -14,9 +14,3 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS first_touch_medium TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS first_touch_campaign TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS first_touch_landing_route TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS first_visit_at TIMESTAMPTZ;
-
--- Reporting by acquisition source ("show me every business card customer") is
--- the only query pattern here, and it is always narrowed to a small subset.
-CREATE INDEX IF NOT EXISTS idx_users_first_touch_source
-  ON users (LOWER(first_touch_source))
-  WHERE first_touch_source IS NOT NULL;

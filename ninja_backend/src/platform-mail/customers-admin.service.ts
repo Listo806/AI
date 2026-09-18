@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { PlatformMailerService } from './platform-mailer.service';
 import { UsageService } from '../plans/usage.service';
+import { acquisitionView } from '../common/acquisition.util';
 import {
   PLAN_ORDER,
   getPlan,
@@ -393,8 +394,12 @@ export class CustomersAdminService {
   // breakdown so they always agree.
   private readonly sourceExpr = `
     CASE
-      WHEN LOWER(COALESCE(first_touch_source,'')) = 'business_card'
-        OR LOWER(COALESCE(utm_source,'')) = 'business_card' THEN 'Business Card'
+      WHEN LOWER(COALESCE(first_touch_source,'')) = 'business_card' THEN 'Business Card'
+      -- Customers who registered before the first visit was recorded keep the
+      -- older reading; once a first visit exists, it decides the source and a
+      -- later channel cannot relabel them.
+      WHEN first_visit_at IS NULL
+        AND LOWER(COALESCE(utm_source,'')) = 'business_card' THEN 'Business Card'
       WHEN COALESCE(gclid,'') <> '' THEN 'Google Ads'
       WHEN LOWER(COALESCE(utm_source,'')) LIKE '%google%' THEN 'Google Ads'
       WHEN LOWER(COALESCE(signup_source,'')) = 'exit_popup' THEN 'Exit Popup'
@@ -599,6 +604,7 @@ export class CustomersAdminService {
         seats_limit: seatsLimit,
         seats_used: seatsUsed,
         country: row.signup_country || null,
+        ...acquisitionView(row),
       };
     }
 
@@ -631,6 +637,7 @@ export class CustomersAdminService {
       seats_limit: seatsLimit,
       seats_used: seatsUsed,
       country: row.signup_country || null,
+      ...acquisitionView(row),
     };
   }
 
@@ -1371,10 +1378,9 @@ export class CustomersAdminService {
       // Where this customer originally came from, carried onto the subscription
       // so it is visible next to the plan and the payments.
       originalSource: row.source_label || null,
-      originalMedium: row.first_touch_medium || row.utm_medium || null,
-      originalCampaign: row.first_touch_campaign || row.utm_campaign || null,
-      originalLandingRoute:
-        row.first_touch_landing_route || row.landing_page || null,
+      originalMedium: acquisitionView(row).first_touch_medium,
+      originalCampaign: acquisitionView(row).first_touch_campaign,
+      originalLandingRoute: acquisitionView(row).first_touch_landing_route,
       firstVisitAt: row.first_visit_at || null,
     };
   }

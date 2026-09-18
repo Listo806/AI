@@ -3215,6 +3215,10 @@ function CustomerModal({
                       <strong>
                         {c.first_touch_landing_route || c.landing_page || "—"}
                       </strong>
+                      <span>First Visit</span>
+                      <strong>
+                        {c.first_visit_at ? fmtDate(c.first_visit_at) : "—"}
+                      </strong>
                       <span>Lifetime Value</span>
                       <strong className="green">{usd(c.ltv)}</strong>
                       <span>Registered</span>

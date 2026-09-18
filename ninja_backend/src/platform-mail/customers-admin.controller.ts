@@ -45,7 +45,10 @@ const CSV_FIELDS = [
 
 function csvCell(v: any): string {
   if (v == null) return '';
-  const s = String(v);
+  // A cell that starts with =, +, - or @ is run as a formula by spreadsheet
+  // programs, and several of these columns come from what a visitor typed, so
+  // prefix those with a quote to keep them as plain text.
+  const s = /^[=+\-@]/.test(String(v)) ? `'${String(v)}` : String(v);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

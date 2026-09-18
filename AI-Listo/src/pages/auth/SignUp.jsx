@@ -46,15 +46,26 @@ export default function SignUp() {
           body: JSON.stringify({ email, password, role, language, firstTouch }),
         });
       } catch (err) {
-        // Resilience: an older backend that predates the `language` field
-        // rejects unknown properties with a 400. Retry once without it so
-        // signup can never break while the backend is being updated; the
-        // language just isn't captured until then. Any other error is real.
+        // Resilience: an older backend that predates the `language` or
+        // `firstTouch` fields rejects unknown properties with a 400. Step back
+        // one field at a time so signup can never break while the backend is
+        // being updated; only the extra detail is lost. Any other error is real.
         if (err && err.status === 400) {
-          res = await apiClient.request('/auth/signup', {
-            method: 'POST',
-            body: JSON.stringify({ email, password, role }),
-          });
+          try {
+            res = await apiClient.request('/auth/signup', {
+              method: 'POST',
+              body: JSON.stringify({ email, password, role, language }),
+            });
+          } catch (err2) {
+            if (err2 && err2.status === 400) {
+              res = await apiClient.request('/auth/signup', {
+                method: 'POST',
+                body: JSON.stringify({ email, password, role }),
+              });
+            } else {
+              throw err2;
+            }
+          }
         } else {
           throw err;
         }

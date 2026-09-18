@@ -71,6 +71,44 @@ export function isBusinessCard(source?: string | null): boolean {
 }
 
 /**
+ * The acquisition fields as an admin should read them: the channel in words for
+ * the channels we name, the raw values otherwise, and the older utm columns as a
+ * fallback for customers who registered before this was recorded. One place, so
+ * the customer detail and the CSV export can never disagree.
+ */
+export function acquisitionView(row: any) {
+  const labels = acquisitionLabels(row?.first_touch_source);
+  return {
+    first_touch_medium:
+      labels?.medium || row?.first_touch_medium || row?.utm_medium || null,
+    first_touch_campaign:
+      labels?.campaign || row?.first_touch_campaign || row?.utm_campaign || null,
+    first_touch_landing_route:
+      row?.first_touch_landing_route || row?.landing_page || null,
+    first_visit_at: row?.first_visit_at || null,
+  };
+}
+
+// The columns live in migration 164, which is not auto-run in this environment,
+// so every write path makes sure they exist first. Done once per process.
+let columnsReady = false;
+export async function ensureAcquisitionColumns(db: {
+  query: (sql: string, params?: any[]) => Promise<any>;
+}): Promise<void> {
+  if (columnsReady) return;
+  for (const col of [
+    'first_touch_source TEXT',
+    'first_touch_medium TEXT',
+    'first_touch_campaign TEXT',
+    'first_touch_landing_route TEXT',
+    'first_visit_at TIMESTAMPTZ',
+  ]) {
+    await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
+  }
+  columnsReady = true;
+}
+
+/**
  * Store the first touch for an account that has none yet. Used by sign-up paths
  * that create the user before the attribution is known. Write-once by
  * construction: the UPDATE only matches while the source is still empty, so a
@@ -84,6 +122,10 @@ export async function captureFirstTouch(
   try {
     const ft = firstTouchFromDto(dto);
     if (!ft.source && !ft.landingRoute) return;
+    // The columns ship in migration 164, which is not auto-run here, so make
+    // sure they exist before writing. Without this the UPDATE would fail and,
+    // because the write happens once, the source would be lost for good.
+    await ensureAcquisitionColumns(db);
     await db.query(
       `UPDATE users
           SET first_touch_source = $1,

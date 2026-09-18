@@ -1,5 +1,6 @@
 import { useLocation, Navigate } from "react-router-dom";
 import { buildLocalizedPath, localeCodeFromPath } from "../../i18n/locales";
+import { recordFirstTouch } from "../../utils/track";
 
 /**
  * /card — the address printed on the business card.
@@ -12,37 +13,20 @@ import { buildLocalizedPath, localeCodeFromPath } from "../../i18n/locales";
  * The values are written only when they are not already set, so a returning
  * visitor keeps whatever source first brought them in.
  */
-const CARD_UTM = {
-  attr_utm_source: "business_card",
-  attr_utm_medium: "qr",
-  attr_utm_campaign: "offline",
-};
-
 export const CARD_QUERY =
   "utm_source=business_card&utm_medium=qr&utm_campaign=offline";
 
-function rememberCardVisit() {
-  try {
-    for (const [key, value] of Object.entries(CARD_UTM)) {
-      if (!localStorage.getItem(key)) localStorage.setItem(key, value);
-    }
-    if (!localStorage.getItem("attr_landing_route")) {
-      localStorage.setItem("attr_landing_route", "/card");
-    }
-    if (!localStorage.getItem("attr_landing_page")) {
-      localStorage.setItem("attr_landing_page", `/card?${CARD_QUERY}`);
-    }
-    if (!localStorage.getItem("attr_first_visit_at")) {
-      localStorage.setItem("attr_first_visit_at", new Date().toISOString());
-    }
-  } catch (_e) {
-    /* best-effort: a visitor with storage blocked still reaches the site */
-  }
-}
-
 export default function CardRedirect() {
   const { pathname } = useLocation();
-  rememberCardVisit();
+  // Record the whole visit as one record, and only if this browser has no
+  // earlier first visit: someone who found Cortexa another way first keeps that
+  // original source even if they later scan the card.
+  recordFirstTouch({
+    source: "business_card",
+    medium: "qr",
+    campaign: "offline",
+    landingRoute: pathname,
+  });
   // Keep the language the visitor arrived in: /card goes to /, /es/card to /es.
   const home = buildLocalizedPath("/", localeCodeFromPath(pathname));
   return <Navigate to={`${home}?${CARD_QUERY}`} replace />;
