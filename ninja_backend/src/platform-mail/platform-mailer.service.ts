@@ -25,6 +25,7 @@ export interface SendResult {
 export class PlatformMailerService {
   private readonly logger = new Logger(PlatformMailerService.name);
   private schemaReady = false;
+  private schemaPromise: Promise<void> | null = null;
   private bulkSchemaReady = false;
 
   constructor(
@@ -35,7 +36,29 @@ export class PlatformMailerService {
   // ---- schema (self-healing; migrations are not auto-run here) ----
   async ensureSchema(): Promise<void> {
     if (this.schemaReady) return;
+
+    // Several mail workers/controllers can call ensureSchema() at the same time
+    // during application startup. PostgreSQL's CREATE ... IF NOT EXISTS is not a
+    // concurrency lock: two concurrent CREATE INDEX statements can still race in
+    // pg_class and one may fail with pg_class_relname_nsp_index. Share one in-flight
+    // promise per Nest service instance so only one schema bootstrap runs locally.
+    if (this.schemaPromise) return this.schemaPromise;
+
+    this.schemaPromise = this.ensureSchemaInternal();
     try {
+      await this.schemaPromise;
+    } finally {
+      // Clear only after completion. Successful runs set schemaReady=true; failed
+      // runs may be retried by a later caller.
+      this.schemaPromise = null;
+    }
+  }
+
+  private async ensureSchemaInternal(): Promise<void> {
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
       const userCols = [
         `preferred_language VARCHAR(5) DEFAULT 'en'`,
         `welcome_email_sent_at TIMESTAMPTZ`,
@@ -187,8 +210,33 @@ export class PlatformMailerService {
            ON email_log(campaign_id, user_id) WHERE campaign_id IS NOT NULL`,
       );
       this.schemaReady = true;
-    } catch (err: any) {
-      this.logger.error(`email schema ensure failed: ${err?.message}`);
+        return;
+      } catch (err: any) {
+        const code = String(err?.code || '');
+        const constraint = String(err?.constraint || '');
+        const message = String(err?.message || '');
+
+        // A second process/Render instance may still be bootstrapping the same
+        // relation. SQLSTATE 23505 against PostgreSQL's pg_class name constraint is
+        // a harmless DDL race: wait briefly, then replay the idempotent schema steps.
+        const concurrentDdlRace =
+          code === '23505' &&
+          (constraint === 'pg_class_relname_nsp_index' ||
+            message.includes('pg_class_relname_nsp_index'));
+
+        if (concurrentDdlRace && attempt < maxAttempts) {
+          this.logger.warn(
+            `Concurrent email schema bootstrap detected; retrying (${attempt}/${maxAttempts}).`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, 150 * attempt));
+          continue;
+        }
+
+        this.logger.error(
+          `email schema ensure failed: ${message || 'unknown error'}${code ? ` [${code}]` : ''}`,
+        );
+        return;
+      }
     }
   }
 
