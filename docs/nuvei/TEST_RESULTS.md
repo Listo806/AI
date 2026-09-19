@@ -53,7 +53,10 @@ The subscription flow, activation now and monthly charges after the trial, uses 
 | Access control, administrators exempt from all customer billing checks | PASS | each role tested separately |
 | Checkout text follows the address, English, Spanish and Portuguese | PASS | /checkout, /es/checkout and /pt/checkout, screenshots checkout-english, checkout-spanish, checkout-portuguese |
 | Page language sent to Nuvei Checkout and to Nuvei's card form | PASS | Nuvei serves its card form page marked with the language we send |
-| Card holder and card number labels in the page language | BLOCKED BY NUVEI | fixed in Spanish inside Nuvei's form script, see below |
+| Nuvei Checkout fully in the page language, card labels included | PASS | screenshots languages/checkout_en, checkout_es, checkout_pt |
+| Nuvei Checkout carries our logo and button colour | PASS | the only visual customisation Nuvei supports |
+| Link to Pay in the payer's language | PARTLY | the page follows the payer's browser language; the language we send is ignored today, screenshots languages/linktopay_* |
+| Card labels on the subscription card form, in the page language | BLOCKED BY NUVEI | that form stays Spanish whatever language is sent, screenshots languages/tokenization_* |
 
 Automated suite on the final build: 37 of 37 payment checks, plus the Checkout, Link to Pay, Verify, Delete Card and access control checks.
 
@@ -77,7 +80,13 @@ The 3D Secure challenge screen cannot be triggered on this staging application. 
 
 Nuvei's compatibility table marks Add Card as 3D Secure compatible. On Add Card, Nuvei's own card form sends the 3D Secure browser data and runs any verification step inside the form, so there is nothing for the merchant to pass. Please ask Nuvei to confirm it is active for this account.
 
-The card holder and card number labels read Spanish on every checkout language. Our checkout sends the page language, en, es or pt, to Nuvei's card form, and Nuvei serves the form page marked with that language. The labels stay Spanish because Nuvei's form script, payment_2.14.9, has them fixed as "Nombre del titular" and "Número de tarjeta" and does not translate them. Only Nuvei can change that script. The form sits inside Nuvei's secure frame, so we cannot change it from our side.
+Language, tested on all three payment methods in English, Spanish and Portuguese on 18 September. Screenshots are in `screenshots/languages/`.
+
+Nuvei Checkout is fully translated, card holder and card number included, and it carries our logo and the colour of our Pay button. The language comes from the address the customer is on and is sent when the payment session is created.
+
+The card form used for subscriptions is not translated. It is a different Nuvei component, it stays Spanish whatever language we send, and it sits inside Nuvei's secure frame, so only Nuvei can change it. Nuvei's answer about selecting the language applies to their hosted Checkout, not to this form.
+
+Link to Pay follows the payer's own browser language, which is why the three screenshots differ. The language we send with the link is accepted but ignored today, so it will take effect when Nuvei honours it.
 
 Production credentials and Nuvei's production approval are required before any real card is charged.
 
