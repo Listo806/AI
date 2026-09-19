@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Navigate, useSearchParams } from "react-router-dom";
 
@@ -25,6 +25,10 @@ export default function SignIn({ variant = 'crm' }) {
   const { login, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEcuadorFlow = location.pathname === '/es-ec' || location.pathname.startsWith('/es-ec/');
+  const routePrefix = isEcuadorFlow ? '/es-ec' : '';
+  const funnelPath = (path) => `${routePrefix}${path}`;
   const hasNext = !!searchParams.get('next');
   // Where to land after login. Used by email CTAs (e.g. the $257 promo checkout)
   // so a logged-out customer returns to the offer instead of the dashboard.
@@ -145,11 +149,11 @@ export default function SignIn({ variant = 'crm' }) {
         </form>
 
         <p className="auth-footer" style={{ marginTop: '12px' }}>
-          <Link to="/forgot-password">{t('auth.forgotLink')}</Link>
+          <Link to={funnelPath("/forgot-password")}>{t('auth.forgotLink')}</Link>
         </p>
 
         <p className="auth-footer" style={{ marginTop: '8px' }}>
-          {t('auth.footerText')} <Link to="/sign-up">{t('auth.footerLink')}</Link>
+          {t('auth.footerText')} <Link to={funnelPath("/sign-up")}>{t('auth.footerLink')}</Link>
         </p>
       </div>
     </div>

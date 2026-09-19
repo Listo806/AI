@@ -151,6 +151,12 @@ function detectBrowserCountryCode() {
 export default function StartTrial() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const isEcuadorFlow = window.location.pathname === "/es-ec/trial" || window.location.pathname.startsWith("/es-ec/");
+  const funnelPath = (path) => (isEcuadorFlow ? `/es-ec${path}` : path);
+
+  useEffect(() => {
+    if (isEcuadorFlow) sessionStorage.setItem("cortexa_market", "EC");
+  }, [isEcuadorFlow]);
 
   const [countryCode] = useState(() =>
     detectBrowserCountryCode()
@@ -342,7 +348,7 @@ export default function StartTrial() {
         }
 
         navigate(
-          `/checkout?plan=${encodeURIComponent(
+          `${funnelPath("/checkout")}?plan=${encodeURIComponent(
             validPendingPlan,
           )}&billing=${encodeURIComponent(
             registrationBilling || "monthly",
@@ -378,7 +384,7 @@ export default function StartTrial() {
       });
       trackSignupConversion();
 
-      navigate("/pricing", {
+      navigate(funnelPath("/pricing"), {
         replace: true,
       });
       return;

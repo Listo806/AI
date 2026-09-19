@@ -76,6 +76,7 @@ import EditorialBusinessAIPt from "./pages/editorial/EditorialBusinessAIPt";
 import LocaleLayout from "./components/LocaleLayout";
 import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import Onboarding from "./pages/checkout/Onboarding";
+import EmailVerificationPage from "./pages/auth/EmailVerificationPage";
 
 import CortexaAISetup from "./pages/ai-center/CortexaAISetup";
 import CortexaAI from "./pages/ai-center/CortexaAI";
@@ -281,6 +282,7 @@ function publicRoutes(prefix) {
         element={<PromoBusinessCheckout />}
       />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
+      <Route path={`${p}/verify-email`} element={<EmailVerificationPage />} />
       <Route path={`${p}/onboarding`} element={<Onboarding />} />
     </>
   );
@@ -293,6 +295,9 @@ function AppRoutes() {
           The URL decides the language; LocaleLayout sets it + hreflang/canonical. */}
       <Route element={<LocaleLayout code="en" />}>{publicRoutes("")}</Route>
       <Route element={<LocaleLayout code="es" />}>{publicRoutes("es")}</Route>
+      {/* Ecuador is an explicit campaign market. It uses Spanish content but keeps
+          its own URL namespace all the way through signup and checkout. */}
+      <Route element={<LocaleLayout code="es" />}>{publicRoutes("es-ec")}</Route>
       <Route element={<LocaleLayout code="pt" />}>{publicRoutes("pt")}</Route>
 
       {/* Old-URL redirects (keep existing links working). Portuguese moved from

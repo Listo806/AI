@@ -93,6 +93,14 @@ export function AuthProvider({ children }) {
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
 
         if (redirect) {
+          const verificationPending = String(u.paymentStatus || '').toLowerCase() === 'paid_email_verification_pending' || String(u.accountStatus || '').toLowerCase() === 'paid_email_verification_pending';
+          if (verificationPending && !isInternalAccount(u)) {
+            const path = window.location.pathname;
+            const prefix = path.startsWith('/es-ec/') ? '/es-ec' : path.startsWith('/es/') ? '/es' : path.startsWith('/pt/') ? '/pt' : '';
+            navigate(`${prefix}/verify-email`);
+            return response;
+          }
+
           // Resume checkout: an unpaid owner with a selected plan is sent back to
           // the checkout page instead of the dashboard so they can finish paying.
           const u = response.user || {};
@@ -167,6 +175,7 @@ export function AuthProvider({ children }) {
       if (u && u.id) {
         setUser(u);
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(u));
+        return u;
       }
     } catch (err) {
       console.error('Failed to refresh user:', err);

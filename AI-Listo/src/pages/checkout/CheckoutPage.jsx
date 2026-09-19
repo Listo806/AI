@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   User, Mail, Phone, Layers, CreditCard, Calendar, Lock, ShieldCheck,
-  Edit2, ExternalLink, HelpCircle, Zap,
+  Edit2, ExternalLink, HelpCircle, Zap, Landmark, Copy, MessageCircle, Info,
 } from "lucide-react";
 import { trackEvent, trackPurchase, setUserData } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
@@ -123,8 +123,28 @@ export default function CheckoutPage() {
   // The URL decides the language: /checkout is English, /es/checkout Spanish,
   // /pt/checkout Portuguese.
   const { pathname } = useLocation();
-  const [lang] = useState(() => localeCodeFromPath(pathname));
+  const isEcuadorFlow = pathname === "/es-ec/checkout" || pathname.startsWith("/es-ec/");
+  const [lang] = useState(() => isEcuadorFlow ? "es" : localeCodeFromPath(pathname));
   const tr = t[lang] || t.en;
+  const ec = {
+    bankTitle: "1. Transferencia bancaria",
+    recommended: "Recomendado en Ecuador",
+    bankSub: "Paga hoy tu primer mes y eliminamos la cuota de activación.",
+    transferAmount: "Monto a transferir",
+    paymentReference: "Referencia de pago",
+    bank: "Banco", accountHolder: "Titular de la cuenta", accountType: "Tipo de cuenta",
+    accountNumber: "Número de cuenta", taxId: "RUC", checking: "Corriente",
+    sendConfirmation: "Enviar confirmación de transferencia",
+    verification: "Tu cuenta se activa después de verificar el pago.",
+    or: "O", cardTitle: "2. Tarjeta de crédito o débito",
+    cardSub: "Paga la cuota de activación de ${a} y comienza tu prueba de 14 días.",
+    bankToday: "Transferencia bancaria:", activationWaived: "Cuota de activación eliminada",
+    cardToday: "Tarjeta:", chooseMethod: "Elige tu método de pago a la derecha.",
+  };
+
+  useEffect(() => {
+    if (isEcuadorFlow) sessionStorage.setItem("cortexa_market", "EC");
+  }, [isEcuadorFlow]);
 
   const resolvedPlan = normalizePlan(searchParams.get("plan") || localStorage.getItem("trialPlan"));
   const planIsValid = Boolean(resolvedPlan);
@@ -195,8 +215,9 @@ export default function CheckoutPage() {
     // "logged-in" visitor straight back here without showing the form.
     try { setUser(null); } catch (e) { /* ignore */ }
     // Keep the customer in their language when they come back.
-    const back = buildLocalizedPath("/checkout", lang);
-    navigate(`${buildLocalizedPath("/sign-in", lang)}?next=${encodeURIComponent(back)}`, { replace: true });
+    const back = isEcuadorFlow ? "/es-ec/checkout" : buildLocalizedPath("/checkout", lang);
+    const signIn = isEcuadorFlow ? "/es-ec/sign-in" : buildLocalizedPath("/sign-in", lang);
+    navigate(`${signIn}?next=${encodeURIComponent(back)}`, { replace: true });
   };
   useEffect(() => {
     if (authLoading || !planIsValid) return;
@@ -278,9 +299,21 @@ export default function CheckoutPage() {
     localStorage.setItem("trialPlan", selectedPlan);
     localStorage.removeItem("password");
     clearSetupOffer();
-    localStorage.setItem("cortexa_paid_at", String(Date.now()));
-    try { await refreshUser(); } catch (e) {}
-    navigate("/dashboard/ai-cortexa-setup", { replace: true });
+    // Payment success is not account activation anymore. The backend only marks
+    // the account pending after it has confirmed the Nuvei payment, then sends
+    // the verification email. Never grant CRM access from this browser result.
+    let fresh = null;
+    try { fresh = await refreshUser(); } catch (e) {}
+    const pending = String(fresh?.paymentStatus || "").toLowerCase() === "paid_email_verification_pending" || String(fresh?.accountStatus || "").toLowerCase() === "paid_email_verification_pending";
+    if (pending) {
+      const verifyPath = isEcuadorFlow ? "/es-ec/verify-email" : buildLocalizedPath("/verify-email", lang);
+      navigate(verifyPath, { replace: true });
+      return;
+    }
+    // Callback/reconciliation can land a few moments after the browser result.
+    // Stay in the safe verification flow instead of opening the CRM.
+    const verifyPath = isEcuadorFlow ? "/es-ec/verify-email" : buildLocalizedPath("/verify-email", lang);
+    navigate(verifyPath, { replace: true });
   };
 
   // A customer who already has a live subscription never sees a second
@@ -417,7 +450,7 @@ export default function CheckoutPage() {
       const result = await nuveiActivate({
         planKey: nuveiPlanKey, cardId,
         browserInfo: collectBrowserInfo(),
-        termUrl: `${window.location.origin}/checkout?plan=${selectedPlan}&threeds=return`,
+        termUrl: `${window.location.origin}${isEcuadorFlow ? "/es-ec/checkout" : buildLocalizedPath("/checkout", lang)}?plan=${selectedPlan}&threeds=return`,
         ...(testScenario ? { testScenario } : {}),
       });
       await finishActivation(result);
@@ -453,10 +486,31 @@ export default function CheckoutPage() {
     }, 60000);
   }
 
-  const go = (path) => navigate(buildLocalizedPath(path, lang));
+  const go = (path) => navigate(isEcuadorFlow ? `/es-ec${path}` : buildLocalizedPath(path, lang));
+
+  const paymentReference = `CX-${String(customer.userId || "28471").replace(/[^a-zA-Z0-9]/g, "").slice(-5).toUpperCase() || "28471"}`;
+  const ecBankHolder = import.meta.env.VITE_ECUADOR_BANK_HOLDER || "CORTEXA S-E-S S.A.S.";
+  const ecBankAccount = String(import.meta.env.VITE_ECUADOR_BANK_ACCOUNT || "");
+  const ecRuc = String(import.meta.env.VITE_ECUADOR_RUC || "");
+  const maskEnd = (value, fallback) => value ? `••••••${value.slice(-4)}` : fallback;
+  const copyValue = async (value) => { try { await navigator.clipboard.writeText(String(value)); } catch (_) {} };
+  const whatsappNumber = String(import.meta.env.VITE_ECUADOR_WHATSAPP || "").replace(/\D/g, "");
+  const sendTransferConfirmation = () => {
+    const message = `Hola, realicé mi transferencia de $${money(monthly)} USD. Referencia: ${paymentReference}. Plan: ${tr.planNames[selectedPlan]}.`;
+    if (whatsappNumber) window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    else copyValue(message);
+  };
 
   return (
-    <main className="cxo-page">
+    <main className={`cxo-page ${isEcuadorFlow ? "ec-checkout-page" : ""}`}>
+      {isEcuadorFlow && <>
+        <header className="ec-top"><div><b>Cortexa</b><span>Agentic CRM</span></div><strong><ShieldCheck size={20}/> Pago seguro</strong></header>
+        <div className="ec-steps">
+          <div><i>✓</i><span><b>1. Cuenta</b><small>Completado</small></span></div><em/>
+          <div><i>✓</i><span><b>2. Plan</b><small>Completado</small></span></div><em/>
+          <div><i>3</i><span><b>3. Pago seguro</b><small>Datos de tu pago</small></span></div>
+        </div>
+      </>}
       <div className="cxo-wrap">
         <div className="cxo-grid">
           {/* LEFT */}
@@ -484,17 +538,65 @@ export default function CheckoutPage() {
               <div className="cxo-plan-sub">{usersText}</div>
               <div className="cxo-plan-sub">{tr.workspace}</div>
               <div className="cxo-divider" />
-              <div className="cxo-row"><span>{tr.activationFee}</span><b>${money(setupFee)}</b></div>
-              <div className="cxo-row"><span>{tr.trial}</span><span className="inc">{tr.included}</span></div>
-              <div className="cxo-row"><span>{tr.firstPayment.replace("{date}", firstDate)}</span><b>${money(monthly)}</b></div>
-              <p className="cxo-note">{tr.thenMonthly.replace("{p}", money(monthly))}</p>
-              <div className="cxo-divider" />
-              <div className="cxo-total"><strong>{tr.dueToday}</strong><div className="amt"><em>USD</em><b>${money(setupFee)}</b></div></div>
+              {isEcuadorFlow ? (
+                <>
+                  <div className="ec-plan-option ec-bank-option"><Landmark size={22}/><b>{ec.bankToday}</b><span><strong>${money(monthly)} hoy</strong><small>{ec.activationWaived}</small></span></div>
+                  <div className="ec-plan-option"><CreditCard size={22}/><b>{ec.cardToday}</b><span><strong>${money(setupFee)} hoy — prueba de 14 días</strong><small>Luego ${money(monthly)}/mes</small></span></div>
+                  <div className="ec-plan-help"><Info size={17}/>{ec.chooseMethod}</div>
+                </>
+              ) : (
+                <>
+                  <div className="cxo-row"><span>{tr.activationFee}</span><b>${money(setupFee)}</b></div>
+                  <div className="cxo-row"><span>{tr.trial}</span><span className="inc">{tr.included}</span></div>
+                  <div className="cxo-row"><span>{tr.firstPayment.replace("{date}", firstDate)}</span><b>${money(monthly)}</b></div>
+                  <p className="cxo-note">{tr.thenMonthly.replace("{p}", money(monthly))}</p>
+                  <div className="cxo-divider" />
+                  <div className="cxo-total"><strong>{tr.dueToday}</strong><div className="amt"><em>USD</em><b>${money(setupFee)}</b></div></div>
+                </>
+              )}
             </section>
           </div>
 
           {/* RIGHT */}
           <div className="cxo-col cxo-right-col">
+            {isEcuadorFlow ? (
+              <div className="ec-payment-stack">
+                <section className="cxo-card ec-bank-card">
+                  <div className="ec-pay-head"><div className="cxo-icon ec-bank-icon"><Landmark size={27}/></div><div><h2>{ec.bankTitle} <span>{ec.recommended}</span></h2><p>{ec.bankSub}</p></div></div>
+                  <div className="ec-bank-top">
+                    <div><small>{ec.transferAmount}</small><strong>${money(monthly)}</strong><button onClick={()=>copyValue(money(monthly))}><Copy size={16}/></button></div>
+                    <div><small>{ec.paymentReference}</small><strong>{paymentReference}</strong><button onClick={()=>copyValue(paymentReference)}><Copy size={16}/></button></div>
+                  </div>
+                  <div className="ec-bank-details">
+                    {[
+                      [ec.bank,"Banco Pichincha","Banco Pichincha"],
+                      [ec.accountHolder,ecBankHolder,ecBankHolder],
+                      [ec.accountType,ec.checking,ec.checking],
+                      [ec.accountNumber,maskEnd(ecBankAccount,"••••••4821"),ecBankAccount],
+                      [ec.taxId,ecRuc ? `${ecRuc.slice(0,3)}•••••••${ecRuc.slice(-3)}` : "179•••••••001",ecRuc],
+                    ].map(([label,value,copy])=><div key={label}><span>{label}:</span><b>{value}</b>{copy && <button onClick={()=>copyValue(copy)}><Copy size={15}/></button>}</div>)}
+                  </div>
+                  <button className="ec-whatsapp" onClick={sendTransferConfirmation}><MessageCircle size={21}/>{ec.sendConfirmation}</button>
+                  <p className="ec-verify"><Info size={16}/>{ec.verification}</p>
+                </section>
+                <div className="ec-or"><span/>{ec.or}<span/></div>
+                <section className="cxo-card cxo-payment-card ec-card-payment">
+                  <div className="cxo-chead">
+                    <div className="cxo-icon"><CreditCard size={20} /></div>
+                    <div className="cxo-chead-copy"><h2>{ec.cardTitle}</h2><p>{ec.cardSub.replace("{a}", money(setupFee))}</p></div>
+                    <CardBrands />
+                  </div>
+                  {config && !config.enabled ? <p className="cxo-err">{tr.unavailable}</p> : <>
+                    <div id="nuvei-card-form" className="cxo-nuvei-host" />
+                    <label className="cxo-consent"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/><span>{tr.agreePrefix} <a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a>.</span></label>
+                    {errorMsg && <div className="cxo-err">{errorMsg}</div>}
+                    <button className="cxo-pay" onClick={payNow} disabled={!formReady || paying || processing || !consent}><Lock size={17}/>{processing ? tr.processing : tr.paySecurely.replace("{a}", money(setupFee))}</button>
+                    <div className="cxo-badges"><div className="cxo-badge"><ShieldCheck size={18}/>{tr.tokenization}</div><div className="cxo-badge"><Lock size={18}/>{tr.threeds}</div></div>
+                    <div className="cxo-processedby">{tr.processedBy}</div>
+                  </>}
+                </section>
+              </div>
+            ) : (
             <section className="cxo-card cxo-payment-card">
               <div className="cxo-chead">
                 <div className="cxo-icon"><CreditCard size={20} /></div>
@@ -528,14 +630,15 @@ export default function CheckoutPage() {
                 </>
               )}
             </section>
+            )}
           </div>
         </div>
 
-        <div className="cxo-next">
+        {!isEcuadorFlow && <div className="cxo-next">
           <div className="cxo-next-item"><div className="cxo-next-badge"><Zap size={17} /></div><div><b>{tr.nextTitle}</b><small>{tr.nextSub}</small></div></div>
           <div className="cxo-next-item"><div className="cxo-next-badge">1</div><div><b>{tr.next1}</b><small>{tr.next1s}</small></div></div>
           <div className="cxo-next-item"><div className="cxo-next-badge">2</div><div><b>{tr.next2}</b><small>{tr.next2s}</small></div></div>
-        </div>
+        </div>}
       </div>
     </main>
   );

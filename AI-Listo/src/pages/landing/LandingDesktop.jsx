@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   UserPlus,
@@ -234,12 +234,20 @@ const CUSTOMER_EXPERIENCES_COPY = {
 };
 
 export default function Landing() {
+  const { pathname } = useLocation();
+  const isEcuadorFlow = pathname === "/es-ec" || pathname.startsWith("/es-ec/");
   const [lang, setLang] = useState(() => {
+    if (isEcuadorFlow) return "es";
     return localStorage.getItem("cortexa_lang") || "en";
   });
   const [langOpen, setLangOpen] = useState(false);
   const [activeFAQ, setActiveFAQ] = useState(0);
   const { isAuthenticated } = useAuth();
+  const ecPath = (path) => (isEcuadorFlow ? `/es-ec${path}` : path);
+
+  useEffect(() => {
+    if (isEcuadorFlow) sessionStorage.setItem("cortexa_market", "EC");
+  }, [isEcuadorFlow]);
 
   const switchLocale = useLocaleSwitch();
   const handleLangChange = (newLang) => {
@@ -1636,7 +1644,7 @@ export default function Landing() {
                 </HashLink>
               );
             })}
-            <a className="nav-menu" href="/pricing">
+            <a className="nav-menu" href={ecPath("/pricing")}>
               {tr.pricing}
             </a>
             <a className="nav-menu" href="/editorial/the-end-of-legacy-crm">
@@ -1648,7 +1656,7 @@ export default function Landing() {
           </nav>
 
           <div className="cx-actions">
-            <a href="/trial?flow=free-access&plan=free" className="cx-btn cx-btn-primary- small">
+            <a href={ecPath("/trial?flow=free-access&plan=free")} className="cx-btn cx-btn-primary- small">
               {tr.trial}
             </a>
 
@@ -1711,7 +1719,7 @@ export default function Landing() {
                 Dashboard
               </Link>
             ) : (
-              <Link to="/sign-in" className="cx-login">
+              <Link to={ecPath("/sign-in")} className="cx-login">
                 {tr.login}
               </Link>
             )}
@@ -1736,7 +1744,7 @@ export default function Landing() {
               </div>
               <div className="hero-inline hero-inline-free-access">
                 <a
-                  href="/trial?flow=free-access&plan=free"
+                  href={ecPath("/trial?flow=free-access&plan=free")}
                   className="hero-btn hero-btn-trial hero-btn-free-access-main"
                 >
                   {tr.heroCTA}
@@ -1905,7 +1913,7 @@ export default function Landing() {
           </div>
 
           <p className="cx-ws-connected">{tr.workspaceSection.connected}</p>
-          <a className="cx-ws-explore" href="/trial?flow=free-access&plan=free">
+          <a className="cx-ws-explore" href={ecPath("/trial?flow=free-access&plan=free")}>
             {tr.workspaceSection.explore} <ArrowRight size={18} />
           </a>
           <p className="cx-ws-note">{tr.workspaceSection.note}</p>
@@ -2179,7 +2187,7 @@ export default function Landing() {
               <strong>{tr.revenueActionTitleAccent}</strong>
             </h2>
             <p className="revenue-action-sub">{tr.revenueActionSub}</p>
-            <a href="/trial?flow=free-access&plan=free" className="revenue-action-btn">
+            <a href={ecPath("/trial?flow=free-access&plan=free")} className="revenue-action-btn">
               {tr.heroCTA}
             </a>
           </div>
@@ -2238,7 +2246,7 @@ export default function Landing() {
 
           <div className="cx-customer-experiences-cta">
             <p>{customerExperience.ready}</p>
-            <a href="/trial?flow=free-access&plan=free" className="cx-customer-get-started">
+            <a href={ecPath("/trial?flow=free-access&plan=free")} className="cx-customer-get-started">
               <span>{customerExperience.cta}</span>
               <ArrowRight size={24} />
             </a>
@@ -2310,7 +2318,7 @@ export default function Landing() {
             {tr.finalDesc} <span className="text-os">{tr.finalDesc1}</span>
           </p>
 
-          <a href="/trial?flow=free-access&plan=free" className="cx-btn cx-btn-secondary">
+          <a href={ecPath("/trial?flow=free-access&plan=free")} className="cx-btn cx-btn-secondary">
             <Zap size={22} />
             {tr.heroCTA}
           </a>
@@ -2342,7 +2350,7 @@ export default function Landing() {
 
                 <p>{tr.footerDescription}</p>
 
-                <a href="/trial?flow=free-access&plan=free" className="btn-primary">
+                <a href={ecPath("/trial?flow=free-access&plan=free")} className="btn-primary">
                   <Zap size={18} />
                   {tr.heroCTA}
                 </a>
@@ -2382,7 +2390,7 @@ export default function Landing() {
                     </HashLink>
                   </li>
                   <li>
-                    <a href="/pricing">{tr.pricing}</a>
+                    <a href={ecPath("/pricing")}>{tr.pricing}</a>
                   </li>
                   <li>
                     <a href="/editorial/the-end-of-legacy-crm">
@@ -2396,7 +2404,7 @@ export default function Landing() {
                 <h3>{tr.getStarted}</h3>
                 <ul>
                   <li>
-                    <a href="/trial?flow=free-access&plan=free">{tr.getStarted}</a>
+                    <a href={ecPath("/trial?flow=free-access&plan=free")}>{tr.getStarted}</a>
                   </li>
                   <li>
                     <a href="/sign-in">{tr.login}</a>

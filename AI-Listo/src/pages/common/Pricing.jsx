@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
 import "./Common.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 import { trackEvent } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
@@ -1199,6 +1199,10 @@ export default function PricingPage() {
   const pv3 = pricingV3[lang] || pricingV3.en;
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEcuadorFlow = location.pathname === "/es-ec" || location.pathname.startsWith("/es-ec/");
+  const routePrefix = isEcuadorFlow ? "/es-ec" : "";
+  const funnelPath = (path) => `${routePrefix}${path}`;
   const { user, setUser } = useAuth();
   const cycle = billingCycle === "annually" ? "annual" : "monthly";
 
@@ -1326,7 +1330,7 @@ export default function PricingPage() {
         planKey === "free" ? "free" : cycle,
       );
 
-      navigate("/trial?from=pricing");
+      navigate(`${funnelPath("/trial")}?from=pricing`);
       return;
     }
 
@@ -1356,7 +1360,7 @@ export default function PricingPage() {
         }
 
         navigate(
-          `/checkout?plan=${encodeURIComponent(selectedPlan)}&billing=${cycle}&source=trial`,
+          `${funnelPath("/checkout")}?plan=${encodeURIComponent(selectedPlan)}&billing=${cycle}&source=trial`,
           { replace: true },
         );
       } catch (error) {
@@ -1368,7 +1372,7 @@ export default function PricingPage() {
           localStorage.removeItem("trialUserId");
           localStorage.setItem("trialPlan", planKey);
           try { setUser(null); } catch (e) { /* ignore */ }
-          navigate("/sign-in?next=/pricing");
+          navigate(`${funnelPath("/sign-in")}?next=${encodeURIComponent(funnelPath("/pricing"))}`);
           return;
         }
 
@@ -1434,7 +1438,7 @@ export default function PricingPage() {
                 <p className="cx-pricing-v3-desc">{pv3.plans.solo.desc}</p>
                 {renderPaidPrice("solo")}
                 <Link
-                  to="/trial?from=pricing"
+                  to={`${funnelPath("/trial")}?from=pricing`}
                   className="cx-pricing-v3-cta"
                   onClick={(e) => onPlanCta(e, "solo")}
                 >
@@ -1465,7 +1469,7 @@ export default function PricingPage() {
                 <p className="cx-pricing-v3-desc">{pv3.plans.business.desc}</p>
                 {renderPaidPrice("team")}
                 <Link
-                  to="/trial?from=pricing"
+                  to={`${funnelPath("/trial")}?from=pricing`}
                   className="cx-pricing-v3-cta cx-pricing-v3-cta-business"
                   onClick={(e) => onPlanCta(e, "team")}
                 >
@@ -1491,7 +1495,7 @@ export default function PricingPage() {
                 <p className="cx-pricing-v3-desc">{pv3.plans.scale.desc}</p>
                 {renderPaidPrice("growth")}
                 <Link
-                  to="/trial?from=pricing"
+                  to={`${funnelPath("/trial")}?from=pricing`}
                   className="cx-pricing-v3-cta"
                   onClick={(e) => onPlanCta(e, "growth")}
                 >

@@ -97,6 +97,12 @@ export default function DashboardLayout() {
     // check, no subscription check, no checkout redirect.
     if (isInternalAccount(user)) return;
     const status = String(user.paymentStatus || "").toLowerCase();
+    if (status === 'paid_email_verification_pending' || String(user.accountStatus || '').toLowerCase() === 'paid_email_verification_pending') {
+      const lang = String(user.preferredLanguage || 'en').toLowerCase();
+      const prefix = /\/es-ec(?:[/?#]|$)/i.test(String(user.landingPage || '')) ? '/es-ec' : lang === 'es' ? '/es' : lang === 'pt' ? '/pt' : '';
+      navigate(`${prefix}/verify-email`, { replace: true });
+      return;
+    }
     // A subscription in its 14-day trial is a paid account (the backend's
     // resolveEffectivePlan treats "trialing" as paid); never bounce it to checkout.
     const paid = status === "active" || status === "paid" || status === "trialing";
