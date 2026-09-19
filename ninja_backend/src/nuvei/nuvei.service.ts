@@ -43,6 +43,7 @@ interface NuveiPlan {
 
 export type SubStatus =
   | 'pending_activation'
+  | 'verification_pending'
   | 'trialing'
   | 'active'
   | 'payment_failed'
@@ -249,10 +250,6 @@ export class NuveiService {
     await this.db.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS nuvei_subscription_id UUID`,
     );
-    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_payment_status VARCHAR(32)`);
-    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ`);
-    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_status VARCHAR(48) DEFAULT 'registered'`);
-    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_confirmed_at TIMESTAMPTZ`);
 
     // One LIVE subscription per customer, enforced by the database: two
     // activations approved at the same instant cannot both become live.
@@ -282,6 +279,11 @@ export class NuveiService {
         `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_sub_one_live_uidx
            ON nuvei_subscriptions (user_id)
            WHERE status IN ('trialing','active')`,
+      );
+      await this.db.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_sub_one_entitlement_uidx
+           ON nuvei_subscriptions (user_id)
+           WHERE status IN ('verification_pending','trialing','active')`,
       );
     } catch (err: any) {
       // Never block startup on this hardening step.
@@ -366,7 +368,7 @@ export class NuveiService {
                 ORDER BY t.created_at DESC LIMIT 1) AS activation_transaction_id
          FROM nuvei_subscriptions s
         WHERE s.user_id = $1
-        ORDER BY (s.status IN ('trialing','active')) DESC,
+        ORDER BY (s.status IN ('verification_pending','trialing','active')) DESC,
                  (s.status = 'pending_activation' AND s.created_at > NOW() - interval '48 hours') DESC,
                  s.created_at DESC
         LIMIT 1`,
@@ -447,7 +449,7 @@ export class NuveiService {
       );
       const plan = this.plan(sub.plan_key);
       const outcome = await this.activateLate(sub, plan, tx);
-      if (outcome === 'activated') return plan.trialDays > 0 ? 'trialing' : 'active';
+      if (outcome === 'verification_pending') return 'verification_pending';
       return outcome === 'duplicate_refunded' ? 'refunded' : 'payment_failed';
     }
     if (this.isDefinitiveFailure(info.body)) {
@@ -934,7 +936,7 @@ export class NuveiService {
     // second subscription (double monthly billing) and overwrote the plan.
     const { rows: live } = await this.db.query(
       `SELECT id, plan_key, status FROM nuvei_subscriptions
-        WHERE user_id = $1 AND status IN ('trialing','active')
+        WHERE user_id = $1 AND status IN ('verification_pending','trialing','active')
         ORDER BY created_at DESC LIMIT 1`,
       [input.userId],
     );
@@ -1091,7 +1093,7 @@ export class NuveiService {
         plan,
         tx,
       );
-      if (outcome !== 'activated') {
+      if (outcome !== 'verification_pending') {
         // Two activations raced each other; this one was refunded (or flagged).
         return {
           status: outcome === 'duplicate_refunded' ? 'refunded' : 'payment_failed',
@@ -1101,9 +1103,10 @@ export class NuveiService {
         };
       }
       return {
-        status: plan.trialDays > 0 ? 'trialing' : 'active',
+        status: 'verification_pending',
         subscriptionId,
         transactionId: tx.id,
+        message: 'Payment received. Verify your email to activate your account.',
       };
     }
 
@@ -1324,59 +1327,39 @@ export class NuveiService {
     plan: NuveiPlan,
     tx: any,
   ): Promise<void> {
-    const now = new Date();
-    // With a trial, the first monthly charge lands at the end of the trial and
-    // the activation fee is separate. With NO trial (e.g. the $257 promo), the
-    // activation charge IS the first month, so the next charge is one month out.
-    let nextBilling: Date;
-    if (plan.trialDays > 0) {
-      nextBilling = new Date(now.getTime() + plan.trialDays * 24 * 60 * 60 * 1000);
-    } else {
-      nextBilling = this.addMonths(now, 1);
-    }
-    const trialEnd = plan.trialDays > 0 ? nextBilling : null;
-    const status: SubStatus = plan.trialDays > 0 ? 'trialing' : 'active';
-    // Atomic: only a subscription still awaiting activation flips. A callback
-    // and the pending reconcile racing each other can activate (and email)
-    // the customer exactly once.
-    const { rows } = await this.db.query(
-      `UPDATE nuvei_subscriptions
-         SET status = $2,
-             trial_end = $3,
-             next_billing_date = $4,
-             last_charge_at = NOW(),
-             updated_at = NOW()
-       WHERE id = $1 AND status IN ('pending_activation','payment_failed')
-       RETURNING user_id, email, plan_key, provision_plan, activation_amount, monthly_amount`,
-      [subscriptionId, status, trialEnd, nextBilling],
-    );
-    const sub = rows[0];
-    if (!sub) return;
+    // Nuvei approval proves payment, not account activation. Hold the paid
+    // subscription until email verification; do not start the trial/billing
+    // clock or grant CRM/workspace access here.
+    let userId: string | null = null;
 
-    // A new subscription replaces an older one that was still being retried
-    // (past due / suspended): close it so it can never bill again.
-    await this.db.query(
-      `UPDATE nuvei_subscriptions
-          SET status = 'canceled', next_billing_date = NULL,
-              canceled_at = COALESCE(canceled_at, NOW()), updated_at = NOW()
-        WHERE user_id = $1 AND id <> $2 AND status IN ('past_due','suspended')`,
-      [sub.user_id, subscriptionId],
-    );
+    await this.db.transaction(async (client) => {
+      const { rows } = await client.query(
+        `UPDATE nuvei_subscriptions
+            SET status='verification_pending',
+                trial_end=NULL, next_billing_date=NULL,
+                last_charge_at=NOW(), updated_at=NOW()
+          WHERE id=$1 AND status IN ('pending_activation','payment_failed')
+          RETURNING user_id,email,plan_key,provision_plan,activation_amount`,
+        [subscriptionId],
+      );
+      const sub = rows[0];
+      if (!sub) return;
+      userId = String(sub.user_id);
 
-    await this.provisionAccount({
-      userId: sub.user_id,
-      subscriptionId,
-      plan: sub.provision_plan,
-      paymentStatus: 'paid_email_verification_pending',
-      finalPaymentStatus: plan.trialDays > 0 ? 'trialing' : 'active',
-      trialEnd: plan.trialDays > 0 ? nextBilling : null,
+      await client.query(
+        `UPDATE users
+            SET plan=$2, checkout_status='paid', nuvei_subscription_id=$3, updated_at=NOW()
+          WHERE id=$1`,
+        [sub.user_id, normalizePlanId(sub.provision_plan), subscriptionId],
+      );
     });
-    await this.mirrorBilling(subscriptionId, 'active', nextBilling);
 
-    // Payment is confirmed, but CRM/trial access stays locked until the customer
-    // proves ownership of the email address. This call is idempotent across
-    // immediate approval, callback retries and reconciliation races.
-    await this.mailer.beginPaidEmailVerification(sub.user_id);
+    if (!userId) return;
+    const finalStatus: 'trialing' | 'active' = plan.trialDays > 0 ? 'trialing' : 'active';
+    // Idempotent initial-email claim inside PlatformMailerService. A crash here
+    // is recoverable: a duplicate callback sees verification_pending and calls
+    // this method below again through the callback branch.
+    await this.mailer.beginPaidEmailVerification(userId, finalStatus);
   }
 
   /**
@@ -1390,17 +1373,17 @@ export class NuveiService {
     sub: any,
     plan: NuveiPlan,
     tx: any,
-  ): Promise<'activated' | 'duplicate_refunded' | 'duplicate_needs_refund'> {
+  ): Promise<'verification_pending' | 'duplicate_refunded' | 'duplicate_needs_refund'> {
     const { rows: live } = await this.db.query(
       `SELECT id FROM nuvei_subscriptions
-        WHERE user_id = $1 AND id <> $2 AND status IN ('trialing','active','past_due')
+        WHERE user_id = $1 AND id <> $2 AND status IN ('verification_pending','trialing','active','past_due')
         LIMIT 1`,
       [sub.user_id, sub.id],
     );
     if (!live[0]) {
       try {
         await this.markActivated(sub.id, plan, tx);
-        return 'activated';
+        return 'verification_pending';
       } catch (err: any) {
         // The database refused a second live subscription (a concurrent
         // activation won the race): fall through and refund this charge.
@@ -2209,6 +2192,16 @@ export class NuveiService {
           if (sub.status === 'pending_activation') await this.setSubStatus(sub.id, 'payment_failed');
           return { handled: 'reversal_noted', verified: true };
         }
+        if (confirmed && sub.status === 'verification_pending') {
+          // Idempotent recovery: if the first callback committed payment but
+          // crashed before the initial verification email, this call claims it.
+          const p = this.plan(sub.plan_key);
+          await this.mailer.beginPaidEmailVerification(
+            sub.user_id,
+            p.trialDays > 0 ? 'trialing' : 'active',
+          );
+          return { handled: 'verification_pending', verified: true };
+        }
         if (confirmed && ['trialing', 'active'].includes(sub.status)) {
           // Already activated; a retry after a half-done activation must still
           // leave the account provisioned (provisionAccount is idempotent).
@@ -2537,7 +2530,7 @@ export class NuveiService {
         [txRow.id],
       );
     }
-    if (['trialing', 'active', 'past_due', 'suspended', 'pending_activation'].includes(sub.status)) {
+    if (['verification_pending', 'trialing', 'active', 'past_due', 'suspended', 'pending_activation'].includes(sub.status)) {
       await this.revokeForRefund(sub.id);
       const plan = this.plan(sub.plan_key);
       await this.sendConfirmation({
@@ -3260,15 +3253,13 @@ export class NuveiService {
     userId: string;
     subscriptionId: string;
     plan: string;
-    paymentStatus: 'trialing' | 'active' | 'paid_email_verification_pending';
-    finalPaymentStatus?: 'trialing' | 'active';
+    paymentStatus: 'trialing' | 'active';
     trialEnd: Date | null;
   }): Promise<void> {
     const planId = normalizePlanId(input.plan);
     await this.db.query(
       `UPDATE users
          SET payment_status = $2,
-             pending_payment_status = $6,
              is_active = true,
              plan = $3,
              checkout_status = 'paid',
@@ -3276,7 +3267,7 @@ export class NuveiService {
              trial_ends_at = CASE WHEN $5::timestamptz IS NOT NULL THEN $5::timestamptz ELSE trial_ends_at END,
              updated_at = NOW()
        WHERE id = $1`,
-      [input.userId, input.paymentStatus, planId, input.subscriptionId, input.trialEnd, input.finalPaymentStatus || null],
+      [input.userId, input.paymentStatus, planId, input.subscriptionId, input.trialEnd],
     );
   }
 

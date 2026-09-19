@@ -1,10 +1,11 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
+import type { PoolClient } from 'pg';
 import { DatabaseService } from '../database/database.service';
 import { ConfigService } from '../config/config.service';
 import { renderTemplate, TemplateName, TemplateVars } from './templates';
-import { getPlan } from '../plans/plan-config';
+import { getPlan, getSeatLimit } from '../plans/plan-config';
 
 export interface SendResult {
   sent: boolean;
@@ -23,6 +24,38 @@ export interface SendResult {
 // nothing throws to the caller.
 @Injectable()
 export class PlatformMailerService {
+  private paidActivationHandler:
+    | {
+        activate: (
+          client: PoolClient,
+          userId: string,
+        ) => Promise<{
+          subscriptionId: string;
+          plan: string;
+          paymentStatus: 'trialing' | 'active';
+          trialEnd: Date | null;
+          nextBilling: Date | null;
+        } | null>;
+        afterCommit?: (result: any) => Promise<void>;
+      }
+    | null = null;
+
+  registerPaidActivationHandler(handler: {
+    activate: (
+      client: PoolClient,
+      userId: string,
+    ) => Promise<{
+      subscriptionId: string;
+      plan: string;
+      paymentStatus: 'trialing' | 'active';
+      trialEnd: Date | null;
+      nextBilling: Date | null;
+    } | null>;
+    afterCommit?: (result: any) => Promise<void>;
+  }): void {
+    this.paidActivationHandler = handler;
+  }
+
   private readonly logger = new Logger(PlatformMailerService.name);
   private schemaReady = false;
   private schemaPromise: Promise<void> | null = null;
@@ -588,21 +621,21 @@ export class PlatformMailerService {
     const result = await this.sendCustomEmail({ to:u.email, userId, subject:copy.subject, html:copy.html, text:copy.text, template:'email_verification', language:u.lang });
     if (result.sent) {
       await this.db.query(`UPDATE users SET verification_email_sent_at=COALESCE(verification_email_sent_at,NOW()), verification_email_resent_at=CASE WHEN $2 <> 'initial' THEN NOW() ELSE verification_email_resent_at END WHERE id=$1`, [userId, kind]);
-      await this.activationEvent(userId, kind === 'initial' ? 'verification_email_sent' : kind === 'resend' ? 'verification_email_resent' : 'pending_email_address_changed');
+      await this.activationEvent(userId, kind === 'initial' ? 'verification_email_sent' : kind === 'resend' ? 'verification_email_resent' : 'verification_email_sent');
     }
     return { sent:result.sent, email:u.email, maskedEmail:this.maskEmail(u.email), message:result.sent ? 'A new verification email was sent.' : 'The verification email could not be sent.' };
   }
 
-  async beginPaidEmailVerification(userId: string): Promise<void> {
+  async beginPaidEmailVerification(userId: string, finalPaymentStatus: 'trialing' | 'active' = 'active'): Promise<void> {
     await this.ensurePaidVerificationSchema();
     // Atomic first-callback claim. Duplicate Nuvei notifications see an existing
     // payment_confirmed_at and never send a second verification email.
     const claim = await this.db.query(
       `UPDATE users SET payment_confirmed_at=COALESCE(payment_confirmed_at,NOW()),
                         account_status='paid_email_verification_pending',
-                        payment_status='paid_email_verification_pending', checkout_status='paid', updated_at=NOW()
+                        payment_status='paid_email_verification_pending', pending_payment_status=$2, checkout_status='paid', updated_at=NOW()
         WHERE id=$1 AND email_verified_at IS NULL AND payment_confirmed_at IS NULL
-        RETURNING id`, [userId]);
+        RETURNING id`, [userId, finalPaymentStatus]);
     if (!claim.rows.length) return;
     await this.activationEvent(userId, 'payment_confirmed');
     await this.issuePaidVerification(userId, 'initial');
@@ -625,31 +658,198 @@ export class PlatformMailerService {
     if(!u?.payment_confirmed_at || u.email_verified_at) throw new ForbiddenException('This email address can no longer be changed from verification.');
     const dup=await this.db.query(`SELECT 1 FROM users WHERE LOWER(email)=LOWER($1) AND id<>$2 LIMIT 1`,[email,userId]);
     if(dup.rows.length) throw new ConflictException('That email address is already registered.');
-    await this.db.query(`UPDATE email_verification_tokens SET invalidated_at=NOW() WHERE user_id=$1 AND used_at IS NULL AND invalidated_at IS NULL`,[userId]);
-    await this.db.query(`UPDATE users SET email=$2,pending_email_changed_at=NOW(),verification_email_resent_at=NULL,updated_at=NOW() WHERE id=$1`,[userId,email]);
-    await this.activationEvent(userId,'pending_email_address_changed');
+    try {
+      await this.db.transaction(async (client) => {
+        await client.query(`UPDATE email_verification_tokens SET invalidated_at=NOW() WHERE user_id=$1 AND used_at IS NULL AND invalidated_at IS NULL`,[userId]);
+        await client.query(`UPDATE users SET email=$2,pending_email_changed_at=NOW(),verification_email_resent_at=NULL,updated_at=NOW() WHERE id=$1 AND email_verified_at IS NULL`,[userId,email]);
+      });
+    } catch (err: any) {
+      if (err?.code === '23505') throw new ConflictException('That email address is already registered.');
+      throw err;
+    }
+    await this.activationEvent(userId,'email_changed');
     return this.issuePaidVerification(userId,'email_changed');
+  }
+
+  private addBillingMonthsUtc(d: Date, months: number): Date {
+    const r = new Date(d);
+    const day = r.getUTCDate();
+    r.setUTCDate(1);
+    r.setUTCMonth(r.getUTCMonth() + months);
+    const last = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + 1, 0)).getUTCDate();
+    r.setUTCDate(Math.min(day, last));
+    return r;
   }
 
   async verifyPaidEmailToken(rawToken: string) {
     await this.ensurePaidVerificationSchema();
-    const raw=String(rawToken||'').trim(); if(!raw) throw new BadRequestException('Invalid verification link.');
-    const hash=this.verificationHash(raw);
-    const { rows }=await this.db.query(`SELECT t.id,t.user_id,t.expires_at,t.used_at,t.invalidated_at,u.email_verified_at,u.payment_confirmed_at,u.account_status,u.pending_payment_status FROM email_verification_tokens t JOIN users u ON u.id=t.user_id WHERE t.token_hash=$1 LIMIT 1`,[hash]);
-    const r=rows[0];
-    if(!r){ throw new BadRequestException('Invalid verification link.'); }
-    if(r.email_verified_at){ return { verified:true, alreadyVerified:true }; }
-    if(!r.payment_confirmed_at){ await this.activationEvent(r.user_id,'verification_failed',{reason:'payment_not_confirmed'}); throw new ForbiddenException('Payment has not been confirmed.'); }
-    if(r.invalidated_at || r.used_at){ await this.activationEvent(r.user_id,'verification_failed',{reason:'invalidated'}); throw new BadRequestException('Invalid verification link.'); }
-    if(new Date(r.expires_at).getTime()<=Date.now()){ await this.db.query(`UPDATE users SET verification_failed_at=NOW() WHERE id=$1`,[r.user_id]); await this.activationEvent(r.user_id,'verification_expired'); throw new BadRequestException('Verification link expired.'); }
-    const claim=await this.db.query(`UPDATE email_verification_tokens SET used_at=NOW(),invalidated_at=NOW() WHERE id=$1 AND used_at IS NULL AND invalidated_at IS NULL AND expires_at>NOW() RETURNING user_id`,[r.id]);
-    if(!claim.rows.length) throw new BadRequestException('Invalid verification link.');
-    await this.db.query(`UPDATE email_verification_tokens SET invalidated_at=NOW() WHERE user_id=$1 AND id<>$2 AND used_at IS NULL AND invalidated_at IS NULL`,[r.user_id,r.id]);
-    const finalStatus=['trialing','active','paid'].includes(String(r.pending_payment_status||''))?String(r.pending_payment_status):'active';
-    await this.db.query(`UPDATE users SET email_verified_at=NOW(),account_status='active',account_activated_at=NOW(),payment_status=$2,pending_payment_status=NULL,updated_at=NOW() WHERE id=$1 AND email_verified_at IS NULL`,[r.user_id,finalStatus]);
-    await this.activationEvent(r.user_id,'verification_completed'); await this.activationEvent(r.user_id,'account_activated');
-    await this.sendWelcomeOnceByUserId(r.user_id); await this.sendGettingStartedOnce({userId:r.user_id});
-    return { verified:true, alreadyVerified:false, accountStatus:'active' };
+    const raw = String(rawToken || '').trim();
+    if (!raw) throw new BadRequestException('Invalid verification link.');
+
+    const hash = this.verificationHash(raw);
+
+    // Cheap pre-check gives friendly invalid/expired/already-verified responses.
+    const pre = await this.db.query(
+      `SELECT t.id,t.user_id,t.expires_at,t.used_at,t.invalidated_at,
+              u.email_verified_at,u.payment_confirmed_at,u.pending_payment_status
+         FROM email_verification_tokens t
+         JOIN users u ON u.id=t.user_id
+        WHERE t.token_hash=$1
+        LIMIT 1`,
+      [hash],
+    );
+    const first = pre.rows[0];
+    if (!first) throw new BadRequestException('Invalid verification link.');
+    if (first.email_verified_at) {
+      return { verified: true, alreadyVerified: true };
+    }
+    if (!first.payment_confirmed_at) {
+      await this.activationEvent(first.user_id, 'verification_failed', {
+        reason: 'payment_not_confirmed',
+      });
+      throw new ForbiddenException('Payment has not been confirmed.');
+    }
+    if (first.invalidated_at || first.used_at) {
+      await this.activationEvent(first.user_id, 'verification_failed', {
+        reason: 'invalidated',
+      });
+      throw new BadRequestException('Invalid verification link.');
+    }
+    if (new Date(first.expires_at).getTime() <= Date.now()) {
+      await this.db.query(
+        `UPDATE users SET verification_failed_at=NOW() WHERE id=$1`,
+        [first.user_id],
+      );
+      await this.activationEvent(first.user_id, 'verification_expired');
+      throw new BadRequestException('Verification link expired.');
+    }
+
+    let activationResult: any = null;
+
+    const result = await this.db.transaction(async (client) => {
+      const locked = await client.query(
+        `SELECT t.id,t.user_id,t.expires_at,t.used_at,t.invalidated_at,
+                u.email_verified_at,u.payment_confirmed_at,u.pending_payment_status
+           FROM email_verification_tokens t
+           JOIN users u ON u.id=t.user_id
+          WHERE t.token_hash=$1
+          LIMIT 1
+          FOR UPDATE OF t,u`,
+        [hash],
+      );
+      const r = locked.rows[0];
+      if (!r) throw new BadRequestException('Invalid verification link.');
+      if (r.email_verified_at) {
+        return { verified: true, alreadyVerified: true, userId: r.user_id };
+      }
+      if (
+        !r.payment_confirmed_at ||
+        r.invalidated_at ||
+        r.used_at ||
+        new Date(r.expires_at).getTime() <= Date.now()
+      ) {
+        throw new BadRequestException('Invalid verification link.');
+      }
+
+      // If this payment came from Nuvei, promote its subscription inside this
+      // same transaction. SQL/manual test accounts can still use the fallback.
+      activationResult = this.paidActivationHandler
+        ? await this.paidActivationHandler.activate(client, r.user_id)
+        : null;
+
+      const finalStatus =
+        activationResult?.paymentStatus ||
+        (['trialing', 'active', 'paid'].includes(
+          String(r.pending_payment_status || ''),
+        )
+          ? String(r.pending_payment_status)
+          : 'active');
+
+      const claim = await client.query(
+        `UPDATE email_verification_tokens
+            SET used_at=NOW(), invalidated_at=NOW()
+          WHERE id=$1
+            AND used_at IS NULL
+            AND invalidated_at IS NULL
+            AND expires_at>NOW()
+          RETURNING user_id`,
+        [r.id],
+      );
+      if (!claim.rows.length) {
+        throw new BadRequestException('Invalid verification link.');
+      }
+
+      await client.query(
+        `UPDATE email_verification_tokens
+            SET invalidated_at=NOW()
+          WHERE user_id=$1
+            AND id<>$2
+            AND used_at IS NULL
+            AND invalidated_at IS NULL`,
+        [r.user_id, r.id],
+      );
+
+      const activated = await client.query(
+        `UPDATE users
+            SET email_verified_at=NOW(),
+                account_status='active',
+                account_activated_at=NOW(),
+                payment_status=$2,
+                pending_payment_status=NULL,
+                plan=COALESCE($3,plan),
+                nuvei_subscription_id=COALESCE($4,nuvei_subscription_id),
+                trial_ends_at=CASE
+                  WHEN $5::timestamptz IS NOT NULL THEN $5::timestamptz
+                  ELSE trial_ends_at
+                END,
+                updated_at=NOW()
+          WHERE id=$1
+            AND email_verified_at IS NULL
+            AND payment_confirmed_at IS NOT NULL
+          RETURNING id`,
+        [
+          r.user_id,
+          finalStatus,
+          activationResult?.plan || null,
+          activationResult?.subscriptionId || null,
+          activationResult?.trialEnd || null,
+        ],
+      );
+      if (!activated.rows.length) {
+        throw new BadRequestException('Account could not be activated.');
+      }
+
+      return {
+        verified: true,
+        alreadyVerified: false,
+        accountStatus: 'active',
+        userId: r.user_id,
+      };
+    });
+
+    // Side effects only AFTER the transaction committed.
+    if (!result.alreadyVerified) {
+      if (activationResult && this.paidActivationHandler?.afterCommit) {
+        try {
+          await this.paidActivationHandler.afterCommit(activationResult);
+        } catch (err: any) {
+          this.logger.warn(
+            `post-verification billing mirror failed: ${err?.message}`,
+          );
+        }
+      }
+
+      await this.activationEvent(result.userId, 'verification_completed');
+      await this.activationEvent(result.userId, 'account_activated');
+      await this.sendWelcomeOnceByUserId(result.userId);
+      await this.sendGettingStartedOnce({ userId: result.userId });
+    }
+
+    return {
+      verified: true,
+      alreadyVerified: !!result.alreadyVerified,
+      accountStatus: 'active',
+    };
   }
 
   // ---- admin free-form email (composed from the Customers hub) ----

@@ -49,6 +49,36 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async getClient(): Promise<PoolClient> {
     return this.pool.connect();
   }
+
+  /**
+   * Run all queries in `work` on the same PostgreSQL connection.
+   * Commits only when the whole callback succeeds; otherwise rolls back.
+   *
+   * IMPORTANT:
+   * Inside `work`, use the supplied `client` instead of this.query().
+   */
+  async transaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
+    const client = await this.pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const result = await work(client);
+
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        console.error('❌ Database rollback failed:', rollbackError);
+      }
+
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
   /*
   async runMigrations() {
     console.log('👉 Running migrations...');
