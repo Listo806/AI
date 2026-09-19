@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import { localeCodeFromPath } from "../i18n/locales";
 
 // Nuvei / Datafast (Paymentez) API helpers.
 //
@@ -75,11 +76,15 @@ export async function nuveiCancel(subscriptionId, immediately = false) {
   return res?.data ?? res;
 }
 
-// Admin: create a Link-to-Pay for a custom Web Solutions quotation.
+// Admin: create a Link-to-Pay for a custom Web Solutions quotation. The page
+// language travels with it, so the payer can be shown their own language.
 export async function nuveiCreateLinkToPay(payload) {
+  const locale = localeCodeFromPath(
+    typeof window === "undefined" ? "/" : window.location.pathname,
+  );
   const res = await apiClient.request("/nuvei/link-to-pay", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ locale, ...payload }),
   });
   return res?.data ?? res;
 }

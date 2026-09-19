@@ -306,6 +306,9 @@ export class NuveiController {
       description: String(body?.description || ''),
       reference: body?.reference,
       adminId: user?.id,
+      // The language of the page the link is created from, so the payer sees
+      // their own language as soon as Nuvei honours it on Link to Pay.
+      locale: body?.locale,
     });
   }
 
