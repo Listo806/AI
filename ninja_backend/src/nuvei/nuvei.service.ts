@@ -260,11 +260,11 @@ export class NuveiService {
         `UPDATE nuvei_subscriptions s
             SET status = 'canceled', next_billing_date = NULL,
                 canceled_at = COALESCE(canceled_at, NOW()), updated_at = NOW()
-          WHERE s.status IN ('trialing','active')
+          WHERE s.status IN ('verification_pending','trialing','active')
             AND EXISTS (
               SELECT 1 FROM nuvei_subscriptions o
                WHERE o.user_id = s.user_id AND o.id <> s.id
-                 AND o.status IN ('trialing','active')
+                 AND o.status IN ('verification_pending','trialing','active')
                  AND (o.id = (SELECT u.nuvei_subscription_id FROM users u WHERE u.id = s.user_id)
                       OR (s.id <> (SELECT u.nuvei_subscription_id FROM users u WHERE u.id = s.user_id) IS NOT FALSE
                           AND (o.created_at, o.id::text) > (s.created_at, s.id::text))))
@@ -277,11 +277,6 @@ export class NuveiService {
       }
       await this.db.query(
         `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_sub_one_live_uidx
-           ON nuvei_subscriptions (user_id)
-           WHERE status IN ('trialing','active')`,
-      );
-      await this.db.query(
-        `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_sub_one_entitlement_uidx
            ON nuvei_subscriptions (user_id)
            WHERE status IN ('verification_pending','trialing','active')`,
       );
