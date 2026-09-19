@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
 import { DatabaseService } from '../database/database.service';
@@ -450,6 +450,160 @@ export class PlatformMailerService {
     };
   }
 
+
+  // ---- paid-account email verification ---------------------------------
+  // Payment confirmation and email verification are separate trust boundaries.
+  // Nuvei calls beginPaidEmailVerification only after a verified payment result.
+  // Raw verification tokens are returned only long enough to build the email URL;
+  // the database stores SHA-256 hashes only.
+  private async ensurePaidVerificationSchema(): Promise<void> {
+    await this.ensureSchema();
+    const cols = [
+      `email_verified_at TIMESTAMPTZ`,
+      `account_status VARCHAR(48) DEFAULT 'registered'`,
+      `payment_confirmed_at TIMESTAMPTZ`,
+      `account_activated_at TIMESTAMPTZ`,
+      `verification_email_sent_at TIMESTAMPTZ`,
+      `verification_email_resent_at TIMESTAMPTZ`,
+      `pending_email_changed_at TIMESTAMPTZ`,
+      `verification_failed_at TIMESTAMPTZ`,
+      `pending_payment_status VARCHAR(32)`,
+    ];
+    for (const c of cols) await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
+    await this.db.query(`CREATE TABLE IF NOT EXISTS email_verification_tokens (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash CHAR(64) NOT NULL UNIQUE, expires_at TIMESTAMPTZ NOT NULL,
+      used_at TIMESTAMPTZ, invalidated_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+    await this.db.query(`CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user ON email_verification_tokens(user_id, created_at DESC)`);
+    await this.db.query(`CREATE TABLE IF NOT EXISTS account_activation_events (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      event_type VARCHAR(64) NOT NULL, metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  }
+
+  private verificationHash(raw: string): string {
+    return crypto.createHash('sha256').update(raw).digest('hex');
+  }
+
+  private verificationPrefix(lang: string, landingPage?: string | null): string {
+    if (/\/es-ec(?:[/?#]|$)/i.test(String(landingPage || ''))) return '/es-ec';
+    return lang === 'es' ? '/es' : lang === 'pt' ? '/pt' : '';
+  }
+
+  private maskEmail(email: string): string {
+    const [local, domain] = String(email || '').split('@');
+    if (!domain) return '••••';
+    return `${(local || '').slice(0, 1)}••••@${domain}`;
+  }
+
+  private async activationEvent(userId: string, type: string, metadata: any = {}): Promise<void> {
+    await this.db.query(
+      `INSERT INTO account_activation_events(user_id,event_type,metadata) VALUES ($1,$2,$3::jsonb)`,
+      [userId, type, JSON.stringify(metadata || {})],
+    ).catch(() => {});
+  }
+
+  private verificationEmailCopy(lang: string, name: string | null, url: string) {
+    const first = name ? String(name).trim().split(/\s+/)[0] : '';
+    const l = lang === 'es' || lang === 'pt' ? lang : 'en';
+    const copy: any = {
+      en: { subject:'Verify your email to activate Cortexa', hi:`Hi${first ? ` ${first}` : ''},`, paid:'Your payment was received.', verify:'Verify your email to activate your account.', body:'Your Cortexa account is almost ready. Confirm this email address to activate your plan and continue to workspace selection.', button:'Verify My Email', exp:'This secure link expires in 60 minutes and can only be used once.', fallback:"If the button doesn't work, copy and paste the secure verification link into your browser.", ignore:"If you didn’t create this Cortexa account, you can safely ignore this email.", help:'Need help? Contact Cortexa Support.' },
+      es: { subject:'Verifica tu correo para activar Cortexa', hi:`Hola${first ? ` ${first}` : ''},`, paid:'Tu pago fue recibido.', verify:'Verifica tu correo electrónico para activar tu cuenta.', body:'Tu cuenta de Cortexa está casi lista. Confirma esta dirección de correo para activar tu plan y continuar a la selección de espacio de trabajo.', button:'Verificar mi correo', exp:'Este enlace seguro vence en 60 minutos y solo puede usarse una vez.', fallback:'Si el botón no funciona, copia y pega el enlace seguro de verificación en tu navegador.', ignore:'Si no creaste esta cuenta de Cortexa, puedes ignorar este correo de forma segura.', help:'¿Necesitas ayuda? Contacta al Soporte de Cortexa.' },
+      pt: { subject:'Verifique seu e-mail para ativar a Cortexa', hi:`Olá${first ? ` ${first}` : ''},`, paid:'Seu pagamento foi recebido.', verify:'Verifique seu e-mail para ativar sua conta.', body:'Sua conta Cortexa está quase pronta. Confirme este endereço de e-mail para ativar seu plano e continuar para a seleção do espaço de trabalho.', button:'Verificar meu e-mail', exp:'Este link seguro expira em 60 minutos e só pode ser usado uma vez.', fallback:'Se o botão não funcionar, copie e cole o link seguro de verificação no navegador.', ignore:'Se você não criou esta conta Cortexa, pode ignorar este e-mail com segurança.', help:'Precisa de ajuda? Entre em contato com o Suporte Cortexa.' },
+    }[l];
+    const html = `<div style="margin:0;background:#f7f9fc;padding:36px 16px;font-family:Arial,sans-serif;color:#14233f"><div style="max-width:680px;margin:auto;background:#fff;padding:44px 54px;text-align:center;border-radius:14px"><div style="font-size:30px;letter-spacing:10px;font-weight:700;color:#071a3b">CORTEXA</div><div style="font-size:11px;letter-spacing:5px;color:#6d7890;margin-top:5px">AGENTIC CRM</div><div style="margin:32px auto 20px;width:52px;height:52px;line-height:52px;border:2px solid #356cf5;border-radius:50%;color:#356cf5;font-size:26px">✓</div><p style="font-size:19px;color:#53617a">${copy.hi}</p><h1 style="font-size:32px;margin:8px 0;color:#071a3b">${copy.paid}</h1><h2 style="font-size:24px;font-weight:500;color:#5f6e89;margin:0 0 26px">${copy.verify}</h2><p style="font-size:17px;line-height:1.55;color:#53617a">${copy.body}</p><a href="${url}" style="display:inline-block;margin:14px 0 20px;padding:17px 42px;background:#356cf5;color:#fff;text-decoration:none;border-radius:9px;font-weight:700;font-size:17px">${copy.button}</a><p style="font-size:14px;color:#66758e">${copy.exp}</p><hr style="border:0;border-top:1px solid #e2e7ef;margin:28px 0"><p style="font-size:13px;line-height:1.55;color:#66758e">${copy.fallback}<br><a href="${url}" style="color:#1769f6;word-break:break-all">${url}</a></p><p style="font-size:13px;line-height:1.55;color:#66758e">${copy.ignore}<br>${copy.help}</p><div style="margin-top:28px;color:#9aa5b7;font-size:12px">Cortexa • Secure account verification</div></div></div>`;
+    const text = `${copy.hi}\n\n${copy.paid}\n${copy.verify}\n\n${copy.body}\n\n${copy.button}: ${url}\n\n${copy.exp}\n${copy.fallback}\n${url}\n\n${copy.ignore}\n${copy.help}`;
+    return { ...copy, html, text };
+  }
+
+  private async issuePaidVerification(userId: string, kind: 'initial'|'resend'|'email_changed'): Promise<{ sent: boolean; email: string; maskedEmail: string; message: string }> {
+    await this.ensurePaidVerificationSchema();
+    const { rows } = await this.db.query(
+      `SELECT id,email,name,COALESCE(preferred_language,'en') AS lang,landing_page,email_verified_at,
+              payment_confirmed_at,account_status,verification_email_sent_at,verification_email_resent_at
+         FROM users WHERE id=$1 LIMIT 1`, [userId]);
+    const u = rows[0];
+    if (!u) throw new BadRequestException('Account not found.');
+    if (!u.payment_confirmed_at) throw new ForbiddenException('Payment has not been confirmed.');
+    if (u.email_verified_at) return { sent:false, email:u.email, maskedEmail:this.maskEmail(u.email), message:'Email is already verified.' };
+    if (kind === 'resend' && u.verification_email_resent_at && Date.now() - new Date(u.verification_email_resent_at).getTime() < 60_000) {
+      throw new HttpException('Please wait before requesting another verification email.', HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    const raw = crypto.randomBytes(32).toString('base64url');
+    const hash = this.verificationHash(raw);
+    await this.db.query(`UPDATE email_verification_tokens SET invalidated_at=NOW() WHERE user_id=$1 AND used_at IS NULL AND invalidated_at IS NULL`, [userId]);
+    await this.db.query(`INSERT INTO email_verification_tokens(user_id,token_hash,expires_at) VALUES($1,$2,NOW()+INTERVAL '60 minutes')`, [userId, hash]);
+    const prefix = this.verificationPrefix(u.lang, u.landing_page);
+    const url = `${this.appUrl()}${prefix}/verify-email?token=${encodeURIComponent(raw)}`;
+    const copy = this.verificationEmailCopy(u.lang, u.name, url);
+    const result = await this.sendCustomEmail({ to:u.email, userId, subject:copy.subject, html:copy.html, text:copy.text, template:'email_verification', language:u.lang });
+    if (result.sent) {
+      await this.db.query(`UPDATE users SET verification_email_sent_at=COALESCE(verification_email_sent_at,NOW()), verification_email_resent_at=CASE WHEN $2 <> 'initial' THEN NOW() ELSE verification_email_resent_at END WHERE id=$1`, [userId, kind]);
+      await this.activationEvent(userId, kind === 'initial' ? 'verification_email_sent' : kind === 'resend' ? 'verification_email_resent' : 'pending_email_address_changed');
+    }
+    return { sent:result.sent, email:u.email, maskedEmail:this.maskEmail(u.email), message:result.sent ? 'A new verification email was sent.' : 'The verification email could not be sent.' };
+  }
+
+  async beginPaidEmailVerification(userId: string): Promise<void> {
+    await this.ensurePaidVerificationSchema();
+    // Atomic first-callback claim. Duplicate Nuvei notifications see an existing
+    // payment_confirmed_at and never send a second verification email.
+    const claim = await this.db.query(
+      `UPDATE users SET payment_confirmed_at=COALESCE(payment_confirmed_at,NOW()),
+                        account_status='paid_email_verification_pending',
+                        payment_status='paid_email_verification_pending', checkout_status='paid', updated_at=NOW()
+        WHERE id=$1 AND email_verified_at IS NULL AND payment_confirmed_at IS NULL
+        RETURNING id`, [userId]);
+    if (!claim.rows.length) return;
+    await this.activationEvent(userId, 'payment_confirmed');
+    await this.issuePaidVerification(userId, 'initial');
+  }
+
+  async getEmailVerificationStatus(userId: string) {
+    await this.ensurePaidVerificationSchema();
+    const { rows } = await this.db.query(`SELECT email,email_verified_at,account_status,payment_confirmed_at,account_activated_at,COALESCE(preferred_language,'en') AS language,landing_page FROM users WHERE id=$1`, [userId]);
+    const u=rows[0]; if(!u) throw new BadRequestException('Account not found.');
+    return { email:u.email, maskedEmail:this.maskEmail(u.email), verified:!!u.email_verified_at, paymentConfirmed:!!u.payment_confirmed_at, accountStatus:u.account_status, language:u.language, market:/\/es-ec(?:[/?#]|$)/i.test(String(u.landing_page||''))?'ec':null, activatedAt:u.account_activated_at };
+  }
+
+  async resendPaidVerification(userId: string) { return this.issuePaidVerification(userId, 'resend'); }
+
+  async changePendingVerificationEmail(userId: string, rawEmail: string) {
+    await this.ensurePaidVerificationSchema();
+    const email=String(rawEmail||'').trim().toLowerCase();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new BadRequestException('Please enter a valid email address.');
+    const { rows }=await this.db.query(`SELECT id,email_verified_at,payment_confirmed_at FROM users WHERE id=$1`,[userId]); const u=rows[0];
+    if(!u?.payment_confirmed_at || u.email_verified_at) throw new ForbiddenException('This email address can no longer be changed from verification.');
+    const dup=await this.db.query(`SELECT 1 FROM users WHERE LOWER(email)=LOWER($1) AND id<>$2 LIMIT 1`,[email,userId]);
+    if(dup.rows.length) throw new ConflictException('That email address is already registered.');
+    await this.db.query(`UPDATE email_verification_tokens SET invalidated_at=NOW() WHERE user_id=$1 AND used_at IS NULL AND invalidated_at IS NULL`,[userId]);
+    await this.db.query(`UPDATE users SET email=$2,pending_email_changed_at=NOW(),verification_email_resent_at=NULL,updated_at=NOW() WHERE id=$1`,[userId,email]);
+    await this.activationEvent(userId,'pending_email_address_changed');
+    return this.issuePaidVerification(userId,'email_changed');
+  }
+
+  async verifyPaidEmailToken(rawToken: string) {
+    await this.ensurePaidVerificationSchema();
+    const raw=String(rawToken||'').trim(); if(!raw) throw new BadRequestException('Invalid verification link.');
+    const hash=this.verificationHash(raw);
+    const { rows }=await this.db.query(`SELECT t.id,t.user_id,t.expires_at,t.used_at,t.invalidated_at,u.email_verified_at,u.payment_confirmed_at,u.account_status,u.pending_payment_status FROM email_verification_tokens t JOIN users u ON u.id=t.user_id WHERE t.token_hash=$1 LIMIT 1`,[hash]);
+    const r=rows[0];
+    if(!r){ throw new BadRequestException('Invalid verification link.'); }
+    if(r.email_verified_at){ return { verified:true, alreadyVerified:true }; }
+    if(!r.payment_confirmed_at){ await this.activationEvent(r.user_id,'verification_failed',{reason:'payment_not_confirmed'}); throw new ForbiddenException('Payment has not been confirmed.'); }
+    if(r.invalidated_at || r.used_at){ await this.activationEvent(r.user_id,'verification_failed',{reason:'invalidated'}); throw new BadRequestException('Invalid verification link.'); }
+    if(new Date(r.expires_at).getTime()<=Date.now()){ await this.db.query(`UPDATE users SET verification_failed_at=NOW() WHERE id=$1`,[r.user_id]); await this.activationEvent(r.user_id,'verification_expired'); throw new BadRequestException('Verification link expired.'); }
+    const claim=await this.db.query(`UPDATE email_verification_tokens SET used_at=NOW(),invalidated_at=NOW() WHERE id=$1 AND used_at IS NULL AND invalidated_at IS NULL AND expires_at>NOW() RETURNING user_id`,[r.id]);
+    if(!claim.rows.length) throw new BadRequestException('Invalid verification link.');
+    await this.db.query(`UPDATE email_verification_tokens SET invalidated_at=NOW() WHERE user_id=$1 AND id<>$2 AND used_at IS NULL AND invalidated_at IS NULL`,[r.user_id,r.id]);
+    const finalStatus=['trialing','active','paid'].includes(String(r.pending_payment_status||''))?String(r.pending_payment_status):'active';
+    await this.db.query(`UPDATE users SET email_verified_at=NOW(),account_status='active',account_activated_at=NOW(),payment_status=$2,pending_payment_status=NULL,updated_at=NOW() WHERE id=$1 AND email_verified_at IS NULL`,[r.user_id,finalStatus]);
+    await this.activationEvent(r.user_id,'verification_completed'); await this.activationEvent(r.user_id,'account_activated');
+    await this.sendWelcomeOnceByUserId(r.user_id); await this.sendGettingStartedOnce({userId:r.user_id});
+    return { verified:true, alreadyVerified:false, accountStatus:'active' };
+  }
+
   // ---- admin free-form email (composed from the Customers hub) ----
   // Sends a raw subject/html through the same provider (SendGrid preferred, else
   // SMTP) and records it in email_log like any other send. Never throws.
@@ -459,6 +613,8 @@ export class PlatformMailerService {
     subject: string;
     html: string;
     text?: string;
+    template?: string;
+    language?: string;
   }): Promise<SendResult> {
     await this.ensureSchema();
     const token = crypto.randomUUID();
@@ -483,8 +639,8 @@ export class PlatformMailerService {
         [
           opts.userId || null,
           opts.to,
-          'admin_custom',
-          'en',
+          opts.template || 'admin_custom',
+          String(opts.language || 'en').slice(0, 5),
           opts.subject,
           status,
           result.ok ? null : result.error?.slice(0, 500),
@@ -494,7 +650,7 @@ export class PlatformMailerService {
         ],
       );
     } catch (err: any) {
-      this.logger.error(`admin_custom email_log insert failed: ${err?.message}`);
+      this.logger.error(`${opts.template || 'admin_custom'} email_log insert failed: ${err?.message}`);
     }
     return {
       sent: result.ok,

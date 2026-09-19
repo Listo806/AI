@@ -25,5 +25,11 @@ export interface User {
   paymentStatus?: string | null;
   plan?: string | null;
   selectedPlan?: string | null;
+  emailVerifiedAt?: Date | null;
+  accountStatus?: string | null;
+  paymentConfirmedAt?: Date | null;
+  accountActivatedAt?: Date | null;
+  preferredLanguage?: string | null;
+  landingPage?: string | null;
 }
 

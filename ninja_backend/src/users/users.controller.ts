@@ -36,6 +36,12 @@ export class UsersController {
       paymentStatus: freshUser?.paymentStatus ?? null,
       plan: freshUser?.plan ?? null,
       selectedPlan: freshUser?.selectedPlan ?? null,
+      emailVerifiedAt: freshUser?.emailVerifiedAt ?? null,
+      accountStatus: freshUser?.accountStatus ?? null,
+      paymentConfirmedAt: freshUser?.paymentConfirmedAt ?? null,
+      accountActivatedAt: freshUser?.accountActivatedAt ?? null,
+      preferredLanguage: freshUser?.preferredLanguage ?? 'en',
+      landingPage: freshUser?.landingPage ?? null,
       internalRole: access.internalRole,
       isInternal: access.isInternal,
     };

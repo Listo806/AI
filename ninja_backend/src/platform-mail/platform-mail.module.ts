@@ -14,6 +14,7 @@ import { BillingTraceController } from './billing-trace.controller';
 import { EmailAssetController } from './email-asset.controller';
 import { EmailAssetService } from './email-asset.service';
 import { PlansModule } from '../plans/plans.module';
+import { EmailVerificationController } from './email-verification.controller';
 
 // Platform lifecycle email + the admin Sign-ups / Customers sections. The new
 // master Customers hub (CustomersAdmin*) consolidates sign-ups + customers +
@@ -31,6 +32,7 @@ import { PlansModule } from '../plans/plans.module';
     OnboardingTestController,
     BillingTraceController,
     EmailAssetController,
+    EmailVerificationController,
   ],
   providers: [
     PlatformMailerService,

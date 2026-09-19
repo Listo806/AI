@@ -249,6 +249,10 @@ export class NuveiService {
     await this.db.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS nuvei_subscription_id UUID`,
     );
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_payment_status VARCHAR(32)`);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ`);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_status VARCHAR(48) DEFAULT 'registered'`);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_confirmed_at TIMESTAMPTZ`);
 
     // One LIVE subscription per customer, enforced by the database: two
     // activations approved at the same instant cannot both become live.
@@ -1363,29 +1367,16 @@ export class NuveiService {
       userId: sub.user_id,
       subscriptionId,
       plan: sub.provision_plan,
-      paymentStatus: plan.trialDays > 0 ? 'trialing' : 'active',
+      paymentStatus: 'paid_email_verification_pending',
+      finalPaymentStatus: plan.trialDays > 0 ? 'trialing' : 'active',
       trialEnd: plan.trialDays > 0 ? nextBilling : null,
     });
     await this.mirrorBilling(subscriptionId, 'active', nextBilling);
 
-    await this.sendConfirmation({
-      to: sub.email,
-      userId: sub.user_id,
-      subject: `Your Cortexa ${plan.label} plan is active`,
-      lines: [
-        ['Plan', plan.label],
-        ['Amount charged today', this.money(Number(tx?.amount ?? sub.activation_amount ?? plan.activation))],
-        plan.trialDays > 0
-          ? ['Trial', `${plan.trialDays} days`]
-          : ['Billing', 'Monthly'],
-        ['First monthly charge', nextBilling.toISOString().slice(0, 10)],
-        ['Monthly price', this.money(plan.monthly)],
-        ['Transaction ID', tx?.id || '—'],
-        ['Authorization code', tx?.authorization_code || '—'],
-      ],
-      note:
-        'Your card is securely stored with Nuvei for automatic monthly billing. You can cancel anytime.',
-    });
+    // Payment is confirmed, but CRM/trial access stays locked until the customer
+    // proves ownership of the email address. This call is idempotent across
+    // immediate approval, callback retries and reconciliation races.
+    await this.mailer.beginPaidEmailVerification(sub.user_id);
   }
 
   /**
@@ -3269,13 +3260,15 @@ export class NuveiService {
     userId: string;
     subscriptionId: string;
     plan: string;
-    paymentStatus: 'trialing' | 'active';
+    paymentStatus: 'trialing' | 'active' | 'paid_email_verification_pending';
+    finalPaymentStatus?: 'trialing' | 'active';
     trialEnd: Date | null;
   }): Promise<void> {
     const planId = normalizePlanId(input.plan);
     await this.db.query(
       `UPDATE users
          SET payment_status = $2,
+             pending_payment_status = $6,
              is_active = true,
              plan = $3,
              checkout_status = 'paid',
@@ -3283,7 +3276,7 @@ export class NuveiService {
              trial_ends_at = CASE WHEN $5::timestamptz IS NOT NULL THEN $5::timestamptz ELSE trial_ends_at END,
              updated_at = NOW()
        WHERE id = $1`,
-      [input.userId, input.paymentStatus, planId, input.subscriptionId, input.trialEnd],
+      [input.userId, input.paymentStatus, planId, input.subscriptionId, input.trialEnd, input.finalPaymentStatus || null],
     );
   }
 

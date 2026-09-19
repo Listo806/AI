@@ -21,6 +21,10 @@ export class UsersService {
     await this.db.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS abandoned_email_sent_at TIMESTAMPTZ`,
     );
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ`);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_status VARCHAR(48) DEFAULT 'registered'`);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_confirmed_at TIMESTAMPTZ`);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_activated_at TIMESTAMPTZ`);
     this.lifecycleColsReady = true;
   }
 
@@ -48,7 +52,7 @@ export class UsersService {
     // Case-insensitive so a capitalized-at-signup email still matches a
     // lowercase login (mobile keyboards auto-capitalize email fields).
     const { rows } = await this.db.query(
-      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt", payment_status as "paymentStatus", plan, selected_plan as "selectedPlan"
+      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt", payment_status as "paymentStatus", plan, selected_plan as "selectedPlan", email_verified_at as "emailVerifiedAt", account_status as "accountStatus", payment_confirmed_at as "paymentConfirmedAt", account_activated_at as "accountActivatedAt", preferred_language as "preferredLanguage", landing_page as "landingPage"
        FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
       [email],
     );
@@ -93,7 +97,7 @@ export class UsersService {
 
   async findById(id: string): Promise<User | null> {
     const { rows } = await this.db.query(
-      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt", payment_status as "paymentStatus", plan, selected_plan as "selectedPlan"
+      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt", payment_status as "paymentStatus", plan, selected_plan as "selectedPlan", email_verified_at as "emailVerifiedAt", account_status as "accountStatus", payment_confirmed_at as "paymentConfirmedAt", account_activated_at as "accountActivatedAt", preferred_language as "preferredLanguage", landing_page as "landingPage"
        FROM users WHERE id = $1`,
       [id],
     );
