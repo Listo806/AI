@@ -361,6 +361,7 @@ export class NuveiClientService {
       pending_url: string;
       review_url: string;
     };
+    locale?: string;
   }): Promise<NuveiCallResult> {
     const rate = Number(this.config.get('NUVEI_VAT_RATE') || '0.15');
     const o: any = { installments_type: 0, currency: 'USD', ...input.order };
@@ -380,6 +381,12 @@ export class NuveiClientService {
       'POST',
       `${this.nonCardsBase()}/linktopay/init_order/`,
       {
+        // Sent for every link. Nuvei's Link to Pay page currently follows the
+        // payer's own browser language and ignores this, so it takes effect as
+        // soon as they honour it.
+        locale: ['en', 'es', 'pt'].includes(String(input.locale || '').toLowerCase())
+          ? String(input.locale).toLowerCase()
+          : 'en',
         user: {
           id: input.user.id,
           email: input.user.email,
@@ -445,6 +452,24 @@ export class NuveiClientService {
       locale: String(input.locale || 'en'),
       user: input.user,
       order: o,
+      conf: { theme: this.checkoutTheme() },
     });
+  }
+
+  /**
+   * The only visual customisation Nuvei's hosted Checkout supports: our logo and
+   * two colours, which we match to the Pay button on our own checkout. Overridable
+   * by environment so the logo can be changed without a release.
+   */
+  private checkoutTheme(): { logo: string; primary_color: string; secondary_color: string } {
+    return {
+      logo:
+        String(this.config.get('NUVEI_THEME_LOGO_URL') || '').trim() ||
+        'https://www.cortexaaicrm.com/cortexa-email-logo.png',
+      primary_color:
+        String(this.config.get('NUVEI_THEME_PRIMARY_COLOR') || '').trim() || '#2563eb',
+      secondary_color:
+        String(this.config.get('NUVEI_THEME_SECONDARY_COLOR') || '').trim() || '#0f172a',
+    };
   }
 }

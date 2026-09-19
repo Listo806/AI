@@ -3188,6 +3188,7 @@ export class NuveiService {
     description: string;
     reference?: string;
     adminId?: string;
+    locale?: string;
   }): Promise<{ reference: string; payUrl: string | null; status: string }> {
     this.assertEnabled();
     await this.ensureSchema();
@@ -3214,6 +3215,7 @@ export class NuveiService {
         dev_reference: reference,
         currency: 'USD',
       },
+      locale: input.locale,
       configuration: {
         success_url: `${site}/?payment=success&ref=${encodeURIComponent(reference)}`,
         failure_url: `${site}/?payment=failure&ref=${encodeURIComponent(reference)}`,
