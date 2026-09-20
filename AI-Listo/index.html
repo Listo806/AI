@@ -1,24 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cortexa | Agentic CRM &amp; Software Solutions</title>
-    <meta name="description" content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
-    <link rel="canonical" href="https://www.cortexaaicrm.com/" />
 
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Cortexa" />
-    <meta property="og:url" content="https://www.cortexaaicrm.com/" />
-    <meta property="og:title" content="Cortexa | Agentic CRM &amp; Software Solutions" />
-    <meta property="og:description" content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cortexa | Agentic CRM &amp; Software Solutions</title>
+  <meta name="description"
+    content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
+  <link rel="canonical" href="https://www.cortexaaicrm.com/" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Cortexa | Agentic CRM &amp; Software Solutions" />
-    <meta name="twitter:description" content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Cortexa" />
+  <meta property="og:url" content="https://www.cortexaaicrm.com/" />
+  <meta property="og:title" content="Cortexa | Agentic CRM &amp; Software Solutions" />
+  <meta property="og:description"
+    content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
 
-    <script type="application/ld+json">
+  <!-- Open Graph Image -->
+  <meta property="og:image" content="https://www.cortexaaicrm.com/images/cortexa-social-preview.jpg" />
+  <meta property="og:image:secure_url" content="https://www.cortexaaicrm.com/images/cortexa-social-preview.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Cortexa — Agentic CRM & Software Solutions" />
+
+  <!-- Twitter / X Image -->
+  <meta name="twitter:image" content="https://www.cortexaaicrm.com/images/cortexa-social-preview.jpg" />
+  <meta name="twitter:image:alt" content="Cortexa — Agentic CRM & Software Solutions" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cortexa | Agentic CRM &amp; Software Solutions" />
+  <meta name="twitter:description"
+    content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
+
+  <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebSite",
@@ -28,39 +44,86 @@
         "description": "Agentic CRM, web and software development, automation, and systems integration—built around your business."
       }
     </script>
-    <!-- Lucide Icons (self-hosted, pinned to v1.22.0 — no third-party CDN) -->
-    <script src="/vendor/lucide.min.js"></script>
-    <!-- Google Ads global site tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17836518151"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-17836518151');
-    </script>
-    <style>
-      /* First-paint splash: shown before the JS bundle mounts React, and reused
+  <!-- Lucide Icons (self-hosted, pinned to v1.22.0 — no third-party CDN) -->
+  <script src="/vendor/lucide.min.js"></script>
+  <!-- Google Ads global site tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17836518151"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'AW-17836518151');
+  </script>
+  <style>
+    /* First-paint splash: shown before the JS bundle mounts React, and reused
          by the app's auth-loading state so the handoff is seamless. */
-      .app-splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#f7f8fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;z-index:1}
-      .app-splash-word{font-size:22px;font-weight:700;letter-spacing:.22em;color:#4f46e5}
-      .app-spinner{width:34px;height:34px;border-radius:50%;border:3px solid #e5e7eb;border-top-color:#4f46e5;animation:app-spin .8s linear infinite}
-      @keyframes app-spin{to{transform:rotate(360deg)}}
-      body.crm-dark .app-splash{background:#0f172a}
-      body.crm-dark .app-splash-word{color:#a5b4fc}
-      body.crm-dark .app-spinner{border-color:#1e293b;border-top-color:#a5b4fc}
-      @media (prefers-reduced-motion:reduce){.app-spinner{animation:none}}
-    </style>
-  </head>
-  <body>
-    <script>
-      (function(){ var k='crm-theme'; if(localStorage.getItem(k)==='dark') document.body.classList.add('crm-dark'); })();
-    </script>
-    <div id="root">
-      <div class="app-splash">
-        <div class="app-splash-word">CORTEXA</div>
-        <div class="app-spinner"></div>
-      </div>
+    .app-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: #f7f8fb;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      z-index: 1
+    }
+
+    .app-splash-word {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      color: #4f46e5
+    }
+
+    .app-spinner {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 3px solid #e5e7eb;
+      border-top-color: #4f46e5;
+      animation: app-spin .8s linear infinite
+    }
+
+    @keyframes app-spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    body.crm-dark .app-splash {
+      background: #0f172a
+    }
+
+    body.crm-dark .app-splash-word {
+      color: #a5b4fc
+    }
+
+    body.crm-dark .app-spinner {
+      border-color: #1e293b;
+      border-top-color: #a5b4fc
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .app-spinner {
+        animation: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    (function () { var k = 'crm-theme'; if (localStorage.getItem(k) === 'dark') document.body.classList.add('crm-dark'); })();
+  </script>
+  <div id="root">
+    <div class="app-splash">
+      <div class="app-splash-word">CORTEXA</div>
+      <div class="app-spinner"></div>
     </div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+  </div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
