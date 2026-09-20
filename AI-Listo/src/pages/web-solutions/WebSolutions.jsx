@@ -6,6 +6,7 @@ import {
   Shield, SlidersHorizontal, Target, UsersRound, X,
 } from "lucide-react";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
+import footdarklogoImg from "../../assets/cortexa/headlogotran.png";
 import { useAuth } from "../../context/AuthContext";
 import "./WebSolutions.css";
 
@@ -67,7 +68,7 @@ function Header({tr,lang,setLang}){
 function Footer({tr,lang,setLang}){
   const {isAuthenticated}=useAuth();
   return <footer className="ws-footer"><div className="ws-container ws-footer-inner">
-    <Link to="/" className="ws-footer-brand"><img src={headlogoImg} alt="CORTEXA"/></Link>
+    <Link to="/" className="ws-footer-brand"><picture><source media="(max-width: 900px)" srcSet={footdarklogoImg}/><img src={headlogoImg} alt="CORTEXA"/></picture></Link>
     <nav>{tr.nav.map((l,i)=><a key={i} href={HREFS[i]}>{String(l).replace("|"," ")}</a>)}</nav>
     <div className="ws-footer-actions"><Language lang={lang} setLang={setLang} footer/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div>
   </div><div className="ws-container ws-footer-bottom"><span>{tr.footer[0]}</span><div><a href="/privacy">{tr.footer[1]}</a><a href="/terms">{tr.footer[2]}</a><a href="mailto:support@cortexaaicrm.com">{tr.footer[3]}</a></div></div></footer>;

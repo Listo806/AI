@@ -60,37 +60,53 @@ export default function LocaleLayout({ code }) {
 
   // Canonical + hreflang for the current page, rebuilt on every navigation.
   useEffect(() => {
-    const basePath = stripLocaleFromPath(location.pathname);
-    const origin = window.location.origin;
-    const created = [];
+  const basePath = stripLocaleFromPath(location.pathname);
+  const seo = resolveSeo(basePath, code);
 
-    created.push(
-      setManagedLink("canonical", {
-        rel: "canonical",
-        href: origin + buildLocalizedPath(basePath, code),
-      }),
-    );
+  document.title = seo.title;
 
-    LOCALES.forEach((l) => {
-      created.push(
-        setManagedLink(`alt-${l.code}`, {
-          rel: "alternate",
-          hreflang: l.htmlLang,
-          href: origin + buildLocalizedPath(basePath, l.code),
-        }),
-      );
-    });
+  setMetaTag(
+    'meta[name="description"]',
+    "name",
+    "description",
+    seo.description,
+  );
 
-    created.push(
-      setManagedLink("alt-x-default", {
-        rel: "alternate",
-        hreflang: "x-default",
-        href: origin + buildLocalizedPath(basePath, "en"),
-      }),
-    );
+  setMetaTag(
+    'meta[property="og:title"]',
+    "property",
+    "og:title",
+    seo.title,
+  );
 
-    return () => created.forEach((el) => el && el.remove());
-  }, [location.pathname, code]);
+  setMetaTag(
+    'meta[property="og:description"]',
+    "property",
+    "og:description",
+    seo.description,
+  );
+
+  setMetaTag(
+    'meta[name="twitter:title"]',
+    "name",
+    "twitter:title",
+    seo.title,
+  );
+
+  setMetaTag(
+    'meta[name="twitter:description"]',
+    "name",
+    "twitter:description",
+    seo.description,
+  );
+
+  setMetaTag(
+    'meta[property="og:locale"]',
+    "property",
+    "og:locale",
+    locale.htmlLang,
+  );
+}, [location.pathname, code, locale.htmlLang]);
 
   // Localized document title + meta description (+ Open Graph) per page. Uses the
   // isolated SEO map, always resolving to a non-empty title so pages never show a

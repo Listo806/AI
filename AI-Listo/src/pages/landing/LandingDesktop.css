@@ -524,7 +524,7 @@ i {
 #cortexa-ai-crm-landing .cx-header-inner .cx-btn {
   padding: 0 16px;
   color: #000 !important;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .cx-header-inner {
@@ -546,7 +546,7 @@ i {
   border: none;
   cursor: pointer;
   color: #000;
-  font-size: 15px;
+  font-size: 13px;
   transition: 0.2s;
   margin: 0 11px;
   font-weight: 500;
@@ -576,7 +576,7 @@ html {
   color: #000;
   text-decoration: none;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .cx-footer {
@@ -5085,7 +5085,20 @@ section#footer {
     font-size: 18px;
   }
 }
+.nav-menu-web-solutions {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.08;
+  white-space: nowrap;
+  gap: 2px;
+}
 
+.nav-menu-web-solutions span {
+  display: block;
+}
 
 /* WEB SOLUTIONS BRIDGE — approved reference 2026-09-17 */
 #cortexa-ai-crm-landing .cx-web-solutions-bridge{position:relative;overflow:hidden;padding:64px 24px 54px!important;background:#fff;text-align:center}

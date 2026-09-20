@@ -127,7 +127,7 @@ export default function LandingMobile() {
               "Testimonials"
           ],
           "pricing": "Pricing",
-          "webSolutions": "Web Solutions",
+          "webSolutions": "Web & Software Development Systems Integration",
           "aiosSectionTitle": "Team ",
           "aiosSectionTitle1": "Revenue ",
           "aiosSectionTitle2": "Workspace",
@@ -290,7 +290,7 @@ export default function LandingMobile() {
                   "paragraph1": "Once selected, the guided setup helps you define your services, hours, team responsibilities, customer entry points, qualification rules, conversion goals, appointments, follow-up, and human handoff.",
                   "paragraph2": "Your website, business phone, forms, advertising traffic, and WhatsApp can connect to the same managed process so the AI agent, CRM, pipeline, checkout, appointments, and team work together from the first conversation to the next appropriate action.",
                   "paragraph3a": "You can complete the setup yourself. If your website needs to be updated, built, or connected to your workspace, our",
-                  "webSolutions": "Web Solutions",
+                  "webSolutions": "Web & Software Development Systems Integration",
                   "paragraph3b": "team can review what you have and provide a separate implementation quote.",
                   "cta": "Explore Web Solutions",
                   "note": "Optional setup and website implementation services are quoted separately."
@@ -390,7 +390,7 @@ export default function LandingMobile() {
               "Testimonios"
           ],
           "pricing": "Precios",
-          "webSolutions": "Soluciones Web",
+          "webSolutions": "Desarrollo Web y de Software e Integración de Sistemas",
           "ctaButtonText": "¡Comenzar!",
           "heroNoCard": "Prueba gratuita de 14 días",
           "heroFreeForever": "Desde $11",
@@ -550,7 +550,7 @@ export default function LandingMobile() {
                   "paragraph1": "Una vez seleccionado, la configuración guiada te ayuda a definir tus servicios, horarios, responsabilidades del equipo, puntos de entrada de clientes, reglas de calificación, objetivos de conversión, citas, seguimiento y transferencia humana.",
                   "paragraph2": "Tu sitio web, teléfono comercial, formularios, tráfico publicitario y WhatsApp pueden conectarse al mismo proceso gestionado para que el agente de IA, CRM, pipeline, checkout, citas y equipo trabajen juntos desde la primera conversación hasta la siguiente acción adecuada.",
                   "paragraph3a": "Puedes completar la configuración por tu cuenta. Si tu sitio web necesita actualizarse, crearse o conectarse a tu espacio de trabajo, nuestro equipo de",
-                  "webSolutions": "Soluciones Web",
+                  "webSolutions": "Desarrollo Web y de Software e Integración de Sistemas",
                   "paragraph3b": "puede revisar lo que tienes y proporcionar una cotización de implementación por separado.",
                   "cta": "Explorar Soluciones Web",
                   "note": "Los servicios opcionales de configuración e implementación web se cotizan por separado."
@@ -651,7 +651,7 @@ export default function LandingMobile() {
               "Depoimentos"
           ],
           "pricing": "Preços",
-          "webSolutions": "Soluções Web",
+          "webSolutions": "Desenvolvimento Web e de Software e Integração de Sistemas",
           "aiosSectionTitle": "Espaço de Trabalho",
           "aiosSectionTitle1": "de Receita",
           "aiosSectionTitle2": "para Equipes",
@@ -814,7 +814,7 @@ export default function LandingMobile() {
                   "paragraph1": "Depois de selecionado, a configuração guiada ajuda você a definir serviços, horários, responsabilidades da equipe, pontos de entrada de clientes, regras de qualificação, metas de conversão, agendamentos, acompanhamento e transferência humana.",
                   "paragraph2": "Seu site, telefone comercial, formulários, tráfego de publicidade e WhatsApp podem se conectar ao mesmo processo gerenciado para que o agente de IA, CRM, pipeline, checkout, agendamentos e equipe trabalhem juntos desde a primeira conversa até a próxima ação adequada.",
                   "paragraph3a": "Você pode concluir a configuração por conta própria. Se o seu site precisar ser atualizado, criado ou conectado ao seu espaço de trabalho, nossa equipe de",
-                  "webSolutions": "Soluções Web",
+                  "webSolutions": "Desenvolvimento Web e de Software e Integração de Sistemas",
                   "paragraph3b": "pode revisar o que você tem e fornecer uma cotação de implementação separada.",
                   "cta": "Explorar Soluções Web",
                   "note": "Serviços opcionais de configuração e implementação de site são cotados separadamente."

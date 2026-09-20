@@ -11,25 +11,26 @@ const BRAND = "Cortexa";
 
 export const DEFAULT_SEO = {
   en: {
-    title: "Cortexa — AI CRM for real estate teams",
+    title: "Cortexa | Agentic CRM & Software Solutions",
     description:
-      "Cortexa is the AI CRM that turns conversations into booked appointments for real estate teams. Capture, qualify, and follow up automatically.",
+      "Agentic CRM, web and software development, automation, and systems integration—built around your business.",
   },
   es: {
-    title: "Cortexa — CRM con IA para equipos inmobiliarios",
+    title: "Cortexa | Agentic CRM & Software Solutions",
     description:
-      "Cortexa es el CRM con IA que convierte conversaciones en citas agendadas para equipos inmobiliarios. Capta, califica y da seguimiento automáticamente.",
+      "Agentic CRM, web and software development, automation, and systems integration—built around your business.",
   },
   pt: {
-    title: "Cortexa — CRM com IA para equipes imobiliárias",
+    title: "Cortexa | Agentic CRM & Software Solutions",
     description:
-      "A Cortexa é o CRM com IA que transforma conversas em agendamentos para equipes imobiliárias. Capte, qualifique e faça o follow-up automaticamente.",
+      "Agentic CRM, web and software development, automation, and systems integration—built around your business.",
   },
 };
 
 // path (locale-stripped) -> { en|es|pt: { title, description } }
 export const SEO = {
   "/": DEFAULT_SEO,
+
   "/features": {
     en: {
       title: `Features — ${BRAND}`,
@@ -47,6 +48,7 @@ export const SEO = {
         "Conheça os recursos de IA da Cortexa: qualificação automática de leads, follow-up no WhatsApp, agendamento de reuniões e um funil que roda sozinho.",
     },
   },
+
   "/pricing": {
     en: {
       title: `Pricing — ${BRAND}`,
@@ -64,6 +66,7 @@ export const SEO = {
         "Preços simples da Cortexa. Comece hoje seu CRM imobiliário com IA e pague apenas pelo que sua equipe precisa.",
     },
   },
+
   "/integrations": {
     en: {
       title: `Integrations — ${BRAND}`,
@@ -81,6 +84,7 @@ export const SEO = {
         "Conecte a Cortexa ao WhatsApp, Instagram, seu site e às ferramentas que sua equipe imobiliária já usa.",
     },
   },
+
   "/about": {
     en: {
       title: `About — ${BRAND}`,
@@ -98,6 +102,7 @@ export const SEO = {
         "Conheça a Cortexa e nossa missão de dar a cada equipe imobiliária um agente de IA que nunca perde um lead.",
     },
   },
+
   "/contact": {
     en: {
       title: `Contact — ${BRAND}`,
@@ -105,13 +110,15 @@ export const SEO = {
     },
     es: {
       title: `Contacto — ${BRAND}`,
-      description: "Ponte en contacto con el equipo de Cortexa. Estamos para ayudarte.",
+      description:
+        "Ponte en contacto con el equipo de Cortexa. Estamos para ayudarte.",
     },
     pt: {
       title: `Contato — ${BRAND}`,
       description: "Fale com a equipe da Cortexa. Estamos aqui para ajudar.",
     },
   },
+
   "/help": {
     en: {
       title: `Help Center — ${BRAND}`,
@@ -126,6 +133,7 @@ export const SEO = {
       description: "Guias e respostas para aproveitar a Cortexa ao máximo.",
     },
   },
+
   "/support": {
     en: {
       title: `Support — ${BRAND}`,
@@ -133,17 +141,21 @@ export const SEO = {
     },
     es: {
       title: `Soporte — ${BRAND}`,
-      description: "Contacta al soporte de Cortexa y encuentra respuestas rápido.",
+      description:
+        "Contacta al soporte de Cortexa y encuentra respuestas rápido.",
     },
     pt: {
       title: `Suporte — ${BRAND}`,
-      description: "Fale com o suporte da Cortexa e encontre respostas rápido.",
+      description:
+        "Fale com o suporte da Cortexa e encontre respostas rápido.",
     },
   },
+
   "/setup-guide": {
     en: {
       title: `Setup Guide — ${BRAND}`,
-      description: "Set up your Cortexa AI agent step by step and go live in minutes.",
+      description:
+        "Set up your Cortexa AI agent step by step and go live in minutes.",
     },
     es: {
       title: `Guía de configuración — ${BRAND}`,
@@ -156,8 +168,12 @@ export const SEO = {
         "Configure seu agente de IA da Cortexa passo a passo e coloque no ar em minutos.",
     },
   },
+
   "/sign-in": {
-    en: { title: `Sign In — ${BRAND}`, description: "Sign in to your Cortexa account." },
+    en: {
+      title: `Sign In — ${BRAND}`,
+      description: "Sign in to your Cortexa account.",
+    },
     es: {
       title: `Iniciar sesión — ${BRAND}`,
       description: "Inicia sesión en tu cuenta de Cortexa.",
@@ -167,10 +183,12 @@ export const SEO = {
       description: "Entre na sua conta Cortexa.",
     },
   },
+
   "/sign-up": {
     en: {
       title: `Start Free Trial — ${BRAND}`,
-      description: "Create your Cortexa account and put your AI real estate agent to work.",
+      description:
+        "Create your Cortexa account and put your AI real estate agent to work.",
     },
     es: {
       title: `Prueba gratis — ${BRAND}`,
@@ -183,6 +201,7 @@ export const SEO = {
         "Crie sua conta Cortexa e coloque seu agente imobiliário de IA para trabalhar.",
     },
   },
+
   "/trial": {
     en: {
       title: `Start Free Trial — ${BRAND}`,
@@ -197,6 +216,7 @@ export const SEO = {
       description: "Comece hoje seu teste grátis da Cortexa.",
     },
   },
+
   "/editorial/the-end-of-legacy-crm": {
     en: {
       title: "The End of Legacy CRM — Cortexa",
@@ -214,6 +234,7 @@ export const SEO = {
         "Por que os CRMs tradicionais estão falhando com as equipes imobiliárias e como um CRM com IA muda o jogo.",
     },
   },
+
   "/editorial/business": {
     en: {
       title: "How AI Is Transforming Every Business — Cortexa",
@@ -231,8 +252,12 @@ export const SEO = {
         "Como a IA está transformando a forma como as empresas captam, qualificam e convertem clientes.",
     },
   },
+
   "/privacy-policy": {
-    en: { title: `Privacy Policy — ${BRAND}`, description: "Cortexa privacy policy." },
+    en: {
+      title: `Privacy Policy — ${BRAND}`,
+      description: "Cortexa privacy policy.",
+    },
     es: {
       title: `Política de privacidad — ${BRAND}`,
       description: "Política de privacidad de Cortexa.",
@@ -242,8 +267,12 @@ export const SEO = {
       description: "Política de privacidade da Cortexa.",
     },
   },
+
   "/terms": {
-    en: { title: `Terms of Service — ${BRAND}`, description: "Cortexa terms of service." },
+    en: {
+      title: `Terms of Service — ${BRAND}`,
+      description: "Cortexa terms of service.",
+    },
     es: {
       title: `Términos del servicio — ${BRAND}`,
       description: "Términos del servicio de Cortexa.",
@@ -253,8 +282,12 @@ export const SEO = {
       description: "Termos de serviço da Cortexa.",
     },
   },
+
   "/refund-policy": {
-    en: { title: `Refund Policy — ${BRAND}`, description: "Cortexa refund policy." },
+    en: {
+      title: `Refund Policy — ${BRAND}`,
+      description: "Cortexa refund policy.",
+    },
     es: {
       title: `Política de reembolso — ${BRAND}`,
       description: "Política de reembolso de Cortexa.",
@@ -264,6 +297,7 @@ export const SEO = {
       description: "Política de reembolso da Cortexa.",
     },
   },
+
   "/cancellation": {
     en: {
       title: `Cancellation Policy — ${BRAND}`,
@@ -284,11 +318,17 @@ export const SEO = {
 // returning a complete { title, description } (never blank).
 export function resolveSeo(strippedPath, code) {
   const lang = code === "es" || code === "pt" ? code : "en";
+
   // Normalize a trailing editorial language suffix (/es, /pt) to its base path
   // so /editorial/.../es reuses the same entry.
   let key = strippedPath || "/";
   key = key.replace(/\/(es|pt)$/, "");
-  if (key.length > 1 && key.endsWith("/")) key = key.slice(0, -1);
+
+  if (key.length > 1 && key.endsWith("/")) {
+    key = key.slice(0, -1);
+  }
+
   const entry = SEO[key] || DEFAULT_SEO;
+
   return entry[lang] || entry.en || DEFAULT_SEO.en;
 }
