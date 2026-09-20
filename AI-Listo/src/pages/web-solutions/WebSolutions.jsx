@@ -56,7 +56,7 @@ function Header({tr,lang,setLang}){
   const [mobileOpen,setMobileOpen]=useState(false);
   return <header className="ws-header">
     <div className="ws-header-inner">
-      <Link to="/" className="ws-brand"><img src={headlogoImg} alt="CORTEXA"/></Link>
+      <Link to="/" className="ws-brand"><picture><source media="(max-width: 1024px)" srcSet={footdarklogoImg}/><img src={headlogoImg} alt="CORTEXA"/></picture></Link>
       <nav className="ws-nav">{tr.nav.map((l,i)=><a key={i} href={HREFS[i]} className={`${i===7?"ws-nav-development active":""}`}><NavLabel label={l} desktop/></a>)}</nav>
       <div className="ws-header-actions"><Language lang={lang} setLang={setLang}/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div>
       <button className="ws-menu-btn" type="button" onClick={()=>setMobileOpen(v=>!v)} aria-label="Menu">{mobileOpen?<X/>:<Menu/>}</button>

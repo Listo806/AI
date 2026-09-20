@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as crypto from 'crypto';
+import type { PoolClient } from 'pg';
 import { ConfigService } from '../config/config.service';
 import { DatabaseService } from '../database/database.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
@@ -64,7 +65,16 @@ export class NuveiService {
     private readonly db: DatabaseService,
     private readonly mailer: PlatformMailerService,
     private readonly client: NuveiClientService,
-  ) {}
+  ) {
+    // Email verification is the final activation boundary for paid Nuvei accounts.
+    // Register the promotion hook here so verification and subscription activation
+    // commit atomically on the same PostgreSQL connection.
+    this.mailer.registerPaidActivationHandler({
+      activate: (client, userId) => this.activateAfterEmailVerification(client, userId),
+      afterCommit: (result) =>
+        this.mirrorBilling(result.subscriptionId, result.paymentStatus, result.nextBilling),
+    });
+  }
 
   // ---- feature flags ---------------------------------------------------
 
@@ -3241,6 +3251,54 @@ export class NuveiService {
     return { reference, payUrl, status: 'pending' };
   }
 
+  /** Promote a payment-confirmed Nuvei subscription only after the email token
+   * has passed validation. Runs inside PlatformMailerService's verification
+   * transaction, so the subscription and user activation cannot split-brain. */
+  private async activateAfterEmailVerification(client: PoolClient, userId: string): Promise<{
+    subscriptionId: string;
+    plan: string;
+    paymentStatus: 'trialing' | 'active';
+    trialEnd: Date | null;
+    nextBilling: Date | null;
+  } | null> {
+    const { rows } = await client.query(
+      `SELECT id, plan_key, provision_plan, status
+         FROM nuvei_subscriptions
+        WHERE user_id=$1 AND status='verification_pending'
+        ORDER BY created_at DESC
+        LIMIT 1
+        FOR UPDATE`,
+      [userId],
+    );
+    const sub = rows[0];
+    if (!sub) return null;
+
+    const plan = this.plan(sub.plan_key);
+    const now = new Date();
+    const paymentStatus: 'trialing' | 'active' = plan.trialDays > 0 ? 'trialing' : 'active';
+    const trialEnd = plan.trialDays > 0
+      ? new Date(now.getTime() + plan.trialDays * 24 * 60 * 60 * 1000)
+      : null;
+    const nextBilling = trialEnd || new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+
+    const promoted = await client.query(
+      `UPDATE nuvei_subscriptions
+          SET status=$2, trial_end=$3, next_billing_date=$4, updated_at=NOW()
+        WHERE id=$1 AND status='verification_pending'
+        RETURNING id`,
+      [sub.id, paymentStatus, trialEnd, nextBilling],
+    );
+    if (!promoted.rows.length) return null;
+
+    return {
+      subscriptionId: String(sub.id),
+      plan: normalizePlanId(sub.provision_plan),
+      paymentStatus,
+      trialEnd,
+      nextBilling,
+    };
+  }
+
   // ---- provisioning (account access + admin billing mirror) ------------
 
   /** Write the account's plan access exactly like the Paddle path does. */
@@ -3425,7 +3483,7 @@ export class NuveiService {
     const html = `
       <div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:520px;margin:0 auto;">
         <h2 style="color:#111827;font-size:18px;margin:0 0 4px;">${this.esc(input.subject)}</h2>
-        <p style="color:#6b7280;font-size:13px;margin:0 0 16px;">Cortexa AI CRM payment confirmation</p>
+        <p style="color:#6b7280;font-size:13px;margin:0 0 16px;">Cortexa Agentic CRM payment confirmation</p>
         <table style="width:100%;border-collapse:collapse;background:#f9fafb;border-radius:10px;">${rows}</table>
         ${input.note ? `<p style="color:#6b7280;font-size:12px;margin:16px 0 0;">${this.esc(input.note)}</p>` : ''}
       </div>`;

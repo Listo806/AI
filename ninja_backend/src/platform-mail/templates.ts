@@ -83,7 +83,7 @@ export interface TemplateVars {
   promoCheckoutUrl?: string;
 }
 
-const BRAND = 'Cortexa AI CRM';
+const BRAND = 'Cortexa Agentic CRM';
 const ACCENT = '#2563eb';
 
 function normalizeLang(lang?: string): MailLang {
@@ -173,7 +173,7 @@ interface Copy {
 const COPY: Partial<Record<TemplateName, Partial<Record<MailLang, Copy>>>> = {
   welcome: {
     en: {
-      subject: 'Welcome to Cortexa AI CRM — your account is active',
+      subject: 'Welcome to Cortexa Agentic CRM — your account is active',
       heading: 'Welcome to Cortexa',
       intro: [
         'Thank you. Your payment was successful and your account is now active.',
@@ -183,7 +183,7 @@ const COPY: Partial<Record<TemplateName, Partial<Record<MailLang, Copy>>>> = {
       support: 'Need anything? Reach us any time at',
     },
     es: {
-      subject: 'Bienvenido a Cortexa AI CRM: tu cuenta está activa',
+      subject: 'Bienvenido a Cortexa Agentic CRM: tu cuenta está activa',
       heading: 'Bienvenido a Cortexa',
       intro: [
         'Gracias. Tu pago se realizó con éxito y tu cuenta ya está activa.',
@@ -193,7 +193,7 @@ const COPY: Partial<Record<TemplateName, Partial<Record<MailLang, Copy>>>> = {
       support: '¿Necesitas algo? Escríbenos cuando quieras a',
     },
     pt: {
-      subject: 'Bem-vindo à Cortexa AI CRM — sua conta está ativa',
+      subject: 'Bem-vindo à Cortexa Agentic CRM — sua conta está ativa',
       heading: 'Bem-vindo à Cortexa',
       intro: [
         'Obrigado. Seu pagamento foi concluído com sucesso e sua conta já está ativa.',

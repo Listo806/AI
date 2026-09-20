@@ -11,6 +11,8 @@ export interface SendResult {
   sent: boolean;
   status: 'sent' | 'skipped' | 'error';
   reason?: string;
+  provider?: string;
+  messageId?: string;
 }
 
 // Platform (transactional) email sender for lifecycle mail: welcome-on-payment
@@ -391,7 +393,7 @@ export class PlatformMailerService {
   }): Promise<{ ok: boolean; provider: string; error?: string; messageId?: string }> {
     const sg = this.sendgridConfig();
     if (sg) {
-      const sender = this.parseSender(sg.from, sg.name || 'Cortexa AI CRM');
+      const sender = this.parseSender(sg.from, sg.name || 'Cortexa Agentic CRM');
       if (!sender) {
         return {
           ok: false,
@@ -446,7 +448,7 @@ export class PlatformMailerService {
     const tx = this.buildSmtp();
     if (!tx) return { ok: false, provider: 'smtp', error: 'smtp_not_configured' };
     try {
-      await tx.transporter.sendMail({
+      const info = await tx.transporter.sendMail({
         from: tx.from,
         to: opts.to,
         replyTo: this.supportEmail(),
@@ -454,7 +456,7 @@ export class PlatformMailerService {
         text: opts.text,
         html: opts.html,
       });
-      return { ok: true, provider: 'smtp' };
+      return { ok: true, provider: 'smtp', messageId: info?.messageId || undefined };
     } catch (err: any) {
       return { ok: false, provider: 'smtp', error: err?.message };
     }
@@ -506,8 +508,8 @@ export class PlatformMailerService {
     try {
       await this.db.query(
         `INSERT INTO email_log
-           (user_id, to_email, template, language, subject, status, error, provider, track_token, sent_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+           (user_id, to_email, template, language, subject, status, error, provider, track_token, sent_at, message_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
         [
           opts.userId || null,
           opts.to,
@@ -519,6 +521,7 @@ export class PlatformMailerService {
           result.provider,
           token,
           status === 'sent' ? new Date() : null,
+          result.messageId || null,
         ],
       );
     } catch (err: any) {
@@ -528,6 +531,8 @@ export class PlatformMailerService {
       sent: result.ok,
       status,
       reason: result.ok ? undefined : result.error,
+      provider: result.provider,
+      messageId: result.messageId,
     };
   }
 
@@ -792,6 +797,7 @@ export class PlatformMailerService {
       const activated = await client.query(
         `UPDATE users
             SET email_verified_at=NOW(),
+                is_active=true,
                 account_status='active',
                 account_activated_at=NOW(),
                 payment_status=$2,
@@ -882,8 +888,8 @@ export class PlatformMailerService {
     try {
       await this.db.query(
         `INSERT INTO email_log
-           (user_id, to_email, template, language, subject, status, error, provider, track_token, sent_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+           (user_id, to_email, template, language, subject, status, error, provider, track_token, sent_at, message_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
         [
           opts.userId || null,
           opts.to,
@@ -895,6 +901,7 @@ export class PlatformMailerService {
           result.provider,
           token,
           status === 'sent' ? new Date() : null,
+          result.messageId || null,
         ],
       );
     } catch (err: any) {
@@ -904,6 +911,8 @@ export class PlatformMailerService {
       sent: result.ok,
       status,
       reason: result.ok ? undefined : result.error,
+      provider: result.provider,
+      messageId: result.messageId,
     };
   }
 

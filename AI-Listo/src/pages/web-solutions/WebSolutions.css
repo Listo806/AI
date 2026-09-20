@@ -35,3 +35,27 @@
   .ws-footer-bottom{border-top-color:rgba(255,255,255,.14);color:rgba(255,255,255,.68)}
   .ws-footer .ws-language-button{color:#fff}
 }
+
+
+/* Tablet / mobile dark theme */
+@media(max-width:1024px){
+  .ws-page{background:#000;color:#fff}
+  .ws-header{background:#000;border-bottom:1px solid rgba(255,255,255,.14)}
+  .ws-menu-btn{color:#fff}
+  .ws-mobile-menu{background:#000;border-top-color:rgba(255,255,255,.14);box-shadow:0 16px 30px rgba(0,0,0,.35)}
+  .ws-mobile-menu>a{color:#fff;border-bottom-color:rgba(255,255,255,.12)}
+  .ws-mobile-menu>a.active{color:#5da0ff}
+  .ws-mobile-menu-bottom>a{color:#fff}
+  .ws-header .ws-language-button{color:#fff}
+
+  .ws-hero,.ws-build,.ws-design,.ws-outcomes,.ws-lifecycle,.ws-trust-strip{background:#000;color:#fff}
+  .ws-hero p,.ws-section-lead,.ws-design-grid p,.ws-build-grid li,.ws-build-note,.ws-outcome-grid p,.ws-life-intro p,.ws-life-grid p,.ws-life-strip p,.ws-trust-grid p{color:rgba(255,255,255,.72)}
+  .ws-trust-strip,.ws-section,.ws-design-grid article,.ws-build-grid article+article,.ws-outcome-grid article,.ws-life-intro,.ws-life-grid article,.ws-life-strip,.ws-life-strip article+article{border-color:rgba(255,255,255,.14)}
+
+  .ws-footer{background:#000;border-top-color:rgba(255,255,255,.14);color:#fff}
+  .ws-footer-brand picture,.ws-brand picture{display:block}
+  .ws-footer-brand img{width:190px}
+  .ws-footer-inner nav a,.ws-footer-actions a,.ws-footer-bottom a{color:#fff}
+  .ws-footer-bottom{border-top-color:rgba(255,255,255,.14);color:rgba(255,255,255,.68)}
+  .ws-footer .ws-language-button{color:#fff}
+}
