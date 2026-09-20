@@ -267,7 +267,7 @@ export default function CheckoutPage() {
       const oldFailed = ["payment_failed", "canceled", "refunded", "suspended"].includes(st)
         && payStartedRef.current && created && created < payStartedRef.current - 60000;
       if (!sub || oldFailed) { if (++tries >= 3) { fail(tr.errServer); return; } setTimeout(tick, 3000); return; }
-      if (["trialing", "active"].includes(st)) { await completeActivation(sub.activation_transaction_id || sub.id); return; }
+      if (["verification_pending", "trialing", "active"].includes(st)) { await completeActivation(sub.activation_transaction_id || sub.id); return; }
       if (["payment_failed", "canceled", "suspended", "refunded"].includes(st) || ++tries >= 20) {
         fail(st === "payment_failed" ? tr.errDeclined : st === "refunded" ? tr.errServer : tr.errPending); return;
       }
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
     fetchNuveiSubscription().then((sub) => {
       if (c || !sub) return;
       const st = String(sub.status);
-      if (["trialing", "active"].includes(st)) { setBlocked(true); finishAndLogin(); return; }
+      if (["verification_pending", "trialing", "active"].includes(st)) { setBlocked(true); finishAndLogin(); return; }
     });
     return () => { c = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -416,7 +416,7 @@ export default function CheckoutPage() {
       // this page keeps polling until the account is live.
       setAwaiting(true); return;
     }
-    if (result?.status === "trialing" || result?.status === "active") {
+    if (result?.status === "verification_pending" || result?.status === "trialing" || result?.status === "active") {
       await completeActivation(result.transactionId);
       return;
     }
