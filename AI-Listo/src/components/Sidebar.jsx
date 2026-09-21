@@ -1354,6 +1354,24 @@ export default function Sidebar({
             )}
           </button>
 
+          <NavLink
+            to="/account/settings"
+            className={({ isActive }) =>
+              `crm-nav-link crm-settings-link ${isActive ? "active" : ""}`
+            }
+            onClick={() => {
+              if (onClose) onClose();
+            }}
+            title={isCollapsed ? t("header.settings", "Settings") : undefined}
+          >
+            <SidebarIcon name="settings" className="crm-nav-icon" />
+            {!isCollapsed && (
+              <span className="crm-nav-label">
+                {t("header.settings", "Settings")}
+              </span>
+            )}
+          </NavLink>
+
           {!isCollapsed && (
             <section
               className="crm-workspaces-section"

@@ -44,6 +44,7 @@ import { BusinessSuiteModule } from './business-suite/business-suite.module';
 import { AestheticWellnessModule } from './aesthetic-wellness/aesthetic-wellness.module';
 import { NuveiModule } from './nuvei/nuvei.module';
 import { ClinicMedicalModule } from "./clinic-medical/clinic-medical.module";
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { ClinicMedicalModule } from "./clinic-medical/clinic-medical.module";
     BusinessSuiteModule,
     AestheticWellnessModule,
     ClinicMedicalModule,
+    SettingsModule,
   ],
   controllers: [AppController],
 })

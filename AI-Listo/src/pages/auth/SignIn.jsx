@@ -22,7 +22,9 @@ export default function SignIn({ variant = 'crm' }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const [twoFactorChallenge, setTwoFactorChallenge] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const { login, completeTwoFactorLogin, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,7 +69,8 @@ export default function SignIn({ variant = 'crm' }) {
       // Normalize so a capitalized/spaced email still matches the stored one.
       // When the visitor was sent here with ?next= (e.g. from checkout), return
       // them there instead of the default role-based landing.
-      await login(email.trim().toLowerCase(), password, { redirect: !hasNext });
+      const result = await login(email.trim().toLowerCase(), password, { redirect: !hasNext });
+      if (result?.requiresTwoFactor) { setTwoFactorChallenge(result.challengeToken); setLoading(false); return; }
       if (hasNext) navigate(nextPath, { replace: true });
       // Funnel: successful login. Fire first_login once per device so the first
       // login after signup is distinguishable from repeat logins.
@@ -92,7 +95,7 @@ export default function SignIn({ variant = 'crm' }) {
 
         {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        {twoFactorChallenge ? <form className="auth-form" onSubmit={async (e)=>{e.preventDefault();setLoading(true);setError('');try{await completeTwoFactorLogin(twoFactorChallenge,twoFactorCode,{redirect:!hasNext});if(hasNext)navigate(nextPath,{replace:true});}catch(err){setError(err.message||'Invalid authentication code');}finally{setLoading(false)}}}><div className="auth-field"><label>Authentication code</label><input inputMode="numeric" autoComplete="one-time-code" value={twoFactorCode} onChange={e=>setTwoFactorCode(e.target.value)} placeholder="6-digit code or recovery code" required /></div><button type="submit" className="auth-submit" disabled={loading}>{loading?'Verifying…':'Verify & sign in'}</button><button type="button" className="auth-link-button" onClick={()=>{setTwoFactorChallenge('');setTwoFactorCode('')}}>Back to password</button></form> : <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-field">
             <label htmlFor="email">{t('auth.emailLabel')}</label>
             <input
@@ -146,7 +149,7 @@ export default function SignIn({ variant = 'crm' }) {
           <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? t('auth.btnSigningIn') : t('auth.btnSignIn')}
           </button>
-        </form>
+        </form>}
 
         <p className="auth-footer" style={{ marginTop: '12px' }}>
           <Link to={funnelPath("/forgot-password")}>{t('auth.forgotLink')}</Link>

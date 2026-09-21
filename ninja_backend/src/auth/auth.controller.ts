@@ -28,6 +28,14 @@ import { CurrentUser } from './decorators/current-user.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  private meta(req: any) {
+    return {
+      ip: clientIpFromHeaders(req?.headers, req),
+      userAgent: req?.headers?.['user-agent'] || null,
+      location: req?.headers?.['cf-ipcity'] || null,
+    };
+  }
+
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user account' })
@@ -50,8 +58,24 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() req: any) {
+    return this.authService.login(loginDto, this.meta(req));
+  }
+
+  @Post('2fa/verify-login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Complete sign in with a 2FA or recovery code' })
+  @ApiResponse({ status: 200, description: 'Two-factor login successful' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired 2FA challenge' })
+  async verifyTwoFactorLogin(
+    @Body() body: { challengeToken: string; code: string },
+    @Req() req: any,
+  ) {
+    return this.authService.completeTwoFactorLogin(
+      body.challengeToken,
+      body.code,
+      this.meta(req),
+    );
   }
 
   @Post('refresh')

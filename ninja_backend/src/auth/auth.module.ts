@@ -1,18 +1,20 @@
-import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import type { StringValue } from 'ms';
-import { ConfigModule } from '../config/config.module';
-import { ConfigService } from '../config/config.service';
-import { DatabaseModule } from '../database/database.module';
-import { UsersModule } from '../users/users.module';
-import { AnalyticsModule } from '../analytics/analytics.module';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RolesGuard } from './guards/roles.guard';
-import { SuperAdminBootstrapService } from './super-admin-bootstrap.service';
+import { Module } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import { PassportModule } from "@nestjs/passport";
+import type { StringValue } from "ms";
+import { ConfigModule } from "../config/config.module";
+import { ConfigService } from "../config/config.service";
+import { DatabaseModule } from "../database/database.module";
+import { UsersModule } from "../users/users.module";
+import { AnalyticsModule } from "../analytics/analytics.module";
+import { AuthService } from "./auth.service";
+import { AuthController } from "./auth.controller";
+import { SecurityController } from "./security.controller";
+import { SecurityService } from "./security.service";
+import { JwtStrategy } from "./strategies/jwt.strategy";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { RolesGuard } from "./guards/roles.guard";
+import { SuperAdminBootstrapService } from "./super-admin-bootstrap.service";
 
 @Module({
   imports: [
@@ -23,18 +25,24 @@ import { SuperAdminBootstrapService } from './super-admin-bootstrap.service';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.getRequired('JWT_SECRET'),
+      useFactory: (c: ConfigService) => ({
+        secret: c.getRequired("JWT_SECRET"),
         signOptions: {
-          expiresIn: (configService.get('JWT_EXPIRES_IN') || '15m') as StringValue,
+          expiresIn: (c.get("JWT_EXPIRES_IN") || "15m") as StringValue,
         },
       }),
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard, SuperAdminBootstrapService],
-  exports: [AuthService, JwtAuthGuard, RolesGuard],
+  controllers: [AuthController, SecurityController],
+  providers: [
+    AuthService,
+    SecurityService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RolesGuard,
+    SuperAdminBootstrapService,
+  ],
+  exports: [AuthService, SecurityService, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}
-

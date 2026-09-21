@@ -19,6 +19,7 @@ import { ConfigService } from '../config/config.service';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
 import { captureSignupCountry } from '../common/signup-geo.util';
 import { captureFirstTouch } from '../common/acquisition.util';
+import { SecurityService } from './security.service';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly db: DatabaseService,
     private readonly eventLogger: EventLoggerService,
+    private readonly security: SecurityService,
   ) {}
 
   async signup(
@@ -110,7 +112,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, meta: any = {}) {
     try {
       const { email, password } = loginDto;
 
@@ -128,7 +130,25 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      const tokens = await this.generateTokens(user);
+      if (await this.security.needs2fa(user.id)) {
+        const challengeToken = this.jwtService.sign(
+          { id: user.id, purpose: '2fa_login' },
+          {
+            secret: this.configService.getRequired('JWT_SECRET'),
+            expiresIn: '5m',
+          },
+        );
+        return { requiresTwoFactor: true, challengeToken };
+      }
+
+      const sessionId = await this.security.createSession(user.id, meta);
+      const tokens = await this.generateTokens(user, sessionId);
+      await this.security.activity(
+        user.id,
+        'successful_sign_in',
+        'Successful sign-in',
+        meta,
+      );
 
       await this.eventLogger.logUserLoggedIn(user.id, user.teamId);
 
@@ -170,17 +190,25 @@ export class AuthService {
       const payload = this.jwtService.verify(refreshToken, { secret });
 
       const user = await this.usersService.findById(payload.id);
+
+      if (
+        payload.sid &&
+        !(await this.security.sessionValid(payload.id, payload.sid))
+      ) {
+        throw new UnauthorizedException('Session has been signed out');
+      }
+
       if (!user || !user.isActive) {
         throw new UnauthorizedException('Invalid token');
       }
 
-      return await this.generateTokens(user);
+      return await this.generateTokens(user, payload.sid);
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
 
-  private async generateTokens(user: any) {
+  private async generateTokens(user: any, sessionId?: string) {
     // Get user's token version and team token version
     // Fallback to default values if columns don't exist (for backward compatibility)
     let tokenVersion = 1;
@@ -216,6 +244,7 @@ export class AuthService {
       role: user.role,
       tokenVersion,
       teamTokenVersion,
+      sid: sessionId || undefined,
     };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -224,7 +253,7 @@ export class AuthService {
     });
 
     const refreshToken = this.jwtService.sign(
-      { id: user.id, tokenVersion, teamTokenVersion },
+      { id: user.id, tokenVersion, teamTokenVersion, sid: sessionId || undefined },
       {
         secret: this.configService.getRequired('JWT_REFRESH_SECRET'),
         expiresIn: (this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d') as StringValue,
@@ -234,6 +263,76 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
+    };
+  }
+
+  async completeTwoFactorLogin(
+    challengeToken: string,
+    code: string,
+    meta: any = {},
+  ) {
+    let payload: any;
+
+    try {
+      payload = this.jwtService.verify(challengeToken, {
+        secret: this.configService.getRequired('JWT_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException(
+        'Two-factor challenge expired. Please sign in again.',
+      );
+    }
+
+    if (payload?.purpose !== '2fa_login' || !payload?.id) {
+      throw new UnauthorizedException('Invalid two-factor challenge.');
+    }
+
+    const verified = await this.security.verifySecondFactor(payload.id, code);
+    if (!verified) {
+      throw new UnauthorizedException(
+        'Invalid authentication or recovery code.',
+      );
+    }
+
+    const user = await this.usersService.findById(payload.id);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Invalid account.');
+    }
+
+    const sessionId = await this.security.createSession(user.id, meta);
+    const tokens = await this.generateTokens(user, sessionId);
+
+    await this.security.activity(
+      user.id,
+      'successful_sign_in',
+      'Successful sign-in with two-factor authentication',
+      meta,
+    );
+    await this.eventLogger.logUserLoggedIn(user.id, user.teamId);
+
+    this.db
+      .query(`UPDATE users SET last_seen_at = NOW() WHERE id = $1`, [user.id])
+      .catch(() => {});
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name ?? null,
+        phone: user.phone ?? null,
+        role: user.role,
+        teamId: user.teamId,
+        paymentStatus: user.paymentStatus ?? null,
+        plan: user.plan ?? null,
+        selectedPlan: user.selectedPlan ?? null,
+        emailVerifiedAt: user.emailVerifiedAt ?? null,
+        accountStatus: user.accountStatus ?? null,
+        paymentConfirmedAt: user.paymentConfirmedAt ?? null,
+        preferredLanguage: user.preferredLanguage ?? 'en',
+        landingPage: user.landingPage ?? null,
+        ...(await this.usersService.internalAccess(user.id)),
+      },
+      ...tokens,
     };
   }
 
@@ -364,9 +463,10 @@ export class AuthService {
       `UPDATE users SET password = $1, token_version = COALESCE(token_version, 1) + 1, updated_at = NOW() WHERE id = $2`,
       [hashed, userId],
     );
-    // Re-issue a fresh session (new token_version) so THIS session stays valid
-    // while any other existing sessions are invalidated.
-    const tokens = await this.generateTokens(user);
+    // Record the event and issue a new current session after token_version changes.
+    await this.security.passwordChanged(userId);
+    const sessionId = await this.security.createSession(userId, {});
+    const tokens = await this.generateTokens(user, sessionId);
     return { success: true, message: 'Password updated successfully.', ...tokens };
   }
 

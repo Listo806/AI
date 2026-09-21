@@ -87,6 +87,8 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ email, password }),
       });
 
+      if (response.requiresTwoFactor) return response;
+
       if (response.accessToken) {
         apiClient.setTokens(response.accessToken, response.refreshToken);
         setUser(response.user);
@@ -132,7 +134,19 @@ export function AuthProvider({ children }) {
             return response;
           }
 
-          // Redirect based on user role
+          // Personal default landing page. This is loaded from the authenticated
+          // user's settings only; it never changes another team member's account.
+          try {
+            const settings = await apiClient.request('/settings/me');
+            const preferred = settings?.preferences?.defaultLandingPage;
+            if (preferred && typeof preferred === 'string' && preferred.startsWith('/dashboard')) {
+              navigate(preferred);
+              return response;
+            }
+          } catch (_) {
+            // Settings must never block login. Fall back to the established role route.
+          }
+
           const role = response.user?.role;
           if (role === 'va') {
             navigate('/dashboard/properties');
@@ -153,6 +167,14 @@ export function AuthProvider({ children }) {
     } catch (error) {
       throw new Error(error.message || 'Login failed');
     }
+  };
+
+  const completeTwoFactorLogin = async (challengeToken, code, options = {}) => {
+    const response = await apiClient.request('/auth/2fa/verify-login', { method:'POST', body:JSON.stringify({ challengeToken, code }) });
+    if (!response?.accessToken) throw new Error('Two-factor verification failed');
+    apiClient.setTokens(response.accessToken,response.refreshToken); setUser(response.user); localStorage.setItem(STORAGE_PREFIX+'user',JSON.stringify(response.user));
+    if (options.redirect !== false) navigate('/dashboard');
+    return response;
   };
 
   const logout = () => {
@@ -189,6 +211,7 @@ export function AuthProvider({ children }) {
     setUser,
     loading,
     login,
+    completeTwoFactorLogin,
     logout,
     isAuthenticated,
     getDashboardPath,

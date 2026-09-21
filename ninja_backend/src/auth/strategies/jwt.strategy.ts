@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '../../config/config.service';
 import { DatabaseService } from '../../database/database.service';
 import { AuthService } from '../auth.service';
+import { SecurityService } from '../security.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,6 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
     private readonly db: DatabaseService,
+    private readonly security: SecurityService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -41,6 +43,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user) throw new UnauthorizedException();
 
     this.touchLastSeen(user.id);
+
+    if (!(await this.security.sessionValid(user.id, payload.sid))) {
+      throw new UnauthorizedException('Session has been signed out');
+    }
+    void this.security.touchSession(payload.sid);
 
     try {
       const { rows } = await this.db.query(
@@ -96,6 +103,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         role: effectiveRole,
         internalRole: internalActive ? (row.internal_role ?? null) : null,
         internalAccessStatus: row.internal_access_status ?? null,
+        sessionId: payload.sid || null,
         internalPermissions: Array.isArray(row.internal_permissions)
           ? row.internal_permissions
           : [],
