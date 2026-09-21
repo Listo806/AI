@@ -16,5 +16,6 @@ export class SecurityController {
   @Get('sessions') sessions(@CurrentUser() u:any){ return this.security.sessions(u.id,u.sessionId); }
   @Delete('sessions/:id') revoke(@CurrentUser() u:any,@Param('id') id:string){ return this.security.revokeSession(u.id,id,u.sessionId); }
   @Post('sessions/revoke-others') revokeOthers(@CurrentUser() u:any){ return this.security.revokeOthers(u.id,u.sessionId); }
+  @Post('sessions/revoke-current') revokeCurrent(@CurrentUser() u:any){ return this.security.revokeCurrent(u.id,u.sessionId); }
   @Get('activity') activity(@CurrentUser() u:any,@Query('limit') limit?:string){ return this.security.recentActivity(u.id,Number(limit)||20); }
 }

@@ -177,7 +177,14 @@ export function AuthProvider({ children }) {
     return response;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Best-effort server-side revocation so this device disappears from Active sessions.
+    // Local logout still succeeds if the request cannot reach the API.
+    try {
+      if (apiClient.accessToken) {
+        await apiClient.request('/security/sessions/revoke-current', { method: 'POST', body: '{}' });
+      }
+    } catch (_) {}
     apiClient.clearTokens();
     localStorage.removeItem(STORAGE_PREFIX + 'user');
     setUser(null);
