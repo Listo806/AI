@@ -37,6 +37,8 @@ const CSV_FIELDS = [
   'first_touch_landing_route',
   'first_visit_at',
   'country',
+  'state',
+  'location',
   'seat_count',
   'created_at',
   'registered_at',

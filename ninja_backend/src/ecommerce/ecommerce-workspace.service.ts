@@ -91,6 +91,12 @@ export class EcommerceWorkspaceService {
         ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ
       `);
 
+      // Registration state or region, kept alongside the country, and a state
+      // from a payment billing address when a provider gives us one.
+      for (const col of ['signup_region VARCHAR(80)', 'billing_state VARCHAR(80)']) {
+        await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
+      }
+
       // First-touch acquisition, written once at sign-up and never changed.
       for (const col of [
         'first_touch_source TEXT',

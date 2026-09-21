@@ -104,6 +104,25 @@ export class CustomersAdminService {
     await this.db.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ`,
     );
+    // Where the customer registered from, by state as well as country, and a
+    // state from a payment billing address when a provider gives us one.
+    for (const col of [
+      `signup_region VARCHAR(80)`,
+      `billing_state VARCHAR(80)`,
+    ]) {
+      await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
+    }
+    // The business profile is one of the places a state can come from, but it
+    // belongs to another module and its table may not exist on every database.
+    // Check once, and read from it only when it is really there.
+    try {
+      const { rows } = await this.db.query(
+        `SELECT to_regclass('public.ai_agent_business_profiles') IS NOT NULL AS present`,
+      );
+      this.hasProfileState = !!rows?.[0]?.present;
+    } catch {
+      this.hasProfileState = false;
+    }
     // First-touch acquisition, written once at sign-up and never changed. Read by
     // the source filter, the customer detail and the CSV export.
     for (const col of [
@@ -372,7 +391,16 @@ export class CustomersAdminService {
     return { success: true, newOwnerId: newOwnerUserId };
   }
 
-  private readonly cols = `
+  /**
+   * Every row also carries the state resolved by the same expression the filter
+   * and the totals use, so what a row shows and what a filter matches can never
+   * disagree.
+   */
+  private get cols(): string {
+    return `${this.baseCols}, (${this.stateExpr}) AS resolved_state`;
+  }
+
+  private readonly baseCols = `
     id, email, name, phone, COALESCE(preferred_language, 'en') AS language,
     offer_used, checkout_status, payment_status, plan, selected_plan,
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
@@ -380,6 +408,7 @@ export class CustomersAdminService {
     gclid, landing_page, signup_country, trial_ends_at, created_at, registered_at, upgraded_at, last_seen_at,
     first_touch_source, first_touch_medium, first_touch_campaign,
     first_touch_landing_route, first_visit_at,
+    signup_region, billing_state,
     team_id,
     (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id) AS seat_count,
     (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id AND tm.status = 'active') AS seats_used,
@@ -389,6 +418,50 @@ export class CustomersAdminService {
     (SELECT s.current_period_end FROM subscriptions s
       WHERE s.team_id = users.team_id
       ORDER BY s.created_at DESC LIMIT 1) AS next_billing`;
+
+  /**
+   * The customer's state, in the order the client asked for: a state from a
+   * payment billing address first, then the one on their business profile, then
+   * the state resolved from the sign-up request. Used by the filter, the
+   * breakdown and the display so all three always agree.
+   */
+  // Set by ready(): whether the business profile table exists on this database.
+  private hasProfileState = false;
+
+  /** The business profile state, or nothing when that table is not present. */
+  private get profileStateSql(): string {
+    return this.hasProfileState
+      ? `NULLIF(TRIM((SELECT bp.state
+                        FROM ai_agent_business_profiles bp
+                       WHERE bp.team_id = users.team_id
+                       LIMIT 1)), ''),`
+      : '';
+  }
+
+  private get stateExpr(): string {
+    return `
+    NULLIF(TRIM(COALESCE(
+      NULLIF(TRIM(users.billing_state), ''),
+      ${this.profileStateSql}
+      NULLIF(TRIM(users.signup_region), ''),
+      ''
+    )), '')`;
+  }
+
+  /**
+   * What the admin sees as the customer's location: the state for a United
+   * States customer who has one, the country otherwise. The country itself is
+   * always kept in the database exactly as before.
+   */
+  private get locationExpr(): string {
+    return `
+      CASE
+        WHEN UPPER(COALESCE(users.signup_country, '')) = 'US'
+          AND (${this.stateExpr}) IS NOT NULL
+        THEN (${this.stateExpr})
+        ELSE NULLIF(users.signup_country, '')
+      END`;
+  }
 
   // Friendly, normalized acquisition source used by both the filter and the
   // breakdown so they always agree.
@@ -604,6 +677,7 @@ export class CustomersAdminService {
         seats_limit: seatsLimit,
         seats_used: seatsUsed,
         country: row.signup_country || null,
+        ...this.locationView(row),
         ...acquisitionView(row),
       };
     }
@@ -637,7 +711,29 @@ export class CustomersAdminService {
       seats_limit: seatsLimit,
       seats_used: seatsUsed,
       country: row.signup_country || null,
+      ...this.locationView(row),
       ...acquisitionView(row),
+    };
+  }
+
+  /**
+   * The customer's state and the location the admin displays, in the same order
+   * of priority as the SQL above so a row and a filter can never disagree. The
+   * country stays on the row untouched.
+   */
+  private locationView(row: any): { state: string | null; location: string | null } {
+    const pick = (v: any) => {
+      const s = String(v ?? '').trim();
+      return s || null;
+    };
+    const state =
+      pick(row?.resolved_state) ||
+      pick(row?.billing_state) ||
+      pick(row?.signup_region);
+    const isUs = String(row?.signup_country || '').toUpperCase() === 'US';
+    return {
+      state,
+      location: isUs && state ? state : pick(row?.signup_country),
     };
   }
 
@@ -743,6 +839,37 @@ export class CustomersAdminService {
         ors.push(`UPPER(COALESCE(signup_country,'')) IN (${ph})`);
       }
       if (includeUnknown) ors.push(`COALESCE(signup_country,'') = ''`);
+      if (ors.length) clauses.push(`(${ors.join(' OR ')})`);
+    }
+    if (opts.state && opts.state !== 'all') {
+      // One or many states, by name, matched case-insensitively so "florida" and
+      // "Florida" are the same customer set. "Unknown" = a United States customer
+      // whose state we do not have.
+      const parts = String(opts.state)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const names: string[] = [];
+      let includeUnknown = false;
+      for (const p of parts) {
+        if (p.toLowerCase() === 'unknown') includeUnknown = true;
+        else if (p.toLowerCase() !== 'all') names.push(p.toLowerCase());
+      }
+      const ors: string[] = [];
+      if (names.length) {
+        const ph = names
+          .map((n) => {
+            params.push(n);
+            return `$${params.length}`;
+          })
+          .join(',');
+        ors.push(`LOWER(${this.stateExpr}) IN (${ph})`);
+      }
+      if (includeUnknown) {
+        ors.push(
+          `(UPPER(COALESCE(signup_country,'')) = 'US' AND (${this.stateExpr}) IS NULL)`,
+        );
+      }
       if (ors.length) clauses.push(`(${ors.join(' OR ')})`);
     }
     if (opts.usersRole && opts.usersRole !== 'all') {
@@ -919,6 +1046,79 @@ export class CustomersAdminService {
     return rows.map((r) => ({ ...this.enrich(r), source_label: r.source_label }));
   }
 
+  /**
+   * United States customers by state: sign-ups, activations, renewals and the
+   * monthly revenue they represent, so states can be compared with each other.
+   * An activation is an account that has paid at least once; a renewal is a
+   * recorded payment after the first one. Customers with no state are grouped
+   * as Unknown rather than dropped.
+   */
+  private async stateTotals(where: string, params: any[]) {
+    const { rows } = await this.db.query(
+      `SELECT COALESCE(${this.stateExpr}, 'Unknown') AS key,
+              COUNT(*)::int AS signups,
+              COUNT(*) FILTER (
+                WHERE payment_status = 'active' OR checkout_status = 'paid'
+              )::int AS activations,
+              COALESCE(SUM((
+                SELECT GREATEST(COUNT(*)::int - 1, 0)
+                  FROM payments p
+                  JOIN subscriptions s ON s.id = p.subscription_id
+                 WHERE s.team_id = users.team_id AND p.status = 'succeeded'
+              )), 0)::int AS renewals,
+              COALESCE(SUM((
+                SELECT COALESCE(SUM(p.amount), 0)
+                  FROM payments p
+                  JOIN subscriptions s ON s.id = p.subscription_id
+                 WHERE s.team_id = users.team_id AND p.status = 'succeeded'
+              )), 0)::float AS revenue,
+              selected_plan, plan, billing_cycle, payment_status, checkout_status
+         FROM users
+        WHERE ${where} AND UPPER(COALESCE(signup_country,'')) = 'US'
+        GROUP BY 1, selected_plan, plan, billing_cycle, payment_status, checkout_status`,
+      params,
+    );
+
+    // Fold the per-plan rows into one row per state, adding the recurring value
+    // of each active account the same way the headline MRR figure is built.
+    const byKey = new Map<string, any>();
+    for (const r of rows) {
+      const key = String(r.key || 'Unknown');
+      const entry = byKey.get(key) || {
+        key,
+        signups: 0,
+        activations: 0,
+        renewals: 0,
+        revenue: 0,
+        mrr: 0,
+      };
+      entry.signups += Number(r.signups || 0);
+      entry.activations += Number(r.activations || 0);
+      entry.renewals += Number(r.renewals || 0);
+      entry.revenue += Number(r.revenue || 0);
+      const isActive =
+        r.payment_status === 'active' || r.checkout_status === 'paid';
+      if (isActive) {
+        const cfg = getPlan(normalizePlanId(r.selected_plan || r.plan));
+        if (!cfg.isFree) {
+          const cents =
+            r.billing_cycle === 'annual'
+              ? Math.round(cfg.pricing.annualCents / 12)
+              : cfg.pricing.monthlyCents;
+          entry.mrr += (cents * Number(r.activations || 0)) / 100;
+        }
+      }
+      byKey.set(key, entry);
+    }
+    return [...byKey.values()]
+      .map((e) => ({
+        ...e,
+        revenue: Number(e.revenue.toFixed(2)),
+        mrr: Number(e.mrr.toFixed(2)),
+      }))
+      .sort((a, b) => b.signups - a.signups || b.mrr - a.mrr);
+  }
+
   // KPI cards + tab counts + source/offer/language breakdowns + funnel, all
   // respecting the shared filters (date range, plan, source, language, search).
   async summary(opts: any = {}) {
@@ -974,6 +1174,7 @@ export class CustomersAdminService {
     };
     const bySource = await breakdown(this.sourceExpr);
     const byLanguage = await breakdown(`COALESCE(preferred_language, 'en')`);
+    const byState = await this.stateTotals(where, params);
     const byCountry = await breakdown(
       `COALESCE(NULLIF(signup_country, ''), 'Unknown')`,
     );
@@ -1288,6 +1489,7 @@ export class CustomersAdminService {
         plan: byPlan,
         language: byLanguage,
         country: byCountry,
+        state: byState,
         customerStatus: customerStatusRows,
         customerActivity: customerActivityRows,
         workspaceOpportunity: workspaceOpportunityRows,

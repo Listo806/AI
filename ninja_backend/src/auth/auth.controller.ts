@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import {
   countryFromHeaders,
+  regionFromHeaders,
   clientIpFromHeaders,
 } from '../common/signup-geo.util';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
@@ -38,6 +39,7 @@ export class AuthController {
     // Registration country: Cloudflare's country header first, IP as the fallback.
     return this.authService.signup(signupDto, {
       country: countryFromHeaders(req?.headers),
+      region: regionFromHeaders(req?.headers),
       ip: clientIpFromHeaders(req?.headers, req),
     });
   }

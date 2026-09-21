@@ -34,7 +34,7 @@ export class AuthService {
 
   async signup(
     signupDto: SignupDto,
-    geo?: { country?: string | null; ip?: string | null },
+    geo?: { country?: string | null; region?: string | null; ip?: string | null },
   ) {
     const { password, role } = signupDto;
     // Normalize the email so it is stored consistently and can always be matched
