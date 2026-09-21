@@ -93,10 +93,15 @@ export async function lookupGeoByIp(
     pick: (j: any) => { country?: any; region?: any } | null,
   ): Promise<{ country: string | null; region: string | null } | null> => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
+    const timer = setTimeout(() => controller.abort(), 4000);
     try {
       const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        console.warn(
+          `[geo] ${new URL(url).host} answered HTTP ${res.status}; location may be incomplete`,
+        );
+        return null;
+      }
       const j: any = await res.json();
       const picked = pick(j);
       const code = picked?.country;
@@ -106,7 +111,10 @@ export async function lookupGeoByIp(
         country: code.toUpperCase(),
         region: region && region.length <= 80 ? region : null,
       };
-    } catch {
+    } catch (err: any) {
+      console.warn(
+        `[geo] ${new URL(url).host} lookup failed: ${err?.name || 'error'}; location may be incomplete`,
+      );
       return null;
     } finally {
       clearTimeout(timer);
@@ -155,6 +163,9 @@ export async function captureSignupCountry(
       region = region || normalizeRegion(found.region);
     }
     if (!code && !region) return;
+    console.log(
+      `[geo] signup location: country ${code || 'unknown'}, region ${region || 'unknown'}`,
+    );
 
     // The columns exist on every database the admin has read from, but the
     // /auth/signup path can run before that, so make sure once per process.
