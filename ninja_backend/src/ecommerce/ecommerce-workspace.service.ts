@@ -10,6 +10,14 @@ import { randomUUID } from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import { acquisitionView } from '../common/acquisition.util';
+import { canonicalUsState } from '../common/us-states.util';
+
+/** The customer's state, in one spelling, for a United States customer. */
+function usStateOf(row: any): string | null {
+  const raw = String(row?.billing_state || row?.signup_region || '').trim();
+  if (!raw) return null;
+  return canonicalUsState(raw) || raw;
+}
 import {
   getPlan,
   normalizePlanId,
@@ -91,6 +99,12 @@ export class EcommerceWorkspaceService {
         ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ
       `);
 
+      // Registration state or region, kept alongside the country, and a state
+      // from a payment billing address when a provider gives us one.
+      for (const col of ['signup_region VARCHAR(80)', 'billing_state VARCHAR(80)']) {
+        await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
+      }
+
       // First-touch acquisition, written once at sign-up and never changed.
       for (const col of [
         'first_touch_source TEXT',
@@ -131,6 +145,7 @@ export class EcommerceWorkspaceService {
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
     signup_source, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
     gclid, landing_page, signup_country, trial_ends_at,
+    signup_region, billing_state,
     first_touch_source, first_touch_medium, first_touch_campaign,
     first_touch_landing_route, first_visit_at,
     created_at, registered_at, upgraded_at, last_seen_at,
@@ -217,6 +232,7 @@ export class EcommerceWorkspaceService {
         recurring_amount: recurringCents / 100,
         seats_limit: cfg.seats,
         country: row.signup_country || null,
+        state: usStateOf(row),
         ...acquisitionView(row),
         source_label: row.source_label || 'Direct / Organic',
         next_billing: row.next_billing || null,
@@ -242,6 +258,7 @@ export class EcommerceWorkspaceService {
       recurring_amount: 0,
       seats_limit: 1,
       country: row.signup_country || null,
+      state: usStateOf(row),
       ...acquisitionView(row),
       source_label: row.source_label || 'Direct / Organic',
       next_billing: row.next_billing || null,

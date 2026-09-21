@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import {
   countryFromHeaders,
+  regionFromHeaders,
   clientIpFromHeaders,
 } from '../common/signup-geo.util';
 
@@ -16,6 +17,7 @@ export class TrialController {
     // Registration country: Cloudflare's country header first, IP as the fallback.
     return this.trialService.startTrial(dto, {
       country: countryFromHeaders(req?.headers),
+      region: regionFromHeaders(req?.headers),
       ip: clientIpFromHeaders(req?.headers, req),
     });
   }

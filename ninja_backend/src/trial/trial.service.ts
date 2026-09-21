@@ -60,6 +60,12 @@ export class TrialService {
       `plan_status VARCHAR(24) DEFAULT 'active'`,
       `signup_source VARCHAR(32)`,
       `signup_country VARCHAR(2)`,
+      // The state or region the customer registered from, kept next to the
+      // country, never instead of it. Reported on for United States customers.
+      `signup_region VARCHAR(80)`,
+      // A state taken from a payment billing address, when the provider gives
+      // us one. It takes priority over everything else.
+      `billing_state VARCHAR(80)`,
       // First-touch acquisition: where the customer originally came from. Written
       // once at sign-up and never changed afterwards, so a later visit through
       // Google, social or direct traffic cannot rewrite the original source. Kept
@@ -78,7 +84,7 @@ export class TrialService {
 
   async startTrial(
     dto: any,
-    geo?: { country?: string | null; ip?: string | null },
+    geo?: { country?: string | null; region?: string | null; ip?: string | null },
   ) {
     try {
       // Never log the raw payload: it carries the customer's password.
