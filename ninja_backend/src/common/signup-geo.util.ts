@@ -11,6 +11,10 @@ import { canonicalUsState, normalizeRegion } from './us-states.util';
 // Cloudflare returns these for anonymizers/unknowns/regions rather than a country.
 const CF_INVALID = new Set(['', 'XX', 'T1', 'ZZ', 'AP', 'EU']);
 
+// The free geolocation services limit by caller address, and this server shares
+// one. While they are refusing us, the CDN headers are the only source.
+let rateLimitedUntil = 0;
+
 // The state column ships in migration 166, which is not auto-run here, so make
 // sure it exists before the first write. Once per process, like the others.
 let geoColumnsReady = false;
@@ -42,14 +46,20 @@ export function countryFromHeaders(headers: any): string | null {
 // below fills it in. Validated like the country header is, so nothing arbitrary
 // from a request can reach the reports.
 export function regionFromHeaders(headers: any): string | null {
+  const pick = (...keys: string[]) => {
+    for (const k of keys) {
+      const v = String(headers?.[k] ?? '').trim();
+      if (v) return v;
+    }
+    return '';
+  };
+  // Cloudflare's visitor location headers: the name when it is sent, otherwise
+  // the code, which the state list turns into a name.
   const raw =
-    headers?.['cf-region'] ??
-    headers?.['Cf-Region'] ??
-    headers?.['CF-Region'] ??
-    headers?.['cf-region-name'];
-  const name = String(raw || '').trim();
-  if (!name || name.length > 60) return null;
-  return /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]*$/.test(name) ? name : null;
+    pick('cf-region', 'Cf-Region', 'CF-Region', 'cf-region-name') ||
+    pick('cf-region-code', 'Cf-Region-Code', 'CF-Region-Code');
+  if (!raw || raw.length > 60) return null;
+  return /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]*$/.test(raw) ? raw : null;
 }
 
 // Best client IP for the fallback geo lookup: the real visitor address that
@@ -74,6 +84,10 @@ export function clientIpFromHeaders(headers: any, req?: any): string | null {
 export async function lookupGeoByIp(
   ip?: string | null,
 ): Promise<{ country: string | null; region: string | null }> {
+  // The free providers rate-limit this server's address. When they do, stop
+  // asking for a while instead of spending a second of every sign-up on a call
+  // that will be refused.
+  if (Date.now() < rateLimitedUntil) return { country: null, region: null };
   const raw = String(ip || '').trim();
   if (
     !raw ||
@@ -97,6 +111,7 @@ export async function lookupGeoByIp(
     try {
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) {
+        if (res.status === 429) rateLimitedUntil = Date.now() + 30 * 60 * 1000;
         console.warn(`[geo] ${new URL(url).host} answered HTTP ${res.status}`);
         return null;
       }
