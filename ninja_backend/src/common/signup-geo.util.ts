@@ -93,20 +93,27 @@ export async function lookupGeoByIp(
     pick: (j: any) => { country?: any; region?: any } | null,
   ): Promise<{ country: string | null; region: string | null } | null> => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
+    const timer = setTimeout(() => controller.abort(), 4000);
     try {
       const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        console.warn(`[geo] ${new URL(url).host} answered HTTP ${res.status}`);
+        return null;
+      }
       const j: any = await res.json();
       const picked = pick(j);
       const code = picked?.country;
-      if (typeof code !== 'string' || !/^[A-Za-z]{2}$/.test(code)) return null;
+      if (typeof code !== 'string' || !/^[A-Za-z]{2}$/.test(code)) {
+        console.warn(`[geo] ${new URL(url).host} gave no usable country`);
+        return null;
+      }
       const region = String(picked?.region ?? '').trim();
       return {
         country: code.toUpperCase(),
         region: region && region.length <= 80 ? region : null,
       };
-    } catch {
+    } catch (err: any) {
+      console.warn(`[geo] ${new URL(url).host} lookup failed: ${err?.name || 'error'}`);
       return null;
     } finally {
       clearTimeout(timer);
@@ -155,6 +162,10 @@ export async function captureSignupCountry(
       region = region || normalizeRegion(found.region);
     }
     if (!code && !region) return;
+    // One line per sign-up, so a location that never arrives can be traced.
+    console.log(
+      `[geo] signup location: country ${code || 'unknown'}, region ${region || 'unknown'}`,
+    );
 
     // The columns exist on every database the admin has read from, but the
     // /auth/signup path can run before that, so make sure once per process.
