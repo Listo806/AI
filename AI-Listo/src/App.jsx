@@ -79,6 +79,12 @@ import Onboarding from "./pages/checkout/Onboarding";
 import EmailVerificationPage from "./pages/auth/EmailVerificationPage";
 
 import CortexaAISetup from "./pages/ai-center/CortexaAISetup";
+import SetupHome from "./pages/setup/SetupHome";
+import CustomerEntryPoints from "./pages/setup/CustomerEntryPoints";
+import BusinessPhoneSetup from "./pages/setup/BusinessPhoneSetup";
+import TestLaunchSetup from "./pages/setup/TestLaunchSetup";
+import SetupAssistance from "./pages/setup/SetupAssistance";
+
 import CortexaAI from "./pages/ai-center/CortexaAI";
 import AIAgentWorkspace from "./pages/ai-center/AIAgentWorkspace";
 import AICenterOverview from "./pages/ai-center/AICenterOverview";
@@ -419,9 +425,13 @@ function AppRoutes() {
         <Route path="contacts" element={<Contacts />} />
 
         {/* AI Center Routes */}
-        <Route path="ai-cortexa-setup" element={<CortexaAI />} />
+        <Route path="ai-cortexa-setup" element={<SetupHome />} />
         <Route path="ai-cortexa-setup/training" element={<CortexaAI />} />
-        <Route path="ai-cortexa-setup/conversion-flow" element={<CortexaAI />} />
+        <Route path="ai-cortexa-setup/customer-entry-points" element={<CustomerEntryPoints />} />
+        <Route path="ai-cortexa-setup/customer-entry-points/business-phone" element={<BusinessPhoneSetup />} />
+        <Route path="ai-cortexa-setup/test-launch" element={<TestLaunchSetup />} />
+        <Route path="ai-cortexa-setup/assistance" element={<SetupAssistance />} />
+        <Route path="ai-cortexa-setup/conversion-flow" element={<CustomerEntryPoints />} />
         <Route path="ai-cortexa" element={<AIAgentWorkspace />} />
         <Route path="ai-center" element={<AICenterOverview />} />
         <Route path="ai-assistant" element={<AIAssistant />} />

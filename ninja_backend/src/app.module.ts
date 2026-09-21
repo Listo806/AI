@@ -45,6 +45,7 @@ import { AestheticWellnessModule } from './aesthetic-wellness/aesthetic-wellness
 import { NuveiModule } from './nuvei/nuvei.module';
 import { ClinicMedicalModule } from "./clinic-medical/clinic-medical.module";
 import { SettingsModule } from './settings/settings.module';
+import { SetupModule } from './setup/setup.module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { SettingsModule } from './settings/settings.module';
     AestheticWellnessModule,
     ClinicMedicalModule,
     SettingsModule,
+    SetupModule,
   ],
   controllers: [AppController],
 })
