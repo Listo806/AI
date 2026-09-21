@@ -1,0 +1,35 @@
+/* Business Phone Pass 3 — scoped precision layer. Loaded after setup.css. */
+.phone3-page{max-width:none!important;color:#071342}
+.phone3-crumb{margin:0 0 8px!important;height:22px!important;font-size:11px!important}
+.phone3-header{min-height:62px!important;height:auto!important;display:grid!important;grid-template-columns:50px minmax(0,1fr) auto auto auto!important;gap:12px!important;align-items:center!important}
+.phone3-title-icon{width:48px!important;height:48px!important;border-radius:11px!important}
+.phone3-header h1{font-size:25px!important;line-height:1.05!important;margin:0!important}.phone3-header p{font-size:10px!important;margin:5px 0 0!important}
+.phone3-status{height:30px!important;padding:0 11px!important}.phone3-outline{height:36px!important;padding:0 16px!important}
+.phone3-progress{height:40px!important;grid-template-columns:150px 155px minmax(180px,1fr) 95px!important;margin:8px 0 10px!important}
+.phone3-layout{display:grid!important;grid-template-columns:286px minmax(650px,1fr) 360px!important;gap:12px!important;align-items:start!important}
+.phone3-nav>button{height:59px!important;padding:6px 9px!important;gap:6px!important;position:relative!important}
+.phone3-nav>button.active{background:#f1edff!important;border-radius:8px!important}
+.phone3-step-wrap{display:flex;align-items:center;gap:7px}
+.phone3-num{width:36px!important;height:36px!important;flex:0 0 36px!important;background:#f0f3f8!important;color:#20365e!important;font-size:14px!important}
+.phone3-num.active{background:linear-gradient(135deg,#6741f6,#4d22e8)!important;color:#fff!important}
+.phone3-complete-check{width:27px;height:27px;flex:0 0 27px;border-radius:50%;background:#0bb563;color:#fff;display:grid;place-items:center}
+.phone3-complete-check svg{width:15px;height:15px;stroke-width:3}.phone3-nav-copy{min-width:0;display:flex!important;flex-direction:column;gap:3px}.phone3-nav-copy b{font-size:11px!important}.phone3-nav-copy small{font-size:11px!important}
+.phone3-main{padding:0!important;border:0!important;background:transparent!important;display:flex!important;flex-direction:column!important;gap:9px!important}
+.phone3-objective{height:60px!important;min-height:60px!important;padding:7px 11px!important;border-radius:8px!important;background:#fbfaff!important}
+.phone3-objective-icon{width:39px!important;height:39px!important;flex:0 0 39px!important}.phone3-objective-copy{margin-left:9px!important;display:flex!important;flex-direction:column!important;gap:2px!important;flex:1}.phone3-objective button{font-size:10px!important}
+.phone3-section{text-align:left;padding:10px 12px!important;border:1px solid #dce5f2!important;border-radius:8px!important;background:#fff!important}
+.phone3-section h2{font-size:12px!important;margin:0 0 6px!important}.phone3-section-head{text-align:left!important}.phone3-section-head p{font-size:11px!important}
+.phone3-tabs{height:36px!important;margin:7px 0 8px!important;border-bottom:1px solid #e5eaf2!important}.phone3-tabs button{font-size:11px!important;padding:0 16px!important}.phone3-tabs button.active:after{height:2px!important}
+.phone3-number{min-height:64px!important;margin-top:0!important;grid-template-columns:42px minmax(180px,1fr) auto auto auto auto!important;gap:7px!important;padding:7px 9px!important}.phone3-phone-icon{width:39px!important;height:39px!important}.phone3-number-copy small{font-size:11px!important}.phone3-number-copy b{font-size:12px!important}.phone3-number-copy em{font-size:10px!important}.phone3-verify,.phone3-connect{height:25px!important;font-size:11px!important}.phone3-number>button{height:30px!important;font-size:11px!important}
+.phone3-channel-grid{gap:8px!important}.phone3-channel-grid>div{height:57px!important;padding:7px 9px!important}.phone3-channel-icon{width:36px!important;height:36px!important}.phone3-channel-grid b{font-size:11px!important}.phone3-channel-grid small{font-size:11px!important;line-height:1.25!important}
+.phone3-fields.three{grid-template-columns:repeat(4,auto)!important;align-items: end;}.phone3-fields.voice{grid-template-columns:.9fr 1.55fr!important}.phone3-fields label>span{font-size:11px!important}.phone3-fields input,.phone3-fields select{height:32px!important;font-size:11px!important}
+.phone3-record{min-height:44px!important;margin-top:7px!important}.phone3-record b{font-size:11px!important}.phone3-record small{font-size:11px!important}.phone3-advanced{height:30px!important;margin-top:7px!important}
+.phone3-right{gap:9px!important}.phone3-right-card,.phone3-test{padding:10px 12px!important}.phone3-right h2{font-size:14px!important}.phone3-right p{font-size:11px!important;text-align: left;}.phone3-journey>div{height:49px!important}.phone3-journey b{font-size:11px!important}.phone3-journey small{font-size:11px!important}
+.phone3-test-number{height:44px!important}.phone3-wave{height:43px!important}.phone3-run{height:34px!important}.phone3-caps span{font-size:7px!important}
+.phone3-footer{height:49px!important;grid-template-columns:286px 1fr 286px!important}
+.phone3-nav{padding: 8px;}
+.crm-dark .phone3-section{background:#111827!important;border-color:#2b3a52!important}.crm-dark .phone3-objective{background:#171526!important}
+@media(max-width:1450px){.phone3-layout{grid-template-columns:20% minmax(57%,1fr) 21%!important}.phone3-num{width:34px!important;height:34px!important;flex-basis:34px!important}.phone3-complete-check{width:24px;height:24px;flex-basis:24px}.phone3-number{grid-template-columns:40px minmax(145px,1fr) auto auto!important}.phone3-number>button{min-width:76px}.phone3-footer{grid-template-columns:250px 1fr 270px!important}}
+@media(max-width:1180px){.phone3-layout{grid-template-columns:240px minmax(540px,1fr)!important}.phone3-right{grid-column:2!important}.phone3-header{grid-template-columns:48px 1fr auto auto!important}.phone3-status{grid-column:3}.phone3-header .phone3-outline:last-child{grid-column:4}.phone3-footer{grid-template-columns:240px 1fr 260px!important}}
+@media(max-width:900px){.phone3-layout{grid-template-columns:1fr!important}.phone3-right{grid-column:auto!important}.phone3-nav{display:flex!important;overflow-x:auto!important}.phone3-nav>button{min-width:225px!important}.phone3-progress{grid-template-columns:auto auto 1fr!important}.phone3-progress strong{display:none!important}.phone3-footer{grid-template-columns:1fr 1fr!important;height:auto!important}.phone3-footer>span{grid-column:1/-1;grid-row:1}}
+@media(max-width:620px){.phone3-page{padding:10px!important}.phone3-header{grid-template-columns:42px 1fr!important}.phone3-status,.phone3-outline{grid-column:auto!important}.phone3-progress{grid-template-columns:1fr auto!important;height:auto!important;padding:8px!important}.phone3-progress>div{grid-column:1/-1}.phone3-number,.phone3-channel-grid,.phone3-fields.three,.phone3-fields.voice{grid-template-columns:1fr!important}.phone3-number{display:grid!important}.phone3-phone-icon{display:none!important}.phone3-footer{grid-template-columns:1fr!important}}
