@@ -116,12 +116,11 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Password updated successfully' })
   @ApiResponse({ status: 400, description: 'Current password is incorrect' })
   @ApiResponse({ status: 401, description: 'Not authenticated' })
-  async changePassword(@CurrentUser() user: any, @Body() dto: ChangePasswordDto, @Req() req: any) {
+  async changePassword(@CurrentUser() user: any, @Body() dto: ChangePasswordDto) {
     return this.authService.changePassword(
       user.id,
       dto.currentPassword,
       dto.newPassword,
-      this.meta(req),
     );
   }
 }

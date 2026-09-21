@@ -1,248 +1,28 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useMemo, useState } from 'react';
+import { UserRoundPlus, MessageCircle, CalendarDays, SquareCheckBig, ChartNoAxesColumnIncreasing, Sparkles, UsersRound, CreditCard, Mail, Bell, Clock3, Coins, House, LayoutGrid, Laptop, Smartphone, KeyRound, Shield, LockKeyhole, X } from 'lucide-react';
 import apiClient from '../../api/apiClient';
-import './account.css';
-
-export default function Settings() {
-  const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('notifications');
-
-  // Change-password form state
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  const resetFields = () => {
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-  };
-
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    // Client-side validation
-    if (newPassword.length < 8) {
-      setError(t('account.settings.passwordTooShort'));
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError(t('account.settings.passwordMismatch'));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const response = await apiClient.request('/auth/change-password', {
-        method: 'POST',
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-
-      // The backend re-issues a fresh session so THIS session stays valid.
-      if (response && response.accessToken) {
-        apiClient.setTokens(response.accessToken, response.refreshToken);
-      }
-
-      setSuccess((response && response.message) || t('account.settings.passwordUpdated'));
-      resetFields();
-    } catch (err) {
-      setError(err.message || t('account.settings.passwordUpdateError'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const labelStyle = {
-    fontSize: '13px',
-    fontWeight: 500,
-    color: '#475569',
-    marginBottom: '6px',
-    display: 'block',
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '10px 14px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '6px',
-    fontSize: '14px',
-    color: '#0f172a',
-    background: '#ffffff',
-    outline: 'none',
-    boxSizing: 'border-box',
-  };
-
-  const canSubmit =
-    currentPassword.length > 0 &&
-    newPassword.length > 0 &&
-    confirmPassword.length > 0 &&
-    !submitting;
-
-  return (
-    <div className="account-page">
-      <div className="account-header">
-        <h1 className="account-title">{t('account.settings.title')}</h1>
-        <p className="account-description">
-          {t('account.settings.description')}
-        </p>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="settings-tabs">
-        <button
-          onClick={() => setActiveTab('notifications')}
-          className={`settings-tab ${activeTab === 'notifications' ? 'active' : ''}`}
-        >
-          {t('account.settings.notifications')}
-        </button>
-        <button
-          onClick={() => setActiveTab('preferences')}
-          className={`settings-tab ${activeTab === 'preferences' ? 'active' : ''}`}
-        >
-          {t('account.settings.preferences')}
-        </button>
-        <button
-          onClick={() => setActiveTab('security')}
-          className={`settings-tab ${activeTab === 'security' ? 'active' : ''}`}
-        >
-          {t('account.settings.security')}
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      <div className="settings-tab-content">
-        {activeTab === 'notifications' && (
-          <div>
-            <h2 className="settings-section-title">{t('account.settings.notifications')}</h2>
-            <p style={{ color: '#94A3B8', margin: 0, fontSize: '14px' }}>
-              {t('account.settings.notificationsPlaceholder')}
-            </p>
-          </div>
-        )}
-
-        {activeTab === 'preferences' && (
-          <div>
-            <h2 className="settings-section-title">{t('account.settings.preferences')}</h2>
-            <p style={{ color: '#94A3B8', margin: 0, fontSize: '14px' }}>
-              {t('account.settings.preferencesPlaceholder')}
-            </p>
-          </div>
-        )}
-
-        {activeTab === 'security' && (
-          <div>
-            <h2 className="settings-section-title">{t('account.settings.security')}</h2>
-            <p style={{ color: '#94A3B8', margin: '0 0 20px 0', fontSize: '14px' }}>
-              {t('account.settings.securityDescription')}
-            </p>
-
-            <form
-              onSubmit={handleChangePassword}
-              style={{ maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '16px' }}
-            >
-              <div>
-                <label style={labelStyle} htmlFor="currentPassword">
-                  {t('account.settings.currentPassword')}
-                </label>
-                <input
-                  id="currentPassword"
-                  type="password"
-                  autoComplete="current-password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle} htmlFor="newPassword">
-                  {t('account.settings.newPassword')}
-                </label>
-                <input
-                  id="newPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  style={inputStyle}
-                />
-                <p style={{ color: '#94A3B8', margin: '6px 0 0 0', fontSize: '12px' }}>
-                  {t('account.settings.passwordMinHint')}
-                </p>
-              </div>
-
-              <div>
-                <label style={labelStyle} htmlFor="confirmPassword">
-                  {t('account.settings.confirmNewPassword')}
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-
-              {error && (
-                <div
-                  style={{
-                    background: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    color: '#b91c1c',
-                    borderRadius: '6px',
-                    padding: '10px 14px',
-                    fontSize: '13px',
-                  }}
-                >
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div
-                  style={{
-                    background: '#f0fdf4',
-                    border: '1px solid #bbf7d0',
-                    color: '#15803d',
-                    borderRadius: '6px',
-                    padding: '10px 14px',
-                    fontSize: '13px',
-                  }}
-                >
-                  {success}
-                </div>
-              )}
-
-              <div>
-                <button
-                  type="submit"
-                  disabled={!canSubmit}
-                  style={{
-                    background: canSubmit ? '#7c3aed' : '#f8fafc',
-                    color: canSubmit ? '#ffffff' : '#94a3b8',
-                    border: `1px solid ${canSubmit ? '#7c3aed' : '#e2e8f0'}`,
-                    padding: '10px 20px',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    cursor: canSubmit ? 'pointer' : 'not-allowed',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  {submitting ? t('account.settings.updating') : t('account.settings.updatePassword')}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+import './account.css'; import './settings.css';
+const rows=[['newLeadAssigned','New lead assigned','When a new lead is assigned to you',UserRoundPlus],['newCustomerMessage','New WhatsApp or customer message','When a customer sends a new message',MessageCircle],['appointmentUpdates','Appointments','Bookings, changes, cancellations, and reminders',CalendarDays],['taskUpdates','Tasks','Assignments and upcoming deadlines',SquareCheckBig],['pipelineChanges','Pipeline activity','Important deal and stage changes',ChartNoAxesColumnIncreasing],['aiHumanAssistance','AI agent handoff','When the AI agent needs human assistance',Sparkles],['importantTeamActivity','Team activity','Important activity from your team',UsersRound],['billingAccountAlerts','Billing and account alerts','Payment and account notifications',CreditCard]];
+const dn=Object.fromEntries(rows.map(([k])=>[k,true])); dn.emailNotifications=true;dn.inAppNotifications=true;
+const dp={timeZone:'America/Bogota',dateFormat:'MM/DD/YYYY',timeFormat:'12h',currency:'USD',defaultLandingPage:'/dashboard',defaultWorkspace:''};
+function Toggle({checked,onChange,disabled}){return <button type="button" className={`st-toggle ${checked?'on':''}`} disabled={disabled} onClick={()=>!disabled&&onChange(!checked)}><span/></button>}
+function Icon({C}){return <span className="st-icon"><C size={22}/></span>}
+export default function Settings(){
+ const [tab,setTab]=useState('notifications'),[n,setN]=useState(dn),[p,setP]=useState(dp),[ws,setWs]=useState([]),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[msg,setMsg]=useState('');
+ const [sec,setSec]=useState({}),[sessions,setSessions]=useState([]),[activity,setActivity]=useState([]),[modal,setModal]=useState(null),[setup,setSetup]=useState(null),[code,setCode]=useState(''),[recovery,setRecovery]=useState([]);
+ useEffect(()=>{(async()=>{try{const d=await apiClient.request('/settings/me');setN({...dn,...d.notifications});setP({...dp,...d.preferences,defaultWorkspace:d.preferences?.defaultWorkspace||''});setWs(d.availableWorkspaces||[])}finally{setLoading(false)}})()},[]);
+ const loadSecurity=async()=>{const [s,se,a]=await Promise.all([apiClient.request('/security/status'),apiClient.request('/security/sessions'),apiClient.request('/security/activity?limit=20')]);setSec(s||{});setSessions(se||[]);setActivity(a||[])};
+ useEffect(()=>{if(tab==='security')loadSecurity().catch(e=>setMsg(e.message))},[tab]);
+ const zones=useMemo(()=>['America/Bogota','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Sao_Paulo','Europe/London','Asia/Ho_Chi_Minh','UTC'],[]);
+ const save=async(kind)=>{setSaving(true);setMsg('');try{const r=await apiClient.request(kind==='notifications'?'/settings/me/notifications':'/settings/me/preferences',{method:'PATCH',body:JSON.stringify(kind==='notifications'?n:{...p,defaultWorkspace:p.defaultWorkspace||null})}); if(r.notifications)setN(r.notifications);if(r.preferences)setP({...r.preferences,defaultWorkspace:r.preferences.defaultWorkspace||''});setMsg('Settings saved successfully.')}catch(e){setMsg(e.message)}finally{setSaving(false)}};
+ const begin2fa=async()=>{const d=await apiClient.request('/security/2fa/setup',{method:'POST',body:'{}'});setSetup(d);setCode('');setModal('2fa')};
+ const confirm2fa=async()=>{const d=await apiClient.request('/security/2fa/confirm',{method:'POST',body:JSON.stringify({code})});setRecovery(d.recoveryCodes||[]);setModal('recovery');setSetup(null);setCode('');await loadSecurity()};
+ const genRecovery=async()=>{const d=await apiClient.request('/security/recovery-codes',{method:'POST',body:JSON.stringify({code})});setRecovery(d.recoveryCodes||[]);setModal('recovery');setCode('');await loadSecurity()};
+ const fmt=d=>{if(!d)return '';const x=new Date(d);return x.toLocaleString()};
+ if(loading)return <div className="st-page">Loading settings…</div>;
+ return <div className="st-page"><header><h1>Settings</h1><p>Manage your account preferences, notifications, and security.</p></header><nav className="st-tabs">{['notifications','preferences','security'].map(x=><button key={x} className={tab===x?'active':''} onClick={()=>{setTab(x);setMsg('')}}>{x[0].toUpperCase()+x.slice(1)}</button>)}</nav>{msg&&<div className="st-msg">{msg}</div>}
+ {tab==='notifications'&&<><h2>Notifications</h2><p className="st-sub">Choose how Cortexa keeps you informed.</p><section className="st-box">{rows.map(([k,t,d,C])=><div className="st-row" key={k}><Icon C={C}/><div className="st-copy"><b>{t}</b><span>{d}</span></div><Toggle checked={!!n[k]} disabled={k==='billingAccountAlerts'} onChange={v=>setN(s=>({...s,[k]:v}))}/></div>)}</section><section className="st-box st-delivery"><div className="st-row"><Icon C={Mail}/><div className="st-copy"><b>Email notifications</b></div><Toggle checked={n.emailNotifications} onChange={v=>setN(s=>({...s,emailNotifications:v}))}/></div><div className="st-row"><Icon C={Bell}/><div className="st-copy"><b>In-app notifications</b></div><Toggle checked={n.inAppNotifications} onChange={v=>setN(s=>({...s,inAppNotifications:v}))}/></div></section><div className="st-save"><button onClick={()=>save('notifications')} disabled={saving}>Save changes</button></div></>}
+ {tab==='preferences'&&<><h2>Preferences</h2><p className="st-sub">Choose how Cortexa works for your account.</p><section className="st-box">{[[Clock3,'Time zone','Used for appointments, reminders, and activity times','timeZone',zones],[CalendarDays,'Date format','', 'dateFormat',['MM/DD/YYYY','DD/MM/YYYY','YYYY-MM-DD']]].map(([C,t,d,k,opts])=><div className="st-row" key={k}><Icon C={C}/><div className="st-copy"><b>{t}</b>{d&&<span>{d}</span>}</div><select value={p[k]} onChange={e=>setP(s=>({...s,[k]:e.target.value}))}>{opts.map(o=><option key={o}>{o}</option>)}</select></div>)}<div className="st-row"><Icon C={Clock3}/><div className="st-copy"><b>Time format</b></div><div className="st-segment"><button className={p.timeFormat==='12h'?'active':''} onClick={()=>setP(s=>({...s,timeFormat:'12h'}))}>12-hour</button><button className={p.timeFormat==='24h'?'active':''} onClick={()=>setP(s=>({...s,timeFormat:'24h'}))}>24-hour</button></div></div><div className="st-row"><Icon C={Coins}/><div className="st-copy"><b>Default currency</b><span>Used when displaying monetary values</span></div><select value={p.currency} onChange={e=>setP(s=>({...s,currency:e.target.value}))}>{['USD','EUR','GBP','CAD','AUD','BRL','MXN'].map(x=><option key={x}>{x} — {x==='USD'?'US Dollar':x}</option>)}</select></div><div className="st-row"><Icon C={House}/><div className="st-copy"><b>Default landing page</b><span>The first page you see after signing in</span></div><select value={p.defaultLandingPage} onChange={e=>setP(s=>({...s,defaultLandingPage:e.target.value}))}><option value="/dashboard">Dashboard</option><option value="/dashboard/leads">Leads</option><option value="/dashboard/pipeline">Pipeline</option><option value="/dashboard/contacts">Contacts</option><option value="/dashboard/calendar">Calendar</option><option value="/dashboard/whatsapp">Conversations</option></select></div><div className="st-row"><Icon C={LayoutGrid}/><div className="st-copy"><b>Default workspace</b><span>The workspace that opens when you sign in</span></div><select value={p.defaultWorkspace} onChange={e=>setP(s=>({...s,defaultWorkspace:e.target.value}))}><option value="">No default workspace</option>{ws.map(w=><option value={w.id} key={w.id}>{w.label}</option>)}</select></div></section><div className="st-save"><button onClick={()=>save('preferences')} disabled={saving}>Save changes</button></div></>}
+ {tab==='security'&&<><h2>Security</h2><p className="st-sub">Protect your account and manage where you're signed in.</p><section className="st-box"><div className="st-row"><Icon C={LockKeyhole}/><div className="st-copy"><b>Password</b><span>{sec.passwordChangedAt?`Last changed ${fmt(sec.passwordChangedAt)}`:'Password is protected'}</span></div><button className="st-outline" onClick={()=>setModal('password')}>Change password</button></div><div className="st-row"><Icon C={Shield}/><div className="st-copy"><b>Two-factor authentication</b><span>Add an extra layer of security to your account</span></div><span className="st-badge">{sec.twoFactorEnabled?'Enabled':'Not enabled'}</span><button className="st-outline" onClick={sec.twoFactorEnabled?()=>setModal('disable2fa'):begin2fa}>{sec.twoFactorEnabled?'Disable':'Set up'}</button></div></section><section className="st-box st-section st-sessions"><h3>Active sessions</h3>{sessions.length===0&&<div className="st-empty">No active sessions found.</div>}{sessions.map(s=><div className="st-row" key={s.id}><Icon C={/Android|iPhone|iPad/i.test(s.device)?Smartphone:Laptop}/><div className="st-copy"><b>{s.device}</b><span>{s.location||'Location unavailable'} · {s.current?'Current session':`Last active ${fmt(s.lastActiveAt)}`}</span></div>{s.current?<span className="st-active">Active now</span>:<button className="st-link" onClick={async()=>{await apiClient.request(`/security/sessions/${s.id}`,{method:'DELETE'});loadSecurity()}}>Sign out</button>}</div>)}<button className="st-danger" onClick={async()=>{await apiClient.request('/security/sessions/revoke-others',{method:'POST',body:'{}'});loadSecurity()}}>Sign out of all other devices</button></section><section className="st-box st-section"><h3>Recovery</h3><div className="st-row"><Icon C={KeyRound}/><div className="st-copy"><b>Recovery codes</b><span>Generate backup codes in case you lose access to your authentication device</span></div><button className="st-outline" disabled={!sec.twoFactorEnabled} onClick={()=>{setCode('');setModal('generateRecovery')}}>Generate codes</button></div></section><section className="st-box st-section st-activity"><h3>Recent security activity</h3>{activity.length===0&&<div className="st-empty">No recent security activity.</div>}{activity.slice(0,3).map(a=><div className="st-row" key={a.id}><Icon C={Clock3}/><div className="st-copy st-inline"><b>{a.description}</b><span>{fmt(a.createdAt)}{a.location?` · ${a.location}`:''}</span></div></div>)}<button className="st-link st-view" onClick={()=>setModal('activity')}>View all activity</button></section></>}
+ {modal&&<div className="st-modal-bg" onMouseDown={()=>setModal(null)}><div className="st-modal" onMouseDown={e=>e.stopPropagation()}><button className="st-x" onClick={()=>setModal(null)}><X/></button>{modal==='2fa'&&<><h3>Set up two-factor authentication</h3><p>Scan this QR code with your authenticator app, then enter the 6-digit code.</p>{setup?.qrDataUrl&&<img className="st-qr" src={setup.qrDataUrl}/>}<code>{setup?.secret}</code><input value={code} onChange={e=>setCode(e.target.value)} placeholder="6-digit code"/><button className="st-primary" onClick={confirm2fa}>Verify & enable</button></>}{modal==='disable2fa'&&<><h3>Disable two-factor authentication</h3><input value={code} onChange={e=>setCode(e.target.value)} placeholder="Authenticator or recovery code"/><button className="st-danger-fill" onClick={async()=>{await apiClient.request('/security/2fa/disable',{method:'POST',body:JSON.stringify({code})});setModal(null);setCode('');loadSecurity()}}>Disable 2FA</button></>}{modal==='generateRecovery'&&<><h3>Generate recovery codes</h3><p>Enter a current authenticator code to replace your recovery codes.</p><input value={code} onChange={e=>setCode(e.target.value)} placeholder="6-digit code"/><button className="st-primary" onClick={genRecovery}>Generate codes</button></>}{modal==='recovery'&&<><h3>Save your recovery codes</h3><p>Each code can be used once. Store them somewhere safe.</p><div className="st-codes">{recovery.map(x=><code key={x}>{x}</code>)}</div><button className="st-primary" onClick={()=>setModal(null)}>Done</button></>}{modal==='activity'&&<><h3>Security activity</h3><div className="st-activity-modal">{activity.map(a=><div key={a.id}><b>{a.description}</b><span>{fmt(a.createdAt)}{a.location?` · ${a.location}`:''}</span></div>)}</div></>}{modal==='password'&&<PasswordForm done={()=>{setModal(null);loadSecurity()}}/>}</div></div>}</div>}
+function PasswordForm({done}){const [a,setA]=useState(''),[b,setB]=useState(''),[c,setC]=useState(''),[e,setE]=useState('');const go=async()=>{if(b.length<8)return setE('New password must be at least 8 characters.');if(b!==c)return setE('Passwords do not match.');try{const r=await apiClient.request('/auth/change-password',{method:'POST',body:JSON.stringify({currentPassword:a,newPassword:b})});if(r.accessToken)apiClient.setTokens(r.accessToken,r.refreshToken);done()}catch(x){setE(x.message)}};return <><h3>Change password</h3>{e&&<div className="st-error">{e}</div>}<input type="password" placeholder="Current password" value={a} onChange={x=>setA(x.target.value)}/><input type="password" placeholder="New password" value={b} onChange={x=>setB(x.target.value)}/><input type="password" placeholder="Confirm new password" value={c} onChange={x=>setC(x.target.value)}/><button className="st-primary" onClick={go}>Change password</button></>}

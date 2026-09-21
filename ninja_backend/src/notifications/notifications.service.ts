@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
+import { SettingsService } from "../settings/settings.service";
 
 export interface CreateNotificationDto {
   teamId: string;
@@ -37,7 +38,30 @@ export interface CreateNotificationDto {
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly settings: SettingsService,
+  ) {}
+
+  private preferenceKey(type?: string, category?: string): any {
+    const t = String(type || "").toLowerCase();
+    const c = String(category || "").toLowerCase();
+    if (t === "lead.assigned") return "newLeadAssigned";
+    if (t.includes("whatsapp") || t.includes("message")) return "newCustomerMessage";
+    if (t.includes("appointment") || t.includes("booking")) return "appointmentUpdates";
+    if (t.includes("task") || t.includes("deadline")) return "taskUpdates";
+    if (t.startsWith("deal.") || t.includes("pipeline") || t.includes("stage")) return "pipelineChanges";
+    if (t.includes("handoff") || t.includes("escalat") || c === "ai") return "aiHumanAssistance";
+    if (t.startsWith("payment.") || t.startsWith("subscription.") || c === "payment" || c === "subscription") return "billingAccountAlerts";
+    if (t.startsWith("team.") || c === "team") return "importantTeamActivity";
+    return null;
+  }
+
+  private async inAppAllowed(userId: string, row: any) {
+    const key = this.preferenceKey(row?.type, row?.category);
+    if (!key) return true;
+    return this.settings.notificationAllowed(userId, key, "inApp");
+  }
 
   async create(dto: CreateNotificationDto) {
     await this.db.query(
@@ -189,10 +213,15 @@ export class NotificationsService {
 
     LIMIT $3
     `,
-      [teamId, userId, limit],
+      [teamId, userId, Math.max(limit * 4, limit)],
     );
 
-    return result.rows;
+    const visible: any[] = [];
+    for (const row of result.rows) {
+      if (await this.inAppAllowed(userId, row)) visible.push(row);
+      if (visible.length >= limit) break;
+    }
+    return visible;
   }
  
   async getTeamNotifications(teamId: string, limit = 50) {
@@ -257,24 +286,19 @@ export class NotificationsService {
 
   async getUnreadCount(teamId: string, userId: string) {
     const result = await this.db.query(
-      `
-    SELECT COUNT(*) as total
-
-    FROM team_notifications
-
-    WHERE team_id = $1
-
-    AND (
-      user_id IS NULL
-      OR user_id = $2
-    )
-
-    AND is_read = false
-    `,
+      `SELECT type, category
+       FROM team_notifications
+       WHERE team_id = $1
+         AND (user_id IS NULL OR user_id = $2)
+         AND is_read = false
+         AND deleted_at IS NULL`,
       [teamId, userId],
     );
-
-    return Number(result.rows[0]?.total || 0);
+    let total = 0;
+    for (const row of result.rows) {
+      if (await this.inAppAllowed(userId, row)) total += 1;
+    }
+    return total;
   }
   async markNotificationAsRead(
     teamId: string,

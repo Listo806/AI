@@ -1,0 +1,95 @@
+
+/* Settings — reference layout */
+.st-page{max-width:none;color:#071a40;background:transparent}
+.st-page header h1{font-size:30px;line-height:1.08;margin:0 0 5px;font-weight: 700;letter-spacing:-.45px}
+.st-page header p,.st-sub{color:#46679b;margin:0;font-size:15px}
+.st-tabs{display:flex;gap:0;border-bottom:1px solid #cfdbec;margin:18px 0 22px}
+.st-tabs button{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:0 0 12px;margin-right:36px;font-size:15px;color:#294b7e;cursor:pointer}
+.st-tabs button.active{color:#066bff;border-color:#066bff}
+.st-page h2{font-size:25px;line-height:1.15;margin:0 0 3px;font-weight: 700;letter-spacing:-.25px}
+.st-sub{margin-bottom:17px}
+.st-box{text-align: left;border:1px solid #d7e2f0;border-radius:8px;overflow:hidden;background:#fff}
+.st-delivery,.st-section{margin-top:13px}
+.st-row{min-height:48px;display:flex;align-items:center;border-bottom:1px solid #d7e2f0;padding:0 17px;gap:14px}
+.st-row:last-child{border-bottom:0}
+.st-icon{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#edf5ff;color:#0872ff;flex:0 0 42px}
+.st-icon svg{width:21px;height:21px;stroke-width:2}
+.st-copy{text-align: left;display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0}
+.st-copy b{font-size:14px;line-height:1.25;color:#071a40;font-weight:700}
+.st-copy span{font-size:12.5px;line-height:1.25;color:#47689f;margin-top:2px}
+.st-copy.st-inline{flex-direction:row;gap:26px;align-items:center}
+.st-toggle{width:48px;height:24px;border:0;border-radius:20px;background:#cbd5e1;padding:3px;cursor:pointer;flex:0 0 auto}
+.st-toggle span{display:block;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.st-toggle.on{background:#0872ff}.st-toggle.on span{transform:translateX(24px)}
+.st-toggle:disabled{cursor:not-allowed;opacity:.82}
+.st-row select{width:350px;max-width:42%;height:42px;border:1px solid #cedced;border-radius:8px;background:#fff;color:#071a40;padding:0 14px;font-size:14px}
+.st-segment{width:350px;max-width:42%;height:42px;display:flex;background:#eef4fb;border-radius:8px;overflow:hidden}
+.st-segment button{flex:1;border:0;background:transparent;color:#526b91;font-size:14px;cursor:pointer}
+.st-segment button.active{background:#0872ff;color:#fff;border-radius:8px;font-weight:700}
+.st-save{display:flex;justify-content:flex-end;margin-top:12px}
+.st-save button,.st-primary{border:0;border-radius:7px;background:#0872ff;color:#fff;min-width:170px;padding:10px 28px;font-weight:700;cursor:pointer}
+.st-save button:disabled{opacity:.6;cursor:wait}
+.st-msg{padding:8px 12px;background:#edf5ff;margin-bottom:12px;border-radius:6px;color:#24538f}
+
+/* Security is intentionally denser in the supplied design */
+.st-section h3{font-size:13px;line-height:1;margin:0;padding:8px 16px;border-bottom:1px solid #d7e2f0;font-weight: 700}
+.st-outline{min-width:130px;border:1px solid #0872ff;color:#0872ff;background:transparent;border-radius:6px;padding:7px 17px;font-weight:700;cursor:pointer}
+.st-outline:disabled{opacity:.45;cursor:not-allowed}
+.st-badge{font-size:12px;background:#edf4ff;color:#47689f;padding:5px 10px;border-radius:6px;margin-left:auto}
+.st-active{color:#009d4e;font-weight:700;font-size:13px;white-space:nowrap}
+.st-link{border:0;background:none;color:#0671ff;font-weight:700;cursor:pointer}
+.st-danger{margin:7px 16px;border:1px solid #ef3340;background:#fff;color:#c51d2b;border-radius:5px;padding:7px 20px;font-weight:600;cursor:pointer}
+.st-view{margin:8px 16px}
+.st-empty{padding:12px 17px;color:#60769b;font-size:13px;border-bottom:1px solid #e2e8f0}
+
+/* Preferences: six complete rows from the design */
+.st-page select:focus,.st-page button:focus-visible,.st-modal input:focus{outline:2px solid rgba(8,114,255,.22);outline-offset:1px}
+
+/* Modals */
+.st-modal-bg{position:fixed;inset:0;background:rgba(4,15,37,.55);display:grid;place-items:center;z-index:9999;padding:20px}
+.st-modal{width:min(470px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;padding:26px;position:relative;display:flex;flex-direction:column;gap:13px;color:#071a40}
+.st-modal h3{font-size:21px;margin:0}.st-modal p{color:#60769b;margin:0}
+.st-modal input{height:42px;border:1px solid #cad8eb;border-radius:7px;padding:0 12px}
+.st-x{position:absolute;right:12px;top:12px;border:0;background:none;cursor:pointer}
+.st-qr{width:220px;align-self:center}
+.st-modal>code{padding:10px;background:#f4f7fb;text-align:center;border-radius:6px;word-break:break-all}
+.st-codes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.st-codes code{padding:8px;background:#f4f7fb;border-radius:5px;text-align:center}
+.st-danger-fill{border:0;background:#d92937;color:#fff;border-radius:7px;padding:11px;font-weight:700;cursor:pointer}
+.st-activity-modal div{display:flex;flex-direction:column;padding:10px 0;border-bottom:1px solid #e2e8f0}
+.st-activity-modal span{color:#60769b;font-size:12px}.st-error{color:#b91c1c}
+
+/* Dark */
+.crm-dark .st-page{color:#f5f8ff}
+.crm-dark .st-page header p,.crm-dark .st-sub,.crm-dark .st-copy span,.crm-dark .st-empty{color:#9db0cf}
+.crm-dark .st-tabs{border-color:#29354b}.crm-dark .st-tabs button{color:#9db0cf}.crm-dark .st-tabs button.active{color:#4c9aff}
+.crm-dark .st-box,.crm-dark .st-modal{background:#111827;border-color:#29354b}
+.crm-dark .st-row,.crm-dark .st-section h3,.crm-dark .st-empty{border-color:#29354b}
+.crm-dark .st-copy b{color:#f7f9fd}.crm-dark .st-icon{background:#172640}
+.crm-dark .st-row select,.crm-dark .st-modal input{background:#0b1220;border-color:#334155;color:#fff}
+.crm-dark .st-segment{background:#172033}.crm-dark .st-danger{background:transparent}
+.crm-dark .st-modal>code,.crm-dark .st-codes code{background:#0b1220}.crm-dark .st-modal{color:#f5f8ff}
+
+/* Tablet */
+@media(max-width:1024px){
+ .st-page{padding:22px 24px 34px}
+ .st-row select,.st-segment{width:310px;max-width:45%}
+}
+/* Mobile */
+@media(max-width:760px){
+ .st-page{padding:18px 14px 28px}.st-page header h1{font-size:26px}
+ .st-tabs{overflow:auto;margin-top:17px}.st-tabs button{white-space:nowrap;margin-right:26px}
+ .st-row{padding:9px 12px;gap:10px;min-height:58px;flex-wrap:nowrap}
+ .st-icon{width:38px;height:38px;flex-basis:38px}.st-icon svg{width:19px;height:19px}
+ .st-row select,.st-segment{width:42%;max-width:42%;font-size:12px}
+ .st-copy b{font-size:13px}.st-copy span{font-size:11px}
+ .st-outline{min-width:auto;padding:7px 10px}.st-badge{padding:4px 7px}
+ .st-copy.st-inline{flex-direction:column;gap:2px;align-items:flex-start}
+ .st-codes{grid-template-columns:1fr}.st-save button{width:100%}
+}
+@media(max-width:520px){
+ .st-row select,.st-segment{width:44%;max-width:44%}
+ .st-row{gap:8px;padding-left:10px;padding-right:10px}
+ .st-icon{width:34px;height:34px;flex-basis:34px}
+ .st-outline{font-size:11px}.st-badge{font-size:10px}
+}

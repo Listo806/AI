@@ -14,6 +14,7 @@ import {
 import { EventLoggerService } from "../analytics/events/event-logger.service";
 import { LeadAIService } from "./lead-ai.service";
 import { WebhooksService } from "../integrations/webhooks/webhooks.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 @Injectable()
 export class LeadsService {
@@ -22,6 +23,7 @@ export class LeadsService {
     private readonly eventLogger: EventLoggerService,
     private readonly leadAI: LeadAIService,
     private readonly webhooksService: WebhooksService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createPublic(createLeadDto: CreateLeadDto): Promise<Lead> {
@@ -490,6 +492,21 @@ export class LeadsService {
         teamId,
         updateLeadDto.assignedTo || "",
       );
+
+      if (teamId && updateLeadDto.assignedTo) {
+        await this.notificationsService.create({
+          teamId,
+          userId: updateLeadDto.assignedTo,
+          actorUserId: userId,
+          type: "lead.assigned",
+          category: "lead",
+          title: "New lead assigned",
+          message: updatedLead.name ? `${updatedLead.name} was assigned to you` : "A lead was assigned to you",
+          url: `/dashboard/leads/${updatedLead.id}`,
+          entityType: "lead",
+          entityId: updatedLead.id,
+        });
+      }
     }
 
     return updatedLead;

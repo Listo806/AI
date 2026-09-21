@@ -19,9 +19,10 @@ import { MessagingModule } from '../messaging/messaging.module';
 import { WebhooksModule } from '../integrations/webhooks/webhooks.module';
 import { AwsModule } from '../common/aws/aws.module';
 import { PaymentGuard } from '../auth/guards/payment.guard';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [ConfigModule, AnalyticsModule, SubscriptionsModule, PlansModule, IntegrationsModule, IntelligenceModule, forwardRef(() => MessagingModule), WebhooksModule, AwsModule],
+  imports: [ConfigModule, AnalyticsModule, SubscriptionsModule, PlansModule, IntegrationsModule, IntelligenceModule, forwardRef(() => MessagingModule), WebhooksModule, AwsModule, NotificationsModule],
   controllers: [AILeadController, LeadsController],
   providers: [
     PaymentGuard,

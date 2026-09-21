@@ -22,9 +22,10 @@ import { CrmModule } from '../crm/crm.module';
 import { AiCenterModule } from "../ai-center/ai-center.module";
 import { PaymentGuard } from "../auth/guards/payment.guard";
 import { PlansModule } from '../plans/plans.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, AiAssistantModule, CrmModule, AiCenterModule, PlansModule],
+  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, AiAssistantModule, CrmModule, AiCenterModule, PlansModule, NotificationsModule],
   controllers: [WhatsAppQrController],
   providers: [
     PaymentGuard,

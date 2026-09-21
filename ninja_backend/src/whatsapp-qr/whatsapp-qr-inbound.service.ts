@@ -8,6 +8,7 @@ import { WhatsAppQrIntentService } from "./whatsapp-qr-intent.service";
 import { WhatsAppQrRoutingService } from "./whatsapp-qr-routing.service";
 import { WhatsAppQrAiReplyService } from "./whatsapp-qr-ai-reply.service";
 import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 /**
  * Baileys messages.upsert → normalize → lead find/create → QR conversation → message row
@@ -26,6 +27,7 @@ export class WhatsAppQrInboundService {
     private readonly routing: WhatsAppQrRoutingService,
     private readonly aiReply: WhatsAppQrAiReplyService,
     private readonly realtime: WhatsAppQrRealtimeService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -189,6 +191,20 @@ export class WhatsAppQrInboundService {
       return;
     }
 
+    if (crmEntity.team_id) {
+      await this.notifications.create({
+        teamId: crmEntity.team_id,
+        userId,
+        type: "whatsapp.message_received",
+        category: "message",
+        title: "New WhatsApp message",
+        message: cleanBody || parsed.body || "New customer message",
+        url: "/dashboard/whatsapp",
+        entityType: crmEntity.lead_id ? "lead" : "contact",
+        entityId: crmEntity.lead_id || crmEntity.contact_id || undefined,
+      });
+    }
+
     this.realtime.emitMessage({
       userId,
       conversationId: conv.id,
@@ -216,6 +232,20 @@ export class WhatsAppQrInboundService {
 
           conv.owner_type = "human";
           conv.ai_enabled = false;
+          if (crmEntity.team_id) {
+            await this.notifications.create({
+              teamId: crmEntity.team_id,
+              userId,
+              type: "ai.handoff",
+              category: "ai",
+              priority: "high",
+              title: "AI agent handoff",
+              message: "A WhatsApp customer requested human assistance",
+              url: "/dashboard/whatsapp",
+              entityType: "lead",
+              entityId: crmEntity.lead_id,
+            });
+          }
         }
       }
 

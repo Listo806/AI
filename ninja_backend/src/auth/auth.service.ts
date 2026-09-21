@@ -453,7 +453,6 @@ export class AuthService {
     userId: string,
     currentPassword: string,
     newPassword: string,
-    meta: any = {},
   ) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new UnauthorizedException();
@@ -465,8 +464,8 @@ export class AuthService {
       [hashed, userId],
     );
     // Record the event and issue a new current session after token_version changes.
-    await this.security.passwordChanged(userId, meta);
-    const sessionId = await this.security.createSession(userId, meta);
+    await this.security.passwordChanged(userId);
+    const sessionId = await this.security.createSession(userId, {});
     const tokens = await this.generateTokens(user, sessionId);
     return { success: true, message: 'Password updated successfully.', ...tokens };
   }
