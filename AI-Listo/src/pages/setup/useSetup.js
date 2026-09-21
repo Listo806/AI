@@ -43,7 +43,12 @@ export function useSetup() {
         setState("Saving…");
         // IMPORTANT: use workspace_id returned by GET, not a possibly stale
         // localStorage value. This is what fixes PATCH /setup 403 in this flow.
-        const workspaceId = dataRef.current?.workspace_id || "";
+        const workspaceId =
+          dataRef.current?.workspace_id &&
+          dataRef.current.workspace_id !== "default"
+            ? dataRef.current.workspace_id
+            : "";
+
         const next = await setupApi.save(patch, workspaceId);
         applyData(next);
         setState("All changes saved");

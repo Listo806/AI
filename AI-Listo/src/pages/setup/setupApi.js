@@ -1,30 +1,24 @@
 import apiClient from "../../api/apiClient";
 
-const storedWorkspace = () =>
-  localStorage.getItem("activeWorkspaceId") ||
-  localStorage.getItem("workspace_id") ||
-  "";
+const normalizeWorkspaceId = (workspaceId) => {
+  if (!workspaceId) return "";
+  if (workspaceId === "default") return "";
+  if (workspaceId === "undefined") return "";
+  if (workspaceId === "null") return "";
 
-const endpoint = (path = "", workspaceId = "") =>
-  `/setup${path}${workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : ""}`;
+  return workspaceId;
+};
+
+const endpoint = (path = "", workspaceId = "") => {
+  const ws = normalizeWorkspaceId(workspaceId);
+
+  return `/setup${path}${
+    ws ? `?workspace_id=${encodeURIComponent(ws)}` : ""
+  }`;
+};
 
 export const setupApi = {
-  async get() {
-    const requested = storedWorkspace();
-
-    // Prefer the active workspace. If localStorage contains a stale/non-entitled
-    // workspace, retry without it so the backend resolves an active workspace
-    // belonging to the authenticated team.
-    if (requested) {
-      try {
-        return await apiClient.request(endpoint("", requested));
-      } catch (error) {
-        if (error?.status !== 403 && error?.statusCode !== 403) throw error;
-      }
-    }
-
-    return apiClient.request(endpoint());
-  },
+  get: () => apiClient.request(endpoint()),
 
   save: (body, workspaceId) =>
     apiClient.request(endpoint("", workspaceId), {
@@ -41,7 +35,7 @@ export const setupApi = {
   activate: (workspaceId) =>
     apiClient.request(endpoint("/activate", workspaceId), {
       method: "POST",
-      body: "{}",
+      body: JSON.stringify({}),
     }),
 
   assist: (body, workspaceId) =>
@@ -53,6 +47,6 @@ export const setupApi = {
   dismiss: (workspaceId) =>
     apiClient.request(endpoint("/assistance/dismiss", workspaceId), {
       method: "POST",
-      body: "{}",
+      body: JSON.stringify({}),
     }),
 };
