@@ -10,6 +10,7 @@ import { DatabaseService } from '../database/database.service';
 import { PlatformMailerService } from './platform-mailer.service';
 import { UsageService } from '../plans/usage.service';
 import { acquisitionView } from '../common/acquisition.util';
+import { canonicalUsState, canonicalUsStateSql } from '../common/us-states.util';
 import {
   PLAN_ORDER,
   getPlan,
@@ -428,40 +429,39 @@ export class CustomersAdminService {
   // Set by ready(): whether the business profile table exists on this database.
   private hasProfileState = false;
 
-  /** The business profile state, or nothing when that table is not present. */
+  /** The team this customer belongs to, including owners whose row has none. */
+  private readonly teamIdExpr = `
+    COALESCE(users.team_id,
+      (SELECT t.id FROM teams t WHERE t.owner_id = users.id LIMIT 1))`;
+
+  /**
+   * The business profile state, used only when that profile is itself in the
+   * United States, so a foreign province never becomes a US state. Empty when
+   * the profile table is not present on this database.
+   */
   private get profileStateSql(): string {
     return this.hasProfileState
-      ? `NULLIF(TRIM((SELECT bp.state
-                        FROM ai_agent_business_profiles bp
-                       WHERE bp.team_id = users.team_id
-                       LIMIT 1)), ''),`
+      ? `NULLIF(BTRIM((SELECT bp.state
+                         FROM ai_agent_business_profiles bp
+                        WHERE bp.team_id = ${this.teamIdExpr}
+                          AND (COALESCE(bp.country, '') = ''
+                               OR UPPER(BTRIM(bp.country)) IN ('US', 'USA', 'UNITED STATES'))
+                        LIMIT 1)), ''),`
       : '';
   }
 
   private get stateExpr(): string {
-    return `
-    NULLIF(TRIM(COALESCE(
-      NULLIF(TRIM(users.billing_state), ''),
+    const raw = `COALESCE(
+      NULLIF(BTRIM(users.billing_state), ''),
       ${this.profileStateSql}
-      NULLIF(TRIM(users.signup_region), ''),
+      NULLIF(BTRIM(users.signup_region), ''),
       ''
-    )), '')`;
+    )`;
+    // One spelling per state, so "FL", "florida" and "Florida" are one row in
+    // the totals, one option in the filter and one label on the customer.
+    return `NULLIF(${canonicalUsStateSql(raw)}, '')`;
   }
 
-  /**
-   * What the admin sees as the customer's location: the state for a United
-   * States customer who has one, the country otherwise. The country itself is
-   * always kept in the database exactly as before.
-   */
-  private get locationExpr(): string {
-    return `
-      CASE
-        WHEN UPPER(COALESCE(users.signup_country, '')) = 'US'
-          AND (${this.stateExpr}) IS NOT NULL
-        THEN (${this.stateExpr})
-        ELSE NULLIF(users.signup_country, '')
-      END`;
-  }
 
   // Friendly, normalized acquisition source used by both the filter and the
   // breakdown so they always agree.
@@ -859,18 +859,22 @@ export class CustomersAdminService {
       if (names.length) {
         const ph = names
           .map((n) => {
-            params.push(n);
+            // Compare on the canonical name, so picking "Florida" also finds a
+            // customer stored as "FL".
+            params.push(canonicalUsState(n) || n);
             return `$${params.length}`;
           })
           .join(',');
-        ors.push(`LOWER(${this.stateExpr}) IN (${ph})`);
+        ors.push(`(${this.stateExpr}) IN (${ph})`);
       }
-      if (includeUnknown) {
-        ors.push(
-          `(UPPER(COALESCE(signup_country,'')) = 'US' AND (${this.stateExpr}) IS NULL)`,
+      if (includeUnknown) ors.push(`(${this.stateExpr}) IS NULL`);
+      // States are a United States view, exactly like the totals panel, so the
+      // filter and the panel always describe the same customers.
+      if (ors.length) {
+        clauses.push(
+          `(UPPER(COALESCE(signup_country,'')) = 'US' AND (${ors.join(' OR ')}))`,
         );
       }
-      if (ors.length) clauses.push(`(${ors.join(' OR ')})`);
     }
     if (opts.usersRole && opts.usersRole !== 'all') {
       const r = String(opts.usersRole).toLowerCase();
@@ -1054,28 +1058,53 @@ export class CustomersAdminService {
    * as Unknown rather than dropped.
    */
   private async stateTotals(where: string, params: any[]) {
+    const activeSql = `(payment_status = 'active'
+      OR (checkout_status = 'paid'
+          AND COALESCE(payment_status, '') NOT IN ('canceled','suspended','refunded','past_due')))`;
     const { rows } = await this.db.query(
-      `SELECT COALESCE(${this.stateExpr}, 'Unknown') AS key,
+      // One row per customer account, with their team resolved, so a team is
+      // never counted twice and an owner without a team row still counts.
+      `WITH customers AS (
+         SELECT DISTINCT ON (COALESCE(${this.teamIdExpr}, users.id))
+                users.id,
+                ${this.teamIdExpr} AS tid,
+                ${this.stateExpr} AS state_name,
+                users.selected_plan, users.plan, users.billing_cycle,
+                ${activeSql} AS is_active
+           FROM users
+          WHERE ${where} AND UPPER(COALESCE(users.signup_country,'')) = 'US'
+          ORDER BY COALESCE(${this.teamIdExpr}, users.id), users.created_at ASC
+       ),
+       -- Renewals are the charges after the first one on each subscription, so
+       -- a one-off activation fee or a second product cannot inflate them.
+       per_subscription AS (
+         SELECT s.team_id AS tid,
+                p.subscription_id,
+                COUNT(*)::int AS paid_count,
+                COALESCE(SUM(p.amount), 0)::float AS paid_total
+           FROM payments p
+           JOIN subscriptions s ON s.id = p.subscription_id
+          WHERE p.status = 'succeeded'
+            AND UPPER(COALESCE(p.currency, 'USD')) = 'USD'
+          GROUP BY s.team_id, p.subscription_id
+       ),
+       per_team AS (
+         SELECT tid,
+                SUM(GREATEST(paid_count - 1, 0))::int AS renewals,
+                SUM(paid_total)::float AS revenue
+           FROM per_subscription
+          GROUP BY tid
+       )
+       SELECT COALESCE(c.state_name, 'Unknown') AS key,
               COUNT(*)::int AS signups,
-              COUNT(*) FILTER (
-                WHERE payment_status = 'active' OR checkout_status = 'paid'
-              )::int AS activations,
-              COALESCE(SUM((
-                SELECT GREATEST(COUNT(*)::int - 1, 0)
-                  FROM payments p
-                  JOIN subscriptions s ON s.id = p.subscription_id
-                 WHERE s.team_id = users.team_id AND p.status = 'succeeded'
-              )), 0)::int AS renewals,
-              COALESCE(SUM((
-                SELECT COALESCE(SUM(p.amount), 0)
-                  FROM payments p
-                  JOIN subscriptions s ON s.id = p.subscription_id
-                 WHERE s.team_id = users.team_id AND p.status = 'succeeded'
-              )), 0)::float AS revenue,
-              selected_plan, plan, billing_cycle, payment_status, checkout_status
-         FROM users
-        WHERE ${where} AND UPPER(COALESCE(signup_country,'')) = 'US'
-        GROUP BY 1, selected_plan, plan, billing_cycle, payment_status, checkout_status`,
+              COUNT(*) FILTER (WHERE c.is_active)::int AS activations,
+              COALESCE(SUM(t.renewals), 0)::int AS renewals,
+              COALESCE(SUM(t.revenue), 0)::float AS revenue,
+              c.selected_plan, c.plan, c.billing_cycle, c.is_active
+         FROM customers c
+         LEFT JOIN per_team t ON t.tid = c.tid
+        GROUP BY 1, c.selected_plan, c.plan, c.billing_cycle, c.is_active
+        LIMIT 200`,
       params,
     );
 
@@ -1096,9 +1125,7 @@ export class CustomersAdminService {
       entry.activations += Number(r.activations || 0);
       entry.renewals += Number(r.renewals || 0);
       entry.revenue += Number(r.revenue || 0);
-      const isActive =
-        r.payment_status === 'active' || r.checkout_status === 'paid';
-      if (isActive) {
+      if (r.is_active) {
         const cfg = getPlan(normalizePlanId(r.selected_plan || r.plan));
         if (!cfg.isFree) {
           const cents =
@@ -1174,7 +1201,10 @@ export class CustomersAdminService {
     };
     const bySource = await breakdown(this.sourceExpr);
     const byLanguage = await breakdown(`COALESCE(preferred_language, 'en')`);
-    const byState = await this.stateTotals(where, params);
+    // The comparison panel ignores the state filter itself, so selecting one
+    // state does not collapse the table you are comparing against.
+    const stateScope = this.buildWhere({ ...opts, tab: 'all', state: 'all' });
+    const byState = await this.stateTotals(stateScope.where, stateScope.params);
     const byCountry = await breakdown(
       `COALESCE(NULLIF(signup_country, ''), 'Unknown')`,
     );

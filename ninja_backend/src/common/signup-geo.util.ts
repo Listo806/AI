@@ -6,8 +6,23 @@
 // non-specific. The country is taken from the connection at sign-up, never from the
 // email/name/phone, and the IP itself is never stored.
 
+import { canonicalUsState, normalizeRegion } from './us-states.util';
+
 // Cloudflare returns these for anonymizers/unknowns/regions rather than a country.
 const CF_INVALID = new Set(['', 'XX', 'T1', 'ZZ', 'AP', 'EU']);
+
+// The state column ships in migration 166, which is not auto-run here, so make
+// sure it exists before the first write. Once per process, like the others.
+let geoColumnsReady = false;
+async function ensureGeoColumns(db: {
+  query: (sql: string, params?: any[]) => Promise<any>;
+}): Promise<void> {
+  if (geoColumnsReady) return;
+  await db.query(
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_region VARCHAR(80)`,
+  );
+  geoColumnsReady = true;
+}
 
 // The visitor's country from the CDN request headers (Cloudflare cf-ipcountry),
 // validated to a real ISO-3166 alpha-2 code. Returns null when absent/non-specific.
@@ -24,7 +39,8 @@ export function countryFromHeaders(headers: any): string | null {
 
 // The visitor's state or region from the CDN request headers, when Cloudflare is
 // configured to send it. Free and instant when present; otherwise the IP lookup
-// below fills it in. Returns a readable name, never a code on its own.
+// below fills it in. Validated like the country header is, so nothing arbitrary
+// from a request can reach the reports.
 export function regionFromHeaders(headers: any): string | null {
   const raw =
     headers?.['cf-region'] ??
@@ -32,7 +48,8 @@ export function regionFromHeaders(headers: any): string | null {
     headers?.['CF-Region'] ??
     headers?.['cf-region-name'];
   const name = String(raw || '').trim();
-  return name && name.length <= 80 ? name : null;
+  if (!name || name.length > 60) return null;
+  return /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]*$/.test(name) ? name : null;
 }
 
 // Best client IP for the fallback geo lookup: the real visitor address that
@@ -49,18 +66,10 @@ export function clientIpFromHeaders(headers: any, req?: any): string | null {
   );
 }
 
-// Best-effort IP geolocation via free, no-key services. Returns null on any
-// failure, a private/loopback IP, or a bad response. Never throws.
-export async function lookupCountryByIp(
-  ip?: string | null,
-): Promise<string | null> {
-  return (await lookupGeoByIp(ip)).country;
-}
-
 /**
- * The same best-effort lookup, returning the state or region as well as the
- * country. Used for United States sign-ups, where the admin reports by state.
- * Returns nulls on any failure and never throws.
+ * Best-effort IP geolocation via free, no-key services: the country and, when
+ * the provider gives one, the state or region. Returns nulls on any failure, a
+ * private or loopback address, or a bad response. Never throws.
  */
 export async function lookupGeoByIp(
   ip?: string | null,
@@ -104,15 +113,20 @@ export async function lookupGeoByIp(
     }
   };
   const enc = encodeURIComponent(raw);
-  return (
-    (await attempt(
-      `https://ipwho.is/${enc}?fields=success,country_code,region`,
-      (j) => (j && j.success ? { country: j.country_code, region: j.region } : null),
-    )) ||
-    (await attempt(`https://ipapi.co/${enc}/json/`, (j) =>
-      j && !j.error ? { country: j.country, region: j.region } : null,
-    )) || { country: null, region: null }
+  const first = await attempt(
+    `https://ipwho.is/${enc}?fields=success,country_code,region`,
+    (j) => (j && j.success ? { country: j.country_code, region: j.region } : null),
   );
+  // A provider can answer with a country but no region, so try the second one
+  // for the missing half rather than stopping at the first usable answer.
+  if (first?.country && first.region) return first;
+  const second = await attempt(`https://ipapi.co/${enc}/json/`, (j) =>
+    j && !j.error ? { country: j.country, region: j.region } : null,
+  );
+  return {
+    country: first?.country || second?.country || null,
+    region: first?.region || second?.region || null,
+  };
 }
 
 // Resolve and permanently store the registration country for a freshly-created
@@ -131,31 +145,36 @@ export async function captureSignupCountry(
       geo.country && /^[A-Z]{2}$/.test(String(geo.country))
         ? String(geo.country).toUpperCase()
         : null;
-    let region = String(geo.region || '').trim() || null;
+    let region = normalizeRegion(geo.region);
 
-    // One lookup covers both. It runs when the country is unknown, and also for
-    // United States sign-ups whose state the CDN did not give us, since that is
-    // the only place the state is reported.
-    if (!code || (code === 'US' && !region)) {
+    // One lookup covers both, and runs whenever either half is still missing.
+    // It is fire-and-forget, so it never delays the sign-up that spawned it.
+    if (!code || !region) {
       const found = await lookupGeoByIp(geo.ip);
       code = code || found.country;
-      region = region || found.region;
+      region = region || normalizeRegion(found.region);
     }
-    if (!code) return;
-    // The columns are ensured by the trial signup path and the admin read path;
-    // a plain UPDATE here avoids a per-signup ALTER table lock.
-    await db.query(
-      `UPDATE users SET signup_country = $1 WHERE id = $2 AND signup_country IS NULL`,
-      [code, userId],
-    );
+    if (!code && !region) return;
+
+    // The columns exist on every database the admin has read from, but the
+    // /auth/signup path can run before that, so make sure once per process.
+    await ensureGeoColumns(db);
+
+    if (code) {
+      await db.query(
+        `UPDATE users SET signup_country = $1 WHERE id = $2 AND signup_country IS NULL`,
+        [code, userId],
+      );
+    }
     if (region) {
-      await db
-        .query(
-          `UPDATE users SET signup_region = $1
-            WHERE id = $2 AND COALESCE(signup_region, '') = ''`,
-          [region.slice(0, 80), userId],
-        )
-        .catch(() => undefined);
+      // A United States state is stored in one spelling so the admin can
+      // compare states; anywhere else keeps the name the provider gave.
+      const value = code === 'US' ? canonicalUsState(region) || region : region;
+      await db.query(
+        `UPDATE users SET signup_region = $1
+          WHERE id = $2 AND COALESCE(signup_region, '') = ''`,
+        [value.slice(0, 80), userId],
+      );
     }
   } catch {
     /* best-effort: registration-country capture must never break sign-up */

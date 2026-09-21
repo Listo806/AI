@@ -233,14 +233,17 @@ const countryName = (code) => {
     return cc;
   }
 };
-function CountryCell({ code }) {
+function CountryCell({ code, state }) {
   if (!code) return <span className="cxc-muted">Unknown</span>;
   const flag = flagEmoji(code);
   const name = countryName(code);
   return (
-    <span className="cxc-country" title={name}>
+    <span
+      className="cxc-country"
+      title={String(code).toUpperCase() === "US" && state ? `${state}, ${name}` : name}
+    >
       {flag ? `${flag} ` : ""}
-      {name}
+      {String(code).toUpperCase() === "US" && state ? state : name}
     </span>
   );
 }
@@ -972,7 +975,7 @@ function ECommerceSubscriptionsUI() {
                     </td>
                     <td><span className={`cxc-badge ${st}`}>{getCustomerStatusLabel(r, st)}</span></td>
                     <td>{r.source_label || "—"}</td>
-                    <td><CountryCell code={r.country} /></td>
+                    <td><CountryCell code={r.country} state={r.state} /></td>
                     <td>{fmtDate(r.registered_at || r.created_at)}<div className="cxc-sub-date">{fmtTime(r.registered_at || r.created_at)}</div></td>
                     <td>{r.last_seen_at ? <>{fmtDate(r.last_seen_at)}<div className="cxc-sub-date">{fmtTime(r.last_seen_at)}</div></> : <span className="cxc-muted">—</span>}</td>
                     <td className="cxc-ltv">{usd(r.ltv)}</td>
@@ -1446,7 +1449,7 @@ function CustomerModal({
                       </span>
                     )}
                     <span>
-                      <Globe size={14} /> <CountryCell code={c.country} />
+                      <Globe size={14} /> <CountryCell code={c.country} state={c.state} />
                     </span>
                   </div>
                   <button className="cxc-detail-id" onClick={copyCustomerId}>
@@ -1940,7 +1943,9 @@ function CustomerModal({
                       )}
                       <span>
                         <MapPin size={16} />
-                        {countryName(c.country) || "Unknown"}
+                        {String(c.country || "").toUpperCase() === "US" && c.state
+                          ? c.state
+                          : countryName(c.country) || "Unknown"}
                       </span>
                       <button onClick={copyCustomerId}>
                         <CreditCard size={15} /> Customer ID: {c.id}

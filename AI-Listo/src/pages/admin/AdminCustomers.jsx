@@ -858,6 +858,7 @@ export default function AdminCustomers() {
       source: "all",
       language: "all",
       country: "all",
+      state: "all",
       usersRole: "all",
       seatStatus: "all",
       from: "",
@@ -988,6 +989,7 @@ export default function AdminCustomers() {
       "first_touch_landing_route",
       "first_visit_at",
       "country",
+      "state",
       "ltv",
     ];
     const header = fields.join(",");
@@ -995,7 +997,10 @@ export default function AdminCustomers() {
       .map((r) =>
         fields
           .map((f) => {
-            const v = r[f] == null ? "" : String(r[f]);
+            const raw = r[f] == null ? "" : String(r[f]);
+            // Keep a cell that starts with a formula character as plain text,
+            // the same way the full export on the server does.
+            const v = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
             return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
           })
           .join(","),
@@ -3244,7 +3249,9 @@ function CustomerModal({
                       )}
                       <span>
                         <MapPin size={16} />
-                        {countryName(c.country) || "Unknown"}
+                        {String(c.country || "").toUpperCase() === "US" && c.state
+                          ? c.state
+                          : countryName(c.country) || "Unknown"}
                       </span>
                       <button onClick={copyCustomerId}>
                         <CreditCard size={15} /> Customer ID: {c.id}
