@@ -14,7 +14,6 @@ import {
 import { trackEvent, getAttribution } from "../utils/track";
 import apiClient from "../api/apiClient";
 import { useAuth } from "../context/AuthContext";
-import { currentSiteLanguage } from "../i18n/currentLanguage";
 
 // Exit-intent popup: a registration form. On submit it creates the Cortexa
 // account immediately (source = exit_popup, no plan yet — a saved lead) and
@@ -157,12 +156,24 @@ export default function ExitIntentOffer() {
   const [error, setError] = useState("");
   const cardRef = useRef(null);
 
-  // The actual site language the visitor is on (URL version first), used both to
-  // show the popup in that language and to save it with the registration.
-  const lang = currentSiteLanguage();
-  const tr = T[lang] || T.en;
-
   const { prefix, local } = localeInfo(location.pathname);
+
+  // Popup language must always follow the active page URL.
+  // English:    /
+  // Spanish:    /es
+  // Portuguese: /pt or /pt-br
+  const getPopupLanguage = (pathname) => {
+    const segments = pathname.split("/").filter(Boolean);
+    const locale = segments[0]?.toLowerCase();
+
+    if (locale === "es") return "es";
+    if (locale === "pt" || locale === "pt-br") return "pt";
+
+    return "en";
+  };
+
+  const lang = getPopupLanguage(location.pathname);
+  const tr = T[lang];
   const mode = new URLSearchParams(location.search).get("exitoffer");
   const isLoggedIn = !!user;
 
