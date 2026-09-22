@@ -178,9 +178,45 @@ export default function CustomerEntryPoints() {
   const initial = sectionKeys.includes(requestedSection) ? requestedSection : "website";
   const [active, setActive] = useState(initial);
 
-  if (!data) return <main className="setup-shell"><div className="setup-loading">{setupCopy[lang].loading}</div></main>;
+  const c = data?.config || {};
 
-  const c = data.config || {};
+  useEffect(() => {
+    if (!data?.id) return;
+
+    let alive = true;
+    setupApi.whatsappStatus()
+      .then((wa) => {
+        if (!alive || !wa) return;
+
+        const current = data?.config?.whatsapp || {};
+        const connected = wa.connected === true;
+        const nextStatus = wa.status || (connected ? "connected" : "disconnected");
+        const nextNumber = wa.phone || null;
+
+        if (
+          current.connected !== connected ||
+          current.number !== nextNumber ||
+          current.status !== nextStatus
+        ) {
+          save({
+            whatsapp: {
+              ...current,
+              connected,
+              number: nextNumber,
+              status: nextStatus,
+              connectedAt: wa.connected_at || null,
+            },
+          }, true);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      alive = false;
+    };
+  }, [data?.id, save]);
+
+  if (!data) return <main className="setup-shell"><div className="setup-loading">{setupCopy[lang].loading}</div></main>;
   const website = c.website || {};
   const statuses = sectionKeys.map(k => sectionStatus(c, k, data.tests));
   const done = statuses.filter(x => x === "complete").length;
@@ -210,34 +246,6 @@ export default function CustomerEntryPoints() {
       : current.filter(x => x !== channel);
     save({ customerChannels: next }, true);
   };
-
-  useEffect(() => {
-    let alive = true;
-    setupApi.whatsappStatus()
-      .then((wa) => {
-        if (!alive || !wa) return;
-        const connected = wa.connected === true;
-        const current = c.whatsapp || {};
-        if (
-          current.connected !== connected ||
-          current.number !== (wa.phone || null) ||
-          current.status !== wa.status
-        ) {
-          save({
-            whatsapp: {
-              ...current,
-              connected,
-              number: wa.phone || null,
-              status: wa.status || (connected ? "connected" : "disconnected"),
-              connectedAt: wa.connected_at || null,
-            },
-          }, true);
-        }
-      })
-      .catch(() => {});
-    return () => { alive = false; };
-    // only sync provider status when this page/setup identity changes
-  }, [data?.id]);
 
   const renderWebsite = () => (
     <>
