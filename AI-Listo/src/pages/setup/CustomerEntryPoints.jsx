@@ -177,6 +177,9 @@ export default function CustomerEntryPoints() {
   const requestedSection = params.get("section");
   const initial = sectionKeys.includes(requestedSection) ? requestedSection : "website";
   const [active, setActive] = useState(initial);
+  const [routingOptions, setRoutingOptions] = useState({
+    loading: false, error: "", pipeline: null, agents: [],
+  });
 
   const c = data?.config || {};
 
@@ -215,6 +218,20 @@ export default function CustomerEntryPoints() {
       alive = false;
     };
   }, [data?.id, save]);
+
+  useEffect(() => {
+    if (active !== "routing" || !data?.id) return;
+    let alive = true;
+    setRoutingOptions(x => ({...x,loading:true,error:""}));
+    Promise.all([setupApi.pipeline(), setupApi.pipelineAgents()])
+      .then(([pipeline,agents]) => {
+        if(!alive) return;
+        const items=Array.isArray(agents)?agents:Array.isArray(agents?.agents)?agents.agents:Array.isArray(agents?.data)?agents.data:[];
+        setRoutingOptions({loading:false,error:"",pipeline:pipeline||null,agents:items});
+      })
+      .catch(e => alive && setRoutingOptions({loading:false,error:e?.message||"Unable to load CRM routing options.",pipeline:null,agents:[]}));
+    return () => {alive=false};
+  }, [active,data?.id]);
 
   if (!data) return <main className="setup-shell"><div className="setup-loading">{setupCopy[lang].loading}</div></main>;
   const website = c.website || {};
@@ -438,15 +455,29 @@ export default function CustomerEntryPoints() {
 
     if (active === "routing") {
       const x=c.routing||{};
+      const stages=[["new","New"],["qualified","Qualified"],["proposal","Proposal"],["negotiation","Negotiation"],["won","Won"],["lost","Lost"]];
+      const pipelineName=routingOptions.pipeline?.name||routingOptions.pipeline?.title||"Cortexa CRM Pipeline";
+      const pipelineValue=routingOptions.pipeline?.id||routingOptions.pipeline?.pipelineId||"team-pipeline";
       return <div className="cep-functional">
-        {cardHead(GitBranch, labels[lang][7], "Choose the CRM pipeline and stage used for customers captured by this setup.")}
+        {cardHead(GitBranch, labels[lang][7], "Route captured customers into your existing Cortexa CRM pipeline.")}
+        {routingOptions.error&&<div className="cep-info-note"><Info/>{routingOptions.error}</div>}
         <div className="cep-generic-grid">
-          <label><span>Pipeline ID</span><input value={x.pipelineId||""} placeholder="Paste/select your CRM pipeline ID" onChange={e=>patchConfig("routing",{pipelineId:e.target.value},false)} onBlur={()=>patchConfig("routing",{pipelineId:x.pipelineId||""},true)}/></label>
-          <label><span>Stage ID</span><input value={x.stageId||""} placeholder="Paste/select the destination stage ID" onChange={e=>patchConfig("routing",{stageId:e.target.value},false)} onBlur={()=>patchConfig("routing",{stageId:x.stageId||""},true)}/></label>
-          <label><span>Owner / assignee (optional)</span><input value={x.ownerId||""} placeholder="Owner ID" onChange={e=>patchConfig("routing",{ownerId:e.target.value},false)} onBlur={()=>patchConfig("routing",{ownerId:x.ownerId||""},true)}/></label>
-          <label><span>Routing note</span><input value={x.note||""} placeholder="Optional routing rule note" onChange={e=>patchConfig("routing",{note:e.target.value},false)} onBlur={()=>patchConfig("routing",{note:x.note||""},true)}/></label>
+          <label><span>CRM pipeline</span><select disabled={routingOptions.loading} value={x.pipelineId||""} onChange={e=>patchConfig("routing",{pipelineId:e.target.value,pipelineName:e.target.options[e.target.selectedIndex]?.text||""})}>
+            <option value="">{routingOptions.loading?"Loading pipeline…":"Select pipeline"}</option>
+            {routingOptions.pipeline&&<option value={pipelineValue}>{pipelineName}</option>}
+          </select></label>
+          <label><span>Destination stage</span><select disabled={!x.pipelineId} value={x.stageId||""} onChange={e=>patchConfig("routing",{stageId:e.target.value,stageName:e.target.options[e.target.selectedIndex]?.text||""})}>
+            <option value="">Select stage</option>{stages.map(([id,name])=><option key={id} value={id}>{name}</option>)}
+          </select></label>
+          <label><span>Owner / assignee</span><select value={x.ownerId||""} onChange={e=>patchConfig("routing",{ownerId:e.target.value||null,ownerName:e.target.options[e.target.selectedIndex]?.text||""})}>
+            <option value="">Current user / automatic assignment</option>
+            {routingOptions.agents.map(a=>{const id=a.id||a.userId||a.user_id;const name=a.name||a.fullName||a.email||"Team member";return id?<option key={id} value={id}>{name}</option>:null})}
+          </select></label>
+          <label><span>Routing mode</span><select value={x.mode||"selected-owner"} onChange={e=>patchConfig("routing",{mode:e.target.value})}>
+            <option value="selected-owner">Selected owner</option><option value="automatic">Automatic assignment</option>
+          </select></label>
         </div>
-        <div className="cep-info-note"><Info/>This section saves real CRM identifiers. It is Complete only when both pipeline and stage IDs are present.</div>
+        <div className="cep-info-note"><Info/>Pipeline and owner options are loaded from the existing Cortexa CRM. No internal IDs need to be pasted manually.</div>
       </div>;
     }
 
