@@ -26,6 +26,28 @@ export const setupApi = {
       body: JSON.stringify(body),
     }),
 
+
+  whatsappStatus: async () => {
+    const response = await apiClient.request("/whatsapp-qr/status", {
+      method: "GET",
+    });
+    return response?.data || response || null;
+  },
+
+  whatsappConnect: async () => {
+    const response = await apiClient.request("/whatsapp-qr/connect", {
+      method: "POST",
+    });
+    return response?.data || response || null;
+  },
+
+  whatsappDisconnect: async () => {
+    const response = await apiClient.request("/whatsapp-qr/disconnect", {
+      method: "POST",
+    });
+    return response?.data || response || null;
+  },
+
   pipeline: () => apiClient.request("/pipeline", { method: "GET" }),
   pipelineAgents: () => apiClient.request("/pipeline/agents", { method: "GET" }),
 
