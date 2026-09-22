@@ -190,7 +190,27 @@ export class SetupService {
    const patch:any={};
    for(const k of allowed) if(body[k]!==undefined) patch[k]=body[k];
 
-   const merged={...(old.config||{}),...patch};
+   // Deep-merge nested setup groups. This prevents two autosaves/toggles
+   // (for example consent.configured + consent.captureSource) from erasing
+   // each other when requests are close together.
+   const nestedGroups=new Set([
+     'website','phone','whatsapp','marketing','consent',
+     'conversion','routing','handoff'
+   ]);
+   const merged:any={...(old.config||{})};
+   for(const [key,value] of Object.entries(patch)){
+     if(
+       nestedGroups.has(key) &&
+       value &&
+       typeof value==='object' &&
+       !Array.isArray(value)
+     ){
+       merged[key]={...(merged[key]||{}),...(value as any)};
+     }else{
+       merged[key]=value;
+     }
+   }
+
    await this.db.query(
      `UPDATE customer_setup_configs
          SET selected_objective=COALESCE($3,selected_objective),

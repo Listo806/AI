@@ -236,8 +236,10 @@ export default function CustomerEntryPoints() {
   const statusText = key => tr[sectionStatus(c, key, data.tests)] || tr.notStarted;
 
 
+  // Send only the nested fields that changed. useSetup + backend both deep-merge
+  // these groups, so two quick toggles cannot overwrite each other.
   const patchConfig = (group, patch, immediate = true) =>
-    save({ [group]: { ...(c[group] || {}), ...patch } }, immediate);
+    save({ [group]: patch }, immediate);
 
   const setChannel = (channel, enabled) => {
     const current = c.customerChannels || [];
