@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,6 +8,7 @@ import {
   Target, GitBranch, FlaskConical, ExternalLink, ChevronRight
 } from "lucide-react";
 import { useSetup } from "./useSetup";
+import { setupApi } from "./setupApi";
 import { setupCopy, setupLanguage } from "./setupTranslations";
 import websiteMobilePreview from "../../assets/cortexa/website-mobile-preview.png";
 import "./setup.css";
@@ -121,19 +122,47 @@ const copy = {
   }
 };
 
-function sectionStatus(c, key) {
-  if (key === "channels") return (c.customerChannels || []).length ? "complete" : "notStarted";
-  if (key === "website") {
-    if (c.website?.url && c.website?.ctaLabel && c.website?.destination) return "complete";
-    return c.website?.url || c.website?.ctaLabel ? "inProgress" : "notStarted";
+function sectionStatus(c, key, tests = []) {
+  if (key === "channels") {
+    const x = c.customerChannels || [];
+    return x.length ? "complete" : "notStarted";
   }
-  if (key === "phone") return c.phone?.connectionStatus === "connected" ? "complete" : c.phone?.number ? "inProgress" : "notStarted";
-  if (key === "whatsapp") return c.whatsapp?.connected ? "complete" : "notStarted";
-  if (key === "marketing") return c.marketing?.primaryPage ? "complete" : "notStarted";
-  if (key === "consent") return c.consent?.configured ? "complete" : "notStarted";
-  if (key === "conversion") return c.conversion?.objective || c.conversion?.desiredAction ? "complete" : "notStarted";
-  if (key === "routing") return c.routing?.pipelineId && c.routing?.stageId ? "complete" : "notStarted";
-  if (key === "test") return Array.isArray(c.tests) && c.tests.some(x => x.status === "pass") ? "complete" : "notStarted";
+  if (key === "website") {
+    const w = c.website || {};
+    if (w.url && w.ctaLabel && w.destination && (w.placements || []).length) return "complete";
+    return Object.values(w).some(Boolean) ? "inProgress" : "notStarted";
+  }
+  if (key === "phone") {
+    if (c.phone?.connectionStatus === "connected") return "complete";
+    return c.phone?.number || c.phone?.displayName ? "inProgress" : "notStarted";
+  }
+  if (key === "whatsapp") {
+    if (c.whatsapp?.connected === true) return "complete";
+    return c.whatsapp?.status === "connecting" ? "inProgress" : "notStarted";
+  }
+  if (key === "marketing") {
+    const m = c.marketing || {};
+    if (m.primaryPage && m.sourceName) return "complete";
+    return Object.values(m).some(Boolean) ? "inProgress" : "notStarted";
+  }
+  if (key === "consent") {
+    const x = c.consent || {};
+    if (x.configured === true && x.captureSource === true) return "complete";
+    return Object.values(x).some(Boolean) ? "inProgress" : "notStarted";
+  }
+  if (key === "conversion") {
+    const x = c.conversion || {};
+    if (x.objective && x.desiredAction) return "complete";
+    return Object.values(x).some(Boolean) ? "inProgress" : "notStarted";
+  }
+  if (key === "routing") {
+    const x = c.routing || {};
+    if (x.pipelineId && x.stageId) return "complete";
+    return Object.values(x).some(Boolean) ? "inProgress" : "notStarted";
+  }
+  if (key === "test") {
+    return Array.isArray(tests) && tests.some(x => x.status === "pass") ? "complete" : "notStarted";
+  }
   return "notStarted";
 }
 
@@ -143,16 +172,17 @@ export default function CustomerEntryPoints() {
   const { i18n } = useTranslation();
   const lang = setupLanguage(i18n);
   const tr = copy[lang];
-  const { data, state, save } = useSetup();
+  const { data, state, save, load } = useSetup();
 
-  const initial = params.get("section") === "conversion" ? "conversion" : "website";
+  const requestedSection = params.get("section");
+  const initial = sectionKeys.includes(requestedSection) ? requestedSection : "website";
   const [active, setActive] = useState(initial);
 
   if (!data) return <main className="setup-shell"><div className="setup-loading">{setupCopy[lang].loading}</div></main>;
 
   const c = data.config || {};
   const website = c.website || {};
-  const statuses = sectionKeys.map(k => sectionStatus(c, k));
+  const statuses = sectionKeys.map(k => sectionStatus(c, k, data.tests));
   const done = statuses.filter(x => x === "complete").length;
   const pct = Math.round((done / 9) * 100);
 
@@ -167,7 +197,47 @@ export default function CustomerEntryPoints() {
     patchWebsite("placements", next, true);
   };
 
-  const statusText = key => tr[sectionStatus(c, key)] || tr.notStarted;
+  const statusText = key => tr[sectionStatus(c, key, data.tests)] || tr.notStarted;
+
+
+  const patchConfig = (group, patch, immediate = true) =>
+    save({ [group]: { ...(c[group] || {}), ...patch } }, immediate);
+
+  const setChannel = (channel, enabled) => {
+    const current = c.customerChannels || [];
+    const next = enabled
+      ? [...new Set([...current, channel])]
+      : current.filter(x => x !== channel);
+    save({ customerChannels: next }, true);
+  };
+
+  useEffect(() => {
+    let alive = true;
+    setupApi.whatsappStatus()
+      .then((wa) => {
+        if (!alive || !wa) return;
+        const connected = wa.connected === true;
+        const current = c.whatsapp || {};
+        if (
+          current.connected !== connected ||
+          current.number !== (wa.phone || null) ||
+          current.status !== wa.status
+        ) {
+          save({
+            whatsapp: {
+              ...current,
+              connected,
+              number: wa.phone || null,
+              status: wa.status || (connected ? "connected" : "disconnected"),
+              connectedAt: wa.connected_at || null,
+            },
+          }, true);
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+    // only sync provider status when this page/setup identity changes
+  }, [data?.id]);
 
   const renderWebsite = () => (
     <>
@@ -261,10 +331,124 @@ export default function CustomerEntryPoints() {
   );
 
   const renderGeneric = () => {
-    if (active === "phone") return <div className="cep-empty"><Phone/><h2>{labels[lang][2]}</h2><p>{setupCopy[lang].phoneSub}</p><button className="cep-primary" onClick={() => n("/dashboard/ai-cortexa-setup/customer-entry-points/business-phone")}>Configure business phone</button></div>;
-    if (active === "test") return <div className="cep-empty"><FlaskConical/><h2>{labels[lang][8]}</h2><p>Run the end-to-end connection test after the required routing is configured.</p><button className="cep-primary" onClick={() => n("/dashboard/ai-cortexa-setup/test-launch")}>Run end-to-end test</button></div>;
-    const GenericIcon = sectionIcons[sectionKeys.indexOf(active)] || Share2;
-    return <div className="cep-empty"><GenericIcon/><h2>{labels[lang][sectionKeys.indexOf(active)]}</h2><p>{tr.current}</p></div>;
+    const channels = c.customerChannels || [];
+    const cardHead = (Icon, title, sub) => (
+      <div className="cep-section-head">
+        <div><h2><Icon className="cep-inline-icon"/>{title}</h2><p>{sub}</p></div>
+      </div>
+    );
+
+    if (active === "channels") {
+      const options = [
+        ["website", Globe2, "Website", "Primary CTA and website conversations"],
+        ["phone", Phone, "Voice Calls", "Business phone calls handled by Cortexa"],
+        ["sms", MessageCircle, "SMS", "Customer text messages"],
+        ["whatsapp", MessageCircle, "WhatsApp", "Existing Cortexa WhatsApp QR connection"],
+      ];
+      return <div className="cep-functional">
+        {cardHead(Share2, labels[lang][0], "Choose the customer channels this AI Agent should handle. Only selected channels are required for launch.")}
+        <div className="cep-option-list">
+          {options.map(([id,Icon,title,sub]) => <label className="cep-option-row" key={id}>
+            <span className="cep-option-icon"><Icon/></span>
+            <span><b>{title}</b><small>{sub}</small></span>
+            <button type="button" className={channels.includes(id) ? "cep-switch on" : "cep-switch"} onClick={() => setChannel(id,!channels.includes(id))}><i/></button>
+          </label>)}
+        </div>
+        <div className="cep-info-note"><Info/>Select only channels you intend to launch. Readiness checks will not require unselected channels.</div>
+      </div>;
+    }
+
+    if (active === "phone") return <div className="cep-functional">
+      {cardHead(Phone, labels[lang][2], setupCopy[lang].phoneSub)}
+      <div className="cep-action-panel">
+        <div><b>{c.phone?.number || "No business number connected"}</b><small>{c.phone?.connectionStatus === "connected" ? "Connected and available to this setup." : "Connect or configure a business number before Voice/SMS can be launch-ready."}</small></div>
+        <button className="cep-primary" onClick={() => n("/dashboard/ai-cortexa-setup/customer-entry-points/business-phone")}>Configure business phone</button>
+      </div>
+    </div>;
+
+    if (active === "whatsapp") {
+      const wa=c.whatsapp||{};
+      const connect=async()=>{
+        if(wa.connected){ await setupApi.whatsappDisconnect(); }
+        else { await setupApi.whatsappConnect(); }
+        const status=await setupApi.whatsappStatus();
+        save({whatsapp:{...wa,connected:status?.connected===true,number:status?.phone||null,status:status?.status||"disconnected",connectedAt:status?.connected_at||null}},true);
+      };
+      return <div className="cep-functional">
+        {cardHead(MessageCircle, labels[lang][3], "Use the existing Cortexa WhatsApp QR integration. Setup reads the real connection status; it does not mark WhatsApp connected manually.")}
+        <div className="cep-connection-card">
+          <span className="wa-logo">◉</span>
+          <div><b>{wa.connected ? "WhatsApp connected" : wa.status === "connecting" ? "WhatsApp connection in progress" : "WhatsApp not connected"}</b><small>{wa.number || "No connected number"}</small></div>
+          <span className={`cep-state ${wa.connected?"complete":""}`}>{wa.connected?"Connected":wa.status||"Disconnected"}</span>
+        </div>
+        <div className="cep-form-actions">
+          <button className="cep-secondary" onClick={connect}>{wa.connected ? "Disconnect" : "Start WhatsApp connection"}</button>
+          <button className="cep-primary" onClick={() => n("/dashboard/whatsapp")}>Open WhatsApp workspace</button>
+        </div>
+        {!wa.connected && <div className="cep-info-note"><Info/>The existing QR/pairing flow completes the connection. Return here afterward; status is read from <b>/whatsapp-qr/status</b>.</div>}
+      </div>;
+    }
+
+    if (active === "marketing") {
+      const m=c.marketing||{};
+      return <div className="cep-functional">
+        {cardHead(Megaphone, labels[lang][4], "Define the primary traffic page and source label so conversations retain campaign context.")}
+        <div className="cep-generic-grid">
+          <label><span>Primary traffic / landing page</span><input value={m.primaryPage||""} placeholder="https://yourbusiness.com/offer" onChange={e=>patchConfig("marketing",{primaryPage:e.target.value},false)} onBlur={()=>patchConfig("marketing",{primaryPage:m.primaryPage||""},true)}/></label>
+          <label><span>Default source name</span><input value={m.sourceName||""} placeholder="Website / Google Ads / Meta Ads" onChange={e=>patchConfig("marketing",{sourceName:e.target.value},false)} onBlur={()=>patchConfig("marketing",{sourceName:m.sourceName||""},true)}/></label>
+          <label><span>Campaign parameter</span><input value={m.campaignParameter||"utm_campaign"} onChange={e=>patchConfig("marketing",{campaignParameter:e.target.value},true)}/></label>
+          <label><span>Source parameter</span><input value={m.sourceParameter||"utm_source"} onChange={e=>patchConfig("marketing",{sourceParameter:e.target.value},true)}/></label>
+        </div>
+      </div>;
+    }
+
+    if (active === "consent") {
+      const x=c.consent||{};
+      return <div className="cep-functional">
+        {cardHead(ShieldCheck, labels[lang][5], "Configure customer consent and source capture used by the approved entry points.")}
+        <div className="cep-option-list">
+          <label className="cep-option-row"><span className="cep-option-icon"><ShieldCheck/></span><span><b>Consent configured</b><small>Confirm your customer-facing consent language/process is ready.</small></span><button type="button" className={x.configured?"cep-switch on":"cep-switch"} onClick={()=>patchConfig("consent",{configured:!x.configured})}><i/></button></label>
+          <label className="cep-option-row"><span className="cep-option-icon"><Link2/></span><span><b>Capture source automatically</b><small>Store referrer, UTM and entry-point source with the CRM record.</small></span><button type="button" className={x.captureSource?"cep-switch on":"cep-switch"} onClick={()=>patchConfig("consent",{captureSource:!x.captureSource})}><i/></button></label>
+        </div>
+        <label className="cep-full-field"><span>Consent notice / reference</span><textarea value={x.notice||""} placeholder="Optional internal note about the consent notice used on your site or channels." onChange={e=>patchConfig("consent",{notice:e.target.value},false)} onBlur={()=>patchConfig("consent",{notice:x.notice||""},true)}/></label>
+      </div>;
+    }
+
+    if (active === "conversion") {
+      const x=c.conversion||{};
+      return <div className="cep-functional">
+        {cardHead(Target, labels[lang][6], "Choose the conversion outcome the entry-point flow should optimize for.")}
+        <div className="cep-generic-grid">
+          <label><span>Conversion objective</span><select value={x.objective||data.selected_objective||""} onChange={e=>patchConfig("conversion",{objective:e.target.value})}><option value="">Select objective</option>{setupCopy[lang].objectives.map(o=><option key={o} value={o}>{o}</option>)}</select></label>
+          <label><span>Desired action</span><select value={x.desiredAction||""} onChange={e=>patchConfig("conversion",{desiredAction:e.target.value})}><option value="">Select action</option>{["Purchase","Appointment","Quote","Viewing","Demo","Support","Human handoff"].map(v=><option key={v}>{v}</option>)}</select></label>
+        </div>
+        <div className="cep-info-note"><Info/>The primary conversion action remains above WhatsApp. WhatsApp enters the same Cortexa-assisted flow.</div>
+      </div>;
+    }
+
+    if (active === "routing") {
+      const x=c.routing||{};
+      return <div className="cep-functional">
+        {cardHead(GitBranch, labels[lang][7], "Choose the CRM pipeline and stage used for customers captured by this setup.")}
+        <div className="cep-generic-grid">
+          <label><span>Pipeline ID</span><input value={x.pipelineId||""} placeholder="Paste/select your CRM pipeline ID" onChange={e=>patchConfig("routing",{pipelineId:e.target.value},false)} onBlur={()=>patchConfig("routing",{pipelineId:x.pipelineId||""},true)}/></label>
+          <label><span>Stage ID</span><input value={x.stageId||""} placeholder="Paste/select the destination stage ID" onChange={e=>patchConfig("routing",{stageId:e.target.value},false)} onBlur={()=>patchConfig("routing",{stageId:x.stageId||""},true)}/></label>
+          <label><span>Owner / assignee (optional)</span><input value={x.ownerId||""} placeholder="Owner ID" onChange={e=>patchConfig("routing",{ownerId:e.target.value},false)} onBlur={()=>patchConfig("routing",{ownerId:x.ownerId||""},true)}/></label>
+          <label><span>Routing note</span><input value={x.note||""} placeholder="Optional routing rule note" onChange={e=>patchConfig("routing",{note:e.target.value},false)} onBlur={()=>patchConfig("routing",{note:x.note||""},true)}/></label>
+        </div>
+        <div className="cep-info-note"><Info/>This section saves real CRM identifiers. It is Complete only when both pipeline and stage IDs are present.</div>
+      </div>;
+    }
+
+    if (active === "test") return <div className="cep-functional">
+      {cardHead(FlaskConical, labels[lang][8], "Run the end-to-end connection test after selected channels, consent and CRM routing are configured.")}
+      <div className="cep-action-panel">
+        <div><b>{sectionStatus(c,"test",data.tests)==="complete" ? "Connection test passed" : "Connection test not completed"}</b><small>Test evidence is stored with this setup and is used by launch readiness.</small></div>
+        <button className="cep-primary" onClick={() => n("/dashboard/ai-cortexa-setup/test-launch")}>Open Test & Launch</button>
+      </div>
+    </div>;
+
+    return null;
   };
 
   return <main className="setup-shell cep-page">
@@ -287,7 +471,7 @@ export default function CustomerEntryPoints() {
       <aside className="cep-nav">
         {sectionKeys.map((key, i) => {
           const currentIndex = sectionKeys.indexOf(active);
-          const realStatus = sectionStatus(c, key);
+          const realStatus = sectionStatus(c, key, data.tests);
           const isCurrent = i === currentIndex;
           const isComplete = realStatus === "complete";
           const visualStatus = isComplete ? "complete" : isCurrent ? "inProgress" : realStatus;

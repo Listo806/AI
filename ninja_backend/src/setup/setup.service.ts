@@ -87,7 +87,37 @@ export class SetupService {
    await this.ensure();
    const teamId=await this.resolveTeamId(u);
    const ws=await this.workspace(teamId,requested);
-   const setup=await this.loadResolved(teamId,ws);
+   let setup=await this.loadResolved(teamId,ws);
+
+   // Sync WhatsApp readiness from the real QR session instead of trusting a manual flag.
+   const userId=this.userId(u);
+   if(userId){
+     const wa=await this.db.query(
+       `SELECT phone,status,connected_at,updated_at
+          FROM whatsapp_qr_sessions
+         WHERE user_id=$1
+         ORDER BY updated_at DESC
+         LIMIT 1`,
+       [userId]
+     );
+     const row=wa.rows[0];
+     const current=setup.config?.whatsapp||{};
+     const whatsapp={
+       ...current,
+       connected:row?.status==='connected',
+       number:row?.status==='connected' ? (row?.phone||null) : null,
+       status:row?.status||'disconnected',
+       connectedAt:row?.connected_at||null
+     };
+     if(JSON.stringify(current)!==JSON.stringify(whatsapp)){
+       const merged={...(setup.config||{}),whatsapp};
+       await this.db.query(
+         `UPDATE customer_setup_configs SET config=$3::jsonb,updated_at=now() WHERE team_id=$1 AND workspace_id=$2`,
+         [teamId,ws,JSON.stringify(merged)]
+       );
+       setup=await this.loadResolved(teamId,ws);
+     }
+   }
 
    const req=await this.db.query(
      `SELECT id,request_code,assistance_type,status,latest_response,created_at,updated_at
@@ -123,7 +153,10 @@ export class SetupService {
    return this.loadResolved(teamId,ws);
  }
 
- async runTest(u:any,requested:string|undefined,b:any){ const teamId=await this.resolveTeamId(u); const ws=await this.workspace(teamId,requested); const c=await this.loadResolved(teamId,ws); const connected=(c.config?.customerChannels||[]).includes(b.channel); if(!connected) throw new BadRequestException('Selected test channel is not configured'); const routing=!!(c.config?.routing?.pipelineId&&c.config?.routing?.stageId); const handoff=!!c.config?.handoff?.verified; const pass=connected&&routing&&handoff; const result={id:randomUUID(),workspaceId:ws,aiAgentId:c.ai_agent_id||null,channel:b.channel,scenario:b.scenario,entryPoint:b.entryPoint||null,timestamp:new Date().toISOString(),contactId:null,source:b.entryPoint||b.channel,pipelineId:c.config?.routing?.pipelineId||null,stageId:c.config?.routing?.stageId||null,conversionResult:pass?'verified':'not_verified',handoffResult:handoff?'verified':'not_verified',status:pass?'pass':'fail',errorDetails:pass?null:'Complete routing and human handoff before the end-to-end test.'}; const tests=[...(c.tests||[]),result].slice(-50); await this.db.query(`UPDATE customer_setup_configs SET tests=$3::jsonb,updated_at=now() WHERE team_id=$1 AND workspace_id=$2`,[teamId,ws,JSON.stringify(tests)]); return {result,setup:await this.loadResolved(teamId,ws)}; }
+ async runTest(u:any,requested:string|undefined,b:any){ const teamId=await this.resolveTeamId(u); const ws=await this.workspace(teamId,requested); const c=await this.loadResolved(teamId,ws); const selected=c.config?.customerChannels||[];
+ const selectedKey=b.channel==='voice'?'phone':b.channel;
+ const connected=selected.includes(selectedKey);
+ if(!connected) throw new BadRequestException('Selected test channel is not configured'); const routing=!!(c.config?.routing?.pipelineId&&c.config?.routing?.stageId); const handoff=!!c.config?.handoff?.verified; const pass=connected&&routing&&handoff; const result={id:randomUUID(),workspaceId:ws,aiAgentId:c.ai_agent_id||null,channel:b.channel,scenario:b.scenario,entryPoint:b.entryPoint||null,timestamp:new Date().toISOString(),contactId:null,source:b.entryPoint||b.channel,pipelineId:c.config?.routing?.pipelineId||null,stageId:c.config?.routing?.stageId||null,conversionResult:pass?'verified':'not_verified',handoffResult:handoff?'verified':'not_verified',status:pass?'pass':'fail',errorDetails:pass?null:'Complete routing and human handoff before the end-to-end test.'}; const tests=[...(c.tests||[]),result].slice(-50); await this.db.query(`UPDATE customer_setup_configs SET tests=$3::jsonb,updated_at=now() WHERE team_id=$1 AND workspace_id=$2`,[teamId,ws,JSON.stringify(tests)]); return {result,setup:await this.loadResolved(teamId,ws)}; }
  async activate(u:any,requested?:string){ const teamId=await this.resolveTeamId(u); const ws=await this.workspace(teamId,requested); const c=await this.loadResolved(teamId,ws); if(!c.readiness.ready) throw new BadRequestException('Complete all required launch-readiness checks before activation.'); await this.db.query(`UPDATE customer_setup_configs SET status='active',activated_at=now(),activated_by=$3,updated_at=now() WHERE team_id=$1 AND workspace_id=$2`,[teamId,ws,this.userId(u)]); return this.loadResolved(teamId,ws); }
  async assistance(u:any,requested:string|undefined,b:any){ const teamId=await this.resolveTeamId(u); const ws=await this.workspace(teamId,requested); if(!['AI Agent Setup Assistance','Website & Connection Assistance'].includes(b.assistanceType)) throw new BadRequestException('Select an assistance type'); if(!b.businessName||!b.contactName||!b.contactEmail) throw new BadRequestException('Business name, contact name and email are required'); const duplicate=await this.db.query(`SELECT * FROM setup_assistance_requests WHERE team_id=$1 AND workspace_id=$2 AND status IN ('Submitted','Reviewing','Quote Sent','Approved','In Progress') ORDER BY created_at DESC LIMIT 1`,[teamId,ws]); if(duplicate.rows[0]) return {duplicate:true,request:duplicate.rows[0]}; const c=await this.loadResolved(teamId,ws); const code='SET-'+Date.now().toString(36).toUpperCase(); const q=await this.db.query(`INSERT INTO setup_assistance_requests(request_code,team_id,workspace_id,ai_agent_id,requested_by,assistance_type,payload) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING *`,[code,teamId,ws,c.ai_agent_id||null,this.userId(u),b.assistanceType,JSON.stringify(b)]); await this.notifications.create({teamId,type:'setup.assistance.submitted',category:'team',priority:'high',title:'New setup assistance request',message:`${b.assistanceType} — ${code}`,url:'/dashboard/ai-cortexa-setup/assistance',entityType:'setup_assistance',entityId:q.rows[0].id,metadata:{requestCode:code,assistanceType:b.assistanceType}}); return {duplicate:false,request:q.rows[0]}; }
 }

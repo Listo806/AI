@@ -17,8 +17,25 @@ const endpoint = (path = "", workspaceId = "") => {
   }`;
 };
 
+const unwrap = (value) => value?.data?.data ?? value?.data ?? value;
+
 export const setupApi = {
   get: () => apiClient.request(endpoint()),
+
+  whatsappStatus: async () =>
+    unwrap(await apiClient.request("/whatsapp-qr/status")),
+
+  whatsappConnect: async () =>
+    unwrap(await apiClient.request("/whatsapp-qr/connect", {
+      method: "POST",
+      body: JSON.stringify({}),
+    })),
+
+  whatsappDisconnect: async () =>
+    unwrap(await apiClient.request("/whatsapp-qr/disconnect", {
+      method: "POST",
+      body: JSON.stringify({}),
+    })),
 
   save: (body, workspaceId) =>
     apiClient.request(endpoint("", workspaceId), {

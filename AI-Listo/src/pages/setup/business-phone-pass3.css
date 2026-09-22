@@ -1,5 +1,5 @@
 /* Business Phone Pass 3 — scoped precision layer. Loaded after setup.css. */
-.phone3-page{max-width:none!important;color:#071342}
+.phone3-page{max-width:none!important;color:#071342;margin-bottom: 10px;}
 .phone3-crumb{margin:0 0 8px!important;height:22px!important;font-size:11px!important}
 .phone3-header{min-height:62px!important;height:auto!important;display:grid!important;grid-template-columns:50px minmax(0,1fr) auto auto auto!important;gap:12px!important;align-items:center!important}
 .phone3-title-icon{width:48px!important;height:48px!important;border-radius:11px!important}
@@ -33,3 +33,5 @@
 @media(max-width:1180px){.phone3-layout{grid-template-columns:240px minmax(540px,1fr)!important}.phone3-right{grid-column:2!important}.phone3-header{grid-template-columns:48px 1fr auto auto!important}.phone3-status{grid-column:3}.phone3-header .phone3-outline:last-child{grid-column:4}.phone3-footer{grid-template-columns:240px 1fr 260px!important}}
 @media(max-width:900px){.phone3-layout{grid-template-columns:1fr!important}.phone3-right{grid-column:auto!important}.phone3-nav{display:flex!important;overflow-x:auto!important}.phone3-nav>button{min-width:225px!important}.phone3-progress{grid-template-columns:auto auto 1fr!important}.phone3-progress strong{display:none!important}.phone3-footer{grid-template-columns:1fr 1fr!important;height:auto!important}.phone3-footer>span{grid-column:1/-1;grid-row:1}}
 @media(max-width:620px){.phone3-page{padding:10px!important}.phone3-header{grid-template-columns:42px 1fr!important}.phone3-status,.phone3-outline{grid-column:auto!important}.phone3-progress{grid-template-columns:1fr auto!important;height:auto!important;padding:8px!important}.phone3-progress>div{grid-column:1/-1}.phone3-number,.phone3-channel-grid,.phone3-fields.three,.phone3-fields.voice{grid-template-columns:1fr!important}.phone3-number{display:grid!important}.phone3-phone-icon{display:none!important}.phone3-footer{grid-template-columns:1fr!important}}
+
+.phone3-number-copy input{width:100%;height:29px;border:1px solid #cbd8ec;border-radius:5px;padding:0 8px;font-size:10px;background:#fff;color:#071342}.phone3-channel-grid button:disabled{opacity:.45;cursor:not-allowed}.crm-dark .phone3-number-copy input{background:#111827;border-color:#2b3a52;color:#f3f6ff}

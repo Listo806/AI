@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -337,6 +337,7 @@ export default function BusinessPhoneSetup() {
 
   const [mode, setMode] = useState("existing");
   const [testing, setTesting] = useState(false);
+  const connectRef = useRef(null);
 
   /*
    * IMPORTANT:
@@ -353,7 +354,7 @@ export default function BusinessPhoneSetup() {
 
       !!(c.website?.url && c.website?.ctaLabel && c.website?.destination),
 
-      false,
+      c.phone?.connectionStatus === "connected",
 
       c.whatsapp?.connected === true,
 
@@ -436,8 +437,8 @@ export default function BusinessPhoneSetup() {
           <Info />
           {t.status}
         </span>
-        <button className="phone3-outline">{t.save}</button>
-        <button className="phone3-outline">
+        <button className="phone3-outline" onClick={() => navigate("/dashboard/ai-cortexa-setup")}>{t.save}</button>
+        <button className="phone3-outline" onClick={() => document.querySelector(".phone3-test")?.scrollIntoView({behavior:"smooth",block:"center"})}>
           <PhoneCall />
           {t.testNumber}
         </button>
@@ -457,10 +458,14 @@ export default function BusinessPhoneSetup() {
       <div className="phone3-layout">
         <aside className="phone3-nav">
           {t.nav.map((label, i) => {
-            const done = i < current || completed[i];
+            const done = completed[i];
             const active = i === current;
             return (
-              <button key={label} className={active ? "active" : ""}>
+              <button key={label} className={active ? "active" : ""} onClick={() => {
+                if (i === 2) return;
+                const keys=["channels","website","phone","whatsapp","marketing","consent","conversion","routing","test"];
+                navigate(`/dashboard/ai-cortexa-setup/customer-entry-points?section=${keys[i]}`);
+              }}>
                 <span className={`phone3-step-wrap ${done ? "done" : ""}`}>
                   <span className={`phone3-num ${active ? "active" : ""}`}>{i + 1}</span>
                   {done && <span className="phone3-complete-check"><Check /></span>}
@@ -494,7 +499,7 @@ export default function BusinessPhoneSetup() {
             </button>
           </div>
 
-          <section className="phone3-section">
+          <section className="phone3-section" ref={connectRef}>
             <div className="phone3-section-head">
               <div>
                 <h2>{t.connect}</h2>
@@ -516,15 +521,27 @@ export default function BusinessPhoneSetup() {
               </button>
             </div>
             <div className="phone3-number">
-              <span className="phone3-phone-icon">
-                <Phone />
-              </span>
+              <span className="phone3-phone-icon"><Phone /></span>
               <div className="phone3-number-copy">
-                <b>{phone.number || "—"}</b>
-                <em>{t.callerId}: {phone.callerId || "—"}</em>
+                {mode === "existing" ? (
+                  <>
+                    <input
+                      value={phone.number || ""}
+                      placeholder="+1 305 555 0100"
+                      onChange={(e) => patch({ number: e.target.value, connectionStatus: "pending" })}
+                      onBlur={() => patch({ number: phone.number || "", connectionStatus: phone.number ? "pending" : "disconnected" }, true)}
+                    />
+                    <em>{phone.number ? "Saved — verification/provider connection still required" : "Enter the existing business number"}</em>
+                  </>
+                ) : (
+                  <>
+                    <b>New-number activation requires the configured phone provider.</b>
+                    <em>No number will be marked connected until the provider confirms activation.</em>
+                  </>
+                )}
               </div>
-              <button>{t.changeNumber}</button>
-              <button>{t.manage}</button>
+              <button onClick={() => { patch({ number:"", callerId:"", connectionStatus:"disconnected", voiceEnabled:false, smsEnabled:false }, true); setMode("existing"); }}>{t.changeNumber}</button>
+              <button onClick={() => document.querySelector(".phone3-fields.three")?.scrollIntoView({behavior:"smooth",block:"center"})}>{t.manage}</button>
             </div>
           </section>
 
@@ -541,6 +558,8 @@ export default function BusinessPhoneSetup() {
                 </div>
                 <button
                   className={voiceEnabled ? "on" : ""}
+                  disabled={!isConnected}
+                  title={!isConnected ? "Connect and verify a business number first" : ""}
                   onClick={() => patch({ voiceEnabled: !voiceEnabled }, true)}
                 >
                   <i />
@@ -556,6 +575,8 @@ export default function BusinessPhoneSetup() {
                 </div>
                 <button
                   className={smsEnabled ? "on" : ""}
+                  disabled={!isConnected}
+                  title={!isConnected ? "Connect and verify a business number first" : ""}
                   onClick={() => patch({ smsEnabled: !smsEnabled }, true)}
                 >
                   <i />
@@ -680,7 +701,7 @@ export default function BusinessPhoneSetup() {
                 />
               </label>
             
-            <button className="phone3-advanced">
+            <button className="phone3-advanced" onClick={() => navigate("/dashboard/ai-cortexa-setup/customer-entry-points?section=routing")}>
               <Settings2 />
               {t.advanced}
               <ChevronRight />
