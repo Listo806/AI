@@ -324,25 +324,40 @@ export class NuveiClientService {
   }
 
   /**
-   * POST /v2/3ds/auth_continue/ — after the 3DS "method" (fingerprint) iframe
-   * has been rendered for ~5s (authentication return_code 50 / status_detail
-   * 35), continue the authentication. May answer with a challenge.
+   * 3D Secure continuation for a payment we started with a stored token.
+   *
+   * Nuvei has two 3DS flows and they do not share endpoints. The authenticate
+   * -first flow (/v2/3ds/authenticate/ then /v2/3ds/auth_continue/ and
+   * /v2/3ds/auth_verify/) takes a full card number, has no token parameter at
+   * all, and only accepts the identifiers it issues itself. A payment started
+   * by a charge is continued through the verify method instead, which is what
+   * these two do:
+   *
+   *   status_detail 35, the fingerprint was requested -> AUTHENTICATION_CONTINUE
+   *   status_detail 36, a challenge was requested     -> BY_CRES with the CRes
+   *
+   * Sending a charge's identifier to /v2/3ds/auth_continue/ is refused by the
+   * API as a malformed identifier, which is why this path is kept separate.
    */
-  async threeDsContinue(transactionId: string): Promise<NuveiCallResult> {
-    return this.request('POST', `${this.cardsBase()}/v2/3ds/auth_continue/`, {
-      transaction: { id: transactionId },
-    });
+  async threeDsContinue(
+    userId: string,
+    transactionId: string,
+  ): Promise<NuveiCallResult> {
+    return this.verifyWithValue(
+      userId,
+      transactionId,
+      'AUTHENTICATION_CONTINUE',
+      '',
+    );
   }
 
-  /**
-   * POST /v2/3ds/auth_verify/ — submit the CRes the ACS posted to our term_url
-   * so Nuvei can validate the challenge result and complete the debit.
-   */
-  async threeDsVerify(transactionId: string, cres: string): Promise<NuveiCallResult> {
-    return this.request('POST', `${this.cardsBase()}/v2/3ds/auth_verify/`, {
-      transaction: { id: transactionId },
-      cres,
-    });
+  /** Submit the CRes the ACS posted to our term_url, completing the charge. */
+  async threeDsVerify(
+    userId: string,
+    transactionId: string,
+    cres: string,
+  ): Promise<NuveiCallResult> {
+    return this.verifyWithValue(userId, transactionId, 'BY_CRES', cres);
   }
 
   /**
