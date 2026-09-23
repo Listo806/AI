@@ -250,17 +250,18 @@ const countryName = (code) => {
     return cc;
   }
 };
-// Where the customer is. For a United States customer we show their state, which
-// is far more useful than repeating "United States" on every row; everyone else
-// keeps their country. The country itself is always still stored.
+// Where the customer is, inside the Country column that was always there. A
+// United States customer with a known state reads "Texas, USA"; without one they
+// read "United States", and everyone else keeps their country unchanged. The
+// country itself is always still stored.
 function CountryCell({ code, state }) {
   if (!code) return <span className="cxc-muted">Unknown</span>;
   const flag = flagEmoji(code);
   const name = countryName(code);
   const isUs = String(code).toUpperCase() === "US";
-  const label = isUs && state ? state : name;
+  const label = isUs && state ? `${state}, USA` : name;
   return (
-    <span className="cxc-country" title={isUs && state ? `${state}, ${name}` : name}>
+    <span className="cxc-country" title={label}>
       {flag ? `${flag} ` : ""}
       {label}
     </span>
@@ -767,9 +768,6 @@ export default function AdminCustomers() {
   // Same idea for the acquisition Source filter: keep the full option list even
   // once a source is selected, so sources can be compared freely.
   const [sourceOpts, setSourceOpts] = useState([]);
-  // United States states seen in the unfiltered view, with their totals, so the
-  // list stays complete once a state is selected.
-  const [stateOpts, setStateOpts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
   const [filters, setFilters] = useState({
@@ -780,7 +778,6 @@ export default function AdminCustomers() {
     source: "all",
     language: "all",
     country: "all",
-    state: "all",
     usersRole: "all",
     seatStatus: "all",
     from: "",
@@ -828,10 +825,6 @@ export default function AdminCustomers() {
           const ss = sum?.breakdowns?.source;
           if (Array.isArray(ss)) setSourceOpts(ss);
         }
-        if ((filters.state || "all") === "all") {
-          const st = sum?.breakdowns?.state;
-          if (Array.isArray(st)) setStateOpts(st.filter((s) => s.key !== "Unknown"));
-        }
       })
       .catch(() => {
         setRows([]);
@@ -858,7 +851,6 @@ export default function AdminCustomers() {
       source: "all",
       language: "all",
       country: "all",
-      state: "all",
       usersRole: "all",
       seatStatus: "all",
       from: "",
@@ -1068,10 +1060,6 @@ export default function AdminCustomers() {
     return out;
   };
 
-  // United States totals by state, as returned by the summary endpoint.
-  const usStateRows = Array.isArray(summary?.breakdowns?.state)
-    ? summary.breakdowns.state
-    : [];
   const planBreakdown = Array.isArray(summary?.breakdowns?.plan)
     ? summary.breakdowns.plan
     : [];
@@ -1450,54 +1438,6 @@ export default function AdminCustomers() {
           />
         </div>
 
-        {/* United States customers by state: sign-ups, activations, renewals and
-            the monthly revenue they represent, so states can be compared. */}
-        {usStateRows.length > 0 && (
-          <div className="cxc-panel">
-            <div className="cxc-overview-card-title">
-              <Globe size={17} /> UNITED STATES BY STATE
-            </div>
-            <div className="cxc-table-wrap">
-              <table className="cxc-table">
-                <thead>
-                  <tr>
-                    <th>State</th>
-                    <th>Sign-ups</th>
-                    <th>Activations</th>
-                    <th>Renewals</th>
-                    <th>Revenue</th>
-                    <th>Monthly Recurring</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usStateRows.map((s) => (
-                    <tr key={s.key}>
-                      <td>{s.key}</td>
-                      <td>{s.signups}</td>
-                      <td>{s.activations}</td>
-                      <td>{s.renewals}</td>
-                      <td>{usd(s.revenue)}</td>
-                      <td>{usd(s.mrr)}</td>
-                      <td>
-                        <button
-                          className="cxc-btn cxc-btn-sm"
-                          onClick={() => {
-                            setPage(1);
-                            setFilter("state", s.key);
-                            setMoreFilters(true);
-                          }}
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
         {/* Tabs + filters panel */}
         <div className="cxc-panel">
@@ -1654,22 +1594,6 @@ export default function AdminCustomers() {
                         {s}
                       </option>
                     ))}
-                </select>
-                {/* United States customers by state. Unknown covers US customers
-                    whose state we do not have yet. */}
-                <select
-                  className="cxc-select"
-                  value={filters.state}
-                  onChange={(e) => setFilter("state", e.target.value)}
-                  title="State (US)"
-                >
-                  <option value="all">All States (US)</option>
-                  {stateOpts.map((s) => (
-                    <option key={s.key} value={s.key}>
-                      {s.key} ({s.signups})
-                    </option>
-                  ))}
-                  <option value="Unknown">Unknown state</option>
                 </select>
                 <input
                   className="cxc-select"
@@ -3250,7 +3174,7 @@ function CustomerModal({
                       <span>
                         <MapPin size={16} />
                         {String(c.country || "").toUpperCase() === "US" && c.state
-                          ? c.state
+                          ? `${c.state}, USA`
                           : countryName(c.country) || "Unknown"}
                       </span>
                       <button onClick={copyCustomerId}>
