@@ -98,7 +98,11 @@ export class SetupService {
    const checks:any={
      trained:!!cfg.trainingComplete,
      website:!channels.includes('website')||!!(cfg.website?.url&&cfg.website?.ctaLabel&&cfg.website?.destination),
-     phone:!channels.some((x:string)=>['phone','sms'].includes(x))||cfg.phone?.connectionStatus==='connected',
+     phone:!channels.some((x:string)=>['phone','sms'].includes(x))||(
+       cfg.phone?.connectionStatus==='connected' &&
+       cfg.phone?.providerVerified===true &&
+       (cfg.phone?.providerCapabilities?.voice===true || cfg.phone?.providerCapabilities?.sms===true)
+     ),
      whatsapp:!channels.includes('whatsapp')||cfg.whatsapp?.connected===true,
      consent:!!cfg.consent?.configured && cfg.consent?.captureSource===true,
      routing:!!(cfg.routing?.pipelineId&&cfg.routing?.stageId),
@@ -218,7 +222,24 @@ export class SetupService {
    const patch:any={};
    for(const k of allowed) if(body[k]!==undefined) patch[k]=body[k];
 
-   const merged={...(old.config||{}),...patch};
+   // Deep-merge nested setup groups so a partial autosave cannot erase sibling fields.
+   const nestedGroups=new Set([
+     'website','phone','whatsapp','marketing','consent',
+     'conversion','routing','handoff'
+   ]);
+   const merged:any={...(old.config||{})};
+   for(const [key,value] of Object.entries(patch)){
+     if(
+       nestedGroups.has(key) &&
+       value &&
+       typeof value==='object' &&
+       !Array.isArray(value)
+     ){
+       merged[key]={...(merged[key]||{}),...(value as any)};
+     }else{
+       merged[key]=value;
+     }
+   }
    await this.db.query(
      `UPDATE customer_setup_configs
          SET selected_objective=COALESCE($3,selected_objective),
@@ -251,7 +272,16 @@ export class SetupService {
    const channelReady=
      channel==='website' ? !!(cfg.website?.url&&cfg.website?.ctaLabel&&cfg.website?.destination) :
      channel==='whatsapp' ? cfg.whatsapp?.connected===true :
-     ['voice','sms'].includes(channel) ? cfg.phone?.connectionStatus==='connected' : false;
+     channel==='voice' ? !!(
+       cfg.phone?.connectionStatus==='connected' &&
+       cfg.phone?.providerVerified===true &&
+       cfg.phone?.providerCapabilities?.voice===true
+     ) :
+     channel==='sms' ? !!(
+       cfg.phone?.connectionStatus==='connected' &&
+       cfg.phone?.providerVerified===true &&
+       cfg.phone?.providerCapabilities?.sms===true
+     ) : false;
    if(!channelReady) throw new BadRequestException('Selected test channel is not connected yet');
 
    if(!(cfg.consent?.configured && cfg.consent?.captureSource===true))

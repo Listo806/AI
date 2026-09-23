@@ -133,8 +133,15 @@ function sectionStatus(c, key, tests = []) {
     return Object.values(w).some(Boolean) ? "inProgress" : "notStarted";
   }
   if (key === "phone") {
-    if (c.phone?.connectionStatus === "connected") return "complete";
-    return c.phone?.number || c.phone?.displayName ? "inProgress" : "notStarted";
+    const p = c.phone || {};
+    const providerConnected =
+      p.connectionStatus === "connected" &&
+      p.providerVerified === true;
+    const hasConfirmedCapability =
+      p.providerCapabilities?.voice === true ||
+      p.providerCapabilities?.sms === true;
+    if (providerConnected && hasConfirmedCapability) return "complete";
+    return p.number || p.displayName || p.connectionStatus ? "inProgress" : "notStarted";
   }
   if (key === "whatsapp") {
     if (c.whatsapp?.connected === true) return "complete";
@@ -152,8 +159,9 @@ function sectionStatus(c, key, tests = []) {
   }
   if (key === "conversion") {
     const x = c.conversion || {};
-    if (x.objective && x.desiredAction) return "complete";
-    return Object.values(x).some(Boolean) ? "inProgress" : "notStarted";
+    const objective = x.objective || c.__selectedObjective;
+    if (objective && x.desiredAction) return "complete";
+    return objective || Object.values(x).some(Boolean) ? "inProgress" : "notStarted";
   }
   if (key === "routing") {
     const x = c.routing || {};
@@ -235,7 +243,8 @@ export default function CustomerEntryPoints() {
 
   if (!data) return <main className="setup-shell"><div className="setup-loading">{setupCopy[lang].loading}</div></main>;
   const website = c.website || {};
-  const statuses = sectionKeys.map(k => sectionStatus(c, k, data.tests));
+  const statusConfig = { ...c, __selectedObjective: data.selected_objective || "" };
+  const statuses = sectionKeys.map(k => sectionStatus(statusConfig, k, data.tests));
   const done = statuses.filter(x => x === "complete").length;
   const pct = Math.round((done / 9) * 100);
 
@@ -250,7 +259,7 @@ export default function CustomerEntryPoints() {
     patchWebsite("placements", next, true);
   };
 
-  const statusText = key => tr[sectionStatus(c, key, data.tests)] || tr.notStarted;
+  const statusText = key => tr[sectionStatus(statusConfig, key, data.tests)] || tr.notStarted;
 
 
   // Send only the nested fields that changed. useSetup + backend both deep-merge
@@ -282,7 +291,7 @@ export default function CustomerEntryPoints() {
               value={website.url || ""}
               placeholder="https://yourbusiness.com"
               onChange={e => patchWebsite("url", e.target.value)}
-              onBlur={() => patchWebsite("url", website.url, true)}
+              onBlur={e => patchWebsite("url", e.currentTarget.value, true)}
             />
           </div>
           <span className={`cep-verified-pill ${website.url ? "verified" : ""}`}><Check/> {website.url ? tr.verified : tr.verify}</span>
@@ -311,7 +320,7 @@ export default function CustomerEntryPoints() {
       <div className="cep-field-block">
         <h4>{tr.settings}</h4>
         <div className="cep-settings-exact">
-          <label className="cep-setting-label"><span>{tr.buttonLabel}</span><input value={website.ctaLabel || ""} placeholder={tr.buyNow} onChange={e => patchWebsite("ctaLabel", e.target.value)} onBlur={() => patchWebsite("ctaLabel", website.ctaLabel, true)}/></label>
+          <label className="cep-setting-label"><span>{tr.buttonLabel}</span><input value={website.ctaLabel || ""} placeholder={tr.buyNow} onChange={e => patchWebsite("ctaLabel", e.target.value)} onBlur={e => patchWebsite("ctaLabel", e.currentTarget.value, true)}/></label>
           <div className="cep-style-field"><span>{tr.buttonStyle}</span>
             {["Floating button","Inline button","Both"].map((value, idx) => {
               const names = lang === "es" ? ["Botón flotante","Botón en línea","Ambos"] : lang === "pt" ? ["Botão flutuante","Botão inline","Ambos"] : ["Floating button","Inline button","Both"];
@@ -330,7 +339,7 @@ export default function CustomerEntryPoints() {
         <h4>{tr.websiteMessage}</h4>
         <p className="cep-field-help">{tr.websiteMessageHelp}</p>
         <div className="cep-message-wrap">
-          <textarea maxLength={500} className="cep-message" value={website.openingMessage || ""} onChange={e => patchWebsite("openingMessage", e.target.value)} onBlur={() => patchWebsite("openingMessage", website.openingMessage, true)} placeholder="Hi, I'm interested in this product. Can you help me complete my purchase?"/>
+          <textarea maxLength={500} className="cep-message" value={website.openingMessage || ""} onChange={e => patchWebsite("openingMessage", e.target.value)} onBlur={e => patchWebsite("openingMessage", e.currentTarget.value, true)} placeholder="Hi, I'm interested in this product. Can you help me complete my purchase?"/>
           <span>{(website.openingMessage || "").length}/500</span>
         </div>
       </div>
@@ -421,10 +430,10 @@ export default function CustomerEntryPoints() {
       return <div className="cep-functional">
         {cardHead(Megaphone, labels[lang][4], "Define the primary traffic page and source label so conversations retain campaign context.")}
         <div className="cep-generic-grid">
-          <label><span>Primary traffic / landing page</span><input value={m.primaryPage||""} placeholder="https://yourbusiness.com/offer" onChange={e=>patchConfig("marketing",{primaryPage:e.target.value},false)} onBlur={()=>patchConfig("marketing",{primaryPage:m.primaryPage||""},true)}/></label>
-          <label><span>Default source name</span><input value={m.sourceName||""} placeholder="Website / Google Ads / Meta Ads" onChange={e=>patchConfig("marketing",{sourceName:e.target.value},false)} onBlur={()=>patchConfig("marketing",{sourceName:m.sourceName||""},true)}/></label>
-          <label><span>Campaign parameter</span><input value={m.campaignParameter||"utm_campaign"} onChange={e=>patchConfig("marketing",{campaignParameter:e.target.value},true)}/></label>
-          <label><span>Source parameter</span><input value={m.sourceParameter||"utm_source"} onChange={e=>patchConfig("marketing",{sourceParameter:e.target.value},true)}/></label>
+          <label><span>Primary traffic / landing page</span><input value={m.primaryPage||""} placeholder="https://yourbusiness.com/offer" onChange={e=>patchConfig("marketing",{primaryPage:e.target.value},false)} onBlur={e=>patchConfig("marketing",{primaryPage:e.currentTarget.value},true)}/></label>
+          <label><span>Default source name</span><input value={m.sourceName||""} placeholder="Website / Google Ads / Meta Ads" onChange={e=>patchConfig("marketing",{sourceName:e.target.value},false)} onBlur={e=>patchConfig("marketing",{sourceName:e.currentTarget.value},true)}/></label>
+          <label><span>Campaign parameter</span><input value={m.campaignParameter ?? "utm_campaign"} onChange={e=>patchConfig("marketing",{campaignParameter:e.target.value},true)} onBlur={e=>patchConfig("marketing",{campaignParameter:e.currentTarget.value},true)}/></label>
+          <label><span>Source parameter</span><input value={m.sourceParameter ?? "utm_source"} onChange={e=>patchConfig("marketing",{sourceParameter:e.target.value},true)} onBlur={e=>patchConfig("marketing",{sourceParameter:e.currentTarget.value},true)}/></label>
         </div>
       </div>;
     }
@@ -437,7 +446,7 @@ export default function CustomerEntryPoints() {
           <label className="cep-option-row"><span className="cep-option-icon"><ShieldCheck/></span><span><b>Consent configured</b><small>Confirm your customer-facing consent language/process is ready.</small></span><button type="button" className={x.configured?"cep-switch on":"cep-switch"} onClick={()=>patchConfig("consent",{configured:!x.configured})}><i/></button></label>
           <label className="cep-option-row"><span className="cep-option-icon"><Link2/></span><span><b>Capture source automatically</b><small>Store referrer, UTM and entry-point source with the CRM record.</small></span><button type="button" className={x.captureSource?"cep-switch on":"cep-switch"} onClick={()=>patchConfig("consent",{captureSource:!x.captureSource})}><i/></button></label>
         </div>
-        <label className="cep-full-field"><span>Consent notice / reference</span><textarea value={x.notice||""} placeholder="Optional internal note about the consent notice used on your site or channels." onChange={e=>patchConfig("consent",{notice:e.target.value},false)} onBlur={()=>patchConfig("consent",{notice:x.notice||""},true)}/></label>
+        <label className="cep-full-field"><span>Consent notice / reference</span><textarea value={x.notice||""} placeholder="Optional internal note about the consent notice used on your site or channels." onChange={e=>patchConfig("consent",{notice:e.target.value},false)} onBlur={e=>patchConfig("consent",{notice:e.currentTarget.value},true)}/></label>
       </div>;
     }
 
@@ -512,7 +521,7 @@ export default function CustomerEntryPoints() {
       <aside className="cep-nav">
         {sectionKeys.map((key, i) => {
           const currentIndex = sectionKeys.indexOf(active);
-          const realStatus = sectionStatus(c, key, data.tests);
+          const realStatus = sectionStatus(statusConfig, key, data.tests);
           const isCurrent = i === currentIndex;
           const isComplete = realStatus === "complete";
           const visualStatus = isComplete ? "complete" : isCurrent ? "inProgress" : realStatus;
