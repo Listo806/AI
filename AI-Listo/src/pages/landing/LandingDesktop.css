@@ -564,7 +564,6 @@ html {
 
 .cx-logo-img {
   width: 100%;
-  margin-top: -30px;
 }
 
 .cx-header .cx-left {
@@ -1701,11 +1700,6 @@ section#footer {
   background: #fff;
 }
 
-.cx-header .cx-nav,
-.cx-header .cx-actions {
-  margin-top: 26px;
-}
-
 #cortexa-ai-crm-landing .hero-text .hero-title {
   font-size: 15.4px;
   font-weight: 600;
@@ -1714,6 +1708,7 @@ section#footer {
   color: #111827;
   margin-top: 0;
   margin-bottom: 0;
+  display: none;
 }
 
 .highlight {
