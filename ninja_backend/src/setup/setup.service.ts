@@ -190,27 +190,7 @@ export class SetupService {
    const patch:any={};
    for(const k of allowed) if(body[k]!==undefined) patch[k]=body[k];
 
-   // Deep-merge nested setup groups. This prevents two autosaves/toggles
-   // (for example consent.configured + consent.captureSource) from erasing
-   // each other when requests are close together.
-   const nestedGroups=new Set([
-     'website','phone','whatsapp','marketing','consent',
-     'conversion','routing','handoff'
-   ]);
-   const merged:any={...(old.config||{})};
-   for(const [key,value] of Object.entries(patch)){
-     if(
-       nestedGroups.has(key) &&
-       value &&
-       typeof value==='object' &&
-       !Array.isArray(value)
-     ){
-       merged[key]={...(merged[key]||{}),...(value as any)};
-     }else{
-       merged[key]=value;
-     }
-   }
-
+   const merged={...(old.config||{}),...patch};
    await this.db.query(
      `UPDATE customer_setup_configs
          SET selected_objective=COALESCE($3,selected_objective),
@@ -365,6 +345,60 @@ export class SetupService {
    );
    return {result,setup:await this.loadResolved(teamId,ws)};
  }
- async activate(u:any,requested?:string){ const teamId=await this.resolveTeamId(u); const ws=await this.workspace(teamId,requested); const c=await this.loadResolved(teamId,ws); if(!c.readiness.ready) throw new BadRequestException('Complete all required launch-readiness checks before activation.'); await this.db.query(`UPDATE customer_setup_configs SET status='active',activated_at=now(),activated_by=$3,updated_at=now() WHERE team_id=$1 AND workspace_id=$2`,[teamId,ws,this.userId(u)]); return this.loadResolved(teamId,ws); }
+ async activate(u:any,requested?:string){
+   await this.ensure();
+   const teamId=await this.resolveTeamId(u);
+   const userId=this.userId(u);
+   if(!userId) throw new ForbiddenException('Authenticated user is missing an id');
+   const ws=await this.workspace(teamId,requested);
+   const c=await this.loadResolved(teamId,ws);
+   if(!c.readiness.ready)
+     throw new BadRequestException('Complete all required launch-readiness checks before activation.');
+
+   const selected=Array.isArray(c.config?.customerChannels)?c.config.customerChannels:[];
+   const approvedChannels=selected.filter((channel:string)=>{
+     if(channel==='website') return c.readiness.website===true;
+     if(channel==='whatsapp') return c.readiness.whatsapp===true;
+     if(channel==='phone'||channel==='sms') return c.readiness.phone===true;
+     return false;
+   });
+   if(!approvedChannels.length)
+     throw new BadRequestException('At least one approved customer channel is required before activation.');
+
+   const activatedAt=new Date().toISOString();
+   const config={
+     ...(c.config||{}),
+     activation:{
+       ...((c.config||{}).activation||{}),
+       approvedChannels,
+       liveChannels:approvedChannels,
+       activatedAt,
+       activatedBy:userId
+     }
+   };
+
+   // The AI runtime reads ai_agent_settings.launched. Activation must update
+   // that source of truth; changing only the setup wizard status is not enough.
+   await this.db.query(
+     `INSERT INTO ai_agent_settings(team_id,launched,paused,updated_at)
+      VALUES($1,true,false,NOW())
+      ON CONFLICT(team_id)
+      DO UPDATE SET launched=true,paused=false,updated_at=NOW()`,
+     [teamId]
+   );
+
+   await this.db.query(
+     `UPDATE customer_setup_configs
+         SET status='active',
+             activated_at=NOW(),
+             activated_by=$3,
+             config=$4::jsonb,
+             updated_at=NOW()
+       WHERE team_id=$1 AND workspace_id=$2`,
+     [teamId,ws,userId,JSON.stringify(config)]
+   );
+
+   return this.loadResolved(teamId,ws);
+ }
  async assistance(u:any,requested:string|undefined,b:any){ const teamId=await this.resolveTeamId(u); const ws=await this.workspace(teamId,requested); if(!['AI Agent Setup Assistance','Website & Connection Assistance'].includes(b.assistanceType)) throw new BadRequestException('Select an assistance type'); if(!b.businessName||!b.contactName||!b.contactEmail) throw new BadRequestException('Business name, contact name and email are required'); const duplicate=await this.db.query(`SELECT * FROM setup_assistance_requests WHERE team_id=$1 AND workspace_id=$2 AND status IN ('Submitted','Reviewing','Quote Sent','Approved','In Progress') ORDER BY created_at DESC LIMIT 1`,[teamId,ws]); if(duplicate.rows[0]) return {duplicate:true,request:duplicate.rows[0]}; const c=await this.loadResolved(teamId,ws); const code='SET-'+Date.now().toString(36).toUpperCase(); const q=await this.db.query(`INSERT INTO setup_assistance_requests(request_code,team_id,workspace_id,ai_agent_id,requested_by,assistance_type,payload) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING *`,[code,teamId,ws,c.ai_agent_id||null,this.userId(u),b.assistanceType,JSON.stringify(b)]); await this.notifications.create({teamId,type:'setup.assistance.submitted',category:'team',priority:'high',title:'New setup assistance request',message:`${b.assistanceType} — ${code}`,url:'/dashboard/ai-cortexa-setup/assistance',entityType:'setup_assistance',entityId:q.rows[0].id,metadata:{requestCode:code,assistanceType:b.assistanceType}}); return {duplicate:false,request:q.rows[0]}; }
 }
