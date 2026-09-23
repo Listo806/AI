@@ -1,19 +1,21 @@
 // Registration-country capture for new sign-ups.
 //
-// The backend is served through Cloudflare, so every request carries a reliable
-// `cf-ipcountry` header (the visitor's country, for free, no external call). We use
-// that first and only fall back to an IP geolocation lookup when it is missing or
-// non-specific. The country is taken from the connection at sign-up, never from the
-// email/name/phone, and the IP itself is never stored.
+// The hosting platform's edge puts a `cf-ipcountry` header on every request, so
+// the visitor's country is free and needs no external call. It does NOT carry the
+// state or region, so that half comes from an IP geolocation lookup. The location
+// is taken from the connection at sign-up, never from the email/name/phone, and
+// the IP itself is never stored.
 
 import { canonicalUsState, normalizeRegion } from './us-states.util';
 
 // Cloudflare returns these for anonymizers/unknowns/regions rather than a country.
 const CF_INVALID = new Set(['', 'XX', 'T1', 'ZZ', 'AP', 'EU']);
 
-// The free geolocation services limit by caller address, and this server shares
-// one. While they are refusing us, the CDN headers are the only source.
-let rateLimitedUntil = 0;
+// The keyless geolocation services limit by caller address, and this server
+// shares one with every other application on the platform, so a refusal from one
+// of them means nothing about the next. Each is rested on its own.
+const restingUntil: Record<string, number> = {};
+const REST_AFTER_REFUSAL_MS = 30 * 60 * 1000;
 
 // The state column ships in migration 166, which is not auto-run here, so make
 // sure it exists before the first write. Once per process, like the others.
@@ -76,18 +78,77 @@ export function clientIpFromHeaders(headers: any, req?: any): string | null {
   );
 }
 
+type GeoAnswer = { country: string | null; region: string | null };
+
 /**
- * Best-effort IP geolocation via free, no-key services: the country and, when
- * the provider gives one, the state or region. Returns nulls on any failure, a
- * private or loopback address, or a bad response. Never throws.
+ * The geolocation services we ask, best first. Each returns the country and the
+ * state or region for an address.
+ *
+ * GEO_API_TOKEN (an ipinfo.io token, free tier) is optional but preferred: a
+ * token is counted against our own allowance instead of the shared address of
+ * the host, so it cannot be refused because a neighbour was busy. Without it the
+ * keyless services below still answer, they are simply not guaranteed to.
  */
-export async function lookupGeoByIp(
-  ip?: string | null,
-): Promise<{ country: string | null; region: string | null }> {
-  // The free providers rate-limit this server's address. When they do, stop
-  // asking for a while instead of spending a second of every sign-up on a call
-  // that will be refused.
-  if (Date.now() < rateLimitedUntil) return { country: null, region: null };
+function geoProviders(
+  ip: string,
+): Array<{ name: string; url: string; pick: (j: any) => { country?: any; region?: any } | null }> {
+  const enc = encodeURIComponent(ip);
+  const token = String(
+    process.env.GEO_API_TOKEN || process.env.IPINFO_TOKEN || '',
+  ).trim();
+  const list: Array<{
+    name: string;
+    url: string;
+    pick: (j: any) => { country?: any; region?: any } | null;
+  }> = [];
+  if (token) {
+    list.push({
+      name: 'ipinfo.io',
+      url: `https://ipinfo.io/${enc}/json?token=${encodeURIComponent(token)}`,
+      pick: (j) => (j && !j.error ? { country: j.country, region: j.region } : null),
+    });
+  }
+  list.push(
+    {
+      name: 'get.geojs.io',
+      url: `https://get.geojs.io/v1/ip/geo/${enc}.json`,
+      pick: (j) => (j && j.country_code ? { country: j.country_code, region: j.region } : null),
+    },
+    {
+      name: 'reallyfreegeoip.org',
+      url: `https://reallyfreegeoip.org/json/${enc}`,
+      pick: (j) => (j && j.country_code ? { country: j.country_code, region: j.region_name } : null),
+    },
+    {
+      name: 'ipwho.is',
+      url: `https://ipwho.is/${enc}?fields=success,country_code,region`,
+      pick: (j) => (j && j.success ? { country: j.country_code, region: j.region } : null),
+    },
+    {
+      name: 'ipapi.co',
+      url: `https://ipapi.co/${enc}/json/`,
+      pick: (j) => (j && !j.error ? { country: j.country, region: j.region } : null),
+    },
+  );
+  if (!token) {
+    // Without a token this one allows a small daily volume per address, so it
+    // goes last rather than not at all.
+    list.push({
+      name: 'ipinfo.io',
+      url: `https://ipinfo.io/${enc}/json`,
+      pick: (j) => (j && !j.error ? { country: j.country, region: j.region } : null),
+    });
+  }
+  return list;
+}
+
+/**
+ * Best-effort IP geolocation: the country and, when the provider gives one, the
+ * state or region. Each service is asked in turn until both halves are known.
+ * Returns nulls on any failure, a private or loopback address, or a bad
+ * response. Never throws.
+ */
+export async function lookupGeoByIp(ip?: string | null): Promise<GeoAnswer> {
   const raw = String(ip || '').trim();
   if (
     !raw ||
@@ -103,23 +164,29 @@ export async function lookupGeoByIp(
     return { country: null, region: null };
   }
   const attempt = async (
+    name: string,
     url: string,
     pick: (j: any) => { country?: any; region?: any } | null,
-  ): Promise<{ country: string | null; region: string | null } | null> => {
+  ): Promise<GeoAnswer | null> => {
+    // A service that has just refused us is left alone for a while, so a busy
+    // one never costs every sign-up a wasted second.
+    if (Date.now() < (restingUntil[name] || 0)) return null;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 4000);
     try {
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) {
-        if (res.status === 429) rateLimitedUntil = Date.now() + 30 * 60 * 1000;
-        console.warn(`[geo] ${new URL(url).host} answered HTTP ${res.status}`);
+        if (res.status === 429 || res.status === 403) {
+          restingUntil[name] = Date.now() + REST_AFTER_REFUSAL_MS;
+        }
+        console.warn(`[geo] ${name} answered HTTP ${res.status}`);
         return null;
       }
       const j: any = await res.json();
       const picked = pick(j);
       const code = picked?.country;
       if (typeof code !== 'string' || !/^[A-Za-z]{2}$/.test(code)) {
-        console.warn(`[geo] ${new URL(url).host} gave no usable country`);
+        console.warn(`[geo] ${name} gave no usable country`);
         return null;
       }
       const region = String(picked?.region ?? '').trim();
@@ -128,35 +195,42 @@ export async function lookupGeoByIp(
         region: region && region.length <= 80 ? region : null,
       };
     } catch (err: any) {
-      console.warn(`[geo] ${new URL(url).host} lookup failed: ${err?.name || 'error'}`);
+      console.warn(`[geo] ${name} lookup failed: ${err?.name || 'error'}`);
       return null;
     } finally {
       clearTimeout(timer);
     }
   };
-  const enc = encodeURIComponent(raw);
-  const first = await attempt(
-    `https://ipwho.is/${enc}?fields=success,country_code,region`,
-    (j) => (j && j.success ? { country: j.country_code, region: j.region } : null),
-  );
-  // A provider can answer with a country but no region, so try the second one
-  // for the missing half rather than stopping at the first usable answer.
-  if (first?.country && first.region) return first;
-  const second = await attempt(`https://ipapi.co/${enc}/json/`, (j) =>
-    j && !j.error ? { country: j.country, region: j.region } : null,
-  );
-  return {
-    country: first?.country || second?.country || null,
-    region: first?.region || second?.region || null,
-  };
+
+  // Ask each service in turn until the country and the region are both known.
+  // The two halves must always describe the same place: the first usable answer
+  // sets both, and a later service may only fill in a missing region when it
+  // agrees about the country. Services do disagree, so merging their halves
+  // freely would store a location that does not exist, and a foreign region
+  // banked against a US country would appear as an invented state in the admin
+  // reports.
+  const found: GeoAnswer = { country: null, region: null };
+  for (const provider of geoProviders(raw)) {
+    const answer = await attempt(provider.name, provider.url, provider.pick);
+    if (!answer) continue;
+    if (!found.country) {
+      found.country = answer.country;
+      found.region = answer.region;
+    } else if (!found.region && answer.country === found.country) {
+      found.region = answer.region;
+    }
+    if (found.country && found.region) break;
+  }
+  return found;
 }
 
 // Resolve and permanently store the registration country for a freshly-created
-// user: the Cloudflare header when present, otherwise an IP lookup. The state or
-// region is stored alongside it, for United States sign-ups, because the admin
-// reports those by state. Fully guarded and idempotent (never overwrites an
-// existing value) so it can be fire-and-forget and can never affect the sign-up
-// that spawned it.
+// user: the edge header when present, otherwise an IP lookup. The state or
+// region is stored alongside it, and comes from the lookup, since the edge sends
+// only the country. United States sign-ups need it because the admin reports
+// those by state. Fully guarded and idempotent (never overwrites an existing
+// value) so it can be fire-and-forget and can never affect the sign-up that
+// spawned it.
 export async function captureSignupCountry(
   db: { query: (sql: string, params?: any[]) => Promise<any> },
   userId: string,
@@ -171,10 +245,14 @@ export async function captureSignupCountry(
 
     // One lookup covers both, and runs whenever either half is still missing.
     // It is fire-and-forget, so it never delays the sign-up that spawned it.
+    // A region from the lookup is only kept when the lookup agrees with the
+    // country we already hold, so the two halves always describe one place.
     if (!code || !region) {
       const found = await lookupGeoByIp(geo.ip);
+      if (!region && found.region && (!code || code === found.country)) {
+        region = normalizeRegion(found.region);
+      }
       code = code || found.country;
-      region = region || normalizeRegion(found.region);
     }
     if (!code && !region) return;
     // One line per sign-up, so a location that never arrives can be traced.
