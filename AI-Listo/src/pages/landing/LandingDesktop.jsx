@@ -1788,10 +1788,6 @@ export default function Landing() {
           <div className="hero-right">
             <div className="hero-image">
               <img src={herorightImg} />
-              <i>
-                Product demo — the names, numbers, and activity shown are sample
-                data for illustration only, not real customer results.
-              </i>
             </div>
           </div>
         </div>
