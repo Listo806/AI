@@ -237,13 +237,12 @@ function CountryCell({ code, state }) {
   if (!code) return <span className="cxc-muted">Unknown</span>;
   const flag = flagEmoji(code);
   const name = countryName(code);
+  const label =
+    String(code).toUpperCase() === "US" && state ? `${state}, USA` : name;
   return (
-    <span
-      className="cxc-country"
-      title={String(code).toUpperCase() === "US" && state ? `${state}, ${name}` : name}
-    >
+    <span className="cxc-country" title={label}>
       {flag ? `${flag} ` : ""}
-      {String(code).toUpperCase() === "US" && state ? state : name}
+      {label}
     </span>
   );
 }
@@ -1944,7 +1943,7 @@ function CustomerModal({
                       <span>
                         <MapPin size={16} />
                         {String(c.country || "").toUpperCase() === "US" && c.state
-                          ? c.state
+                          ? `${c.state}, USA`
                           : countryName(c.country) || "Unknown"}
                       </span>
                       <button onClick={copyCustomerId}>
