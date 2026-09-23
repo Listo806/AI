@@ -202,16 +202,24 @@ export async function lookupGeoByIp(ip?: string | null): Promise<GeoAnswer> {
     }
   };
 
-  // Ask each service in turn, keeping whichever half it supplies, and stop as
-  // soon as the country and the region are both known.
+  // Ask each service in turn until the country and the region are both known.
+  // The two halves must always describe the same place: the first usable answer
+  // sets both, and a later service may only fill in a missing region when it
+  // agrees about the country. Services do disagree, so merging their halves
+  // freely would store a location that does not exist, and a foreign region
+  // banked against a US country would appear as an invented state in the admin
+  // reports.
   const found: GeoAnswer = { country: null, region: null };
   for (const provider of geoProviders(raw)) {
     const answer = await attempt(provider.name, provider.url, provider.pick);
-    if (answer) {
-      found.country = found.country || answer.country;
-      found.region = found.region || answer.region;
-      if (found.country && found.region) break;
+    if (!answer) continue;
+    if (!found.country) {
+      found.country = answer.country;
+      found.region = answer.region;
+    } else if (!found.region && answer.country === found.country) {
+      found.region = answer.region;
     }
+    if (found.country && found.region) break;
   }
   return found;
 }
@@ -237,10 +245,14 @@ export async function captureSignupCountry(
 
     // One lookup covers both, and runs whenever either half is still missing.
     // It is fire-and-forget, so it never delays the sign-up that spawned it.
+    // A region from the lookup is only kept when the lookup agrees with the
+    // country we already hold, so the two halves always describe one place.
     if (!code || !region) {
       const found = await lookupGeoByIp(geo.ip);
+      if (!region && found.region && (!code || code === found.country)) {
+        region = normalizeRegion(found.region);
+      }
       code = code || found.country;
-      region = region || normalizeRegion(found.region);
     }
     if (!code && !region) return;
     // One line per sign-up, so a location that never arrives can be traced.
