@@ -69,6 +69,12 @@ export const setupApi = {
       body: JSON.stringify(body),
     }),
 
+  updateAssistanceStatus: (requestId, body) =>
+    apiClient.request(`/setup/assistance/${encodeURIComponent(requestId)}/status`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
   dismiss: (workspaceId) =>
     apiClient.request(endpoint("/assistance/dismiss", workspaceId), {
       method: "POST",

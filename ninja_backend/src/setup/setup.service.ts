@@ -76,7 +76,22 @@ export class SetupService {
    }
    return 'default';
  }
- private async ensure(){ await this.db.query(`CREATE TABLE IF NOT EXISTS customer_setup_configs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),team_id uuid NOT NULL,workspace_id text NOT NULL,ai_agent_id uuid NULL,selected_objective text NULL,config jsonb NOT NULL DEFAULT '{}'::jsonb,tests jsonb NOT NULL DEFAULT '[]'::jsonb,status text NOT NULL DEFAULT 'setup',activated_at timestamptz NULL,activated_by uuid NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(team_id,workspace_id)); CREATE INDEX IF NOT EXISTS idx_customer_setup_team_ws ON customer_setup_configs(team_id,workspace_id); CREATE TABLE IF NOT EXISTS setup_assistance_requests(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),request_code text UNIQUE NOT NULL,team_id uuid NOT NULL,workspace_id text NOT NULL,ai_agent_id uuid NULL,requested_by uuid NOT NULL,assistance_type text NOT NULL,payload jsonb NOT NULL DEFAULT '{}'::jsonb,status text NOT NULL DEFAULT 'Submitted',latest_response text NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());`); }
+ private async ensure(){ await this.db.query(`
+ CREATE TABLE IF NOT EXISTS customer_setup_configs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),team_id uuid NOT NULL,workspace_id text NOT NULL,ai_agent_id uuid NULL,selected_objective text NULL,config jsonb NOT NULL DEFAULT '{}'::jsonb,tests jsonb NOT NULL DEFAULT '[]'::jsonb,status text NOT NULL DEFAULT 'setup',activated_at timestamptz NULL,activated_by uuid NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(team_id,workspace_id));
+ CREATE INDEX IF NOT EXISTS idx_customer_setup_team_ws ON customer_setup_configs(team_id,workspace_id);
+ CREATE TABLE IF NOT EXISTS setup_assistance_requests(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),request_code text UNIQUE NOT NULL,team_id uuid NOT NULL,workspace_id text NOT NULL,ai_agent_id uuid NULL,requested_by uuid NOT NULL,assistance_type text NOT NULL,payload jsonb NOT NULL DEFAULT '{}'::jsonb,status text NOT NULL DEFAULT 'Submitted',latest_response text NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
+ CREATE TABLE IF NOT EXISTS setup_assistance_status_history(
+   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+   request_id uuid NOT NULL REFERENCES setup_assistance_requests(id) ON DELETE CASCADE,
+   previous_status text NULL,
+   new_status text NOT NULL,
+   changed_by uuid NOT NULL,
+   internal_note text NULL,
+   customer_response text NULL,
+   created_at timestamptz NOT NULL DEFAULT now()
+ );
+ CREATE INDEX IF NOT EXISTS idx_setup_assistance_history_request ON setup_assistance_status_history(request_id,created_at ASC);
+ `); }
  private readiness(c:any){
    const cfg=c.config||{};
    const channels=cfg.customerChannels||[];
@@ -177,7 +192,20 @@ export class SetupService {
      [teamId,ws]
    );
 
-   return {...setup,assistanceRequest:req.rows[0]||null};
+   const assistanceRequest=req.rows[0]||null;
+   let assistanceHistory:any[]=[];
+   if(assistanceRequest?.id){
+     const history=await this.db.query(
+       `SELECT id,previous_status AS "previousStatus",new_status AS "newStatus",
+               changed_by AS "changedBy",internal_note AS "internalNote",
+               customer_response AS "customerResponse",created_at AS "createdAt"
+          FROM setup_assistance_status_history
+         WHERE request_id=$1 ORDER BY created_at ASC`,
+       [assistanceRequest.id]
+     );
+     assistanceHistory=history.rows;
+   }
+   return {...setup,assistanceRequest,assistanceHistory};
  }
 
  async patch(u:any,requested:string|undefined,body:any){
@@ -400,5 +428,81 @@ export class SetupService {
 
    return this.loadResolved(teamId,ws);
  }
- async assistance(u:any,requested:string|undefined,b:any){ const teamId=await this.resolveTeamId(u); const ws=await this.workspace(teamId,requested); if(!['AI Agent Setup Assistance','Website & Connection Assistance'].includes(b.assistanceType)) throw new BadRequestException('Select an assistance type'); if(!b.businessName||!b.contactName||!b.contactEmail) throw new BadRequestException('Business name, contact name and email are required'); const duplicate=await this.db.query(`SELECT * FROM setup_assistance_requests WHERE team_id=$1 AND workspace_id=$2 AND status IN ('Submitted','Reviewing','Quote Sent','Approved','In Progress') ORDER BY created_at DESC LIMIT 1`,[teamId,ws]); if(duplicate.rows[0]) return {duplicate:true,request:duplicate.rows[0]}; const c=await this.loadResolved(teamId,ws); const code='SET-'+Date.now().toString(36).toUpperCase(); const q=await this.db.query(`INSERT INTO setup_assistance_requests(request_code,team_id,workspace_id,ai_agent_id,requested_by,assistance_type,payload) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING *`,[code,teamId,ws,c.ai_agent_id||null,this.userId(u),b.assistanceType,JSON.stringify(b)]); await this.notifications.create({teamId,type:'setup.assistance.submitted',category:'team',priority:'high',title:'New setup assistance request',message:`${b.assistanceType} — ${code}`,url:'/dashboard/ai-cortexa-setup/assistance',entityType:'setup_assistance',entityId:q.rows[0].id,metadata:{requestCode:code,assistanceType:b.assistanceType}}); return {duplicate:false,request:q.rows[0]}; }
+ async assistance(u:any,requested:string|undefined,b:any){
+   await this.ensure();
+   const teamId=await this.resolveTeamId(u);
+   const ws=await this.workspace(teamId,requested);
+   const userId=this.userId(u);
+   if(!userId) throw new ForbiddenException('Authenticated user is missing an id');
+   if(!['AI Agent Setup Assistance','Website & Connection Assistance'].includes(b.assistanceType))
+     throw new BadRequestException('Select an assistance type');
+   if(!b.businessName||!b.contactName||!b.contactEmail)
+     throw new BadRequestException('Business name, contact name and email are required');
+
+   const duplicate=await this.db.query(
+     `SELECT * FROM setup_assistance_requests
+       WHERE team_id=$1 AND workspace_id=$2
+         AND status IN ('Submitted','Reviewing','Quote Sent','Approved','In Progress')
+       ORDER BY created_at DESC LIMIT 1`,[teamId,ws]
+   );
+   if(duplicate.rows[0]) return {duplicate:true,request:duplicate.rows[0]};
+
+   const c=await this.loadResolved(teamId,ws);
+   const code='SET-'+Date.now().toString(36).toUpperCase();
+   const q=await this.db.query(
+     `INSERT INTO setup_assistance_requests(request_code,team_id,workspace_id,ai_agent_id,requested_by,assistance_type,payload)
+      VALUES($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING *`,
+     [code,teamId,ws,c.ai_agent_id||null,userId,b.assistanceType,JSON.stringify(b)]
+   );
+   await this.db.query(
+     `INSERT INTO setup_assistance_status_history(request_id,previous_status,new_status,changed_by)
+      VALUES($1,NULL,'Submitted',$2)`,[q.rows[0].id,userId]
+   );
+   await this.notifications.create({teamId,type:'setup.assistance.submitted',category:'team',priority:'high',title:'New setup assistance request',message:`${b.assistanceType} — ${code}`,url:'/dashboard/ai-cortexa-setup/assistance',entityType:'setup_assistance',entityId:q.rows[0].id,metadata:{requestCode:code,assistanceType:b.assistanceType}});
+   return {duplicate:false,request:q.rows[0]};
+ }
+
+ async updateAssistanceStatus(u:any,requestId:string,b:any){
+   await this.ensure();
+   const role=String(u?.role||'').toLowerCase();
+   if(!['admin','super_admin'].includes(role))
+     throw new ForbiddenException('Only authorized Cortexa team members may update assistance status');
+   const userId=this.userId(u);
+   if(!userId) throw new ForbiddenException('Authenticated user is missing an id');
+   const allowed=['Submitted','Reviewing','Quote Sent','Approved','In Progress','Complete'];
+   if(!allowed.includes(b.status)) throw new BadRequestException('Invalid assistance status');
+   const rq=await this.db.query(`SELECT * FROM setup_assistance_requests WHERE id=$1 LIMIT 1`,[requestId]);
+   const request=rq.rows[0];
+   if(!request) throw new BadRequestException('Assistance request not found');
+   const previous=request.status;
+   const customerResponse=String(b.customerResponse||'').trim()||null;
+   const internalNote=String(b.internalNote||'').trim()||null;
+   await this.db.query('BEGIN');
+   try{
+     await this.db.query(
+       `UPDATE setup_assistance_requests
+           SET status=$2,latest_response=COALESCE($3,latest_response),updated_at=NOW()
+         WHERE id=$1`,[requestId,b.status,customerResponse]
+     );
+     await this.db.query(
+       `INSERT INTO setup_assistance_status_history(request_id,previous_status,new_status,changed_by,internal_note,customer_response)
+        VALUES($1,$2,$3,$4,$5,$6)`,[requestId,previous,b.status,userId,internalNote,customerResponse]
+     );
+     await this.db.query('COMMIT');
+   }catch(error){ await this.db.query('ROLLBACK'); throw error; }
+
+   if(previous!==b.status || customerResponse){
+     await this.notifications.create({
+       teamId:request.team_id,userId:request.requested_by,actorUserId:userId,
+       type:'setup.assistance.updated',category:'team',priority:'normal',
+       title:`Setup assistance ${b.status}`,
+       message:customerResponse||`Request ${request.request_code} changed from ${previous} to ${b.status}.`,
+       url:'/dashboard/ai-cortexa-setup/assistance',entityType:'setup_assistance',entityId:requestId,
+       metadata:{requestCode:request.request_code,previousStatus:previous,newStatus:b.status}
+     });
+   }
+   const updated=await this.db.query(`SELECT * FROM setup_assistance_requests WHERE id=$1`,[requestId]);
+   return updated.rows[0];
+ }
+
 }

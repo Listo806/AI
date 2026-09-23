@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft, BarChart3, Bot, CalendarDays, Check, CheckCircle2, ChevronRight,
-  CircleDot, Globe2, Headphones, Info, Monitor, Phone, Send, ShoppingCart,
-  Sparkles, UserRound, Wrench
+  ArrowLeft, Database, Bot, Check, CheckCircle2, ChevronRight, Circle,
+  CircleDot, Clock3, Code2, Globe2, Headphones, Info, Link2, Megaphone,
+  MessageCircle, Phone, Send, Settings2, ShieldCheck, Sparkles, Wrench
 } from "lucide-react"; 
 import { setupApi } from "./setupApi";
 import { useSetup } from "./useSetup";
@@ -21,7 +21,7 @@ const COPY={
   aiTitle:"AI Agent Setup Assistance",aiSub:"Help configuring your AI Agent, channels, routing, conversion goals, testing, and launch.",
   webTitle:"Website & Connection Assistance",webSub:"Help adding website buttons, connecting forms, tracking sources, phone, WhatsApp, and customer entry points.",
   labels:{businessName:"Business name",workspace:"Workspace",contactName:"Contact name",contactEmail:"Email",phoneOrWhatsApp:"Phone",websiteUrl:"Website",servicesOrProducts:"Services / Products",businessHours:"Business hours",mainConversionGoal:"Main conversion goal",existingWhatsAppNumber:"Existing WhatsApp",businessPhone:"Business phone",marketingTrafficPages:"Marketing / traffic pages",preferredEntryPoint:"Preferred entry point",additionalInstructions:"Additional instructions"},
-  placeholders:{businessName:"Auzalab",contactName:"John Smith",contactEmail:"john@auzalab.com",phoneOrWhatsApp:"+1 (305) 555-0123",websiteUrl:"https://auzalab.com",servicesOrProducts:"Coconut beverages, tasting boxes...",businessHours:"Mon–Fri, 9:00 AM–6:00 PM",marketingTrafficPages:"Instagram, Meta Ads, Google Ads...",preferredEntryPoint:"Website product page",additionalInstructions:"Tell us anything else our team should know about your current setup or desired customer journey."},
+  placeholders:{businessName:"Your business name",contactName:"Contact name",contactEmail:"name@company.com",phoneOrWhatsApp:"Phone or WhatsApp",websiteUrl:"https://yourcompany.com",servicesOrProducts:"Describe your services or products",businessHours:"Business hours",marketingTrafficPages:"Marketing or traffic pages",preferredEntryPoint:"Preferred customer entry point",additionalInstructions:"Tell us anything else our team should know about your current setup or desired customer journey."},
   desired:"Desired action",actions:["Purchase","Appointment","Quote","Viewing","Demo","Support"],
   notice:"Custom setup and website implementation are optional paid services quoted separately based on your requirements.",
   note:"Submitting this form does not start paid work. Our team will review your request and contact you before any paid implementation begins.",
@@ -45,128 +45,38 @@ const FIELDS=["businessName","workspace","contactName","contactEmail","phoneOrWh
 
 export default function SetupAssistance(){
  const navigate=useNavigate();const {i18n}=useTranslation();const lang=setupLanguage(i18n);const t=COPY[lang]||COPY.en;
- const {data,load}=useSetup();const [form,setForm]=useState({assistanceType:"Website & Connection Assistance",desiredAction:"Purchase"});const [message,setMessage]=useState("");const [busy,setBusy]=useState(false);
+ const {data,load}=useSetup();const [form,setForm]=useState({assistanceType:"AI Agent Setup Assistance",desiredAction:"Purchase"});const [message,setMessage]=useState("");const [busy,setBusy]=useState(false);
  useEffect(()=>{if(!data)return;setForm(v=>({...v,workspace:data.workspace_id||"",mainConversionGoal:data.selected_objective||"",websiteUrl:v.websiteUrl||data.config?.website?.url||"",businessPhone:v.businessPhone||data.config?.phone?.number||"",existingWhatsAppNumber:v.existingWhatsAppNumber||data.config?.whatsapp?.number||""}))},[data]);
  if(!data)return <main className="setup-shell pass5-page">Loading…</main>;
  const req=data.assistanceRequest;
+ const history=Array.isArray(data.assistanceHistory)?data.assistanceHistory:[];
+ const canonicalStatuses=["Submitted","Reviewing","Quote Sent","Approved","In Progress","Complete"];
+ const statusIndex=req?Math.max(0,canonicalStatuses.indexOf(req.status)):-1;
  const update=(k,v)=>setForm(x=>({...x,[k]:v}));
- const submit=async()=>{setBusy(true);setMessage("");try{const r=await setupApi.assist(form, data?.workspace_id);setMessage(r.duplicate?`Existing request ${r.request.request_code} is still open.`:`Request ${r.request.request_code} submitted successfully.`);await load()}catch(e){setMessage(e?.message||"Unable to submit assistance request.")}finally{setBusy(false)}};
- const connectIcons=[Globe2,Phone,Sparkles,BarChart3,CalendarDays,ShoppingCart,UserRound];
- const connectItems = lang==="es"
-  ? ["Puntos de entrada web y publicidad","Teléfono comercial y WhatsApp","Agente de IA Cortexa y CRM","Seguimiento de campañas y captura de origen","Pipelines y citas","Checkout, cotizaciones, demos y soporte","Transferencia humana"]
-  : lang==="pt"
-  ? ["Pontos de entrada do site e publicidade","Telefone comercial e WhatsApp","Agente de IA Cortexa e CRM","Rastreamento de campanhas e captura de origem","Pipelines e agendamentos","Checkout, orçamentos, demos e suporte","Transferência humana"]
-  : ["Website & advertising entry points","Business phone & WhatsApp","Cortexa AI Agent & CRM","Campaign tracking & source capture","Pipelines & appointments","Checkout, quotes, demos & support","Human handoff"];
-
- const goalOptions=[
-  "Capture and qualify leads","Answer customer questions","Book appointments",
-  "Provide quotes","Help customers purchase","Follow up with customers",
-  "Provide customer support","Route customers to correct person"
- ];
- const entryOptions=["Website — Primary CTA","Website form","Business phone","WhatsApp","Marketing / campaign page"];
- const workspaceOptions=[data.workspace_id, data.workspace?.name, data.workspace_name].filter(Boolean);
- const currentStatus=req?.status||"Not submitted";
- const statusIndex=Math.max(0,["Submitted","Reviewing","Quote Sent","Approved","In Progress","Complete"].findIndex(x=>x.toLowerCase()===String(req?.status||"").toLowerCase()));
-
+ const submit=async()=>{setBusy(true);setMessage("");try{const r=await setupApi.assist(form);setMessage(r.duplicate?`Existing request ${r.request.request_code} is still open.`:`Request ${r.request.request_code} submitted successfully.`);await load()}catch(e){setMessage(e?.message||"Unable to submit assistance request.")}finally{setBusy(false)}};
+ const iconMap=[Globe2,Code2,Phone,MessageCircle,Megaphone,Link2,Database,Headphones];
  return <main className="setup-shell pass5-page">
   <div className="p5-crumb"><span>{t.crumb[0]}</span><ChevronRight/><b>{t.crumb[1]}</b></div>
-
-  <header className="p5-header">
-   <span className="p5-title-icon"><Wrench/></span>
-   <div>
-    <h1>{t.title}</h1>
-    <p>{lang==="en"?"Tell us what you need. Our team will review your setup and recommend the right implementation.":t.sub}</p>
-   </div>
-   <span className="p5-new"><CircleDot/>{req?req.status:t.newReq}</span>
-   <button onClick={()=>navigate("/dashboard/ai-cortexa-setup")}><ArrowLeft/>{t.back}</button>
-  </header>
-
+  <header className="p5-header"><span className="p5-title-icon"><Wrench/></span><div><h1>{t.title}</h1><p>{t.sub}</p></div><span className="p5-new"><CircleDot/>{req?req.status:t.newReq}</span><button onClick={()=>navigate("/dashboard/ai-cortexa-setup")}><ArrowLeft/>{t.back}</button></header>
   <div className="p5-layout">
    <section className="p5-form-card">
-    <div className="p5-card-head">
-     <h2>{t.request}</h2>
-     <p>{lang==="en"?"Complete the details below so the correct Cortexa team can review your request.":t.requestSub}</p>
-    </div>
-
-    <div className="p5-assistance-label">{lang==="en"?"Assistance type":lang==="es"?"Tipo de asistencia":"Tipo de assistência"}</div>
+    <div className="p5-card-head"><h2>{t.request}</h2><p>{t.requestSub}</p></div>
     <div className="p5-types">
-     <button type="button" className={form.assistanceType==="AI Agent Setup Assistance"?"active":""} onClick={()=>update("assistanceType","AI Agent Setup Assistance")}>
-      <span><Sparkles/></span>
-      <section><b>{t.aiTitle}</b><small>{lang==="en"?"Training, behavior, routing, testing, or launch support.":t.aiSub}</small></section>
-      <i className="p5-radio">{form.assistanceType==="AI Agent Setup Assistance"&&<b/>}</i>
-     </button>
-     <button type="button" className={form.assistanceType==="Website & Connection Assistance"?"active":""} onClick={()=>update("assistanceType","Website & Connection Assistance")}>
-      <span><Monitor/></span>
-      <section><b>{t.webTitle}</b><small>{lang==="en"?"Website, advertising, phone, WhatsApp, and system connections.":t.webSub}</small></section>
-      <i className="p5-radio">{form.assistanceType==="Website & Connection Assistance"&&<b/>}</i>
-     </button>
+     <button className={form.assistanceType==="AI Agent Setup Assistance"?"active":""} onClick={()=>update("assistanceType","AI Agent Setup Assistance")}><span><Bot/></span><section><b>{t.aiTitle}</b><small>{t.aiSub}</small></section>{form.assistanceType==="AI Agent Setup Assistance"&&<CheckCircle2/>}</button>
+     <button className={form.assistanceType==="Website & Connection Assistance"?"active":""} onClick={()=>update("assistanceType","Website & Connection Assistance")}><span><Globe2/></span><section><b>{t.webTitle}</b><small>{t.webSub}</small></section>{form.assistanceType==="Website & Connection Assistance"&&<CheckCircle2/>}</button>
     </div>
-
-    <div className="p5-fields">
-     <label><span>{t.labels.businessName}</span><input value={form.businessName||""} placeholder="Your business" onChange={e=>update("businessName",e.target.value)}/></label>
-     <label><span>{t.labels.workspace}</span><select value={form.workspace||""} onChange={e=>update("workspace",e.target.value)}><option value={form.workspace||""}>{data.workspace?.name||data.workspace_name||form.workspace||"Default workspace"}</option>{workspaceOptions.filter(x=>x!==form.workspace).map(x=><option key={x} value={x}>{x}</option>)}</select></label>
-     <label><span>{t.labels.contactName}</span><input value={form.contactName||""} placeholder="Contact name" onChange={e=>update("contactName",e.target.value)}/></label>
-
-     <label><span>{t.labels.contactEmail}</span><input type="email" value={form.contactEmail||""} placeholder="name@company.com" onChange={e=>update("contactEmail",e.target.value)}/></label>
-     <label><span>{lang==="en"?"Phone / WhatsApp":t.labels.phoneOrWhatsApp}</span><input value={form.phoneOrWhatsApp||""} placeholder="+1 ..." onChange={e=>update("phoneOrWhatsApp",e.target.value)}/></label>
-     <label><span>{lang==="en"?"Website URL":t.labels.websiteUrl}</span><input value={form.websiteUrl||""} placeholder="https://yourbusiness.com" onChange={e=>update("websiteUrl",e.target.value)}/></label>
-
-     <label><span>{lang==="en"?"Services or products":t.labels.servicesOrProducts}</span><input value={form.servicesOrProducts||""} placeholder="Describe your services or products" onChange={e=>update("servicesOrProducts",e.target.value)}/></label>
-     <label><span>{t.labels.businessHours}</span><input value={form.businessHours||""} placeholder="Business hours" onChange={e=>update("businessHours",e.target.value)}/></label>
-     <label><span>{t.labels.mainConversionGoal}</span><select value={form.mainConversionGoal||""} onChange={e=>update("mainConversionGoal",e.target.value)}>{goalOptions.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
-
-     <label><span>{t.labels.existingWhatsAppNumber}</span><input value={form.existingWhatsAppNumber||""} placeholder="+1 ..." onChange={e=>update("existingWhatsAppNumber",e.target.value)}/></label>
-     <label><span>{t.labels.businessPhone}</span><input value={form.businessPhone||""} placeholder="+1 ..." onChange={e=>update("businessPhone",e.target.value)}/></label>
-     <label><span>{lang==="en"?"Marketing-traffic pages":t.labels.marketingTrafficPages}</span><input value={form.marketingTrafficPages||""} placeholder="Homepage, product pages, Google Ads landing page" onChange={e=>update("marketingTrafficPages",e.target.value)}/></label>
-
-     <label><span>{t.labels.preferredEntryPoint}</span><select value={form.preferredEntryPoint||"Website — Primary CTA"} onChange={e=>update("preferredEntryPoint",e.target.value)}>{entryOptions.map(x=><option key={x}>{x}</option>)}</select></label>
-     <label><span>{t.desired}</span><select value={form.desiredAction||"Purchase"} onChange={e=>update("desiredAction",e.target.value)}>{["Purchase","Appointment","Quote","Viewing","Demo","Support"].map(x=><option key={x}>{x}</option>)}</select></label>
-     <div className="p5-empty-cell"/>
-    </div>
-
-    <div className="p5-action-chips">
-     {t.actions.map((x,i)=>{const value=["Purchase","Appointment","Quote","Viewing","Demo","Support"][i];return <button type="button" key={x} className={form.desiredAction===value?"active":""} onClick={()=>update("desiredAction",value)}>{form.desiredAction===value&&<Check/>}{x}</button>})}
-    </div>
-
-    <label className="p5-instructions">
-     <span>{t.labels.additionalInstructions}</span>
-     <textarea rows="3" value={form.additionalInstructions||""} placeholder={lang==="en"?"Connect our primary website button and advertising landing pages to the AI-assisted purchase flow.\nEscalate complex requests to the sales team.":t.placeholders.additionalInstructions} onChange={e=>update("additionalInstructions",e.target.value)}/>
-    </label>
-
+    <div className="p5-fields">{FIELDS.map(k=><label key={k}><span>{t.labels[k]}</span><input disabled={k==="workspace"} value={form[k]||""} placeholder={t.placeholders?.[k]||""} onChange={e=>update(k,e.target.value)}/></label>)}</div>
+    <div className="p5-desired"><span>{t.desired}</span><div>{t.actions.map((x,i)=><button key={x} className={form.desiredAction===["Purchase","Appointment","Quote","Viewing","Demo","Support"][i]?"active":""} onClick={()=>update("desiredAction",["Purchase","Appointment","Quote","Viewing","Demo","Support"][i])}>{x}</button>)}</div></div>
+    <label className="p5-instructions"><span>{t.labels.additionalInstructions}</span><textarea rows="4" value={form.additionalInstructions||""} placeholder={t.placeholders.additionalInstructions} onChange={e=>update("additionalInstructions",e.target.value)}/></label>
     <div className="p5-paid"><Info/><b>{t.notice}</b></div>
-    <div className="p5-submit-row">
-     <p>{lang==="en"?"Your request will be saved to your Cortexa account.":t.note}</p>
-     <button disabled={busy||!!req} onClick={submit}><Send/>{busy?"Submitting…":t.submit}</button>
-    </div>
+    <div className="p5-submit-row"><p>{t.note}</p><button disabled={busy||!!req} onClick={submit}><Send/>{busy?"Submitting…":t.submit}</button></div>
     {message&&<div className="p5-message">{message}</div>}
    </section>
-
    <aside className="p5-right">
-    <section className="p5-side-card p5-connect">
-     <h2>{t.connect}</h2>
-     <div className="p5-connect-list">
-      {connectItems.map((x,i)=>{const I=connectIcons[i];return <div key={x}><span><I/></span><b>{x}</b></div>})}
-     </div>
-    </section>
-
-    <section className="p5-side-card p5-flow">
-     <h2>{t.flow}</h2>
-     <p>{t.flowSub}</p>
-     <div className="p5-flow-list">
-      {(lang==="en"?["Customer entry point","Cortexa AI Agent","Contact captured","CRM record created","Source recorded","Correct pipeline selected","Conversion or human handoff"]:t.flowItems).map((x,i)=>
-       <div className="p5-flow-row" key={x}><span>{i+1}</span><b>{x}</b>{i<6&&<i>↓</i>}</div>
-      )}
-     </div>
-     <aside><Info/><span>{lang==="en"?"The primary conversion action remains above WhatsApp. WhatsApp enters the AI-assisted Cortexa flow—not an unmanaged inbox.":t.flowNote}</span></aside>
-    </section>
-
-    <section className="p5-side-card p5-status">
-     <header><h2>{t.status}</h2><span className={req?"submitted":""}><i/>{req?req.status:t.notSubmitted}</span></header>
-     <div className="p5-status-grid">
-      {t.statuses.map((x,i)=><div key={x} className={req&&i<=statusIndex?"active":""}><span>{x}</span>{i<t.statuses.length-1&&<b>→</b>}</div>)}
-     </div>
-     <p>{req?(req.latest_response||"You’ll be notified whenever the status or team response changes."):(lang==="en"?"You’ll be notified whenever the status or team response changes.":t.statusSub)}</p>
-     {req&&<div className="p5-request-code"><b>{t.current}</b><strong>{req.request_code}</strong></div>}
+    <section className="p5-side-card"><h2>{t.connect}</h2><div className="p5-connect-list">{t.connectItems.map((x,i)=>{const I=iconMap[i];return <div key={x}><span><I/></span><b>{x}</b><Check/></div>})}</div></section>
+    <section className="p5-side-card p5-flow"><h2>{t.flow}</h2><p>{t.flowSub}</p>{t.flowItems.map((x,i)=><div key={x}><span>{i+1}</span><b>{x}</b>{i<t.flowItems.length-1&&<i/>}</div>)}<aside><Info/>{t.flowNote}</aside></section>
+    <section className="p5-side-card p5-status"><header><h2>{t.status}</h2><span className={req?"submitted":""}>{req?req.status:t.notSubmitted}</span></header>{req?<><div className="p5-request-code"><b>{t.current}</b><strong>{req.request_code}</strong></div>{req.latest_response&&<p><b>{t.response}:</b> {req.latest_response}</p>}</>:<p>{t.statusSub}</p>}<div className="p5-status-line">{t.statuses.map((x,i)=><div key={x} className={req&&i<=statusIndex?"active":""}><span>{i+1}</span><small>{x}</small></div>)}</div>
+    {history.length>0&&<div className="p5-history"><b>Status history</b>{history.map(h=><div key={h.id}><span>{h.newStatus}</span><small>{h.createdAt?new Date(h.createdAt).toLocaleString():""}</small>{h.customerResponse&&<p>{h.customerResponse}</p>}</div>)}</div>}
     </section>
    </aside>
   </div>

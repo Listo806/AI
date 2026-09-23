@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Bot,
   Building2,
@@ -46,6 +46,7 @@ export default function CortexaAISetup({
 }) {
   const { t } = useTranslation();
   const isAesthetic = workspaceId === "aesthetic-wellness";
+  const [workspaceRecommendationDismissed, setWorkspaceRecommendationDismissed] = useState(false);
 
   const setupSteps = useMemo(() => {
     const data = setupData || {};
@@ -401,7 +402,7 @@ export default function CortexaAISetup({
                       />
                     </div>
                   )}
-                  {step.id === 2 && (
+                  {step.id === 2 && !workspaceRecommendationDismissed && (
                     <div className="cx-workspace-recommendation-desktop">
                       <span className="cx-workspace-recommendation-label">
                         {t("aiCenter.desktopRecommendedForYou")}
@@ -430,9 +431,10 @@ export default function CortexaAISetup({
                         <button
                           type="button"
                           className="cx-workspace-not-now-btn"
-                          onClick={() =>
-                            onDismissWorkspaceRecommendation?.("real-estate")
-                          }
+                          onClick={() => {
+                            setWorkspaceRecommendationDismissed(true);
+                            onDismissWorkspaceRecommendation?.("real-estate");
+                          }}
                         >
                           {t("aiCenter.desktopNotNow")}
                         </button>

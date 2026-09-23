@@ -120,7 +120,7 @@ const COPY = {
     select: "Select",
     english: "English (US)",
     female: "Cortexa — Ava",
-    greetingValue: "Thanks for calling Auzalab. How can I help you today?",
+    greetingValue: "",
   },
   es: {
     crumbs: [
@@ -211,7 +211,7 @@ const COPY = {
     select: "Seleccionar",
     english: "Inglés (EE. UU.)",
     female: "Cortexa — Ava",
-    greetingValue: "Gracias por llamar a Auzalab. ¿Cómo puedo ayudarte hoy?",
+    greetingValue: "",
   },
   pt: {
     crumbs: [
@@ -303,7 +303,7 @@ const COPY = {
     select: "Selecionar",
     english: "Inglês (EUA)",
     female: "Cortexa — Ava",
-    greetingValue: "Obrigado por ligar para a Auzalab. Como posso ajudar hoje?",
+    greetingValue: "",
   },
 };
 
@@ -406,11 +406,26 @@ export default function BusinessPhoneSetup() {
     );
   };
 
-  const isConnected = phone.connectionStatus === "connected";
+  const isConnected =
+    phone.connectionStatus === "connected" &&
+    phone.providerVerified === true;
 
-  const voiceEnabled = phone.voiceEnabled === true;
+  const voiceReady =
+    isConnected &&
+    phone.providerCapabilities?.voice === true;
 
-  const smsEnabled = phone.smsEnabled === true;
+  const smsReady =
+    isConnected &&
+    phone.providerCapabilities?.sms === true;
+
+  const callerIdReady =
+    isConnected &&
+    phone.providerCapabilities?.callerId === true &&
+    phone.callerIdVerified === true;
+
+  const voiceEnabled = voiceReady && phone.voiceEnabled === true;
+
+  const smsEnabled = smsReady && phone.smsEnabled === true;
 
   const recording = !!phone.callRecording;
 
@@ -558,8 +573,8 @@ export default function BusinessPhoneSetup() {
                 </div>
                 <button
                   className={voiceEnabled ? "on" : ""}
-                  disabled={!isConnected}
-                  title={!isConnected ? "Connect and verify a business number first" : ""}
+                  disabled={!voiceReady}
+                  title={!voiceReady ? "Voice is available only after the phone provider confirms voice capability." : ""}
                   onClick={() => patch({ voiceEnabled: !voiceEnabled }, true)}
                 >
                   <i />
@@ -575,8 +590,8 @@ export default function BusinessPhoneSetup() {
                 </div>
                 <button
                   className={smsEnabled ? "on" : ""}
-                  disabled={!isConnected}
-                  title={!isConnected ? "Connect and verify a business number first" : ""}
+                  disabled={!smsReady}
+                  title={!smsReady ? "SMS is available only after the phone provider confirms SMS capability." : ""}
                   onClick={() => patch({ smsEnabled: !smsEnabled }, true)}
                 >
                   <i />
@@ -771,9 +786,9 @@ export default function BusinessPhoneSetup() {
             <div className="phone3-caps">
               {t.capabilities.map((x, i) => {
                 const ready = [
-                  phone.voiceEnabled === true,
-                  phone.smsEnabled === true,
-                  phone.callerIdVerified === true,
+                  voiceReady,
+                  smsReady,
+                  callerIdReady,
                 ][i];
                 return (
                   <span key={x} className={ready ? "ready" : "pending"}>
