@@ -1,31 +1,52 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { SetupService } from "./setup.service";
 
 @Controller("setup")
+@UseGuards(JwtAuthGuard)
 export class SetupController {
   constructor(private readonly service: SetupService) {}
 
   @Get()
-  get(@CurrentUser() u:any,@Query("workspace_id") ws?:string){ return this.service.get(u,ws); }
+  get(@CurrentUser() u: any, @Query("workspace_id") ws?: string) {
+    return this.service.get(u, ws);
+  }
 
   @Patch()
-  patch(@CurrentUser() u:any,@Query("workspace_id") ws:string|undefined,@Body() body:any){ return this.service.patch(u,ws,body); }
+  patch(
+    @CurrentUser() u: any,
+    @Query("workspace_id") ws: string | undefined,
+    @Body() body: any,
+  ) {
+    return this.service.patch(u, ws, body);
+  }
 
   @Post("test")
-  test(@CurrentUser() u:any,@Query("workspace_id") ws:string|undefined,@Body() body:any){ return this.service.runTest(u,ws,body); }
+  test(
+    @CurrentUser() u: any,
+    @Query("workspace_id") ws: string | undefined,
+    @Body() body: any,
+  ) {
+    return this.service.runTest(u, ws, body);
+  }
 
   @Post("activate")
-  activate(@CurrentUser() u:any,@Query("workspace_id") ws?:string){ return this.service.activate(u,ws); }
+  activate(@CurrentUser() u: any, @Query("workspace_id") ws?: string) {
+    return this.service.activate(u, ws);
+  }
 
   @Post("assistance")
-  assistance(@CurrentUser() u:any,@Query("workspace_id") ws:string|undefined,@Body() body:any){ return this.service.assistance(u,ws,body); }
-
-  @Patch("assistance/:requestId/status")
-  updateAssistanceStatus(@CurrentUser() u:any,@Param("requestId") requestId:string,@Body() body:any){
-    return this.service.updateAssistanceStatus(u,requestId,body);
+  assistance(
+    @CurrentUser() u: any,
+    @Query("workspace_id") ws: string | undefined,
+    @Body() body: any,
+  ) {
+    return this.service.assistance(u, ws, body);
   }
 
   @Post("assistance/dismiss")
-  dismiss(@CurrentUser() u:any,@Query("workspace_id") ws?:string){ return this.service.patch(u,ws,{assistanceDismissed:true}); }
+  dismiss(@CurrentUser() u: any, @Query("workspace_id") ws?: string) {
+    return this.service.patch(u, ws, { assistanceDismissed: true });
+  }
 }
