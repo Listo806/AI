@@ -35,3 +35,12 @@
 @media(max-width:620px){.phone3-page{padding:10px!important}.phone3-header{grid-template-columns:42px 1fr!important}.phone3-status,.phone3-outline{grid-column:auto!important}.phone3-progress{grid-template-columns:1fr auto!important;height:auto!important;padding:8px!important}.phone3-progress>div{grid-column:1/-1}.phone3-number,.phone3-channel-grid,.phone3-fields.three,.phone3-fields.voice{grid-template-columns:1fr!important}.phone3-number{display:grid!important}.phone3-phone-icon{display:none!important}.phone3-footer{grid-template-columns:1fr!important}}
 
 .phone3-number-copy input{width:100%;height:29px;border:1px solid #cbd8ec;border-radius:5px;padding:0 8px;font-size:10px;background:#fff;color:#071342}.phone3-channel-grid button:disabled{opacity:.45;cursor:not-allowed}.crm-dark .phone3-number-copy input{background:#111827;border-color:#2b3a52;color:#f3f6ff}
+
+
+/* Add to business-phone-pass3.css — no existing layout rules changed. */
+.phone3-number-copy select,.phone3-test-destination{width:100%;margin-top:8px;border:1px solid var(--setup-border,#dbe3ef);border-radius:10px;padding:10px 12px;background:var(--setup-card,#fff);color:inherit}
+.phone3-twilio-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.phone3-twilio-modal{width:min(560px,100%);background:#fff;color:#172033;border-radius:18px;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.25)}
+.crm-dark .phone3-twilio-modal{background:#111827;color:#e5e7eb}
+.phone3-twilio-modal label{display:block;margin-top:14px}.phone3-twilio-modal label span{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.phone3-twilio-modal input{width:100%;box-sizing:border-box;border:1px solid #d6deea;border-radius:10px;padding:11px 12px;background:transparent;color:inherit}
+.phone3-twilio-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.phone3-twilio-actions button{border:1px solid #d6deea;border-radius:10px;padding:10px 16px;background:transparent;color:inherit;cursor:pointer}.phone3-twilio-actions button:last-child{background:#2563eb;color:#fff;border-color:#2563eb}

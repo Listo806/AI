@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useSetup } from "./useSetup";
 import { setupLanguage } from "./setupTranslations";
+import { customerTwilioApi } from "./customerTwilioApi";
 import "./setup.css";
 import "./business-phone-pass3.css";
 
@@ -333,10 +334,17 @@ export default function BusinessPhoneSetup() {
   const lang = setupLanguage(i18n);
   const t = COPY[lang] || COPY.en;
 
-  const { data, state, save } = useSetup();
+  const { data, state, save, load } = useSetup();
 
   const [mode, setMode] = useState("existing");
   const [testing, setTesting] = useState(false);
+  const [twilioStatus, setTwilioStatus] = useState(null);
+  const [twilioNumbers, setTwilioNumbers] = useState([]);
+  const [showTwilioConnect, setShowTwilioConnect] = useState(false);
+  const [twilioForm, setTwilioForm] = useState({ accountSid:"", apiKeySid:"", apiKeySecret:"", authToken:"" });
+  const [twilioError, setTwilioError] = useState("");
+  const [testToNumber, setTestToNumber] = useState("");
+  const [testResult, setTestResult] = useState(null);
   const connectRef = useRef(null);
 
   /*
@@ -347,6 +355,50 @@ export default function BusinessPhoneSetup() {
   const c = data?.config || {};
   const phone = c.phone || {};
   const current = 2;
+  const workspaceId = data?.workspace_id && data.workspace_id !== "default" ? data.workspace_id : "";
+
+  useEffect(() => {
+    if (!data) return;
+    customerTwilioApi.status(workspaceId).then(async (s) => {
+      setTwilioStatus(s);
+      if (s?.connected) setTwilioNumbers(await customerTwilioApi.numbers(workspaceId));
+    }).catch(() => {});
+  }, [data?.workspace_id]);
+
+  const connectTwilio = async () => {
+    try {
+      setTwilioError("");
+      const s = await customerTwilioApi.connect(twilioForm, workspaceId);
+      setTwilioStatus(s);
+      setTwilioForm({ accountSid:"", apiKeySid:"", apiKeySecret:"", authToken:"" });
+      setShowTwilioConnect(false);
+      setTwilioNumbers(await customerTwilioApi.numbers(workspaceId));
+      await load();
+    } catch (e) { setTwilioError(e?.message || "Unable to verify Twilio credentials"); }
+  };
+
+  const selectTwilioNumber = async (numberSid) => {
+    try {
+      setTwilioError("");
+      const s = await customerTwilioApi.selectNumber(numberSid, workspaceId);
+      setTwilioStatus(s);
+      await load();
+    } catch(e){ setTwilioError(e?.message || "Unable to select Twilio number"); }
+  };
+
+  const runRealTestCall = async () => {
+    try {
+      setTesting(true); setTestResult(null); setTwilioError("");
+      const started = await customerTwilioApi.startTestCall(testToNumber, workspaceId);
+      const deadline = Date.now() + 90000;
+      while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 2500));
+        const result = await customerTwilioApi.testStatus(started.testId, workspaceId);
+        setTestResult(result);
+        if (["passed","failed"].includes(result.status)) { await load(); break; }
+      }
+    } catch(e){ setTwilioError(e?.message || "Test call failed"); } finally { setTesting(false); }
+  };
 
   const completed = useMemo(() => {
     return [
@@ -538,26 +590,27 @@ export default function BusinessPhoneSetup() {
             <div className="phone3-number">
               <span className="phone3-phone-icon"><Phone /></span>
               <div className="phone3-number-copy">
-                {mode === "existing" ? (
+                {twilioStatus?.connected ? (
                   <>
-                    <input
-                      value={phone.number || ""}
-                      placeholder="+1 305 555 0100"
-                      onChange={(e) => patch({ number: e.target.value, connectionStatus: "pending" })}
-                      onBlur={() => patch({ number: phone.number || "", connectionStatus: phone.number ? "pending" : "disconnected" }, true)}
-                    />
-                    <em>{phone.number ? "Saved — verification/provider connection still required" : "Enter the existing business number"}</em>
+                    <b>{twilioStatus.selectedNumber?.phone_number || phone.number || "Twilio connected — select a number"}</b>
+                    <em>Verified directly with your Twilio account. Cortexa never uses its internal Twilio account for this workspace.</em>
+                    <select value={twilioStatus.selectedNumber?.number_sid || phone.providerReference || ""} onChange={(e)=>selectTwilioNumber(e.target.value)}>
+                      <option value="">Select a number from your Twilio account</option>
+                      {twilioNumbers.map(n=><option key={n.numberSid} value={n.numberSid}>{n.phoneNumber} — {n.voice?"Voice ":""}{n.sms?"SMS":""}</option>)}
+                    </select>
                   </>
                 ) : (
                   <>
-                    <b>New-number activation requires the configured phone provider.</b>
-                    <em>No number will be marked connected until the provider confirms activation.</em>
+                    <b>Connect your Twilio account</b>
+                    <em>Use your own Account SID and API credentials. Credentials are encrypted and never returned by the API.</em>
                   </>
                 )}
               </div>
-              <button onClick={() => { patch({ number:"", callerId:"", connectionStatus:"disconnected", voiceEnabled:false, smsEnabled:false }, true); setMode("existing"); }}>{t.changeNumber}</button>
-              <button onClick={() => document.querySelector(".phone3-fields.three")?.scrollIntoView({behavior:"smooth",block:"center"})}>{t.manage}</button>
+              <button onClick={()=>setShowTwilioConnect(true)}>{twilioStatus?.connected ? "Reconnect Twilio" : "Connect Twilio"}</button>
+              <button onClick={async()=>{if(!twilioStatus?.connected)return;setTwilioNumbers(await customerTwilioApi.refreshNumbers(workspaceId));}}>Refresh Numbers</button>
             </div>
+            {mode === "new" && <p className="phone3-real-note"><Info />Purchase, provision, or port the number in your own Twilio account, then click Refresh Numbers here.</p>}
+            {twilioError && <p className="phone3-real-note"><Info />{twilioError}</p>}
           </section>
 
           <section className="phone3-section">
@@ -775,14 +828,11 @@ export default function BusinessPhoneSetup() {
                 ),
               )}
             </div>
-            <button
-              className="phone3-run"
-              disabled={true}
-              title="A real phone-provider test-call endpoint must be connected before this action is enabled."
-            >
-              <Play />
-              {testing ? "Testing…" : t.run}
+            <input className="phone3-test-destination" value={testToNumber} onChange={(e)=>setTestToNumber(e.target.value)} placeholder="Test destination, e.g. +13055550100" />
+            <button className="phone3-run" disabled={!voiceReady || !testToNumber || testing} onClick={runRealTestCall}>
+              <Play />{testing ? "Testing…" : t.run}
             </button>
+            {testResult && <p className="phone3-real-note"><Info />Twilio callback: {testResult.providerStatus || testResult.status} — {testResult.callbackVerified ? "verified" : "waiting for verification"}</p>}
             <div className="phone3-caps">
               {t.capabilities.map((x, i) => {
                 const ready = [
@@ -809,6 +859,19 @@ export default function BusinessPhoneSetup() {
         </aside>
       </div>
 
+
+      {showTwilioConnect && <div className="phone3-twilio-overlay" onMouseDown={(e)=>{if(e.target===e.currentTarget)setShowTwilioConnect(false)}}>
+        <div className="phone3-twilio-modal">
+          <h2>Connect your Twilio account</h2>
+          <p>Credentials are sent only to the Cortexa backend over HTTPS, encrypted at rest, and are never returned after saving.</p>
+          <label><span>Account SID</span><input autoComplete="off" value={twilioForm.accountSid} onChange={e=>setTwilioForm({...twilioForm,accountSid:e.target.value})}/></label>
+          <label><span>API Key SID</span><input autoComplete="off" value={twilioForm.apiKeySid} onChange={e=>setTwilioForm({...twilioForm,apiKeySid:e.target.value})}/></label>
+          <label><span>API Key Secret</span><input type="password" autoComplete="new-password" value={twilioForm.apiKeySecret} onChange={e=>setTwilioForm({...twilioForm,apiKeySecret:e.target.value})}/></label>
+          <label><span>Auth Token (webhook signature validation)</span><input type="password" autoComplete="new-password" value={twilioForm.authToken} onChange={e=>setTwilioForm({...twilioForm,authToken:e.target.value})}/></label>
+          {twilioError && <p className="phone3-real-note"><Info />{twilioError}</p>}
+          <div className="phone3-twilio-actions"><button onClick={()=>setShowTwilioConnect(false)}>Cancel</button><button onClick={connectTwilio}>Verify & Connect</button></div>
+        </div>
+      </div>}
       <footer className="phone3-footer">
         <button
           className="phone3-back"
