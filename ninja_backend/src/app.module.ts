@@ -47,6 +47,7 @@ import { ClinicMedicalModule } from "./clinic-medical/clinic-medical.module";
 import { SettingsModule } from './settings/settings.module';
 import { SetupModule } from './setup/setup.module';
 
+import { CustomerTwilioModule } from './customer-twilio/customer-twilio.module';
 @Module({
   imports: [
     ConfigModule,
@@ -95,6 +96,7 @@ import { SetupModule } from './setup/setup.module';
     ClinicMedicalModule,
     SettingsModule,
     SetupModule,
+    CustomerTwilioModule,
   ],
   controllers: [AppController],
 })
