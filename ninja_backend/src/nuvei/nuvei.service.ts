@@ -1254,7 +1254,14 @@ export class NuveiService {
       return { status: sub.status, subscriptionId };
     }
     if (sub.provider_transaction_id) {
-      const res = await this.client.threeDsContinue(sub.provider_transaction_id);
+      const res = await this.client.threeDsContinue(
+        sub.user_id,
+        sub.provider_transaction_id,
+      );
+      this.logger.log(
+        `Nuvei 3DS continue for sub ${sub.id}: HTTP ${res.httpStatus} ` +
+          `status ${res.body?.transaction?.status ?? '-'}/${res.body?.transaction?.status_detail ?? '-'}`,
+      );
       const br = this.threeDsBrowserResponse(res.body);
       if (br?.challenge_request) {
         return { status: 'pending_activation', subscriptionId, requires3ds: true, challenge: br };
@@ -1282,7 +1289,7 @@ export class NuveiService {
   async threeDsReturn(subscriptionId: string, form: any): Promise<{ redirect: string }> {
     await this.ensureSchema();
     const { rows } = await this.db.query(
-      `SELECT s.id, s.status, s.plan_key, s.return_url, t.provider_transaction_id
+      `SELECT s.id, s.user_id, s.status, s.plan_key, s.return_url, t.provider_transaction_id
          FROM nuvei_subscriptions s
          LEFT JOIN nuvei_transactions t
            ON t.subscription_id = s.id AND t.kind = 'activation'
@@ -1298,9 +1305,14 @@ export class NuveiService {
 
     const cres = String(form?.cres || form?.CRes || form?.CRES || '').trim();
     if (sub.provider_transaction_id && cres) {
-      const v = await this.client.threeDsVerify(sub.provider_transaction_id, cres);
+      const v = await this.client.threeDsVerify(
+        sub.user_id,
+        sub.provider_transaction_id,
+        cres,
+      );
       this.logger.log(
-        `Nuvei 3DS auth_verify for sub ${sub.id}: HTTP ${v.httpStatus} auth=${JSON.stringify(v.body?.authentication || {}).slice(0, 200)}`,
+        `Nuvei 3DS challenge result for sub ${sub.id}: HTTP ${v.httpStatus} ` +
+          `status ${v.body?.transaction?.status ?? '-'}/${v.body?.transaction?.status_detail ?? '-'}`,
       );
     } else {
       this.logger.warn(`Nuvei 3DS return for sub ${sub.id} without a CRes (keys: ${Object.keys(form || {}).join(',')})`);
