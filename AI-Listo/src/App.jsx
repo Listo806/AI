@@ -8,6 +8,7 @@ import {
   Navigate,
   useParams,
   useLocation,
+  Outlet,
 } from "react-router-dom";
 import {
   trackEvent,
@@ -168,6 +169,20 @@ import ClinicMedicalWorkspace from "./pages/clinic-medical/ClinicMedicalWorkspac
 import ClinicPatients from "./pages/clinic-medical/ClinicPatients";
 import ClinicPatientProfile from "./pages/clinic-medical/ClinicPatientProfile";
 import ClinicalConsultation from "./pages/clinic-medical/ClinicalConsultation";
+import {
+  EcommerceAuthProvider,
+  EcommerceProtectedRoute,
+  EcommerceLanding,
+  EcommercePricing,
+  EcommerceLogin,
+  EcommerceSignup,
+  EcommerceCheckout,
+  EcommerceAppLayout,
+  EcommerceDashboard,
+  EcommerceSubscriptions,
+  EcommerceIntegrations,
+  EcommerceTerms,
+} from "./pages/ecommerce-product/EcommerceProduct";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -350,6 +365,22 @@ function AppRoutes() {
       {/* Tokenized webview link from WhatsApp property card */}
       <Route path="/view" element={<View />} />
 
+      {/* Dedicated E-Commerce Subscription CRM — intentionally separate from the main workspace system. */}
+      <Route path="/e-commerce" element={<EcommerceAuthProvider><Outlet /></EcommerceAuthProvider>}>
+        <Route index element={<EcommerceLanding />} />
+        <Route path="pricing" element={<EcommercePricing />} />
+        <Route path="login" element={<EcommerceLogin />} />
+        <Route path="signup" element={<EcommerceSignup />} />
+        <Route path="checkout" element={<EcommerceCheckout />} />
+        <Route path="terms" element={<EcommerceTerms />} />
+        <Route element={<EcommerceProtectedRoute />}>
+          <Route element={<EcommerceAppLayout />}>
+            <Route path="dashboard" element={<EcommerceDashboard />} />
+            <Route path="subscriptions" element={<EcommerceSubscriptions />} />
+            <Route path="integrations" element={<EcommerceIntegrations />} />
+          </Route>
+        </Route>
+      </Route>  
       {/* Protected Dashboard Routes - All under /dashboard */}
       <Route
         path="/dashboard"
@@ -745,6 +776,7 @@ function AppRoutes() {
 
       <Route path="/:country/:city" element={<CityPage />} />
       <Route path="/:country" element={<CountryPage />} />
+      
     </Routes>
   );
 }
