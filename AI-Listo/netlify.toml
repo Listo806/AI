@@ -1,53 +1,6 @@
+# Build only. Every redirect, rewrite and 404 rule is generated into
+# dist/_redirects by scripts/build-seo.mjs from src/seo/site.js, so there is one
+# place to change them and no chance of two files disagreeing.
 [build]
-  command = "echo '===== GIT COMMIT =====' && git rev-parse HEAD && echo '===== MAIN.JSX =====' && cat src/main.jsx && echo '===== SEARCH BUY =====' && grep -Rni --exclude-dir=node_modules --exclude-dir=.git \"Buy.jsx\\|components/Buy\\|from.*Buy\" . || true && echo '===== BUILD =====' && npm run build"
+  command = "npm run build"
   publish = "dist"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-
-[[redirects]]
-from = "https://stirring-liger-864437.netlify.app/*"
-to = "https://www.cortexaaicrm.com/:splat"
-status = 301
-force = true
-
-[[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
-
-# ─────────────────────────────────────────────
-# Redirect root domain → vacation rentals page
-# ─────────────────────────────────────────────
-
-[[redirects]]
-  from = "/"
-  to = "/vacation-rentals/search"
-  status = 302
-
-[[redirects]]
-  from = "/vacation-rentals"
-  to = "/vacation-rentals/search"
-  status = 302
-
-# ─────────────────────────────────────────────
-# WWW → non-WWW redirect (recommended SEO standard)
-# ─────────────────────────────────────────────
-
-[[redirects]]
-  from = "https://www.listostays.com/*"
-  to = "https://listostays.com/:splat"
-  status = 301
-  force = true
-
-# ─────────────────────────────────────────────
-# SPA fallback (IMPORTANT: must be last)
-# ─────────────────────────────────────────────
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200

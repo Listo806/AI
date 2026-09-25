@@ -18,6 +18,7 @@ import {
 } from "./utils/track";
 import ThemeProvider from "./theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { applyHead } from "./seo/head";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationToast from "./components/NotificationToast";
 import ExitIntentOffer from "./components/ExitIntentOffer";
@@ -787,6 +788,14 @@ function AppRoutes() {
 function PageViewTracker() {
   const location = useLocation();
   const { user } = useAuth();
+
+  // Keep the page's own title, description, canonical, language alternates and
+  // robots directive correct as the customer navigates. The first response
+  // already carries them; this keeps them right afterwards, and makes sure a
+  // private page always says noindex.
+  useEffect(() => {
+    applyHead(location.pathname);
+  }, [location.pathname]);
 
   // Publish the visitor's lifecycle stage (visitor / registered_no_plan / free /
   // paid / past_customer) to Google Ads + GA4 whenever the signed-in user
