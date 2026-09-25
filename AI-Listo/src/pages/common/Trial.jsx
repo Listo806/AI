@@ -274,6 +274,10 @@ export default function StartTrial() {
         // changed, so it stays with them through checkout and beyond.
         firstTouch: attribution.firstTouch || null,
 
+        // And the visit that brought them back to sign up, kept separately so
+        // one never overwrites the other.
+        lastTouch: attribution.lastTouch || null,
+
         offer: getSetupOffer() === "exit7" ? "exit7" : "standard",
       };
 

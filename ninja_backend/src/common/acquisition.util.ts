@@ -22,8 +22,21 @@ export interface FirstTouch {
   source: string | null;
   medium: string | null;
   campaign: string | null;
+  term: string | null;
+  content: string | null;
   landingRoute: string | null;
+  landingPage: string | null;
+  channel: string | null;
+  keywordTheme: string | null;
+  campaignCluster: string | null;
+  language: string | null;
   firstVisitAt: string | null;
+}
+
+/** The same shape for the visit that brought a customer back. */
+export interface LastTouch extends Omit<FirstTouch, 'firstVisitAt'> {
+  referrerHost: string | null;
+  lastVisitAt: string | null;
 }
 
 function text(value: any, max = 120): string | null {
@@ -56,8 +69,46 @@ export function firstTouchFromDto(dto: any): FirstTouch {
     source,
     medium,
     campaign,
+    term: text(ft.term ?? utm.term ?? dto?.utmTerm),
+    content: text(ft.content ?? utm.content ?? dto?.utmContent),
     landingRoute: text(ft.landingRoute ?? dto?.landingRoute ?? dto?.landingPage, 400),
+    landingPage: text(ft.landingPage ?? dto?.landingPage, 400),
+    channel: text(ft.channel),
+    // The advertiser's own keyword theme, never a guess at what someone typed
+    // into a search engine: search engines do not tell us that, and Search
+    // Console is where aggregate query data belongs.
+    keywordTheme: text(ft.keywordTheme ?? ft.term ?? utm.term),
+    campaignCluster: text(ft.campaignCluster),
+    language: text(ft.language ?? dto?.language, 8),
     firstVisitAt: when(ft.firstVisitAt ?? dto?.firstVisitAt),
+  };
+}
+
+/**
+ * Read the last-touch block: the visit that brought the customer back. Absent
+ * for someone who signed up on their first visit, in which case the first touch
+ * already describes it.
+ */
+export function lastTouchFromDto(dto: any): LastTouch | null {
+  const lt = (dto && typeof dto.lastTouch === 'object' && dto.lastTouch) || null;
+  if (!lt) return null;
+  const source = text(lt.source);
+  const medium = text(lt.medium);
+  if (!source && !medium && !lt.campaign && !lt.landingRoute) return null;
+  return {
+    source,
+    medium,
+    campaign: text(lt.campaign),
+    term: text(lt.term),
+    content: text(lt.content),
+    landingRoute: text(lt.landingRoute, 400),
+    landingPage: text(lt.landingPage, 400),
+    channel: text(lt.channel),
+    keywordTheme: text(lt.keywordTheme ?? lt.term),
+    campaignCluster: text(lt.campaignCluster),
+    language: text(lt.language, 8),
+    referrerHost: text(lt.referrerHost, 200),
+    lastVisitAt: when(lt.lastVisitAt),
   };
 }
 
@@ -102,6 +153,27 @@ export async function ensureAcquisitionColumns(db: {
     'first_touch_campaign TEXT',
     'first_touch_landing_route TEXT',
     'first_visit_at TIMESTAMPTZ',
+    // The rest of the first visit, and the visit that brought them back.
+    'first_touch_term TEXT',
+    'first_touch_content TEXT',
+    'first_touch_landing_page TEXT',
+    'first_touch_channel TEXT',
+    'first_touch_keyword_theme TEXT',
+    'first_touch_campaign_cluster TEXT',
+    'first_touch_language VARCHAR(8)',
+    'last_touch_source TEXT',
+    'last_touch_medium TEXT',
+    'last_touch_campaign TEXT',
+    'last_touch_term TEXT',
+    'last_touch_content TEXT',
+    'last_touch_landing_route TEXT',
+    'last_touch_landing_page TEXT',
+    'last_touch_channel TEXT',
+    'last_touch_keyword_theme TEXT',
+    'last_touch_campaign_cluster TEXT',
+    'last_touch_referrer_host TEXT',
+    'last_touch_language VARCHAR(8)',
+    'last_visit_at TIMESTAMPTZ',
   ]) {
     await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
   }
@@ -132,10 +204,63 @@ export async function captureFirstTouch(
               first_touch_medium = $2,
               first_touch_campaign = $3,
               first_touch_landing_route = $4,
-              first_visit_at = COALESCE($5::timestamptz, NOW())
-        WHERE id = $6
+              first_visit_at = COALESCE($5::timestamptz, NOW()),
+              first_touch_term = $6,
+              first_touch_content = $7,
+              first_touch_landing_page = $8,
+              first_touch_channel = $9,
+              first_touch_keyword_theme = $10,
+              first_touch_campaign_cluster = $11,
+              first_touch_language = $12
+        WHERE id = $13
           AND COALESCE(first_touch_source, '') = ''`,
-      [ft.source, ft.medium, ft.campaign, ft.landingRoute, ft.firstVisitAt, userId],
+      [
+        ft.source, ft.medium, ft.campaign, ft.landingRoute, ft.firstVisitAt,
+        ft.term, ft.content, ft.landingPage, ft.channel, ft.keywordTheme,
+        ft.campaignCluster, ft.language, userId,
+      ],
+    );
+  } catch {
+    /* best-effort: attribution must never break a sign-up */
+  }
+}
+
+/**
+ * Store the visit that brought a customer back. Unlike the first touch this is
+ * meant to change: it is rewritten on each sign-up event, and it never touches
+ * the first-touch columns. When it is absent the first touch already describes
+ * the visit, so nothing is written and nothing is guessed.
+ */
+export async function captureLastTouch(
+  db: { query: (sql: string, params?: any[]) => Promise<any> },
+  userId: string,
+  dto: any,
+): Promise<void> {
+  try {
+    const lt = lastTouchFromDto(dto);
+    if (!lt) return;
+    await ensureAcquisitionColumns(db);
+    await db.query(
+      `UPDATE users
+          SET last_touch_source = $1,
+              last_touch_medium = $2,
+              last_touch_campaign = $3,
+              last_touch_term = $4,
+              last_touch_content = $5,
+              last_touch_landing_route = $6,
+              last_touch_landing_page = $7,
+              last_touch_channel = $8,
+              last_touch_keyword_theme = $9,
+              last_touch_campaign_cluster = $10,
+              last_touch_referrer_host = $11,
+              last_touch_language = $12,
+              last_visit_at = COALESCE($13::timestamptz, NOW())
+        WHERE id = $14`,
+      [
+        lt.source, lt.medium, lt.campaign, lt.term, lt.content, lt.landingRoute,
+        lt.landingPage, lt.channel, lt.keywordTheme, lt.campaignCluster,
+        lt.referrerHost, lt.language, lt.lastVisitAt, userId,
+      ],
     );
   } catch {
     /* best-effort: attribution must never break a sign-up */

@@ -3,6 +3,7 @@ import { ConfigModule } from '../config/config.module';
 import { DatabaseModule } from '../database/database.module';
 import { PlatformMailModule } from '../platform-mail/platform-mail.module';
 import { NuveiService } from './nuvei.service';
+import { RenewalReportingService } from './renewal-reporting.service';
 import { NuveiClientService } from './nuvei-client.service';
 import { NuveiController } from './nuvei.controller';
 

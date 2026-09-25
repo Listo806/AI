@@ -12,6 +12,7 @@ import { ConfigService } from '../config/config.service';
 import { DatabaseService } from '../database/database.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import { NuveiClientService, NuveiUser } from './nuvei-client.service';
+import { RenewalReportingService } from './renewal-reporting.service';
 import { decryptToken, encryptToken, tokenFingerprint } from './nuvei-crypto.util';
 import { PLANS, PlanId, getSeatLimit, normalizePlanId } from '../plans/plan-config';
 
@@ -65,6 +66,7 @@ export class NuveiService {
     private readonly db: DatabaseService,
     private readonly mailer: PlatformMailerService,
     private readonly client: NuveiClientService,
+    private readonly renewalReporting: RenewalReportingService,
   ) {
     // Email verification is the final activation boundary for paid Nuvei accounts.
     // Register the promotion hook here so verification and subscription activation
@@ -183,6 +185,11 @@ export class NuveiService {
         last_charge_at TIMESTAMPTZ,
         consent_at TIMESTAMPTZ,
         consent_ip TEXT,
+        -- Where this particular purchase came from, copied from the customer
+        -- at the moment they paid. Kept here as well as on the customer so a
+        -- revenue report by campaign reads one row and cannot be changed by a
+        -- later visit through another channel.
+        acquisition JSONB,
         canceled_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -301,6 +308,10 @@ export class NuveiService {
     // Where the browser lands after a 3DS challenge (our checkout page).
     await this.db.query(
       `ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS return_url TEXT`,
+    );
+    // What brought the customer, copied onto the purchase itself.
+    await this.db.query(
+      `ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS acquisition JSONB`,
     );
     // Nuvei's own Link-to-Pay order id, returned as data.order.id.
     await this.db.query(
@@ -1009,8 +1020,8 @@ export class NuveiService {
       `INSERT INTO nuvei_subscriptions
          (user_id, team_id, email, plan_key, provision_plan, status,
           activation_amount, monthly_amount, card_id, dev_reference,
-          consent_at, consent_ip, return_url)
-       VALUES ($1,$2,$3,$4,$5,'pending_activation',$6,$7,$8,$9,NOW(),$10,$11)
+          consent_at, consent_ip, return_url, acquisition)
+       VALUES ($1,$2,$3,$4,$5,'pending_activation',$6,$7,$8,$9,NOW(),$10,$11,$12)
        RETURNING id`,
       [
         input.userId,
@@ -1024,6 +1035,7 @@ export class NuveiService {
         dev_reference,
         input.consentIp || null,
         returnUrl,
+        JSON.stringify(await this.acquisitionSnapshot(input.userId)),
       ],
     );
     const subscriptionId = subRows[0].id;
@@ -1678,6 +1690,22 @@ export class NuveiService {
     }
   }
 
+  /** The charge row for a settled renewal, so it is reported exactly once. */
+  private async recurringRowId(subscriptionId: string, providerTxId?: string | null): Promise<string | null> {
+    try {
+      const { rows } = await this.db.query(
+        `SELECT id FROM nuvei_transactions
+          WHERE subscription_id = $1 AND kind = 'recurring'
+            AND ($2::text IS NULL OR provider_transaction_id = $2)
+          ORDER BY created_at DESC LIMIT 1`,
+        [subscriptionId, providerTxId || null],
+      );
+      return rows[0]?.id || null;
+    } catch {
+      return null;
+    }
+  }
+
   private async markClaim(subscriptionId: string, period: string, status: string, message: string, raw?: any): Promise<void> {
     await this.db.query(
       `UPDATE nuvei_transactions
@@ -1914,6 +1942,20 @@ export class NuveiService {
       trialEnd: null,
     });
     await this.mirrorBilling(sub.id, 'active', next);
+
+    // A renewal is charged by the scheduler with no browser present, so the
+    // analytics account can only hear about it from here. Fire and forget, and
+    // silent unless analytics is configured.
+    void this.renewalReporting.reportRenewal({
+      transactionRowId: await this.recurringRowId(sub.id, tx?.id),
+      providerTransactionId: tx?.id || null,
+      userId: sub.user_id,
+      subscriptionId: sub.id,
+      amount,
+      currency: sub.currency || 'USD',
+      planKey: sub.plan_key,
+    });
+
     await this.sendConfirmation({
       to: sub.email,
       userId: sub.user_id,
@@ -2052,6 +2094,74 @@ export class NuveiService {
         .query(`DELETE FROM nuvei_webhook_events WHERE dedupe_key = $1 AND verified = false`, [dedupe])
         .catch(() => undefined);
       return { ok: false, handled: 'error', httpStatus: 409 };
+    }
+  }
+
+  /**
+   * What brought this customer, as it stands at the moment of purchase: the
+   * first visit that ever reached us, the visit that brought them back, the
+   * plan they chose and where they were. Copied onto the subscription so
+   * revenue can be reported by campaign, landing page, country or language
+   * without depending on values that keep changing on the customer record.
+   * Never blocks a payment: an empty snapshot is perfectly acceptable.
+   */
+  private async acquisitionSnapshot(userId: string): Promise<Record<string, any>> {
+    try {
+      const { rows } = await this.db.query(
+        `SELECT first_touch_source, first_touch_medium, first_touch_campaign,
+                first_touch_landing_route, first_touch_landing_page,
+                first_touch_channel, first_touch_keyword_theme,
+                first_touch_campaign_cluster, first_touch_language, first_visit_at,
+                last_touch_source, last_touch_medium, last_touch_campaign,
+                last_touch_landing_route, last_touch_landing_page,
+                last_touch_channel, last_touch_keyword_theme,
+                last_touch_campaign_cluster, last_touch_referrer_host,
+                last_touch_language, last_visit_at,
+                landing_page, utm_source, utm_medium, utm_campaign, utm_term,
+                utm_content, gclid, signup_country, signup_region, signup_city,
+                preferred_language, signup_source
+           FROM users WHERE id = $1 LIMIT 1`,
+        [userId],
+      );
+      const u = rows[0] || {};
+      const snapshot: Record<string, any> = {
+        captured_at: new Date().toISOString(),
+        first_touch: {
+          source: u.first_touch_source || u.utm_source || null,
+          medium: u.first_touch_medium || u.utm_medium || null,
+          campaign: u.first_touch_campaign || u.utm_campaign || null,
+          landing_route: u.first_touch_landing_route || null,
+          landing_page: u.first_touch_landing_page || u.landing_page || null,
+          channel: u.first_touch_channel || null,
+          keyword_theme: u.first_touch_keyword_theme || u.utm_term || null,
+          campaign_cluster: u.first_touch_campaign_cluster || null,
+          language: u.first_touch_language || null,
+          at: u.first_visit_at || null,
+        },
+        last_touch: {
+          source: u.last_touch_source || null,
+          medium: u.last_touch_medium || null,
+          campaign: u.last_touch_campaign || null,
+          landing_route: u.last_touch_landing_route || null,
+          landing_page: u.last_touch_landing_page || null,
+          channel: u.last_touch_channel || null,
+          keyword_theme: u.last_touch_keyword_theme || null,
+          campaign_cluster: u.last_touch_campaign_cluster || null,
+          referrer_host: u.last_touch_referrer_host || null,
+          language: u.last_touch_language || null,
+          at: u.last_visit_at || null,
+        },
+        gclid: u.gclid || null,
+        signup_source: u.signup_source || null,
+        country: u.signup_country || null,
+        region: u.signup_region || null,
+        city: u.signup_city || null,
+        language: u.preferred_language || null,
+      };
+      return snapshot;
+    } catch {
+      // A purchase is never held up by a reporting field.
+      return {};
     }
   }
 

@@ -16,6 +16,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '../users/entities/user.entity';
+import { AcquisitionReportService } from './acquisition-report.service';
 import { CustomersAdminService } from './customers-admin.service';
 import { PlanOverridesService } from '../plans/plan-overrides.service';
 
@@ -66,6 +67,7 @@ export class CustomersAdminController {
   constructor(
     private readonly customers: CustomersAdminService,
     private readonly planOverrides: PlanOverridesService,
+    private readonly acquisition: AcquisitionReportService,
   ) {}
 
   @Get()
@@ -244,6 +246,27 @@ export class CustomersAdminController {
     @Body() body: { newOwnerId?: string },
   ) {
     return this.customers.transferOwnership(id, body?.newOwnerId || '');
+  }
+
+  @Get('acquisition/dimensions')
+  @ApiOperation({ summary: 'The dimensions an acquisition report can group by' })
+  acquisitionDimensions() {
+    return this.acquisition.dimensions();
+  }
+
+  @Get('acquisition')
+  @ApiOperation({
+    summary:
+      'Sign-ups, paying customers and revenue grouped by landing page, campaign, country, language and the rest',
+  })
+  async acquisitionReport(
+    @Query('dimension') dimension?: string,
+    @Query('basis') basis?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.acquisition.report({ dimension, basis, from, to, limit: Number(limit) || undefined });
   }
 
   @Post(':id/change-plan')

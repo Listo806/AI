@@ -44,5 +44,13 @@ export class SignupDto {
   @IsOptional()
   @IsObject()
   firstTouch?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    description:
+      'Last-touch acquisition: the visit that brought the customer back. Same shape as firstTouch, plus referrerHost and lastVisitAt. Never replaces the first touch.',
+  })
+  @IsOptional()
+  @IsObject()
+  lastTouch?: Record<string, any>;
 }
 

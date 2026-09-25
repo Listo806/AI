@@ -325,7 +325,22 @@ export function captureClickIds() {
       source: params.get("utm_source"),
       medium: params.get("utm_medium"),
       campaign: params.get("utm_campaign"),
+      term: params.get("utm_term"),
+      content: params.get("utm_content"),
       landingRoute: window.location.pathname,
+    });
+    // The visit happening right now. Unlike the first touch, this one is
+    // replaced whenever the visitor arrives again, so we can tell what
+    // originally brought someone apart from what brought them back on the day
+    // they paid. It never touches the first-touch record.
+    recordLastTouch({
+      source: params.get("utm_source"),
+      medium: params.get("utm_medium"),
+      campaign: params.get("utm_campaign"),
+      term: params.get("utm_term"),
+      content: params.get("utm_content"),
+      landingRoute: window.location.pathname,
+      landingPage: window.location.pathname + window.location.search,
     });
     for (const key of [
       "utm_source",
@@ -351,6 +366,81 @@ export function captureClickIds() {
 // and a later visit through another channel cannot replace any part of it.
 const FIRST_TOUCH_KEY = "attr_first_touch";
 
+// What the visitor's arrival tells us, without guessing. A visit with campaign
+// parameters is that campaign; a visit carrying a Google click id is paid
+// search; a visit with a referrer from another site is a referral; anything else
+// is direct. An organic search keyword is never inferred, because search
+// engines do not provide it: keyword themes come from Search Console instead.
+function classifyVisit(visit) {
+  const hasClickId =
+    !!localStorage.getItem("ads_gclid") ||
+    !!localStorage.getItem("ads_wbraid") ||
+    !!localStorage.getItem("ads_gbraid");
+  let referrerHost = null;
+  try {
+    referrerHost = document.referrer ? new URL(document.referrer).hostname : null;
+  } catch (_e) {
+    referrerHost = null;
+  }
+  const sameSite = referrerHost && referrerHost === window.location.hostname;
+  let channel = "direct";
+  if (visit?.medium) channel = String(visit.medium).toLowerCase();
+  else if (hasClickId) channel = "cpc";
+  else if (referrerHost && !sameSite) channel = "referral";
+  return {
+    channel,
+    referrerHost: sameSite ? null : referrerHost,
+    // Only what the campaign itself declares. utm_term is the advertiser's own
+    // keyword theme; utm_content is the creative. Neither is a guess.
+    keywordTheme: visit?.term || null,
+    campaignCluster: visit?.campaign ? String(visit.campaign).split(/[_|-]/)[0] : null,
+  };
+}
+
+// The most recent arrival, replaced on each new visit that carries campaign
+// information or comes from outside the site.
+const LAST_TOUCH_KEY = "attr_last_touch";
+
+export function recordLastTouch(visit) {
+  if (typeof window === "undefined") return;
+  try {
+    const classified = classifyVisit(visit);
+    const worthRecording =
+      visit?.source || visit?.medium || visit?.campaign || classified.referrerHost ||
+      classified.channel === "cpc" || !localStorage.getItem(LAST_TOUCH_KEY);
+    if (!worthRecording) return;
+    localStorage.setItem(
+      LAST_TOUCH_KEY,
+      JSON.stringify({
+        source: visit?.source || (classified.referrerHost ? classified.referrerHost : "direct"),
+        medium: visit?.medium || classified.channel,
+        campaign: visit?.campaign || null,
+        term: visit?.term || null,
+        content: visit?.content || null,
+        landingRoute: visit?.landingRoute || window.location.pathname,
+        landingPage: visit?.landingPage || window.location.pathname,
+        channel: classified.channel,
+        referrerHost: classified.referrerHost,
+        keywordTheme: classified.keywordTheme,
+        campaignCluster: classified.campaignCluster,
+        language: localStorage.getItem("cortexa_lang") || null,
+        lastVisitAt: new Date().toISOString(),
+      }),
+    );
+  } catch (_e) {
+    /* best-effort: a visitor with storage blocked still browses normally */
+  }
+}
+
+function readLastTouch() {
+  try {
+    const raw = localStorage.getItem(LAST_TOUCH_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
 export function recordFirstTouch(visit) {
   if (typeof window === "undefined") return;
   try {
@@ -361,7 +451,14 @@ export function recordFirstTouch(visit) {
         source: visit?.source || null,
         medium: visit?.medium || null,
         campaign: visit?.campaign || null,
+        term: visit?.term || null,
+        content: visit?.content || null,
         landingRoute: visit?.landingRoute || window.location.pathname,
+        landingPage: window.location.pathname + window.location.search,
+        channel: classifyVisit(visit).channel,
+        keywordTheme: classifyVisit(visit).keywordTheme,
+        campaignCluster: classifyVisit(visit).campaignCluster,
+        language: localStorage.getItem("cortexa_lang") || null,
         firstVisitAt: new Date().toISOString(),
       }),
     );
@@ -414,6 +511,9 @@ export function getAttribution() {
       // stored once, so it survives the whole journey to payment and is never
       // replaced when the customer comes back another way.
       firstTouch: readFirstTouch(),
+      // And what brought them back this time. Recorded alongside, never over
+      // the first touch, so both questions can be answered.
+      lastTouch: readLastTouch(),
     };
   } catch (_e) {
     return {};

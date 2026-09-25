@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PlatformMailerService } from './platform-mailer.service';
 import { SignupLifecycleService } from './signup-lifecycle.service';
 import { SignupsAdminService } from './signups-admin.service';
+import { AcquisitionReportService } from './acquisition-report.service';
 import { CustomersAdminService } from './customers-admin.service';
 import { PlatformMailController } from './platform-mail.controller';
 import { EmailTrackController } from './email-track.controller';
@@ -39,6 +40,7 @@ import { EmailVerificationController } from './email-verification.controller';
     SignupLifecycleService,
     SignupsAdminService,
     CustomersAdminService,
+    AcquisitionReportService,
     EmailAssetService,
   ],
   exports: [PlatformMailerService],

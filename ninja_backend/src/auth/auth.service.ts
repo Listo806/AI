@@ -18,7 +18,7 @@ import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '../config/config.service';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
 import { captureSignupCountry } from '../common/signup-geo.util';
-import { captureFirstTouch } from '../common/acquisition.util';
+import { captureFirstTouch, captureLastTouch } from '../common/acquisition.util';
 import { SecurityService } from './security.service';
 
 @Injectable()
@@ -87,6 +87,10 @@ export class AuthService {
     // Where this customer originally came from, when the browser sends it.
     // Write-once, so a later visit through another channel cannot replace it.
     void captureFirstTouch(this.db, user.id, signupDto);
+
+    // And the visit that brought them back today, stored beside it rather than
+    // over it, so both the original and the closing source are known.
+    void captureLastTouch(this.db, user.id, signupDto);
 
     // Generate tokens
     const tokens = await this.generateTokens(user);

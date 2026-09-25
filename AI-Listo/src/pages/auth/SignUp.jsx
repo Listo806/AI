@@ -38,12 +38,14 @@ export default function SignUp() {
       const language = ['en', 'es', 'pt'].includes(lang) ? lang : 'en';
       // Where this visitor originally came from, so an account created here
       // carries the same acquisition source as one created on the trial form.
-      const firstTouch = getAttribution().firstTouch || null;
+      const attribution = getAttribution();
+      const firstTouch = attribution.firstTouch || null;
+      const lastTouch = attribution.lastTouch || null;
       let res;
       try {
         res = await apiClient.request('/auth/signup', {
           method: 'POST',
-          body: JSON.stringify({ email, password, role, language, firstTouch }),
+          body: JSON.stringify({ email, password, role, language, firstTouch, lastTouch }),
         });
       } catch (err) {
         // Resilience: an older backend that predates the `language` or
