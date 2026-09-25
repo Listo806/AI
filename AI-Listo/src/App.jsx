@@ -253,23 +253,22 @@ function publicRoutes(prefix) {
       <Route path={`${p}/integrations`} element={<IntegrationsPage />} />
       <Route path={`${p}/setup-guide`} element={<SetupGuidePage />} />
       <Route path={`${p}/pricing`} element={<Pricing />} />
+      {/* The editorial exists in all three languages, and the language comes
+          from the address like every other public page: /editorial/..., then
+          /es/editorial/... and /pt/editorial/.... The older addresses that
+          carried the language as a suffix are redirected to these. */}
       <Route
         path={`${p}/editorial/the-end-of-legacy-crm`}
-        element={<EditorialFunnel />}
+        element={
+          p === "pt" ? (
+            <EditorialFunnelPt />
+          ) : p === "es" || p === "es-ec" ? (
+            <EditorialFunnelEs />
+          ) : (
+            <EditorialFunnel />
+          )
+        }
       />
-      <Route element={<LocaleLayout code="es" />}>
-        <Route
-          path="/editorial/the-end-of-legacy-crm/es"
-          element={<EditorialFunnelEs />}
-        />
-      </Route>
-
-      <Route element={<LocaleLayout code="pt" />}>
-        <Route
-          path="/editorial/the-end-of-legacy-crm/pt"
-          element={<EditorialFunnelPt />}
-        />
-      </Route>
       <Route path="/web-solutions" element={<WebSolutions />} />
 
       <Route
@@ -277,25 +276,19 @@ function publicRoutes(prefix) {
         element={<WebSolutionsCheckout />}
       />
       <Route path="/web-solutions/free-review" element={<FreeWebsiteReview />} />
-      <Route path="/editorial/business" element={<EditorialBusinessAI />} />
+      {/* The business article, the same way: the address carries the language.
+          The old suffix addresses are redirected to these. */}
       <Route
-        path="/editorial/business/es"
-        element={<EditorialBusinessAIEs />}
-      />
-
-      <Route
-        path="/editorial/business/pt"
-        element={<EditorialBusinessAIPt />}
-      />
-      {/* Prefix-form URLs used by the localized abandoned-signup email #2
-          (client spec: /es/editorial/business, /pt/editorial/business). */}
-      <Route
-        path="/es/editorial/business"
-        element={<EditorialBusinessAIEs />}
-      />
-      <Route
-        path="/pt/editorial/business"
-        element={<EditorialBusinessAIPt />}
+        path={`${p}/editorial/business`}
+        element={
+          p === "pt" ? (
+            <EditorialBusinessAIPt />
+          ) : p === "es" || p === "es-ec" ? (
+            <EditorialBusinessAIEs />
+          ) : (
+            <EditorialBusinessAI />
+          )
+        }
       />
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
