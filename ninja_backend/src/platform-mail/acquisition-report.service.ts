@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { ensureAcquisitionColumns, landingSlugSql } from '../common/acquisition.util';
 
 /**
  * What each channel actually produced: sign-ups, paying customers, the money
@@ -28,6 +29,20 @@ const DIMENSIONS: Record<string, { first: string; last: string; label: string }>
     last: `COALESCE(NULLIF(s.acquisition->'last_touch'->>'landing_page', ''),
                     NULLIF(u.last_touch_landing_page, ''),
                     NULLIF(u.last_touch_landing_route, ''))`,
+  },
+  // The landing page as a short slug, derived from the stored landing page at
+  // report time: no locale prefix, no query ("/es/pricing?x=1" -> "pricing").
+  source_slug: {
+    label: 'Landing page slug',
+    first: landingSlugSql(`COALESCE(NULLIF(s.acquisition->'first_touch'->>'landing_route', ''),
+                     NULLIF(s.acquisition->'first_touch'->>'landing_page', ''),
+                     NULLIF(u.first_touch_landing_route, ''),
+                     NULLIF(u.first_touch_landing_page, ''),
+                     NULLIF(u.landing_page, ''))`),
+    last: landingSlugSql(`COALESCE(NULLIF(s.acquisition->'last_touch'->>'landing_route', ''),
+                    NULLIF(s.acquisition->'last_touch'->>'landing_page', ''),
+                    NULLIF(u.last_touch_landing_route, ''),
+                    NULLIF(u.last_touch_landing_page, ''))`),
   },
   campaign: {
     label: 'Campaign',
@@ -71,6 +86,36 @@ const DIMENSIONS: Record<string, { first: string; last: string; label: string }>
     last: `COALESCE(NULLIF(s.acquisition->'last_touch'->>'campaign_cluster', ''),
                     NULLIF(u.last_touch_campaign_cluster, ''))`,
   },
+  ad_group: {
+    label: 'Ad group',
+    first: `COALESCE(NULLIF(s.acquisition->'first_touch'->>'ad_group', ''),
+                     NULLIF(u.first_touch_ad_group, ''))`,
+    last: `COALESCE(NULLIF(s.acquisition->'last_touch'->>'ad_group', ''),
+                    NULLIF(u.last_touch_ad_group, ''))`,
+  },
+  device: {
+    label: 'Device',
+    first: `COALESCE(NULLIF(s.acquisition->'first_touch'->>'device', ''),
+                     NULLIF(u.first_touch_device, ''))`,
+    last: `COALESCE(NULLIF(s.acquisition->'last_touch'->>'device', ''),
+                    NULLIF(u.last_touch_device, ''))`,
+  },
+  // Only what a campaign link declared (utm_intent / utm_competitor and the
+  // like). Never inferred, so most rows read Unknown until campaigns tag them.
+  intent: {
+    label: 'Search intent (campaign-declared)',
+    first: `COALESCE(NULLIF(s.acquisition->'first_touch'->>'intent', ''),
+                     NULLIF(u.first_touch_intent, ''))`,
+    last: `COALESCE(NULLIF(s.acquisition->'last_touch'->>'intent', ''),
+                    NULLIF(u.last_touch_intent, ''))`,
+  },
+  competitor: {
+    label: 'Competitor (campaign-declared)',
+    first: `COALESCE(NULLIF(s.acquisition->'first_touch'->>'competitor', ''),
+                     NULLIF(u.first_touch_competitor, ''))`,
+    last: `COALESCE(NULLIF(s.acquisition->'last_touch'->>'competitor', ''),
+                    NULLIF(u.last_touch_competitor, ''))`,
+  },
   country: {
     label: 'Country',
     first: `COALESCE(NULLIF(s.acquisition->>'country', ''), NULLIF(u.signup_country, ''))`,
@@ -100,9 +145,38 @@ const DIMENSIONS: Record<string, { first: string; last: string; label: string }>
   },
 };
 
+// The plan a customer chose: the paid subscription's plan when there is one,
+// otherwise the plan picked at sign-up. Legacy names fold into the four tiers.
+const PLAN_EXPR = `LOWER(COALESCE(NULLIF(s.provision_plan, ''), NULLIF(u.selected_plan, '')))`;
+
 @Injectable()
 export class AcquisitionReportService {
+  private columnsReady = false;
+
   constructor(private readonly db: DatabaseService) {}
+
+  /**
+   * The report reads optional columns that are added at runtime elsewhere
+   * (migrations are not auto-run everywhere). Make sure they exist so the
+   * report never fails on a fresh database. Idempotent, once per process.
+   */
+  private async ensureColumns(): Promise<void> {
+    if (this.columnsReady) return;
+    try {
+      await ensureAcquisitionColumns(this.db);
+      for (const col of [
+        'signup_country VARCHAR(2)',
+        'signup_region VARCHAR(80)',
+        'signup_city VARCHAR(80)',
+        'onboarding_workspace_id VARCHAR(64)',
+      ]) {
+        await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
+      }
+      this.columnsReady = true;
+    } catch {
+      /* the query below reports the real problem if a column is still missing */
+    }
+  }
 
   /** The dimensions a caller may ask for, for the admin screen to offer. */
   dimensions() {
@@ -123,6 +197,7 @@ export class AcquisitionReportService {
     to?: string;
     limit?: number;
   }) {
+    await this.ensureColumns();
     const key = DIMENSIONS[String(params.dimension || 'campaign')]
       ? String(params.dimension || 'campaign')
       : 'campaign';
@@ -154,6 +229,7 @@ export class AcquisitionReportService {
       ),
       money AS (
         SELECT t.subscription_id,
+               COUNT(*) FILTER (WHERE t.kind = 'activation')::int AS activation_payments,
                SUM(t.amount) FILTER (WHERE t.kind = 'activation')::float AS activation_revenue,
                SUM(t.amount) FILTER (WHERE t.kind = 'recurring')::float AS renewal_revenue,
                COUNT(*) FILTER (WHERE t.kind = 'recurring')::int AS renewals
@@ -166,6 +242,19 @@ export class AcquisitionReportService {
              COUNT(*)::int AS signups,
              COUNT(*) FILTER (WHERE s.id IS NOT NULL)::int AS checkouts_started,
              COUNT(*) FILTER (WHERE s.status IN ('trialing', 'active'))::int AS paying_customers,
+             -- The plan each sign-up chose, folded into the four tiers.
+             COUNT(*) FILTER (WHERE ${PLAN_EXPR} = 'free')::int AS plan_free,
+             COUNT(*) FILTER (WHERE ${PLAN_EXPR} IN ('solo', 'pro'))::int AS plan_solo,
+             COUNT(*) FILTER (WHERE ${PLAN_EXPR} IN ('business', 'team'))::int AS plan_business,
+             COUNT(*) FILTER (WHERE ${PLAN_EXPR} IN ('scale', 'growth'))::int AS plan_scale,
+             -- Customers who chose a workspace in post-activation onboarding.
+             COUNT(*) FILTER (WHERE NULLIF(u.onboarding_workspace_id, '') IS NOT NULL)::int AS workspace_selections,
+             COALESCE(SUM(m.activation_payments), 0)::int AS activation_payments,
+             COUNT(*) FILTER (WHERE s.status = 'trialing')::int AS trialing_subscriptions,
+             COUNT(*) FILTER (WHERE s.status = 'active')::int AS active_paid_subscriptions,
+             -- A trial subscription (trial_end is only set for plans with a
+             -- trial) that has since had at least one successful monthly charge.
+             COUNT(*) FILTER (WHERE s.trial_end IS NOT NULL AND COALESCE(m.renewals, 0) > 0)::int AS trial_to_paid,
              COALESCE(SUM(m.activation_revenue), 0)::float AS activation_revenue,
              COALESCE(SUM(m.renewal_revenue), 0)::float AS renewal_revenue,
              COALESCE(SUM(m.activation_revenue), 0)::float
@@ -186,13 +275,30 @@ export class AcquisitionReportService {
       (acc: any, r: any) => {
         acc.signups += Number(r.signups || 0);
         acc.paying_customers += Number(r.paying_customers || 0);
+        acc.workspace_selections += Number(r.workspace_selections || 0);
+        acc.activation_payments += Number(r.activation_payments || 0);
+        acc.active_paid_subscriptions += Number(r.active_paid_subscriptions || 0);
+        acc.trial_to_paid += Number(r.trial_to_paid || 0);
+        acc.renewals += Number(r.renewals || 0);
         acc.activation_revenue += Number(r.activation_revenue || 0);
         acc.renewal_revenue += Number(r.renewal_revenue || 0);
         acc.total_revenue += Number(r.total_revenue || 0);
         acc.mrr += Number(r.mrr || 0);
         return acc;
       },
-      { signups: 0, paying_customers: 0, activation_revenue: 0, renewal_revenue: 0, total_revenue: 0, mrr: 0 },
+      {
+        signups: 0,
+        paying_customers: 0,
+        workspace_selections: 0,
+        activation_payments: 0,
+        active_paid_subscriptions: 0,
+        trial_to_paid: 0,
+        renewals: 0,
+        activation_revenue: 0,
+        renewal_revenue: 0,
+        total_revenue: 0,
+        mrr: 0,
+      },
     );
     return {
       dimension: key,
@@ -201,7 +307,10 @@ export class AcquisitionReportService {
       rows,
       totals,
       note:
-        'Revenue is counted in US dollars from successful charges. An organic ' +
+        'Revenue is counted in US dollars from successful charges. Renewals are ' +
+        'successful monthly charges; for a trial plan the first one is also the ' +
+        'trial-to-paid conversion. Unknown means the visit did not provide the ' +
+        'value, which includes direct traffic. An organic ' +
         'search keyword is never inferred; keyword themes come from campaign ' +
         'parameters, and Search Console is the source for organic queries.',
     };

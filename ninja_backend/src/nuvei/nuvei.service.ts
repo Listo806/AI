@@ -15,7 +15,7 @@ import { NuveiClientService, NuveiUser } from './nuvei-client.service';
 import { RenewalReportingService } from './renewal-reporting.service';
 import { decryptToken, encryptToken, tokenFingerprint } from './nuvei-crypto.util';
 import { PLANS, PlanId, getSeatLimit, normalizePlanId } from '../plans/plan-config';
-import { ensureAcquisitionColumns } from '../common/acquisition.util';
+import { ensureAcquisitionColumns, landingSlug } from '../common/acquisition.util';
 import { cleanGaClientId, ga4Settings, sendGa4Event } from '../common/ga4-measurement.util';
 
 /**
@@ -2218,6 +2218,8 @@ export class NuveiService {
                 last_touch_language, last_visit_at,
                 first_touch_ad_group, first_touch_device,
                 last_touch_ad_group, last_touch_device,
+                first_touch_intent, first_touch_competitor,
+                last_touch_intent, last_touch_competitor,
                 landing_page, utm_source, utm_medium, utm_campaign, utm_term,
                 utm_content, gclid, signup_country, signup_region, signup_city,
                 preferred_language, signup_source
@@ -2239,6 +2241,13 @@ export class NuveiService {
           language: u.first_touch_language || null,
           ad_group: u.first_touch_ad_group || null,
           device: u.first_touch_device || null,
+          // Derived from the landing page, never captured separately.
+          source_slug: landingSlug(
+            u.first_touch_landing_route || u.first_touch_landing_page || u.landing_page,
+          ),
+          // Only what the campaign link declared; null means unknown.
+          intent: u.first_touch_intent || null,
+          competitor: u.first_touch_competitor || null,
           at: u.first_visit_at || null,
         },
         last_touch: {
@@ -2254,6 +2263,9 @@ export class NuveiService {
           language: u.last_touch_language || null,
           ad_group: u.last_touch_ad_group || null,
           device: u.last_touch_device || null,
+          source_slug: landingSlug(u.last_touch_landing_route || u.last_touch_landing_page),
+          intent: u.last_touch_intent || null,
+          competitor: u.last_touch_competitor || null,
           at: u.last_visit_at || null,
         },
         gclid: u.gclid || null,

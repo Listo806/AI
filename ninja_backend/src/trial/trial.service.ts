@@ -242,6 +242,8 @@ export class TrialService {
           first_touch_language,
           first_touch_ad_group,
           first_touch_device,
+          first_touch_intent,
+          first_touch_competitor,
           registered_at,
           created_at,
           updated_at
@@ -251,7 +253,7 @@ export class TrialService {
           $1, $2, $3, $4, $5, 'TRIAL', $6, true, $7, $8,
           $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
           $21, $22, $23, $24, COALESCE($25::timestamptz, NOW()),
-          $26, $27, $28, $29, $30, $31, $32, $33, $34,
+          $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36,
           NOW(), NOW(), NOW()
         )
         RETURNING id
@@ -291,6 +293,8 @@ export class TrialService {
           firstTouch.language,
           firstTouch.adGroup,
           firstTouch.device,
+          firstTouch.intent,
+          firstTouch.competitor,
         ],
       );
 
