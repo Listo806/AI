@@ -20,6 +20,7 @@ import ordersDashboard from "./assets/orders-dashboard.png";
 import integrationsDiagram from "./assets/integrations-diagram.png";
 import automationDashboard from "./assets/automation-dashboard.png";
 import analyticsDashboard from "./assets/analytics-dashboard.png";
+import headlogoImg from "./assets/headlogo.png";
 
 const EcAuthContext = createContext(null);
 const EC_TOKEN = "cortexa_ecommerce_access_token";
@@ -51,7 +52,7 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
-  return <Link to="/e-commerce" className="ec-logo"><span className="ec-logo-mark">C</span><span><b>CORTEXA</b><small>E-COMMERCE CRM</small></span></Link>;
+  return <Link to="/e-commerce" className="ec-logo"><img src={headlogoImg} className="cx-logo-img" /></Link>;
 }
 
 export function EcommerceHeader(){
