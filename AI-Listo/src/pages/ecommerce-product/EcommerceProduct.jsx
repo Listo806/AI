@@ -4,11 +4,13 @@ import {
   ArrowRight, PlayCircle, ShoppingCart, RefreshCw, Users, Megaphone, Store,
   CheckCircle2, UserRound, CalendarDays, LayoutDashboard, CreditCard,
   PackageCheck, BadgeDollarSign, Plug, Workflow, BarChart3, LogOut,
-  ChevronDown, CircleDollarSign, WalletCards, RotateCcw, Truck, Tags,
+  ChevronDown, CircleDollarSign, WalletCards, PanelLeftClose, PanelLeftOpen, RotateCcw, Truck, Tags,
   Link2, MessageSquareText, FileBarChart2
 } from "lucide-react";
 
 import "./ecommerce-product.css";
+import EcommerceIntegrationsPage from "./EcommerceIntegrations";
+import EcommerceSubscriptionsPage from "./EcommerceSubscriptions";
 import heroDashboard from "./assets/hero-dashboard.png";
 import connectedDiagram from "./assets/connected-diagram.png";
 import subscriberDashboard from "./assets/subscriber-dashboard.png";
@@ -54,7 +56,7 @@ function Logo(){
 
 export function EcommerceHeader(){
   return <header className="ec-header"><div className="ec-header-inner"><Logo/><nav>
-    <a href="/e-commerce#dashboard">Dashboard</a><a href="/e-commerce#subscriptions">Subscriptions</a><a href="/e-commerce#integrations">Integrations</a><Link to="/e-commerce/pricing">Pricing</Link><a href="/e-commerce#resources">Resources </a>
+    <Link to="/e-commerce/dashboard">Dashboard</Link><a href="/e-commerce#subscriptions">Subscriptions</a><a href="/e-commerce#integrations">Integrations</a><Link to="/e-commerce/pricing">Pricing</Link><a href="/e-commerce#resources">Resources </a>
   </nav><div className="ec-header-actions"><Link className="ec-login-link" to="/e-commerce/login">Login</Link><Link className="ec-btn ec-btn-small" to="/e-commerce/signup">Get Started</Link></div></div></header>;
 }
 
@@ -75,7 +77,7 @@ export function EcommerceLanding(){
    <section className="ec-hero" id="dashboard"><div className="ec-copy"><div className="ec-kicker"><Workflow size={13}/> ENGINEERED FOR GROWTH</div><h1>CRM &amp; Payment Platform<br/>for <em>E-Commerce Subscriptions<br/>&amp; Affiliate Marketers.</em></h1><span className="ec-rule"/><p>Manage customers, subscriptions, recurring billing, payments, fulfillment, and integrations from one powerful platform.</p><div className="ec-actions"><Link className="ec-btn" to="/e-commerce/signup">Get Started <ArrowRight size={15}/></Link><a href="#subscriptions" className="ec-watch"><PlayCircle size={15}/> See How It Works</a></div></div><img className="ec-hero-image" src={heroDashboard} alt="Cortexa E-Commerce CRM billing calendar dashboard"/></section>
    <section className="ec-audience"><div className="ec-section-heading"><span>02</span><b>WHO IT'S BUILT FOR</b><h2>Built for businesses that<br/>run on <em>recurring revenue.</em></h2></div><p className="ec-audience-intro">From e-commerce brands to affiliate marketers, Cortexa gives you the tools to scale, automate, and maximize lifetime value.</p><div className="ec-audience-grid">{[[ShoppingCart,"E-commerce Brands","Sell products online, manage customers and orders, and grow profitably."],[RefreshCw,"Subscription Businesses","Launch and scale flexible subscriptions with smart billing and retention."],[Users,"Affiliate Marketers","Run offers, track performance, and maximize affiliate commissions."],[Megaphone,"Digital Marketers","Create campaigns, capture leads, and turn traffic into loyal customers."],[Store,"Online Sellers","Manage products, orders, and fulfillment in one streamlined platform."]].map(([Icon,title,text])=><article key={title}><Icon className="ec-audience-icon" size={25} strokeWidth={1.8}/><b>{title}</b><p>{text}</p></article>)}</div></section>
    {sections.map((s,i)=><section className="ec-feature" id={s.id} key={s.n}><div className="ec-feature-copy"><div className="ec-eyebrow"><span>{s.n}</span>{s.eyebrow}</div><h2>{s.title}</h2><p>{s.desc}</p>{s.bullets.length>0&&<ul>{s.bullets.map(([Icon,text])=><li key={text}><Icon className="ec-feature-list-icon" size={15} strokeWidth={2}/><span>{text}</span></li>)}</ul>}</div><div className="ec-visual"><img src={s.img} alt={`${s.eyebrow} interface`}/></div></section>)}
-   <section className="ec-bottom-cta"><h2>Run your subscription business without losing control<br/>of your customers or data.</h2><p>Keep customers, subscriptions, billing schedules, orders, affiliates, and payment history connected in one operating system.</p><Link className="ec-btn" to="/e-commerce/signup">Get Started Today →</Link><div><span><CheckCircle2 size={14}/> No contracts</span><span><CheckCircle2 size={14}/> Cancel anytime</span><span><CheckCircle2 size={14}/> Connect your tools</span></div></section>
+   <section className="ec-bottom-cta"><h2>Run your subscription business without losing control<br/>of your customers or data.</h2><p>Keep customers, subscriptions, billing schedules, orders, affiliates, and payment history connected in one operating system.</p><Link className="ec-btn" to="/e-commerce/signup">Get Started Today →</Link></section>
   </main><footer className="ec-footer"><Logo/><span>© 2026 Cortexa. All rights reserved.</span><nav><a href="#">Privacy</a><Link to="/e-commerce/terms">Terms</Link><a href="#">Contact</a><Link to="/e-commerce/login">Login</Link></nav></footer>
  </div>
 }
@@ -113,11 +115,43 @@ export const EcommerceSignup=()=> <AuthCard mode="signup"/>;
 
 export function EcommerceCheckout(){ const nav=useNavigate(); const saved=JSON.parse(sessionStorage.getItem("ec_signup")||"{}"); return <div className="ec-auth-page"><Logo/><div className="ec-checkout"><section><h1>Complete your E-Commerce CRM setup</h1><p>Your E-Commerce account, billing and access remain separate from the main Cortexa CRM.</p><label>Full name<input defaultValue={saved.name||""}/></label><label>Email<input defaultValue={saved.email||""}/></label><label>Card number<input placeholder="1234 5678 9012 3456"/></label><div className="ec-field-row"><label>Expiry<input placeholder="MM / YY"/></label><label>CVC<input placeholder="CVC"/></label></div></section><aside><h2>E-Commerce CRM</h2><div><span>Subscription</span><b>$397 / month</b></div><div><span>Active subscribers</span><b>Up to 500</b></div><hr/><div><strong>Due today</strong><strong>$397</strong></div><button className="ec-btn" onClick={()=>nav("/e-commerce/login")}>Complete Checkout</button><small>Checkout UI is ready for the dedicated E-Commerce payment API.</small></aside></div></div> }
 
-export function EcommerceAppLayout(){ const auth=useEcAuth(); return <div className="ec-app"><aside className="ec-sidebar"><Logo/><nav><NavLink to="/e-commerce/dashboard"><LayoutDashboard size={17}/><span>Dashboard</span></NavLink><NavLink to="/e-commerce/subscriptions"><CreditCard size={17}/><span>Subscriptions</span></NavLink><NavLink to="/e-commerce/integrations"><Plug size={17}/><span>Integrations</span></NavLink></nav><button onClick={auth.logout}><LogOut size={16}/><span>Log out</span></button></aside><main className="ec-app-main"><Outlet/></main></div> }
-const Metric=({label,value,trend})=><div className="ec-metric"><span>{label}</span><b>{value}</b><small>{trend}</small></div>;
-export function EcommerceDashboard(){return <div className="ec-dash"><div className="ec-dash-head"><div><h1>Billing Calendar</h1><p>Overview of your billing activity</p></div><button>Apr 24 - May 24, 2026 <ChevronDown size={15}/></button></div><div className="ec-metrics"><Metric label="Scheduled" value="12,543" trend="↑ 3.5% in last 30 days"/><Metric label="Paid" value="9,842" trend="↑ 1.1% in last 30 days"/><Metric label="Failed" value="256" trend="↓ 0.3% in last 30 days"/><Metric label="Past Due" value="$56" trend="↓ 1.6% in last 30 days"/></div><div className="ec-dashboard-grid"><section><h2>May 2026</h2><div className="ec-calendar">{["Sun","Mon","Tue","Wed","Thu","Fri","Sat",...Array.from({length:31},(_,i)=>i+1)].map((d,i)=><span key={i} className={typeof d==='number'&&[4,8,12,16,20,24,28].includes(d)?"event":""}>{d}</span>)}</div></section><section><h2>Billing Status Overview</h2><div className="ec-donut"><b>12,543</b><span>Total</span></div><ul><li>Paid <b>9,842</b></li><li>Scheduled <b>1,063</b></li><li>Past Due <b>800</b></li><li>Failed <b>332</b></li></ul></section></div></div>}
-export function EcommerceSubscriptions(){return <SimpleAppPage title="Subscriptions" text="Manage subscriber accounts, recurring plans, billing status and customer subscription history."/>}
-export function EcommerceIntegrations(){return <SimpleAppPage title="Integrations" text="Connect payment gateways, fulfillment providers, communication tools, accounting platforms, APIs and webhooks."/>}
+export function EcommerceAppLayout(){
+ const auth=useEcAuth();
+ const [collapsed,setCollapsed]=useState(false);
+
+ return <div className={`ec-app ${collapsed ? "ec-sidebar-collapsed" : ""}`}>
+  <aside className="ec-sidebar">
+   <div className="ec-sidebar-top">
+    <Logo/>
+    <button
+     type="button"
+     className="ec-sidebar-collapse"
+     onClick={()=>setCollapsed(v=>!v)}
+     aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+     title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+    >
+     {collapsed ? <PanelLeftOpen size={17}/> : <PanelLeftClose size={17}/>}
+    </button>
+   </div>
+
+   <nav>
+    <NavLink to="/e-commerce/dashboard" title="Dashboard"><LayoutDashboard size={17}/><span>Dashboard</span></NavLink>
+    <NavLink to="/e-commerce/subscriptions" title="Subscriptions"><CreditCard size={17}/><span>Subscriptions</span></NavLink>
+    <NavLink to="/e-commerce/integrations" title="Integrations"><Plug size={17}/><span>Integrations</span></NavLink>
+   </nav>
+
+   <button className="ec-sidebar-logout" onClick={auth.logout} title="Log out">
+    <LogOut size={16}/><span>Log out</span>
+   </button>
+  </aside>
+
+  <main className="ec-app-main"><Outlet/></main>
+ </div>
+}
+
+export { default as EcommerceDashboard } from "./EcommerceDashboard";
+export function EcommerceSubscriptions(){ return <EcommerceSubscriptionsPage/>; }
+export function EcommerceIntegrations(){ return <EcommerceIntegrationsPage/>; }
 function SimpleAppPage({title,text}){return <div className="ec-simple-page"><h1>{title}</h1><p>{text}</p><div className="ec-empty-card"><b>{title}</b><span>Dedicated E-Commerce CRM module</span></div></div>}
 const ecommerceTerms = [
  ["1. Eligibility", <>
