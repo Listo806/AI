@@ -416,6 +416,12 @@ export function captureClickIds() {
     const adGroup =
       params.get("utm_adgroup") || params.get("adgroup") || params.get("adgroupid") || null;
     const device = deviceCategory();
+    // Search intent and competitor, only when the campaign link declares them.
+    // Never inferred: a visit without these parameters stays unknown.
+    const intent =
+      params.get("utm_intent") || params.get("intent") || params.get("cx_intent") || null;
+    const competitor =
+      params.get("utm_competitor") || params.get("competitor") || params.get("cx_competitor") || null;
     for (const key of ["gclid", "wbraid", "gbraid"]) {
       const val = params.get(key);
       if (val) {
@@ -441,6 +447,8 @@ export function captureClickIds() {
       content: params.get("utm_content"),
       adGroup,
       device,
+      intent,
+      competitor,
       landingRoute: window.location.pathname,
     });
     // The visit happening right now. Unlike the first touch, this one is
@@ -455,6 +463,8 @@ export function captureClickIds() {
       content: params.get("utm_content"),
       adGroup,
       device,
+      intent,
+      competitor,
       landingRoute: window.location.pathname,
       landingPage: window.location.pathname + window.location.search,
     });
@@ -543,7 +553,8 @@ export function recordLastTouch(visit) {
   try {
     const classified = classifyVisit(visit);
     const worthRecording =
-      visit?.source || visit?.medium || visit?.campaign || visit?.adGroup || classified.referrerHost ||
+      visit?.source || visit?.medium || visit?.campaign || visit?.adGroup ||
+      visit?.intent || visit?.competitor || classified.referrerHost ||
       classified.channel === "cpc" || !localStorage.getItem(LAST_TOUCH_KEY);
     if (!worthRecording) return;
     localStorage.setItem(
@@ -556,6 +567,8 @@ export function recordLastTouch(visit) {
         content: visit?.content || null,
         adGroup: visit?.adGroup || null,
         device: visit?.device || deviceCategory(),
+        intent: visit?.intent || null,
+        competitor: visit?.competitor || null,
         landingRoute: visit?.landingRoute || window.location.pathname,
         landingPage: visit?.landingPage || window.location.pathname,
         channel: classified.channel,
@@ -594,6 +607,8 @@ export function recordFirstTouch(visit) {
         content: visit?.content || null,
         adGroup: visit?.adGroup || null,
         device: visit?.device || deviceCategory(),
+        intent: visit?.intent || null,
+        competitor: visit?.competitor || null,
         landingRoute: visit?.landingRoute || window.location.pathname,
         landingPage: window.location.pathname + window.location.search,
         channel: classifyVisit(visit).channel,

@@ -34,6 +34,13 @@ export interface FirstTouch {
   adGroup: string | null;
   /** mobile | tablet | desktop, as the browser saw it. */
   device: string | null;
+  /**
+   * Search intent and competitor, only when the campaign link itself declares
+   * them (utm_intent / intent / cx_intent, utm_competitor / competitor /
+   * cx_competitor). Never inferred: absent means unknown.
+   */
+  intent: string | null;
+  competitor: string | null;
   firstVisitAt: string | null;
 }
 
@@ -92,6 +99,8 @@ export function firstTouchFromDto(dto: any): FirstTouch {
     language: text(ft.language ?? dto?.language, 8),
     adGroup: text(ft.adGroup ?? dto?.adGroup),
     device: deviceOf(ft.device ?? dto?.device),
+    intent: text(ft.intent ?? utm.intent),
+    competitor: text(ft.competitor ?? utm.competitor),
     firstVisitAt: when(ft.firstVisitAt ?? dto?.firstVisitAt),
   };
 }
@@ -121,6 +130,8 @@ export function lastTouchFromDto(dto: any): LastTouch | null {
     language: text(lt.language, 8),
     adGroup: text(lt.adGroup),
     device: deviceOf(lt.device),
+    intent: text(lt.intent),
+    competitor: text(lt.competitor),
     referrerHost: text(lt.referrerHost, 200),
     lastVisitAt: when(lt.lastVisitAt),
   };
@@ -154,13 +165,45 @@ export function acquisitionView(row: any) {
   };
 }
 
-/** Ad group + device columns (migration 173), shared by every ensure-list. */
+/**
+ * Ad group + device columns (migration 173) and the campaign-declared intent +
+ * competitor columns (migration 176), shared by every ensure-list.
+ */
 export const ACQUISITION_EXTRA_COLUMNS = [
   'first_touch_ad_group TEXT',
   'first_touch_device VARCHAR(16)',
   'last_touch_ad_group TEXT',
   'last_touch_device VARCHAR(16)',
+  'first_touch_intent TEXT',
+  'first_touch_competitor TEXT',
+  'last_touch_intent TEXT',
+  'last_touch_competitor TEXT',
 ];
+
+/**
+ * The landing page as a short slug: no locale prefix, no query, no trailing
+ * slash. "/es/pricing?utm_source=x" -> "pricing", "/" or "/es" -> "home".
+ * Derived from the stored landing page, so nothing new is captured for it.
+ * null when there is no landing page at all.
+ */
+export function landingSlug(path?: string | null): string | null {
+  let p = String(path ?? '').trim();
+  if (!p) return null;
+  p = p.replace(/^https?:\/\/[^/]+/i, '');
+  p = p.split('#')[0].split('?')[0];
+  p = p.replace(/^\/(es-ec|es|pt|en)(\/|$)/i, '/');
+  p = p.replace(/^\/+|\/+$/g, '').toLowerCase();
+  return p ? p.slice(0, 200) : 'home';
+}
+
+/** The same derivation in SQL, for reports over a landing-page expression. */
+export function landingSlugSql(expr: string): string {
+  return `(CASE WHEN (${expr}) IS NULL THEN NULL ELSE COALESCE(NULLIF(LOWER(BTRIM(
+            REGEXP_REPLACE(
+              SPLIT_PART(SPLIT_PART(REGEXP_REPLACE((${expr}), '^https?://[^/]+', '', 'i'), '#', 1), '?', 1),
+              '^/(es-ec|es|pt|en)(/|$)', '/', 'i'),
+            '/')), ''), 'home') END)`;
+}
 
 // The columns live in migration 164, which is not auto-run in this environment,
 // so every write path makes sure they exist first. Done once per process.
@@ -236,13 +279,16 @@ export async function captureFirstTouch(
               first_touch_campaign_cluster = $11,
               first_touch_language = $12,
               first_touch_ad_group = $14,
-              first_touch_device = $15
+              first_touch_device = $15,
+              first_touch_intent = $16,
+              first_touch_competitor = $17
         WHERE id = $13
           AND COALESCE(first_touch_source, '') = ''`,
       [
         ft.source, ft.medium, ft.campaign, ft.landingRoute, ft.firstVisitAt,
         ft.term, ft.content, ft.landingPage, ft.channel, ft.keywordTheme,
         ft.campaignCluster, ft.language, userId, ft.adGroup, ft.device,
+        ft.intent, ft.competitor,
       ],
     );
   } catch {
@@ -281,12 +327,15 @@ export async function captureLastTouch(
               last_touch_language = $12,
               last_visit_at = COALESCE($13::timestamptz, NOW()),
               last_touch_ad_group = $15,
-              last_touch_device = $16
+              last_touch_device = $16,
+              last_touch_intent = $17,
+              last_touch_competitor = $18
         WHERE id = $14`,
       [
         lt.source, lt.medium, lt.campaign, lt.term, lt.content, lt.landingRoute,
         lt.landingPage, lt.channel, lt.keywordTheme, lt.campaignCluster,
         lt.referrerHost, lt.language, lt.lastVisitAt, userId, lt.adGroup, lt.device,
+        lt.intent, lt.competitor,
       ],
     );
   } catch {
