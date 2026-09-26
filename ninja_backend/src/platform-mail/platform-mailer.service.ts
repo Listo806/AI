@@ -391,6 +391,9 @@ export class PlatformMailerService {
     html: string;
     text: string;
     token: string;
+    // Optional Reply-To override (e.g. the visitor on a public contact form).
+    // Omitted -> replies go to the support inbox, as before.
+    replyTo?: { email: string; name?: string };
   }): Promise<{ ok: boolean; provider: string; error?: string; messageId?: string }> {
     const sg = this.sendgridConfig();
     if (sg) {
@@ -419,7 +422,7 @@ export class PlatformMailerService {
             from: sender,
             // Replies (and the "Reply to this email" button) route to the real
             // support inbox regardless of the verified From sender.
-            reply_to: { email: this.supportEmail() },
+            reply_to: opts.replyTo || { email: this.supportEmail() },
             subject: opts.subject,
             content: [{ type: 'text/html', value: opts.html }],
             custom_args: { token: opts.token },
@@ -452,7 +455,11 @@ export class PlatformMailerService {
       const info = await tx.transporter.sendMail({
         from: tx.from,
         to: opts.to,
-        replyTo: this.supportEmail(),
+        replyTo: opts.replyTo
+          ? opts.replyTo.name
+            ? { name: opts.replyTo.name, address: opts.replyTo.email }
+            : opts.replyTo.email
+          : this.supportEmail(),
         subject: opts.subject,
         text: opts.text,
         html: opts.html,
@@ -909,6 +916,7 @@ export class PlatformMailerService {
     text?: string;
     template?: string;
     language?: string;
+    replyTo?: { email: string; name?: string };
   }): Promise<SendResult> {
     await this.ensureSchema();
     const token = crypto.randomUUID();
@@ -919,6 +927,7 @@ export class PlatformMailerService {
       html,
       text: opts.text || opts.html.replace(/<[^>]+>/g, ' '),
       token,
+      replyTo: opts.replyTo,
     });
     const status: 'sent' | 'skipped' | 'error' = result.ok
       ? 'sent'

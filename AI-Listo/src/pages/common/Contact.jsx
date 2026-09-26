@@ -21,6 +21,32 @@ import headlogoImg from "../../assets/cortexa/headlogo.png";
 import styles from "./Contact.module.css";
 import { trackEvent } from "../../utils/track";
 import { currentSiteLanguage } from "../../i18n/currentLanguage";
+import { submitContactForm } from "../../api/contact";
+
+// Short status lines under the Send button (the rest of the page is English).
+const STATUS_TEXT = {
+  en: {
+    sending: "Sending...",
+    success: "Thank you! Your message has been sent. We usually reply within 24 hours.",
+    required: "Please enter your name, a valid email and a message.",
+    rateLimited: "Too many messages. Please try again in a few minutes.",
+    failed: "We couldn't send your message. Please try again or email support@cortexaaicrm.com.",
+  },
+  es: {
+    sending: "Enviando...",
+    success: "¡Gracias! Tu mensaje fue enviado. Normalmente respondemos en menos de 24 horas.",
+    required: "Por favor ingresa tu nombre, un email válido y un mensaje.",
+    rateLimited: "Demasiados mensajes. Inténtalo de nuevo en unos minutos.",
+    failed: "No pudimos enviar tu mensaje. Inténtalo de nuevo o escribe a support@cortexaaicrm.com.",
+  },
+  pt: {
+    sending: "Enviando...",
+    success: "Obrigado! Sua mensagem foi enviada. Normalmente respondemos em até 24 horas.",
+    required: "Por favor informe seu nome, um email válido e uma mensagem.",
+    rateLimited: "Muitas mensagens. Tente novamente em alguns minutos.",
+    failed: "Não conseguimos enviar sua mensagem. Tente novamente ou escreva para support@cortexaaicrm.com.",
+  },
+};
 
 export default function Contact() {
   const helpItems = [
@@ -56,9 +82,55 @@ export default function Contact() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Honeypot (hidden from people; bots fill it) + submit status.
+  const [website, setWebsite] = useState("");
+  const [sending, setSending] = useState(false);
+  const [status, setStatus] = useState(null); // { type: "success" | "error", text }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Dữ liệu gửi đi:", formData);
+    if (sending) return;
+
+    const language = currentSiteLanguage();
+    const t = STATUS_TEXT[language] || STATUS_TEXT.en;
+
+    const fullName = formData.fullName.trim();
+    const email = formData.email.trim();
+    const message = formData.message.trim();
+    if (!fullName || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !message) {
+      setStatus({ type: "error", text: t.required });
+      return;
+    }
+
+    setSending(true);
+    setStatus(null);
+    const { ok, status: httpStatus } = await submitContactForm({
+      name: fullName,
+      email,
+      company: formData.company.trim(),
+      topic: formData.reason,
+      message,
+      language,
+      pagePath: window.location.pathname,
+      website,
+    });
+    setSending(false);
+
+    if (ok) {
+      trackEvent("contact_request", {
+        method: "form",
+        page_path: window.location.pathname,
+        language,
+      });
+      setFormData({ fullName: "", email: "", company: "", reason: "", message: "" });
+      setStatus({ type: "success", text: t.success });
+    } else if (httpStatus === 400) {
+      setStatus({ type: "error", text: t.required });
+    } else if (httpStatus === 429) {
+      setStatus({ type: "error", text: t.rateLimited });
+    } else {
+      setStatus({ type: "error", text: t.failed });
+    }
   };
 
   return (
@@ -188,10 +260,51 @@ export default function Contact() {
                 <span>Your information is secure and confidential.</span>
               </div>
 
-              <button type="submit" className={styles.sendButton}>
+              <button
+                type="submit"
+                className={styles.sendButton}
+                disabled={sending}
+                aria-busy={sending}
+                style={sending ? { opacity: 0.7, cursor: "wait" } : undefined}
+              >
                 <Send size={20} />
-                Send Message
+                {sending
+                  ? (STATUS_TEXT[currentSiteLanguage()] || STATUS_TEXT.en).sending
+                  : "Send Message"}
               </button>
+            </div>
+
+            {status && (
+              <p
+                role={status.type === "error" ? "alert" : "status"}
+                className={status.type === "success" ? styles.greenText : undefined}
+                style={{
+                  margin: "10px 0 0",
+                  fontSize: 13,
+                  textAlign: "right",
+                  color: status.type === "error" ? "#dc2626" : undefined,
+                }}
+              >
+                {status.text}
+              </p>
+            )}
+
+            {/* Spam honeypot: invisible to people and skipped by keyboard/screen readers. */}
+            <div
+              aria-hidden="true"
+              style={{ position: "absolute", left: "-10000px", top: "auto", width: 1, height: 1, overflow: "hidden" }}
+            >
+              <label>
+                Website
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </label>
             </div>
           </form>
 

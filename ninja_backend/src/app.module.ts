@@ -46,8 +46,10 @@ import { NuveiModule } from './nuvei/nuvei.module';
 import { ClinicMedicalModule } from "./clinic-medical/clinic-medical.module";
 import { SettingsModule } from './settings/settings.module';
 import { SetupModule } from './setup/setup.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 
 import { CustomerTwilioModule } from './customer-twilio/customer-twilio.module';
+import { ContactModule } from './contact/contact.module';
 @Module({
   imports: [
     ConfigModule,
@@ -96,7 +98,9 @@ import { CustomerTwilioModule } from './customer-twilio/customer-twilio.module';
     ClinicMedicalModule,
     SettingsModule,
     SetupModule,
+    OnboardingModule,
     CustomerTwilioModule,
+    ContactModule,
   ],
   controllers: [AppController],
 })
