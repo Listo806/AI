@@ -39,7 +39,7 @@ function serve() {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, "http://localhost");
     const clean = decodeURIComponent(url.pathname).replace(/\/+$/, "") || "/";
-    const candidates = [path.join(DIST, clean, "index.html"), path.join(DIST, clean), path.join(DIST, "app.html")];
+    const candidates = [path.join(DIST, `${clean}.html`), path.join(DIST, clean, "index.html"), path.join(DIST, clean), path.join(DIST, "app.html")];
     const file = candidates.find((f) => f.startsWith(DIST) && fs.existsSync(f) && fs.statSync(f).isFile());
     res.writeHead(200, { "content-type": TYPES[path.extname(file)] || "application/octet-stream" });
     fs.createReadStream(file).pipe(res);

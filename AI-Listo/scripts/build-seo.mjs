@@ -394,8 +394,14 @@ function write(relPath, contents) {
   fs.writeFileSync(full, contents, "utf8");
 }
 
-const outFile = (code, base) =>
-  `${byCode[code].prefix}${base === "/" ? "" : base}/index.html`.replace(/^\//, "") || "index.html";
+// Pages are written as flat files ("pricing.html", "es.html"), never as
+// folders: the host redirects a folder address to its trailing-slash form, so
+// "/pricing" would answer 301 instead of 200. A flat file is served at exactly
+// the canonical address.
+const outFile = (code, base) => {
+  const clean = `${byCode[code].prefix}${base === "/" ? "" : base}`.replace(/^\//, "");
+  return clean ? `${clean}.html` : "index.html";
+};
 
 // A self-contained 404 page: a real page that works without the application,
 // so a missing address answers 404 and shows a way back instead of bouncing.
@@ -634,7 +640,7 @@ function main() {
     ),
     "",
     "# The Ecuador campaign namespace shares the Spanish pages.",
-    "/es-ec    /es/index.html    200",
+    "/es-ec    /es.html    200",
     "/es-ec/*    /es/:splat    200",
     "",
     "# Legacy country and city pages: kept, reachable, not indexed until the",

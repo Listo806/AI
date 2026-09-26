@@ -12,8 +12,10 @@ import {
 
 const DIST = path.resolve("dist");
 const byCode = Object.fromEntries(LANGUAGES.map((l) => [l.code, l]));
-const fileFor = (code, base) =>
-  path.join(DIST, `${byCode[code].prefix}${base === "/" ? "" : base}`, "index.html");
+const fileFor = (code, base) => {
+  const clean = `${byCode[code].prefix}${base === "/" ? "" : base}`;
+  return path.join(DIST, clean ? `${clean}.html` : "index.html");
+};
 const read = (f) => fs.readFileSync(f, "utf8");
 const attr = (html, re) => (html.match(re) || [])[1];
 const all = (html, re) => [...html.matchAll(re)].map((m) => m[1]);
