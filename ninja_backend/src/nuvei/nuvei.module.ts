@@ -17,7 +17,7 @@ import { NuveiController } from './nuvei.controller';
 @Module({
   imports: [ConfigModule, DatabaseModule, PlatformMailModule],
   controllers: [NuveiController],
-  providers: [NuveiService, NuveiClientService],
+  providers: [NuveiService, NuveiClientService, RenewalReportingService],
   exports: [NuveiService, NuveiClientService],
 })
 export class NuveiModule {}
