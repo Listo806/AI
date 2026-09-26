@@ -2,8 +2,10 @@
  * Server-side events to Google Analytics 4 through the Measurement Protocol.
  *
  * Same posture as the renewal reporting (nuvei/renewal-reporting.service.ts):
- *  - off unless BOTH GA4_MEASUREMENT_ID and GA4_API_SECRET are set, so nothing
- *    is sent from an environment that was not configured on purpose;
+ *  - off unless GA4_SERVER_EVENTS_ENABLED=true AND both GA4_MEASUREMENT_ID and
+ *    GA4_API_SECRET are set: adding the secret alone switches nothing on, so
+ *    the account connection can be configured and tested before any event is
+ *    sent;
  *  - GA4 only. Nothing here is ever sent to Google Ads;
  *  - never throws and never blocks the caller for more than a few seconds:
  *    analytics must not hold up a payment or an email.
@@ -22,6 +24,7 @@ export interface Ga4Settings {
 export function ga4Settings(config: ConfigLike | null | undefined): Ga4Settings | null {
   const read = (k: string) =>
     String((config && config.get(k)) ?? process.env[k] ?? '').trim();
+  if (read('GA4_SERVER_EVENTS_ENABLED').toLowerCase() !== 'true') return null;
   const measurementId = read('GA4_MEASUREMENT_ID');
   const apiSecret = read('GA4_API_SECRET');
   return measurementId && apiSecret ? { measurementId, apiSecret } : null;

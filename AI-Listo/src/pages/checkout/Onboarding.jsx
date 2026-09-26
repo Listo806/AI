@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./Common.css";
 import apiClient from '../../api/apiClient';
+import { useAuth } from "../../context/AuthContext";
 import { trackEvent, trackEventOnce } from "../../utils/track";
 import {
   explicitLanguageChoice,
@@ -12,19 +13,50 @@ import {
   withLocalePrefix,
 } from "../../i18n/funnelLocale";
 
-const API_BASE = "https://backend.cortexaaicrm.com";
 const STORAGE_PREFIX = 'listo_';
+
+// Workspace names shown on step 1 (the backend returns the ids + English names;
+// the labels follow the page language). Unknown ids fall back to the server name.
+const WORKSPACE_LABELS = {
+  en: {
+    business: "Business Suite", sales: "Sales", insurance: "Insurance",
+    financial_services: "Financial Services", "customer-service": "Customer Service",
+    marketing: "Marketing", projects: "Projects", ecommerce: "E-Commerce",
+    "real-estate": "Real Estate", team: "Team",
+    "aesthetic-wellness": "Aesthetic & Wellness", "clinic-medical": "Clinic & Medical",
+  },
+  es: {
+    business: "Suite de Negocios", sales: "Ventas", insurance: "Seguros",
+    financial_services: "Servicios Financieros", "customer-service": "Servicio al Cliente",
+    marketing: "Marketing", projects: "Proyectos", ecommerce: "Comercio Electrónico",
+    "real-estate": "Bienes Raíces", team: "Equipo",
+    "aesthetic-wellness": "Estética y Bienestar", "clinic-medical": "Clínica y Medicina",
+  },
+  pt: {
+    business: "Suíte de Negócios", sales: "Vendas", insurance: "Seguros",
+    financial_services: "Serviços Financeiros", "customer-service": "Atendimento ao Cliente",
+    marketing: "Marketing", projects: "Projetos", ecommerce: "E-commerce",
+    "real-estate": "Imóveis", team: "Equipe",
+    "aesthetic-wellness": "Estética e Bem-estar", "clinic-medical": "Clínica e Medicina",
+  },
+};
+
 export default function Onboarding() {
   const { t, i18n } = useTranslation();
-  // The page's language prefix (/es, /pt, /es-ec): used for the localized
-  // /trial fallback and as the language carried into the (unprefixed) CRM.
+  const { user, refreshUser } = useAuth();
+  // The page's language prefix (/es, /pt, /es-ec): kept on the sign-in /
+  // verification hops and used as the language carried into the (unprefixed) CRM.
   const routePrefix = localePrefixFromPath(window.location.pathname);
-  const trialPath = withLocalePrefix(routePrefix, "/trial");
+  const onboardingPath = withLocalePrefix(routePrefix, "/onboarding");
+  const signInPath = `${withLocalePrefix(routePrefix, "/sign-in")}?next=${encodeURIComponent(onboardingPath)}`;
+  const verifyPath = withLocalePrefix(routePrefix, "/verify-email");
   const pageLang = languageFromPrefix(routePrefix);
+  const labels = WORKSPACE_LABELS[pageLang] || WORKSPACE_LABELS.en;
   const workspaceTrackedRef = useRef(null);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [workspaces, setWorkspaces] = useState([]);
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -33,41 +65,62 @@ export default function Onboarding() {
     mainGoal: "",
   });
 
-  // 🔒 PROTECT ROUTE
-  useEffect(() => {
-    const userId = localStorage.getItem("trialUserId");
+  const hasSession = () =>
+    !!(apiClient.accessToken || localStorage.getItem(STORAGE_PREFIX + "access_token"));
 
-    if (!userId) {
-      navigate(trialPath);
+  // Auth / verification failures from the onboarding API send the customer to
+  // the step they are missing instead of leaving them on a broken page.
+  const handleAuthError = (err) => {
+    const status = err?.status || err?.response?.status;
+    if (status === 401 || !hasSession()) {
+      navigate(signInPath, { replace: true });
+      return true;
+    }
+    if (status === 403) {
+      // Paid but the email link has not been clicked yet.
+      navigate(verifyPath, { replace: true });
+      return true;
+    }
+    return false;
+  };
+
+  // 🔒 PROTECT ROUTE: the signed-in account (JWT) decides everything here. A
+  // customer who opens the verification link on another device signs in first
+  // and comes straight back to this page.
+  useEffect(() => {
+    if (!hasSession()) {
+      navigate(signInPath, { replace: true });
       return;
     }
 
-    // onboarding_started: once per browser session for this account.
-    trackEventOnce(`onboarding_started:${userId}`, "onboarding_started", { language: pageLang });
-
+    let dead = false;
     const checkUser = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/auth/user/${userId}`);
+        const data = await apiClient.request("/onboarding/state");
+        if (dead) return;
 
-        if (!res.ok) throw new Error("API error");
-
-        const data = await res.json();
-
-        if (!data.success) {
-          navigate(trialPath);
+        // Already onboarded (or the team already has its workspace): skip ahead.
+        if (data?.completed) {
+          navigate(data.route || "/dashboard", { replace: true });
           return;
         }
 
-        if (data?.user?.onboardingCompleted) {
-          navigate("/dashboard");
-        }
+        setWorkspaces(Array.isArray(data?.workspaces) ? data.workspaces : []);
+        // onboarding_started: once per browser session for this account.
+        trackEventOnce(`onboarding_started:${user?.id || "session"}`, "onboarding_started", { language: pageLang });
       } catch (err) {
+        if (dead) return;
+        if (handleAuthError(err)) return;
         console.error("CHECK USER ERROR:", err);
         setError(t("onboarding.loadError"));
       }
     };
 
     checkUser();
+    return () => {
+      dead = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   // ======================
@@ -111,61 +164,55 @@ export default function Onboarding() {
   };
 
   const handleFinish = async () => {
-    const userId = localStorage.getItem("trialUserId");
-
-    if (!userId) {
-      navigate(trialPath);
+    if (!hasSession()) {
+      navigate(signInPath, { replace: true });
+      return;
+    }
+    if (!form.businessType) {
+      setStep(1);
+      setError(t("onboarding.selectToContinue"));
       return;
     }
 
     setLoading(true);
     setError("");
-    console.log("ONBOARDING PAYLOAD:", {
-      userId,
-      ...form,
-    });
-    
+
     try {
-      const data = await apiClient.request('/auth/save-onboarding', {
+      // The chosen business type IS the workspace id; the server links it to the
+      // account's active CRM plan (the one included Workspace) and marks
+      // onboarding complete. Identity comes from the JWT only.
+      const data = await apiClient.request("/onboarding", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
-          userId,
-          ...form,
+          workspaceId: form.businessType,
+          leadSources: form.leadSources,
+          mainGoal: form.mainGoal,
         }),
       });
 
-      //if (!res.ok) throw new Error("API error");
+      if (data?.success) {
+        trackEventOnce(`onboarding_completed:${user?.id || "session"}`, "onboarding_completed", {
+          workspace: data.workspaceId || form.businessType || undefined,
+          language: pageLang,
+        }, "local");
 
-      //const data = await res.json();
-        console.log("SAVE ONBOARDING RESPONSE:", data);
-      if (data.success) {
-          apiClient.setTokens(data.token, null);
+        try { await refreshUser?.(); } catch (_e) { /* never block entry */ }
 
-          localStorage.setItem('listo_access_token', data.token);
-          localStorage.setItem('listo_user', JSON.stringify(data.user));
+        // /dashboard is not language-prefixed: carry the language into it
+        // (explicit choice > account preference > this page's language).
+        const lang = explicitLanguageChoice() || userLanguage(user) || pageLang;
+        if (lang && String(i18n.language || "").slice(0, 2) !== lang) {
+          i18n.changeLanguage(lang);
+        }
 
-          trackEventOnce(`onboarding_completed:${userId}`, "onboarding_completed", {
-            workspace: form.businessType || undefined,
-            language: pageLang,
-          }, "local");
-
-          // /dashboard is not language-prefixed: carry the language into it
-          // (explicit choice > account preference > this page's language).
-          const lang = explicitLanguageChoice() || userLanguage(data.user) || pageLang;
-          if (lang && String(i18n.language || "").slice(0, 2) !== lang) {
-            i18n.changeLanguage(lang);
-          }
-
-          navigate("/dashboard");
+        navigate(data.route || "/dashboard", { replace: true });
       } else {
-        setError(data.message || t("onboarding.saveError"));
+        setError(data?.message || t("onboarding.saveError"));
       }
     } catch (err) {
+      if (handleAuthError(err)) return;
       console.error("SAVE ONBOARDING ERROR:", err);
-      setError(t("onboarding.serverError"));
+      setError(err?.status === 400 ? t("onboarding.selectToContinue") : t("onboarding.serverError"));
     } finally {
       setLoading(false);
     }
@@ -186,17 +233,16 @@ export default function Onboarding() {
           <div>
             <h2>{t("onboarding.step1Question")}</h2>
 
-            <button onClick={() => setForm({ ...form, businessType: "real_estate" })}>
-              {t("onboarding.businessRealEstate")}
-            </button>
-
-            <button onClick={() => setForm({ ...form, businessType: "agency" })}>
-              {t("onboarding.businessAgency")}
-            </button>
-
-            <button onClick={() => setForm({ ...form, businessType: "solo" })}>
-              {t("onboarding.businessSolo")}
-            </button>
+            {workspaces.map((ws) => (
+              <button
+                key={ws.id}
+                aria-pressed={form.businessType === ws.id}
+                style={form.businessType === ws.id ? { outline: "2px solid #6366f1", outlineOffset: 2 } : undefined}
+                onClick={() => setForm({ ...form, businessType: ws.id })}
+              >
+                {labels[ws.id] || ws.name}
+              </button>
+            ))}
           </div>
         )}
 

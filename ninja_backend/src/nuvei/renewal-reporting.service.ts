@@ -17,8 +17,9 @@ import { DatabaseService } from '../database/database.service';
  *  - It sends each charge at most once. The charge row is stamped when the
  *    event is accepted, and the transaction id doubles as the deduplication
  *    key on Google's side.
- *  - It stays off until GA4_MEASUREMENT_ID and GA4_API_SECRET are set, so
- *    nothing is sent from an environment that was not configured on purpose.
+ *  - It stays off until GA4_SERVER_EVENTS_ENABLED=true and GA4_MEASUREMENT_ID
+ *    and GA4_API_SECRET are set, so nothing is sent before the account
+ *    connection has been configured and tested on purpose.
  *  - It does NOT report renewals to Google Ads. Uploading offline conversions
  *    needs an Ads developer token and an authorised account, and a renewal
  *    counted as an Ads conversion changes how the campaigns bid. That is a
@@ -43,7 +44,8 @@ export class RenewalReportingService {
   }
 
   enabled(): boolean {
-    return !!this.measurementId && !!this.apiSecret;
+    const on = String(this.config.get('GA4_SERVER_EVENTS_ENABLED') || '').trim().toLowerCase() === 'true';
+    return on && !!this.measurementId && !!this.apiSecret;
   }
 
   private async ensureColumn(): Promise<void> {

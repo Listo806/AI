@@ -19,9 +19,12 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
+// The "pure" entry loads Stripe only when this checkout calls loadStripe. The
+// default entry injects Stripe's script on import, which put ~290 KB of
+// third-party code on every public page.
 import {
   loadStripe,
-} from "@stripe/stripe-js";
+} from "@stripe/stripe-js/pure";
 import {
   useAuth,
 } from "../../context/AuthContext";
