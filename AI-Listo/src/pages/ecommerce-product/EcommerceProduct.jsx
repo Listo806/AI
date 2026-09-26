@@ -53,7 +53,7 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
-  return <Link to="/e-commerce" className="ec-logo"><img src={headlogoImg} className="cx-logo-img" /></Link>;
+  return <Link to="/e-commerce" className="ec-logo"><img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM" /></Link>;
 }
 
 export function EcommerceHeader(){

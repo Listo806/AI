@@ -66,7 +66,9 @@ async function snapshot(browser, origin, pagePath) {
     });
     await page.setRequestInterception(true);
     page.on("request", (r) => (BLOCKED.test(r.url()) ? r.abort() : r.continue()));
-    await page.goto(`${origin}${pagePath}`, { waitUntil: "networkidle0", timeout: 60000 });
+    // "load", not network idle: third-party requests that never settle must not
+    // stall the snapshot. Readiness is judged by the page itself below.
+    await page.goto(`${origin}${pagePath}`, { waitUntil: "load", timeout: 60000 });
     // The application has rendered this page when the loading splash is gone
     // and the page has a headline.
     await page.waitForFunction(
@@ -146,7 +148,12 @@ async function main() {
     for (const p of pages) {
       const url = urlPath(p);
       try {
-        const snap = await snapshot(browser, origin, url);
+        let snap;
+        try {
+          snap = await snapshot(browser, origin, url);
+        } catch (_first) {
+          snap = await snapshot(browser, origin, url); // one retry for a slow load
+        }
         if (snap.h1 !== 1) throw new Error(`expected one h1, found ${snap.h1}`);
         if (snap.text < 200) throw new Error(`only ${snap.text} characters of text`);
         inject(p.out, snap.html);
