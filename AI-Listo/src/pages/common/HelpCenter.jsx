@@ -109,7 +109,7 @@ export default function HelpCenter() {
       <section className={styles.supportHero}>
         <div className={styles.supportBadge}>
           <BookOpen size={16} />
-          CORTEXA OS HELP CENTER
+          CORTEXA HELP CENTER
         </div>
         
         <div className={styles.supportAiBox}>

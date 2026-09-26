@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-seo.mjs && node scripts/prerender.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
+    "puppeteer": "^24.43.1",
     "vite": "^5.0.0"
   }
 }

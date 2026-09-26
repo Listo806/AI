@@ -60,10 +60,7 @@ const COPY = {
     terms: "/es/terms",
     privacy: "/es/privacy-policy",
     title: "Cómo la IA está transformando todas las empresas",
-    subtitle: "Por qué el futuro pertenece a los Sistemas Operativos de Ingresos con IA",
-    metaTitle: "Cómo la IA está transformando todas las empresas | Cortexa AI CRM",
-    metaDescription:
-      "Descubre cómo los Sistemas Operativos de Ingresos con IA están transformando la interacción con clientes, las operaciones y el crecimiento empresarial en todas las industrias.",
+    subtitle: "Por qué el futuro pertenece a los CRM agénticos",
     pageEvent: "how_ai_is_transforming_every_business_es",
     byline: "3 de agosto de 2026 por",
     author: "Equipo Editorial de Cortexa",
@@ -79,7 +76,7 @@ const COPY = {
       resources: "Recursos",
       company: "Empresa",
       start: "Comenzar",
-      trial: "Comenzar prueba gratuita",
+      trial: "Comenzar",
     },
     contentsTitle: "[ Contenido ]",
     ariaContents: "Contenido del artículo",
@@ -91,10 +88,10 @@ const COPY = {
       ["old-way", "El costo de hacer negocios a la antigua"],
       ["missed-leads", "Cada lead perdido representa ingresos perdidos"],
       ["ai-rules", "La inteligencia artificial cambia las reglas"],
-      ["revenue-os", "Del CRM al Sistema Operativo de Ingresos con IA"],
+      ["revenue-os", "Del CRM al CRM agéntico"],
       ["every-industry", "Todas las industrias pueden beneficiarse de la IA"],
       ["competitive-advantage", "Las empresas que adopten IA crearán ventajas competitivas"],
-      ["introducing-cortexa", "Presentamos Cortexa AI CRM"],
+      ["introducing-cortexa", "Presentamos Cortexa Agentic CRM"],
       ["team-workspace", "Un equipo. Un espacio de trabajo. Un negocio conectado."],
       ["move-first", "El futuro pertenece a las empresas que actúan primero"],
       ["transform-business", "¿Listo para transformar tu negocio?"],
@@ -102,7 +99,7 @@ const COPY = {
     cta: {
       eyebrow: "¿Listo para crecer con IA?",
       heading: "Descubre cómo Cortexa ayuda a tu empresa a operar de forma más inteligente y responder más rápido.",
-      primary: "Comienza tu prueba gratuita",
+      primary: "Comenzar",
       secondary: "Ver planes",
       benefits: [
         ["Interacción instantánea", "Responde a leads y clientes las 24 horas."],
@@ -174,7 +171,7 @@ const COPY = {
         "Eso fue una innovación importante.",
         "Pero organizar información por sí solo ya no genera una ventaja competitiva.",
         "Las empresas modernas necesitan cada vez más sistemas que contribuyan activamente al crecimiento de los ingresos.",
-        "Un Sistema Operativo de Ingresos con IA va más allá de almacenar registros de clientes.",
+        "Un CRM agéntico va más allá de almacenar registros de clientes.",
         "Ayuda a las empresas a interactuar automáticamente con los clientes, gestionar la comunicación, optimizar las operaciones y apoyar a los equipos de ventas con automatización inteligente que funciona de manera continua.",
       ],
       revenueQuote:
@@ -209,7 +206,7 @@ const COPY = {
       ],
       competitiveQuote: "La ventaja surge de integrar la IA en todo el recorrido del cliente.",
       cortexaKicker: "Una plataforma conectada",
-      cortexaIntro: "Cortexa AI CRM fue creado alrededor de una idea sencilla:",
+      cortexaIntro: "Cortexa Agentic CRM fue creado alrededor de una idea sencilla:",
       cortexaQuote:
         "Las empresas deberían dedicar menos tiempo a gestionar software y más tiempo a aumentar sus ingresos.",
       cortexaBody: [
@@ -231,7 +228,7 @@ const COPY = {
         ["Los equipos de operaciones", "necesitan flujos de trabajo organizados que mantengan en movimiento los proyectos, las personas y los procesos empresariales."],
       ],
       teamHighlight:
-        "Cortexa integra Team Workspace directamente en tu Sistema Operativo de Ingresos con IA, conectando a tus personas, clientes, proyectos, flujos de trabajo y Agente de IA dentro de una plataforma inteligente.",
+        "Cortexa integra Team Workspace directamente en tu CRM agéntico, conectando a tus personas, clientes, proyectos, flujos de trabajo y Agente de IA dentro de una plataforma inteligente.",
       teamBody: [
         "En lugar de separar la colaboración de la gestión de clientes y las operaciones de ingresos, todas las áreas de tu empresa trabajan juntas desde un espacio conectado.",
         "Cortexa Team Workspace reúne tu Agente de IA, conversaciones con clientes, leads, pipelines, citas, notas, documentos, tareas, proyectos, flujos de trabajo, analítica y colaboración del equipo en una plataforma conectada.",
@@ -260,10 +257,10 @@ const COPY = {
       moveQuote: "Pertenecerá a las empresas que trabajan de forma más inteligente.",
       finalKicker: "Tu próximo paso",
       finalBody: [
-        "Ya sea que tu objetivo sea generar más leads, responder más rápido, automatizar tareas repetitivas o construir una organización más eficiente, un Sistema Operativo de Ingresos con IA puede ayudarte a posicionar tu empresa para un crecimiento sostenible.",
-        "Descubre cómo Cortexa AI CRM puede ayudar a tu empresa a operar de forma más inteligente, responder más rápido y crecer con IA.",
+        "Ya sea que tu objetivo sea generar más leads, responder más rápido, automatizar tareas repetitivas o construir una organización más eficiente, un CRM agéntico puede ayudarte a posicionar tu empresa para un crecimiento sostenible.",
+        "Descubre cómo Cortexa Agentic CRM puede ayudar a tu empresa a operar de forma más inteligente, responder más rápido y crecer con IA.",
       ],
-      finalStrong: "Comienza hoy tu prueba gratuita.",
+      finalStrong: "Comienza hoy.",
       finalText:
         "Activa conversaciones con IA, automatización e inteligencia de ingresos para tu empresa.",
     },
@@ -292,10 +289,7 @@ const COPY = {
     terms: "/pt/terms",
     privacy: "/pt/privacy-policy",
     title: "Como a IA está transformando todas as empresas",
-    subtitle: "Por que o futuro pertence aos Sistemas Operacionais de Receita com IA",
-    metaTitle: "Como a IA está transformando todas as empresas | Cortexa AI CRM",
-    metaDescription:
-      "Descubra como os Sistemas Operacionais de Receita com IA estão transformando o engajamento com clientes, as operações e o crescimento empresarial em todos os setores.",
+    subtitle: "Por que o futuro pertence aos CRMs agênticos",
     pageEvent: "how_ai_is_transforming_every_business_pt",
     byline: "3 de agosto de 2026 por",
     author: "Equipe Editorial da Cortexa",
@@ -311,7 +305,7 @@ const COPY = {
       resources: "Recursos",
       company: "Empresa",
       start: "Começar",
-      trial: "Começar teste grátis",
+      trial: "Começar",
     },
     contentsTitle: "[ Conteúdo ]",
     ariaContents: "Conteúdo do artigo",
@@ -323,10 +317,10 @@ const COPY = {
       ["old-way", "O custo de fazer negócios do jeito antigo"],
       ["missed-leads", "Cada lead perdido representa receita perdida"],
       ["ai-rules", "A inteligência artificial muda as regras"],
-      ["revenue-os", "Do CRM ao Sistema Operacional de Receita com IA"],
+      ["revenue-os", "Do CRM ao CRM agêntico"],
       ["every-industry", "Todos os setores podem se beneficiar da IA"],
       ["competitive-advantage", "Empresas que adotam IA constroem vantagens competitivas"],
-      ["introducing-cortexa", "Apresentando o Cortexa AI CRM"],
+      ["introducing-cortexa", "Apresentando o Cortexa Agentic CRM"],
       ["team-workspace", "Uma equipe. Um workspace. Um negócio conectado."],
       ["move-first", "O futuro pertence às empresas que agem primeiro"],
       ["transform-business", "Pronto para transformar sua empresa?"],
@@ -334,7 +328,7 @@ const COPY = {
     cta: {
       eyebrow: "Pronto para crescer com IA?",
       heading: "Veja como a Cortexa ajuda sua empresa a operar de forma mais inteligente e responder mais rápido.",
-      primary: "Comece seu teste grátis",
+      primary: "Começar",
       secondary: "Ver planos",
       benefits: [
         ["Engajamento instantâneo", "Responda a leads e clientes 24 horas por dia."],
@@ -406,7 +400,7 @@ const COPY = {
         "Essa foi uma inovação importante.",
         "Mas organizar informações por si só já não cria vantagem competitiva.",
         "As empresas modernas precisam cada vez mais de sistemas que contribuam ativamente para o crescimento da receita.",
-        "Um Sistema Operacional de Receita com IA vai além de armazenar registros de clientes.",
+        "Um CRM agêntico vai além de armazenar registros de clientes.",
         "Ele ajuda as empresas a interagir automaticamente com clientes, gerenciar a comunicação, otimizar operações e apoiar equipes de vendas com automação inteligente que funciona continuamente.",
       ],
       revenueQuote:
@@ -441,7 +435,7 @@ const COPY = {
       ],
       competitiveQuote: "A vantagem vem de integrar a IA em toda a jornada do cliente.",
       cortexaKicker: "Uma plataforma conectada",
-      cortexaIntro: "O Cortexa AI CRM foi criado em torno de uma ideia simples:",
+      cortexaIntro: "O Cortexa Agentic CRM foi criado em torno de uma ideia simples:",
       cortexaQuote:
         "As empresas deveriam gastar menos tempo gerenciando software e mais tempo aumentando a receita.",
       cortexaBody: [
@@ -463,7 +457,7 @@ const COPY = {
         ["As equipes de operações", "precisam de fluxos organizados que mantenham projetos, pessoas e processos empresariais avançando."],
       ],
       teamHighlight:
-        "A Cortexa integra o Team Workspace diretamente ao seu Sistema Operacional de Receita com IA, conectando pessoas, clientes, projetos, fluxos de trabalho e seu Agente de IA em uma plataforma inteligente.",
+        "A Cortexa integra o Team Workspace diretamente ao seu CRM agêntico, conectando pessoas, clientes, projetos, fluxos de trabalho e seu Agente de IA em uma plataforma inteligente.",
       teamBody: [
         "Em vez de separar a colaboração da gestão de clientes e das operações de receita, todas as áreas da empresa trabalham juntas em um workspace conectado.",
         "O Cortexa Team Workspace reúne seu Agente de IA, conversas com clientes, leads, pipelines, compromissos, notas, documentos, tarefas, projetos, fluxos de trabalho, analytics e colaboração da equipe em uma plataforma conectada.",
@@ -492,10 +486,10 @@ const COPY = {
       moveQuote: "Pertencerá às empresas que trabalham de forma mais inteligente.",
       finalKicker: "Seu próximo passo",
       finalBody: [
-        "Seja seu objetivo gerar mais leads, responder mais rápido, automatizar tarefas repetitivas ou construir uma organização mais eficiente, um Sistema Operacional de Receita com IA pode ajudar a posicionar sua empresa para um crescimento sustentável.",
-        "Veja como o Cortexa AI CRM pode ajudar sua empresa a operar de forma mais inteligente, responder mais rápido e crescer com IA.",
+        "Seja seu objetivo gerar mais leads, responder mais rápido, automatizar tarefas repetitivas ou construir uma organização mais eficiente, um CRM agêntico pode ajudar a posicionar sua empresa para um crescimento sustentável.",
+        "Veja como o Cortexa Agentic CRM pode ajudar sua empresa a operar de forma mais inteligente, responder mais rápido e crescer com IA.",
       ],
-      finalStrong: "Comece hoje seu teste grátis.",
+      finalStrong: "Comece hoje.",
       finalText:
         "Coloque conversas com IA, automação e inteligência de receita para trabalhar na sua empresa.",
     },
@@ -575,7 +569,7 @@ function Contents({ copy, activeId, onNavigate }) {
 function EditorialImage({ src, alt, caption, variant = "" }) {
   return (
     <figure className={`ed-ai-image ${variant}`}>
-      <img src={src} alt={alt} />
+      <img src={src} alt={alt} loading="lazy" decoding="async" />
       {caption ? <figcaption>{caption}</figcaption> : null}
     </figure>
   );
@@ -587,20 +581,10 @@ export default function EditorialBusinessAILocalized({ locale }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const sectionIds = useMemo(() => copy.sections.map(([id]) => id), [copy]);
 
+  // Title and meta description are set centrally by the head manager
+  // (src/seo/head.js from src/i18n/seo.js); do not override them here.
   useEffect(() => {
-    document.title = copy.metaTitle;
-    let meta = document.querySelector('meta[name="description"]');
-    const previousDescription = meta?.getAttribute("content") || "";
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.setAttribute("name", "description");
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute("content", copy.metaDescription);
     trackEvent("editorial_view", { page: copy.pageEvent });
-    return () => {
-      if (meta) meta.setAttribute("content", previousDescription);
-    };
   }, [copy]);
 
   useEffect(() => {
@@ -871,7 +855,7 @@ export default function EditorialBusinessAILocalized({ locale }) {
 
       <footer className="ed-footer">
         <div className="ed-footer-inner">
-          <img src={footlogo} alt="Cortexa" className="ed-footlogo" />
+          <img src={footlogo} alt="Cortexa Agentic CRM" loading="lazy" decoding="async" className="ed-footlogo" />
           <div className="ed-footer-links">
             <Link to={copy.pricing}>{copy.footer.pricing}</Link>
             <Link to={copy.features}>{copy.footer.features}</Link>

@@ -21,6 +21,42 @@ function browserLanguages() {
   }
 }
 
+// Where the homepage auto-redirect will send this visitor ("es" / "pt"), or
+// null when it stays on the English root. Pure: shared by the redirect below
+// and by the page_view / first-touch tracker in App.jsx, which must not record
+// the synthetic "/" hop (the visitor's real landing page is /es or /pt).
+function homeRedirectTarget() {
+  let explicitChoice = null;
+  try {
+    explicitChoice = localStorage.getItem(LANG_CHOICE_KEY);
+  } catch (_e) {
+    /* storage blocked — treat as no explicit choice */
+  }
+  // An explicit choice always wins over browser detection.
+  if (explicitChoice) {
+    return explicitChoice !== "en" && SUPPORTED_CODES.includes(explicitChoice)
+      ? explicitChoice
+      : null;
+  }
+  const primary = String(browserLanguages()[0] || "")
+    .slice(0, 2)
+    .toLowerCase();
+  if (primary === "en" || !SUPPORTED_CODES.includes(primary)) return null;
+  return primary;
+}
+
+// The detection runs once per page load (the first time "/" renders).
+let homeDetectionDone = false;
+
+// True while the app is on "/" and about to be redirected to /es or /pt by
+// LanguageAutoDetect (it has not run yet for this page load).
+export function pendingHomeRedirect(location) {
+  if (homeDetectionDone) return false;
+  if (!location || location.pathname !== "/") return false;
+  if (new URLSearchParams(location.search || "").has("langdebug")) return false;
+  return !!homeRedirectTarget();
+}
+
 // Browser-language homepage redirect.
 //
 // On the homepage ("/"), a Spanish or Portuguese browser is sent to /es or /pt;
@@ -45,35 +81,15 @@ export default function LanguageAutoDetect() {
     if (ranRef.current) return undefined;
     if (location.pathname !== "/") return undefined;
     ranRef.current = true;
+    homeDetectionDone = true;
 
-    let explicitChoice = null;
-    try {
-      explicitChoice = localStorage.getItem(LANG_CHOICE_KEY);
-    } catch (_e) {
-      /* storage blocked — treat as no explicit choice */
-    }
-
-    // An explicit choice always wins over browser detection.
-    if (explicitChoice) {
-      if (explicitChoice !== "en" && SUPPORTED_CODES.includes(explicitChoice)) {
-        navigate(
-          buildLocalizedPath("/", explicitChoice) +
-            location.search +
-            location.hash,
-          { replace: true },
-        );
-      }
-      return undefined;
-    }
-
-    // Otherwise follow the browser language.
-    const primary = String(browserLanguages()[0] || "")
-      .slice(0, 2)
-      .toLowerCase();
-    if (primary === "en" || !SUPPORTED_CODES.includes(primary)) return undefined;
+    // An explicit choice wins over browser detection; otherwise follow the
+    // browser language. English (and anything unsupported) stays on "/".
+    const target = homeRedirectTarget();
+    if (!target) return undefined;
 
     navigate(
-      buildLocalizedPath("/", primary) + location.search + location.hash,
+      buildLocalizedPath("/", target) + location.search + location.hash,
       { replace: true },
     );
     return undefined;

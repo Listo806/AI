@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Menu,
   X,
@@ -59,24 +59,51 @@ import {
   MessagesSquare
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { trackEvent } from "../../utils/track";
 import { HashLink } from "react-router-hash-link";
 import "./LandingMobile.css";
 
 import headlogoImg from "../../assets/cortexa/headlogotran.png";
-import landingDashImg from "../../assets/cortexa/mobile/m_dash1.png";
-import dashboardMockupImg from "../../assets/cortexa/mobile/im_auto.png";
+import landingDashImg from "../../assets/cortexa/mobile/cortexa-agentic-crm-dashboard-mobile.webp";
+import dashboardMockupImg from "../../assets/cortexa/mobile/cortexa-mobile-dashboard.webp";
 import featurechart from "../../assets/cortexa/mobile/featurechart.png";
 import powerfulM from "../../assets/cortexa/mobile/powerfulM.png";
-import workspaceImg from "../../assets/cortexa/mobile/workspaceM.png";
-import workspaceImgES from "../../assets/cortexa/mobile/workspaceESM.png";
-import workspaceImgPT from "../../assets/cortexa/mobile/workspacePTM.png";
+import workspaceImg from "../../assets/cortexa/mobile/cortexa-team-revenue-workspace-en.webp";
+import workspaceImgES from "../../assets/cortexa/mobile/cortexa-team-revenue-workspace-es.webp";
+import workspaceImgPT from "../../assets/cortexa/mobile/cortexa-team-revenue-workspace-pt.webp";
 import bgreportingImg from "../../assets/cortexa/mobile/bg_reporting.png";
-import webSolutionsPhoneImg from "../../assets/cortexa/mobile/cortexa-web-solutions-phone.png";
+import webSolutionsPhoneImg from "../../assets/cortexa/mobile/cortexa-web-solutions-phone.webp";
 import clinicOperationsManagerImg from "../../assets/cortexa/mobile/clinic-operations-manager.png";
 import salesDirectorImg from "../../assets/cortexa/mobile/sales-director.png";
 import businessOwnerImg from "../../assets/cortexa/mobile/business-owner.png";
-import connectedCustomerJourneyImg from "../../assets/cortexa/mobile/cortexa-connected-customer-journey.png";
+import connectedCustomerJourneyImg from "../../assets/cortexa/mobile/cortexa-connected-customer-journey.webp";
 import cortexaAiAgentIcon from "../../assets/cortexa/mobile/cortexa-ai-agent-icon.png";
+
+// Locale-aware links. /es, /pt and /es-ec visitors keep their language when they
+// follow a link to one of the public pages that exist under every locale prefix.
+// Anything else (web-solutions, e-commerce, dashboard, country/city pages) exists
+// only unprefixed and is returned unchanged. Query strings and hashes are kept.
+const LOCALE_PREFIXES = ["es-ec", "es", "pt"];
+const LOCALIZED_ROUTES = new Set([
+  "/", "/sign-in", "/sign-up", "/forgot-password", "/privacy-policy",
+  "/refund-policy", "/terms", "/cancellation", "/contact", "/help", "/about",
+  "/support", "/features", "/integrations", "/setup-guide", "/pricing",
+  "/editorial/the-end-of-legacy-crm", "/editorial/business", "/trial", "/checkout",
+]);
+function localePrefixFromPath(pathname) {
+  const first = String(pathname || "/").split("/").filter(Boolean)[0];
+  return first && LOCALE_PREFIXES.includes(first) ? `/${first}` : "";
+}
+function withLocalePrefix(prefix, path) {
+  if (!prefix) return path;
+  const m = String(path).match(/^([^?#]*)(.*)$/);
+  const base = m[1] || "/";
+  if (!LOCALIZED_ROUTES.has(base)) return path;
+  return `${prefix}${base === "/" ? "" : base}${m[2]}`;
+}
+
+// Intrinsic pixel sizes of the localized Team Revenue Workspace image.
+const WORKSPACE_SIZE = { en: [862, 1474], es: [858, 1480], pt: [856, 1578] };
 
 export default function LandingMobile() {
   const [lang, setLang] = useState(() => {
@@ -88,6 +115,16 @@ export default function LandingMobile() {
   const [activeFaq, setActiveFaq] = useState(null);
   const [activeMarket, setActiveMarket] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const { pathname } = useLocation();
+  const localePrefix = localePrefixFromPath(pathname);
+  const lp = (path) => withLocalePrefix(localePrefix, path);
+  const trackCta = (ctaId, ctaText) => () =>
+    trackEvent("primary_cta_click", {
+      cta_id: ctaId,
+      cta_text: ctaText,
+      page_path: pathname,
+      language: lang,
+    });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -111,12 +148,12 @@ export default function LandingMobile() {
   const t = {
       "en": {
           "heroTitle1": "Agentic CRM built to",
-          "heroTitle11": "automate and track",
+          "heroTitle11": "automate and scale",
           "heroTitle2": "your business",
           "heroTitle3": "workflow.",
           "heroDesc": "AI organizes. AI qualifies. You follow up. You close.",
-          "heroTopBanner1": "Agentic AI",
-          "heroTopBanner2": "revenue operating system for businesses tired of complicated, overpriced CRM software.",
+          "heroTopBanner1": "Agentic CRM",
+          "heroTopBanner2": "for businesses tired of complicated, overpriced CRM software.",
           "login": "Log in",
           "nav": [
               "Features",
@@ -132,7 +169,7 @@ export default function LandingMobile() {
           "aiosSectionTitle1": "Revenue ",
           "aiosSectionTitle2": "Workspace",
           "ctaButtonText": "Get Started!",
-          "heroNoCard": "14-Day Free Trial",
+          "heroNoCard": "14-Day Trial",
           "heroFreeForever": "Starting at $11",
           "faqSubtitle": "Straight answers about the AI agent, workspaces, setup, connections, your team, and getting started.",
           "faqTitle": "Frequently Asked Questions",
@@ -181,6 +218,7 @@ export default function LandingMobile() {
           "finalCtaTitle1": "Connect Your",
           "finalCtaTitle2": "Entire Workflow",
           "finalCtaDesc": "AI Leads. AI Qualifies. AI Closes. All in your ",
+          "finalCtaBrand": "Agentic CRM.",
           "marketsSubtitle": "EXPLORE OUR MARKETS",
           "marketsRegionLabel": "Our Regions",
           "viewAllCountriesText": "View All Countries",
@@ -374,12 +412,12 @@ export default function LandingMobile() {
       },
       "es": {
           "heroTitle1": "CRM agéntico creado para",
-          "heroTitle11": "automatizar y hacer seguimiento de ",
-          "heroTitle2": "tu negocio",
-          "heroTitle3": "flujo de trabajo.",
+          "heroTitle11": "automatizar y escalar",
+          "heroTitle2": "el flujo de trabajo",
+          "heroTitle3": "de tu negocio.",
           "heroDesc": "La IA organiza. La IA califica. Tú haces seguimiento. Tú cierras.",
-          "heroTopBanner1": "Agentic AI",
-          "heroTopBanner2": "sistema operativo de ingresos impulsado por IA para empresas cansadas de CRM complicados y demasiado costosos.",
+          "heroTopBanner1": "CRM agéntico",
+          "heroTopBanner2": "para negocios cansados de software CRM complicado y costoso.",
           "login": "Iniciar sesión",
           "nav": [
               "Funciones",
@@ -392,7 +430,7 @@ export default function LandingMobile() {
           "pricing": "Precios",
           "webSolutions": "Desarrollo Web y de Software e Integración de Sistemas",
           "ctaButtonText": "¡Comenzar!",
-          "heroNoCard": "Prueba gratuita de 14 días",
+          "heroNoCard": "Prueba de 14 días",
           "heroFreeForever": "Desde $11",
           "faqSubtitle": "Respuestas claras sobre el agente de IA, los espacios de trabajo, la configuración, las conexiones, tu equipo y cómo comenzar.",
           "faqTitle": "Preguntas Frecuentes",
@@ -438,9 +476,10 @@ export default function LandingMobile() {
                   "a": "La configuración guiada está disponible dentro de tu cuenta y puedes enviar una solicitud de asistencia cuando necesites ayuda. Nuestro equipo puede revisar tu configuración, identificar información faltante y responder a través de tu cuenta. La configuración personalizada, el trabajo del sitio web y la implementación técnica son servicios opcionales de pago y se cotizarán por separado antes de comenzar cualquier trabajo pagado."
               }
           ],
-          "finalCtaTitle1": "Conecta Tu",
-          "finalCtaTitle2": "Tu Flujo de Trabajo",
+          "finalCtaTitle1": "Conecta",
+          "finalCtaTitle2": "Todo Tu Flujo de Trabajo",
           "finalCtaDesc": "La IA capta leads. La IA califica. La IA cierra. Todo en tu ",
+          "finalCtaBrand": "CRM agéntico.",
           "marketsSubtitle": "EXPLORA NUESTROS MERCADOS",
           "marketsRegionLabel": "Nuestras Regiones",
           "viewAllCountriesText": "Ver Todos los Países",
@@ -635,12 +674,12 @@ export default function LandingMobile() {
       },
       "pt": {
           "heroTitle1": "CRM agêntico criado para",
-          "heroTitle11": "automatizar e acompanhar ",
-          "heroTitle2": "o seu negócio",
-          "heroTitle3": "fluxo de trabalho.",
+          "heroTitle11": "automatizar e escalar",
+          "heroTitle2": "o fluxo de trabalho",
+          "heroTitle3": "do seu negócio.",
           "heroDesc": "A IA organiza. A IA qualifica. Você faz o acompanhamento. Você fecha.",
-          "heroTopBanner1": "Agentic AI",
-          "heroTopBanner2": "sistema operacional de receita com IA para empresas cansadas de CRMs complicados e caros.",
+          "heroTopBanner1": "CRM agêntico",
+          "heroTopBanner2": "para empresas cansadas de software de CRM complicado e caro.",
           "login": "Entrar",
           "nav": [
               "Recursos",
@@ -656,7 +695,7 @@ export default function LandingMobile() {
           "aiosSectionTitle1": "de Receita",
           "aiosSectionTitle2": "para Equipes",
           "ctaButtonText": "Começar!",
-          "heroNoCard": "Teste grátis de 14 dias",
+          "heroNoCard": "Teste de 14 dias",
           "heroFreeForever": "A partir de US$ 11",
           "faqSubtitle": "Respostas diretas sobre o agente de IA, espaços de trabalho, configuração, conexões, sua equipe e como começar.",
           "faqTitle": "Perguntas Frequentes",
@@ -702,9 +741,10 @@ export default function LandingMobile() {
                   "a": "A configuração guiada está disponível dentro da sua conta, e você pode enviar uma solicitação de assistência sempre que precisar de ajuda. Nossa equipe pode revisar sua configuração, identificar informações ausentes e responder pela sua conta. Configuração personalizada, trabalho no site e implementação técnica são serviços pagos opcionais e serão orçados separadamente antes do início de qualquer trabalho pago."
               }
           ],
-          "finalCtaTitle1": "Conecte Seu",
-          "finalCtaTitle2": "Seu Fluxo de Trabalho",
+          "finalCtaTitle1": "Conecte",
+          "finalCtaTitle2": "Todo o Seu Fluxo de Trabalho",
           "finalCtaDesc": "A IA gera leads. A IA qualifica. A IA fecha. Tudo no seu ",
+          "finalCtaBrand": "CRM agêntico.",
           "marketsSubtitle": "EXPLORE NOSSOS MERCADOS",
           "marketsRegionLabel": "Nossas Regiões",
           "viewAllCountriesText": "Ver Todos os Países",
@@ -998,8 +1038,14 @@ export default function LandingMobile() {
       {/* HEADER */}
 
       <header className="m-header">
-        <a href="/">
-          <img src={headlogoImg} alt="CORTEXA" className="m-logo" />
+        <a href={lp("/")}>
+          <img
+            src={headlogoImg}
+            alt="Cortexa Agentic CRM"
+            className="m-logo"
+            width="293"
+            height="70"
+          />
         </a>
         <div className="m-header-right">
           <div className="m-lang-wrapper">
@@ -1074,7 +1120,7 @@ export default function LandingMobile() {
               "features",
               "ai-assistant",
               "automation",
-              "pipeline",
+              "m-workspace", // Pipeline: the Team Revenue Workspace section
               "analytics",
               "testimonials",
             ];
@@ -1082,21 +1128,21 @@ export default function LandingMobile() {
             if (ids[i] === "testimonials") return null;
 
             return (
-              <HashLink className="nav-menu" key={i} smooth to={`/#${ids[i]}`}>
+              <HashLink className="nav-menu" key={i} smooth to={lp(`/#${ids[i]}`)}>
                 {n}
               </HashLink>
             );
           })}
 
-          <a href="/pricing">{tr.pricing}</a>
-          <a href="/editorial/the-end-of-legacy-crm">Cost Calculator</a>
-          <a href="/web-solutions">{tr.webSolutions}</a>
+          <a href={lp("/pricing")} onClick={trackCta("drawer_pricing", tr.pricing)}>{tr.pricing}</a>
+          <a href={lp("/editorial/the-end-of-legacy-crm")}>Cost Calculator</a>
+          <a href="/web-solutions" onClick={trackCta("drawer_web_solutions", tr.webSolutions)}>{tr.webSolutions}</a>
           {isAuthenticated() ? (
             <Link to="/dashboard/home" className="m-login-btn">
               <LogIn /> Dashboard
             </Link>
           ) : (
-            <Link to="/sign-in" className="m-login-btn">
+            <Link to={lp("/sign-in")} className="m-login-btn">
               <LogIn /> {tr.login}
             </Link>
           )}
@@ -1135,8 +1181,9 @@ export default function LandingMobile() {
         <p className="m-description">{tr.heroDesc}</p>
         <div className="m-hero-actions">
           <a
-            href="/trial?flow=free-access&plan=free"
+            href={lp("/trial?flow=free-access&plan=free")}
             className="m-hero-cta m-hero-cta-trial m-hero-free-access-main"
+            onClick={trackCta("hero_get_started", tr.ctaButtonText)}
           >
             {tr.ctaButtonText}
           </a>
@@ -1157,12 +1204,18 @@ export default function LandingMobile() {
 
         {/* dashboard image */}
         <div className="m-dashboard">
-          <img src={landingDashImg} alt="" />
+          <img
+            src={landingDashImg}
+            alt="Cortexa Agentic CRM dashboard with AI command center, lead, pipeline and revenue metrics"
+            width="733"
+            height="519"
+            fetchpriority="high"
+          />
         </div>
       </section>
 
       {/* SPECIALIZED WORKSPACES */}
-      <section className="m-specialized-workspaces">
+      <section id="features" className="m-specialized-workspaces">
         <div className="m-specialized-workspaces-inner">
           <div className="m-specialized-eyebrow">
             <span className="m-specialized-line" />
@@ -1391,12 +1444,12 @@ export default function LandingMobile() {
             <h3>{tr.guidedSetup.helpTitle}</h3>
             <p>{tr.guidedSetup.helpDescription}</p>
 
-            <a className="m-guided-setup-request" href="/contact">
+            <a className="m-guided-setup-request" href={lp("/contact")}>
               <span>{tr.guidedSetup.request}</span>
               <ArrowRight size={22} strokeWidth={2.2} aria-hidden="true" />
             </a>
 
-            <a className="m-guided-setup-guide" href="/setup-guide">
+            <a className="m-guided-setup-guide" href={lp("/setup-guide")}>
               {tr.guidedSetup.guide}
             </a>
 
@@ -1447,13 +1500,21 @@ export default function LandingMobile() {
 
             <p className="m-workspace-connected-paragraph">
               {tr.workspaceClosing.paragraph3a}{" "}
-              <a href="/web-solutions" className="m-workspace-web-link">
+              <a
+                href="/web-solutions"
+                className="m-workspace-web-link"
+                onClick={trackCta("workspace_closing_web_solutions_link", tr.workspaceClosing.webSolutions)}
+              >
                 {tr.workspaceClosing.webSolutions}
               </a>{" "}
               {tr.workspaceClosing.paragraph3b}
             </p>
 
-            <a href="/web-solutions" className="m-workspace-web-cta">
+            <a
+              href="/web-solutions"
+              className="m-workspace-web-cta"
+              onClick={trackCta("workspace_closing_web_solutions", tr.workspaceClosing.cta)}
+            >
               <span>{tr.workspaceClosing.cta}</span>
               <ArrowRight size={22} strokeWidth={2.2} aria-hidden="true" />
             </a>
@@ -1565,7 +1626,14 @@ export default function LandingMobile() {
           <p className="m-web-connected-description">{tr.webSolutionsConnected.description}</p>
 
           <div className="m-web-connected-phone">
-            <img src={webSolutionsPhoneImg} alt="Cortexa Web Solutions mobile website with AI Agent" />
+            <img
+              src={webSolutionsPhoneImg}
+              alt="Cortexa Web Solutions mobile website with AI Agent"
+              width="490"
+              height="960"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
 
           <p className="m-web-connected-entry-eyebrow">{tr.webSolutionsConnected.entryEyebrow}</p>
@@ -1587,7 +1655,11 @@ export default function LandingMobile() {
             <p>{tr.webSolutionsConnected.existingDescription}</p>
           </div>
 
-          <a href="/web-solutions" className="m-web-connected-cta">
+          <a
+            href="/web-solutions"
+            className="m-web-connected-cta"
+            onClick={trackCta("web_connected_web_solutions", tr.webSolutionsConnected.cta)}
+          >
             <span>{tr.webSolutionsConnected.cta}</span>
             <ArrowRight size={25} strokeWidth={1.8} aria-hidden="true" />
           </a>
@@ -1643,6 +1715,10 @@ export default function LandingMobile() {
                     src={avatar}
                     alt=""
                     aria-hidden="true"
+                    width={[234, 220, 220][index]}
+                    height={[234, 220, 220][index]}
+                    loading="lazy"
+                    decoding="async"
                   />
 
                   <h3 className="m-customer-testimonial-role">{item.role}</h3>
@@ -1659,12 +1735,16 @@ export default function LandingMobile() {
               {tr.customerExperiences.ctaTitle}
             </h2>
 
-            <Link to="/sign-up" className="m-customer-experiences-cta">
+            <Link
+              to={lp("/sign-up")}
+              className="m-customer-experiences-cta"
+              onClick={trackCta("customer_experiences_get_started", tr.customerExperiences.cta)}
+            >
               <span>{tr.customerExperiences.cta}</span>
               <ArrowRight size={28} strokeWidth={1.8} aria-hidden="true" />
             </Link>
 
-            <a href="#m-specialized-workspaces" className="m-customer-experiences-explore">
+            <a href="#features" className="m-customer-experiences-explore">
               {tr.customerExperiences.explore}
             </a>
 
@@ -1673,7 +1753,7 @@ export default function LandingMobile() {
       </section>
 
       {/* ONE CONNECTED CUSTOMER JOURNEY */}
-      <section className="m-connected-journey">
+      <section id="automation" className="m-connected-journey">
         <div className="m-connected-journey-inner">
           <p className="m-connected-journey-eyebrow">
             {tr.connectedJourney.eyebrow}
@@ -1690,8 +1770,11 @@ export default function LandingMobile() {
           <div className="m-connected-journey-diagram">
             <img
               src={connectedCustomerJourneyImg}
-              alt=""
-              aria-hidden="true"
+              alt="Cortexa connected customer journey: website, advertising, phone and WhatsApp leads flow through the AI agent into the CRM, the right workspace and pipeline"
+              width="655"
+              height="2322"
+              loading="lazy"
+              decoding="async"
             />
           </div>
 
@@ -1699,7 +1782,7 @@ export default function LandingMobile() {
             {tr.connectedJourney.closing}
           </h2>
 
-          <Link to="/#platform" className="m-connected-journey-cta">
+          <Link to={lp("/features")} className="m-connected-journey-cta">
             <span>{tr.connectedJourney.cta}</span>
             <ArrowRight size={28} strokeWidth={1.8} aria-hidden="true" />
           </Link>
@@ -1715,13 +1798,20 @@ export default function LandingMobile() {
             <br />
             {tr.aiosSectionTitle2}
           </div>
-          <img src={workspace} alt="workspace" />
+          <img
+            src={workspace}
+            alt="Cortexa Team Revenue Workspace connecting tasks, leads, appointments, messages and notes"
+            width={(WORKSPACE_SIZE[lang] || WORKSPACE_SIZE.en)[0]}
+            height={(WORKSPACE_SIZE[lang] || WORKSPACE_SIZE.en)[1]}
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </section>
       
 
       {/* APPOINTMENT AUTOMATION */}
-      <section className="m-appointment-automation">
+      <section id="ai-assistant" className="m-appointment-automation">
         <div className="m-appointment-automation-inner">
           <p className="m-appointment-automation-eyebrow">{tr.appointmentAutomation.eyebrow}</p>
           <h2 className="m-appointment-automation-title">{tr.appointmentAutomation.title}</h2>
@@ -1739,6 +1829,10 @@ export default function LandingMobile() {
                         alt=""
                         aria-hidden="true"
                         className="m-appointment-agent-icon"
+                        width="84"
+                        height="80"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <UserCheck size={25} strokeWidth={2.2} />
@@ -1791,7 +1885,14 @@ export default function LandingMobile() {
           </div>
 
           <h2 className="cx-mp-heading">{tr.powertitle}</h2>
-          <img src={powerfulM} alt="powerful" />
+          <img
+            src={powerfulM}
+            alt="Apps that connect with Cortexa, including WhatsApp, Gmail, Slack, HubSpot, Salesforce and Zapier"
+            width="448"
+            height="440"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </section>
       {/* TESTIMONIALS SECTION */}
@@ -1861,11 +1962,15 @@ export default function LandingMobile() {
             {tr.finalCtaTitle2}
           </h2>
           <p className="m-bottom-desc">
-            {tr.finalCtaDesc} <span className="text-blue">Revenue OS.</span>
+            {tr.finalCtaDesc} <span className="text-blue">{tr.finalCtaBrand}</span>
           </p>
 
           <div className="m-bottom-action-wrapper">
-            <a href="/trial?flow=free-access&plan=free" className="m-bottom-primary-btn">
+            <a
+              href={lp("/trial?flow=free-access&plan=free")}
+              className="m-bottom-primary-btn"
+              onClick={trackCta("final_get_started", tr.ctaButtonText)}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -1901,15 +2006,19 @@ export default function LandingMobile() {
           <div className="m-bottom-preview-container">
             <img
               src={dashboardMockupImg}
-              alt="CORTEXA Mobile Dashboard"
+              alt="Cortexa Agentic CRM mobile dashboard with AI command center, top leads and revenue trend"
               className="m-bottom-preview-img"
+              width="793"
+              height="1365"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         </div>
       </section>
 
       {/* EXPLORE OUR MARKETS SECTION */}
-      <section className="m-markets">
+      <section id="markets" className="m-markets">
         <div className="m-markets-header">
           <p className="m-markets-subtitle">{tr.marketsSubtitle}</p>
         </div>
@@ -1935,7 +2044,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/br.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/br.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Brazil</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -1972,7 +2081,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/mx.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/mx.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Mexico</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2009,7 +2118,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/ar.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/ar.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Argentina</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2046,7 +2155,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/cl.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/cl.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Chile</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2083,7 +2192,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/co.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/co.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Colombia</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2120,7 +2229,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/pe.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/pe.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Peru</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2153,7 +2262,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/ec.png`} alt="flag" />
+                  <img src={`https://flagcdn.com/w40/ec.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Ecuador</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2192,7 +2301,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/gb.png`} alt="United Kingdom flag" />
+                  <img src={`https://flagcdn.com/w40/gb.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">United Kingdom</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2229,7 +2338,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/es.png`} alt="Spain flag" />
+                  <img src={`https://flagcdn.com/w40/es.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Spain</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2262,7 +2371,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/pt.png`} alt="Portugal flag" />
+                  <img src={`https://flagcdn.com/w40/pt.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Portugal</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2293,7 +2402,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/us.png`} alt="United States flag" />
+                  <img src={`https://flagcdn.com/w40/us.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">United States</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2330,7 +2439,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/ca.png`} alt="Canada flag" />
+                  <img src={`https://flagcdn.com/w40/ca.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Canada</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2363,7 +2472,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/au.png`} alt="Australia flag" />
+                  <img src={`https://flagcdn.com/w40/au.png`} alt="" loading="lazy" decoding="async" />
                   <span className="m-market-name">Australia</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2387,7 +2496,7 @@ export default function LandingMobile() {
           </div>
 
           <div className="m-view-all-countries">
-            <a href="/markets">
+            <a href="#markets">
               <Globe />
               <span>{tr.viewAllCountriesText}</span>
               <svg
@@ -2411,7 +2520,15 @@ export default function LandingMobile() {
       <footer className="m-footer">
         <div className="m-footer-brand">
           <div className="m-footer-logo">
-            <img src={headlogoImg} alt="CORTEXA" className="m-logo" />
+            <img
+              src={headlogoImg}
+              alt="Cortexa Agentic CRM"
+              className="m-logo"
+              width="293"
+              height="70"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <p className="m-footer-description">{tr.footerDesc}</p>
         </div>
@@ -2472,71 +2589,71 @@ export default function LandingMobile() {
         <div className="m-footer-links-grid">
           <div className="m-footer-column">
             <h4>{tr.colProduct}</h4>
-            <a href="/features">{tr.fFeatures}</a>
-            <HashLink smooth to="/features#ai-assistant">
+            <a href={lp("/features")}>{tr.fFeatures}</a>
+            <HashLink smooth to={lp("/features#ai-assistant")}>
               {tr.fAiAssistant}
             </HashLink>
-            <HashLink smooth to="/features#automations">
+            <HashLink smooth to={lp("/features#automations")}>
               {tr.fAutomations}
             </HashLink>
-            <a href="/integrations">{tr.fIntegrations}</a>
-            <HashLink smooth to="/features#analytics">
+            <a href={lp("/integrations")}>{tr.fIntegrations}</a>
+            <HashLink smooth to={lp("/features#analytics")}>
               {tr.fAnalytics}
             </HashLink>
-            <a href="/pricing">{tr.fPricing}</a>
-            <a href="/editorial/the-end-of-legacy-crm">Cost Calculator</a>
-            <a href="/web-solutions">{tr.webSolutions}</a>
+            <a href={lp("/pricing")} onClick={trackCta("footer_pricing", tr.fPricing)}>{tr.fPricing}</a>
+            <a href={lp("/editorial/the-end-of-legacy-crm")}>Cost Calculator</a>
+            <a href="/web-solutions" onClick={trackCta("footer_web_solutions", tr.webSolutions)}>{tr.webSolutions}</a>
           </div>
 
           <div className="m-footer-column">
             <h4>{tr.colGetStarted}</h4>
-            <a href="/trial?flow=free-access&plan=free">{tr.fStart}</a>
-            <a href="/sign-in">{tr.fLogin}</a>
-            <a href="/setup-guide">{tr.fSetup}</a>
+            <a href={lp("/trial?flow=free-access&plan=free")} onClick={trackCta("footer_get_started", tr.fStart)}>{tr.fStart}</a>
+            <a href={lp("/sign-in")}>{tr.fLogin}</a>
+            <a href={lp("/setup-guide")}>{tr.fSetup}</a>
           </div>
 
           <div className="m-footer-column">
             <h4>{tr.colConnect}</h4>
-            <HashLink smooth to="/integrations#connect-apps">
+            <HashLink smooth to={lp("/integrations#connect-apps")}>
               {tr.fConnectApps}
             </HashLink>
-            <HashLink smooth to="/integrations#import-crm">
+            <HashLink smooth to={lp("/integrations#import-crm")}>
               {tr.fImportCrm}
             </HashLink>
-            <HashLink smooth to="/integrations#import-csv">
+            <HashLink smooth to={lp("/integrations#import-csv")}>
               {tr.fImportCsv}
             </HashLink>
-            <HashLink smooth to="/integrations#zapier-automations">
+            <HashLink smooth to={lp("/integrations#zapier-automations")}>
               {tr.fZapier}
             </HashLink>
-            <HashLink smooth to="/integrations#api-webhooks">
+            <HashLink smooth to={lp("/integrations#api-webhooks")}>
               {tr.fApiWebhooks}
             </HashLink>
           </div>
 
           <div className="m-footer-column">
             <h4>{tr.colSupport}</h4>
-            <a href="/support">{tr.fSupport247}</a>
-            <a href="/help">{tr.fHelpCenter}</a>
-            <a href="/contact">{tr.fContact}</a>
-            <a href="/about">{tr.fAbout}</a>
+            <a href={lp("/support")}>{tr.fSupport247}</a>
+            <a href={lp("/help")}>{tr.fHelpCenter}</a>
+            <a href={lp("/contact")}>{tr.fContact}</a>
+            <a href={lp("/about")}>{tr.fAbout}</a>
           </div>
 
           <div className="m-footer-column full-width-mobile">
             <h4>{tr.colLegal}</h4>
-            <a href="/terms">{tr.fTerms}</a>
-            <a href="/privacy-policy">{tr.fPrivacy}</a>
-            <a href="/refund-policy">{tr.fRefund}</a>
-            <a href="/cancellation">{tr.fCancel}</a>
+            <a href={lp("/terms")}>{tr.fTerms}</a>
+            <a href={lp("/privacy-policy")}>{tr.fPrivacy}</a>
+            <a href={lp("/refund-policy")}>{tr.fRefund}</a>
+            <a href={lp("/cancellation")}>{tr.fCancel}</a>
           </div>
         </div>
 
         <div className="m-footer-bottom">
           <p className="m-footer-copy-text">{tr.copyright}</p>
           <div className="m-footer-bottom-links">
-            <a href="/privacy-policy">{tr.fPrivacy}</a>
+            <a href={lp("/privacy-policy")}>{tr.fPrivacy}</a>
             <span className="m-divider">|</span>
-            <a href="/terms">{tr.termsOfService}</a>
+            <a href={lp("/terms")}>{tr.termsOfService}</a>
           </div>
         </div>
       </footer>

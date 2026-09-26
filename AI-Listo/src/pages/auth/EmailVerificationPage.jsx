@@ -3,6 +3,7 @@ import { Check, Mail, ShieldCheck } from "lucide-react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
+import { trackEventOnce } from "../../utils/track";
 import "./EmailVerificationPage.css";
 
 const COPY = {
@@ -60,6 +61,11 @@ export default function EmailVerificationPage() {
       if (token) {
         const r=await apiClient.request('/email-verification/verify',{method:'POST',body:JSON.stringify({token})});
         if(dead)return; setInfo(r); setState(r?.verified || r?.alreadyVerified ? 'verified' : 'invalid');
+        // email_verified: once, only for the request that actually verified the
+        // address (a re-run / reload of the same link answers alreadyVerified).
+        if (r?.verified && !r?.alreadyVerified) {
+          trackEventOnce(`email_verified:${String(token).slice(0, 24)}`, 'email_verified', { language: lang }, 'local');
+        }
         try { await refreshUser(); } catch(e){}
       } else if (user) {
         const r=await apiClient.request('/email-verification/status'); if(dead)return; setInfo(r); setEmail(r?.email || '');

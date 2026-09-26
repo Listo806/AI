@@ -117,7 +117,7 @@ export default function SetupGuide() {
             Follow these steps and your CORTEXA workspace will be ready to
             manage leads,
             <br />
-            automate follow-ups, and organize your real estate business.
+            automate follow-ups, and organize your business.
           </p>
         </section>
 

@@ -1,45 +1,14 @@
 import { useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import i18n from "../i18n/config";
-import {
-  LOCALES,
-  localeByCode,
-  stripLocaleFromPath,
-  buildLocalizedPath,
-} from "../i18n/locales";
-import { resolveSeo } from "../i18n/seo";
+import { localeByCode } from "../i18n/locales";
 
-// Create or update a <head> <link> we manage, tagged so we can clean it up.
-function setManagedLink(id, attrs) {
-  let el = document.head.querySelector(`link[data-locale-link="${id}"]`);
-  if (!el) {
-    el = document.createElement("link");
-    el.setAttribute("data-locale-link", id);
-    document.head.appendChild(el);
-  }
-  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
-  return el;
-}
-
-// Create or update a <meta> tag by name or property (og:*). Managed so it can be
-// updated on every navigation without stacking duplicates.
-function setMetaTag(selector, attr, value, content) {
-  let el = document.head.querySelector(selector);
-  if (!el) {
-    el = document.createElement("meta");
-    el.setAttribute(attr, value);
-    document.head.appendChild(el);
-  }
-  el.setAttribute("content", content);
-  return el;
-}
-
-// Layout for every public page. The URL decides the language (no cookie
-// reliance): this sets the language storage the pages read, updates i18next and
-// the <html lang> attribute, and injects canonical + hreflang tags per page.
+// Layout for every public page. The URL decides the language, not a cookie:
+// this sets the language storage the pages read, updates i18next and the
+// <html lang> attribute. The head tags are handled once for every route in
+// src/seo/head.js, so there is a single place where they are decided.
 export default function LocaleLayout({ code }) {
   const locale = localeByCode(code);
-  const location = useLocation();
 
   // Public pages seed their language from localStorage at mount, so this must
   // run synchronously during render (before the child page mounts), not in an
@@ -57,74 +26,6 @@ export default function LocaleLayout({ code }) {
     }
     document.documentElement.lang = locale.htmlLang;
   }, [code, locale.htmlLang]);
-
-  // Canonical + hreflang for the current page, rebuilt on every navigation.
-  useEffect(() => {
-  const basePath = stripLocaleFromPath(location.pathname);
-  const seo = resolveSeo(basePath, code);
-
-  document.title = seo.title;
-
-  setMetaTag(
-    'meta[name="description"]',
-    "name",
-    "description",
-    seo.description,
-  );
-
-  setMetaTag(
-    'meta[property="og:title"]',
-    "property",
-    "og:title",
-    seo.title,
-  );
-
-  setMetaTag(
-    'meta[property="og:description"]',
-    "property",
-    "og:description",
-    seo.description,
-  );
-
-  setMetaTag(
-    'meta[name="twitter:title"]',
-    "name",
-    "twitter:title",
-    seo.title,
-  );
-
-  setMetaTag(
-    'meta[name="twitter:description"]',
-    "name",
-    "twitter:description",
-    seo.description,
-  );
-
-  setMetaTag(
-    'meta[property="og:locale"]',
-    "property",
-    "og:locale",
-    locale.htmlLang,
-  );
-}, [location.pathname, code, locale.htmlLang]);
-
-  // Localized document title + meta description (+ Open Graph) per page. Uses the
-  // isolated SEO map, always resolving to a non-empty title so pages never show a
-  // blank or raw value.
-  useEffect(() => {
-    const basePath = stripLocaleFromPath(location.pathname);
-    const seo = resolveSeo(basePath, code);
-    document.title = seo.title;
-    setMetaTag('meta[name="description"]', "name", "description", seo.description);
-    setMetaTag('meta[property="og:title"]', "property", "og:title", seo.title);
-    setMetaTag(
-      'meta[property="og:description"]',
-      "property",
-      "og:description",
-      seo.description,
-    );
-    setMetaTag('meta[property="og:locale"]', "property", "og:locale", locale.htmlLang);
-  }, [location.pathname, code, locale.htmlLang]);
 
   return <Outlet />;
 }

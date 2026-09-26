@@ -126,7 +126,7 @@ function CtaCard({ where }) {
           trackEvent("editorial_cta_click", { where, cta: "trial" })
         }
       >
-        Start your free trial
+        Get started
       </Link>
 
       <Link
@@ -232,7 +232,7 @@ export default function EditorialFunnel() {
               })
             }
           >
-            Start free trial
+            Get started
           </Link>
 
           <button
@@ -264,7 +264,7 @@ export default function EditorialFunnel() {
               Pricing
             </a>
             <Link to="/trial" onClick={closeMobileNav}>
-              Start free trial
+              Get started
             </Link>
           </div>
         )}
@@ -306,8 +306,8 @@ export default function EditorialFunnel() {
                 Why Businesses Are <br /> Re-Evaluating Salesforce,
                 <br /> HubSpot, and the Rise
                 <br />
-                of Agentic AI Revenue
-                <br /> Operating Systems
+                of Agentic
+                <br /> CRM Platforms
               </p>
             </div>
           </div>
@@ -369,7 +369,7 @@ export default function EditorialFunnel() {
                 <strong>It’s focused on helping teams generate revenue.</strong>
               </p>
               <p>
-                That’s where Agentic AI Revenue Operating Systems enter the
+                That’s where Agentic CRMs enter the
                 conversation.
               </p>
               <p>
@@ -384,7 +384,7 @@ export default function EditorialFunnel() {
                 The shift is from managing records to operating revenue.
               </blockquote>
 
-              <img src={whyImg} alt="CORTEXA" className="background" />
+              <img src={whyImg} alt="Cortexa Agentic CRM revenue intelligence dashboard" loading="lazy" decoding="async" className="background" />
               <figcaption>Cortexa Revenue Intelligence dashboard</figcaption>
             </section>
 
@@ -402,7 +402,7 @@ export default function EditorialFunnel() {
                 opportunities, and documenting what happened yesterday.
               </p>
               <p>
-                Modern AI-native Revenue Operating Systems are designed to help
+                Modern Agentic CRMs are designed to help
                 businesses decide what should happen next.
               </p>
               <p>Instead of simply storing leads, businesses are asking:</p>
@@ -423,7 +423,7 @@ export default function EditorialFunnel() {
                 operations.
               </p>
 
-              <img src={why1Img} alt="CORTEXA" className="background" />
+              <img src={why1Img} alt="Cortexa AI agent qualifying a lead and booking an appointment automatically" loading="lazy" decoding="async" className="background" />
               <figcaption>
                 AI Agent qualification and automated appointment booking
               </figcaption>
@@ -492,7 +492,7 @@ export default function EditorialFunnel() {
                 looking for a better operating model.
               </blockquote>
 
-              <img src={why2Img} alt="CORTEXA" className="background" />
+              <img src={why2Img} alt="Cortexa AI agent answering a customer on WhatsApp" loading="lazy" decoding="async" className="background" />
               <figcaption>
                 AI WhatsApp and automated customer conversations
               </figcaption>
@@ -509,14 +509,13 @@ export default function EditorialFunnel() {
 
               <aside
                 className="ed-editorial-callout"
-                aria-label="One-time setup fee"
+                aria-label="One-time activation"
               >
                 <span className="ed-editorial-callout-label">
-                  One-time setup fee
+                  One-time activation
                 </span>
                 <p>
-                  Cortexa begins with a simple{" "}
-                  , giving businesses a
+                  Cortexa begins with a simple one-time activation, giving businesses a
                   transparent starting point without turning onboarding into a
                   large implementation project.
                 </p>
@@ -524,8 +523,8 @@ export default function EditorialFunnel() {
 
               <p>
                 A simple, transparent starting point designed to reduce friction
-                and help businesses begin using an AI-native Revenue Operating
-                System without committing to a large upfront implementation
+                and help businesses begin using an Agentic CRM
+                without committing to a large upfront implementation
                 project.
               </p>
               <p>Transparent pricing is only part of the equation.</p>
@@ -556,7 +555,7 @@ export default function EditorialFunnel() {
                 starts producing value.
               </p>
 
-              <img src={why3Img} alt="CORTEXA" className="background" />
+              <img src={why3Img} alt="Cortexa onboarding screen with WhatsApp QR code connection" loading="lazy" decoding="async" className="background" />
               <figcaption>
                 Fast onboarding and WhatsApp QR connection
               </figcaption>
@@ -685,7 +684,7 @@ export default function EditorialFunnel() {
             <section className="ed-section" id="forward-momentum">
               <h2>From Follow-Up to Forward Momentum</h2>
               <p>
-                The value of an AI-native Revenue Operating System is not simply
+                The value of an Agentic CRM is not simply
                 that it stores customer information.
               </p>
               <p>It helps keep opportunities moving.</p>
@@ -705,7 +704,7 @@ export default function EditorialFunnel() {
                 require human attention.
               </p>
 
-              <img src={why4Img} alt="CORTEXA" className="background" />
+              <img src={why4Img} alt="Cortexa AI agent conversation, WhatsApp automation, appointment calendar, and pipeline routing" loading="lazy" decoding="async" className="background" />
             </section>
 
             <section className="ed-section" id="team-workspace">
@@ -726,7 +725,7 @@ export default function EditorialFunnel() {
                 visibility across the work that supports revenue.
               </p>
 
-              <img src={why5Img} alt="CORTEXA" className="background" />
+              <img src={why5Img} alt="Cortexa Team Revenue Workspace dashboard with pipeline and team performance" loading="lazy" decoding="async" className="background" />
               <figcaption>Team Revenue Workspace</figcaption>
             </section>
 
@@ -746,7 +745,7 @@ export default function EditorialFunnel() {
                 performance, and keep revenue moving.
               </p>
 
-              <img src={why6Img} alt="CORTEXA" className="background" />
+              <img src={why6Img} alt="Cortexa reporting dashboard with revenue, pipeline, and lead sources" loading="lazy" decoding="async" className="background" />
               <figcaption>Reporting Turns to Revenue</figcaption>
             </section>
 
@@ -755,13 +754,13 @@ export default function EditorialFunnel() {
               <p>
                 Whether you run a real estate company, e-commerce business,
                 agency, consulting firm, insurance agency, financial
-                organization, or another growing business, Cortexa’s Agentic AI
-                Revenue Operating System helps teams organize operations, manage
+                organization, or another growing business, Cortexa’s Agentic CRM
+                helps teams organize operations, manage
                 customer relationships, automate communication, and improve
                 business productivity.
               </p>
               <p className="ed-legal-note">
-                Cortexa AI CRM is a Software-as-a-Service (SaaS) platform built
+                Cortexa Agentic CRM is a Software-as-a-Service (SaaS) platform built
                 for organizations across multiple industries. We do not provide
                 insurance products, financial products, lending services,
                 investment advice, or financial advisory services. Cortexa
@@ -782,7 +781,7 @@ export default function EditorialFunnel() {
             <section className="ed-section" id="dont-get-left-behind">
               <h2>Don’t Get Left Behind</h2>
               <p>
-                See how our integrated Revenue Operating System helps businesses
+                See how our integrated Agentic CRM helps businesses
                 automate faster, close more opportunities, and increase revenue.
               </p>
             </section>
@@ -810,7 +809,7 @@ export default function EditorialFunnel() {
                 “Which platform will help us operate more efficiently, automate more work, and create more opportunities?”
               </blockquote>
               <p>
-                That’s the conversation that AI-native Revenue Operating Systems
+                That’s the conversation that Agentic CRMs
                 are beginning to change.
               </p>
               <p>
@@ -833,8 +832,8 @@ export default function EditorialFunnel() {
                 on revenue signals while opportunities are still active.
               </p>
               <p>
-                That is why the shift toward an Agentic AI Revenue Operating
-                System is more than a software upgrade. It is a move from
+                That is why the shift toward an Agentic CRM
+                is more than a software upgrade. It is a move from
                 passive record keeping to an operating model designed around
                 action, speed, and measurable growth.
               </p>
@@ -865,7 +864,7 @@ export default function EditorialFunnel() {
 
       <footer className="ed-footer">
         <div className="ed-footer-inner">
-          <img src={footlogo} alt="Cortexa" className="ed-footlogo" />
+          <img src={footlogo} alt="Cortexa Agentic CRM" loading="lazy" decoding="async" className="ed-footlogo" />
           <div className="ed-footer-links">
             <Link to="/pricing">Pricing</Link>
             <Link to="/features">Features</Link>

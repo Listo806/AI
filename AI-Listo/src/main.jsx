@@ -6,6 +6,7 @@ import App from './App';
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { NotificationProvider } from "./context/NotificationContext";
+import { handOffPrerender } from "./prerenderHandoff";
 
 // Render app
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -19,6 +20,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </AuthProvider>
   </BrowserRouter>
 );
+
+// Public pages arrive with their content already written into the HTML; swap
+// it for the application once the application shows the same page.
+handOffPrerender();
 
 // Lucide icons init (keep your logic)
 (function initLucideIcons() {

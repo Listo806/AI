@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { trackEvent } from "../../utils/track";
 import {
   UserPlus,
   RefreshCcw,
@@ -66,33 +67,33 @@ import "./LandingDesktop.css";
 
 import footdarklogo from "../../assets/cortexa/footlogo.png";
 import CountriesCitiesSection from "./CountriesCitiesSection";
-import herorightImg from "../../assets/cortexa/hero_right.png";
-import trialmobileImg from "../../assets/cortexa/img_desktop_none.png";
+import herorightImg from "../../assets/cortexa/cortexa-agentic-crm-dashboard.webp";
+import trialmobileImg from "../../assets/cortexa/cortexa-dashboard-preview-wide.webp";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import logoImg from "../../assets/cortexa/logo.png";
 import heroImg from "../../assets/cortexa/Cortexa Hero 1.png";
 import heroImgES from "../../assets/cortexa/hero-es.png";
 import heroImgPT from "../../assets/cortexa/hero-pt.png";
 
-import sec2Img from "../../assets/cortexa/Cortexa sec 2.png";
-import sec2ImgES from "../../assets/cortexa/sec2ES.png";
-import sec2ImgPT from "../../assets/cortexa/sec2PT.png";
+import sec2Img from "../../assets/cortexa/cortexa-reporting-analytics-pipeline-en.webp";
+import sec2ImgES from "../../assets/cortexa/cortexa-reporting-analytics-pipeline-es.webp";
+import sec2ImgPT from "../../assets/cortexa/cortexa-reporting-analytics-pipeline-pt.webp";
 
-import sec3Img from "../../assets/cortexa/Cortexa sec 3.png";
-import sec3ImgES from "../../assets/cortexa/sec3ES.png";
-import sec3ImgPT from "../../assets/cortexa/sec3PT.png";
+import sec3Img from "../../assets/cortexa/cortexa-ai-insights-workflows-en.webp";
+import sec3ImgES from "../../assets/cortexa/cortexa-ai-insights-workflows-es.webp";
+import sec3ImgPT from "../../assets/cortexa/cortexa-ai-insights-workflows-pt.webp";
 
-import sec4Img from "../../assets/cortexa/Cortexa sec 4.png";
-import sec4ImgES from "../../assets/cortexa/sec4ES.png";
-import sec4ImgPT from "../../assets/cortexa/sec4PT.png";
+import sec4Img from "../../assets/cortexa/cortexa-deals-pipeline-en.webp";
+import sec4ImgES from "../../assets/cortexa/cortexa-deals-pipeline-es.webp";
+import sec4ImgPT from "../../assets/cortexa/cortexa-deals-pipeline-pt.webp";
 
 import sec5Img from "../../assets/cortexa/Cortexa sec 5.png";
 import sec5ImgES from "../../assets/cortexa/sec5ES.png";
 import sec5ImgPT from "../../assets/cortexa/sec5PT.png";
 
-import customerJourneyEN from "../../assets/cortexa/customer-journey-en.png";
-import customerJourneyES from "../../assets/cortexa/customer-journey-es.png";
-import customerJourneyPT from "../../assets/cortexa/customer-journey-pt.png";
+import customerJourneyEN from "../../assets/cortexa/cortexa-customer-journey-en.webp";
+import customerJourneyES from "../../assets/cortexa/cortexa-customer-journey-es.webp";
+import customerJourneyPT from "../../assets/cortexa/cortexa-customer-journey-pt.webp";
 
 import aiSetterImg from "../../assets/cortexa/aiSetter.png";
 import aiSetterImgES from "../../assets/cortexa/aiSetterES.png";
@@ -101,7 +102,7 @@ import customerClinicManagerImg from "../../assets/cortexa/customer-clinic-manag
 import customerSalesDirectorImg from "../../assets/cortexa/customer-sales-director.jpg";
 import customerBusinessOwnerImg from "../../assets/cortexa/customer-business-owner.jpg";
 
-import powerfulImg from "../../assets/cortexa/powerful.png";
+import powerfulImg from "../../assets/cortexa/cortexa-app-integrations.webp";
 import workspaceImg from "../../assets/cortexa/workspace.png";
 import workspaceImgES from "../../assets/cortexa/workspaceES.png";
 import workspaceImgPT from "../../assets/cortexa/workspacePT.png";
@@ -109,6 +110,34 @@ import workspaceImgPT from "../../assets/cortexa/workspacePT.png";
 import sect2 from "../../assets/cortexa/sect2.png";
 import sect2ES from "../../assets/cortexa/sect2es.png";
 import sect2PT from "../../assets/cortexa/sect2pt.png";
+
+// Locale-aware links. /es, /pt and /es-ec visitors keep their language when they
+// follow a link to one of the public pages that exist under every locale prefix.
+// Anything else (web-solutions, e-commerce, dashboard, country/city pages) exists
+// only unprefixed and is returned unchanged. Query strings and hashes are kept.
+const LOCALE_PREFIXES = ["es-ec", "es", "pt"];
+const LOCALIZED_ROUTES = new Set([
+  "/", "/sign-in", "/sign-up", "/forgot-password", "/privacy-policy",
+  "/refund-policy", "/terms", "/cancellation", "/contact", "/help", "/about",
+  "/support", "/features", "/integrations", "/setup-guide", "/pricing",
+  "/editorial/the-end-of-legacy-crm", "/editorial/business", "/trial", "/checkout",
+]);
+function localePrefixFromPath(pathname) {
+  const first = String(pathname || "/").split("/").filter(Boolean)[0];
+  return first && LOCALE_PREFIXES.includes(first) ? `/${first}` : "";
+}
+function withLocalePrefix(prefix, path) {
+  if (!prefix) return path;
+  const m = String(path).match(/^([^?#]*)(.*)$/);
+  const base = m[1] || "/";
+  if (!LOCALIZED_ROUTES.has(base)) return path;
+  return `${prefix}${base === "/" ? "" : base}${m[2]}`;
+}
+
+// Intrinsic pixel sizes of the localized section images (width/height attributes
+// reserve their space before they load; CSS still controls the display size).
+const SEC3_SIZE = { en: [1918, 820], es: [1768, 889], pt: [1753, 897] };
+const SEC4_SIZE = { en: [1823, 863], es: [1411, 736], pt: [1411, 736] };
 
 const IconRenderer = ({ name, className }) => {
   const icons = {
@@ -243,7 +272,16 @@ export default function Landing() {
   const [langOpen, setLangOpen] = useState(false);
   const [activeFAQ, setActiveFAQ] = useState(0);
   const { isAuthenticated } = useAuth();
-  const ecPath = (path) => (isEcuadorFlow ? `/es-ec${path}` : path);
+  const localePrefix = localePrefixFromPath(pathname);
+  const lp = (path) => withLocalePrefix(localePrefix, path);
+  const navigate = useNavigate();
+  const trackCta = (ctaId, ctaText) => () =>
+    trackEvent("primary_cta_click", {
+      cta_id: ctaId,
+      cta_text: ctaText,
+      page_path: pathname,
+      language: lang,
+    });
 
   useEffect(() => {
     if (isEcuadorFlow) sessionStorage.setItem("cortexa_market", "EC");
@@ -306,7 +344,7 @@ export default function Landing() {
       faqCta: "Contact Cortexa",
       faqCtaNote: "Our team can help you understand the platform before you get started.",
       finalTitle:
-        "Automate your workflow with AI agents — powered by CORTEXA OS",
+        "Automate your workflow with AI agents — powered by Cortexa Agentic CRM",
       finalDesc:
         "Capture leads, follow up instantly, and move every opportunity forward automatically inside one intelligent operating system.",
       footer: {
@@ -354,11 +392,11 @@ export default function Landing() {
       revenueOverviewTitle: "Your Revenue Overview",
       revenueOverviewSub:
         "Real-time insights across your pipeline, team, and performance — all in one place.",
-      revenueOverviewCta: "Start Your Free Trial",
+      revenueOverviewCta: "Start Your 14-Day Trial",
       revenueOverviewNoCard: "No credit card required",
       revenueOverviewCancel: "Cancel anytime",
 
-      aiosV2Eyebrow: "ALL-IN-ONE REVENUE OPERATING SYSTEM",
+      aiosV2Eyebrow: "ALL-IN-ONE AGENTIC CRM",
       aiosV2TitleLead: "Connect. Organize.",
       aiosV2TitleAccent: "Grow Revenue.",
       aiosV2Subtitle:
@@ -421,14 +459,14 @@ export default function Landing() {
       ],
 
       heroTitleLine1: "Agentic CRM built to",
-      heroTitleLine2: "automate and track ",
+      heroTitleLine2: "automate and scale ",
       heroTitleLine3: "your business workflow.",
       heroTitleLine31: "workflow.",
       heroTitleLine4: "Built to Turn",
       heroTitleLine5: "Conversations",
       heroTitleLine6: "Into Revenue.",
       heroSubtitle:
-        "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
+        "Capture, follow up, and close — all in one system. Connect all your apps so your customers, leads, and data flow into one place automatically.",
       herotextabove: "AI organizes. AI qualifies. You follow up. You close.",
       heroCheck6:
         "Your AI Agent finds, captures, and qualifies leads automatically",
@@ -441,7 +479,7 @@ export default function Landing() {
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
       heroCTA: "Get Started!",
       heroFreeAccess: "Sign Up? — Get Free Access!",
-      heroNoCard: "14-Day Free Trial",
+      heroNoCard: "14-Day Trial",
       heroFreeForever: "Starting at $11",
       heroUnlock: "Unlock potential today!",
       heroTag1: "One AI Platform. Everything Connected.",
@@ -449,7 +487,7 @@ export default function Landing() {
       heroTag3: "Customer Follow-Up Workflows",
       heroTag4: "Pipeline Intelligence That Closes",
       heroTag5: "WhatsApp Integration Built-in",
-      heroTag6: "Secure. Reliable. Built for Real Estate.",
+      heroTag6: "Secure. Reliable. Built for Your Business.",
       heroHead: "All-in-One Business Operating System",
 
       smartV2Badge: "FROM LEAD TO REVENUE — ONE CONNECTED SYSTEM",
@@ -494,20 +532,20 @@ export default function Landing() {
       smartV2Bottom: "Manage Leads. Appointments. Deals. In One Place.",
 
       topLine1: "The simple ",
-      topHighlight: "Agentic AI revenue operating system",
+      topHighlight: "Agentic CRM",
       topLine3:
-        "for bussinesses tired of complicated, overpriced CRM software.",
+        "for businesses tired of complicated, overpriced CRM software.",
       pricing: "Pricing",
       webSolutions: "Web & Software Development Systems Integration",
 
       finalTitle: "Connect Your Entire Workflow",
       finalDesc: "Leads. Opportunities. Deals. All in your",
-      finalDesc1: "Revenue OS",
+      finalDesc1: "Agentic CRM",
 
       footerDescription: "AI Leads.   AI Qualifies.  AI CLoses.",
 
       startFreeTrial: "Get Started",
-      startYourFreeTrial: "Start Your Free Trial →",
+      startYourFreeTrial: "Start Your 14-Day Trial →",
 
       tagAiPowered: "✨ AI-Powered",
       tagSecure: "🛡 Secure",
@@ -777,11 +815,11 @@ export default function Landing() {
       revenueOverviewTitle: "Tu Resumen de Ingresos",
       revenueOverviewSub:
         "Información en tiempo real sobre tu pipeline, equipo y rendimiento — todo en un solo lugar.",
-      revenueOverviewCta: "Comienza Tu Prueba Gratis",
+      revenueOverviewCta: "Comienza tu prueba de 14 días",
       revenueOverviewNoCard: "No se requiere tarjeta de crédito",
       revenueOverviewCancel: "Cancela cuando quieras",
 
-      aiosV2Eyebrow: "SISTEMA OPERATIVO DE INGRESOS TODO EN UNO",
+      aiosV2Eyebrow: "CRM AGÉNTICO TODO EN UNO",
       aiosV2TitleLead: "Conecta. Organiza.",
       aiosV2TitleAccent: "Aumenta tus Ingresos.",
       aiosV2Subtitle:
@@ -844,14 +882,14 @@ export default function Landing() {
       ],
 
       heroTitleLine1: "CRM agéntico creado para",
-      heroTitleLine2: "automatizar y hacer seguimiento de ",
-      heroTitleLine3: "tu negocio flujo de trabajo.",
+      heroTitleLine2: "automatizar y escalar ",
+      heroTitleLine3: "el flujo de trabajo de tu negocio.",
       heroTitleLine31: "flujo de trabajo.",
       heroTitleLine4: "Diseñado para convertir",
       heroTitleLine5: "las conversaciones",
       heroTitleLine6: "en ingresos.",
       heroSubtitle:
-        "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
+        "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus clientes, leads y datos fluyan automáticamente en un solo lugar.",
       herotextabove:
         "La IA organiza. La IA califica. Tú haces seguimiento. Tú cierras.",
       heroCheck5: "Tu agente de IA encuentra y califica leads automáticamente",
@@ -868,7 +906,7 @@ export default function Landing() {
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
       heroCTA: "¡Comenzar!",
       heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
-      heroNoCard: "Prueba gratuita de 14 días",
+      heroNoCard: "Prueba de 14 días",
       heroFreeForever: "Desde $11",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       heroTag1: "Una plataforma de IA. Todo conectado.",
@@ -876,7 +914,7 @@ export default function Landing() {
       heroTag3: "Flujos de seguimiento de clientes",
       heroTag4: "Inteligencia de pipeline que cierra ventas",
       heroTag5: "Integración de WhatsApp incorporada",
-      heroTag6: "Segura. Confiable. Diseñada para el sector inmobiliario.",
+      heroTag6: "Segura. Confiable. Diseñada para tu negocio.",
       heroHead:
         "Diseñado para ayudar a las empresas a automatizar, operar y aumentar sus ingresos",
 
@@ -922,20 +960,20 @@ export default function Landing() {
       smartV2Bottom: "Gestiona leads. Citas. Negocios. Todo en un solo lugar.",
 
       topLine1: "El ",
-      topHighlight: "Sistema operativo de ingresos con IA agéntica",
+      topHighlight: "CRM agéntico",
       topLine3:
-        "simple para empresas cansadas de software CRM complicado y demasiado costoso.",
+        "para negocios cansados de software CRM complicado y costoso.",
       pricing: "Precios",
       webSolutions: "Desarrollo Web y de Software e Integración de Sistemas",
 
       finalTitle: "Conecta Todo Tu Flujo de Trabajo",
       finalDesc: "Leads. Oportunidades. Negocios. Todo en tu ",
-      finalDesc1: "Revenue OS",
+      finalDesc1: "CRM agéntico",
 
       footerDescription: "AI Leads. AI Califica. AI Cierra.",
 
       startFreeTrial: "Comenzar",
-      startYourFreeTrial: "Comienza Tu Prueba Gratis →",
+      startYourFreeTrial: "Comienza tu prueba de 14 días →",
 
       tagAiPowered: "✨ Impulsado por IA",
       tagSecure: "🛡 Seguro",
@@ -1153,7 +1191,7 @@ export default function Landing() {
       faqCta: "Falar com a Cortexa",
       faqCtaNote: "Nossa equipe pode ajudar você a entender a plataforma antes de começar.",
       finalTitle:
-        "Automatize seus processos com agentes de IA impulsionados pelo CORTEXA OS",
+        "Automatize seus processos com agentes de IA impulsionados pelo Cortexa Agentic CRM",
       finalDesc:
         "Capture leads, faça acompanhamentos instantaneamente e avance cada oportunidade automaticamente dentro de um sistema operacional inteligente.",
       footer: {
@@ -1201,11 +1239,11 @@ export default function Landing() {
       revenueOverviewTitle: "Sua Visão Geral de Receita",
       revenueOverviewSub:
         "Insights em tempo real sobre pipeline, equipe e desempenho — tudo em um só lugar.",
-      revenueOverviewCta: "Comece Seu Teste Grátis",
+      revenueOverviewCta: "Comece seu teste de 14 dias",
       revenueOverviewNoCard: "Nenhum cartão de crédito necessário",
       revenueOverviewCancel: "Cancele quando quiser",
 
-      aiosV2Eyebrow: "SISTEMA OPERACIONAL DE RECEITA TUDO EM UM",
+      aiosV2Eyebrow: "CRM AGÊNTICO TUDO EM UM",
       aiosV2TitleLead: "Conecte. Organize.",
       aiosV2TitleAccent: "Aumente a Receita.",
       aiosV2Subtitle:
@@ -1268,20 +1306,20 @@ export default function Landing() {
       ],
 
       heroTitleLine1: "CRM agêntico criado para",
-      heroTitleLine2: "automatizar e acompanhar ",
-      heroTitleLine3: "o seu negócio fluxo de trabalho.",
+      heroTitleLine2: "automatizar e escalar ",
+      heroTitleLine3: "o fluxo de trabalho do seu negócio.",
       heroTitleLine31: "fluxo de trabalho.",
       heroTitleLine4: "Criado para transformar",
       heroTitleLine5: "conversas",
       heroTitleLine6: "em receita.",
 
       heroSubtitle:
-        "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
+        "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus clientes, leads e dados fluam automaticamente em um só lugar.",
       herotextabove:
         "A IA organiza. A IA qualifica. Você faz o acompanhamento. Você fecha.",
       heroCheck5: "Seu agente de IA encontra e qualifica leads automaticamente",
       heroCheck6:
-        "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
+        "Seu agente de IA encontra, capta e qualifica clientes em potencial automaticamente.",
       heroCheck7:
         "Gerencie as conversas com clientes por meio de canais conectados",
       heroCheck8:
@@ -1294,7 +1332,7 @@ export default function Landing() {
         "Veja todos os leads, negócios e oportunidades em um único painel",
       heroCTA: "Começar!",
       heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
-      heroNoCard: "Teste grátis de 14 dias",
+      heroNoCard: "Teste de 14 dias",
       heroFreeForever: "A partir de US$ 11",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
@@ -1302,7 +1340,7 @@ export default function Landing() {
       heroTag3: "Fluxos de acompanhamento de clientes",
       heroTag4: "Inteligência de pipeline que fecha negócios",
       heroTag5: "Integração nativa com WhatsApp",
-      heroTag6: "Segura. Confiável. Feita para o mercado imobiliário.",
+      heroTag6: "Segura. Confiável. Feita para o seu negócio.",
       heroHead:
         "Desenvolvido para ajudar empresas a automatizar, operar e aumentar a receita",
 
@@ -1348,20 +1386,20 @@ export default function Landing() {
       smartV2Bottom: "Gerencie leads. Agendamentos. Negócios. Tudo em um só lugar.",
 
       topLine1: "O ",
-      topHighlight: "Sistema operacional de receita com IA agéntica",
+      topHighlight: "CRM agêntico",
       topLine3:
-        "simples para empresas cansadas de softwares de CRM complicados e caros.",
+        "para empresas cansadas de software de CRM complicado e caro.",
       pricing: "Preços",
       webSolutions: "Desenvolvimento Web e de Software e Integração de Sistemas",
 
       finalTitle: "Conecte Todo o Seu Fluxo de Trabalho",
       finalDesc: "Leads. Oportunidades. Negócios. Tudo no seu ",
-      finalDesc1: "Revenue OS",
+      finalDesc1: "CRM agêntico",
 
       footerDescription: "IA Gera Leads. IA Qualifica. IA Fecha.",
 
       startFreeTrial: "Começar",
-      startYourFreeTrial: "Comece Seu Teste Grátis →",
+      startYourFreeTrial: "Comece seu teste de 14 dias →",
 
       tagAiPowered: "✨ Com tecnologia de IA",
       tagSecure: "🛡 Seguro",
@@ -1608,15 +1646,21 @@ export default function Landing() {
   return (
     <div id="cortexa-ai-crm-landing">
       <div className="hero-text">
-        <h2 className="hero-title">
+        <p className="hero-title">
           <span className="highlight">{tr.topHighlight}</span> {tr.topLine3}
-        </h2>
+        </p>
       </div>
       <header className="cx-header">
         <div className="cx-header-inner">
           <div className="cx-left">
-            <a href="/">
-              <img src={headlogoImg} className="cx-logo-img" />
+            <a href={lp("/")}>
+              <img
+                src={headlogoImg}
+                className="cx-logo-img"
+                alt="Cortexa Agentic CRM"
+                width="258"
+                height="52"
+              />
             </a>
           </div>
 
@@ -1625,7 +1669,7 @@ export default function Landing() {
               const ids = [
                 "features",
                 "ai-assistant",
-                "automation",
+                "whatsapp", // AI Workflows: the AI insights / workflows section
                 "pipeline",
                 "analytics",
                 "testimonials",
@@ -1638,22 +1682,27 @@ export default function Landing() {
                   className="nav-menu"
                   key={i}
                   smooth
-                  to={`/#${ids[i]}`}
+                  to={lp(`/#${ids[i]}`)}
                 >
                   {n}
                 </HashLink>
               );
             })}
-            <a className="nav-menu" href={ecPath("/pricing")}>
+            <a
+              className="nav-menu"
+              href={lp("/pricing")}
+              onClick={trackCta("nav_pricing", tr.pricing)}
+            >
               {tr.pricing}
             </a>
-            <a className="nav-menu" href="/editorial/the-end-of-legacy-crm">
+            <a className="nav-menu" href={lp("/editorial/the-end-of-legacy-crm")}>
               Cost Calculator
             </a>
             <a
               className="nav-menu nav-menu-web-solutions"
               href="/web-solutions"
               aria-label={tr.webSolutions}
+              onClick={trackCta("nav_web_solutions", "Web & Software Development")}
             >
               <span>Web &amp; Software Development</span>
               <span>Systems Integration</span>
@@ -1661,7 +1710,11 @@ export default function Landing() {
           </nav>
 
           <div className="cx-actions">
-            <a href={ecPath("/trial?flow=free-access&plan=free")} className="cx-btn cx-btn-primary- small">
+            <a
+              href={lp("/trial?flow=free-access&plan=free")}
+              className="cx-btn cx-btn-primary- small"
+              onClick={trackCta("header_get_started", tr.trial)}
+            >
               {tr.trial}
             </a>
 
@@ -1724,7 +1777,7 @@ export default function Landing() {
                 Dashboard
               </Link>
             ) : (
-              <Link to={ecPath("/sign-in")} className="cx-login">
+              <Link to={lp("/sign-in")} className="cx-login">
                 {tr.login}
               </Link>
             )}
@@ -1749,8 +1802,9 @@ export default function Landing() {
               </div>
               <div className="hero-inline hero-inline-free-access">
                 <a
-                  href={ecPath("/trial?flow=free-access&plan=free")}
+                  href={lp("/trial?flow=free-access&plan=free")}
                   className="hero-btn hero-btn-trial hero-btn-free-access-main"
+                  onClick={trackCta("hero_get_started", tr.heroCTA)}
                 >
                   {tr.heroCTA}
                 </a>
@@ -1787,7 +1841,13 @@ export default function Landing() {
 
           <div className="hero-right">
             <div className="hero-image">
-              <img src={herorightImg} />
+              <img
+                src={herorightImg}
+                alt="Cortexa Agentic CRM dashboard with AI command center, lead, pipeline and revenue metrics"
+                width="989"
+                height="765"
+                fetchpriority="high"
+              />
             </div>
           </div>
         </div>
@@ -1914,7 +1974,11 @@ export default function Landing() {
           </div>
 
           <p className="cx-ws-connected">{tr.workspaceSection.connected}</p>
-          <a className="cx-ws-explore" href={ecPath("/trial?flow=free-access&plan=free")}>
+          <a
+            className="cx-ws-explore"
+            href={lp("/trial?flow=free-access&plan=free")}
+            onClick={trackCta("workspaces_get_started", tr.workspaceSection.explore)}
+          >
             {tr.workspaceSection.explore} <ArrowRight size={18} />
           </a>
           <p className="cx-ws-note">{tr.workspaceSection.note}</p>
@@ -1964,7 +2028,7 @@ export default function Landing() {
               </div>
               <div className="cx-setup-assistance">
                 <span><Headphones size={30}/></span><div><b>{tr.guidedSetup.assistanceTitle}</b><p>{tr.guidedSetup.assistanceDesc}</p></div>
-                <a href="/web-solutions">{tr.guidedSetup.assistanceAction}<ArrowRight size={16}/></a>
+                <a href="/web-solutions" onClick={trackCta("setup_assistance_web_solutions", tr.guidedSetup.assistanceAction)}>{tr.guidedSetup.assistanceAction}<ArrowRight size={16}/></a>
               </div>
             </div>
           </div>
@@ -1972,7 +2036,7 @@ export default function Landing() {
           <div className="cx-setup-help">
             <span className="cx-setup-help-icon"><LifeBuoy size={43}/></span>
             <div><h3>{tr.guidedSetup.helpTitle}</h3><p>{tr.guidedSetup.helpDesc}</p><small>{tr.guidedSetup.helpNote}</small></div>
-            <div className="cx-setup-help-actions"><a href="/web-solutions">{tr.guidedSetup.requestSetup}<ArrowRight size={18}/></a><a href="/dashboard/ai-cortexa-setup">{tr.guidedSetup.viewGuide}</a></div>
+            <div className="cx-setup-help-actions"><a href="/web-solutions" onClick={trackCta("setup_request_web_solutions", tr.guidedSetup.requestSetup)}>{tr.guidedSetup.requestSetup}<ArrowRight size={18}/></a><a href="/dashboard/ai-cortexa-setup">{tr.guidedSetup.viewGuide}</a></div>
           </div>
         </div>
       </section>
@@ -2001,7 +2065,11 @@ export default function Landing() {
             <p>{tr.webSolutionsSection.paragraph3}</p>
           </div>
 
-          <a className="cx-web-bridge-cta" href="/web-solutions">
+          <a
+            className="cx-web-bridge-cta"
+            href="/web-solutions"
+            onClick={trackCta("web_bridge_web_solutions", tr.webSolutionsSection.cta)}
+          >
             {tr.webSolutionsSection.cta}
           </a>
           <small>{tr.webSolutionsSection.note}</small>
@@ -2009,7 +2077,14 @@ export default function Landing() {
       </section>
 
       <section id="analytics" className="cx-hero pt-50">
-        <img src={currentSec2} alt="analytics" />
+        <img
+          src={currentSec2}
+          alt="Cortexa reporting, analytics, pipeline and team activity dashboards"
+          width="1774"
+          height="887"
+          loading="lazy"
+          decoding="async"
+        />
       </section>
       <section id="workspace" className="cx-team-showcase">
         <div className="cx-team-shell">
@@ -2028,7 +2103,7 @@ export default function Landing() {
               </div>
               <div className="cx-team-actions">
                 <a className="cx-team-primary" href="/dashboard/team">{tr.teamShowcase.explore} <ArrowRight size={18}/></a>
-                <a className="cx-team-link" href="/editorial/how-ai-is-transforming-every-business">{tr.teamShowcase.seeHow} <ArrowRight size={17}/></a>
+                <a className="cx-team-link" href={lp("/editorial/business")}>{tr.teamShowcase.seeHow} <ArrowRight size={17}/></a>
               </div>
             </div>
 
@@ -2072,7 +2147,14 @@ export default function Landing() {
         </div>
       </section>
       <section id="whatsapp" className="cx-hero pt-50">
-        <img src={currentSec3} alt="" />
+        <img
+          src={currentSec3}
+          alt="Cortexa AI assistant, analytics, follow-up workflows and appointment booking"
+          width={(SEC3_SIZE[lang] || SEC3_SIZE.en)[0]}
+          height={(SEC3_SIZE[lang] || SEC3_SIZE.en)[1]}
+          loading="lazy"
+          decoding="async"
+        />
       </section>
 
       <section className="aios-section aios-v2-section cx-web-showcase-v3">
@@ -2101,7 +2183,7 @@ export default function Landing() {
             <div className="cx-web-v3-phone"><div className="cx-web-v3-phone-notch"/><div className="cx-web-v3-phone-brand"><span className="cx-web-v3-mini-mark">A</span><b>Northstar</b><i>☰</i></div><small>{tr.webShowcaseV3.smarter}</small><h4>{tr.webShowcaseV3.heroTitle}</h4><p>{tr.webShowcaseV3.heroDesc}</p><button>{tr.webShowcaseV3.startAgent} →</button><div className="cx-web-v3-phone-art">People.<br/>Process.<br/>Progress.</div></div>
             <div className="cx-web-v3-agent"><div className="cx-web-v3-agent-head"><Sparkles size={22}/><b>{tr.webShowcaseV3.agent}</b><span>•••　−</span></div><div className="cx-web-v3-agent-msg"><span><Sparkles size={18}/></span><p>{tr.webShowcaseV3.welcome}</p></div><div className="cx-web-v3-agent-actions"><div><FileText/><span>{tr.webShowcaseV3.exploreServices}</span><ChevronRight/></div><div><CalendarDays/><span>{tr.webShowcaseV3.appointment}</span><ChevronRight/></div><div><Link2/><span>{tr.webShowcaseV3.quote}</span><ChevronRight/></div><div><Headphones/><span>{tr.webShowcaseV3.support}</span><ChevronRight/></div></div><div className="cx-web-v3-captured"><CheckCircle2/>{tr.webShowcaseV3.captured}</div><div className="cx-web-v3-chat-input"><span>{tr.webShowcaseV3.message}</span><b><Send size={15}/></b></div></div>
           </div>
-          <div className="cx-web-v3-bottom"><h3>{tr.webShowcaseV3.bottomLead} <strong>{tr.webShowcaseV3.bottomAccent}</strong></h3><a href="/web-solutions">{tr.webShowcaseV3.explore} <ArrowRight size={19}/></a><p>{tr.webShowcaseV3.note}</p></div>
+          <div className="cx-web-v3-bottom"><h3>{tr.webShowcaseV3.bottomLead} <strong>{tr.webShowcaseV3.bottomAccent}</strong></h3><a href="/web-solutions" onClick={trackCta("web_showcase_web_solutions", tr.webShowcaseV3.explore)}>{tr.webShowcaseV3.explore} <ArrowRight size={19}/></a><p>{tr.webShowcaseV3.note}</p></div>
         </div>
       </section>
       <section className="powerful">
@@ -2152,7 +2234,14 @@ export default function Landing() {
               <span>{tr.feature4}</span>
             </div>
           </div>
-          <img src={powerfulImg} alt="diagram" />
+          <img
+            src={powerfulImg}
+            alt="Apps that connect with Cortexa, including WhatsApp, Gmail, Google Calendar, Slack, HubSpot, Salesforce and Zapier"
+            width="1177"
+            height="271"
+            loading="lazy"
+            decoding="async"
+          />
 
           <div className="cx-pwr-footer-banner">
             <div className="cx-pwr-footer-left">
@@ -2165,7 +2254,10 @@ export default function Landing() {
                 <span>{tr.footerTextPost}</span>
               </p>
             </div>
-            <button className="cx-pwr-footer-btn">
+            <button
+              className="cx-pwr-footer-btn"
+              onClick={() => navigate(lp("/integrations"))}
+            >
               <span>{tr.btnText}</span>
               <ChevronRight size={16} />
             </button>
@@ -2174,7 +2266,14 @@ export default function Landing() {
       </section>
 
       <section id="pipeline" className="cx-hero pt-50">
-        <img src={currentSec4} alt="" />
+        <img
+          src={currentSec4}
+          alt="Cortexa deals pipeline with AI deal scores, stages and next best actions"
+          width={(SEC4_SIZE[lang] || SEC4_SIZE.en)[0]}
+          height={(SEC4_SIZE[lang] || SEC4_SIZE.en)[1]}
+          loading="lazy"
+          decoding="async"
+        />
       </section>
 
       <section className="roi-section revenue-action-section pt-50">
@@ -2188,7 +2287,11 @@ export default function Landing() {
               <strong>{tr.revenueActionTitleAccent}</strong>
             </h2>
             <p className="revenue-action-sub">{tr.revenueActionSub}</p>
-            <a href={ecPath("/trial?flow=free-access&plan=free")} className="revenue-action-btn">
+            <a
+              href={lp("/trial?flow=free-access&plan=free")}
+              className="revenue-action-btn"
+              onClick={trackCta("revenue_action_get_started", tr.heroCTA)}
+            >
               {tr.heroCTA}
             </a>
           </div>
@@ -2234,7 +2337,14 @@ export default function Landing() {
                   <div className="cx-customer-quote-line" />
 
                   <div className="cx-customer-person">
-                    <img src={avatars[index]} alt="" />
+                    <img
+                      src={avatars[index]}
+                      alt=""
+                      width="102"
+                      height="102"
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <div>
                       <strong>{item.role}</strong>
                       <span>{item.workspace}</span>
@@ -2247,11 +2357,15 @@ export default function Landing() {
 
           <div className="cx-customer-experiences-cta">
             <p>{customerExperience.ready}</p>
-            <a href={ecPath("/trial?flow=free-access&plan=free")} className="cx-customer-get-started">
+            <a
+              href={lp("/trial?flow=free-access&plan=free")}
+              className="cx-customer-get-started"
+              onClick={trackCta("customer_experiences_get_started", customerExperience.cta)}
+            >
               <span>{customerExperience.cta}</span>
               <ArrowRight size={24} />
             </a>
-            <a href="#workspaces" className="cx-customer-explore">
+            <a href="#features" className="cx-customer-explore">
               {customerExperience.explore}
             </a>
           </div>
@@ -2262,8 +2376,12 @@ export default function Landing() {
         <div className="cx-customer-journey-image-wrap">
           <img
             src={currentCustomerJourneyImg}
-            alt="Cortexa connected customer journey"
+            alt="Cortexa connected customer journey: website, advertising, phone and WhatsApp leads flow through the AI agent into the CRM, the right workspace and pipeline"
             className="cx-customer-journey-image"
+            width="1672"
+            height="941"
+            loading="lazy"
+            decoding="async"
           />
         </div>
       </section>
@@ -2293,7 +2411,7 @@ export default function Landing() {
                     <span>{item.q}</span>
                     <span className="cx-faq-toggle" aria-hidden="true">{isOpen ? "−" : "+"}</span>
                   </button>
-                  {isOpen && <div className="cx-faq-a">{item.a}</div>}
+                  <div className="cx-faq-a" hidden={!isOpen}>{item.a}</div>
                 </div>
               );
             })}
@@ -2301,7 +2419,7 @@ export default function Landing() {
 
           <div className="cx-faq-contact">
             <h3>{tr.faqCtaTitle}</h3>
-            <a href="/contact" className="cx-faq-contact-btn">
+            <a href={lp("/contact")} className="cx-faq-contact-btn">
               {tr.faqCta} <ArrowRight size={18} />
             </a>
             <p>{tr.faqCtaNote}</p>
@@ -2319,7 +2437,11 @@ export default function Landing() {
             {tr.finalDesc} <span className="text-os">{tr.finalDesc1}</span>
           </p>
 
-          <a href={ecPath("/trial?flow=free-access&plan=free")} className="cx-btn cx-btn-secondary">
+          <a
+            href={lp("/trial?flow=free-access&plan=free")}
+            className="cx-btn cx-btn-secondary"
+            onClick={trackCta("final_get_started", tr.heroCTA)}
+          >
             <Zap size={22} />
             {tr.heroCTA}
           </a>
@@ -2329,7 +2451,15 @@ export default function Landing() {
             data for illustration only, not real customer results.
           </i>
           <div className="cx-final-shot">
-            <img src={trialmobileImg} className="desktop-none" />
+            <img
+              src={trialmobileImg}
+              className="desktop-none"
+              alt="Cortexa Agentic CRM dashboard preview"
+              width="1914"
+              height="822"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
         </div>
       </section>
@@ -2345,13 +2475,21 @@ export default function Landing() {
               <div className="footer-brand">
                 <img
                   src={footdarklogo}
-                  alt="Cortexa"
+                  alt="Cortexa Agentic CRM"
                   className="landing-logo"
+                  width="293"
+                  height="58"
+                  loading="lazy"
+                  decoding="async"
                 />
 
                 <p>{tr.footerDescription}</p>
 
-                <a href={ecPath("/trial?flow=free-access&plan=free")} className="btn-primary">
+                <a
+                  href={lp("/trial?flow=free-access&plan=free")}
+                  className="btn-primary"
+                  onClick={trackCta("footer_get_started", tr.heroCTA)}
+                >
                   <Zap size={18} />
                   {tr.heroCTA}
                 </a>
@@ -2368,33 +2506,33 @@ export default function Landing() {
                 <h3>{tr.product}</h3>
                 <ul>
                   <li>
-                    <HashLink smooth to="/features">
+                    <HashLink smooth to={lp("/features")}>
                       {tr.features}
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/features#ai-assistant">
+                    <HashLink smooth to={lp("/features#ai-assistant")}>
                       {tr.aiAssistant}
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/features#automations">
+                    <HashLink smooth to={lp("/features#automations")}>
                       {tr.automations}
                     </HashLink>
                   </li>
                   <li>
-                    <a href="/integrations">{tr.integrations}</a>
+                    <a href={lp("/integrations")}>{tr.integrations}</a>
                   </li>
                   <li>
-                    <HashLink smooth to="/features#analytics">
+                    <HashLink smooth to={lp("/features#analytics")}>
                       {tr.analytics}
                     </HashLink>
                   </li>
                   <li>
-                    <a href={ecPath("/pricing")}>{tr.pricing}</a>
+                    <a href={lp("/pricing")} onClick={trackCta("footer_pricing", tr.pricing)}>{tr.pricing}</a>
                   </li>
                   <li>
-                    <a href="/editorial/the-end-of-legacy-crm">
+                    <a href={lp("/editorial/the-end-of-legacy-crm")}>
                       Cost Calculator
                     </a>
                   </li>
@@ -2405,13 +2543,13 @@ export default function Landing() {
                 <h3>{tr.getStarted}</h3>
                 <ul>
                   <li>
-                    <a href={ecPath("/trial?flow=free-access&plan=free")}>{tr.getStarted}</a>
+                    <a href={lp("/trial?flow=free-access&plan=free")} onClick={trackCta("footer_col_get_started", tr.getStarted)}>{tr.getStarted}</a>
                   </li>
                   <li>
-                    <a href="/sign-in">{tr.login}</a>
+                    <a href={lp("/sign-in")}>{tr.login}</a>
                   </li>
                   <li>
-                    <a href="/setup-guide">{tr.setupGuide}</a>
+                    <a href={lp("/setup-guide")}>{tr.setupGuide}</a>
                   </li>
                 </ul>
               </div>
@@ -2420,27 +2558,27 @@ export default function Landing() {
                 <h3>{tr.connect}</h3>
                 <ul>
                   <li>
-                    <HashLink smooth to="/integrations#connect-apps">
+                    <HashLink smooth to={lp("/integrations#connect-apps")}>
                       {tr.connectApps}
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/integrations#import-crm">
+                    <HashLink smooth to={lp("/integrations#import-crm")}>
                       {tr.importCrm}
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/integrations#import-csv">
+                    <HashLink smooth to={lp("/integrations#import-csv")}>
                       {tr.importCsv}
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/integrations#zapier-automations">
+                    <HashLink smooth to={lp("/integrations#zapier-automations")}>
                       {tr.zapierAutomation}
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/integrations#api-webhooks">
+                    <HashLink smooth to={lp("/integrations#api-webhooks")}>
                       {tr.apiWebhooks}
                     </HashLink>
                   </li>
@@ -2451,16 +2589,16 @@ export default function Landing() {
                 <h3>{tr.support}</h3>
                 <ul>
                   <li>
-                    <a href="/support">{tr.support247}</a>
+                    <a href={lp("/support")}>{tr.support247}</a>
                   </li>
                   <li>
-                    <a href="/help">{tr.helpCenter}</a>
+                    <a href={lp("/help")}>{tr.helpCenter}</a>
                   </li>
                   <li>
-                    <a href="/contact">{tr.contactUs}</a>
+                    <a href={lp("/contact")}>{tr.contactUs}</a>
                   </li>
                   <li>
-                    <a href="/about">{tr.aboutUs}</a>
+                    <a href={lp("/about")}>{tr.aboutUs}</a>
                   </li>
                 </ul>
               </div>
@@ -2469,16 +2607,16 @@ export default function Landing() {
                 <h3>{tr.legal}</h3>
                 <ul>
                   <li>
-                    <a href="/terms">{tr.terms}</a>
+                    <a href={lp("/terms")}>{tr.terms}</a>
                   </li>
                   <li>
-                    <a href="/privacy-policy">{tr.privacyPolicy}</a>
+                    <a href={lp("/privacy-policy")}>{tr.privacyPolicy}</a>
                   </li>
                   <li>
-                    <a href="/refund-policy">{tr.refundPolicy}</a>
+                    <a href={lp("/refund-policy")}>{tr.refundPolicy}</a>
                   </li>
                   <li>
-                    <a href="/cancellation">{tr.cancellationPolicy}</a>
+                    <a href={lp("/cancellation")}>{tr.cancellationPolicy}</a>
                   </li>
                 </ul>
               </div>

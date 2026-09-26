@@ -3,48 +3,15 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cortexa | Agentic CRM &amp; Software Solutions</title>
-  <meta name="description"
-    content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
-  
-    <link rel="canonical" href="https://www.cortexaaicrm.com/" />
-
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Cortexa" />
-  <meta property="og:url" content="https://www.cortexaaicrm.com/" />
-  <meta property="og:title" content="Cortexa | Agentic CRM &amp; Software Solutions" />
-  <meta property="og:description"
-    content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
-
-  <!-- Open Graph Image -->
-  <meta property="og:image" content="https://www.cortexaaicrm.com/images/cortexa-social-preview.jpg" />
-  <meta property="og:image:secure_url" content="https://www.cortexaaicrm.com/images/cortexa-social-preview.jpg" />
-  <meta property="og:image:type" content="image/jpeg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Cortexa — Agentic CRM & Software Solutions" />
-
-  <!-- Twitter / X Image -->
-  <meta name="twitter:image" content="https://www.cortexaaicrm.com/images/cortexa-social-preview.jpg" />
-  <meta name="twitter:image:alt" content="Cortexa — Agentic CRM & Software Solutions" />
-
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Cortexa | Agentic CRM &amp; Software Solutions" />
-  <meta name="twitter:description"
-    content="Agentic CRM, web and software development, automation, and systems integration—built around your business." />
-
-  <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Cortexa",
-        "url": "https://www.cortexaaicrm.com/",
-        "headline": "Cortexa | Agentic CRM & Software Solutions",
-        "description": "Agentic CRM, web and software development, automation, and systems integration—built around your business."
-      }
-    </script>
+  <!-- Page metadata is written per page at build time by
+       scripts/build-seo.mjs, so every address arrives with its own title,
+       description, canonical, language and preview even before any script
+       runs. src/seo/head.js keeps them right while the customer navigates. -->
+  <!--seo-head-->
   <!-- Lucide Icons (self-hosted, pinned to v1.22.0 — no third-party CDN) -->
   <script src="/vendor/lucide.min.js"></script>
   <!-- Google Ads global site tag (gtag.js) -->
@@ -53,7 +20,9 @@
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'AW-17836518151');
+    // Page views are sent once per page by the app itself (App.jsx), so the tag
+    // must not send its own automatic one as well.
+    gtag('config', 'AW-17836518151', { send_page_view: false });
   </script>
   <style>
     /* First-paint splash: shown before the JS bundle mounts React, and reused

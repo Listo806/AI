@@ -23,7 +23,7 @@ const T = {
   en: {
     headline1: "WAIT!",
     headline2: "DON'T LEAVE!",
-    sub: "Start Your FREE Trial Today",
+    sub: "Get Free Access Today",
     desc: "Create your Cortexa account to access advanced features, exclusive data and tools built for AI marketers.",
     name: "Full Name",
     email: "Your Email",
@@ -45,7 +45,7 @@ const T = {
   es: {
     headline1: "¡ESPERA!",
     headline2: "NO TE VAYAS.",
-    sub: "Comienza tu prueba GRATIS hoy",
+    sub: "Obtén acceso gratis hoy",
     desc: "Crea tu cuenta de Cortexa para acceder a funciones avanzadas, datos exclusivos y herramientas creadas para especialistas en marketing con IA.",
     name: "Nombre completo",
     email: "Tu correo electrónico",
@@ -67,7 +67,7 @@ const T = {
   pt: {
     headline1: "ESPERE!",
     headline2: "NÃO SAIA.",
-    sub: "Comece seu teste GRÁTIS hoje",
+    sub: "Ganhe acesso grátis hoje",
     desc: "Crie sua conta Cortexa para acessar recursos avançados, dados exclusivos e ferramentas criadas para profissionais de marketing com IA.",
     name: "Nome completo",
     email: "Seu e-mail",

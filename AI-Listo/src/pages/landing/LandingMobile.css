@@ -733,7 +733,7 @@ body #analytics.m-bottom-cta {
   overflow: hidden;
   position: relative;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  background: url('../../assets/cortexa/bg_auto.png');
+  background: url('../../assets/cortexa/cortexa-mobile-final-cta-background.webp');
   background-size: cover;
   padding-top: 35px;
 }
@@ -3663,4 +3663,12 @@ body .cx-reporting-footer .fdes{
 .mobile-landing .m-appointment-confirmed-copy span{font-size:10.5px}
 .mobile-landing .m-appointment-benefit{grid-template-columns:50px minmax(0,1fr);gap:10px}
 .mobile-landing .m-appointment-benefit p{font-size:16px}
+}
+
+/* Images carry width/height attributes (intrinsic size) so the browser can
+   reserve their space before they load. Zero-specificity height:auto keeps the
+   original rendering: any rule that sets an image height still wins, and images
+   sized only by width keep their natural aspect ratio. */
+:where(.mobile-landing img[width][height]) {
+  height: auto;
 }

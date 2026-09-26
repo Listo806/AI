@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import styles from "./Contact.module.css";
+import { trackEvent } from "../../utils/track";
+import { currentSiteLanguage } from "../../i18n/currentLanguage";
 
 export default function Contact() {
   const helpItems = [
@@ -202,7 +204,16 @@ export default function Contact() {
 
                 <div>
                   <h3>Support Email</h3>
-                  <a href="mailto:support@cortexaaicrm.com">
+                  <a
+                    href="mailto:support@cortexaaicrm.com"
+                    onClick={() =>
+                      trackEvent("contact_request", {
+                        method: "email",
+                        page_path: window.location.pathname,
+                        language: currentSiteLanguage(),
+                      })
+                    }
+                  >
                     support@cortexaaicrm.com
                   </a>
                 </div>
@@ -380,7 +391,7 @@ function PublicHeader() {
   return (
     <header className={styles.header}>
       <a href="/" className={styles.logoWrap}>
-        <img src={headlogoImg} className="cx-logo-img" alt="logo" />
+        <img src={headlogoImg} className="cx-logo-img" alt="Cortexa Agentic CRM" />
       </a>
       <div className={styles.headerRight}>
         <Globe size={22} />

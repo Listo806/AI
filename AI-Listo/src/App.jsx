@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Landing from "./pages/landing/Landing";
 
 import {
@@ -18,10 +18,13 @@ import {
 } from "./utils/track";
 import ThemeProvider from "./theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { applyHead } from "./seo/head";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationToast from "./components/NotificationToast";
 import ExitIntentOffer from "./components/ExitIntentOffer";
-import LanguageAutoDetect from "./components/LanguageAutoDetect";
+import LanguageAutoDetect, {
+  pendingHomeRedirect,
+} from "./components/LanguageAutoDetect";
 import TrackDebugPanel from "./components/TrackDebugPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VaRouteGuard from "./components/VaRouteGuard";
@@ -202,16 +205,11 @@ function PtBrRedirect() {
 
 // Root route handler - shows sign-in or redirects to dashboard
 function RootRoute() {
-  const { isAuthenticated, loading, user } = useAuth();
+  // eslint-disable-next-line no-unused-vars
+  const { isAuthenticated, user } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="app-splash">
-        <div className="app-splash-word">CORTEXA</div>
-        <div className="app-spinner" />
-      </div>
-    );
-  }
+  // No splash here: AuthProvider already gates rendering while a session is
+  // being resolved, so "/" renders the landing page directly.
 
   // if (isAuthenticated()) {
   // const role = user?.role?.toLowerCase?.() || user?.role;
@@ -252,23 +250,22 @@ function publicRoutes(prefix) {
       <Route path={`${p}/integrations`} element={<IntegrationsPage />} />
       <Route path={`${p}/setup-guide`} element={<SetupGuidePage />} />
       <Route path={`${p}/pricing`} element={<Pricing />} />
+      {/* The editorial exists in all three languages, and the language comes
+          from the address like every other public page: /editorial/..., then
+          /es/editorial/... and /pt/editorial/.... The older addresses that
+          carried the language as a suffix are redirected to these. */}
       <Route
         path={`${p}/editorial/the-end-of-legacy-crm`}
-        element={<EditorialFunnel />}
+        element={
+          prefix === "pt" ? (
+            <EditorialFunnelPt />
+          ) : prefix === "es" || prefix === "es-ec" ? (
+            <EditorialFunnelEs />
+          ) : (
+            <EditorialFunnel />
+          )
+        }
       />
-      <Route element={<LocaleLayout code="es" />}>
-        <Route
-          path="/editorial/the-end-of-legacy-crm/es"
-          element={<EditorialFunnelEs />}
-        />
-      </Route>
-
-      <Route element={<LocaleLayout code="pt" />}>
-        <Route
-          path="/editorial/the-end-of-legacy-crm/pt"
-          element={<EditorialFunnelPt />}
-        />
-      </Route>
       <Route path="/web-solutions" element={<WebSolutions />} />
 
       <Route
@@ -276,25 +273,19 @@ function publicRoutes(prefix) {
         element={<WebSolutionsCheckout />}
       />
       <Route path="/web-solutions/free-review" element={<FreeWebsiteReview />} />
-      <Route path="/editorial/business" element={<EditorialBusinessAI />} />
+      {/* The business article, the same way: the address carries the language.
+          The old suffix addresses are redirected to these. */}
       <Route
-        path="/editorial/business/es"
-        element={<EditorialBusinessAIEs />}
-      />
-
-      <Route
-        path="/editorial/business/pt"
-        element={<EditorialBusinessAIPt />}
-      />
-      {/* Prefix-form URLs used by the localized abandoned-signup email #2
-          (client spec: /es/editorial/business, /pt/editorial/business). */}
-      <Route
-        path="/es/editorial/business"
-        element={<EditorialBusinessAIEs />}
-      />
-      <Route
-        path="/pt/editorial/business"
-        element={<EditorialBusinessAIPt />}
+        path={`${p}/editorial/business`}
+        element={
+          prefix === "pt" ? (
+            <EditorialBusinessAIPt />
+          ) : prefix === "es" || prefix === "es-ec" ? (
+            <EditorialBusinessAIEs />
+          ) : (
+            <EditorialBusinessAI />
+          )
+        }
       />
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
@@ -788,6 +779,14 @@ function PageViewTracker() {
   const location = useLocation();
   const { user } = useAuth();
 
+  // Keep the page's own title, description, canonical, language alternates and
+  // robots directive correct as the customer navigates. The first response
+  // already carries them; this keeps them right afterwards, and makes sure a
+  // private page always says noindex.
+  useEffect(() => {
+    applyHead(location.pathname);
+  }, [location.pathname]);
+
   // Publish the visitor's lifecycle stage (visitor / registered_no_plan / free /
   // paid / past_customer) to Google Ads + GA4 whenever the signed-in user
   // changes. This is what powers the journey-based retargeting audiences and,
@@ -799,17 +798,30 @@ function PageViewTracker() {
     setUserJourney(user);
   }, [user]);
 
+  // The single source of page_view (index.html and the auth-time gtag config
+  // calls all use send_page_view:false): exactly one per pathname+search.
+  const lastPageRef = useRef(null);
   useEffect(() => {
+    // "/" about to be redirected to /es or /pt by LanguageAutoDetect: skip this
+    // synthetic hop entirely. The redirect target records the page_view AND
+    // the first touch, so the visitor's real landing page and language
+    // (/es, "es") are what gets stored, not "/" and "en".
+    if (pendingHomeRedirect(location)) return;
+    const pageKey = location.pathname + location.search;
+    if (lastPageRef.current === pageKey) return;
+    lastPageRef.current = pageKey;
     // Configure GA4 once (no-op until a Measurement ID is set), then record the
     // page view for both GA4 (funnel analysis) and Google Ads (audiences).
     initAnalytics();
-    // Persist any ad click id present in the URL (gclid/wbraid/gbraid) so a
-    // later Purchase can be attributed to the ad click.
+    // Persist any ad click id present in the URL (gclid/wbraid/gbraid), the
+    // ?internal=1 opt-out, and the first/last touch, so a later Purchase can be
+    // attributed to the ad click.
     captureClickIds();
     trackEvent("page_view", {
-      page_path: location.pathname + location.search,
+      page_path: pageKey,
       page_location: window.location.href,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, location.search]);
   return null;
 }

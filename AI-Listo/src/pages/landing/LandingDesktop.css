@@ -1989,7 +1989,7 @@ section#footer {
     background-repeat: no-repeat;
 }*/
 #cortexa-ai-crm-landing #trial .cx-final-box {
-  background: url('../../assets/cortexa/landing_trial_bg.png');
+  background: url('../../assets/cortexa/cortexa-final-cta-background.webp');
   background-size: cover;
 }
 
@@ -4660,6 +4660,11 @@ section#footer {
   text-align: center;
 }
 
+/* Closed FAQ answers stay in the DOM (FAQPage structured data) but hidden. */
+#cortexa-ai-crm-landing .cx-faq-a[hidden] {
+  display: none;
+}
+
 #cortexa-ai-crm-landing .cx-faq-a {
   display: block;
   padding: 0 42px 15px 10px;
@@ -5115,3 +5120,10 @@ section#footer {
 @media(max-width:700px){#cortexa-ai-crm-landing .cx-web-solutions-bridge{padding:46px 18px 42px!important}#cortexa-ai-crm-landing .cx-web-bridge-shell h2{margin-bottom:25px!important;font-size:38px;line-height:1.06}#cortexa-ai-crm-landing .cx-web-bridge-intro,#cortexa-ai-crm-landing .cx-web-bridge-copy p{font-size:16px;line-height:1.55}#cortexa-ai-crm-landing .cx-web-bridge-quote{min-height:0;margin:25px auto 28px;padding:24px 30px 4px}#cortexa-ai-crm-landing .cx-web-bridge-quote strong{font-size:21px}#cortexa-ai-crm-landing .cx-web-bridge-quote-mark{top:-3px;font-size:58px}#cortexa-ai-crm-landing .cx-web-bridge-quote-left{left:0}#cortexa-ai-crm-landing .cx-web-bridge-quote-right{right:0}#cortexa-ai-crm-landing .cx-web-bridge-copy{gap:18px}#cortexa-ai-crm-landing .cx-web-bridge-cta{width:100%;min-height:54px;margin-top:26px;font-size:18px}}
 @media(max-width:430px){#cortexa-ai-crm-landing .cx-web-bridge-shell h2{font-size:33px}#cortexa-ai-crm-landing .cx-web-bridge-quote{padding-left:20px;padding-right:20px}#cortexa-ai-crm-landing .cx-web-bridge-quote strong{font-size:19px}}
 
+/* Images carry width/height attributes (intrinsic size) so the browser can
+   reserve their space before they load. Zero-specificity height:auto keeps the
+   original rendering: any rule that sets an image height still wins, and images
+   sized only by width keep their natural aspect ratio. */
+:where(#cortexa-ai-crm-landing img[width][height]) {
+  height: auto;
+}

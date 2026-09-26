@@ -11,7 +11,11 @@ import { AuthService } from '../auth/auth.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import { normalizePlanId } from '../plans/plan-config';
 import { captureSignupCountry } from '../common/signup-geo.util';
-import { firstTouchFromDto } from '../common/acquisition.util';
+import {
+  ACQUISITION_EXTRA_COLUMNS,
+  firstTouchFromDto,
+  captureLastTouch,
+} from '../common/acquisition.util';
 
 @Injectable()
 export class TrialService {
@@ -74,7 +78,29 @@ export class TrialService {
       `first_touch_medium TEXT`,
       `first_touch_campaign TEXT`,
       `first_touch_landing_route TEXT`,
+      `first_touch_term TEXT`,
+      `first_touch_content TEXT`,
+      `first_touch_landing_page TEXT`,
+      `first_touch_channel TEXT`,
+      `first_touch_keyword_theme TEXT`,
+      `first_touch_campaign_cluster TEXT`,
+      `first_touch_language VARCHAR(8)`,
+      `last_touch_source TEXT`,
+      `last_touch_medium TEXT`,
+      `last_touch_campaign TEXT`,
+      `last_touch_term TEXT`,
+      `last_touch_content TEXT`,
+      `last_touch_landing_route TEXT`,
+      `last_touch_landing_page TEXT`,
+      `last_touch_channel TEXT`,
+      `last_touch_keyword_theme TEXT`,
+      `last_touch_campaign_cluster TEXT`,
+      `last_touch_referrer_host TEXT`,
+      `last_touch_language VARCHAR(8)`,
+      `last_visit_at TIMESTAMPTZ`,
       `first_visit_at TIMESTAMPTZ`,
+      // Ad group + device of the first / last visit (migration 173).
+      ...ACQUISITION_EXTRA_COLUMNS,
     ];
     for (const c of cols) {
       await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
@@ -207,6 +233,15 @@ export class TrialService {
           first_touch_campaign,
           first_touch_landing_route,
           first_visit_at,
+          first_touch_term,
+          first_touch_content,
+          first_touch_landing_page,
+          first_touch_channel,
+          first_touch_keyword_theme,
+          first_touch_campaign_cluster,
+          first_touch_language,
+          first_touch_ad_group,
+          first_touch_device,
           registered_at,
           created_at,
           updated_at
@@ -216,6 +251,7 @@ export class TrialService {
           $1, $2, $3, $4, $5, 'TRIAL', $6, true, $7, $8,
           $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
           $21, $22, $23, $24, COALESCE($25::timestamptz, NOW()),
+          $26, $27, $28, $29, $30, $31, $32, $33, $34,
           NOW(), NOW(), NOW()
         )
         RETURNING id
@@ -246,6 +282,15 @@ export class TrialService {
           firstTouch.campaign,
           firstTouch.landingRoute,
           firstTouch.firstVisitAt,
+          firstTouch.term,
+          firstTouch.content,
+          firstTouch.landingPage,
+          firstTouch.channel,
+          firstTouch.keywordTheme,
+          firstTouch.campaignCluster,
+          firstTouch.language,
+          firstTouch.adGroup,
+          firstTouch.device,
         ],
       );
 
@@ -258,6 +303,8 @@ export class TrialService {
       // delays or fails the signup; a missing result shows as "Unknown" in admin.
       if (newUserId) {
         void captureSignupCountry(this.db, newUserId, geo || {});
+        // The visit that brought this customer back, kept beside the first one.
+        void captureLastTouch(this.db, newUserId, dto);
       }
 
       // Make the trial user the OWNER of their team and an active member. The

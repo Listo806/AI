@@ -42,13 +42,13 @@ const ARTICLE_SECTIONS = [
   { id: "old-way", label: "The Cost of Doing Business the Old Way" },
   { id: "missed-leads", label: "Every Missed Lead Represents Lost Revenue" },
   { id: "ai-rules", label: "Artificial Intelligence Changes the Rules" },
-  { id: "revenue-os", label: "From CRM to AI Revenue Operating System" },
+  { id: "revenue-os", label: "From CRM to Agentic CRM" },
   { id: "every-industry", label: "Every Industry Can Benefit From AI" },
   {
     id: "competitive-advantage",
     label: "Businesses That Embrace AI Will Build Competitive Advantages",
   },
-  { id: "introducing-cortexa", label: "Introducing Cortexa AI CRM" },
+  { id: "introducing-cortexa", label: "Introducing Cortexa Agentic CRM" },
   {
     id: "team-workspace",
     label: "One Team. One Workspace. One Connected Business.",
@@ -112,7 +112,7 @@ function CtaCard({ where, bottom = false }) {
           })
         }
       >
-        Start your free trial
+        Get started
       </Link>
 
       <Link
@@ -156,7 +156,7 @@ function Contents({ activeId, onNavigate }) {
 function EditorialImage({ src, alt, caption, variant = "" }) {
   return (
     <figure className={`ed-ai-image ${variant}`}>
-      <img src={src} alt={alt} />
+      <img src={src} alt={alt} loading="lazy" decoding="async" />
       {caption ? <figcaption>{caption}</figcaption> : null}
     </figure>
   );
@@ -171,30 +171,12 @@ export default function EditorialBusinessAI() {
     [],
   );
 
+  // Title and meta description are set centrally by the head manager
+  // (src/seo/head.js from src/i18n/seo.js); do not override them here.
   useEffect(() => {
-    document.title = "How AI Is Transforming Every Business | Cortexa AI CRM";
-
-    let meta = document.querySelector('meta[name="description"]');
-    const previousDescription = meta?.getAttribute("content") || "";
-
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.setAttribute("name", "description");
-      document.head.appendChild(meta);
-    }
-
-    meta.setAttribute(
-      "content",
-      "Discover how AI Revenue Operating Systems are transforming customer engagement, operations, and business growth across every industry.",
-    );
-
     trackEvent("editorial_view", {
       page: "how_ai_is_transforming_every_business",
     });
-
-    return () => {
-      if (meta) meta.setAttribute("content", previousDescription);
-    };
   }, []);
 
   useEffect(() => {
@@ -251,7 +233,7 @@ export default function EditorialBusinessAI() {
               })
             }
           >
-            Start free trial
+            Get started
           </Link>
 
           <button
@@ -283,7 +265,7 @@ export default function EditorialBusinessAI() {
               Get Started
             </a>
             <Link to="/trial" onClick={closeMobileNav}>
-              Start free trial
+              Get started
             </Link>
           </div>
         )}
@@ -307,7 +289,7 @@ export default function EditorialBusinessAI() {
               Improve Revenue by Optimizing Your Business Operating System
             </h1>
             <p className="ed-ai-hero-subtitle">
-              Why the Future Belongs to AI Revenue Operating Systems
+              Why the Future Belongs to Agentic CRMs
             </p>
 
             <p className="ed-byline">
@@ -374,7 +356,7 @@ export default function EditorialBusinessAI() {
 
               <EditorialImage
                 src={whyImg}
-                alt="Cortexa AI business dashboard"
+                alt="Cortexa Agentic CRM business dashboard"
                 caption="A connected view of customer activity, automation, pipeline, and revenue performance."
                 variant="is-dashboard"
               />
@@ -501,7 +483,7 @@ export default function EditorialBusinessAI() {
             </section>
 
             <section className="ed-section" id="revenue-os">
-              <h2>From CRM to AI Revenue Operating System</h2>
+              <h2>From CRM to Agentic CRM</h2>
               <p>
                 Traditional CRM software was originally designed to organize
                 customer information.
@@ -516,7 +498,7 @@ export default function EditorialBusinessAI() {
                 contribute to revenue growth.
               </p>
               <p>
-                An AI Revenue Operating System goes beyond storing customer
+                An Agentic CRM goes beyond storing customer
                 records.
               </p>
               <p>
@@ -531,7 +513,7 @@ export default function EditorialBusinessAI() {
 
               <EditorialImage
                 src={why2Img}
-                alt="Cortexa unified AI Revenue Operating System"
+                alt="Cortexa Agentic CRM unified platform"
                 caption="Customer communication, AI automation, workflows, and revenue activity connected in one operating system."
                 variant="is-platform"
               />
@@ -662,8 +644,8 @@ export default function EditorialBusinessAI() {
               id="introducing-cortexa"
             >
               <span className="ed-section-kicker">One connected platform</span>
-              <h2>Introducing Cortexa AI CRM</h2>
-              <p>Cortexa AI CRM was built around a simple idea:</p>
+              <h2>Introducing Cortexa Agentic CRM</h2>
+              <p>Cortexa Agentic CRM was built around a simple idea:</p>
               <blockquote className="ed-pull-quote">
                 Businesses should spend less time managing software and more
                 time growing revenue.
@@ -687,7 +669,7 @@ export default function EditorialBusinessAI() {
 
               <EditorialImage
                 src={why4Img}
-                alt="Cortexa AI CRM platform"
+                alt="Cortexa Agentic CRM platform"
                 caption="Cortexa connects AI conversations, workflows, pipeline, teams, and analytics."
                 variant="is-cortexa"
               />
@@ -754,8 +736,8 @@ export default function EditorialBusinessAI() {
                 </span>
                 <p>
                   <strong>
-                    Cortexa brings Team Workspace directly into your AI Revenue
-                    Operating System,
+                    Cortexa brings Team Workspace directly into your Agentic
+                    CRM,
                   </strong>{" "}
                   connecting your people, customers, projects, workflows, and AI
                   Agent inside one intelligent platform.
@@ -862,18 +844,18 @@ export default function EditorialBusinessAI() {
               <p>
                 Whether your goal is generating more leads, responding faster,
                 automating repetitive tasks, or building a more efficient
-                organization, an AI Revenue Operating System can help position
+                organization, an Agentic CRM can help position
                 your business for long-term growth.
               </p>
               <p>
-                Discover how Cortexa AI CRM can help your business operate
+                Discover how Cortexa Agentic CRM can help your business operate
                 smarter, respond faster, and grow with AI.
               </p>
 
               <div className="ed-ai-final-callout">
                 <Bot size={32} />
                 <div>
-                  <strong>Start Your Free Trial Today.</strong>
+                  <strong>Get Started Today.</strong>
                   <span>
                     Put AI-powered conversations, automation, and revenue
                     intelligence to work for your business.
@@ -895,7 +877,7 @@ export default function EditorialBusinessAI() {
 
       <footer className="ed-footer">
         <div className="ed-footer-inner">
-          <img src={footlogo} alt="Cortexa" className="ed-footlogo" />
+          <img src={footlogo} alt="Cortexa Agentic CRM" loading="lazy" decoding="async" className="ed-footlogo" />
           <div className="ed-footer-links">
             <Link to="/pricing">Pricing</Link>
             <Link to="/features">Features</Link>

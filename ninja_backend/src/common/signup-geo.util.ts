@@ -27,6 +27,9 @@ async function ensureGeoColumns(db: {
   await db.query(
     `ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_region VARCHAR(80)`,
   );
+  // The city, when a provider gives one. Used for reporting only, alongside the
+  // country and region; the address itself is still never stored.
+  await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_city VARCHAR(80)`);
   geoColumnsReady = true;
 }
 
@@ -78,7 +81,7 @@ export function clientIpFromHeaders(headers: any, req?: any): string | null {
   );
 }
 
-type GeoAnswer = { country: string | null; region: string | null };
+type GeoAnswer = { country: string | null; region: string | null; city: string | null };
 
 /**
  * The geolocation services we ask, best first. Each returns the country and the
@@ -99,7 +102,7 @@ function geoProviders(
   const list: Array<{
     name: string;
     url: string;
-    pick: (j: any) => { country?: any; region?: any } | null;
+    pick: (j: any) => { country?: any; region?: any; city?: any } | null;
   }> = [];
   if (token) {
     list.push({
@@ -122,12 +125,12 @@ function geoProviders(
     {
       name: 'ipwho.is',
       url: `https://ipwho.is/${enc}?fields=success,country_code,region`,
-      pick: (j) => (j && j.success ? { country: j.country_code, region: j.region } : null),
+      pick: (j) => (j && j.success ? { country: j.country_code, region: j.region, city: j.city } : null),
     },
     {
       name: 'ipapi.co',
       url: `https://ipapi.co/${enc}/json/`,
-      pick: (j) => (j && !j.error ? { country: j.country, region: j.region } : null),
+      pick: (j) => (j && !j.error ? { country: j.country, region: j.region, city: j.city } : null),
     },
   );
   if (!token) {
@@ -136,7 +139,7 @@ function geoProviders(
     list.push({
       name: 'ipinfo.io',
       url: `https://ipinfo.io/${enc}/json`,
-      pick: (j) => (j && !j.error ? { country: j.country, region: j.region } : null),
+      pick: (j) => (j && !j.error ? { country: j.country, region: j.region, city: j.city } : null),
     });
   }
   return list;
@@ -161,12 +164,12 @@ export async function lookupGeoByIp(ip?: string | null): Promise<GeoAnswer> {
     raw.startsWith('::ffff:10.') ||
     raw.startsWith('169.254.')
   ) {
-    return { country: null, region: null };
+    return { country: null, region: null, city: null };
   }
   const attempt = async (
     name: string,
     url: string,
-    pick: (j: any) => { country?: any; region?: any } | null,
+    pick: (j: any) => { country?: any; region?: any; city?: any } | null,
   ): Promise<GeoAnswer | null> => {
     // A service that has just refused us is left alone for a while, so a busy
     // one never costs every sign-up a wasted second.
@@ -190,9 +193,11 @@ export async function lookupGeoByIp(ip?: string | null): Promise<GeoAnswer> {
         return null;
       }
       const region = String(picked?.region ?? '').trim();
+      const city = String(picked?.city ?? '').trim();
       return {
         country: code.toUpperCase(),
         region: region && region.length <= 80 ? region : null,
+        city: city && city.length <= 80 ? city : null,
       };
     } catch (err: any) {
       console.warn(`[geo] ${name} lookup failed: ${err?.name || 'error'}`);
@@ -209,15 +214,17 @@ export async function lookupGeoByIp(ip?: string | null): Promise<GeoAnswer> {
   // freely would store a location that does not exist, and a foreign region
   // banked against a US country would appear as an invented state in the admin
   // reports.
-  const found: GeoAnswer = { country: null, region: null };
+  const found: GeoAnswer = { country: null, region: null, city: null };
   for (const provider of geoProviders(raw)) {
     const answer = await attempt(provider.name, provider.url, provider.pick);
     if (!answer) continue;
     if (!found.country) {
       found.country = answer.country;
       found.region = answer.region;
+      found.city = answer.city;
     } else if (!found.region && answer.country === found.country) {
       found.region = answer.region;
+      found.city = found.city || answer.city;
     }
     if (found.country && found.region) break;
   }
@@ -242,6 +249,7 @@ export async function captureSignupCountry(
         ? String(geo.country).toUpperCase()
         : null;
     let region = normalizeRegion(geo.region);
+    let city: string | null = null;
 
     // One lookup covers both, and runs whenever either half is still missing.
     // It is fire-and-forget, so it never delays the sign-up that spawned it.
@@ -252,12 +260,14 @@ export async function captureSignupCountry(
       if (!region && found.region && (!code || code === found.country)) {
         region = normalizeRegion(found.region);
       }
+      if (found.city && (!code || code === found.country)) city = found.city;
       code = code || found.country;
     }
-    if (!code && !region) return;
+    if (!code && !region && !city) return;
     // One line per sign-up, so a location that never arrives can be traced.
     console.log(
-      `[geo] signup location: country ${code || 'unknown'}, region ${region || 'unknown'}`,
+      `[geo] signup location: country ${code || 'unknown'}, region ${region || 'unknown'}, ` +
+        `city ${city || 'unknown'}`,
     );
 
     // The columns exist on every database the admin has read from, but the
@@ -268,6 +278,13 @@ export async function captureSignupCountry(
       await db.query(
         `UPDATE users SET signup_country = $1 WHERE id = $2 AND signup_country IS NULL`,
         [code, userId],
+      );
+    }
+    if (city) {
+      await db.query(
+        `UPDATE users SET signup_city = $1
+          WHERE id = $2 AND COALESCE(signup_city, '') = ''`,
+        [city.slice(0, 80), userId],
       );
     }
     if (region) {

@@ -9,17 +9,18 @@ import {
 } from "lucide-react";
 
 import "./ecommerce-product.css";
+import { trackEvent } from "../../utils/track";
 import EcommerceIntegrationsPage from "./EcommerceIntegrations";
 import EcommerceSubscriptionsPage from "./EcommerceSubscriptions";
-import heroDashboard from "./assets/hero-dashboard.png";
-import connectedDiagram from "./assets/connected-diagram.png";
-import subscriberDashboard from "./assets/subscriber-dashboard.png";
-import billingDashboard from "./assets/billing-dashboard.png";
-import revenueDashboard from "./assets/revenue-dashboard.png";
-import ordersDashboard from "./assets/orders-dashboard.png";
-import integrationsDiagram from "./assets/integrations-diagram.png";
-import automationDashboard from "./assets/automation-dashboard.png";
-import analyticsDashboard from "./assets/analytics-dashboard.png";
+import heroDashboard from "./assets/cortexa-ecommerce-subscription-crm-billing-calendar.webp";
+import connectedDiagram from "./assets/cortexa-ecommerce-subscription-crm-connected-platform.webp";
+import subscriberDashboard from "./assets/cortexa-ecommerce-subscription-crm-subscriber-management.webp";
+import billingDashboard from "./assets/cortexa-ecommerce-subscription-crm-billing-payments.webp";
+import revenueDashboard from "./assets/cortexa-ecommerce-subscription-crm-offers-affiliates-revenue.webp";
+import ordersDashboard from "./assets/cortexa-ecommerce-subscription-crm-orders-fulfillment.webp";
+import integrationsDiagram from "./assets/cortexa-ecommerce-subscription-crm-integrations.webp";
+import automationDashboard from "./assets/cortexa-ecommerce-subscription-crm-automation-workflows.webp";
+import analyticsDashboard from "./assets/cortexa-ecommerce-subscription-crm-analytics-reporting.webp";
 import headlogoImg from "./assets/headlogo.png";
 
 const EcAuthContext = createContext(null);
@@ -52,7 +53,7 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
-  return <Link to="/e-commerce" className="ec-logo"><img src={headlogoImg} className="cx-logo-img" /></Link>;
+  return <Link to="/e-commerce" className="ec-logo"><img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM" /></Link>;
 }
 
 export function EcommerceHeader(){
@@ -62,14 +63,14 @@ export function EcommerceHeader(){
 }
 
 const sections=[
- {n:"03",eyebrow:"YOUR SUBSCRIPTION BUSINESS, ALL CONNECTED.",title:<>One platform to run <em>every part of your business.</em></>,desc:"Connect your tools, your data, and your workflows. Cortexa brings everything together so you can operate more efficiently and grow faster.",bullets:[[Link2,"Connect multiple merchant accounts"],[Users,"Manage all your subscribers"],[CalendarDays,"Automate recurring billing"],[CircleDollarSign,"Track transactions and disputes"],[Plug,"Integrate with the tools you use"]],img:connectedDiagram,id:"subscriptions"},
- {n:"04",eyebrow:"YOUR SUBSCRIPTIONS & CUSTOMER MANAGEMENT",title:<>Know every subscriber. <em>Increase retention.</em></>,desc:"Centralize customer data, track subscription status, payment history, and engagement — so you can reduce churn and grow lifetime value.",bullets:[[UserRound,"Complete customer profiles"],[CreditCard,"Real-time status and payment details"],[Tags,"Smart segmentation and tagging"],[RefreshCw,"Retention tools and win-backs"],[MessageSquareText,"Custom fields and notes"]],img:subscriberDashboard},
- {n:"05",eyebrow:"BILLING & PAYMENT MANAGEMENT",title:<>Run billing that <br/><em>always gets paid.</em></>,desc:"Centralize customer merchant accounts and gateways, automate retries, handle fallbacks and chargebacks, and keep cash flow steady.",bullets:[[WalletCards,"Multiple Merchant Accounts"],[CalendarDays,"Recurring Billing & Rebills"],[RefreshCw,"Smart Retries & Dunning"],[CircleDollarSign,"Chargebacks & Disputes"],[RotateCcw,"Refunds & Credits"],[CreditCard,"Transaction History"]],img:billingDashboard},
- {n:"06",eyebrow:"PRODUCTS, OFFERS, CAMPAIGNS & AFFILIATES",title:<>Launch offers. <br/><em>Grow with affiliates.</em></>,desc:"Control analytics and subscription offers, run campaigns that convert, and scale with a powerful affiliate program.",bullets:[[PackageCheck,"Products & Subscriptions"],[BadgeDollarSign,"Offers & Upsells"],[Megaphone,"Campaigns"],[Users,"Affiliate Management"],[BarChart3,"Tracking & Attribution"],[CircleDollarSign,"Commissions & Payouts"]],img:revenueDashboard},
- {n:"07",eyebrow:"ORDERS & FULFILLMENT",title:<>Fulfill every order. <br/><em>Delight every customer.</em></>,desc:"Manage orders from start to finish, connect your fulfillment providers, track shipments, handle returns, and keep customers happy.",bullets:[[ShoppingCart,"Order Management"],[PackageCheck,"Fulfillment Providers"],[Truck,"Shipping & Tracking"],[RotateCcw,"Returns & Reships"]],img:ordersDashboard},
- {n:"08",eyebrow:"INTEGRATIONS",title:<>Connect the tools <em>that power your business.</em></>,desc:"Plug into the payment gateways, providers, and services you rely on. All connected. All in sync.",bullets:[],img:integrationsDiagram,id:"integrations"},
- {n:"09",eyebrow:"AUTOMATION",title:<>Automate the work. <em>Focus on growth.</em></>,desc:"Create powerful automation workflows for billing, communications, fulfillment, and more.",bullets:[[CreditCard,"Billing Automations"],[MessageSquareText,"Customer Communications"],[Truck,"Fulfillment Workflows"],[Workflow,"Operational Automation"],[Workflow,"Custom Workflows"]],img:automationDashboard},
- {n:"10",eyebrow:"ANALYTICS & REPORTING",title:<>Real data. <br/><em>Smarter decisions.</em></>,desc:"Powerful analytics and reports give you the clarity to grow revenue, reduce churn, and optimize performance.",bullets:[[BadgeDollarSign,"Revenue Analytics"],[Users,"Subscriber Insights"],[CreditCard,"Payment Performance"],[BarChart3,"Campaign & Offer Reports"],[FileBarChart2,"Custom Reports"]],img:analyticsDashboard},
+ {n:"03",eyebrow:"YOUR SUBSCRIPTION BUSINESS, ALL CONNECTED.",title:<>One platform to run <em>every part of your business.</em></>,desc:"Connect your tools, your data, and your workflows. Cortexa brings everything together so you can operate more efficiently and grow faster.",bullets:[[Link2,"Connect multiple merchant accounts"],[Users,"Manage all your subscribers"],[CalendarDays,"Automate recurring billing"],[CircleDollarSign,"Track transactions and disputes"],[Plug,"Integrate with the tools you use"]],img:connectedDiagram,alt:"Diagram of Cortexa E-Commerce CRM connecting merchant accounts, subscribers, billing, and fulfillment",id:"subscriptions"},
+ {n:"04",eyebrow:"YOUR SUBSCRIPTIONS & CUSTOMER MANAGEMENT",title:<>Know every subscriber. <em>Increase retention.</em></>,desc:"Centralize customer data, track subscription status, payment history, and engagement — so you can reduce churn and grow lifetime value.",bullets:[[UserRound,"Complete customer profiles"],[CreditCard,"Real-time status and payment details"],[Tags,"Smart segmentation and tagging"],[RefreshCw,"Retention tools and win-backs"],[MessageSquareText,"Custom fields and notes"]],img:subscriberDashboard,alt:"Cortexa E-Commerce CRM subscriber management dashboard with customer profiles and subscription status"},
+ {n:"05",eyebrow:"BILLING & PAYMENT MANAGEMENT",title:<>Run billing that <br/><em>always gets paid.</em></>,desc:"Centralize customer merchant accounts and gateways, automate retries, handle fallbacks and chargebacks, and keep cash flow steady.",bullets:[[WalletCards,"Multiple Merchant Accounts"],[CalendarDays,"Recurring Billing & Rebills"],[RefreshCw,"Smart Retries & Dunning"],[CircleDollarSign,"Chargebacks & Disputes"],[RotateCcw,"Refunds & Credits"],[CreditCard,"Transaction History"]],img:billingDashboard,alt:"Cortexa E-Commerce CRM billing and payment management dashboard with recurring billing and retries"},
+ {n:"06",eyebrow:"PRODUCTS, OFFERS, CAMPAIGNS & AFFILIATES",title:<>Launch offers. <br/><em>Grow with affiliates.</em></>,desc:"Control analytics and subscription offers, run campaigns that convert, and scale with a powerful affiliate program.",bullets:[[PackageCheck,"Products & Subscriptions"],[BadgeDollarSign,"Offers & Upsells"],[Megaphone,"Campaigns"],[Users,"Affiliate Management"],[BarChart3,"Tracking & Attribution"],[CircleDollarSign,"Commissions & Payouts"]],img:revenueDashboard,alt:"Cortexa E-Commerce CRM revenue overview with top offers and affiliate performance"},
+ {n:"07",eyebrow:"ORDERS & FULFILLMENT",title:<>Fulfill every order. <br/><em>Delight every customer.</em></>,desc:"Manage orders from start to finish, connect your fulfillment providers, track shipments, handle returns, and keep customers happy.",bullets:[[ShoppingCart,"Order Management"],[PackageCheck,"Fulfillment Providers"],[Truck,"Shipping & Tracking"],[RotateCcw,"Returns & Reships"]],img:ordersDashboard,alt:"Cortexa E-Commerce CRM orders and fulfillment dashboard with shipping and returns"},
+ {n:"08",eyebrow:"INTEGRATIONS",title:<>Connect the tools <em>that power your business.</em></>,desc:"Plug into the payment gateways, providers, and services you rely on. All connected. All in sync.",bullets:[],img:integrationsDiagram,alt:"Cortexa E-Commerce CRM integrations with payment gateways, fulfillment providers, and services",id:"integrations"},
+ {n:"09",eyebrow:"AUTOMATION",title:<>Automate the work. <em>Focus on growth.</em></>,desc:"Create powerful automation workflows for billing, communications, fulfillment, and more.",bullets:[[CreditCard,"Billing Automations"],[MessageSquareText,"Customer Communications"],[Truck,"Fulfillment Workflows"],[Workflow,"Operational Automation"],[Workflow,"Custom Workflows"]],img:automationDashboard,alt:"Cortexa E-Commerce CRM automation workflows for billing, communications, and fulfillment"},
+ {n:"10",eyebrow:"ANALYTICS & REPORTING",title:<>Real data. <br/><em>Smarter decisions.</em></>,desc:"Powerful analytics and reports give you the clarity to grow revenue, reduce churn, and optimize performance.",bullets:[[BadgeDollarSign,"Revenue Analytics"],[Users,"Subscriber Insights"],[CreditCard,"Payment Performance"],[BarChart3,"Campaign & Offer Reports"],[FileBarChart2,"Custom Reports"]],img:analyticsDashboard,alt:"Cortexa E-Commerce CRM analytics and reporting dashboard"},
 ];
 
 export function EcommerceLanding(){
@@ -77,9 +78,9 @@ export function EcommerceLanding(){
   <main>
    <section className="ec-hero" id="dashboard"><div className="ec-copy"><div className="ec-kicker"><Workflow size={13}/> ENGINEERED FOR GROWTH</div><h1>CRM &amp; Payment Platform<br/>for <em>E-Commerce Subscriptions<br/>&amp; Affiliate Marketers.</em></h1><span className="ec-rule"/><p>Manage customers, subscriptions, recurring billing, payments, fulfillment, and integrations from one powerful platform.</p><div className="ec-actions"><Link className="ec-btn" to="/e-commerce/signup">Get Started <ArrowRight size={15}/></Link><a href="#subscriptions" className="ec-watch"><PlayCircle size={15}/> See How It Works</a></div></div><img className="ec-hero-image" src={heroDashboard} alt="Cortexa E-Commerce CRM billing calendar dashboard"/></section>
    <section className="ec-audience"><div className="ec-section-heading"><span>02</span><b>WHO IT'S BUILT FOR</b><h2>Built for businesses that<br/>run on <em>recurring revenue.</em></h2></div><p className="ec-audience-intro">From e-commerce brands to affiliate marketers, Cortexa gives you the tools to scale, automate, and maximize lifetime value.</p><div className="ec-audience-grid">{[[ShoppingCart,"E-commerce Brands","Sell products online, manage customers and orders, and grow profitably."],[RefreshCw,"Subscription Businesses","Launch and scale flexible subscriptions with smart billing and retention."],[Users,"Affiliate Marketers","Run offers, track performance, and maximize affiliate commissions."],[Megaphone,"Digital Marketers","Create campaigns, capture leads, and turn traffic into loyal customers."],[Store,"Online Sellers","Manage products, orders, and fulfillment in one streamlined platform."]].map(([Icon,title,text])=><article key={title}><Icon className="ec-audience-icon" size={25} strokeWidth={1.8}/><b>{title}</b><p>{text}</p></article>)}</div></section>
-   {sections.map((s,i)=><section className="ec-feature" id={s.id} key={s.n}><div className="ec-feature-copy"><div className="ec-eyebrow"><span>{s.n}</span>{s.eyebrow}</div><h2>{s.title}</h2><p>{s.desc}</p>{s.bullets.length>0&&<ul>{s.bullets.map(([Icon,text])=><li key={text}><Icon className="ec-feature-list-icon" size={15} strokeWidth={2}/><span>{text}</span></li>)}</ul>}</div><div className="ec-visual"><img src={s.img} alt={`${s.eyebrow} interface`}/></div></section>)}
+   {sections.map((s,i)=><section className="ec-feature" id={s.id} key={s.n}><div className="ec-feature-copy"><div className="ec-eyebrow"><span>{s.n}</span>{s.eyebrow}</div><h2>{s.title}</h2><p>{s.desc}</p>{s.bullets.length>0&&<ul>{s.bullets.map(([Icon,text])=><li key={text}><Icon className="ec-feature-list-icon" size={15} strokeWidth={2}/><span>{text}</span></li>)}</ul>}</div><div className="ec-visual"><img src={s.img} alt={s.alt||`${s.eyebrow} interface`} loading="lazy" decoding="async"/></div></section>)}
    <section className="ec-bottom-cta"><h2>Run your subscription business without losing control<br/>of your customers or data.</h2><p>Keep customers, subscriptions, billing schedules, orders, affiliates, and payment history connected in one operating system.</p><Link className="ec-btn" to="/e-commerce/signup">Get Started Today →</Link></section>
-  </main><footer className="ec-footer"><Logo/><span>© 2026 Cortexa. All rights reserved.</span><nav><a href="#">Privacy</a><Link to="/e-commerce/terms">Terms</Link><a href="#">Contact</a><Link to="/e-commerce/login">Login</Link></nav></footer>
+  </main><footer className="ec-footer"><Logo/><span>© 2026 Cortexa. All rights reserved.</span><nav><a href="/privacy-policy">Privacy</a><Link to="/e-commerce/terms">Terms</Link><a href="/contact">Contact</a><Link to="/e-commerce/login">Login</Link></nav></footer>
  </div>
 }
 
@@ -100,7 +101,7 @@ export function EcommercePricing(){
     <div className="ec-price">{recurring}<small>{annual?"/year":"/month"}</small></div>
     <div className="ec-subscriber-cap"><Users size={20}/> Up to 500 active subscribers</div>
     <p className="ec-annual-saving">$3,811 billed annually — <em>save $953</em></p>
-    <Link className="ec-price-button" to="/e-commerce/signup">Get Started</Link>
+    <Link className="ec-price-button" to="/e-commerce/signup" onClick={()=>trackEvent("ecommerce_plan_selected",{plan:"ecommerce_crm",billing_cycle:annual?"annual":"monthly",value:annual?3811:397,currency:"USD"})}>Get Started</Link>
     <hr/>
     <h3>COMPLETE PLATFORM INCLUDED:</h3>
     <ul>{["Customer & Subscription Management","Dashboard Billing Calendar","Products, Offers & Pricing Rules","Campaigns, Coupons & Order Bumps","Orders, Fulfillment & Returns","Affiliate Tracking & Attribution","Multiple Payment Integrations","Automated Decline Recovery","CRM, Notes & Activity Timeline","Integrations, APIs & Webhooks","Automation & Customer Messaging","Analytics & Commerce Reporting","Automatically moves to the next tier after 500 active subscribers"].map(x=><li key={x}><CheckCircle2 size={16}/><span>{x}</span></li>)}</ul>
@@ -246,7 +247,7 @@ const ecommerceTerms = [
   <p>If any provision is unenforceable, it will be limited to the minimum extent necessary and the remaining provisions will remain in effect. A failure to enforce a provision is not a waiver.</p>
  </>],
  ["23. Contact Information", <>
-  <p>CORTEXA E-COMMERCE CRM<br/>Cortexa AI CRM<br/>Email: support@cortexaaicrm.com</p>
+  <p>CORTEXA E-COMMERCE CRM<br/>Cortexa Agentic CRM<br/>Email: support@cortexaaicrm.com</p>
  </>],
 ];
 
@@ -256,7 +257,7 @@ export function EcommerceTerms(){
    <h1>Terms of Service</h1>
    <p className="ec-terms-effective">Effective: September 25, 2026</p>
    <div className="ec-terms-intro">
-    <p>These Terms of Service govern access to and use of the Cortexa E-Commerce CRM website, applications, APIs, integrations, and related services provided by Cortexa AI CRM. By creating an account, accessing the Services, or using the Services, you agree to these Terms. If you do not agree, do not use the Services.</p>
+    <p>These Terms of Service govern access to and use of the Cortexa E-Commerce CRM website, applications, APIs, integrations, and related services provided by Cortexa Agentic CRM. By creating an account, accessing the Services, or using the Services, you agree to these Terms. If you do not agree, do not use the Services.</p>
    </div>
    {ecommerceTerms.map(([title,content])=><section key={title}><h2>{title}</h2>{content}</section>)}
   </main>

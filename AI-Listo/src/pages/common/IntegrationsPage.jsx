@@ -86,7 +86,7 @@ export default function IntegrationsPage() {
           </p>
 
           <div className={styles.heroChartContainer}>
-            <img src={inteTopImg} alt="Cortexa Integrations Dashboard Map" className={styles.cutOutImage} />
+            <img src={inteTopImg} alt="Cortexa Agentic CRM integrations map connecting lead sources and business tools" className={styles.cutOutImage} />
           </div>
         </section>
         <section className={styles.quickSection}>
@@ -121,7 +121,7 @@ export default function IntegrationsPage() {
                 </div>
               </div>
             </div>
-            <img src={inteBottomImg} alt="Connect your app" className={styles.cutOutImage} />
+            <img src={inteBottomImg} alt="Connecting WhatsApp, website forms, email, ads, and calendar apps to Cortexa" className={styles.cutOutImage} loading="lazy" decoding="async" />
           </div>
 
           {/* STEP 2 */}

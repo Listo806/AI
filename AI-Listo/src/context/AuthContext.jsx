@@ -2,13 +2,28 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import { isInternalAccount } from '../utils/internalAccess';
+import { applyUserLanguage, userLocalePrefix } from '../i18n/funnelLocale';
 
 const AuthContext = createContext(null);
 const STORAGE_PREFIX = 'listo_';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Only a browser with a session (token) or a cached user has anything to
+  // resolve before rendering. A logged-out visitor renders the page on the very
+  // first frame instead of the splash (checkAuth below still settles to false).
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem(STORAGE_PREFIX + 'user');
+      return !!(
+        apiClient.accessToken ||
+        localStorage.getItem(STORAGE_PREFIX + 'access_token') ||
+        (cached && cached !== 'undefined')
+      );
+    } catch (_e) {
+      return true;
+    }
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,6 +56,9 @@ export function AuthProvider({ children }) {
               if (u && u.id) {
                 setUser(u);
                 localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(u));
+                // The CRM is not language-prefixed: show it in the account's
+                // saved language (an explicit selector choice still wins).
+                applyUserLanguage(u);
               }
             } catch (error) {
               console.error('❌ /users/me FAILED:', error);
@@ -93,6 +111,7 @@ export function AuthProvider({ children }) {
         apiClient.setTokens(response.accessToken, response.refreshToken);
         setUser(response.user);
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
+        applyUserLanguage(response.user);
 
         if (redirect) {
           const u = response.user || {};
@@ -100,9 +119,8 @@ export function AuthProvider({ children }) {
             String(u.paymentStatus || '').toLowerCase() === 'paid_email_verification_pending' ||
             String(u.accountStatus || '').toLowerCase() === 'paid_email_verification_pending';
           if (verificationPending && !isInternalAccount(u)) {
-            const path = window.location.pathname;
-            const prefix = path.startsWith('/es-ec/') ? '/es-ec' : path.startsWith('/es/') ? '/es' : path.startsWith('/pt/') ? '/pt' : '';
-            navigate(`${prefix}/verify-email`);
+            // The account's own language, not the page it signed in from.
+            navigate(`${userLocalePrefix(u)}/verify-email`);
             return response;
           }
 
@@ -124,7 +142,7 @@ export function AuthProvider({ children }) {
             u.role === 'owner' &&
             !isInternalAccount(u)
           ) {
-            navigate(`/checkout?plan=${encodeURIComponent(u.selectedPlan)}`);
+            navigate(`${userLocalePrefix(u)}/checkout?plan=${encodeURIComponent(u.selectedPlan)}`);
             return response;
           }
 
@@ -172,7 +190,7 @@ export function AuthProvider({ children }) {
   const completeTwoFactorLogin = async (challengeToken, code, options = {}) => {
     const response = await apiClient.request('/auth/2fa/verify-login', { method:'POST', body:JSON.stringify({ challengeToken, code }) });
     if (!response?.accessToken) throw new Error('Two-factor verification failed');
-    apiClient.setTokens(response.accessToken,response.refreshToken); setUser(response.user); localStorage.setItem(STORAGE_PREFIX+'user',JSON.stringify(response.user));
+    apiClient.setTokens(response.accessToken,response.refreshToken); setUser(response.user); localStorage.setItem(STORAGE_PREFIX+'user',JSON.stringify(response.user)); applyUserLanguage(response.user);
     if (options.redirect !== false) navigate('/dashboard');
     return response;
   };
