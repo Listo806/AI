@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { localePrefixFromPath, withLocalePrefix } from "../../i18n/funnelLocale";
 
 export default function PaymentSuccess() {
   const { refreshUser } = useAuth();
@@ -20,7 +21,8 @@ export default function PaymentSuccess() {
         }
         navigate("/dashboard", { replace: true });
       } else {
-        navigate("/sign-in", { replace: true });
+        // Keep the page's language (/es/payment-success -> /es/sign-in).
+        navigate(withLocalePrefix(localePrefixFromPath(window.location.pathname), "/sign-in"), { replace: true });
       }
     };
 

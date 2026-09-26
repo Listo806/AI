@@ -155,7 +155,7 @@ export default function AcceptInvite() {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <div className="auth-badge">Cortexa AI OS</div>
+          <div className="auth-badge">Cortexa Agentic CRM</div>
           <h1 className="auth-title">Checking your invitation…</h1>
           <p className="auth-subtitle">One moment.</p>
         </div>
@@ -168,7 +168,7 @@ export default function AcceptInvite() {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <div className="auth-badge">Cortexa AI OS</div>
+          <div className="auth-badge">Cortexa Agentic CRM</div>
           <h1 className="auth-title">Invitation unavailable</h1>
           <p className="auth-subtitle">
             {invite?.expired
@@ -188,7 +188,7 @@ export default function AcceptInvite() {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <div className="auth-badge">Cortexa AI OS</div>
+          <div className="auth-badge">Cortexa Agentic CRM</div>
           <h1 className="auth-title">You've joined {joinedTeam}</h1>
           <div
             className="auth-error"
@@ -209,7 +209,7 @@ export default function AcceptInvite() {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <div className="auth-badge">Cortexa AI OS</div>
+          <div className="auth-badge">Cortexa Agentic CRM</div>
           <h1 className="auth-title">Join {invite.teamName || 'the team'}</h1>
           <p className="auth-subtitle">
             You were invited as <strong>{invite.role || 'agent'}</strong>.
@@ -234,7 +234,7 @@ export default function AcceptInvite() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-badge">Cortexa AI OS</div>
+        <div className="auth-badge">Cortexa Agentic CRM</div>
         <h1 className="auth-title">Join {invite.teamName || 'the team'}</h1>
         <p className="auth-subtitle">
           You were invited as <strong>{invite.role || 'agent'}</strong>.{' '}

@@ -150,6 +150,7 @@ export class NuveiController {
       browserInfo: body?.browserInfo,
       termUrl: body?.termUrl,
       testScenario: body?.testScenario,
+      gaClientId: body?.gaClientId,
     });
   }
 

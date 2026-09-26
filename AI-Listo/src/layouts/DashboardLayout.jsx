@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import { isInternalAccount } from "../utils/internalAccess";
+import { applyUserLanguage, userLanguage, userLocalePrefix } from "../i18n/funnelLocale";
+import { deriveJourney, trackEventOnce } from "../utils/track";
 import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
 import LanguageSelector from "../components/LanguageSelector";
@@ -67,7 +69,7 @@ const getPageTitle = (pathname) => {
 
 export default function DashboardLayout() {
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -98,9 +100,7 @@ export default function DashboardLayout() {
     if (isInternalAccount(user)) return;
     const status = String(user.paymentStatus || "").toLowerCase();
     if (status === 'paid_email_verification_pending' || String(user.accountStatus || '').toLowerCase() === 'paid_email_verification_pending') {
-      const lang = String(user.preferredLanguage || 'en').toLowerCase();
-      const prefix = /\/es-ec(?:[/?#]|$)/i.test(String(user.landingPage || '')) ? '/es-ec' : lang === 'es' ? '/es' : lang === 'pt' ? '/pt' : '';
-      navigate(`${prefix}/verify-email`, { replace: true });
+      navigate(`${userLocalePrefix(user)}/verify-email`, { replace: true });
       return;
     }
     // A subscription in its 14-day trial is a paid account (the backend's
@@ -118,10 +118,28 @@ export default function DashboardLayout() {
     if (location.pathname.startsWith("/account")) return;
     const paidAt = Number(localStorage.getItem("cortexa_paid_at") || 0);
     if (paidAt && Date.now() - paidAt < 30 * 60 * 1000) return;
-    navigate(`/checkout?plan=${encodeURIComponent(user.selectedPlan)}`, {
+    // The CRM is unprefixed; checkout is a localized public page, so send the
+    // owner to it in their own language (es -> /es, pt -> /pt, Ecuador /es-ec).
+    navigate(`${userLocalePrefix(user)}/checkout?plan=${encodeURIComponent(user.selectedPlan)}`, {
       replace: true,
     });
   }, [user, navigate, location.pathname]);
+
+  // The CRM has no language prefix (no LocaleLayout), so after an English
+  // funnel hop (/sign-in, /checkout) it would stay English. Show it in the
+  // account's saved language instead; an explicit selector choice still wins.
+  useEffect(() => {
+    if (user) applyUserLanguage(user);
+  }, [user?.id, user?.preferredLanguage]);
+
+  // crm_opened: the first CRM render in this browser session.
+  useEffect(() => {
+    if (!user?.id) return;
+    trackEventOnce(`crm_opened:${user.id}`, "crm_opened", {
+      language: userLanguage(user) || String(i18n.language || "en").slice(0, 2),
+      plan: deriveJourney(user).planTier,
+    });
+  }, [user?.id]);
 
   // Tự động kiểm tra cấu hình theme mặc định dựa trên thiết bị (chỉ kích hoạt khi thay đổi kích thước/thiết bị)
   useEffect(() => {

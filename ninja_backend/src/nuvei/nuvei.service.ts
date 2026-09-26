@@ -15,6 +15,8 @@ import { NuveiClientService, NuveiUser } from './nuvei-client.service';
 import { RenewalReportingService } from './renewal-reporting.service';
 import { decryptToken, encryptToken, tokenFingerprint } from './nuvei-crypto.util';
 import { PLANS, PlanId, getSeatLimit, normalizePlanId } from '../plans/plan-config';
+import { ensureAcquisitionColumns } from '../common/acquisition.util';
+import { cleanGaClientId, ga4Settings, sendGa4Event } from '../common/ga4-measurement.util';
 
 /**
  * Nuvei / Datafast (Paymentez) subscription engine.
@@ -312,6 +314,10 @@ export class NuveiService {
     // What brought the customer, copied onto the purchase itself.
     await this.db.query(
       `ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS acquisition JSONB`,
+    );
+    // Stamped once the activation payment was reported to GA4 (migration 173).
+    await this.db.query(
+      `ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS analytics_activation_reported_at TIMESTAMPTZ`,
     );
     // Nuvei's own Link-to-Pay order id, returned as data.order.id.
     await this.db.query(
@@ -906,6 +912,7 @@ export class NuveiService {
     browserInfo?: any; // for 3DS2
     termUrl?: string; // where the browser lands after a 3DS challenge
     testScenario?: string; // STAGING ONLY: '3ds_challenge' | '3ds_frictionless'
+    gaClientId?: string; // the browser's GA4 client id (analytics only)
   }): Promise<{
     status: SubStatus;
     subscriptionId: string;
@@ -1035,7 +1042,12 @@ export class NuveiService {
         dev_reference,
         input.consentIp || null,
         returnUrl,
-        JSON.stringify(await this.acquisitionSnapshot(input.userId)),
+        JSON.stringify({
+          ...(await this.acquisitionSnapshot(input.userId)),
+          // The paying browser's GA4 client id, so the server-side
+          // payment_confirmed_backend event joins the visitor's GA4 user.
+          ga_client_id: cleanGaClientId(input.gaClientId),
+        }),
       ],
     );
     const subscriptionId = subRows[0].id;
@@ -1384,11 +1396,94 @@ export class NuveiService {
     });
 
     if (!userId) return;
+    // Server-side confirmation of the activation payment to GA4 (never to
+    // Google Ads). Fire-and-forget: analytics can never delay activation.
+    void this.reportActivationConfirmed(subscriptionId, plan, tx, userId);
     const finalStatus: 'trialing' | 'active' = plan.trialDays > 0 ? 'trialing' : 'active';
     // Idempotent initial-email claim inside PlatformMailerService. A crash here
     // is recoverable: a duplicate callback sees verification_pending and calls
     // this method below again through the callback branch.
     await this.mailer.beginPaidEmailVerification(userId, finalStatus);
+  }
+
+  /**
+   * payment_confirmed_backend: the activation payment, as confirmed by this
+   * server (Nuvei approval: status success + status_detail 3), sent to GA4 via
+   * the Measurement Protocol. Off unless GA4_MEASUREMENT_ID + GA4_API_SECRET
+   * are set. Sent once per subscription's activation transaction: the
+   * subscription row is claimed (analytics_activation_reported_at) before
+   * sending and released again if GA4 does not accept it. GA4 only; never
+   * Google Ads (the browser reports the Ads purchase conversion).
+   */
+  private async reportActivationConfirmed(
+    subscriptionId: string,
+    plan: NuveiPlan,
+    tx: any,
+    userId: string,
+  ): Promise<void> {
+    try {
+      if (!ga4Settings(this.config)) return;
+      const { rows } = await this.db.query(
+        `UPDATE nuvei_subscriptions
+            SET analytics_activation_reported_at = NOW()
+          WHERE id = $1 AND analytics_activation_reported_at IS NULL
+          RETURNING activation_amount, acquisition`,
+        [subscriptionId],
+      );
+      if (!rows[0]) return; // already reported
+      const acq = rows[0].acquisition || {};
+      const ft = acq.first_touch || {};
+      const lt = acq.last_touch || {};
+      let transactionId: string | null = tx?.id ? String(tx.id) : null;
+      if (!transactionId) {
+        const found = await this.db.query(
+          `SELECT provider_transaction_id FROM nuvei_transactions
+            WHERE subscription_id = $1 AND kind = 'activation'
+              AND provider_transaction_id IS NOT NULL
+            ORDER BY created_at DESC LIMIT 1`,
+          [subscriptionId],
+        );
+        transactionId = found.rows[0]?.provider_transaction_id || subscriptionId;
+      }
+      const value = Number(tx?.amount ?? rows[0].activation_amount ?? plan.activation) || 0;
+      const ok = await sendGa4Event(
+        this.config,
+        {
+          // The paying browser's GA4 client id when the checkout sent one;
+          // otherwise a stable synthetic id (ours, not personal data).
+          clientId: acq.ga_client_id || `server.${userId}`,
+          userId,
+          name: 'payment_confirmed_backend',
+          params: {
+            transaction_id: String(transactionId),
+            value: Number(value.toFixed(2)),
+            currency: 'USD',
+            plan: plan.key,
+            language: acq.language || ft.language || undefined,
+            first_touch_campaign: ft.campaign,
+            first_touch_source: ft.source,
+            first_touch_medium: ft.medium,
+            first_touch_ad_group: ft.ad_group,
+            last_touch_campaign: lt.campaign,
+            last_touch_source: lt.source,
+            last_touch_medium: lt.medium,
+            last_touch_ad_group: lt.ad_group,
+            device: lt.device || ft.device,
+            country: acq.country,
+          },
+        },
+        (m) => this.logger.log(`${m} (sub ${subscriptionId})`),
+      );
+      if (!ok) {
+        // Let a later confirmation path (a duplicate callback) try again.
+        await this.db.query(
+          `UPDATE nuvei_subscriptions SET analytics_activation_reported_at = NULL WHERE id = $1`,
+          [subscriptionId],
+        );
+      }
+    } catch (err: any) {
+      this.logger.warn(`payment_confirmed_backend skipped: ${err?.message || 'error'}`);
+    }
   }
 
   /**
@@ -2107,6 +2202,10 @@ export class NuveiService {
    */
   private async acquisitionSnapshot(userId: string): Promise<Record<string, any>> {
     try {
+      // The ad group / device columns (migration 173) may not exist yet where
+      // migrations are not auto-run; without them the SELECT would fail and
+      // the whole snapshot would be lost.
+      await ensureAcquisitionColumns(this.db);
       const { rows } = await this.db.query(
         `SELECT first_touch_source, first_touch_medium, first_touch_campaign,
                 first_touch_landing_route, first_touch_landing_page,
@@ -2117,6 +2216,8 @@ export class NuveiService {
                 last_touch_channel, last_touch_keyword_theme,
                 last_touch_campaign_cluster, last_touch_referrer_host,
                 last_touch_language, last_visit_at,
+                first_touch_ad_group, first_touch_device,
+                last_touch_ad_group, last_touch_device,
                 landing_page, utm_source, utm_medium, utm_campaign, utm_term,
                 utm_content, gclid, signup_country, signup_region, signup_city,
                 preferred_language, signup_source
@@ -2136,6 +2237,8 @@ export class NuveiService {
           keyword_theme: u.first_touch_keyword_theme || u.utm_term || null,
           campaign_cluster: u.first_touch_campaign_cluster || null,
           language: u.first_touch_language || null,
+          ad_group: u.first_touch_ad_group || null,
+          device: u.first_touch_device || null,
           at: u.first_visit_at || null,
         },
         last_touch: {
@@ -2149,6 +2252,8 @@ export class NuveiService {
           campaign_cluster: u.last_touch_campaign_cluster || null,
           referrer_host: u.last_touch_referrer_host || null,
           language: u.last_touch_language || null,
+          ad_group: u.last_touch_ad_group || null,
+          device: u.last_touch_device || null,
           at: u.last_visit_at || null,
         },
         gclid: u.gclid || null,

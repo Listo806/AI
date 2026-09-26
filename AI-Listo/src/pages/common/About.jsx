@@ -17,7 +17,7 @@ export default function About() {
   const problemCards = [
     {
       title: "Scattered leads",
-      text: "Leads arrive from everywhere — ads, websites, referrals, listings, and more. They get lost, duplicated, or forgotten.",
+      text: "Leads arrive from everywhere — ads, websites, referrals, marketplaces, and more. They get lost, duplicated, or forgotten.",
       icon: ScatterChart,
     },
     {
@@ -62,13 +62,13 @@ export default function About() {
         <div className={styles.aboutHeroText}>
           <div className={styles.aboutBadge}>ABOUT CORTEXA</div>
           <h1>
-            The intelligence layer behind <br />modern <span>real estate operations.</span>
+            The intelligence layer behind <br />modern <span>business operations.</span>
           </h1>
           <p>
-            CORTEXA was built to unify leads, listings, conversations, automations, analytics, and team workflows into one intelligent operating system for real estate professionals.
+            CORTEXA is an Agentic CRM that unifies leads, clients, conversations, automations, analytics, and team workflows, with specialized workspaces for sales, real estate, clinics, e-commerce, and more.
           </p>
           <p>
-            Our mission is simple: bring modern AI and connected systems into a fragmented industry to make daily work simpler, faster, and more effective.
+            Our mission is simple: bring modern AI and connected systems into fragmented operations to make daily work simpler, faster, and more effective.
           </p>
         </div>
 
@@ -81,8 +81,8 @@ export default function About() {
           Why CORTEXA exists
         </h2>
         <p>
-          Real estate doesn’t just have a lead problem — it has an <strong>operations problem.</strong><br />
-          Leads, listings, inboxes, calendars, teams, and follow-up tools often live in separate places. <br />
+          Most businesses don’t just have a lead problem — they have an <strong>operations problem.</strong><br />
+          Leads, clients, inboxes, calendars, teams, and follow-up tools often live in separate places. <br />
           That fragmentation creates delays, missed opportunities, and unnecessary complexity.
         </p>
 
@@ -142,16 +142,16 @@ export default function About() {
       <section className={styles.aboutFinalSection}>
         <div className={styles.finalSectionText}>
           <h2>
-            Built for real estate professionals. <br />
+            Built for businesses of every kind. <br />
             Designed to make the entire business <span>think and move as one.</span>
           </h2>
           <p>
             We believe technology should simplify the complex, not add to it. <br />
-            CORTEXA connects AI, data, communications, and workflow systems so you can spend less time managing tools and more time helping clients and closing deals.
+            CORTEXA connects AI, data, communications, workflow systems, and custom web and software integrations so you can spend less time managing tools and more time helping clients and closing deals.
           </p>
         </div>
 
-        <img src={aboutBottomImg} alt="Real Estate Core Visual" className={styles.aboutBottom} />
+        <img src={aboutBottomImg} alt="Cortexa Agentic CRM connected business workspaces" className={styles.aboutBottom} />
       </section>
     </main>
   );

@@ -1,13 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./Common.css";
 import apiClient from '../../api/apiClient';
+import { trackEvent, trackEventOnce } from "../../utils/track";
+import {
+  explicitLanguageChoice,
+  languageFromPrefix,
+  localePrefixFromPath,
+  userLanguage,
+  withLocalePrefix,
+} from "../../i18n/funnelLocale";
 
 const API_BASE = "https://backend.cortexaaicrm.com";
 const STORAGE_PREFIX = 'listo_';
 export default function Onboarding() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // The page's language prefix (/es, /pt, /es-ec): used for the localized
+  // /trial fallback and as the language carried into the (unprefixed) CRM.
+  const routePrefix = localePrefixFromPath(window.location.pathname);
+  const trialPath = withLocalePrefix(routePrefix, "/trial");
+  const pageLang = languageFromPrefix(routePrefix);
+  const workspaceTrackedRef = useRef(null);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,9 +38,12 @@ export default function Onboarding() {
     const userId = localStorage.getItem("trialUserId");
 
     if (!userId) {
-      navigate("/trial");
+      navigate(trialPath);
       return;
     }
+
+    // onboarding_started: once per browser session for this account.
+    trackEventOnce(`onboarding_started:${userId}`, "onboarding_started", { language: pageLang });
 
     const checkUser = async () => {
       try {
@@ -37,7 +54,7 @@ export default function Onboarding() {
         const data = await res.json();
 
         if (!data.success) {
-          navigate("/trial");
+          navigate(trialPath);
           return;
         }
 
@@ -84,6 +101,12 @@ export default function Onboarding() {
     }
 
     setError("");
+    // workspace_selected: the business type chosen on step 1, once per
+    // selection (a changed choice is a new selection).
+    if (step === 1 && form.businessType && workspaceTrackedRef.current !== form.businessType) {
+      workspaceTrackedRef.current = form.businessType;
+      trackEvent("workspace_selected", { workspace: form.businessType, language: pageLang });
+    }
     setStep((prev) => Math.min(prev + 1, 4));
   };
 
@@ -91,7 +114,7 @@ export default function Onboarding() {
     const userId = localStorage.getItem("trialUserId");
 
     if (!userId) {
-      navigate("/trial");
+      navigate(trialPath);
       return;
     }
 
@@ -123,6 +146,18 @@ export default function Onboarding() {
 
           localStorage.setItem('listo_access_token', data.token);
           localStorage.setItem('listo_user', JSON.stringify(data.user));
+
+          trackEventOnce(`onboarding_completed:${userId}`, "onboarding_completed", {
+            workspace: form.businessType || undefined,
+            language: pageLang,
+          }, "local");
+
+          // /dashboard is not language-prefixed: carry the language into it
+          // (explicit choice > account preference > this page's language).
+          const lang = explicitLanguageChoice() || userLanguage(data.user) || pageLang;
+          if (lang && String(i18n.language || "").slice(0, 2) !== lang) {
+            i18n.changeLanguage(lang);
+          }
 
           navigate("/dashboard");
       } else {

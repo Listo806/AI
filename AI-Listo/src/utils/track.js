@@ -9,6 +9,8 @@
 // analysis and the Google Ads tag can build audiences from them.
 // Conversions (sign-up, purchase) go through trackAdsConversion() to a specific
 // Google Ads conversion action.
+import { isInternalAccount } from "./internalAccess";
+
 const GOOGLE_ADS_ID = "AW-17836518151";
 const GA4_MEASUREMENT_ID =
   import.meta.env.VITE_GA4_MEASUREMENT_ID || "G-WTDN8QJ9CM";
@@ -59,6 +61,89 @@ export function pushTrackLog(type, name, params) {
   }
 }
 
+// ---- Internal / admin / test traffic --------------------------------------
+// Cortexa staff (isInternalAccount: internal roles, admin, super_admin,
+// developer) and any browser opted out with ?internal=1 are tagged
+// traffic_type=internal (so the GA4 "Internal traffic" data filter drops them)
+// and never send Google Ads conversions. ?internal=0 clears the manual flag.
+const INTERNAL_FLAG_KEY = "cortexa_internal_traffic";
+let internalUser = false;
+
+function readInternalFlag() {
+  try {
+    return localStorage.getItem(INTERNAL_FLAG_KEY) === "1";
+  } catch (_e) {
+    return false;
+  }
+}
+
+export function isInternalTraffic() {
+  return internalUser || readInternalFlag();
+}
+
+function applyInternalTag() {
+  if (!isInternalTraffic()) return;
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("set", { traffic_type: "internal" });
+  }
+}
+
+// Read ?internal=1 / ?internal=0 from the current URL (called on every page
+// view, before the page_view is sent).
+export function captureInternalFlag() {
+  if (typeof window === "undefined") return;
+  try {
+    const v = new URLSearchParams(window.location.search).get("internal");
+    if (v === "1") localStorage.setItem(INTERNAL_FLAG_KEY, "1");
+    else if (v === "0") localStorage.removeItem(INTERNAL_FLAG_KEY);
+  } catch (_e) {
+    /* storage blocked: nothing to remember */
+  }
+  applyInternalTag();
+}
+
+// Fire an event at most once per key. scope "session" (default) survives
+// reloads within the browser tab session; "local" survives in this browser;
+// "memory" only for this page load. Returns true when the event was sent.
+const firedInMemory = new Set();
+export function trackEventOnce(key, name, params = {}, scope = "session") {
+  const storageKey = `cortexa_evt_once:${key}`;
+  if (firedInMemory.has(storageKey)) return false;
+  try {
+    const store =
+      scope === "local" ? localStorage : scope === "session" ? sessionStorage : null;
+    if (store) {
+      if (store.getItem(storageKey)) {
+        firedInMemory.add(storageKey);
+        return false;
+      }
+      store.setItem(storageKey, String(Date.now()));
+    }
+  } catch (_e) {
+    /* storage blocked: the in-memory guard still prevents repeats */
+  }
+  firedInMemory.add(storageKey);
+  trackEvent(name, params);
+  return true;
+}
+
+// The GA4 client id of this browser (from the _ga cookie: GA1.1.<id>.<ts>),
+// so a server-side Measurement Protocol event joins the same GA4 user.
+// null when the cookie is not there (blocked / no consent / not loaded yet).
+export function getGaClientId() {
+  if (typeof document === "undefined") return null;
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)_ga=([^;]+)/);
+    if (!m) return null;
+    const parts = decodeURIComponent(m[1]).split(".");
+    if (parts.length < 4) return null;
+    const id = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`;
+    return /^\d+\.\d+$/.test(id) ? id : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
 // Generic funnel/step event -> GA4 (funnel analysis) + Google Ads (audiences).
 // Also mirrored into GTM's dataLayer, so if a Google Tag Manager container is
 // added later it can consume the exact same events with no code change. The
@@ -68,7 +153,11 @@ export function trackEvent(name, params = {}) {
   // Stamp every event with the current journey stage/customer type so audiences
   // and funnel reports can be segmented by lifecycle. Explicit params win, so a
   // caller can always override.
-  const merged = { ...currentJourney, ...params };
+  const merged = {
+    ...currentJourney,
+    ...(isInternalTraffic() ? { traffic_type: "internal" } : {}),
+    ...params,
+  };
   if (typeof window.gtag === "function") {
     window.gtag("event", name, merged);
   }
@@ -151,6 +240,8 @@ export function setUserJourney(user) {
   const j = deriveJourney(user);
   currentJourney = { journey_stage: j.journeyStage, customer_type: j.customerType };
   const uid = user && user.id ? String(user.id) : null;
+  internalUser = isInternalAccount(user);
+  applyInternalTag();
   if (typeof window !== "undefined" && typeof window.gtag === "function") {
     window.gtag("set", "user_properties", {
       journey_stage: j.journeyStage,
@@ -162,7 +253,12 @@ export function setUserJourney(user) {
         user_id: uid,
         send_page_view: false,
       });
-      window.gtag("config", GOOGLE_ADS_ID, { user_id: uid });
+      // send_page_view:false: a config call sends its own page_view unless told
+      // not to, which duplicated the SPA tracker's page_view on every login.
+      window.gtag("config", GOOGLE_ADS_ID, {
+        user_id: uid,
+        send_page_view: false,
+      });
     }
   }
   if (typeof window !== "undefined") {
@@ -185,6 +281,11 @@ export function setUserJourney(user) {
 
 // Fire a specific Google Ads conversion action, e.g. "AW-XXXX/label".
 export function trackAdsConversion(sendTo, params = {}) {
+  // Internal / admin / test traffic never counts as an Ads conversion.
+  if (isInternalTraffic()) {
+    pushTrackLog("conversion_skipped", "conversion", { send_to: sendTo, reason: "internal", ...params });
+    return;
+  }
   if (
     typeof window !== "undefined" &&
     typeof window.gtag === "function" &&
@@ -212,6 +313,11 @@ export const SIGNUP_CONVERSION_SEND_TO =
 // completes on its own.
 export function trackSignupConversion({ onSent } = {}) {
   const done = typeof onSent === "function" ? onSent : () => {};
+  if (isInternalTraffic()) {
+    pushTrackLog("conversion_skipped", "sign_up_conversion", { reason: "internal" });
+    done();
+    return;
+  }
   if (typeof window !== "undefined" && typeof window.gtag === "function") {
     let fired = false;
     const once = () => {
@@ -302,8 +408,14 @@ export function setUserData(userData = {}) {
 // none are present; only writes when an id is actually in the URL.
 export function captureClickIds() {
   if (typeof window === "undefined") return;
+  captureInternalFlag();
   try {
     const params = new URLSearchParams(window.location.search);
+    // Google Ads ad group (a utm_adgroup tag or the ValueTrack {adgroupid})
+    // and the device category of this visit.
+    const adGroup =
+      params.get("utm_adgroup") || params.get("adgroup") || params.get("adgroupid") || null;
+    const device = deviceCategory();
     for (const key of ["gclid", "wbraid", "gbraid"]) {
       const val = params.get(key);
       if (val) {
@@ -327,6 +439,8 @@ export function captureClickIds() {
       campaign: params.get("utm_campaign"),
       term: params.get("utm_term"),
       content: params.get("utm_content"),
+      adGroup,
+      device,
       landingRoute: window.location.pathname,
     });
     // The visit happening right now. Unlike the first touch, this one is
@@ -339,6 +453,8 @@ export function captureClickIds() {
       campaign: params.get("utm_campaign"),
       term: params.get("utm_term"),
       content: params.get("utm_content"),
+      adGroup,
+      device,
       landingRoute: window.location.pathname,
       landingPage: window.location.pathname + window.location.search,
     });
@@ -356,6 +472,27 @@ export function captureClickIds() {
     }
   } catch (_e) {
     /* non-fatal: attribution is best-effort */
+  }
+}
+
+// mobile / tablet / desktop for this browser: user agent first, then touch
+// support + viewport width for devices that hide it (iPadOS reports "Mac").
+export function deviceCategory() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return null;
+  try {
+    const ua = String(navigator.userAgent || "");
+    const touch = (navigator.maxTouchPoints || 0) > 1 || "ontouchstart" in window;
+    if (/iPad|Tablet|PlayBook|Silk|Kindle/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua))) {
+      return "tablet";
+    }
+    if (/Macintosh/i.test(ua) && touch) return "tablet";
+    if (/Mobi|iPhone|iPod|Android|Windows Phone|IEMobile|Opera Mini/i.test(ua)) return "mobile";
+    const width = Math.min(window.innerWidth || 0, (window.screen && window.screen.width) || Infinity);
+    if (touch && width && width < 768) return "mobile";
+    if (touch && width && width < 1100) return "tablet";
+    return "desktop";
+  } catch (_e) {
+    return null;
   }
 }
 
@@ -406,7 +543,7 @@ export function recordLastTouch(visit) {
   try {
     const classified = classifyVisit(visit);
     const worthRecording =
-      visit?.source || visit?.medium || visit?.campaign || classified.referrerHost ||
+      visit?.source || visit?.medium || visit?.campaign || visit?.adGroup || classified.referrerHost ||
       classified.channel === "cpc" || !localStorage.getItem(LAST_TOUCH_KEY);
     if (!worthRecording) return;
     localStorage.setItem(
@@ -417,6 +554,8 @@ export function recordLastTouch(visit) {
         campaign: visit?.campaign || null,
         term: visit?.term || null,
         content: visit?.content || null,
+        adGroup: visit?.adGroup || null,
+        device: visit?.device || deviceCategory(),
         landingRoute: visit?.landingRoute || window.location.pathname,
         landingPage: visit?.landingPage || window.location.pathname,
         channel: classified.channel,
@@ -453,6 +592,8 @@ export function recordFirstTouch(visit) {
         campaign: visit?.campaign || null,
         term: visit?.term || null,
         content: visit?.content || null,
+        adGroup: visit?.adGroup || null,
+        device: visit?.device || deviceCategory(),
         landingRoute: visit?.landingRoute || window.location.pathname,
         landingPage: window.location.pathname + window.location.search,
         channel: classifyVisit(visit).channel,

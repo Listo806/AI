@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { userLocalePrefix } from '../i18n/funnelLocale';
 
 export default function ProtectedRoute({ children }) {
   const { isAuthenticated, loading, user } = useAuth();
@@ -22,15 +23,9 @@ export default function ProtectedRoute({ children }) {
     String(user?.accountStatus || '').toLowerCase() === 'paid_email_verification_pending';
 
   if (verificationPending && !['admin', 'super_admin', 'developer'].includes(String(user?.role || '').toLowerCase())) {
-    const path = window.location.pathname;
-    const prefix = path.startsWith('/es-ec/')
-      ? '/es-ec'
-      : path.startsWith('/es/')
-        ? '/es'
-        : path.startsWith('/pt/')
-          ? '/pt'
-          : '';
-    return <Navigate to={`${prefix}/verify-email`} replace />;
+    // Protected pages are unprefixed, so the account's own language decides
+    // which verification page it lands on.
+    return <Navigate to={`${userLocalePrefix(user)}/verify-email`} replace />;
   }
 
   return children;

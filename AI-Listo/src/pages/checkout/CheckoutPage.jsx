@@ -4,7 +4,7 @@ import {
   User, Mail, Phone, Layers, CreditCard, Calendar, Lock, ShieldCheck,
   Edit2, ExternalLink, HelpCircle, Zap, Landmark, Copy, MessageCircle, Info,
 } from "lucide-react";
-import { trackEvent, trackPurchase, setUserData } from "../../utils/track";
+import { trackEvent, trackEventOnce, trackPurchase, setUserData, getGaClientId } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
 import {
   fetchNuveiConfig, fetchNuveiSubscription, nuveiSaveToken, nuveiActivate, collectBrowserInfo,
@@ -24,6 +24,7 @@ const PLAN_DATA = {
 const NUVEI_KEY = { solo: "solo", team: "business", growth: "scale" };
 const PLAN_ALIASES = { solo: "solo", team: "team", growth: "growth", business: "team", scale: "growth", pro: "solo" };
 const normalizePlan = (v) => { const k = String(v || "").trim().toLowerCase(); const m = PLAN_ALIASES[k]; return m && PLAN_DATA[m] ? m : null; };
+const PENDING_SUB_KEY = "cortexa_nuvei_pending_sub";
 const money = (v) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v || 0);
 
 const t = {
@@ -197,11 +198,6 @@ export default function CheckoutPage() {
     .toLocaleDateString(lang === "es" ? "es-ES" : lang === "pt" ? "pt-BR" : "en-US", { year: "numeric", month: "short", day: "numeric" });
 
   useEffect(() => { if (!planIsValid) navigate(buildLocalizedPath("/pricing", lang), { replace: true }); }, [planIsValid, navigate, lang]);
-  useEffect(() => {
-    if (!planIsValid) return;
-    trackEvent("begin_checkout", { plan: selectedPlan });
-    trackEvent("activation_intent", { plan: selectedPlan, offer: `$${setupFee}`, value: setupFee, currency: "USD" });
-  }, [selectedPlan, planIsValid, setupFee]);
 
   useEffect(() => { let c = false; fetchNuveiConfig().then((cf) => { if (!c) setConfig(cf); }); return () => { c = true; }; }, []);
 
@@ -233,6 +229,21 @@ export default function CheckoutPage() {
     setConfigFailed(false);
   }, [config]);
   useEffect(() => { if (configFailed && !config) setErrorMsg(tr.errConfig); }, [configFailed, config]);
+
+  // Checkout-start events, exactly once per checkout session and plan: wait
+  // until the payment config has answered (or failed) so the fee is the real
+  // one, and never again when the fee value settles or when the page reloads
+  // on the way back from a 3D Secure challenge (?threeds=return).
+  const checkoutTrackedRef = useRef(false);
+  useEffect(() => {
+    if (!planIsValid || checkoutTrackedRef.current) return;
+    if (config === null && !configFailed) return;
+    checkoutTrackedRef.current = true;
+    const key = `checkout:${selectedPlan}`;
+    trackEventOnce(`begin_checkout:${key}`, "begin_checkout", { plan: selectedPlan });
+    trackEventOnce(`activation_intent:${key}`, "activation_intent", { plan: selectedPlan, offer: `$${setupFee}`, value: setupFee, currency: "USD" });
+    trackEventOnce(`checkout_started:${key}`, "checkout_started", { plan: selectedPlan, value: setupFee, currency: "USD", language: lang });
+  }, [selectedPlan, planIsValid, config, configFailed, setupFee, lang]);
 
   // Returning from a bank 3D Secure challenge, or waiting on a pending
   // verification: the backend callback finalizes the activation, so poll the
@@ -267,7 +278,22 @@ export default function CheckoutPage() {
       const oldFailed = ["payment_failed", "canceled", "refunded", "suspended"].includes(st)
         && payStartedRef.current && created && created < payStartedRef.current - 60000;
       if (!sub || oldFailed) { if (++tries >= 3) { fail(tr.errServer); return; } setTimeout(tick, 3000); return; }
-      if (["verification_pending", "trialing", "active"].includes(st)) { await completeActivation(sub.activation_transaction_id || sub.id); return; }
+      if (["verification_pending", "trialing", "active"].includes(st)) {
+        // Record the purchase only for THIS checkout's subscription (the one
+        // this tab just paid for), never for an older live subscription the
+        // poll happens to return.
+        let pendingSub = null;
+        try { pendingSub = sessionStorage.getItem(PENDING_SUB_KEY); } catch (e) { /* ignore */ }
+        const mine = (pendingSub && String(sub.id) === pendingSub)
+          || (payStartedRef.current && created && created >= payStartedRef.current - 60000)
+          // The bank's security step can finish in another tab or app, where
+          // neither marker exists: a subscription created in the last 30
+          // minutes is this checkout's. completeActivation still records each
+          // transaction only once.
+          || (created && Date.now() - created < 30 * 60 * 1000);
+        if (mine) { await completeActivation(sub.activation_transaction_id || sub.id); return; }
+        await finishAndLogin(); return;
+      }
       if (["payment_failed", "canceled", "suspended", "refunded"].includes(st) || ++tries >= 20) {
         fail(st === "payment_failed" ? tr.errDeclined : st === "refunded" ? tr.errServer : tr.errPending); return;
       }
@@ -282,7 +308,12 @@ export default function CheckoutPage() {
   // challenge, review, recovered network error) records the purchase once and
   // lands the customer in the app.
   async function completeActivation(transactionId) {
-    if (!trackedRef.current) {
+    // Once per transaction, across reloads too (the 3DS return reloads this page).
+    const txKey = transactionId ? `cortexa_purchase_tracked:${transactionId}` : null;
+    let alreadyTracked = false;
+    if (txKey) { try { alreadyTracked = !!localStorage.getItem(txKey); localStorage.setItem(txKey, String(Date.now())); } catch (e) { /* ignore */ } }
+    try { sessionStorage.removeItem(PENDING_SUB_KEY); } catch (e) { /* ignore */ }
+    if (!trackedRef.current && !alreadyTracked) {
       trackedRef.current = true;
       try {
         setUserData({ email: customer.email, phone: customer.phone });
@@ -451,8 +482,14 @@ export default function CheckoutPage() {
         planKey: nuveiPlanKey, cardId,
         browserInfo: collectBrowserInfo(),
         termUrl: `${window.location.origin}${isEcuadorFlow ? "/es-ec/checkout" : buildLocalizedPath("/checkout", lang)}?plan=${selectedPlan}&threeds=return`,
+        // GA4 client id of this browser, so the server-side
+        // payment_confirmed_backend event joins this visitor's GA4 session.
+        gaClientId: getGaClientId() || undefined,
         ...(testScenario ? { testScenario } : {}),
       });
+      // Remember which subscription this tab is paying for, so the 3DS /
+      // pending poll only reports THIS purchase.
+      if (result?.subscriptionId) { try { sessionStorage.setItem(PENDING_SUB_KEY, String(result.subscriptionId)); } catch (e) { /* ignore */ } }
       await finishActivation(result);
     } catch (err) {
       if (/session expired/i.test(err?.message || "")) { goSignIn(); return; }
@@ -613,7 +650,7 @@ export default function CheckoutPage() {
 
                   <label className="cxo-consent">
                     <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-                    <span>{tr.agreePrefix} <a href="/terms" target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href="/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a>.</span>
+                    <span>{tr.agreePrefix} <a href={buildLocalizedPath("/terms", lang)} target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href={buildLocalizedPath("/privacy-policy", lang)} target="_blank" rel="noreferrer">{tr.privacy}</a>.</span>
                   </label>
 
                   {errorMsg && <div className="cxo-err">{errorMsg}</div>}

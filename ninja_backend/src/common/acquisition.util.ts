@@ -30,6 +30,10 @@ export interface FirstTouch {
   keywordTheme: string | null;
   campaignCluster: string | null;
   language: string | null;
+  /** Google Ads ad group (utm_adgroup / ValueTrack {adgroupid}), when tagged. */
+  adGroup: string | null;
+  /** mobile | tablet | desktop, as the browser saw it. */
+  device: string | null;
   firstVisitAt: string | null;
 }
 
@@ -42,6 +46,12 @@ export interface LastTouch extends Omit<FirstTouch, 'firstVisitAt'> {
 function text(value: any, max = 120): string | null {
   const v = String(value ?? '').trim();
   return v ? v.slice(0, max) : null;
+}
+
+/** Only the three device categories the site reports; anything else is dropped. */
+function deviceOf(value: any): string | null {
+  const v = String(value ?? '').trim().toLowerCase();
+  return ['mobile', 'tablet', 'desktop'].includes(v) ? v : null;
 }
 
 /** A timestamp we are willing to store: a real date, never in the future. */
@@ -80,6 +90,8 @@ export function firstTouchFromDto(dto: any): FirstTouch {
     keywordTheme: text(ft.keywordTheme ?? ft.term ?? utm.term),
     campaignCluster: text(ft.campaignCluster),
     language: text(ft.language ?? dto?.language, 8),
+    adGroup: text(ft.adGroup ?? dto?.adGroup),
+    device: deviceOf(ft.device ?? dto?.device),
     firstVisitAt: when(ft.firstVisitAt ?? dto?.firstVisitAt),
   };
 }
@@ -94,7 +106,7 @@ export function lastTouchFromDto(dto: any): LastTouch | null {
   if (!lt) return null;
   const source = text(lt.source);
   const medium = text(lt.medium);
-  if (!source && !medium && !lt.campaign && !lt.landingRoute) return null;
+  if (!source && !medium && !lt.campaign && !lt.landingRoute && !lt.adGroup) return null;
   return {
     source,
     medium,
@@ -107,6 +119,8 @@ export function lastTouchFromDto(dto: any): LastTouch | null {
     keywordTheme: text(lt.keywordTheme ?? lt.term),
     campaignCluster: text(lt.campaignCluster),
     language: text(lt.language, 8),
+    adGroup: text(lt.adGroup),
+    device: deviceOf(lt.device),
     referrerHost: text(lt.referrerHost, 200),
     lastVisitAt: when(lt.lastVisitAt),
   };
@@ -139,6 +153,14 @@ export function acquisitionView(row: any) {
     first_visit_at: row?.first_visit_at || null,
   };
 }
+
+/** Ad group + device columns (migration 173), shared by every ensure-list. */
+export const ACQUISITION_EXTRA_COLUMNS = [
+  'first_touch_ad_group TEXT',
+  'first_touch_device VARCHAR(16)',
+  'last_touch_ad_group TEXT',
+  'last_touch_device VARCHAR(16)',
+];
 
 // The columns live in migration 164, which is not auto-run in this environment,
 // so every write path makes sure they exist first. Done once per process.
@@ -174,6 +196,7 @@ export async function ensureAcquisitionColumns(db: {
     'last_touch_referrer_host TEXT',
     'last_touch_language VARCHAR(8)',
     'last_visit_at TIMESTAMPTZ',
+    ...ACQUISITION_EXTRA_COLUMNS,
   ]) {
     await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col}`);
   }
@@ -211,13 +234,15 @@ export async function captureFirstTouch(
               first_touch_channel = $9,
               first_touch_keyword_theme = $10,
               first_touch_campaign_cluster = $11,
-              first_touch_language = $12
+              first_touch_language = $12,
+              first_touch_ad_group = $14,
+              first_touch_device = $15
         WHERE id = $13
           AND COALESCE(first_touch_source, '') = ''`,
       [
         ft.source, ft.medium, ft.campaign, ft.landingRoute, ft.firstVisitAt,
         ft.term, ft.content, ft.landingPage, ft.channel, ft.keywordTheme,
-        ft.campaignCluster, ft.language, userId,
+        ft.campaignCluster, ft.language, userId, ft.adGroup, ft.device,
       ],
     );
   } catch {
@@ -254,12 +279,14 @@ export async function captureLastTouch(
               last_touch_campaign_cluster = $10,
               last_touch_referrer_host = $11,
               last_touch_language = $12,
-              last_visit_at = COALESCE($13::timestamptz, NOW())
+              last_visit_at = COALESCE($13::timestamptz, NOW()),
+              last_touch_ad_group = $15,
+              last_touch_device = $16
         WHERE id = $14`,
       [
         lt.source, lt.medium, lt.campaign, lt.term, lt.content, lt.landingRoute,
         lt.landingPage, lt.channel, lt.keywordTheme, lt.campaignCluster,
-        lt.referrerHost, lt.language, lt.lastVisitAt, userId,
+        lt.referrerHost, lt.language, lt.lastVisitAt, userId, lt.adGroup, lt.device,
       ],
     );
   } catch {

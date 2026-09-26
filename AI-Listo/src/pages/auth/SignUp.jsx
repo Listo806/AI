@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { getAttribution, trackEvent, trackSignupConversion } from '../../utils/track';
+import { localePrefixFromPath, withLocalePrefix } from '../../i18n/funnelLocale';
 import './Auth.css';
 
 const ROLE_OPTIONS = [
@@ -24,6 +25,18 @@ export default function SignUp() {
   useEffect(() => {
     trackEvent('sign_up_started', { source: 'marketplace' });
   }, []);
+
+  // signup_started: first interaction with the form (focus or typing), once per
+  // page view. sign_up_started above is kept for the existing configuration.
+  const signupStartedRef = useRef(false);
+  const onFirstInteraction = () => {
+    if (signupStartedRef.current) return;
+    signupStartedRef.current = true;
+    trackEvent('signup_started', {
+      source: 'marketplace',
+      language: (i18n.language || 'en').slice(0, 2).toLowerCase(),
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,13 +91,18 @@ export default function SignUp() {
         localStorage.setItem('listo_user', JSON.stringify(res.user));
         // Funnel: account successfully created via the marketplace signup form.
         trackEvent('sign_up_completed');
+        trackEvent('signup_completed', { source: 'marketplace', language });
         // NEW FLOW: send new signups to plan selection ($0 / $7 / $14 / $21)
         // BEFORE the CRM — not straight into the dashboard. Google Ads sign-up
         // conversion fires first; the hard-navigate waits for the beacon so the
         // page unload does not cancel it (which made Ads report "wasn't detected").
         trackSignupConversion({
           onSent: () => {
-            window.location.href = '/pricing';
+            // Stay in the visitor's language: /es/sign-up -> /es/pricing.
+            window.location.href = withLocalePrefix(
+              localePrefixFromPath(window.location.pathname),
+              '/pricing',
+            );
           },
         });
         return;
@@ -107,7 +125,12 @@ export default function SignUp() {
 
         {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form
+          onSubmit={handleSubmit}
+          className="auth-form"
+          onFocus={onFirstInteraction}
+          onInput={onFirstInteraction}
+        >
           <div className="auth-field">
             <label htmlFor="email">{t('auth.emailLabel')}</label>
             <input

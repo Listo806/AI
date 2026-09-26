@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MapPin } from "lucide-react";
+import { countries as cityPages } from "../common/CityPage";
 
 export default function ExploreOurMarkets() {
   const [windowWidth, setWindowWidth] = useState(
@@ -86,12 +87,20 @@ export default function ExploreOurMarkets() {
     },
   ];
 
+  // Only cities that have a page get their own address; the slug drops accents
+  // the same way the city pages do ("São Paulo" -> sao-paulo). Other cities
+  // link to the homepage, as the old app redirect did, instead of to a 404.
+  const cityHref = (countrySlug, cityName) => {
+    const slug = cityName.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/ /g, "-");
+    return cityPages[countrySlug]?.includes(slug) ? `/${countrySlug}/${slug}` : "/";
+  };
+
   const renderCityLinks = (cities, countrySlug) => (
     <div style={styles.cityList}>
       {cities.map((cityName) => (
         <a
           key={cityName}
-          href={`/${countrySlug}/${cityName.toLowerCase().replace(/ /g, "-")}`}
+          href={cityHref(countrySlug, cityName)}
           style={styles.cityLink}
         >
           <MapPin size={15} style={styles.pinIcon} />
@@ -104,7 +113,7 @@ export default function ExploreOurMarkets() {
   return (
     <div style={styles.container}>
       <div style={styles.titleWrap}>
-        <h1 style={styles.mainTitle}>Explore Our Markets</h1>
+        <h2 style={styles.mainTitle}>Explore Our Markets</h2>
         <div style={styles.titleUnderline} />
       </div>
 

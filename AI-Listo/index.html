@@ -3,7 +3,9 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Page metadata is written per page at build time by
        scripts/build-seo.mjs, so every address arrives with its own title,
@@ -18,7 +20,9 @@
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'AW-17836518151');
+    // Page views are sent once per page by the app itself (App.jsx), so the tag
+    // must not send its own automatic one as well.
+    gtag('config', 'AW-17836518151', { send_page_view: false });
   </script>
   <style>
     /* First-paint splash: shown before the JS bundle mounts React, and reused

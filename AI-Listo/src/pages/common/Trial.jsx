@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   trackEvent,
@@ -9,6 +9,7 @@ import { getSetupOffer } from "../../utils/offer";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { currentSiteLanguage } from "../../i18n/currentLanguage";
+import { localePrefixFromPath, withLocalePrefix } from "../../i18n/funnelLocale";
 import {
   ArrowRight,
   Box,
@@ -37,6 +38,7 @@ const t = {
       password: "Password",
     },
     continueBtn: "CONTINUE TO CHOOSE YOUR FREE PLAN",
+    freeAccessSubtitle: "Create your Free Forever account.",
     loadingBtn: "CREATING ACCOUNT...",
     security: "Your information is safe and never shared.",
     errors: {
@@ -59,6 +61,7 @@ const t = {
       password: "Contraseña",
     },
     continueBtn: "CONTINUAR PARA ELEGIR TU PLAN GRATIS",
+    freeAccessSubtitle: "Crea tu cuenta Gratis para Siempre.",
     loadingBtn: "CREANDO CUENTA...",
     security: "Tu información está segura y nunca se comparte.",
     errors: {
@@ -81,6 +84,7 @@ const t = {
       password: "Senha",
     },
     continueBtn: "CONTINUAR PARA ESCOLHER SEU PLANO GRÁTIS",
+    freeAccessSubtitle: "Crie sua conta Grátis para Sempre.",
     loadingBtn: "CRIANDO CONTA...",
     security: "Suas informações estão seguras e nunca são compartilhadas.",
     errors: {
@@ -151,8 +155,11 @@ function detectBrowserCountryCode() {
 export default function StartTrial() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
-  const isEcuadorFlow = window.location.pathname === "/es-ec/trial" || window.location.pathname.startsWith("/es-ec/");
-  const funnelPath = (path) => (isEcuadorFlow ? `/es-ec${path}` : path);
+  // Keep the visitor's language through the funnel: /es/trial -> /es/pricing,
+  // /es/checkout (same for /pt and the Ecuador /es-ec namespace).
+  const routePrefix = localePrefixFromPath(window.location.pathname);
+  const isEcuadorFlow = routePrefix === "/es-ec";
+  const funnelPath = (path) => withLocalePrefix(routePrefix, path);
 
   useEffect(() => {
     if (isEcuadorFlow) sessionStorage.setItem("cortexa_market", "EC");
@@ -217,6 +224,16 @@ export default function StartTrial() {
       source: "create_account",
     });
   }, []);
+
+  // signup_started: the visitor's first interaction with the form (focus or
+  // typing), once per page view. sign_up_started above (on open) is kept for
+  // the existing GA4 / Ads configuration.
+  const signupStartedRef = useRef(false);
+  const onFirstInteraction = () => {
+    if (signupStartedRef.current) return;
+    signupStartedRef.current = true;
+    trackEvent("signup_started", { source: "create_account", language: lang });
+  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -340,6 +357,11 @@ export default function StartTrial() {
           source: "pricing_signup",
           plan: validPendingPlan,
         });
+        trackEvent("signup_completed", {
+          source: "pricing_signup",
+          plan: validPendingPlan,
+          language: lang,
+        });
 
         trackSignupConversion();
 
@@ -386,6 +408,11 @@ export default function StartTrial() {
         source: isFreeAccessFlow ? "free_access" : "organic",
         plan: "none",
       });
+      trackEvent("signup_completed", {
+        source: isFreeAccessFlow ? "free_access" : "organic",
+        plan: "none",
+        language: lang,
+      });
       trackSignupConversion();
 
       navigate(funnelPath("/pricing"), {
@@ -415,16 +442,21 @@ export default function StartTrial() {
           {isFreeAccessFlow && (
             <p>
               <span className="trial-v3-desktop-copy">
-                Create your Free Forever account.
+                {tr.freeAccessSubtitle}
               </span>
               <span className="trial-v3-mobile-copy">
-                Create your Free Forever account.
+                {tr.freeAccessSubtitle}
               </span>
             </p>
           )}
         </header>
 
-        <form className="trial-v3-form" onSubmit={handleSubmit}>
+        <form
+          className="trial-v3-form"
+          onSubmit={handleSubmit}
+          onFocus={onFirstInteraction}
+          onInput={onFirstInteraction}
+        >
           <div className="trial-v3-fields">
             <label className="trial-v3-field">
               <User

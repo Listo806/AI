@@ -25,13 +25,13 @@ const COPY = {
     feature: "Feature",
     salesforce: "Salesforce",
     hubspot: "HubSpot",
-    cortexaSub: "AI REVENUE OS",
+    cortexaSub: "AGENTIC CRM",
     rows: [
       ["Team Size", "5 Users", "5 Users", "5 Users"],
-      ["Monthly Software", "$1,500/month", "$750/month", "$397/month"],
-      ["One-Time Setup", "$4,000+", "$1,500+", "$0"],
-      ["Annual Software", "$18,000", "$9,000", "$4,764"],
-      ["Total Annual Platform Cost", "$22,000+", "$10,500+", "$4,764"],
+      ["Monthly Software", "$1,500/month", "$750/month", "$497/month"],
+      ["One-Time Setup", "$4,000+", "$1,500+", "$33 activation"],
+      ["Annual Software", "$18,000", "$9,000", "$5,964"],
+      ["Total Annual Platform Cost", "$22,000+", "$10,500+", "$5,997"],
       ["CRM", true, true, true],
       ["Agentic AI", "Add-on", "Limited", "Included"],
       ["AI Usage", "Add-on", "Add-on", "Unlimited"],
@@ -52,13 +52,13 @@ const COPY = {
     feature: "Función",
     salesforce: "Salesforce",
     hubspot: "HubSpot",
-    cortexaSub: "SISTEMA DE INGRESOS CON IA",
+    cortexaSub: "CRM AGÉNTICO",
     rows: [
       ["Tamaño del equipo", "5 usuarios", "5 usuarios", "5 usuarios"],
-      ["Software mensual", "$1,500/mes", "$750/mes", "$397/mes"],
-      ["Configuración inicial", "$4,000+", "$1,500+", "$0"],
-      ["Software anual", "$18,000", "$9,000", "$4,764"],
-      ["Costo anual total de la plataforma", "$22,000+", "$10,500+", "$4,764"],
+      ["Software mensual", "$1,500/mes", "$750/mes", "$497/mes"],
+      ["Configuración inicial", "$4,000+", "$1,500+", "$33 activación"],
+      ["Software anual", "$18,000", "$9,000", "$5,964"],
+      ["Costo anual total de la plataforma", "$22,000+", "$10,500+", "$5,997"],
       ["CRM", true, true, true],
       ["IA agéntica", "Complemento", "Limitada", "Incluida"],
       ["Uso de IA", "Complemento", "Complemento", "Ilimitado"],
@@ -79,13 +79,13 @@ const COPY = {
     feature: "Recurso",
     salesforce: "Salesforce",
     hubspot: "HubSpot",
-    cortexaSub: "SISTEMA DE RECEITA COM IA",
+    cortexaSub: "CRM AGÊNTICO",
     rows: [
       ["Tamanho da equipe", "5 usuários", "5 usuários", "5 usuários"],
-      ["Software mensal", "$1.500/mês", "$750/mês", "$397/mês"],
-      ["Configuração inicial", "$4.000+", "$1.500+", "$0"],
+      ["Software mensal", "$1.500/mês", "$750/mês", "$497/mês"],
+      ["Configuração inicial", "$4.000+", "$1.500+", "$33 ativação"],
       ["Software anual", "$18.000", "$9.000", "$5.964"],
-      ["Custo anual total da plataforma", "$22.000+", "$10.500+", "$6.061"],
+      ["Custo anual total da plataforma", "$22.000+", "$10.500+", "$5.997"],
       ["CRM", true, true, true],
       ["IA agêntica", "Complemento", "Limitada", "Incluída"],
       ["Uso de IA", "Complemento", "Complemento", "Ilimitado"],
@@ -137,7 +137,7 @@ function BrandHeader({ type, copy }) {
 
   return (
     <div className="cmp-brand cmp-brand-cortexa">
-      <img src={headlogo} className="cx-logo-img" />
+      <img src={headlogo} className="cx-logo-img" alt="" />
       <strong>CORTEXA</strong>
       <small>{copy.cortexaSub}</small>
     </div>

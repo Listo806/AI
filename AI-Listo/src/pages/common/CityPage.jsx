@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 
-const countries = {
+export const countries = {
   brazil: [
     "sao-paulo",
     "rio-de-janeiro",
@@ -77,8 +77,9 @@ const countries = {
 const unslug = (text = "") =>
   text.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-function useSeo(title, description) {
+function useSeo(title, description, enabled = true) {
   React.useEffect(() => {
+    if (!enabled) return;
     document.title = title;
 
     let meta = document.querySelector('meta[name="description"]');
@@ -89,7 +90,7 @@ function useSeo(title, description) {
     }
 
     meta.setAttribute("content", description);
-  }, [title, description]);
+  }, [title, description, enabled]);
 }
 
 const btn = {
@@ -106,22 +107,24 @@ export default function CityPage() {
 
   const validCity = countries[country]?.includes(city);
 
-  if (!validCity) {
-    return <Navigate to="/" replace />;
-  }
-
   const cityName = unslug(city);
   const countryName = unslug(country);
 
+  // Hooks must run on every render (before the early return below).
   useSeo(
-    `Real Estate CRM in ${cityName}, ${countryName} | Cortexa AI CRM`,
-    `AI real estate CRM in ${cityName}, ${countryName}. Capture leads, automate WhatsApp follow-up, manage pipelines, track deals, and close more real estate sales.`
+    `Real Estate CRM in ${cityName}, ${countryName} | Cortexa Agentic CRM`,
+    `AI real estate CRM in ${cityName}, ${countryName}. Capture leads, automate WhatsApp follow-up, manage pipelines, track deals, and close more real estate sales.`,
+    Boolean(validCity)
   );
 
   const nearbyCities = useMemo(
-    () => countries[country].filter((c) => c !== city).slice(0, 8),
+    () => (countries[country] || []).filter((c) => c !== city).slice(0, 8),
     [country, city]
   );
+
+  if (!validCity) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <main style={{ padding: "60px 20px", maxWidth: "1000px", margin: "auto" }}>
@@ -161,7 +164,7 @@ export default function CityPage() {
 
           <div style={{ marginTop: "30px" }}>
             <Link to="/trial">
-              <button style={btn}>Start Free Trial</button>
+              <button style={btn}>Get Started</button>
             </Link>
           </div>
         </section>

@@ -20,11 +20,13 @@ const byPrefix = Object.fromEntries(
 
 export const localeByCode = (code) => byCode[code] || LOCALES[0];
 
-// Remove a leading /es or /pt from a path, returning the base path.
+// Remove a leading /es, /pt or /es-ec from a path, returning the base path.
 // "/es/pricing" -> "/pricing", "/es" -> "/", "/pricing" -> "/pricing".
 export function stripLocaleFromPath(pathname) {
   const parts = String(pathname || "/").split("/").filter(Boolean);
-  if (parts.length && byPrefix[parts[0]]) {
+  // /es-ec (the Ecuador campaign namespace) is Spanish content under its own
+  // prefix; strip it too so switching language from it lands on a real page.
+  if (parts.length && (byPrefix[parts[0]] || parts[0] === "es-ec")) {
     parts.shift();
   }
   if (!parts.length) return "/";

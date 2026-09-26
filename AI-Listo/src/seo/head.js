@@ -14,7 +14,9 @@ import {
   basePathOf,
   languageFromPath,
   pageFor,
+  heldPageFor,
   isNoIndexPath,
+  robotsFor,
   urlFor,
 } from "./site";
 
@@ -54,9 +56,11 @@ export function applyHead(pathname) {
   const code = languageFromPath(pathname);
   const lang = byCode[code] || byCode.en;
   const page = pageFor(base);
+  const held = heldPageFor(base);
   const noindex = isNoIndexPath(pathname);
   const seo = resolveSeo(base, code);
-  const url = page ? urlFor(page.path, code) : `${SITE_ORIGIN}${pathname}`;
+  const own = page || held;
+  const url = own ? urlFor(own.path, code) : `${SITE_ORIGIN}${pathname}`;
 
   document.documentElement.lang = lang.htmlLang;
   document.title = seo.title;
@@ -65,25 +69,25 @@ export function applyHead(pathname) {
     'meta[name="robots"]',
     "name",
     "robots",
-    noindex ? "noindex, follow" : "index, follow, max-image-preview:large",
+    robotsFor(pathname),
   );
-  setMeta('meta[property="og:title"]', "property", "og:title", seo.title);
-  setMeta('meta[property="og:description"]', "property", "og:description", seo.description);
+  setMeta('meta[property="og:title"]', "property", "og:title", seo.ogTitle);
+  setMeta('meta[property="og:description"]', "property", "og:description", seo.ogDescription);
   setMeta('meta[property="og:url"]', "property", "og:url", url);
   setMeta('meta[property="og:locale"]', "property", "og:locale", lang.ogLocale);
   setMeta('meta[property="og:site_name"]', "property", "og:site_name", BRAND_NAME);
   setMeta('meta[property="og:image"]', "property", "og:image", SOCIAL_IMAGE);
-  setMeta('meta[name="twitter:title"]', "name", "twitter:title", seo.title);
-  setMeta('meta[name="twitter:description"]', "name", "twitter:description", seo.description);
+  setMeta('meta[name="twitter:title"]', "name", "twitter:title", seo.twitterTitle);
+  setMeta('meta[name="twitter:description"]', "name", "twitter:description", seo.twitterDescription);
   setMeta('meta[name="twitter:image"]', "name", "twitter:image", SOCIAL_IMAGE);
 
-  // A page that is not in search results must not claim a canonical address
-  // either, so the tag is removed rather than left pointing somewhere wrong.
+  // Indexable and held pages name their own address as canonical. Any other
+  // address has no canonical at all, rather than one pointing somewhere wrong.
   const canonical = document.head.querySelector('link[rel="canonical"]');
-  if (noindex || !page) {
-    if (canonical) canonical.remove();
-  } else {
+  if (own) {
     setLink("canonical", url);
+  } else if (canonical) {
+    canonical.remove();
   }
 
   // Language alternates: every version points at every other one, including

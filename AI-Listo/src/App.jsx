@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Landing from "./pages/landing/Landing";
 
 import {
@@ -22,7 +22,9 @@ import { applyHead } from "./seo/head";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationToast from "./components/NotificationToast";
 import ExitIntentOffer from "./components/ExitIntentOffer";
-import LanguageAutoDetect from "./components/LanguageAutoDetect";
+import LanguageAutoDetect, {
+  pendingHomeRedirect,
+} from "./components/LanguageAutoDetect";
 import TrackDebugPanel from "./components/TrackDebugPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VaRouteGuard from "./components/VaRouteGuard";
@@ -203,16 +205,11 @@ function PtBrRedirect() {
 
 // Root route handler - shows sign-in or redirects to dashboard
 function RootRoute() {
-  const { isAuthenticated, loading, user } = useAuth();
+  // eslint-disable-next-line no-unused-vars
+  const { isAuthenticated, user } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="app-splash">
-        <div className="app-splash-word">CORTEXA</div>
-        <div className="app-spinner" />
-      </div>
-    );
-  }
+  // No splash here: AuthProvider already gates rendering while a session is
+  // being resolved, so "/" renders the landing page directly.
 
   // if (isAuthenticated()) {
   // const role = user?.role?.toLowerCase?.() || user?.role;
@@ -260,9 +257,9 @@ function publicRoutes(prefix) {
       <Route
         path={`${p}/editorial/the-end-of-legacy-crm`}
         element={
-          p === "pt" ? (
+          prefix === "pt" ? (
             <EditorialFunnelPt />
-          ) : p === "es" || p === "es-ec" ? (
+          ) : prefix === "es" || prefix === "es-ec" ? (
             <EditorialFunnelEs />
           ) : (
             <EditorialFunnel />
@@ -281,9 +278,9 @@ function publicRoutes(prefix) {
       <Route
         path={`${p}/editorial/business`}
         element={
-          p === "pt" ? (
+          prefix === "pt" ? (
             <EditorialBusinessAIPt />
-          ) : p === "es" || p === "es-ec" ? (
+          ) : prefix === "es" || prefix === "es-ec" ? (
             <EditorialBusinessAIEs />
           ) : (
             <EditorialBusinessAI />
@@ -801,17 +798,30 @@ function PageViewTracker() {
     setUserJourney(user);
   }, [user]);
 
+  // The single source of page_view (index.html and the auth-time gtag config
+  // calls all use send_page_view:false): exactly one per pathname+search.
+  const lastPageRef = useRef(null);
   useEffect(() => {
+    // "/" about to be redirected to /es or /pt by LanguageAutoDetect: skip this
+    // synthetic hop entirely. The redirect target records the page_view AND
+    // the first touch, so the visitor's real landing page and language
+    // (/es, "es") are what gets stored, not "/" and "en".
+    if (pendingHomeRedirect(location)) return;
+    const pageKey = location.pathname + location.search;
+    if (lastPageRef.current === pageKey) return;
+    lastPageRef.current = pageKey;
     // Configure GA4 once (no-op until a Measurement ID is set), then record the
     // page view for both GA4 (funnel analysis) and Google Ads (audiences).
     initAnalytics();
-    // Persist any ad click id present in the URL (gclid/wbraid/gbraid) so a
-    // later Purchase can be attributed to the ad click.
+    // Persist any ad click id present in the URL (gclid/wbraid/gbraid), the
+    // ?internal=1 opt-out, and the first/last touch, so a later Purchase can be
+    // attributed to the ad click.
     captureClickIds();
     trackEvent("page_view", {
-      page_path: location.pathname + location.search,
+      page_path: pageKey,
       page_location: window.location.href,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, location.search]);
   return null;
 }

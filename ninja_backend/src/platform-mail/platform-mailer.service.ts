@@ -6,6 +6,7 @@ import { DatabaseService } from '../database/database.service';
 import { ConfigService } from '../config/config.service';
 import { renderTemplate, TemplateName, TemplateVars } from './templates';
 import { getPlan, getSeatLimit } from '../plans/plan-config';
+import { cleanGaClientId, ga4Settings, sendGa4Event } from '../common/ga4-measurement.util';
 
 export interface SendResult {
   sent: boolean;
@@ -627,8 +628,47 @@ export class PlatformMailerService {
     if (result.sent) {
       await this.db.query(`UPDATE users SET verification_email_sent_at=COALESCE(verification_email_sent_at,NOW()), verification_email_resent_at=CASE WHEN $2 <> 'initial' THEN NOW() ELSE verification_email_resent_at END WHERE id=$1`, [userId, kind]);
       await this.activationEvent(userId, kind === 'initial' ? 'verification_email_sent' : kind === 'resend' ? 'verification_email_resent' : 'verification_email_sent');
+      // GA4 (Measurement Protocol, off unless configured): one event per email
+      // actually sent. Fire-and-forget so analytics never delays the email flow.
+      void this.reportVerificationEmailSent(userId, kind, u.lang);
     }
     return { sent:result.sent, email:u.email, maskedEmail:this.maskEmail(u.email), message:result.sent ? 'A new verification email was sent.' : 'The verification email could not be sent.' };
+  }
+
+  /**
+   * verification_email_sent to GA4 via the Measurement Protocol, same gating as
+   * the renewal / payment reporting (GA4_MEASUREMENT_ID + GA4_API_SECRET, off
+   * unless both are set). GA4 only, never Google Ads. Called once per email that
+   * was actually sent. Uses the paying browser's GA4 client id stored on the
+   * customer's latest Nuvei subscription when there is one.
+   */
+  private async reportVerificationEmailSent(userId: string, kind: string, lang: string): Promise<void> {
+    try {
+      if (!ga4Settings(this.config)) return;
+      let clientId: string | null = null;
+      try {
+        const { rows } = await this.db.query(
+          `SELECT acquisition->>'ga_client_id' AS cid FROM nuvei_subscriptions
+            WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+          [userId],
+        );
+        clientId = cleanGaClientId(rows[0]?.cid);
+      } catch {
+        /* no Nuvei table / column here: use the synthetic id */
+      }
+      await sendGa4Event(
+        this.config,
+        {
+          clientId: clientId || `server.${userId}`,
+          userId,
+          name: 'verification_email_sent',
+          params: { kind, language: lang || 'en' },
+        },
+        (m) => this.logger.log(`${m} (user ${userId})`),
+      );
+    } catch (err: any) {
+      this.logger.warn(`verification_email_sent reporting skipped: ${err?.message || 'error'}`);
+    }
   }
 
   async beginPaidEmailVerification(userId: string, finalPaymentStatus: 'trialing' | 'active' = 'active'): Promise<void> {

@@ -136,7 +136,7 @@ function CtaCard({ where }) {
           trackEvent("editorial_cta_click", { where, cta: "trial" })
         }
       >
-        Comienza tu prueba gratuita
+        Comenzar
       </Link>
 
       <Link
@@ -241,7 +241,7 @@ export default function EditorialFunnelEs() {
               })
             }
           >
-            Comenzar prueba gratuita
+            Comenzar
           </Link>
 
           <button
@@ -273,7 +273,7 @@ export default function EditorialFunnelEs() {
               Precios
             </a>
             <Link to="/trial" onClick={closeMobileNav}>
-              Comenzar prueba gratuita
+              Comenzar
             </Link>
           </div>
         )}
@@ -313,7 +313,7 @@ export default function EditorialFunnelEs() {
             <div className="ed-hero-cover-frame">
               <p>
                 Por qué las empresas están reconsiderando Salesforce, HubSpot y
-                el auge de los Sistemas Operativos de Ingresos con IA Agéntica
+                el auge de los CRM agénticos
               </p>
             </div>
           </div>
@@ -379,8 +379,8 @@ export default function EditorialFunnelEs() {
                 </strong>
               </p>
               <p>
-                Ahí es donde entran en la conversación los Sistemas Operativos de
-                Ingresos con IA Agéntica.
+                Ahí es donde entran en la conversación los CRM
+                agénticos.
               </p>
               <p>
                 En lugar de exigir que los equipos de ventas dediquen horas a
@@ -398,7 +398,7 @@ export default function EditorialFunnelEs() {
                 ingresos.
               </blockquote>
 
-              <img src={whyImg} alt="CORTEXA" className="background" />
+              <img src={whyImg} alt="Panel de inteligencia de ingresos de Cortexa Agentic CRM" loading="lazy" decoding="async" className="background" />
               <figcaption>
                 Panel de inteligencia de ingresos de Cortexa
               </figcaption>
@@ -423,7 +423,7 @@ export default function EditorialFunnelEs() {
                 ayer.
               </p>
               <p>
-                Los Sistemas Operativos de Ingresos modernos y nativos de IA están
+                Los CRM agénticos modernos están
                 diseñados para ayudar a las empresas a decidir qué debe ocurrir
                 después.
               </p>
@@ -449,7 +449,7 @@ export default function EditorialFunnelEs() {
                 asistidas por IA.
               </p>
 
-              <img src={why1Img} alt="CORTEXA" className="background" />
+              <img src={why1Img} alt="Agente de IA de Cortexa calificando un lead y agendando una cita automáticamente" loading="lazy" decoding="async" className="background" />
               <figcaption>
                 Calificación con agentes de IA y reserva automática de citas
               </figcaption>
@@ -524,7 +524,7 @@ export default function EditorialFunnelEs() {
                 operativo.
               </blockquote>
 
-              <img src={why2Img} alt="CORTEXA" className="background" />
+              <img src={why2Img} alt="Agente de IA de Cortexa respondiendo a un cliente en WhatsApp" loading="lazy" decoding="async" className="background" />
               <figcaption>
                 WhatsApp con IA y conversaciones automatizadas con clientes
               </figcaption>
@@ -542,14 +542,14 @@ export default function EditorialFunnelEs() {
 
               <aside
                 className="ed-editorial-callout"
-                aria-label="Tarifa única de configuración"
+                aria-label="Activación única"
               >
                 <span className="ed-editorial-callout-label">
-                  Tarifa única de configuración
+                  Activación única
                 </span>
                 <p>
                   Cortexa comienza con una sencilla{" "}
-                  <strong>tarifa única de configuración de $97</strong>, ofreciendo a
+                  <strong>activación única</strong>, ofreciendo a
                   las empresas un punto de partida transparente sin convertir la
                   incorporación en un gran proyecto de implementación.
                 </p>
@@ -557,8 +557,8 @@ export default function EditorialFunnelEs() {
 
               <p>
                 Un punto de partida sencillo y transparente, diseñado para reducir la
-                fricción y ayudar a las empresas a comenzar a utilizar un Sistema
-                Operativo de Ingresos nativo de IA sin comprometerse con un gran
+                fricción y ayudar a las empresas a comenzar a utilizar un CRM
+                agéntico sin comprometerse con un gran
                 proyecto inicial de implementación.
               </p>
               <p>
@@ -590,7 +590,7 @@ export default function EditorialFunnelEs() {
                 generar valor.
               </p>
 
-              <img src={why3Img} alt="CORTEXA" className="background" />
+              <img src={why3Img} alt="Pantalla de incorporación de Cortexa con conexión de WhatsApp por código QR" loading="lazy" decoding="async" className="background" />
               <figcaption>
                 Incorporación rápida y conexión de WhatsApp mediante QR
               </figcaption>
@@ -726,7 +726,7 @@ export default function EditorialFunnelEs() {
             <section className="ed-section" id="forward-momentum">
               <h2>Del seguimiento al impulso continuo</h2>
               <p>
-                El valor de un Sistema Operativo de Ingresos nativo con IA no
+                El valor de un CRM agéntico no
                 consiste simplemente en almacenar la información de los
                 clientes.
               </p>
@@ -749,7 +749,7 @@ export default function EditorialFunnelEs() {
                 requieren atención humana.
               </p>
 
-              <img src={why4Img} alt="CORTEXA" className="background" />
+              <img src={why4Img} alt="Conversación del agente de IA de Cortexa, automatización de WhatsApp, calendario de citas y enrutamiento del pipeline" loading="lazy" decoding="async" className="background" />
             </section>
 
             <section className="ed-section" id="team-workspace">
@@ -771,7 +771,7 @@ export default function EditorialFunnelEs() {
                 mayor visibilidad de todo el trabajo que impulsa los ingresos.
               </p>
 
-              <img src={why5Img} alt="CORTEXA" className="background" />
+              <img src={why5Img} alt="Panel del espacio de trabajo de ingresos del equipo en Cortexa con pipeline y rendimiento del equipo" loading="lazy" decoding="async" className="background" />
               <figcaption>Espacio de trabajo de ingresos del equipo</figcaption>
             </section>
 
@@ -793,7 +793,7 @@ export default function EditorialFunnelEs() {
                 de los ingresos.
               </p>
 
-              <img src={why6Img} alt="CORTEXA" className="background" />
+              <img src={why6Img} alt="Panel de informes de Cortexa con ingresos, pipeline y fuentes de leads" loading="lazy" decoding="async" className="background" />
               <figcaption>Informes que generan ingresos</figcaption>
             </section>
 
@@ -803,13 +803,13 @@ export default function EditorialFunnelEs() {
                 Ya sea que dirijas una empresa inmobiliaria, un negocio de
                 comercio electrónico, una agencia, una consultora, una agencia
                 de seguros, una organización financiera u otra empresa en
-                crecimiento, el Sistema Operativo de Ingresos con IA Agéntica de
+                crecimiento, el CRM agéntico de
                 Cortexa ayuda a los equipos a organizar operaciones, gestionar
                 relaciones con clientes, automatizar la comunicación y mejorar
                 la productividad empresarial.
               </p>
               <p className="ed-legal-note">
-                Cortexa AI CRM es una plataforma de Software como Servicio
+                Cortexa Agentic CRM es una plataforma de Software como Servicio
                 (SaaS) creada para organizaciones de múltiples industrias. No
                 ofrecemos productos de seguros, productos financieros, servicios
                 de préstamo, asesoramiento de inversión ni servicios de
@@ -833,7 +833,7 @@ export default function EditorialFunnelEs() {
             <section className="ed-section" id="dont-get-left-behind">
               <h2>No te quedes atrás</h2>
               <p>
-                Descubre cómo nuestro Sistema Operativo de Ingresos integrado
+                Descubre cómo nuestro CRM agéntico integrado
                 ayuda a las empresas a automatizar más rápido, cerrar más
                 oportunidades y aumentar sus ingresos.
               </p>
@@ -862,8 +862,8 @@ export default function EditorialFunnelEs() {
                 “¿Qué plataforma nos ayudará a operar de forma más eficiente, automatizar más trabajo y crear más oportunidades?”
               </blockquote>
               <p>
-                Esa es la conversación que los Sistemas Operativos de Ingresos
-                nativos con IA están empezando a transformar.
+                Esa es la conversación que los CRM agénticos
+                están empezando a transformar.
               </p>
               <p>
                 El objetivo ya no es solo gestionar las relaciones con los
@@ -889,8 +889,8 @@ export default function EditorialFunnelEs() {
                 activas.
               </p>
               <p>
-                Por eso, el cambio hacia un Sistema Operativo de Ingresos con IA
-                Agéntica es mucho más que una actualización de software.
+                Por eso, el cambio hacia un CRM agéntico
+                es mucho más que una actualización de software.
                 Representa el paso de un registro pasivo de información a un
                 modelo operativo diseñado para la acción, la velocidad y un
                 crecimiento medible.
@@ -923,7 +923,7 @@ export default function EditorialFunnelEs() {
 
       <footer className="ed-footer">
         <div className="ed-footer-inner">
-          <img src={footlogo} alt="Cortexa" className="ed-footlogo" />
+          <img src={footlogo} alt="Cortexa Agentic CRM" loading="lazy" decoding="async" className="ed-footlogo" />
           <div className="ed-footer-links">
             <Link to="/pricing">Precios</Link>
             <Link to="/features">Funciones</Link>
