@@ -1051,6 +1051,7 @@ export default function LandingMobile() {
           <div className="m-lang-wrapper">
             <button
               className="m-lang-btn"
+              aria-label="Language / Idioma"
               onClick={() => setLangOpen(!langOpen)}
             >
               <svg
@@ -1092,7 +1093,7 @@ export default function LandingMobile() {
             )}
           </div>
 
-          <button className="m-menu-btn" onClick={() => setMenuOpen(true)}>
+          <button className="m-menu-btn" aria-label="Menu" onClick={() => setMenuOpen(true)}>
             <Menu size={28} />
           </button>
         </div>
@@ -1109,7 +1110,7 @@ export default function LandingMobile() {
       <div className={`m-drawer ${menuOpen ? "open" : ""}`}>
         <div className="m-drawer-top">
           <img src={headlogoImg} alt="" className="m-drawer-logo" />
-          <button className="m-close" onClick={() => setMenuOpen(false)}>
+          <button className="m-close" aria-label="Close" onClick={() => setMenuOpen(false)}>
             <X size={24} />
           </button>
         </div>

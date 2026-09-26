@@ -2120,7 +2120,7 @@ export default function Landing() {
                 </div>
                 <div className="cx-team-data-grid">
                   <div className="cx-team-table-card">
-                    <h3>{tr.teamShowcase.priorities}<a>{tr.teamShowcase.viewAll} →</a></h3>
+                    <h3>{tr.teamShowcase.priorities}<a href="#workspace">{tr.teamShowcase.viewAll} →</a></h3>
                     <div className="cx-team-table-head"><span>□ &nbsp; {tr.teamShowcase.task}</span><span>{tr.teamShowcase.customer}</span><span>{tr.teamShowcase.owner}</span><span>{tr.teamShowcase.dueDate}</span><span>{tr.teamShowcase.status}</span></div>
                     {[
                       ['Follow up with Acme consultation','Acme Co.','Sophia','Apr 24, 2024','Due Today'],
@@ -2130,11 +2130,11 @@ export default function Landing() {
                     ].map((r,i)=><div className="cx-team-table-row" key={r[0]}><span>□ &nbsp; <b>{r[0]}</b></span><span>{r[1]}</span><span className="cx-team-owner"><i>{r[2][0]}</i>{r[2]}</span><span>{r[3]}</span><span><em className={`cx-team-status s${i}`}>{r[4]}</em></span></div>)}
                   </div>
                   <div className="cx-team-activity">
-                    <h3>{tr.teamShowcase.activity}<a>{tr.teamShowcase.viewAll} →</a></h3>
+                    <h3>{tr.teamShowcase.activity}<a href="#workspace">{tr.teamShowcase.viewAll} →</a></h3>
                     {[['S','Sophia reassigned a follow-up','Acme Co.','2h ago'],['M','Marcus approved the proposal','BrightHome Properties','3h ago'],['E','Elena added an internal note','Rivera Clinic','5h ago'],['D','Daniel completed the handoff','Maple & Main','1d ago']].map(r=><div className="cx-team-activity-row" key={r[1]}><i>{r[0]}</i><span><b>{r[1]}</b><small>{r[2]}</small></span><time>{r[3]}</time></div>)}
                   </div>
                 </div>
-                <div className="cx-team-handoffs"><h3>{tr.teamShowcase.handoffs}<a>{tr.teamShowcase.viewAll} →</a></h3>{[['Acme Co.','Sales','Customer Service','Completed','Apr 22, 2024'],['Rivera Clinic','Operations','Client Success','In Progress','Apr 24, 2024'],['Maple & Main','Customer Service','Operations','Pending','Apr 25, 2024']].map((r,i)=><div className="cx-team-handoff-row" key={r[0]}>{r.map((v,j)=><span key={v}>{j===3?<em className={`cx-team-status h${i}`}>{v}</em>:v}</span>)}</div>)}</div>
+                <div className="cx-team-handoffs"><h3>{tr.teamShowcase.handoffs}<a href="#workspace">{tr.teamShowcase.viewAll} →</a></h3>{[['Acme Co.','Sales','Customer Service','Completed','Apr 22, 2024'],['Rivera Clinic','Operations','Client Success','In Progress','Apr 24, 2024'],['Maple & Main','Customer Service','Operations','Pending','Apr 25, 2024']].map((r,i)=><div className="cx-team-handoff-row" key={r[0]}>{r.map((v,j)=><span key={v}>{j===3?<em className={`cx-team-status h${i}`}>{v}</em>:v}</span>)}</div>)}</div>
                 <div className="cx-team-float"><Users2 size={28}/><b>{tr.teamShowcase.float}</b></div>
               </div>
             </div>
