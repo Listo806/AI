@@ -2,7 +2,7 @@
 .eci-filter-empty{min-height:160px;border:1px dashed #dfe5f0;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#7180a3;gap:5px;font-size:9px}.eci-filter-empty svg{color:#5a2cff}.eci-filter-empty b{font-size:11px;color:#24386f}
 @media(max-width:850px){
  .eci-page{background:#090b12!important;color:#f7f8ff!important;--ink:#f7f8ff!important;--muted:#aeb8d0!important;--line:#293041!important}
- .eci-topbar,.eci-directory,.eci-category,.eci-side-card,.eci-recent,.eci-summary>button,.eci-events>button,.eci-popular button,.eci-modal>section{background:#11141d!important;border-color:#293041!important;color:#f7f8ff!important}
+ .eci-donut>div,.eci-topbar,.eci-directory,.eci-category,.eci-side-card,.eci-recent,.eci-summary>button,.eci-events>button,.eci-popular button,.eci-modal>section{background:#11141d!important;border-color:#293041!important;color:#f7f8ff!important}
  .eci-topbar p,.eci-cat-head small,.eci-category footer,.eci-events>button,.eci-help p,.eci-empty{color:#aeb8d0!important}
  .eci-filters button,.eci-filters select,.eci-mobile-search,.eci-account>label{background:#0c0f17!important;border-color:#303748!important;color:#e8ebf4!important}
  .eci-filters button.active{background:#211a42!important;color:#a993ff!important}

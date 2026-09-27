@@ -240,7 +240,10 @@ export function EcommerceCheckout(){
 
 export function EcommerceAppLayout(){
  const auth=useEcAuth();
- const [collapsed,setCollapsed]=useState(false);
+ const [collapsed,setCollapsed]=useState(()=>{
+  if(typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 850px)").matches;
+ });
 
  return <div className={`ec-app ${collapsed ? "ec-sidebar-collapsed" : ""}`}>
   <aside className="ec-sidebar">

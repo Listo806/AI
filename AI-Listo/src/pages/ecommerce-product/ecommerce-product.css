@@ -260,3 +260,141 @@
   .ec-logo picture{max-width:165px}
   .ec-header{height:56px}
 }
+
+
+/* =========================================================
+   TABLET / MOBILE SIDEBAR OPEN + CLOSE FIX
+   On <=850px: collapsed = 72px, expanded = 220px.
+   This intentionally overrides the older mobile rules that
+   permanently forced icon-only mode.
+   ========================================================= */
+@media(max-width:850px){
+  .ec-app{
+    --ec-sidebar-width:220px;
+    --ec-sidebar-collapsed-width:72px;
+  }
+
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar{
+    width:var(--ec-sidebar-width)!important;
+    flex:0 0 var(--ec-sidebar-width)!important;
+    padding:20px 12px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo{
+    opacity:1!important;
+    pointer-events:auto!important;
+    visibility:visible!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav a{
+    justify-content:flex-start!important;
+    padding:12px 12px!important;
+    gap:10px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav a span,
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-logout span{
+    display:inline!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-logout{
+    justify-content:center!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-collapse{
+    right:7px!important;
+  }
+
+  .ec-app.ec-sidebar-collapsed .ec-sidebar{
+    width:var(--ec-sidebar-collapsed-width)!important;
+    flex:0 0 var(--ec-sidebar-collapsed-width)!important;
+    padding:20px 8px!important;
+  }
+  .ec-app.ec-sidebar-collapsed .ec-sidebar-top .ec-logo{
+    opacity:0!important;
+    pointer-events:none!important;
+    visibility:hidden!important;
+  }
+  .ec-app.ec-sidebar-collapsed .ec-sidebar nav a{
+    justify-content:center!important;
+    padding:12px 0!important;
+  }
+  .ec-app.ec-sidebar-collapsed .ec-sidebar nav a span,
+  .ec-app.ec-sidebar-collapsed .ec-sidebar-logout span{
+    display:none!important;
+  }
+  .ec-app.ec-sidebar-collapsed .ec-sidebar-logout{
+    justify-content:center!important;
+    padding:10px 0!important;
+  }
+
+  .ec-sidebar,
+  .ec-app-main{
+    transition:width .22s ease,flex-basis .22s ease,background-color .2s ease;
+  }
+}
+
+@media(max-width:520px){
+  .ec-app{--ec-sidebar-width:200px;--ec-sidebar-collapsed-width:58px}
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar{
+    width:200px!important;
+    flex-basis:200px!important;
+    padding:15px 10px!important;
+  }
+  .ec-app.ec-sidebar-collapsed .ec-sidebar{
+    width:58px!important;
+    flex-basis:58px!important;
+    padding:15px 6px!important;
+  }
+}
+
+/* SMALL-SCREEN SIDEBAR WIDTH FIX */
+@media (min-width:521px) and (max-width:850px){
+  .ec-app{--ec-sidebar-width:180px;--ec-sidebar-collapsed-width:64px}
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar{
+    width:180px!important;flex:0 0 180px!important;padding:18px 9px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo picture{
+    max-width:142px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav a{
+    padding:11px 9px!important;gap:8px!important;font-size:12px!important;
+  }
+}
+
+@media(max-width:520px){
+  .ec-app{--ec-sidebar-width:140px;--ec-sidebar-collapsed-width:52px}
+
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar{
+    width:140px!important;flex:0 0 140px!important;padding:14px 7px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top{
+    min-height:45px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo{
+    width:104px!important;min-width:104px!important;max-width:104px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo picture,
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo img{
+    width:104px!important;max-width:104px!important;height:auto!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-collapse{
+    width:25px!important;height:25px!important;right:1px!important;top:1px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav{
+    margin-top:8px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav a{
+    min-height:40px!important;padding:10px 7px!important;gap:7px!important;
+    font-size:11px!important;border-radius:7px!important;
+  }
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav a svg{
+    width:15px!important;height:15px!important;
+  }
+
+  .ec-app.ec-sidebar-collapsed .ec-sidebar{
+    width:52px!important;flex:0 0 52px!important;padding:14px 5px!important;
+  }
+  .ec-app.ec-sidebar-collapsed .ec-sidebar-collapse{
+    width:25px!important;height:25px!important;right:8px!important;
+  }
+  .ec-app.ec-sidebar-collapsed .ec-sidebar nav a svg{
+    width:16px!important;height:16px!important;
+  }
+  .ec-app-main{min-width:0!important}
+}
