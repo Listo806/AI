@@ -60,7 +60,7 @@ function Logo(){
 export function EcommerceHeader(){
   return <header className="ec-header"><div className="ec-header-inner"><Logo/><nav>
     <Link to="/e-commerce/dashboard">Dashboard</Link><a href="/e-commerce#subscriptions">Subscriptions</a><a href="/e-commerce#integrations">Integrations</a><Link to="/e-commerce/pricing">Pricing</Link><a href="/e-commerce#resources">Resources </a>
-  </nav><div className="ec-header-actions"><Link className="ec-login-link" to="/e-commerce/login">Login</Link><Link className="ec-btn ec-btn-small" to="/e-commerce/signup">Get Started</Link></div></div></header>;
+  </nav><div className="ec-header-actions"><Link className="on-mobile ec-login-link" to="/e-commerce/pricing">Pricing</Link><Link className="ec-login-link" to="/e-commerce/login">Login</Link><Link className="ec-btn ec-btn-small" to="/e-commerce/signup">Get Started</Link></div></div></header>;
 }
 
 const sections=[
