@@ -29,7 +29,7 @@ export const LANGUAGES = [
 // in a language when an approved translation is published for it. `type`
 // selects the structured data the page can honestly carry (scripts/build-seo.mjs).
 export const INDEXABLE_PAGES = [
-  { path: "/", file: "src/pages/landing/Landing.jsx", languages: ["en", "es", "pt"], priority: "1.0", changefreq: "weekly", type: "home" },
+  { path: "/", file: "src/pages/landing/LandingDesktop.jsx", languages: ["en", "es", "pt"], priority: "1.0", changefreq: "weekly", type: "home" },
   { path: "/features", file: "src/pages/common/FeaturesPage.jsx", languages: ["en", "es", "pt"], priority: "0.9", changefreq: "monthly" },
   { path: "/pricing", file: "src/pages/common/Pricing.jsx", languages: ["en", "es", "pt"], priority: "0.9", changefreq: "weekly", type: "pricing" },
   { path: "/integrations", file: "src/pages/common/IntegrationsPage.jsx", languages: ["en", "es", "pt"], priority: "0.8", changefreq: "monthly" },
