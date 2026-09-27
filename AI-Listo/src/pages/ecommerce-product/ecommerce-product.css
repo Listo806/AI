@@ -398,3 +398,198 @@
   }
   .ec-app-main{min-width:0!important}
 }
+
+
+/* =========================================================
+   E-COMMERCE CHECKOUT — TABLET / MOBILE RESPONSIVE FIX
+   ========================================================= */
+@media (max-width:850px){
+  .ec-auth-page{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    padding:20px 16px 32px!important;
+    overflow-x:hidden!important;
+  }
+
+  .ec-auth-page > .ec-logo{
+    width:min(180px,55vw)!important;
+    max-width:180px!important;
+    margin:0 auto 20px!important;
+  }
+
+  .ec-auth-page > .ec-logo picture,
+  .ec-auth-page > .ec-logo img{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    height:auto!important;
+  }
+
+  .ec-checkout{
+    width:100%!important;
+    max-width:620px!important;
+    min-width:0!important;
+    margin:0 auto!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:14px!important;
+  }
+
+  .ec-checkout > section,
+  .ec-checkout > aside{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    padding:22px!important;
+    border-radius:12px!important;
+    overflow:hidden!important;
+  }
+
+  .ec-checkout h1{
+    font-size:25px!important;
+    line-height:1.08!important;
+    letter-spacing:-.5px!important;
+    margin:0 0 8px!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  .ec-checkout h2{
+    font-size:20px!important;
+    line-height:1.15!important;
+    margin:0 0 14px!important;
+  }
+
+  .ec-checkout section > p{
+    font-size:11px!important;
+    line-height:1.45!important;
+    margin:0 0 15px!important;
+  }
+
+  .ec-checkout label{
+    min-width:0!important;
+    margin:13px 0!important;
+    gap:6px!important;
+    font-size:10px!important;
+  }
+
+  .ec-checkout input{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:42px!important;
+    padding:0 11px!important;
+    font-size:12px!important;
+  }
+
+  .ec-field-row{
+    width:100%!important;
+    min-width:0!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:10px!important;
+  }
+
+  .ec-checkout aside div{
+    min-width:0!important;
+    gap:12px!important;
+    margin:13px 0!important;
+    align-items:flex-start!important;
+    font-size:11px!important;
+  }
+
+  .ec-checkout aside div > span,
+  .ec-checkout aside div > strong:first-child{
+    min-width:0!important;
+    flex:1 1 auto!important;
+  }
+
+  .ec-checkout aside div > b,
+  .ec-checkout aside div > strong:last-child{
+    flex:0 0 auto!important;
+    max-width:58%!important;
+    text-align:right!important;
+    white-space:normal!important;
+  }
+
+  .ec-checkout aside .ec-btn{
+    width:100%!important;
+    min-width:0!important;
+    min-height:44px!important;
+    margin:16px 0 12px!important;
+    padding:11px 14px!important;
+    font-size:11px!important;
+  }
+
+  .ec-checkout aside > small{
+    display:block!important;
+    font-size:9px!important;
+    line-height:1.45!important;
+  }
+}
+
+@media (max-width:520px){
+  .ec-auth-page{
+    padding:14px 10px 24px!important;
+  }
+
+  .ec-auth-page > .ec-logo{
+    width:132px!important;
+    margin-bottom:14px!important;
+  }
+
+  .ec-checkout{
+    max-width:100%!important;
+    gap:12px!important;
+  }
+
+  .ec-checkout > section,
+  .ec-checkout > aside{
+    padding:16px 14px!important;
+    border-radius:10px!important;
+  }
+
+  .ec-checkout h1{
+    font-size:21px!important;
+    line-height:1.1!important;
+  }
+
+  .ec-checkout h2{
+    font-size:17px!important;
+  }
+
+  .ec-checkout section > p{
+    font-size:10px!important;
+  }
+
+  .ec-field-row{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+
+  .ec-checkout label{
+    font-size:9px!important;
+  }
+
+  .ec-checkout input{
+    height:40px!important;
+    font-size:11px!important;
+  }
+
+  .ec-checkout aside div{
+    font-size:10px!important;
+    gap:8px!important;
+  }
+
+  .ec-checkout aside div > b,
+  .ec-checkout aside div > strong:last-child{
+    max-width:55%!important;
+  }
+}
+
+@media (max-width:360px){
+  .ec-field-row{
+    grid-template-columns:1fr!important;
+    gap:0!important;
+  }
+}
