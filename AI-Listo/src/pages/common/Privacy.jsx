@@ -68,9 +68,7 @@ const t = {
       { title: "12. CONTACT", blocks: [
         { type: "p", text: "Support Email: support@cortexaaicrm.com" },
         { type: "p", text: "Legal Business Name: Listo Qasa S.A.S." },
-        { type: "p", text: "Trade Name / Brand: CORTEXA Agentic AI Revenue OS" },
-        { type: "p", text: "RUC: 1793234655001" },
-        { type: "p", text: "Country of Registration: Ecuador" },
+        { type: "p", text: "Trade Name / Brand: CORTEXA CRN" },
       ]},
     ],
   },
@@ -142,9 +140,7 @@ const t = {
       { title: "12. CONTACTO", blocks: [
         { type: "p", text: "Correo electrónico de soporte: support@cortexaaicrm.com" },
         { type: "p", text: "Nombre legal de la empresa: Listo Qasa S.A.S." },
-        { type: "p", text: "Nombre comercial / Marca: CORTEXA Agentic AI Revenue OS" },
-        { type: "p", text: "RUC: 1793234655001" },
-        { type: "p", text: "País de registro: Ecuador" },
+        { type: "p", text: "Nombre comercial / Marca: CORTEXA Agentic CRM" },
       ]},
     ],
   },
@@ -216,9 +212,7 @@ const t = {
       { title: "12. CONTATO", blocks: [
         { type: "p", text: "E-mail de suporte: support@cortexaaicrm.com" },
         { type: "p", text: "Nome jurídico da empresa: Listo Qasa S.A.S." },
-        { type: "p", text: "Nome comercial / Marca: CORTEXA Agentic AI Revenue OS" },
-        { type: "p", text: "RUC: 1793234655001" },
-        { type: "p", text: "País de registro: Equador" },
+        { type: "p", text: "Nome comercial / Marca: CORTEXA CRM" },
       ]},
     ],
   },

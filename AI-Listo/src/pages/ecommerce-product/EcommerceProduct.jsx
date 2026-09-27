@@ -22,6 +22,7 @@ import integrationsDiagram from "./assets/cortexa-ecommerce-subscription-crm-int
 import automationDashboard from "./assets/cortexa-ecommerce-subscription-crm-automation-workflows.webp";
 import analyticsDashboard from "./assets/cortexa-ecommerce-subscription-crm-analytics-reporting.webp";
 import headlogoImg from "./assets/headlogo.png";
+import headlogoDarkImg from "./assets/headlogo-dark.png";
 
 const EcAuthContext = createContext(null);
 const EC_TOKEN = "cortexa_ecommerce_access_token";
@@ -53,7 +54,7 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
-  return <Link to="/e-commerce" className="ec-logo"><img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM" /></Link>;
+  return <Link to="/e-commerce" className="ec-logo"><picture><source media="(max-width: 850px)" srcSet={headlogoDarkImg}/><img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM" /></picture></Link>;
 }
 
 export function EcommerceHeader(){
@@ -86,36 +87,156 @@ export function EcommerceLanding(){
 
 export function EcommercePricing(){
  const [annual,setAnnual]=useState(false);
- const recurring=annual?"$3,811":"$397";
+ const billingCycle=annual?"annual":"monthly";
+ const mainPrice=annual?"$317":"$397";
+ const checkoutAmount=annual?3804:397;
+
+ const startCheckout=()=>{
+  sessionStorage.setItem("ec_billing_cycle",billingCycle);
+  sessionStorage.setItem("ec_checkout_amount",String(checkoutAmount));
+  trackEvent("ecommerce_plan_selected",{
+   plan:"ecommerce_crm",
+   billing_cycle:billingCycle,
+   value:checkoutAmount,
+   currency:"USD"
+  });
+ };
+
  return <div className="ec-public ec-pricing-shell">
   <main className="ec-pricing-page">
    <h1>Simple pricing that <em>scales</em> with your business.</h1>
+
    <div className="ec-toggle">
-    <b className={!annual?"on":""}>Billed monthly</b>
-    <button onClick={()=>setAnnual(!annual)} className={annual?"annual":""}><i/></button>
-    <span>Billed annually</span><strong>Save 20%</strong>
+    <b className={`ec-toggle-label ${!annual?"on":""}`}>Billed monthly</b>
+    <button
+     type="button"
+     onClick={()=>setAnnual(v=>!v)}
+     className={annual?"annual":""}
+     aria-label={`Switch to ${annual?"monthly":"annual"} billing`}
+     aria-pressed={annual}
+    ><i/></button>
+    <span className={`ec-toggle-label ${annual?"on":""}`}>Billed annually</span>
+    <strong>Save over 20%</strong>
    </div>
+
    <div className="ec-price-card">
     <h2>E-Commerce CRM</h2>
     <p>The complete platform for subscription<br/>and affiliate businesses.</p>
-    <div className="ec-price">{recurring}<small>{annual?"/year":"/month"}</small></div>
-    <div className="ec-subscriber-cap"><Users size={20}/> Up to 500 active subscribers</div>
-    <p className="ec-annual-saving">$3,811 billed annually — <em>save $953</em></p>
-    <Link className="ec-price-button" to="/e-commerce/signup" onClick={()=>trackEvent("ecommerce_plan_selected",{plan:"ecommerce_crm",billing_cycle:annual?"annual":"monthly",value:annual?3811:397,currency:"USD"})}>Get Started</Link>
+
+    <div className="ec-price">{mainPrice}<small>/month</small></div>
+
+    {annual&&
+     <p className="ec-annual-saving">
+      $3,804 billed annually — <em>save $960 per year</em>
+     </p>
+    }
+
+    <div className="ec-subscriber-cap">
+     <Users size={20}/> Up to 500 active subscribers
+    </div>
+
+    <Link
+     className="ec-price-button"
+     to={`/e-commerce/signup?billing=${billingCycle}`}
+     onClick={startCheckout}
+    >
+     Get Started
+    </Link>
+
     <hr/>
     <h3>COMPLETE PLATFORM INCLUDED:</h3>
-    <ul>{["Customer & Subscription Management","Dashboard Billing Calendar","Products, Offers & Pricing Rules","Campaigns, Coupons & Order Bumps","Orders, Fulfillment & Returns","Affiliate Tracking & Attribution","Multiple Payment Integrations","Automated Decline Recovery","CRM, Notes & Activity Timeline","Integrations, APIs & Webhooks","Automation & Customer Messaging","Analytics & Commerce Reporting","Automatically moves to the next tier after 500 active subscribers"].map(x=><li key={x}><CheckCircle2 size={16}/><span>{x}</span></li>)}</ul>
+    <ul>{[
+     "Customer & Subscription Management",
+     "Dashboard Billing Calendar",
+     "Products, Offers & Pricing Rules",
+     "Campaigns, Coupons & Order Bumps",
+     "Orders, Fulfillment & Returns",
+     "Affiliate Tracking & Attribution",
+     "Multiple Payment Integrations",
+     "Automated Decline Recovery",
+     "CRM, Notes & Activity Timeline",
+     "Integrations, APIs & Webhooks",
+     "Automation & Customer Messaging",
+     "Analytics & Commerce Reporting",
+     "Automatically moves to the next tier after 500 active subscribers"
+    ].map(x=><li key={x}><CheckCircle2 size={16}/><span>{x}</span></li>)}</ul>
    </div>
-   <p className="ec-pricing-note">One complete platform. Pricing automatically scales as your active subscriber volume grows.</p>
+
+   <p className="ec-pricing-note">
+    One complete platform. Pricing automatically scales as your active subscriber volume grows.
+   </p>
   </main>
  </div>
 }
 
-function AuthCard({mode}){ const nav=useNavigate(); const auth=useEcAuth(); const [error,setError]=useState(""); const [form,setForm]=useState({name:"",email:"",password:""}); const submit=async e=>{e.preventDefault();setError("");if(mode==="signup"){sessionStorage.setItem("ec_signup",JSON.stringify(form));nav("/e-commerce/checkout");return;}try{await auth.login(form);nav("/e-commerce/dashboard",{replace:true});}catch(err){setError(err.message)}}; return <div className="ec-auth-page"><Link to="/e-commerce"><Logo/></Link><form className="ec-auth-card" onSubmit={submit}><h1>{mode==="login"?"Welcome back":"Start with Cortexa E-Commerce CRM"}</h1><p>{mode==="login"?"Login to your E-Commerce CRM account.":"Create your dedicated E-Commerce account."}</p>{mode==="signup"&&<label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label>}<label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/></label><label>Password<input type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/></label>{error&&<div className="ec-error">{error}</div>}<button className="ec-btn" type="submit">{mode==="login"?"Login":"Continue to Checkout"}</button><p className="ec-switch">{mode==="login"?<>New to E-Commerce CRM? <Link to="/e-commerce/signup">Get Started</Link></>:<>Already have an account? <Link to="/e-commerce/login">Login</Link></>}</p></form></div> }
+function AuthCard({mode}){ const nav=useNavigate(); const auth=useEcAuth(); const [error,setError]=useState(""); const [form,setForm]=useState({name:"",email:"",password:""}); const submit=async e=>{e.preventDefault();setError("");if(mode==="signup"){
+ const params=new URLSearchParams(window.location.search);
+ const billing=params.get("billing")||sessionStorage.getItem("ec_billing_cycle")||"monthly";
+ sessionStorage.setItem("ec_billing_cycle",billing);
+ sessionStorage.setItem("ec_checkout_amount",billing==="annual"?"3804":"397");
+ sessionStorage.setItem("ec_signup",JSON.stringify({...form,billing}));
+ nav(`/e-commerce/checkout?billing=${billing}`);
+ return;
+}try{await auth.login(form);nav("/e-commerce/dashboard",{replace:true});}catch(err){setError(err.message)}}; return <div className="ec-auth-page"><Link to="/e-commerce"><Logo/></Link><form className="ec-auth-card" onSubmit={submit}><h1>{mode==="login"?"Welcome back":"Start with Cortexa E-Commerce CRM"}</h1><p>{mode==="login"?"Login to your E-Commerce CRM account.":"Create your dedicated E-Commerce account."}</p>{mode==="signup"&&<label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label>}<label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/></label><label>Password<input type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/></label>{error&&<div className="ec-error">{error}</div>}<button className="ec-btn" type="submit">{mode==="login"?"Login":"Continue to Checkout"}</button><p className="ec-switch">{mode==="login"?<>New to E-Commerce CRM? <Link to="/e-commerce/signup">Get Started</Link></>:<>Already have an account? <Link to="/e-commerce/login">Login</Link></>}</p></form></div> }
 export const EcommerceLogin=()=> <AuthCard mode="login"/>;
 export const EcommerceSignup=()=> <AuthCard mode="signup"/>;
 
-export function EcommerceCheckout(){ const nav=useNavigate(); const saved=JSON.parse(sessionStorage.getItem("ec_signup")||"{}"); return <div className="ec-auth-page"><Logo/><div className="ec-checkout"><section><h1>Complete your E-Commerce CRM setup</h1><p>Your E-Commerce account, billing and access remain separate from the main Cortexa CRM.</p><label>Full name<input defaultValue={saved.name||""}/></label><label>Email<input defaultValue={saved.email||""}/></label><label>Card number<input placeholder="1234 5678 9012 3456"/></label><div className="ec-field-row"><label>Expiry<input placeholder="MM / YY"/></label><label>CVC<input placeholder="CVC"/></label></div></section><aside><h2>E-Commerce CRM</h2><div><span>Subscription</span><b>$397 / month</b></div><div><span>Active subscribers</span><b>Up to 500</b></div><hr/><div><strong>Due today</strong><strong>$397</strong></div><button className="ec-btn" onClick={()=>nav("/e-commerce/login")}>Complete Checkout</button><small>Checkout UI is ready for the dedicated E-Commerce payment API.</small></aside></div></div> }
+export function EcommerceCheckout(){
+ const nav=useNavigate();
+ const saved=JSON.parse(sessionStorage.getItem("ec_signup")||"{}");
+ const params=new URLSearchParams(window.location.search);
+ const billing=params.get("billing")||saved.billing||sessionStorage.getItem("ec_billing_cycle")||"monthly";
+ const annual=billing==="annual";
+ const dueToday=annual?3804:397;
+
+ return <div className="ec-auth-page">
+  <Logo/>
+  <div className="ec-checkout">
+   <section>
+    <h1>Complete your E-Commerce CRM setup</h1>
+    <p>Your E-Commerce account, billing and access remain separate from the main Cortexa CRM.</p>
+    <label>Full name<input defaultValue={saved.name||""}/></label>
+    <label>Email<input defaultValue={saved.email||""}/></label>
+    <label>Card number<input placeholder="1234 5678 9012 3456"/></label>
+    <div className="ec-field-row">
+     <label>Expiry<input placeholder="MM / YY"/></label>
+     <label>CVC<input placeholder="CVC"/></label>
+    </div>
+   </section>
+
+   <aside>
+    <h2>E-Commerce CRM</h2>
+    <div>
+     <span>Billing</span>
+     <b>{annual?"Billed annually":"Billed monthly"}</b>
+    </div>
+    <div>
+     <span>Subscription</span>
+     <b>{annual?"$317 / month":"$397 / month"}</b>
+    </div>
+    {annual&&<div><span>Annual charge</span><b>$3,804 / year</b></div>}
+    <div><span>Active subscribers</span><b>Up to 500</b></div>
+    <hr/>
+    <div><strong>Due today</strong><strong>{annual?"$3,804":"$397"}</strong></div>
+    <button
+     className="ec-btn"
+     onClick={()=>{
+      sessionStorage.setItem("ec_billing_cycle",billing);
+      sessionStorage.setItem("ec_checkout_amount",String(dueToday));
+      nav("/e-commerce/login");
+     }}
+    >
+     Complete Checkout
+    </button>
+    <small>
+     {annual
+      ?"Annual subscription renews at $3,804 per year."
+      :"Monthly subscription renews at $397 per month."}
+    </small>
+   </aside>
+  </div>
+ </div>
+}
 
 export function EcommerceAppLayout(){
  const auth=useEcAuth();
@@ -175,7 +296,7 @@ const ecommerceTerms = [
  ["5. Subscription Pricing", <>
   <p>Cortexa offers tiered E-Commerce subscription plans based on active subscriber volume. Unless stated otherwise, subscriptions are billed monthly or annually in advance at the pricing shown below.</p>
   <div className="ec-terms-table-wrap"><table className="ec-terms-table"><thead><tr><th>Active subscribers</th><th>Monthly price</th><th>Annual billing save 20 percent</th></tr></thead><tbody>
-   <tr><td>Up to 500</td><td>$397 per month</td><td>$3,811 per year</td></tr>
+   <tr><td>Up to 500</td><td>$397 per month</td><td>$3,804 per year</td></tr>
    <tr><td>501 - 2,000</td><td>$497 per month</td><td>$4,771 per year</td></tr>
    <tr><td>2,001 - 5,000</td><td>$697 per month</td><td>$6,691 per year</td></tr>
   </tbody></table></div>
