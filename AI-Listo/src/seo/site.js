@@ -93,6 +93,8 @@ export const LEGACY_REDIRECTS = [
   { from: "/pt-br", to: "/pt" },
   { from: "/pt-br/*", to: "/pt/:splat" },
   { from: "/why-legacy-crm", to: "/editorial/the-end-of-legacy-crm" },
+  // The old "AI CRM" landing page; the homepage now describes the Agentic CRM.
+  { from: "/ai-crm", to: "/" },
   { from: "/editorial/the-end-of-legacy-crm/es", to: "/es/editorial/the-end-of-legacy-crm" },
   { from: "/editorial/the-end-of-legacy-crm/pt", to: "/pt/editorial/the-end-of-legacy-crm" },
   { from: "/editorial/business/es", to: "/es/editorial/business" },
