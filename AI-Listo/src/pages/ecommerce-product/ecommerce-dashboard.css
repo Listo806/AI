@@ -4,9 +4,4 @@
 .ecbd-page,.ecbd-page *{font-weight:400}
 .ecbd-page h1,.ecbd-page h2,.ecbd-page h3,.ecbd-page b,.ecbd-page strong{font-weight:700}
 .ecbd-page{width:100%;min-width:0}
-@media(max-width:850px){
- .ecbd-page{background:#090b12!important;color:#f7f8ff!important;--line:#293041!important;--muted:#aeb8d0!important}
- .ecbd-page header,.ecbd-page section,.ecbd-page article,.ecbd-page aside,.ecbd-page .ecbd-card{background:#11141d!important;border-color:#293041!important;color:#f7f8ff!important}
- .ecbd-page input,.ecbd-page select,.ecbd-page button{border-color:#303748!important}
- .ecbd-page input,.ecbd-page select{background:#0c0f17!important;color:#fff!important}
-}
+

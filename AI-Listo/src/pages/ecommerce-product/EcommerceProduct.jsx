@@ -54,7 +54,10 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
-  return <Link to="/e-commerce" className="ec-logo"><picture><source media="(max-width: 850px)" srcSet={headlogoDarkImg}/><img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM" /></picture></Link>;
+  return <Link to="/e-commerce" className="ec-logo"><picture>
+        <source media="(prefers-color-scheme: dark)" srcSet={headlogoDarkImg}/>
+        <img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM"/>
+      </picture></Link>;
 }
 
 export function EcommerceHeader(){
