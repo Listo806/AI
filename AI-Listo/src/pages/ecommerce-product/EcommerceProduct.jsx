@@ -54,13 +54,16 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
-  return <Link to="/e-commerce" className="ec-logo"><picture><source media="(max-width: 850px)" srcSet={headlogoDarkImg}/><img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM" /></picture></Link>;
+  return <Link to="/e-commerce" className="ec-logo"><picture>
+        <source media="(prefers-color-scheme: dark)" srcSet={headlogoDarkImg}/>
+        <img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM"/>
+      </picture></Link>;
 }
 
 export function EcommerceHeader(){
   return <header className="ec-header"><div className="ec-header-inner"><Logo/><nav>
     <Link to="/e-commerce/dashboard">Dashboard</Link><a href="/e-commerce#subscriptions">Subscriptions</a><a href="/e-commerce#integrations">Integrations</a><Link to="/e-commerce/pricing">Pricing</Link><a href="/e-commerce#resources">Resources </a>
-  </nav><div className="ec-header-actions"><Link className="ec-login-link" to="/e-commerce/login">Login</Link><Link className="ec-btn ec-btn-small" to="/e-commerce/signup">Get Started</Link></div></div></header>;
+  </nav><div className="ec-header-actions"><Link className="on-mobile ec-login-link" to="/e-commerce/pricing">Pricing</Link><Link className="ec-login-link" to="/e-commerce/login">Login</Link><Link className="ec-btn ec-btn-small" to="/e-commerce/signup">Get Started</Link></div></div></header>;
 }
 
 const sections=[
@@ -240,7 +243,10 @@ export function EcommerceCheckout(){
 
 export function EcommerceAppLayout(){
  const auth=useEcAuth();
- const [collapsed,setCollapsed]=useState(false);
+ const [collapsed,setCollapsed]=useState(()=>{
+  if(typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 850px)").matches;
+ });
 
  return <div className={`ec-app ${collapsed ? "ec-sidebar-collapsed" : ""}`}>
   <aside className="ec-sidebar">
