@@ -56,11 +56,14 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
- return <div className="ec-logo ec-logo-adaptive" aria-label="Cortexa Payment & Subscription CRM">
-   <img className="ec-logo-adaptive-icon" src={adaptiveLogoIcon} alt=""/>
-   <div className="ec-logo-adaptive-copy">
-     <span className="ec-logo-adaptive-wordmark" style={{"--ec-wordmark-mask":`url(${adaptiveLogoWordmark})`}} role="img" aria-label="CORTEXA"/>
-     <span className="ec-logo-adaptive-tagline">Payment &amp; Subscription CRM</span>
+ return <div className="ec-logo ec-logo-responsive" aria-label="Cortexa Payment & Subscription CRM">
+   <img className="ec-logo-desktop" src={headlogoImg} alt="Cortexa"/>
+   <div className="ec-logo-mobile">
+     <img className="ec-logo-mobile-icon" src={adaptiveLogoIcon} alt=""/>
+     <div className="ec-logo-mobile-copy">
+       <span className="ec-logo-mobile-word">CORTEXA</span>
+       <span className="ec-logo-mobile-tagline">Payment &amp; Subscription CRM</span>
+     </div>
    </div>
  </div>
 }

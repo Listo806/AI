@@ -677,3 +677,156 @@
  .ec-logo-adaptive-wordmark{width:128px!important;height:20px!important}
  .ec-logo-adaptive-tagline{font-size:8px!important}
 }
+
+/* FINAL CUSTOMER LOGO CONTRAST FIX */
+.ec-logo.ec-logo-adaptive {
+  color: #fff !important;
+}
+.ec-logo-adaptive-wordmark {
+  background-color: #fff !important;
+  filter:
+    drop-shadow(1px 0 0 #071630)
+    drop-shadow(-1px 0 0 #071630)
+    drop-shadow(0 1px 0 #071630)
+    drop-shadow(0 -1px 0 #071630) !important;
+}
+.ec-logo-adaptive-tagline {
+  color: #fff !important;
+  opacity: 1 !important;
+  text-shadow:
+    -1px -1px 0 #071630,
+     1px -1px 0 #071630,
+    -1px  1px 0 #071630,
+     1px  1px 0 #071630 !important;
+}
+
+
+/* WHITE-FIRST CORTEXA + THIN NAVY KEYLINE
+   White remains the primary wordmark for the customer's dark/forced-dark screen.
+   The navy edge is only for contrast on normal light screens. */
+.ec-logo-adaptive-wordmark{
+  background-color:#fff!important;
+  filter:
+    drop-shadow(.8px 0 0 #071630)
+    drop-shadow(-.8px 0 0 #071630)
+    drop-shadow(0 .8px 0 #071630)
+    drop-shadow(0 -.8px 0 #071630)
+    drop-shadow(.55px .55px 0 #071630)
+    drop-shadow(-.55px .55px 0 #071630)
+    drop-shadow(.55px -.55px 0 #071630)
+    drop-shadow(-.55px -.55px 0 #071630)!important;
+}
+
+/* Keep the subtitle white-first too, but give it a readable navy edge on light screens. */
+.ec-logo-adaptive-tagline{
+  color:#fff!important;
+  opacity:1!important;
+  -webkit-text-stroke:.35px #071630;
+  paint-order:stroke fill;
+  text-shadow:none!important;
+}
+
+
+/* =========================================================
+   FINAL RESPONSIVE LOGO SPLIT
+   Desktop: original dark CORTEXA logo.
+   Tablet/mobile: white CORTEXA + thin navy keyline for the
+   customer's forced-dark browser, with transparent background.
+   ========================================================= */
+.ec-logo-responsive{
+  display:flex!important;
+  align-items:center!important;
+  background:transparent!important;
+}
+
+.ec-logo-desktop{
+  display:block!important;
+  width:190px!important;
+  max-width:190px!important;
+  height:auto!important;
+  object-fit:contain!important;
+}
+
+.ec-logo-mobile{
+  display:none!important;
+}
+
+@media(max-width:850px){
+  .ec-logo-desktop{
+    display:none!important;
+  }
+
+  .ec-logo-mobile{
+    display:flex!important;
+    align-items:center!important;
+    gap:7px!important;
+    background:transparent!important;
+    min-width:0!important;
+  }
+
+  .ec-logo-mobile-icon{
+    display:block!important;
+    width:36px!important;
+    height:36px!important;
+    flex:0 0 36px!important;
+    object-fit:contain!important;
+    background:transparent!important;
+  }
+
+  .ec-logo-mobile-copy{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    gap:1px!important;
+    min-width:0!important;
+  }
+
+  .ec-logo-mobile-word{
+    display:block!important;
+    color:#fff!important;
+    font-size:22px!important;
+    line-height:1!important;
+    font-weight:700!important;
+    letter-spacing:3.2px!important;
+    white-space:nowrap!important;
+    -webkit-text-stroke:.65px #071630!important;
+    paint-order:stroke fill!important;
+    text-shadow:
+      .6px 0 #071630,
+      -.6px 0 #071630,
+      0 .6px #071630,
+      0 -.6px #071630!important;
+  }
+
+  .ec-logo-mobile-tagline{
+    display:block!important;
+    color:#fff!important;
+    font-size:8px!important;
+    line-height:1.15!important;
+    font-weight:600!important;
+    white-space:nowrap!important;
+    -webkit-text-stroke:.3px #071630!important;
+    paint-order:stroke fill!important;
+    text-shadow:none!important;
+  }
+}
+
+@media(max-width:520px){
+  .ec-logo-mobile{
+    gap:6px!important;
+  }
+  .ec-logo-mobile-icon{
+    width:31px!important;
+    height:31px!important;
+    flex-basis:31px!important;
+  }
+  .ec-logo-mobile-word{
+    font-size:18px!important;
+    letter-spacing:2.6px!important;
+    -webkit-text-stroke:.6px #071630!important;
+  }
+  .ec-logo-mobile-tagline{
+    font-size:7px!important;
+  }
+}
