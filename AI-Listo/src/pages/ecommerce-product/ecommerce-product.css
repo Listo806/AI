@@ -340,7 +340,7 @@
   }
   .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav a{
     min-height:40px!important;padding:10px 7px!important;gap:7px!important;
-    font-size:11px!important;border-radius:7px!important;
+    font-size:12px!important;border-radius:7px!important;
   }
   .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav a svg{
     width:15px!important;height:15px!important;
@@ -894,4 +894,18 @@
   }
   .ec-mobile-menu-button svg{width:30px;height:30px;stroke:currentColor;stroke-width:2.5}
   .ecbd-day-stats strong, .ecbd-day-stats span, .ecbd-day-stats b{text-align: center;}
+}
+
+/* 2026-09-28 client mobile dark reference */
+@media (max-width:850px){
+  .ec-app{background:#111315!important;color:#f3f5fb!important}
+  .ec-app-main{background:#111315!important;color:#f3f5fb!important;min-height:100vh!important}
+  .ec-app .ec-sidebar,.ec-app.ec-sidebar-collapsed .ec-sidebar,.ec-app:not(.ec-sidebar-collapsed) .ec-sidebar{
+    width:min(230px,72vw)!important;max-width:230px!important;background:#1d1d1f!important;color:#eef2ff!important;border-right:1px solid #4a4e56!important;padding:18px 12px!important
+  }
+  .ec-app .ec-sidebar nav a{color:#b8c8f5!important}
+  .ec-app .ec-sidebar nav a.active{background:#29203e!important;color:#c9a7ff!important}
+  .ec-app .ec-sidebar-logout{background:#4a4a4c!important;color:#c5d2f6!important;border-color:#5d6068!important}
+  .ec-mobile-menu-button{color:#eef2ff!important;background:#303740!important;border:1px solid #4c5662!important;border-radius:8px!important}
+  .ec-mobile-sidebar-backdrop{background:rgba(0,0,0,.56)!important}
 }
