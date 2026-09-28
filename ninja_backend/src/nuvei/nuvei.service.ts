@@ -2142,8 +2142,13 @@ export class NuveiService {
     const statusDetail = tx?.status_detail;
 
     if (!this.callbackIsAuthentic(payload, headerToken)) {
+      // Which application signed it, and which fields were present, so a
+      // registration or signing mismatch can be diagnosed with Nuvei. None of
+      // these values is secret.
       this.logger.warn(
-        `Nuvei callback rejected: missing/bad signature (tx ${providerTxId || '-'}, ref ${devReference || '-'})`,
+        `Nuvei callback rejected: missing/bad signature (tx ${providerTxId || '-'}, ref ${devReference || '-'}, ` +
+          `app ${String(tx?.application_code || '-')}, user ${payload?.user?.id ? 'present' : 'missing'}, ` +
+          `stoken ${tx?.stoken ? 'present' : 'missing'}, expected app ${this.client.serverAppCode() || '-'})`,
       );
       return { ok: false, handled: 'unauthorized', httpStatus: 203 };
     }
