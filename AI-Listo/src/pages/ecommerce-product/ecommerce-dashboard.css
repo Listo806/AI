@@ -5,3 +5,77 @@
 .ecbd-page h1,.ecbd-page h2,.ecbd-page h3,.ecbd-page b,.ecbd-page strong{font-weight:700}
 .ecbd-page{width:100%;min-width:0}
 
+
+/* =========================================================
+   UPDATED TABLET / MOBILE DASHBOARD
+   Reference: full-width content + top-left hamburger.
+   ========================================================= */
+@media(max-width:850px){
+  .ecbd-page{width:100%;min-width:0}
+  .ecbd-topbar{
+    min-height:112px!important;height:auto!important;
+    padding:18px 18px 18px 76px!important;
+    align-items:flex-start!important;
+  }
+  .ecbd-topbar>div:first-child{min-width:0;flex:1}
+  .ecbd-topbar h1{font-size:25px!important;line-height:1.15!important;margin:0!important}
+  .ecbd-topbar p{font-size:16px!important;line-height:1.35!important;margin:7px 0 0!important;max-width:560px}
+  .ecbd-user-tools{gap:8px!important;margin-left:8px}
+  .ecbd-user-tools>label,.ecbd-user-tools>b,.ecbd-user-tools>.ecbd-avatar{display:none!important}
+  .ecbd-user-tools>svg{display:block!important}
+  .ecbd-bell svg{width:25px!important;height:25px!important}
+  .ecbd-bell i{font-size:10px!important;right:-4px!important;top:-7px!important}
+
+  .ecbd-content{padding:18px!important;width:100%!important;max-width:none!important}
+  .ecbd-metrics{grid-template-columns:1fr!important;gap:12px!important}
+  .ecbd-metric{height:auto!important;min-height:148px!important;padding:22px!important;border-radius:10px!important}
+  .ecbd-metric span{font-size:16px!important}
+  .ecbd-metric strong{font-size:30px!important;margin:10px 0 12px!important}
+  .ecbd-metric small{font-size:16px!important}
+  .ecbd-metric small svg{width:18px!important;height:18px!important}
+  .ecbd-metric-icon{width:64px!important;height:64px!important;border-radius:14px!important}
+  .ecbd-metric-icon svg{width:32px!important;height:32px!important}
+
+  .ecbd-main-grid{display:block!important;margin-top:14px!important}
+  /* Mobile reference goes directly from metrics to selected-day details. */
+  .ecbd-calendar-card{display:none!important}
+  .ecbd-day-card{height:auto!important;overflow:visible!important;padding:14px!important}
+  .ecbd-card-head h2{font-size:22px!important}
+  .ecbd-close{height:40px!important;font-size:16px!important;border-radius:8px!important}
+  .ecbd-day-stats{grid-template-columns:1fr!important;gap:8px!important;margin:12px 0!important}
+  .ecbd-day-stats button{height:86px!important;text-align:center!important;padding:10px!important}
+  .ecbd-day-stats strong{font-size:25px!important}.ecbd-day-stats span{font-size:15px!important}.ecbd-day-stats b{font-size:16px!important}
+  .ecbd-search-row{gap:10px!important}.ecbd-search-row label,.ecbd-search-row button{height:42px!important;font-size:16px!important}.ecbd-search-row input{font-size:15px!important}
+
+  .ecbd-customer-table,.ecbd-pagination{min-width:0!important;width:100%!important}
+  .ecbd-tr{grid-template-columns:minmax(0,1fr) 120px!important;min-height:58px!important;font-size:14px!important}
+  .ecbd-tr>span:nth-child(3),.ecbd-tr>span:nth-child(4),.ecbd-tr>span:nth-child(5){display:none!important}
+  .ecbd-th{min-height:38px!important}.ecbd-th>span{font-size:14px!important}
+  .ecbd-customer{gap:10px!important}.ecbd-customer>i{width:42px!important;height:42px!important;font-size:17px!important;flex:0 0 42px!important}
+  .ecbd-tr small{font-size:13px!important}.ecbd-tr>span:nth-child(2)>b{display:block}.ecbd-tr>span:nth-child(2){text-align:left}
+  .ecbd-pagination{display:block!important;margin-top:10px!important;font-size:14px!important}.ecbd-pagination div{display:none!important}
+
+  .ecbd-bottom-grid{grid-template-columns:1fr!important;gap:12px!important;margin-top:12px!important}
+  .ecbd-mini,.ecbd-bulk{padding:16px!important}
+  .ecbd-mini h3,.ecbd-bulk h3{font-size:18px!important}.ecbd-mini header a{font-size:14px!important}
+  .ecbd-mini p{font-size:14px!important;padding:7px 0!important}.ecbd-mini p.activity{grid-template-columns:38px minmax(0,1fr) auto auto!important}
+  .ecbd-mini .activity>svg{width:30px!important;height:30px!important}.ecbd-mini .activity small{font-size:13px!important}
+  .ecbd-mini header button{font-size:13px!important;padding:5px 8px!important}
+  .ecbd-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}.ecbd-actions button{height:42px!important;justify-content:center!important;font-size:14px!important}
+  .ecbd-quick{flex-wrap:wrap!important;gap:8px!important}.ecbd-quick span{font-size:15px!important}.ecbd-quick button{height:40px!important;font-size:14px!important;padding:0 12px!important}
+  .ecbd-bulk>p{font-size:14px!important;line-height:1.35!important}
+  .ecbd-statusbar{display:grid!important;grid-template-columns:1fr!important;height:auto!important;gap:10px!important;margin-top:12px!important}
+  .ecbd-statusbar>span{min-height:60px!important;padding:10px 14px!important;font-size:14px!important;line-height:1.35!important}
+}
+
+@media(max-width:520px){
+  .ecbd-topbar{padding:18px 14px 18px 70px!important;min-height:120px!important}
+  .ecbd-topbar h1{font-size:21px!important}.ecbd-topbar p{font-size:15px!important}
+  .ecbd-content{padding:14px!important}
+  .ecbd-metric{min-height:132px!important;padding:19px!important}.ecbd-metric strong{font-size:27px!important}
+  .ecbd-card-head h2{font-size:20px!important}
+  .ecbd-tr{grid-template-columns:minmax(0,1fr) 105px!important}
+  .ecbd-customer>i{width:38px!important;height:38px!important;flex-basis:38px!important}
+  .ecbd-mini p.activity{grid-template-columns:34px minmax(0,1fr) auto!important}
+  .ecbd-mini p.activity>strong:last-child{grid-column:3}.ecbd-mini p.activity>span{grid-column:3}
+}

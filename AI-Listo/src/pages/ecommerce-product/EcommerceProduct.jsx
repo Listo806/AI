@@ -5,7 +5,7 @@ import {
   CheckCircle2, UserRound, CalendarDays, LayoutDashboard, CreditCard,
   PackageCheck, BadgeDollarSign, Plug, Workflow, BarChart3, LogOut,
   ChevronDown, CircleDollarSign, WalletCards, PanelLeftClose, PanelLeftOpen, RotateCcw, Truck, Tags,
-  Link2, MessageSquareText, FileBarChart2
+  Link2, MessageSquareText, FileBarChart2, Menu
 } from "lucide-react";
 
 import "./ecommerce-product.css";
@@ -23,6 +23,8 @@ import automationDashboard from "./assets/cortexa-ecommerce-subscription-crm-aut
 import analyticsDashboard from "./assets/cortexa-ecommerce-subscription-crm-analytics-reporting.webp";
 import headlogoImg from "./assets/headlogo.png";
 import headlogoDarkImg from "./assets/headlogo-dark.png";
+import adaptiveLogoIcon from "./assets/cortexa-logo-icon-transparent.png";
+import adaptiveLogoWordmark from "./assets/cortexa-wordmark-adaptive.png";
 
 const EcAuthContext = createContext(null);
 const EC_TOKEN = "cortexa_ecommerce_access_token";
@@ -54,10 +56,16 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
-  return <Link to="/e-commerce" className="ec-logo"><picture>
-        <source media="(prefers-color-scheme: dark)" srcSet={headlogoDarkImg}/>
-        <img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM"/>
-      </picture></Link>;
+ return <div className="ec-logo ec-logo-responsive" aria-label="Cortexa Payment & Subscription CRM">
+   <img className="ec-logo-desktop" src={headlogoImg} alt="Cortexa"/>
+   <div className="ec-logo-mobile">
+     <img className="ec-logo-mobile-icon" src={adaptiveLogoIcon} alt=""/>
+     <div className="ec-logo-mobile-copy">
+       <span className="ec-logo-mobile-word">CORTEXA</span>
+       <span className="ec-logo-mobile-tagline">Payment &amp; Subscription CRM</span>
+     </div>
+   </div>
+ </div>
 }
 
 export function EcommerceHeader(){
@@ -243,12 +251,14 @@ export function EcommerceCheckout(){
 
 export function EcommerceAppLayout(){
  const auth=useEcAuth();
- const [collapsed,setCollapsed]=useState(()=>{
-  if(typeof window === "undefined") return false;
-  return window.matchMedia("(max-width: 850px)").matches;
- });
+ const [collapsed,setCollapsed]=useState(false);
+ const [mobileOpen,setMobileOpen]=useState(false);
+ const location=useLocation();
 
- return <div className={`ec-app ${collapsed ? "ec-sidebar-collapsed" : ""}`}>
+ React.useEffect(()=>{ setMobileOpen(false); },[location.pathname]);
+
+ return <div className={`ec-app ${collapsed ? "ec-sidebar-collapsed" : ""} ${mobileOpen ? "ec-mobile-sidebar-open" : ""}`}>
+  {mobileOpen&&<button type="button" className="ec-mobile-sidebar-backdrop" aria-label="Close menu" onClick={()=>setMobileOpen(false)}/>}
   <aside className="ec-sidebar">
    <div className="ec-sidebar-top">
     <Logo/>
@@ -263,21 +273,25 @@ export function EcommerceAppLayout(){
     </button>
    </div>
 
-   <nav>
+   <nav onClick={()=>setMobileOpen(false)}>
     <NavLink to="/e-commerce/dashboard" title="Dashboard"><LayoutDashboard size={17}/><span>Dashboard</span></NavLink>
     <NavLink to="/e-commerce/subscriptions" title="Subscriptions"><CreditCard size={17}/><span>Subscriptions</span></NavLink>
     <NavLink to="/e-commerce/integrations" title="Integrations"><Plug size={17}/><span>Integrations</span></NavLink>
    </nav>
 
-   <button className="ec-sidebar-logout" onClick={auth.logout} title="Log out">
+   <button className="ec-sidebar-logout" onClick={()=>{setMobileOpen(false);auth.logout();}} title="Log out">
     <LogOut size={16}/><span>Log out</span>
    </button>
   </aside>
 
-  <main className="ec-app-main"><Outlet/></main>
+  <main className="ec-app-main">
+   <button type="button" className="ec-mobile-menu-button" onClick={()=>setMobileOpen(v=>!v)} aria-label={mobileOpen?"Close menu":"Open menu"} aria-expanded={mobileOpen}>
+    <Menu size={27}/>
+   </button>
+   <Outlet/>
+  </main>
  </div>
 }
-
 export { default as EcommerceDashboard } from "./EcommerceDashboard";
 export function EcommerceSubscriptions(){ return <EcommerceSubscriptionsPage/>; }
 export function EcommerceIntegrations(){ return <EcommerceIntegrationsPage/>; }
