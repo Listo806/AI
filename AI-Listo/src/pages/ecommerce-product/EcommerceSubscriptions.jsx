@@ -64,7 +64,7 @@ export default function EcommerceSubscriptions(){
  const tabs=["All Subscriptions","Registered (Sign-ups)","Free","Trialing","Active Paid","Past Due","Canceled"];
  const tabCount=t=>t==="All Subscriptions"?data.customers.length:data.customers.filter(c=>String(c.status||"").toLowerCase()===t.toLowerCase().replace(" (sign-ups)","")).length;
  return <div className="ecs-page">
-  <header className="ecs-page-head"><div><h1>Subscriptions</h1><p>All registered accounts, subscriptions, and plans — everything in one place.</p></div><div><button><Download size={16}/>Export CSV</button><button><Upload size={16}/>Import Customers</button><button className="primary"><Plus size={17}/>Add Customer</button></div></header>
+  <header className="ecs-page-head"><div className="head"><h1>Subscriptions</h1><p>All registered accounts, subscriptions, and plans — everything in one place.</p></div><div><button><Download size={16}/>Export CSV</button><button><Upload size={16}/>Import Customers</button><button className="primary"><Plus size={17}/>Add Customer</button></div></header>
 
   <section className="ecs-stats">
    <Stat title="Total Registered" value={s.registered} sub="+0 this week" Icon={UsersRound} tone="blue"/>

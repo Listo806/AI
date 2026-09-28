@@ -830,3 +830,68 @@
     font-size:7px!important;
   }
 }
+
+/* =========================================================
+   MOBILE/TABLET APP NAVIGATION — OVERLAY DRAWER
+   Desktop sidebar behavior remains unchanged.
+   ========================================================= */
+.ec-mobile-menu-button,.ec-mobile-sidebar-backdrop{display:none}
+
+@media(max-width:850px){
+  .ec-app{display:block!important;position:relative;min-height:100vh}
+  .ec-app-main{width:100%!important;min-width:0!important;margin:0!important;padding:0!important}
+
+  /* Sidebar occupies zero layout width while closed. */
+  .ec-app .ec-sidebar,
+  .ec-app.ec-sidebar-collapsed .ec-sidebar,
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar{
+    position:fixed!important;
+    z-index:1002!important;
+    left:0!important;top:0!important;bottom:0!important;
+    width:min(280px,82vw)!important;
+    max-width:280px!important;
+    height:100dvh!important;
+    flex:none!important;
+    padding:20px 12px!important;
+    transform:translateX(-105%)!important;
+    transition:transform .22s ease!important;
+    overflow-y:auto!important;
+    visibility:hidden!important;
+    box-shadow:12px 0 30px rgba(0,0,0,.22)!important;
+  }
+  .ec-app.ec-mobile-sidebar-open .ec-sidebar{
+    transform:translateX(0)!important;
+    visibility:visible!important;
+  }
+  .ec-app .ec-sidebar-top .ec-logo,
+  .ec-app.ec-sidebar-collapsed .ec-sidebar-top .ec-logo,
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo{
+    opacity:1!important;visibility:visible!important;pointer-events:auto!important;
+  }
+  .ec-app .ec-sidebar nav a,
+  .ec-app.ec-sidebar-collapsed .ec-sidebar nav a,
+  .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar nav a{
+    justify-content:flex-start!important;padding:12px!important;gap:10px!important;
+  }
+  .ec-app .ec-sidebar nav a span,
+  .ec-app .ec-sidebar-logout span,
+  .ec-app.ec-sidebar-collapsed .ec-sidebar nav a span,
+  .ec-app.ec-sidebar-collapsed .ec-sidebar-logout span{
+    display:inline!important;
+  }
+  .ec-app .ec-sidebar-logout{justify-content:center!important;padding:10px!important}
+  .ec-sidebar-collapse{display:none!important}
+
+  .ec-mobile-sidebar-backdrop{
+    display:block!important;position:fixed;inset:0;z-index:1001;border:0;
+    background:rgba(0,0,0,.48);padding:0;margin:0;
+  }
+  .ec-mobile-menu-button{
+    display:grid!important;place-items:center!important;position:absolute!important;
+    left:18px!important;top:18px!important;z-index:40!important;
+    width:42px!important;height:42px!important;padding:0!important;margin:0!important;
+    border:0!important;background:transparent!important;color:inherit!important;cursor:pointer!important;
+  }
+  .ec-mobile-menu-button svg{width:30px;height:30px;stroke:currentColor;stroke-width:2.5}
+  .ecbd-day-stats strong, .ecbd-day-stats span, .ecbd-day-stats b{text-align: center;}
+}
