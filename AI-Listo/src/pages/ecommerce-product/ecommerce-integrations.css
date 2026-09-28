@@ -8,6 +8,10 @@
    colors are intentionally left untouched.
    ========================================================= */
 @media (max-width: 900px) {
+  .eci-directory{
+    padding:0!important;
+    border: 0;
+  }
   .eci-modal{padding: 0;}
   .eci-modal>section{max-width: 90%;}
   .eci-main { width:100%; min-width:0; }
