@@ -634,3 +634,46 @@
   mix-blend-mode:normal!important;
   filter:none!important;
 }
+
+/* CUSTOMER LOGO FIX — header + footer; transparent background */
+.ec-logo.ec-logo-adaptive{
+ display:flex!important;align-items:center!important;gap:8px!important;
+ width:auto!important;max-width:230px!important;min-width:0!important;
+ background:transparent!important;color:#071630;
+}
+.ec-logo-adaptive-icon{
+ display:block!important;width:40px!important;height:40px!important;
+ object-fit:contain!important;flex:0 0 40px!important;background:transparent!important;
+}
+.ec-logo-adaptive-copy{
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+ justify-content:center!important;min-width:0!important;gap:2px!important;background:transparent!important;
+}
+.ec-logo-adaptive-wordmark{
+ display:block!important;width:150px!important;height:24px!important;flex:none!important;
+ background-color:currentColor!important;
+ -webkit-mask-image:var(--ec-wordmark-mask)!important;mask-image:var(--ec-wordmark-mask)!important;
+ -webkit-mask-repeat:no-repeat!important;mask-repeat:no-repeat!important;
+ -webkit-mask-position:left center!important;mask-position:left center!important;
+ -webkit-mask-size:contain!important;mask-size:contain!important;
+ mix-blend-mode:normal!important;filter:none!important;opacity:1!important;visibility:visible!important;
+}
+.ec-logo-adaptive-tagline{
+ display:block!important;color:currentColor!important;font-size:10px!important;line-height:1.1!important;
+ font-weight:600!important;letter-spacing:.01em!important;white-space:nowrap!important;opacity:.78!important;
+}
+@media(prefers-color-scheme:dark){
+ .ec-logo.ec-logo-adaptive{color:#fff}
+}
+@media(max-width:850px){
+ .ec-logo.ec-logo-adaptive{max-width:205px!important;gap:7px!important}
+ .ec-logo-adaptive-icon{width:36px!important;height:36px!important;flex-basis:36px!important}
+ .ec-logo-adaptive-wordmark{width:138px!important;height:22px!important}
+ .ec-logo-adaptive-tagline{font-size:9px!important}
+}
+@media(max-width:520px){
+ .ec-logo.ec-logo-adaptive{max-width:188px!important;gap:6px!important}
+ .ec-logo-adaptive-icon{width:33px!important;height:33px!important;flex-basis:33px!important}
+ .ec-logo-adaptive-wordmark{width:128px!important;height:20px!important}
+ .ec-logo-adaptive-tagline{font-size:8px!important}
+}
