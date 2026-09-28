@@ -162,7 +162,7 @@
   color:#4e2cff!important;
 }
 .ec-sidebar-collapse{
-  top:40px!important;
+  top:52px!important;
   width:28px!important;
   height:28px!important;
   border:0!important;
@@ -326,11 +326,11 @@
     min-height:45px!important;
   }
   .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo{
-    width:104px!important;min-width:104px!important;max-width:104px!important;
+    width:47px!important;min-width:104px!important;max-width:104px!important;
   }
   .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo picture,
   .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-top .ec-logo img{
-    width:104px!important;max-width:104px!important;height:auto!important;
+    width:47px!important;max-width:104px!important;height:auto!important;
   }
   .ec-app:not(.ec-sidebar-collapsed) .ec-sidebar-collapse{
     width:25px!important;height:25px!important;right:1px!important;top:1px!important;

@@ -3,7 +3,7 @@ import {
  Search,Download,Upload,Plus,UsersRound,UserRoundCheck,DollarSign,TrendingUp,
  Percent,Gift,ChevronRight,Zap,Rocket,Layers3,CalendarDays,Bookmark,Send,
  Languages,Globe2,SlidersHorizontal,ChevronDown,MoreHorizontal,RefreshCw,
- CircleAlert,CheckCircle2
+ CircleAlert,CheckCircle2,UserPlus,Hourglass,ShieldCheck,TriangleAlert,XCircle
 } from "lucide-react";
 import "./ecommerce-subscriptions.css";
 
@@ -62,6 +62,15 @@ export default function EcommerceSubscriptions(){
   return okQ&&okP&&okS&&okT;
  }),[data.customers,query,plan,status,tab]);
  const tabs=["All Subscriptions","Registered (Sign-ups)","Free","Trialing","Active Paid","Past Due","Canceled"];
+ const tabIcons={
+  "All Subscriptions":UsersRound,
+  "Registered (Sign-ups)":UserRoundCheck,
+  "Free":Gift,
+  "Trialing":Hourglass,
+  "Active Paid":CheckCircle2,
+  "Past Due":TriangleAlert,
+  "Canceled":XCircle
+ };
  const tabCount=t=>t==="All Subscriptions"?data.customers.length:data.customers.filter(c=>String(c.status||"").toLowerCase()===t.toLowerCase().replace(" (sign-ups)","")).length;
  return <div className="ecs-page">
   <header className="ecs-page-head"><div className="head"><h1>Subscriptions</h1><p>All registered accounts, subscriptions, and plans — everything in one place.</p></div><div><button><Download size={16}/>Export CSV</button><button><Upload size={16}/>Import Customers</button><button className="primary"><Plus size={17}/>Add Customer</button></div></header>
@@ -83,7 +92,7 @@ export default function EcommerceSubscriptions(){
   </section>
 
   <section className="ecs-table-card">
-   <div className="ecs-tabs">{tabs.map(t=><button className={tab===t?"active":""} onClick={()=>setTab(t)} key={t}>{t}<i>{tabCount(t)}</i></button>)}</div>
+   <div className="ecs-tabs">{tabs.map(t=>{const TabIcon=tabIcons[t];return <button className={tab===t?"active":""} onClick={()=>setTab(t)} key={t}><span className="ecs-tab-icon"><TabIcon size={18}/></span><span className="ecs-tab-label">{t}</span><i>{tabCount(t)}</i><ChevronRight className="ecs-tab-arrow" size={18}/></button>})}</div>
    <Filters query={query} setQuery={setQuery} plan={plan} setPlan={setPlan} status={status} setStatus={setStatus}/>
    {data.error&&<div className="ecs-api-note"><CircleAlert size={15}/>{data.error} UI remains empty instead of using demo customer data.<button onClick={reload}><RefreshCw size={14}/>Retry</button></div>}
    <div className="ecs-table">
