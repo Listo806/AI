@@ -23,6 +23,8 @@ import automationDashboard from "./assets/cortexa-ecommerce-subscription-crm-aut
 import analyticsDashboard from "./assets/cortexa-ecommerce-subscription-crm-analytics-reporting.webp";
 import headlogoImg from "./assets/headlogo.png";
 import headlogoDarkImg from "./assets/headlogo-dark.png";
+import adaptiveLogoIcon from "./assets/cortexa-logo-icon-transparent.png";
+import adaptiveLogoWordmark from "./assets/cortexa-wordmark-adaptive.png";
 
 const EcAuthContext = createContext(null);
 const EC_TOKEN = "cortexa_ecommerce_access_token";
@@ -54,10 +56,10 @@ export function EcommerceProtectedRoute(){
 }
 
 function Logo(){
-  return <Link to="/e-commerce" className="ec-logo"><picture>
-        <source media="(prefers-color-scheme: dark)" srcSet={headlogoDarkImg}/>
-        <img src={headlogoImg} className="cx-logo-img" alt="Cortexa E-Commerce CRM"/>
-      </picture></Link>;
+ return <div className="ec-logo ec-logo-adaptive" aria-label="Cortexa">
+   <img className="ec-logo-adaptive-icon" src={adaptiveLogoIcon} alt=""/>
+   <img className="ec-logo-adaptive-wordmark" src={adaptiveLogoWordmark} alt="CORTEXA"/>
+ </div>
 }
 
 export function EcommerceHeader(){
