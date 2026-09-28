@@ -46,7 +46,7 @@ function useIntegrationData(){
 const value=v=>v===null||v===undefined?"—":v;
 function Topbar(){
  return <header className="eci-topbar">
-  <div><h1>Integrations</h1><p>Connect and manage your critical business services and API integrations.</p></div>
+  <div className="head"><h1>Integrations</h1><p>Connect and manage your critical business services and API integrations.</p></div>
   <div className="eci-account"><label><Search size={16}/><input placeholder="Search integrations..."/><kbd>⌘K</kbd></label><button className="eci-bell"><Bell size={19}/><i>7</i></button><span>H</span><b>Heisenberg<small>Super Admin</small></b><ChevronDown size={15}/></div>
  </header>
 }
