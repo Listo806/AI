@@ -1,9 +1,7 @@
 .crm-main::after{
     background: #fff!important; 
 }
-.crm-content{
-   background: #f7f8fc!important; 
-}
+
 .contacts-page {
   width: 100%;
   display: flex;

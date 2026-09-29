@@ -1,753 +1,370 @@
-import React, { useState, useEffect } from "react";
-import "./AppsIntegrationsHub.css";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Search,
-  Zap,
-  Mail,
-  Webhook,
+  ArrowRight,
+  BarChart3,
+  Boxes,
   CalendarDays,
-  Camera,
-  MessageCircle,
-  Database,
   Cloud,
+  Code2,
+  Database,
   FileSpreadsheet,
   FolderSync,
-  Workflow,
-  BarChart3,
-  Globe,
+  Headphones,
   Link2,
-  Building2,
-  ChevronRight,
-  Music2,
-  CalendarCheck2,
+  Mail,
+  MessageCircle,
+  Search,
+  Settings2,
+  ShieldCheck,
+  ShoppingBag,
   Sparkles,
-  Orbit,
-  Brain,
+  Users,
+  Webhook,
+  Workflow,
+  Zap,
 } from "lucide-react";
 import apiClient from "../../api/apiClient";
 import { getPlanUsage } from "../../api/platformApi";
-import { useNavigate } from "react-router-dom";
-const categories = [
-  "All Apps",
-  "Communication",
-  "Automation",
-  "Calendars",
-  "Marketing",
-  "Storage",
-  "CRM Imports",
-  "API & Webhooks",
+import "./AppsIntegrationsHub.css";
+
+const CATEGORIES = [
+  { label: "All", target: "integration-directory" },
+  { label: "Communication", target: "communication" },
+  { label: "Scheduling", target: "communication" },
+  { label: "Marketing & Leads", target: "marketing" },
+  { label: "E-Commerce", target: "ecommerce" },
+  { label: "Customer Service", target: "customer-service" },
+  { label: "Data & Developer", target: "data-developer" },
+  { label: "Workspaces", target: "workspaces" },
 ];
 
-const integrationsConfig = [
-  {
-    key: "zapier",
-    title: "Zapier",
-    description: "Connect thousands of apps and automate workflows instantly.",
-    icon: Zap,
-    iconColor: "#ff5a1f",
-    iconBg: "#fff1eb",
-    category: "Automation",
-    //status: "Connected",
-  },
-  {
-    key: "email_provider",
-    title: "Email Provider",
-    description: "Connect Gmail, Outlook, SMTP, and outbound email services.",
-    icon: Mail,
-    iconColor: "#2563eb",
-    iconBg: "#eff6ff",
-    category: "Communication",
-    //status: "Configure",
-  },
-  {
-    key: "webhooks",
-    title: "Webhooks",
-    description:
-      "Send and receive real-time API events and automation triggers.",
-    icon: Webhook,
-    iconColor: "#7c3aed",
-    iconBg: "#f5f3ff",
-    category: "API & Webhooks",
-    //status: "Active",
-  },
-  {
-    key: "google_calendar",
-    title: "Google Calendar",
-    description: "Sync appointments, meetings, and scheduling automatically.",
-    icon: CalendarDays,
-    iconColor: "#16a34a",
-    iconBg: "#f0fdf4",
-    category: "Calendars",
-    //status: "Connect",
-  },
-  // {
-  // key: "instagram",
-  // title: "Instagram",
-  // description: "Connect Instagram messaging, lead capture, and automation.",
-  // icon: Camera,
-  // iconColor: "#e1306c",
-  // iconBg: "#fff0f6",
-  // category: "Marketing",
-  // //status: "Connected",
-  // },
-  {
-    key: "appointment",
-    title: "AI Appointment Booking",
-    description:
-      "Automatically schedule calls, meetings, and property tours with qualified leads.",
-    icon: CalendarCheck2,
-    iconColor: "#22c55e",
-    iconBg: "#f0fdf4",
-    category: "Communication",
-    //status: "Connected",
-  },
-  {
-    key: "whatsapp",
-    title: "WhatsApp",
-    description: "Sync WhatsApp conversations and automate lead engagement.",
-    icon: MessageCircle,
-    iconColor: "#22c55e",
-    iconBg: "#f0fdf4",
-    category: "Communication",
-    //status: "Connected",
-  },
-  {
-    key: "crm_import",
-    title: "CRM Migration Tool",
-    description:
-      "Import leads, pipelines, contacts, and properties from another CRM.",
-    icon: Database,
-    iconColor: "#0f766e",
-    iconBg: "#ecfeff",
-    category: "CRM Imports",
-    //status: "Import",
-  },
-  {
-    key: "google_drive",
-    title: "Google Drive",
-    description: "Store contracts, property documents, and media in the cloud.",
-    icon: Cloud,
-    iconColor: "#0284c7",
-    iconBg: "#f0f9ff",
-    category: "Storage",
-    //status: "Connect",
-  },
-  {
-    key: "csv_lead_import",
-    title: "CSV Lead Import",
-    description:
-      "Upload lead lists and import contacts into your CRM instantly.",
-    icon: FileSpreadsheet,
-    iconColor: "#15803d",
-    iconBg: "#f0fdf4",
-    category: "CRM Imports",
-    //status: "Import",
-  },
-  {
-    key: "property_feed_sync",
-    title: "Property Feed Sync",
-    description: "Sync listings and property feeds from external platforms.",
-    icon: FolderSync,
-    iconColor: "#d97706",
-    iconBg: "#fffbeb",
-    category: "CRM Imports",
-    //status: "Sync",
-  },
-  {
-    key: "make",
-    title: "Make.com",
-    description: "Create advanced automations and visual workflow systems.",
-    icon: Workflow,
-    iconColor: "#7c3aed",
-    iconBg: "#f5f3ff",
-    category: "Automation",
-    //status: "Connect",
-  },
-  {
-    key: "google_ads",
-    title: "Google Ads",
-    description:
-      "Track campaigns, leads, and ad performance directly inside CORTEXA.",
-    icon: BarChart3,
-    iconColor: "#ea4335",
-    iconBg: "#fef2f2",
-    category: "Marketing",
-    //status: "Connect",
-  },
-  {
-    key: "tiktok",
-    title: "TikTok Lead Sync",
-    description: "Capture TikTok leads directly into your CRM.",
-    icon: Music2,
-    iconColor: "#1877f2",
-    iconBg: "#eff6ff",
-    category: "Marketing",
-    //status: "Connect",
-  },
-  {
-    key: "api_access",
-    title: "API Access",
-    description:
-      "Connect external CRMs, websites, and custom systems using APIs.",
-    icon: Link2,
-    iconColor: "#475569",
-    iconBg: "#f8fafc",
-    category: "API & Webhooks",
-    //status: "Configure",
-  },
-  {
-    key: "mls_idx_feed",
-    title: "MLS / IDX Feed",
-    description:
-      "Import and synchronize property listings from MLS/IDX systems.",
-    icon: Building2,
-    iconColor: "#b45309",
-    iconBg: "#fefce8",
-    category: "CRM Imports",
-    //status: "Connect",
-  },
+const EXISTING = new Set([
+  "zapier", "email_provider", "webhooks", "google_calendar", "whatsapp",
+  "crm_import", "google_drive", "csv_lead_import", "make", "google_ads",
+  "tiktok", "api_access", "property_feed_sync", "mls_idx_feed",
+]);
+
+const LOGO_OVERRIDES = {
+  // Simple Icons no longer exposes the Microsoft Outlook brand slug reliably.
+  microsoftoutlook: "https://img.icons8.com/color/96/microsoft-outlook-2019.png",
+};
+const logo = (slug) => LOGO_OVERRIDES[slug] || `https://cdn.simpleicons.org/${slug}`;
+
+const app = (key, title, description, options = {}) => ({
+  key,
+  title,
+  description,
+  category: options.category || "",
+  status: options.status || (EXISTING.has(key) ? "available" : "coming_soon"),
+  logo: options.logo,
+  icon: options.icon,
+  action: options.action,
+});
+
+const communication = [
+  app("whatsapp", "WhatsApp Business", "Sync conversations and let your AI agent engage leads.", { category: "Communication", logo: logo("whatsapp") }),
+  app("gmail", "Gmail", "Send, receive, and track customer email inside Cortexa.", { category: "Communication", logo: logo("gmail"), status: "available", action: "email_provider" }),
+  app("outlook", "Microsoft Outlook", "Sync Outlook email, contacts, and customer activity.", { category: "Communication", logo: logo("microsoftoutlook"), status: "available", action: "email_provider" }),
+  app("custom_smtp", "Custom SMTP", "Connect another email provider securely through SMTP.", { category: "Communication", icon: Mail, status: "available", action: "email_provider" }),
+  app("twilio", "Twilio", "Power business SMS and voice calls from one connection.", { category: "Communication", logo: logo("twilio"), status: "available", action: "twilio" }),
+  app("google_calendar", "Google Calendar", "Sync appointments, availability, and meeting updates.", { category: "Scheduling", logo: logo("googlecalendar") }),
+  app("outlook_calendar", "Outlook Calendar", "Keep Microsoft 365 calendars and Cortexa in sync.", { category: "Scheduling", logo: logo("microsoftoutlook") }),
+  app("calendly", "Calendly", "Bring scheduled meetings and invitees into Cortexa.", { category: "Scheduling", logo: logo("calendly") }),
+  app("zoom", "Zoom", "Create meetings and attach details to customer records.", { category: "Scheduling", logo: logo("zoom") }),
+  app("google_meet", "Google Meet", "Launch and track Google Meet appointments.", { category: "Scheduling", logo: logo("googlemeet") }),
+  app("slack", "Slack", "Send team alerts and customer activity to Slack.", { category: "Communication", logo: logo("slack") }),
+  app("microsoft_teams", "Microsoft Teams", "Connect collaboration, meetings, and team alerts.", { category: "Communication", logo: logo("microsoftteams") }),
 ];
+
+const marketing = [
+  app("google_ads", "Google Ads", "Track campaigns, leads, and advertising performance inside Cortexa.", { category: "Marketing & Leads", logo: logo("googleads") }),
+  app("tiktok", "TikTok Lead Sync", "Bring TikTok leads directly into your Cortexa pipeline.", { category: "Marketing & Leads", logo: logo("tiktok") }),
+  app("mailchimp", "Mailchimp", "Sync contacts, audiences, and campaign engagement.", { category: "Marketing & Leads", logo: logo("mailchimp"), status: "available", action: "mailchimp" }),
+  app("zapier", "Zapier", "Connect Cortexa with thousands of apps and automated workflows.", { category: "Automation", logo: logo("zapier") }),
+  app("make", "Make", "Build advanced visual automations across your business tools.", { category: "Automation", logo: logo("make") }),
+  app("meta_lead_ads", "Meta Lead Ads", "Capture Facebook and Instagram leads automatically.", { category: "Marketing & Leads", logo: logo("meta") }),
+  app("linkedin_leads", "LinkedIn Lead Gen Forms", "Send professional-network leads directly into Cortexa.", { category: "Marketing & Leads", logo: logo("linkedin") }),
+  app("n8n", "n8n", "Create flexible, developer-friendly workflow automations.", { category: "Automation", logo: logo("n8n") }),
+];
+
+const stores = [
+  app("shopify", "Shopify", "Sync customers, products, orders, refunds, and subscriptions.", { category: "E-Commerce", logo: logo("shopify") }),
+  app("woocommerce", "WooCommerce", "Bring WordPress store activity and customer data into Cortexa.", { category: "E-Commerce", logo: logo("woocommerce") }),
+  app("bigcommerce", "BigCommerce", "Connect orders, products, customers, and store performance.", { category: "E-Commerce", logo: logo("bigcommerce") }),
+];
+
+const payments = [
+  ["stripe", "Stripe", "Track payments, subscriptions, refunds, fees, and disputes.", "stripe"],
+  ["paypal", "PayPal / Braintree", "Sync PayPal and Braintree transaction activity.", "paypal"],
+  ["square", "Square", "Connect online and in-person payments with customer records.", "square"],
+  ["authorize_net", "Authorize.net", "Link gateway transactions to customers and sales.", "auth0"],
+  ["adyen", "Adyen", "Bring global payment activity and status updates into Cortexa.", "adyen"],
+  ["nmi", "NMI", "Connect independent merchant accounts through the NMI gateway.", "n26"],
+  ["checkout", "Checkout.com", "Track merchant payments, refunds, and transaction outcomes.", "checkoutdotcom"],
+  ["mercado_pago", "Mercado Pago", "Sync Latin American payments and customer transactions.", "mercadopago"],
+  ["dlocal", "dLocal", "Connect local payment methods across emerging markets.", "dlocal"],
+  ["payu", "PayU", "Bring regional payment activity and order status into Cortexa.", "payu"],
+  ["kushki", "Kushki", "Connect digital payments across Latin America.", "kubernetes"],
+  ["quickbooks", "QuickBooks Online", "Sync customers, invoices, payments, and accounting records.", "quickbooks"],
+  ["xero", "Xero", "Keep invoices, contacts, and payment data aligned.", "xero"],
+].map(([key, title, description, slug]) => app(key, title, description, { category: "E-Commerce", logo: logo(slug) }));
+payments.push(app("custom_payment", "Custom Payment Gateway", "Request a provider that is not currently listed.", { category: "E-Commerce", icon: Settings2, status: "request" }));
+
+const affiliates = [
+  ["impact", "Impact.com", "Attribute customers, sales, and commissions to partners.", "impact"],
+  ["partnerstack", "PartnerStack", "Track partner referrals, recurring revenue, and commissions.", "partnerstack"],
+  ["rewardful", "Rewardful", "Connect Stripe-based affiliate and recurring subscription data.", "rewardful"],
+  ["firstpromoter", "FirstPromoter", "Track referrals, conversions, commissions, and payouts.", "firstpromoter"],
+].map(([key, title, description, slug]) => app(key, title, description, { category: "E-Commerce", logo: logo(slug) }));
+
+const fraud = [
+  ["chargeflow", "Chargeflow", "Monitor disputes, evidence deadlines, and recovered revenue.", "chargebee"],
+  ["chargebacks911", "Chargebacks911", "Connect chargeback prevention, disputes, and outcomes.", "c"],
+  ["riskified", "Riskified", "Bring fraud decisions, alerts, and order risk into Cortexa.", "r"]
+].map(([key, title, description, slug]) => app(key, title, description, { category: "E-Commerce", logo: logo(slug) }));
+
+const customerService = [
+  app("zendesk", "Zendesk", "Sync customer tickets, conversations, status, and priority.", { category: "Customer Service", logo: logo("zendesk") }),
+  app("intercom", "Intercom", "Connect customer conversations, AI handoffs, and support activity.", { category: "Customer Service", logo: logo("intercom") }),
+  app("freshdesk", "Freshdesk", "Bring tickets, contacts, assignments, and resolutions into Cortexa.", { category: "Customer Service", logo: logo("freshworks") }),
+];
+const callCenters = [
+  ["aircall", "Aircall", "Log calls, recordings, contacts, and follow-up activity.", "aircall"],
+  ["ringcentral", "RingCentral", "Connect business calls, messages, recordings, and teams.", "ringcentral"],
+  ["dialpad", "Dialpad", "Sync calls, AI transcripts, summaries, and customer activity.", "dialpad"],
+  ["justcall", "JustCall", "Bring sales calls, SMS, dispositions, and notes into Cortexa.", "justcall"],
+  ["five9", "Five9", "Connect enterprise contact-center calls, agents, and outcomes.", "five9"],
+  ["talkdesk", "Talkdesk", "Sync contact-center conversations, recordings, and performance.", "talkdesk"],
+].map(([key, title, description, slug]) => app(key, title, description, { category: "Customer Service", logo: logo(slug) }));
+
+const migration = [
+  app("crm_import", "CRM Migration", "Choose a supported CRM and import its customer and pipeline data.", { category: "Data & Developer", icon: Database }),
+  app("hubspot_migration", "HubSpot", "Import contacts, companies, deals, and pipeline data.", { category: "Data & Developer", logo: logo("hubspot") }),
+  app("salesforce_migration", "Salesforce", "Transfer accounts, contacts, opportunities, and activities.", { category: "Data & Developer", logo: logo("salesforce") }),
+  app("pipedrive_migration", "Pipedrive", "Bring contacts, deals, stages, notes, and activities.", { category: "Data & Developer", logo: logo("pipedrive") }),
+  app("zoho_migration", "Zoho CRM", "Import leads, contacts, accounts, deals, and tasks.", { category: "Data & Developer", logo: logo("zoho") }),
+  app("dynamics_migration", "Microsoft Dynamics 365", "Transfer customers, opportunities, and sales activity.", { category: "Data & Developer", logo: logo("dynamics365") }),
+  app("close_migration", "Close", "Bring leads, contacts, opportunities, emails, and calls.", { category: "Data & Developer", logo: logo("close") }),
+  app("highlevel_migration", "HighLevel", "Import contacts, opportunities, pipelines, and conversations.", { category: "Data & Developer", logo: logo("gohighlevel") }),
+  app("clickup_migration", "ClickUp", "Transfer CRM records, tasks, lists, and custom fields.", { category: "Data & Developer", logo: logo("clickup") }),
+  app("monday_migration", "monday CRM", "Bring contacts, deals, boards, and mapped columns.", { category: "Data & Developer", logo: logo("mondaydotcom") }),
+  app("keap_migration", "Keap", "Import contacts, opportunities, tags, and automation data.", { category: "Data & Developer", logo: logo("keap") }),
+  app("freshsales_migration", "Freshsales", "Transfer contacts, accounts, deals, and activities.", { category: "Data & Developer", logo: logo("freshworks") }),
+  app("csv_lead_import", "CSV Import", "Upload leads and customers with guided field mapping.", { category: "Data & Developer", icon: FileSpreadsheet }),
+];
+const files = [
+  app("google_drive", "Google Drive", "Attach contracts, documents, and customer files from Drive.", { category: "Data & Developer", logo: logo("googledrive") }),
+  app("onedrive", "Microsoft OneDrive", "Connect Microsoft files and folders to customer records.", { category: "Data & Developer", logo: logo("microsoftonedrive") }),
+  app("dropbox", "Dropbox", "Bring shared files and documents into Cortexa.", { category: "Data & Developer", logo: logo("dropbox") }),
+  app("box", "Box", "Connect secure business content and shared files.", { category: "Data & Developer", logo: logo("box") }),
+  app("docusign", "DocuSign", "Track agreements, signatures, and completed documents.", { category: "Data & Developer", logo: logo("docusign") }),
+  app("pandadoc", "PandaDoc", "Connect proposals, quotes, contracts, and signatures.", { category: "Data & Developer", logo: logo("pandadoc") }),
+];
+const developer = [
+  app("api_access", "API Access", "Connect external systems securely through the Cortexa API.", { category: "Data & Developer", icon: Code2 }),
+  app("webhooks", "Webhooks", "Send and receive real-time events for custom automations.", { category: "Data & Developer", icon: Webhook }),
+  app("api_keys", "API Keys", "Create and manage secure application credentials.", { category: "Data & Developer", icon: Link2 }),
+  app("developer_docs", "Developer Documentation", "Explore authentication, endpoints, events, and guides.", { category: "Data & Developer", icon: FileSpreadsheet, status: "coming_soon" }),
+  app("oauth_apps", "OAuth Apps", "Build authorized connections without sharing credentials.", { category: "Data & Developer", icon: ShieldCheck, status: "coming_soon" }),
+  app("integration_logs", "Integration Logs", "Monitor sync activity, delivery status, and errors.", { category: "Data & Developer", icon: Workflow, status: "coming_soon" }),
+];
+
+const teamWorkspace = [
+  app("jira", "Jira", "Sync projects, issues, tasks, and development workflows.", { category: "Workspaces", logo: logo("jira") }),
+  app("asana", "Asana", "Connect projects, assignments, deadlines, and team activity.", { category: "Workspaces", logo: logo("asana") }),
+  app("trello", "Trello", "Bring boards, cards, checklists, and task updates into Cortexa.", { category: "Workspaces", logo: logo("trello") }),
+];
+
+const realEstate = [
+  app("mls_idx_feed", "MLS / IDX", "Import and synchronize property listings from approved feeds.", { category: "Workspaces", icon: ShoppingBag }),
+  app("property_feed_sync", "Property Feed Sync", "Connect regional property data and listing updates.", { category: "Workspaces", icon: FolderSync }),
+  app("property_portals", "Authorized Property Portals", "Connect approved property portals when access is available.", { category: "Workspaces", icon: Cloud, status: "request" }),
+];
+const insurance = [
+  app("agencyzoom", "AgencyZoom", "Connect insurance leads, policies, activities, and retention workflows.", { category: "Workspaces", icon: Boxes }),
+  app("applied_epic", "Applied Epic", "Sync agency customers, policies, activities, and account data.", { category: "Workspaces", icon: Database }),
+  app("ezlynx", "EZLynx", "Bring insurance leads, applicants, policies, and customer activity.", { category: "Workspaces", icon: Workflow }),
+];
+const finance = [
+  app("plaid", "Plaid", "Connect approved account and transaction data securely.", { category: "Workspaces", logo: logo("plaid") }),
+  app("mx", "MX", "Bring permissioned financial account and transaction data into Cortexa.", { category: "Workspaces", logo: logo("mx") }),
+  app("yodlee", "Envestnet Yodlee", "Connect approved financial data and account insights.", { category: "Workspaces", logo: logo("yodlee") }),
+];
+
+const ALL_APPS = [...communication, ...marketing, ...stores, ...payments, ...affiliates, ...fraud, ...customerService, ...callCenters, ...migration, ...files, ...developer, ...teamWorkspace, ...realEstate, ...insurance, ...finance];
+
+const ROUTES = {
+  whatsapp: "/dashboard/whatsapp",
+  email_provider: "/dashboard/integrations/email",
+  zapier: "/dashboard/integrations/zapier",
+  google_drive: "/dashboard/integrations/google-drive",
+  crm_import: "/dashboard/integrations/crm-import",
+  csv_lead_import: "/dashboard/integrations/csv-leads",
+  property_feed_sync: "/dashboard/integrations/property-feed",
+  make: "/dashboard/integrations/make",
+  google_ads: "/dashboard/integrations/google-ads",
+  api_access: "/dashboard/integrations/api-access",
+  mls_idx_feed: "/dashboard/integrations/mls",
+  tiktok: "/dashboard/integrations/tiktok",
+  webhooks: "/dashboard/integrations/webhooks",
+};
+
+function IntegrationLogo({ item }) {
+  const [failed, setFailed] = useState(false);
+  const Icon = item.icon || Sparkles;
+  if (item.logo && !failed) return <img src={item.logo} alt="" onError={() => setFailed(true)} />;
+  return <Icon size={32} strokeWidth={1.8} />;
+}
+
+function StatusText({ status }) {
+  const labels = { connected: "Connected", active: "Connected", available: "Available", coming_soon: "Coming Soon", request: "Request Integration" };
+  return <span className={`directory-status is-${status || "coming_soon"}`}>{labels[status] || "Available"}</span>;
+}
+
+function DirectoryCard({ item, onAction }) {
+  const clickable = item.status !== "coming_soon";
+  return (
+    <article className={`directory-card ${clickable ? "is-clickable" : ""}`} onClick={() => clickable && onAction(item)}>
+      <div className="directory-logo"><IntegrationLogo item={item} /></div>
+      <div className="directory-card-copy">
+        <div className="directory-card-heading">
+          <h4>{item.title}</h4>
+          {clickable && <ArrowRight size={18} />}
+        </div>
+        <p>{item.description}</p>
+        <span className="directory-category">{item.category}</span>
+        <StatusText status={item.status} />
+      </div>
+    </article>
+  );
+}
+
+function CardGrid({ items, onAction, className = "" }) {
+  return <div className={`directory-grid ${className}`.trim()}>{items.map((item) => <DirectoryCard key={item.key} item={item} onAction={onAction} />)}</div>;
+}
+
+function SectionTitle({ eyebrow, title, description }) {
+  return <header className="directory-section-title">{eyebrow && <span>{eyebrow}</span>}<h2>{title}</h2>{description && <p>{description}</p>}</header>;
+}
 
 export default function AppsIntegrationsHub() {
-  const [activeCategory, setActiveCategory] = useState("All Apps");
   const navigate = useNavigate();
-  const [syncingKey, setSyncingKey] = useState(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    loadIntegrations();
-  }, []);
-  const [integrationStates, setIntegrationStates] = useState([]);
   const [search, setSearch] = useState("");
-  const [apiKey, setApiKey] = useState(null);
-  const [generatingKey, setGeneratingKey] = useState(false);
-  const [revokingKey, setRevokingKey] = useState(false);
-  // Plan usage (Free-plan caps). Fail-silent: never block the page on this.
+  const [states, setStates] = useState({});
   const [usage, setUsage] = useState(null);
+
   useEffect(() => {
     let alive = true;
-    getPlanUsage()
-      .then((u) => {
-        if (alive) setUsage(u);
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
+    Promise.allSettled([
+      apiClient.request("/integrations"),
+      apiClient.request("/integrations/email/config/status"),
+      apiClient.request("/webhooks"),
+      apiClient.request("/integrations/zapier/config/status"),
+      apiClient.request("/integrations/google-calendar/config/status"),
+      apiClient.request("/integrations/google-drive/config/status"),
+      apiClient.request("/integrations/make/config/status"),
+      apiClient.request("/integrations/google-ads/config/status"),
+      apiClient.request("/integrations/api-access/status"),
+      apiClient.request("/integrations/mls/status"),
+      apiClient.request("/integrations/tiktok/status"),
+    ]).then((results) => {
+      if (!alive) return;
+      const next = {};
+      const db = results[0].status === "fulfilled" ? results[0].value?.integrations || [] : [];
+      db.forEach((row) => { if (row?.key) next[row.key] = row.status; });
+      const configuredKeys = ["email_provider", "webhooks", "zapier", "google_calendar", "google_drive", "make", "google_ads", "api_access", "mls_idx_feed", "tiktok"];
+      results.slice(1).forEach((result, i) => {
+        if (result.status !== "fulfilled") return;
+        const value = result.value;
+        const configured = Array.isArray(value) ? value.length > 0 : Boolean(value?.isConfigured || value?.configured || value?.active || value?.hasKey);
+        if (configured) next[configuredKeys[i]] = "connected";
+      });
+      setStates(next);
+    });
+    getPlanUsage().then((data) => alive && setUsage(data)).catch(() => {});
+    return () => { alive = false; };
   }, []);
-  const loadIntegrations = async () => {
-    try {
-      setLoading(true);
 
-      const [
-        integrationsRes,
-        emailStatus,
-        webhookStatus,
-        zapierStatus,
-        googleCalendarStatus,
-        googleDriveStatus,
-        instagramStatus,
-        makeStatus,
-        googleAdsStatus,
-        apiAccessStatus,
-        mlsStatus,
-        tiktokStatus,
-        appointmentStatus,
-      ] = await Promise.all([
-        apiClient.request("/integrations"),
-        loadEmailStatus(),
-        loadWebhookStatus(),
-        loadZapierStatus(),
-        loadGoogleCalendarStatus(),
-        loadGoogleDriveStatus(),
-        loadInstagramStatus(),
-        loadMakeStatus(),
-        loadGoogleAdsStatus(),
-        loadApiAccessStatus(),
-        loadMlsStatus(),
-        loadTikTokStatus(),
-        loadAppointmentStatus(),
-      ]);
+  const hydrated = useMemo(() => {
+    const seen = new Set();
+    return ALL_APPS.map((item) => {
+      if (seen.has(item.key)) return null;
+      seen.add(item.key);
+      if (!EXISTING.has(item.key)) return item;
+      const live = states[item.key];
+      return { ...item, status: live === "connected" || live === "active" ? "connected" : "available" };
+    }).filter(Boolean);
+  }, [states]);
 
-      const integrations = integrationsRes.integrations || [];
+  const byKeys = (items) => items.map((original) => hydrated.find((x) => x.key === original.key) || original);
+  const query = search.trim().toLowerCase();
+  const searchResults = query ? hydrated.filter((item) => `${item.title} ${item.description} ${item.category}`.toLowerCase().includes(query)) : [];
+  const connectedCount = hydrated.filter((item) => item.status === "connected").length;
 
-      const updated = integrations.map((item) => {
-        /*
-         * EMAIL PROVIDER
-         */
-        if (item.key === "email_provider" && emailStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (item.key === "webhooks" && webhookStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "active",
-          };
-        }
-        if (item.key === "zapier" && zapierStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (
-          item.key === "google_calendar" &&
-          googleCalendarStatus?.isConfigured
-        ) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (item.key === "google_drive" && googleDriveStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (item.key === "instagram" && instagramStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (item.key === "make" && makeStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (item.key === "google_ads" && googleAdsStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (item.key === "mls_idx_feed" && mlsStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (item.key === "tiktok" && tiktokStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-        if (item.key === "appointment" && appointmentStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
-
-        return item;
-      });
-
-      setIntegrationStates(updated);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const mergedIntegrations = integrationsConfig.map((config) => {
-    const dbIntegration = integrationStates.find(
-      (item) => item.key === config.key,
-    );
-
-    return {
-      ...dbIntegration,
-      ...config,
-    };
-  });
-  const getButtonLabel = (integration) => {
-    if (
-      integration.key === "csv_lead_import" ||
-      integration.key === "crm_import"
-    ) {
-      return "Import";
-    }
-
-    if (
-      integration.key === "email_provider" ||
-      integration.key === "api_access" ||
-      integration.key === "zapier" ||
-      integration.key === "google_calendar" ||
-      integration.key === "google_drive" ||
-      integration.key === "google_ads" ||
-      integration.key === "mls_idx_feed" ||
-      integration.key === "tiktok" ||
-      integration.key === "appointment"
-    ) {
-      return integration.status === "connected" ? "Connected" : "Configure";
-    }
-
-    if (integration.status === "active") {
-      return "Active";
-    }
-
-    if (integration.status === "connected") {
-      return "Connected";
-    }
-
-    return "Sync Now";
-  };
-  const handleIntegrationClick = async (integration) => {
-    try {
-      /*
-       * WHATSAPP
-       */
-      if (integration.key === "whatsapp") {
-        navigate("/dashboard/whatsapp");
-        return;
-      }
-
-      /*
-       * WEBHOOKS
-       */
-      if (integration.key === "webhooks") {
-        navigate("/dashboard/integrations/webhooks");
-        return;
-      }
-
-      /*
-       * EMAIL PROVIDER
-       */
-      if (integration.key === "email_provider") {
-        navigate("/dashboard/integrations/email");
-        return;
-      }
-
-      if (integration.key === "zapier") {
-        navigate("/dashboard/integrations/zapier");
-        return;
-      }
-
-      if (integration.key === "google_calendar") {
-        const res = await apiClient.request(
-          "/integrations/google-calendar/auth-url",
-        );
-        window.location.href = res.url;
-        return;
-      }
-
-      if (integration.key === "google_drive") {
-        navigate("/dashboard/integrations/google-drive");
-        return;
-      }
-      if (integration.key === "instagram") {
-        navigate("/dashboard/integrations/instagram");
-        return;
-      }
-      if (integration.key === "crm_import") {
-        navigate("/dashboard/integrations/crm-import");
-        return;
-      }
-      if (integration.key === "csv_lead_import") {
-        navigate("/dashboard/integrations/csv-leads");
-        return;
-      }
-      if (integration.key === "property_feed_sync") {
-        navigate("/dashboard/integrations/property-feed");
-        return;
-      }
-      if (integration.key === "make") {
-        navigate("/dashboard/integrations/make");
-        return;
-      }
-      if (integration.key === "google_ads") {
-        navigate("/dashboard/integrations/google-ads");
-        return;
-      }
-      if (integration.key === "api_access") {
-        navigate("/dashboard/integrations/api-access");
-        return;
-      }
-      if (integration.key === "mls_idx_feed") {
-        navigate("/dashboard/integrations/mls");
-        return;
-      }
-      if (integration.key === "tiktok") {
-        navigate("/dashboard/integrations/tiktok");
-        return;
-      }
-      if (integration.key === "appointment") {
-        navigate("/dashboard/integrations/ai-appointment");
-        return;
-      }
-      /*
-       * PLACEHOLDER SYNC
-       */
-      setSyncingKey(integration.key);
-      await apiClient.request(`/integrations/${integration.key}/sync`, {
-        method: "POST",
-      });
-
-      await loadIntegrations();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSyncingKey(null);
-    }
-  };
-  const filteredIntegrations = mergedIntegrations.filter((integration) => {
-    const matchesCategory =
-      activeCategory === "All Apps" || integration.category === activeCategory;
-
-    const matchesSearch =
-      integration.title?.toLowerCase().includes(search.toLowerCase()) ||
-      integration.description?.toLowerCase().includes(search.toLowerCase());
-
-    return matchesCategory && matchesSearch;
-  });
-
-  const loadEmailStatus = async () => {
-    try {
-      const res = await apiClient.request("/integrations/email/config/status");
-
-      return res;
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  };
-  const loadWebhookStatus = async () => {
-    try {
-      const webhooks = await apiClient.request("/webhooks");
-
-      return {
-        isConfigured: webhooks?.length > 0,
-      };
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  };
-  const loadZapierStatus = async () => {
-    try {
-      const res = await apiClient.request("/integrations/zapier/config/status");
-
-      return res;
-    } catch (err) {
-      console.error(err);
-
-      return {
-        isConfigured: false,
-      };
-    }
-  };
-  const loadGoogleCalendarStatus = async () => {
-    try {
-      return await apiClient.request(
-        "/integrations/google-calendar/config/status",
-      );
-    } catch (err) {
-      console.error(err);
-
-      return {
-        isConfigured: false,
-      };
-    }
-  };
-  const loadGoogleDriveStatus = async () => {
-    try {
-      const res = await apiClient.request(
-        "/integrations/google-drive/config/status",
-      );
-
-      return res;
-    } catch (err) {
-      console.error(err);
-
-      return {
-        isConfigured: false,
-      };
-    }
+  const requestIntegration = () => {
+    document.getElementById("integration-final-cta")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const loadInstagramStatus = async () => {
-    try {
-      return await apiClient.request("/integrations/instagram/config/status");
-    } catch (err) {
-      return {
-        isConfigured: false,
-      };
+  const onAction = async (item) => {
+    if (item.status === "request") return requestIntegration();
+    if (item.status === "coming_soon") return;
+    const actionKey = item.action || item.key;
+    if (actionKey === "google_calendar") {
+      try {
+        const res = await apiClient.request("/integrations/google-calendar/auth-url");
+        if (res?.url) window.location.href = res.url;
+      } catch (error) { console.error(error); }
+      return;
     }
+    if (ROUTES[actionKey]) return navigate(ROUTES[actionKey]);
+    // Twilio/Mailchimp are intentionally not pointed at guessed routes. Their cards
+    // remain truthful directory entries until their existing route is supplied here.
   };
-  const loadMakeStatus = async () => {
-    try {
-      return await apiClient.request("/integrations/make/config/status");
-    } catch (err) {
-      return {
-        isConfigured: false,
-      };
-    }
-  };
-  const loadGoogleAdsStatus = async () => {
-    try {
-      return await apiClient.request("/integrations/google-ads/config/status");
-    } catch (err) {
-      return {
-        isConfigured: false,
-      };
-    }
-  };
-  const loadApiAccessStatus = async () => {
-    try {
-      return await apiClient.request("/integrations/api-access/status");
-    } catch (err) {
-      return { isConfigured: false };
-    }
-  };
-  const loadMlsStatus = async () => {
-    try {
-      return await apiClient.request("/integrations/mls/status");
-    } catch (err) {
-      return {
-        isConfigured: false,
-      };
-    }
-  };
-  const loadTikTokStatus = async () => {
-    try {
-      return await apiClient.request("/integrations/tiktok/status");
-    } catch (err) {
-      return {
-        isConfigured: false,
-      };
-    }
-  };
-  const loadAppointmentStatus = async () => {
-    try {
-      return await apiClient.request("/integrations/ai-appointment/status");
-    } catch (err) {
-      return {
-        isConfigured: false,
-      };
-    }
-  };
+
+  const scrollCategory = (target) => document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
-    <div className="apps-page">
-      <div className="heading_page">
-        <Brain className="header-icon" size={20} />
-        <h1>App & Integrations</h1>
-      </div>
-      {usage?.isFree && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-            flexWrap: "wrap",
-            margin: "0 0 20px",
-            padding: "14px 18px",
-            border: "1px solid #e5e7eb",
-            borderRadius: "12px",
-            background: "#f9fafb",
-          }}
-        >
-          <div style={{ fontSize: "14px", color: "#374151" }}>
-            <strong style={{ color: "#111827" }}>Free plan</strong>
-            {"  •  "}
-            {usage.usage?.integrationsConnected ?? 0} of{" "}
-            {usage.limits?.integrations ?? 1} integrations used
-            {"  •  "}
-            {usage.usage?.aiConversationsThisMonth ?? 0} of{" "}
-            {usage.limits?.aiConversationsPerMonth ?? 50} AI conversations this
-            month
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate("/pricing")}
-            style={{
-              flexShrink: 0,
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: "none",
-              background: "#111827",
-              color: "#fff",
-              fontSize: "13px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Upgrade
-          </button>
+    <div className="integrations-directory" id="integration-directory">
+      <section className="directory-hero">
+        <span className="directory-eyebrow">CORTEXA INTEGRATIONS</span>
+        <h1>Connect Cortexa with the tools<br />you already use</h1>
+        <p>Bring your conversations, calendars, payments, customer data, and business tools together in one intelligent workspace.</p>
+        <div className="directory-search"><Search size={23} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search integrations" /></div>
+        <div className="directory-meta"><strong><Boxes size={20} /> {connectedCount} connected {connectedCount === 1 ? "app" : "apps"}</strong><i /><button type="button" onClick={requestIntegration}>Request an integration <ArrowRight size={16} /></button></div>
+        <div className="logo-orbit" aria-hidden="true">
+          <svg className="logo-orbit-lines" viewBox="0 0 1200 300" preserveAspectRatio="none">
+            <path className="orbit-path orbit-path-top" d="M8 18 C150 62 330 126 600 132 C870 126 1050 62 1192 18" />
+            <path className="orbit-path orbit-path-bottom" d="M8 126 C150 170 330 234 600 240 C870 234 1050 170 1192 126" />
+            {[
+              [145,58],[285,96],[430,121],[600,132],[770,121],[915,96],[1055,58],
+              [285,202],[915,202]
+            ].map(([cx,cy], index) => <circle key={index} className="orbit-node" cx={cx} cy={cy} r="5" />)}
+          </svg>
+          {["whatsapp", "gmail", "microsoftoutlook", "googlecalendar", "googleads", "tiktok", "mailchimp", "zapier", "make", "shopify", "googledrive"].map((slug) => <span key={slug}><img src={logo(slug)} alt="" /></span>)}
         </div>
-      )}
-      <div className="apps-layout">
-        {/* SIDEBAR */}
-        <aside className="sidebar">
-          <div className="category-list">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`category-btn ${
-                  activeCategory === category ? "active" : ""
-                }`}
-              >
-                <span>{category}</span>
+        <div className="directory-benefits"><div><Zap /><p><b>Save time</b><small>Automate manual work and sync data across your stack.</small></p></div><div><Link2 /><p><b>Work smarter</b><small>Keep all your tools connected in one place.</small></p></div><div><Users /><p><b>Grow faster</b><small>Unlock new possibilities with powerful integrations.</small></p></div></div>
+      </section>
 
-                <span className="arrow">›</span>
-              </button>
-            ))}
-          </div>
-        </aside>
+      <section className="directory-explore">
+        <SectionTitle title="Explore integrations" description="Browse and connect your favorite tools to extend what Cortexa can do." />
+        <div className="directory-filters">{CATEGORIES.map((cat) => <button key={cat.label} className={cat.label === "All" ? "active" : ""} onClick={() => scrollCategory(cat.target)}>{cat.label}</button>)}</div>
+      </section>
 
-        {/* MAIN */}
-        <main className="main-content">
-          {loading ? (
-            <div className="apps-loading">Loading integrations...</div>
-          ) : (
-            <div className="integrations-grid">
-              {filteredIntegrations.map((integration) => {
-                const Icon = integration.icon;
+      {query ? (
+        <section className="directory-section search-results"><SectionTitle eyebrow="SEARCH RESULTS" title={`Results for “${search}”`} description={`${searchResults.length} integration${searchResults.length === 1 ? "" : "s"} found.`} />{searchResults.length ? <CardGrid items={searchResults} onAction={onAction} /> : <div className="directory-empty">No integrations match your search.</div>}</section>
+      ) : <>
+        <section className="directory-section" id="communication"><SectionTitle title="Communication & Scheduling" description="Connect every conversation, call, meeting, and appointment to the right customer." /><CardGrid items={byKeys(communication)} onAction={onAction} /></section>
+        <section className="directory-section" id="marketing"><SectionTitle title="Marketing, Leads & Automation" description="Capture leads, understand campaign performance, and automate work across your business." /><CardGrid items={byKeys(marketing)} onAction={onAction} className="marketing-grid" /></section>
+        <section className="directory-section" id="ecommerce"><SectionTitle title="E-Commerce Operations" description="Connect stores, payments, affiliates, and fraud tools to see every sale from one place." /><h3 className="directory-group-title">STORES</h3><CardGrid items={byKeys(stores)} onAction={onAction} /><h3 className="directory-group-title">MERCHANT ACCOUNTS, PAYMENTS & ACCOUNTING</h3><CardGrid items={byKeys(payments)} onAction={onAction} /><h3 className="directory-group-title">AFFILIATE TRACKING</h3><CardGrid items={byKeys(affiliates)} onAction={onAction} /><h3 className="directory-group-title">CHARGEBACKS & FRAUD</h3><CardGrid items={byKeys(fraud)} onAction={onAction} /></section>
+        <section className="directory-section" id="customer-service"><SectionTitle title="Customer Service & Call Centers" description="Bring customer support, calls, recordings, and team activity into one connected view." /><h3 className="directory-group-title">CUSTOMER SERVICE</h3><CardGrid items={byKeys(customerService)} onAction={onAction} /><h3 className="directory-group-title">CALL CENTERS & BUSINESS PHONE SYSTEMS</h3><CardGrid items={byKeys(callCenters)} onAction={onAction} /></section>
+        <section className="directory-section" id="data-developer"><SectionTitle title="Data, Migration, Files & Developer Tools" description="Move your data, connect your files, and extend Cortexa with secure developer tools." /><h3 className="directory-group-title">CRM MIGRATION & IMPORTS</h3><CardGrid items={byKeys(migration)} onAction={onAction} /><h3 className="directory-group-title">FILES & DOCUMENTS</h3><CardGrid items={byKeys(files)} onAction={onAction} /><h3 className="directory-group-title">DEVELOPER TOOLS</h3><CardGrid items={byKeys(developer)} onAction={onAction} /></section>
+        <section className="directory-section" id="workspaces"><SectionTitle title="Workspace Integrations" description="Connect specialized tools built for the way your team and industry work." /><h3 className="directory-group-title">TEAM WORKSPACE</h3><CardGrid items={byKeys(teamWorkspace)} onAction={onAction} /><h3 className="directory-group-title">REAL ESTATE</h3><CardGrid items={byKeys(realEstate)} onAction={onAction} /><h3 className="directory-group-title">INSURANCE</h3><CardGrid items={byKeys(insurance)} onAction={onAction} /><h3 className="directory-group-title">FINANCIAL SERVICES</h3><CardGrid items={byKeys(finance)} onAction={onAction} /></section>
+      </>}
 
-                return (
-                  <div key={integration.key} className="integration-card">
-                    <div className="integration-left">
-                      <div
-                        className="integration-icon"
-                        style={{
-                          backgroundColor: integration.iconBg,
-                        }}
-                      >
-                        <Icon
-                          size={24}
-                          color={integration.iconColor}
-                          strokeWidth={2.2}
-                        />
-                      </div>
-                      <h3 className="integration-title">{integration.title}</h3>
-                    </div>
-                    <div className="integration-right">
-                      <p className="integration-description">
-                        {integration.description}
-                      </p>
-                    </div>
-                    <button
-                      className={`integration-btn status-${integration.status?.replaceAll("_", "-")}`}
-                      onClick={() => handleIntegrationClick(integration)}
-                      disabled={syncingKey === integration.key}
-                    >
-                      {syncingKey === integration.key
-                        ? "Syncing..."
-                        : getButtonLabel(integration)}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </main>
-      </div>
+      <section className="directory-final-cta" id="integration-final-cta"><span>CUSTOM INTEGRATIONS</span><h2>Don’t see the tool you need?</h2><p>Request an integration or build a secure custom connection with the Cortexa API.</p><div><button type="button" onClick={() => navigate("/dashboard/integrations/api-access")}>Build with the Cortexa API</button><button type="button" className="outline" onClick={() => navigate("/dashboard/integrations/api-access")}>Developer Documentation</button></div></section>
+      {usage?.isFree && <div className="directory-plan-note"><b>Free plan:</b> {usage.usage?.integrationsConnected ?? 0} of {usage.limits?.integrations ?? 1} connected integrations used. <button onClick={() => navigate("/pricing")}>View plans</button></div>}
+      <footer className="directory-footer"><strong>CORTEXA</strong><div><span>Product</span><a href="#integration-directory">Integrations</a><a href="#workspaces">Workspaces</a></div><div><span>Resources</span><button onClick={() => navigate("/dashboard/integrations/api-access")}>Developer Docs</button><button onClick={requestIntegration}>Contact Support</button></div><div><span>Legal</span><button type="button">Privacy</button><button type="button">Terms</button></div><small>© 2026 Cortexa S.A.S. All rights reserved.</small></footer>
     </div>
   );
 }
