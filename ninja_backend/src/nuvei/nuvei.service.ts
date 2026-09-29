@@ -2148,7 +2148,8 @@ export class NuveiService {
       this.logger.warn(
         `Nuvei callback rejected: missing/bad signature (tx ${providerTxId || '-'}, ref ${devReference || '-'}, ` +
           `app ${String(tx?.application_code || '-')}, user ${payload?.user?.id ? 'present' : 'missing'}, ` +
-          `stoken ${tx?.stoken ? 'present' : 'missing'}, expected app ${this.client.serverAppCode() || '-'})`,
+          `stoken ${tx?.stoken ? 'present' : 'missing'}, expected app ${this.client.serverAppCode() || '-'}, ` +
+          `key for that app ${tx?.application_code && this.client.appKeyFor(String(tx.application_code)) ? 'configured' : 'not configured'})`,
       );
       return { ok: false, handled: 'unauthorized', httpStatus: 203 };
     }
@@ -2313,11 +2314,20 @@ export class NuveiService {
       if (appCode && appCode !== code) continue;
       const key = this.client.appKeyFor(code);
       if (!key) continue;
-      const h = crypto
+      // Nuvei signs callbacks with HMAC-SHA256, keyed with the application key,
+      // over "transaction_id_application_code_user_id" (confirmed by Nuvei,
+      // 2026-09-29). The older documented form, an MD5 of the same fields
+      // followed by the key, is still accepted.
+      const hmac = crypto
+        .createHmac('sha256', key)
+        .update(`${txId}_${code}_${userId}`)
+        .digest('hex');
+      if (this.safeEqual(hmac, stoken)) return true;
+      const md5 = crypto
         .createHash('md5')
         .update(`${txId}_${code}_${userId}_${key}`)
         .digest('hex');
-      if (this.safeEqual(h, stoken)) return true;
+      if (this.safeEqual(md5, stoken)) return true;
     }
     return false;
   }
