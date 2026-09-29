@@ -5,7 +5,7 @@ import {
   CheckCircle2, UserRound, CalendarDays, LayoutDashboard, CreditCard,
   PackageCheck, BadgeDollarSign, Plug, Workflow, BarChart3, LogOut,
   ChevronDown, CircleDollarSign, WalletCards, PanelLeftClose, PanelLeftOpen, RotateCcw, Truck, Tags,
-  Link2, MessageSquareText, FileBarChart2, Menu
+  Link2, MessageSquareText, FileBarChart2, Menu, X
 } from "lucide-react";
 
 import "./ecommerce-product.css";
@@ -69,13 +69,31 @@ function Logo(){
 }
 
 export function EcommerceHeader(){
-  return <header className="ec-header"><div className="ec-header-inner"><Logo/><nav>
-    <Link to="/e-commerce/dashboard">Dashboard</Link><a href="/e-commerce#subscriptions">Subscriptions</a><a href="/e-commerce#integrations">Integrations</a><Link to="/e-commerce/pricing">Pricing</Link><a href="/e-commerce#resources">Resources </a>
-  </nav><div className="ec-header-actions"><Link className="on-mobile ec-login-link" to="/e-commerce/pricing">Pricing</Link><Link className="ec-login-link" to="/e-commerce/login">Login</Link><Link className="ec-btn ec-btn-small" to="/e-commerce/signup">Get Started</Link></div></div></header>;
+ const [mobileOpen,setMobileOpen]=useState(false);
+ const closeMobile=()=>setMobileOpen(false);
+ return <header className="ec-header"><div className="ec-header-inner">
+  <Link className="ec-header-logo-link" to="/e-commerce" onClick={closeMobile}><Logo/></Link>
+  <nav className="ec-desktop-nav">
+   <a href="#solutions">Solutions</a><a href="#features">Features</a><a href="#integrations">Integrations</a><Link to="/e-commerce/pricing">Pricing</Link>
+  </nav>
+  <div className="ec-header-actions">
+   <Link className="ec-mobile-pricing" to="/e-commerce/pricing" onClick={closeMobile}>Pricing</Link>
+   <Link className="ec-login-link ec-desktop-login" to="/e-commerce/login">Login</Link>
+   <Link className="ec-btn ec-btn-small" to="/e-commerce/signup">Get Started</Link>
+   <button className="ec-public-menu-toggle" type="button" aria-label={mobileOpen?"Close menu":"Open menu"} aria-expanded={mobileOpen} onClick={()=>setMobileOpen(v=>!v)}>{mobileOpen?<X size={24}/>:<Menu size={25}/>}</button>
+  </div>
+  {mobileOpen&&<><button className="ec-public-menu-backdrop" aria-label="Close menu" onClick={closeMobile}/><div className="ec-public-mobile-menu">
+   <a href="#solutions" onClick={closeMobile}>Solutions</a>
+   <a href="#features" onClick={closeMobile}>Features</a>
+   <a href="#integrations" onClick={closeMobile}>Integrations</a>
+   <Link to="/e-commerce/pricing" onClick={closeMobile}>Pricing</Link>
+   <Link to="/e-commerce/login" onClick={closeMobile}>Login</Link>
+  </div></>}
+ </div></header>;
 }
 
 const sections=[
- {n:"03",eyebrow:"YOUR SUBSCRIPTION BUSINESS, ALL CONNECTED.",title:<>One platform to run <em>every part of your business.</em></>,desc:"Connect your tools, your data, and your workflows. Cortexa brings everything together so you can operate more efficiently and grow faster.",bullets:[[Link2,"Connect multiple merchant accounts"],[Users,"Manage all your subscribers"],[CalendarDays,"Automate recurring billing"],[CircleDollarSign,"Track transactions and disputes"],[Plug,"Integrate with the tools you use"]],img:connectedDiagram,alt:"Diagram of Cortexa E-Commerce CRM connecting merchant accounts, subscribers, billing, and fulfillment",id:"subscriptions"},
+ {n:"03",eyebrow:"YOUR SUBSCRIPTION BUSINESS, ALL CONNECTED.",title:<>One platform to run <em>every part of your business.</em></>,desc:"Connect your tools, your data, and your workflows. Cortexa brings everything together so you can operate more efficiently and grow faster.",bullets:[[Link2,"Connect multiple merchant accounts"],[Users,"Manage all your subscribers"],[CalendarDays,"Automate recurring billing"],[CircleDollarSign,"Track transactions and disputes"],[Plug,"Integrate with the tools you use"]],img:connectedDiagram,alt:"Diagram of Cortexa E-Commerce CRM connecting merchant accounts, subscribers, billing, and fulfillment",id:"features"},
  {n:"04",eyebrow:"YOUR SUBSCRIPTIONS & CUSTOMER MANAGEMENT",title:<>Know every subscriber. <em>Increase retention.</em></>,desc:"Centralize customer data, track subscription status, payment history, and engagement — so you can reduce churn and grow lifetime value.",bullets:[[UserRound,"Complete customer profiles"],[CreditCard,"Real-time status and payment details"],[Tags,"Smart segmentation and tagging"],[RefreshCw,"Retention tools and win-backs"],[MessageSquareText,"Custom fields and notes"]],img:subscriberDashboard,alt:"Cortexa E-Commerce CRM subscriber management dashboard with customer profiles and subscription status"},
  {n:"05",eyebrow:"BILLING & PAYMENT MANAGEMENT",title:<>Run billing that <br/><em>always gets paid.</em></>,desc:"Centralize customer merchant accounts and gateways, automate retries, handle fallbacks and chargebacks, and keep cash flow steady.",bullets:[[WalletCards,"Multiple Merchant Accounts"],[CalendarDays,"Recurring Billing & Rebills"],[RefreshCw,"Smart Retries & Dunning"],[CircleDollarSign,"Chargebacks & Disputes"],[RotateCcw,"Refunds & Credits"],[CreditCard,"Transaction History"]],img:billingDashboard,alt:"Cortexa E-Commerce CRM billing and payment management dashboard with recurring billing and retries"},
  {n:"06",eyebrow:"PRODUCTS, OFFERS, CAMPAIGNS & AFFILIATES",title:<>Launch offers. <br/><em>Grow with affiliates.</em></>,desc:"Control analytics and subscription offers, run campaigns that convert, and scale with a powerful affiliate program.",bullets:[[PackageCheck,"Products & Subscriptions"],[BadgeDollarSign,"Offers & Upsells"],[Megaphone,"Campaigns"],[Users,"Affiliate Management"],[BarChart3,"Tracking & Attribution"],[CircleDollarSign,"Commissions & Payouts"]],img:revenueDashboard,alt:"Cortexa E-Commerce CRM revenue overview with top offers and affiliate performance"},
@@ -88,8 +106,8 @@ const sections=[
 export function EcommerceLanding(){
  return <div className="ec-public"><EcommerceHeader/>
   <main>
-   <section className="ec-hero" id="dashboard"><div className="ec-copy"><div className="ec-kicker"><Workflow size={13}/> ENGINEERED FOR GROWTH</div><h1>CRM &amp; Payment Platform<br/>for <em>E-Commerce Subscriptions<br/>&amp; Affiliate Marketers.</em></h1><span className="ec-rule"/><p>Manage customers, subscriptions, recurring billing, payments, fulfillment, and integrations from one powerful platform.</p><div className="ec-actions"><Link className="ec-btn" to="/e-commerce/signup">Get Started <ArrowRight size={15}/></Link><a href="#subscriptions" className="ec-watch"><PlayCircle size={15}/> See How It Works</a></div></div><img className="ec-hero-image" src={heroDashboard} alt="Cortexa E-Commerce CRM billing calendar dashboard"/></section>
-   <section className="ec-audience"><div className="ec-section-heading"><span>02</span><b>WHO IT'S BUILT FOR</b><h2>Built for businesses that<br/>run on <em>recurring revenue.</em></h2></div><p className="ec-audience-intro">From e-commerce brands to affiliate marketers, Cortexa gives you the tools to scale, automate, and maximize lifetime value.</p><div className="ec-audience-grid">{[[ShoppingCart,"E-commerce Brands","Sell products online, manage customers and orders, and grow profitably."],[RefreshCw,"Subscription Businesses","Launch and scale flexible subscriptions with smart billing and retention."],[Users,"Affiliate Marketers","Run offers, track performance, and maximize affiliate commissions."],[Megaphone,"Digital Marketers","Create campaigns, capture leads, and turn traffic into loyal customers."],[Store,"Online Sellers","Manage products, orders, and fulfillment in one streamlined platform."]].map(([Icon,title,text])=><article key={title}><Icon className="ec-audience-icon" size={25} strokeWidth={1.8}/><b>{title}</b><p>{text}</p></article>)}</div></section>
+   <section className="ec-hero" id="dashboard"><div className="ec-copy"><div className="ec-kicker"><Workflow size={13}/> ENGINEERED FOR GROWTH</div><h1>CRM &amp; Payment Platform<br/>for <em>E-Commerce Subscriptions<br/>&amp; Affiliate Marketers.</em></h1><span className="ec-rule"/><p>Manage customers, subscriptions, recurring billing, payments, fulfillment, and integrations from one powerful platform.</p><div className="ec-actions"><Link className="ec-btn" to="/e-commerce/signup">Get Started <ArrowRight size={15}/></Link><a href="#features" className="ec-watch"><PlayCircle size={15}/> See How It Works</a></div></div><img className="ec-hero-image" src={heroDashboard} alt="Cortexa E-Commerce CRM billing calendar dashboard"/></section>
+   <section className="ec-audience" id="solutions"><div className="ec-section-heading"><span>02</span><b>WHO IT'S BUILT FOR</b><h2>Built for businesses that<br/>run on <em>recurring revenue.</em></h2></div><p className="ec-audience-intro">From e-commerce brands to affiliate marketers, Cortexa gives you the tools to scale, automate, and maximize lifetime value.</p><div className="ec-audience-grid">{[[ShoppingCart,"E-commerce Brands","Sell products online, manage customers and orders, and grow profitably."],[RefreshCw,"Subscription Businesses","Launch and scale flexible subscriptions with smart billing and retention."],[Users,"Affiliate Marketers","Run offers, track performance, and maximize affiliate commissions."],[Megaphone,"Digital Marketers","Create campaigns, capture leads, and turn traffic into loyal customers."],[Store,"Online Sellers","Manage products, orders, and fulfillment in one streamlined platform."]].map(([Icon,title,text])=><article key={title}><Icon className="ec-audience-icon" size={25} strokeWidth={1.8}/><b>{title}</b><p>{text}</p></article>)}</div></section>
    {sections.map((s,i)=><section className="ec-feature" id={s.id} key={s.n}><div className="ec-feature-copy"><div className="ec-eyebrow"><span>{s.n}</span>{s.eyebrow}</div><h2>{s.title}</h2><p>{s.desc}</p>{s.bullets.length>0&&<ul>{s.bullets.map(([Icon,text])=><li key={text}><Icon className="ec-feature-list-icon" size={15} strokeWidth={2}/><span>{text}</span></li>)}</ul>}</div><div className="ec-visual"><img src={s.img} alt={s.alt||`${s.eyebrow} interface`} loading="lazy" decoding="async"/></div></section>)}
    <section className="ec-bottom-cta"><h2>Run your subscription business without losing control of your customers or data.</h2><p>Keep customers, subscriptions, billing schedules, orders, affiliates, and payment history connected in one operating system.</p><Link className="ec-btn" to="/e-commerce/signup">Get Started Today →</Link></section>
   </main><footer className="ec-footer"><Logo/><span>© 2026 Cortexa. All rights reserved.</span><nav><a href="/privacy-policy">Privacy</a><Link to="/e-commerce/terms">Terms</Link><a href="/contact">Contact</a><Link to="/e-commerce/login">Login</Link></nav></footer>
@@ -115,7 +133,7 @@ export function EcommercePricing(){
 
  return <div className="ec-public ec-pricing-shell">
   <main className="ec-pricing-page">
-   <h1>Simple pricing that <em>scales</em> with your business.</h1>
+   <h1>Choose Your <em>Plan</em></h1>
 
    <div className="ec-toggle">
     <b className={`ec-toggle-label ${!annual?"on":""}`}>Billed monthly</b>
@@ -131,8 +149,7 @@ export function EcommercePricing(){
    </div>
 
    <div className="ec-price-card">
-    <h2>E-Commerce CRM</h2>
-    <p>The complete platform for subscription<br/>and affiliate businesses.</p>
+    <h2>Payments &amp; Subscriptions<br/>CRM</h2>
 
     <div className="ec-price">{mainPrice}<small>/month</small></div>
 
@@ -141,10 +158,6 @@ export function EcommercePricing(){
       $3,804 billed annually — <em>save $960 per year</em>
      </p>
     }
-
-    <div className="ec-subscriber-cap">
-     <Users size={20}/> Up to 500 active subscribers
-    </div>
 
     <Link
      className="ec-price-button"
@@ -168,8 +181,7 @@ export function EcommercePricing(){
      "CRM, Notes & Activity Timeline",
      "Integrations, APIs & Webhooks",
      "Automation & Customer Messaging",
-     "Analytics & Commerce Reporting",
-     "Automatically moves to the next tier after 500 active subscribers"
+     "Analytics & Commerce Reporting"
     ].map(x=><li key={x}><CheckCircle2 size={16}/><span>{x}</span></li>)}</ul>
    </div>
 

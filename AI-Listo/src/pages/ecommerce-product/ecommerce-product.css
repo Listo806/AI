@@ -909,3 +909,70 @@
   .ec-mobile-menu-button{color:#eef2ff!important;background:#303740!important;border:1px solid #4c5662!important;border-radius:8px!important}
   .ec-mobile-sidebar-backdrop{background:rgba(0,0,0,.56)!important}
 }
+
+/* =========================================================
+   2026-09-29 PUBLIC E-COMMERCE HEADER
+   Desktop: Solutions | Features | Integrations | Pricing | Login | Get Started
+   Mobile: logo | Pricing | hamburger; menu excludes Get Started.
+   ========================================================= */
+.ec-header-logo-link{display:flex;align-items:center;text-decoration:none;flex:0 0 auto}
+.ec-mobile-pricing,.ec-public-menu-toggle,.ec-public-mobile-menu,.ec-public-menu-backdrop{display:none}
+.ec-desktop-nav{display:flex!important}
+.ec-public section[id]{scroll-margin-top:82px}
+
+@media(max-width:850px){
+ .ec-header{position:sticky;top:0;z-index:1000}
+ .ec-header-inner{position:relative;z-index:1002}
+ .ec-desktop-nav,.ec-desktop-login,.ec-header .ec-btn-small{display:none!important}
+ .ec-header-actions{display:flex!important;align-items:center!important;gap:12px!important;margin-left:auto!important}
+ .ec-mobile-pricing{display:inline-flex!important;align-items:center;justify-content:center;color:inherit;text-decoration:none;font-weight:600;font-size:15px}
+ .ec-public-menu-toggle{display:grid!important;place-items:center;width:38px;height:38px;padding:0;border:0;background:transparent;color:inherit;cursor:pointer}
+ .ec-public-menu-toggle svg{width:25px;height:25px}
+ .ec-public-menu-backdrop{display:block;position:fixed;inset:0;border:0;background:rgba(0,0,0,.38);z-index:1000}
+ .ec-public-mobile-menu{display:flex;position:absolute;z-index:1003;top:calc(100% + 1px);right:12px;width:min(270px,calc(100vw - 24px));padding:10px;background:#fff;border:1px solid #e2e7f0;border-radius:12px;box-shadow:0 18px 45px rgba(4,18,45,.18);flex-direction:column}
+ .ec-public-mobile-menu a{display:flex;align-items:center;min-height:46px;padding:0 14px;border-radius:8px;color:#14233f;text-decoration:none;font-size:15px;font-weight:600}
+ .ec-public-mobile-menu a:hover{background:#f4f1ff;color:#542cff}
+ .ec-public section[id]{scroll-margin-top:66px}
+}
+
+/* =========================================================
+   2026-09-29 PRICING MOBILE — client reference
+   Desktop pricing remains unchanged except requested copy.
+   ========================================================= */
+@media(max-width:600px){
+ .ec-pricing-shell{background:radial-gradient(circle at 50% 36%,#272727 0,#181818 48%,#111 100%)!important;color:#f7f8ff!important}
+ .ec-pricing-page{min-height:100vh!important;padding:54px 22px 150px!important;background:transparent!important;display:block!important}
+ .ec-pricing-page>h1{font-size:48px!important;line-height:1.02!important;letter-spacing:-2.5px!important;margin:12px 0 48px!important;color:#f4f8ff!important;font-weight:700!important;white-space:nowrap}
+ .ec-pricing-page>h1 em{font-style:normal!important;background:linear-gradient(110deg,#eef7ff,#9f72ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+ .ec-toggle{display:grid!important;grid-template-columns:auto 60px auto!important;grid-template-areas:"monthly switch annual" ". . save";align-items:center!important;justify-content:center!important;column-gap:12px!important;row-gap:4px!important;margin-bottom:24px!important;width:100%!important;flex-wrap:nowrap!important}
+ .ec-toggle .ec-toggle-label{font-size:14px!important;white-space:nowrap!important;color:#d8d8dd!important;opacity:.48!important}
+ .ec-toggle .ec-toggle-label:first-child{grid-area:monthly}
+ .ec-toggle .ec-toggle-label:nth-of-type(2){grid-area:annual}
+ .ec-toggle .ec-toggle-label.on{opacity:1!important;color:#fff!important;font-weight:700!important}
+ .ec-toggle>button{grid-area:switch;width:60px!important;height:36px!important;background:#075ee9!important;padding:5px!important}
+ .ec-toggle>button i{width:26px!important;height:26px!important;background:#242424!important}
+ .ec-toggle>button.annual i{transform:translateX(24px)!important}
+ .ec-toggle>strong{grid-area:save;justify-self:center;margin-top:-38px;margin-left:106px;background:#07345a!important;color:#56caff!important;border-radius:22px!important;padding:7px!important;font-size:13px!important;white-space:nowrap}
+ .ec-price-card{width:100%!important;max-width:none!important;box-sizing:border-box!important;margin:0 auto!important;padding:27px 20px 30px!important;border:4px solid #0875ff!important;border-radius:28px!important;background:radial-gradient(circle at 50% 25%,#082143 0,#031329 55%,#021022 100%)!important;box-shadow:0 0 34px rgba(0,113,255,.28)!important}
+ .ec-price-card h2{font-size:25px!important;line-height:1.16!important;margin:0 0 24px!important;color:#fff!important;font-weight:700!important;text-align:center!important}
+ .ec-price-card .ec-price{font-size:58px!important;line-height:1!important;margin:0 0 24px!important;color:#fff!important;font-weight:700!important;text-align:center!important}
+ .ec-price-card .ec-price small{font-size:27px!important;font-weight:400!important}
+ .ec-annual-saving{font-size:13px!important;margin:-12px 0 17px!important;min-height:0!important}
+ .ec-price-button{margin:0 0 21px!important;padding:13px 12px!important;border-radius:13px!important;background:linear-gradient(100deg,#0049bb,#6710b7)!important;font-size:21px!important;line-height:1.2!important;font-weight:700!important}
+ .ec-price-card hr{margin:0 0 10px!important;border:0!important;border-top:1px solid #7e8da2!important}
+ .ec-price-card h3{font-size:16px!important;line-height:1.25!important;margin:0 0 8px!important;color:#fff!important;font-weight:500!important}
+ .ec-price-card ul{margin:0!important;padding:0!important}
+ .ec-price-card li{gap:10px!important;margin:5px 0!important;color:#f6f7fb!important;font-size:14.5px!important;line-height:1.2!important}
+ .ec-price-card li>svg{width:19px!important;height:19px!important;stroke:#36bdff!important;flex:0 0 19px!important}
+ .ec-pricing-note{display:none!important}
+}
+@media(max-width:390px){
+ .ec-pricing-page{padding-left:16px!important;padding-right:16px!important}
+ .ec-pricing-page>h1{font-size:42px!important}
+ .ec-toggle{column-gap:8px!important}
+ .ec-toggle .ec-toggle-label{font-size:15px!important}
+ .ec-toggle>strong{font-size:12px!important;margin-left:72px!important}
+ .ec-price-card h2{font-size:28px!important}
+ .ec-price-card .ec-price{font-size:52px!important}
+ .ec-price-card li{font-size:13.5px!important}
+}
