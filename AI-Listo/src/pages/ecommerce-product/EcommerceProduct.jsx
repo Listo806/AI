@@ -185,9 +185,6 @@ export function EcommercePricing(){
     ].map(x=><li key={x}><CheckCircle2 size={16}/><span>{x}</span></li>)}</ul>
    </div>
 
-   <p className="ec-pricing-note">
-    One complete platform. Pricing automatically scales as your active subscriber volume grows.
-   </p>
   </main>
  </div>
 }
