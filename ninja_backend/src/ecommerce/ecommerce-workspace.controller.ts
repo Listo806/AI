@@ -14,6 +14,7 @@ import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { EcommerceWorkspaceService } from './ecommerce-workspace.service';
+import { EcommerceBillingService } from './ecommerce-billing.service';
 import { WorkspaceLockGuard } from '../workspaces/workspace-lock.guard';
 import { RequiresWorkspace } from '../workspaces/requires-workspace.decorator';
 
@@ -61,8 +62,26 @@ function csvCell(value: any): string {
 @UseGuards(JwtAuthGuard, WorkspaceLockGuard)
 @ApiBearerAuth('JWT-auth')
 export class EcommerceWorkspaceController {
-  constructor(private readonly ecommerce: EcommerceWorkspaceService) {}
+  constructor(private readonly ecommerce: EcommerceWorkspaceService, private readonly billing: EcommerceBillingService) {}
 
+
+  @Get('billing-calendar/dashboard')
+  billingDashboard(@CurrentUser() user: any, @Query('month') month?: string) { return this.billing.dashboard(user, month); }
+
+  @Get('billing-calendar/day/:date')
+  billingDay(@CurrentUser() user: any, @Param('date') date: string, @Query() query: any) { return this.billing.day(user, date, query); }
+
+  @Post('billing-calendar/subscriptions/:id/reschedule')
+  billingReschedule(@CurrentUser() user: any, @Param('id') id: string, @Body() body: any) { return this.billing.reschedule(user, id, body); }
+
+  @Post('billing-calendar/bulk/reschedule')
+  billingBulkReschedule(@CurrentUser() user: any, @Body() body: any) { return this.billing.bulkReschedule(user, body); }
+
+  @Post('billing-calendar/subscriptions/:id/reminder')
+  billingReminder(@CurrentUser() user: any, @Param('id') id: string) { return this.billing.reminder(user, id); }
+
+  @Post('billing-calendar/subscriptions/:id/retry')
+  billingRetry(@CurrentUser() user: any, @Param('id') id: string) { return this.billing.retry(user, id); }
   @Get()
   @ApiOperation({ summary: 'Tenant E-Commerce customer/subscription list' })
   list(@CurrentUser() user: any, @Query() query: any) {

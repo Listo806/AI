@@ -79,3 +79,4 @@
   .ecbd-mini p.activity{grid-template-columns:34px minmax(0,1fr) auto!important}
   .ecbd-mini p.activity>strong:last-child{grid-column:3}.ecbd-mini p.activity>span{grid-column:3}
 }
+.ecbd-empty{padding:18px;color:#7180a4;font-size:11px;display:flex;align-items:center;gap:7px}.ecbd-empty svg{width:14px}.ecbd-api-error{margin:10px 0;padding:10px 12px;border:1px solid #fecaca;background:#fff7f7;color:#b42318;border-radius:8px;font-size:11px;display:flex;gap:8px;align-items:center}.ecbd-api-error svg{width:15px}.ecbd-customer input[type="checkbox"]{margin-right:8px}.ecbd-actions button:disabled,.ecbd-exceptions button:disabled,.ecbd-quick button:disabled{opacity:.45;cursor:not-allowed}

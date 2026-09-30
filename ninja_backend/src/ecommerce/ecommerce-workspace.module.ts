@@ -3,11 +3,13 @@ import { EcommerceWorkspaceController } from './ecommerce-workspace.controller';
 import { EcommerceWorkspaceService } from './ecommerce-workspace.service';
 import { PlatformMailModule } from '../platform-mail/platform-mail.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
+import { PaymentsModule } from '../payments/payments.module';
+import { EcommerceBillingService } from './ecommerce-billing.service';
 
 @Module({
-  imports: [PlatformMailModule, WorkspacesModule],
+  imports: [PlatformMailModule, WorkspacesModule, PaymentsModule],
   controllers: [EcommerceWorkspaceController],
-  providers: [EcommerceWorkspaceService],
+  providers: [EcommerceWorkspaceService, EcommerceBillingService],
   exports: [EcommerceWorkspaceService],
 })
 export class EcommerceWorkspaceModule {}
