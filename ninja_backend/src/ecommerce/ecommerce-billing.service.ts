@@ -10,7 +10,24 @@ export class EcommerceBillingService {
   private async teamId(user:any){
     if(!user?.id) throw new ForbiddenException('Authenticated user is required.');
     if(user.teamId || user.team_id) return String(user.teamId || user.team_id);
-    const {rows}=await this.db.query(`SELECT team_id FROM users WHERE id=$1 LIMIT 1`,[user.id]);
+
+    // Keep billing workspace resolution consistent with WorkspaceLockGuard.
+    // Team owners can legitimately have users.team_id = NULL and own the team
+    // through teams.owner_id, so checking users.team_id alone rejects valid users.
+    const { rows } = await this.db.query(
+      `SELECT COALESCE(u.team_id, owned.id) AS team_id
+         FROM users u
+         LEFT JOIN LATERAL (
+           SELECT t.id
+             FROM teams t
+            WHERE t.owner_id = u.id
+            ORDER BY t.created_at ASC
+            LIMIT 1
+         ) owned ON true
+        WHERE u.id = $1
+        LIMIT 1`,
+      [user.id],
+    );
     if(!rows[0]?.team_id) throw new ForbiddenException('Active workspace is required.');
     return String(rows[0].team_id);
   }

@@ -80,3 +80,6 @@
   .ecbd-mini p.activity>strong:last-child{grid-column:3}.ecbd-mini p.activity>span{grid-column:3}
 }
 .ecbd-empty{padding:22px 12px;text-align:center;color:#7b8498;font-size:13px}.ecbd-api-warning{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;border:1px solid #f1c36a;border-radius:10px;background:#fff9e8;color:#8a5b00;font-size:13px}.ecbd-api-warning svg{width:16px;height:16px}.ecbd-actions button:disabled,.ecbd-quick button:disabled{opacity:.5;cursor:not-allowed}
+/* Billing API failures are distinct from a successfully loaded empty workspace. */
+.ecbd-api-warning{justify-content:space-between}.ecbd-api-warning>span{display:flex;align-items:center;gap:8px;min-width:0}.ecbd-api-warning small{font-size:12px;font-weight:400;color:inherit;opacity:.9}.ecbd-api-warning button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;padding:7px 11px;font:inherit;font-weight:600;cursor:pointer}.ecbd-api-warning button svg{width:14px;height:14px}
+@media(max-width:850px){.ecbd-api-warning{align-items:flex-start;gap:10px}.ecbd-api-warning>span{align-items:flex-start;flex-wrap:wrap}.ecbd-api-warning small{width:100%;padding-left:24px}}
