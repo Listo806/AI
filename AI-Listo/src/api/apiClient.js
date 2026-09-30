@@ -41,6 +41,8 @@ class ApiClient {
       endpoint.includes('/auth/signin') ||
       endpoint.includes('/auth/signup') ||
       endpoint.includes('/auth/login') ||
+      endpoint.includes('/auth/forgot-password') ||
+      endpoint.includes('/auth/reset-password') ||
       endpoint.includes('/properties/public') ||
       pathOnly === '/listings' ||
       pathOnly.startsWith('/listings/') ||

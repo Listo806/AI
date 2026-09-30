@@ -973,3 +973,5 @@
  .ec-price-card .ec-price{font-size:52px!important}
  .ec-price-card li{font-size:13.5px!important}
 }
+
+.ec-forgot-link{text-align:right;margin:-8px 0 14px}.ec-forgot-link a{font-size:12px;color:#3028ff;text-decoration:none;font-weight:700}.ec-forgot-link a:hover{text-decoration:underline}.ec-success{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:11px 12px;border-radius:7px;font-size:12px;line-height:1.45;margin:18px 0}.ec-auth-card .ec-btn:disabled{opacity:.65;cursor:not-allowed}

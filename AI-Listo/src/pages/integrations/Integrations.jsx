@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -218,15 +219,15 @@ function IntegrationLogo({ item }) {
   return <Icon size={32} strokeWidth={1.8} />;
 }
 
-function StatusText({ status, onRequest }) {
-  const labels = { connected: "Connected", active: "Connected", available: "Available" };
+function StatusText({ status, onRequest, t }) {
+  const labels = { connected: t("integrations.directory.status.connected"), active: t("integrations.directory.status.connected"), available: t("integrations.directory.status.available") };
   if (status === "coming_soon" || status === "request") {
-    return <button type="button" className="directory-request-btn" onClick={(e) => { e.stopPropagation(); onRequest?.(); }}>Request Integration</button>;
+    return <button type="button" className="directory-request-btn" onClick={(e) => { e.stopPropagation(); onRequest?.(); }}>{t("integrations.directory.actions.request")}</button>;
   }
   return <span className={`directory-status is-${status || "available"}`}>{labels[status] || "Available"}</span>;
 }
 
-function DirectoryCard({ item, onAction, onRequest }) {
+function DirectoryCard({ item, onAction, onRequest, t }) {
   const unavailable = item.status === "coming_soon" || item.status === "request";
   const clickable = !unavailable;
   return (
@@ -237,16 +238,16 @@ function DirectoryCard({ item, onAction, onRequest }) {
           <h4>{item.title}</h4>
           {clickable && <ArrowRight size={18} />}
         </div>
-        <p>{item.description}</p>
-        <span className="directory-category">{item.category}</span>
-        <StatusText status={item.status} onRequest={() => onRequest(item)} />
+        <p>{t(`integrations.directory.apps.${item.key}.description`, { defaultValue: item.description })}</p>
+        <span className="directory-category">{t(`integrations.directory.categories.${item.category}`, { defaultValue: item.category })}</span>
+        <StatusText status={item.status} onRequest={() => onRequest(item)} t={t} />
       </div>
     </article>
   );
 }
 
-function CardGrid({ items, onAction, onRequest, className = "" }) {
-  return <div className={`directory-grid ${className}`.trim()}>{items.map((item) => <DirectoryCard key={item.key} item={item} onAction={onAction} onRequest={onRequest} />)}</div>;
+function CardGrid({ items, onAction, onRequest, t, className = "" }) {
+  return <div className={`directory-grid ${className}`.trim()}>{items.map((item) => <DirectoryCard key={item.key} item={item} onAction={onAction} onRequest={onRequest} t={t} />)}</div>;
 }
 
 function SectionTitle({ eyebrow, title, description }) {
@@ -255,6 +256,7 @@ function SectionTitle({ eyebrow, title, description }) {
 
 export default function AppsIntegrationsHub() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [states, setStates] = useState({});
   const [usage, setUsage] = useState(null);
@@ -314,14 +316,14 @@ export default function AppsIntegrationsHub() {
   const connectedCount = hydrated.filter((item) => item.status === "connected").length;
 
   const requestIntegration = async (item = null) => {
-    setRequestModal(item || { key: "custom", title: "Custom Integration" });
+    setRequestModal(item || { key: "custom", title: t("integrations.directory.request.customIntegration") });
     setRequestError("");
     setRequestSuccess("");
     try {
       const res = await apiClient.request("/integrations/request-context");
       setRequestContext(res?.customer || { name: "", email: "", workspace: "" });
     } catch (error) {
-      setRequestError(error?.message || "Unable to load your account details. Please try again.");
+      setRequestError(error?.message || t("integrations.directory.request.loadAccountError"));
     }
   };
 
@@ -347,10 +349,10 @@ export default function AppsIntegrationsHub() {
           message: requestMessage.trim(),
         }),
       });
-      setRequestSuccess(res?.message || "Request received. Our team will contact you to discuss this integration.");
+      setRequestSuccess(t("integrations.directory.request.success"));
     } catch (error) {
       // Deliberately keep requestMessage unchanged so the customer can retry.
-      setRequestError(error?.message || "We couldn't send your request. Please try again.");
+      setRequestError(error?.message || t("integrations.directory.request.submitError"));
     } finally {
       setRequestLoading(false);
     }
@@ -376,11 +378,11 @@ export default function AppsIntegrationsHub() {
   return (
     <div className="integrations-directory" id="integration-directory">
       <section className="directory-hero">
-        <span className="directory-eyebrow">CORTEXA INTEGRATIONS</span>
-        <h1>Connect Cortexa with the tools<br />you already use</h1>
-        <p>Bring your conversations, calendars, payments, customer data, and business tools together in one intelligent workspace.</p>
-        <div className="directory-search"><Search size={23} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search integrations" /></div>
-        <div className="directory-meta"><strong><Boxes size={20} /> {connectedCount} connected {connectedCount === 1 ? "app" : "apps"}</strong><i /><button type="button" onClick={requestIntegration}>Request an integration <ArrowRight size={16} /></button></div>
+        <span className="directory-eyebrow">{t("integrations.directory.hero.eyebrow")}</span>
+        <h1>{t("integrations.directory.hero.titleLine1")}<br />{t("integrations.directory.hero.titleLine2")}</h1>
+        <p>{t("integrations.directory.hero.description")}</p>
+        <div className="directory-search"><Search size={23} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("integrations.directory.hero.searchPlaceholder")} /></div>
+        <div className="directory-meta"><strong><Boxes size={20} /> {connectedCount} {t(connectedCount === 1 ? "integrations.directory.hero.connectedApp" : "integrations.directory.hero.connectedApps")}</strong><i /><button type="button" onClick={requestIntegration}>{t("integrations.directory.actions.requestAnIntegration")} <ArrowRight size={16} /></button></div>
         <div className="logo-orbit" aria-hidden="true">
           <svg className="logo-orbit-lines" viewBox="0 0 1200 300" preserveAspectRatio="none">
             <path className="orbit-path orbit-path-top" d="M8 18 C150 62 330 126 600 132 C870 126 1050 62 1192 18" />
@@ -392,48 +394,48 @@ export default function AppsIntegrationsHub() {
           </svg>
           {["whatsapp", "gmail", "microsoftoutlook", "googlecalendar", "googleads", "tiktok", "mailchimp", "zapier", "make", "shopify", "googledrive"].map((slug) => <span key={slug}><img src={logo(slug)} alt="" /></span>)}
         </div>
-        <div className="directory-benefits"><div><Zap /><p><b>Save time</b><small>Automate manual work and sync data across your stack.</small></p></div><div><Link2 /><p><b>Work smarter</b><small>Keep all your tools connected in one place.</small></p></div><div><Users /><p><b>Grow faster</b><small>Unlock new possibilities with powerful integrations.</small></p></div></div>
+        <div className="directory-benefits"><div><Zap /><p><b>{t("integrations.directory.benefits.saveTime")}</b><small>{t("integrations.directory.benefits.saveTimeDesc")}</small></p></div><div><Link2 /><p><b>{t("integrations.directory.benefits.workSmarter")}</b><small>{t("integrations.directory.benefits.workSmarterDesc")}</small></p></div><div><Users /><p><b>{t("integrations.directory.benefits.growFaster")}</b><small>{t("integrations.directory.benefits.growFasterDesc")}</small></p></div></div>
       </section>
 
       <section className="directory-explore">
-        <SectionTitle title="Explore integrations" description="Browse and connect your favorite tools to extend what Cortexa can do." />
-        <div className="directory-filters">{CATEGORIES.map((cat) => <button key={cat.label} className={cat.label === "All" ? "active" : ""} onClick={() => scrollCategory(cat.target)}>{cat.label}</button>)}</div>
+        <SectionTitle title={t("integrations.directory.explore.title")} description={t("integrations.directory.explore.description")} />
+        <div className="directory-filters">{CATEGORIES.map((cat) => <button key={cat.label} className={cat.label === "All" ? "active" : ""} onClick={() => scrollCategory(cat.target)}>{t(`integrations.directory.filters.${cat.label}`, { defaultValue: cat.label })}</button>)}</div>
       </section>
 
       {query ? (
-        <section className="directory-section search-results"><SectionTitle eyebrow="SEARCH RESULTS" title={`Results for “${search}”`} description={`${searchResults.length} integration${searchResults.length === 1 ? "" : "s"} found.`} />{searchResults.length ? <CardGrid items={searchResults} onAction={onAction} onRequest={requestIntegration} /> : <div className="directory-empty">No integrations match your search.</div>}</section>
+        <section className="directory-section search-results"><SectionTitle eyebrow={t("integrations.directory.search.eyebrow")} title={t("integrations.directory.search.resultsFor", { search })} description={t(searchResults.length === 1 ? "integrations.directory.search.oneFound" : "integrations.directory.search.manyFound", { count: searchResults.length })} />{searchResults.length ? <CardGrid items={searchResults} onAction={onAction} onRequest={requestIntegration} t={t} /> : <div className="directory-empty">{t("integrations.directory.search.empty")}</div>}</section>
       ) : <>
-        <section className="directory-section" id="communication"><SectionTitle title="Communication & Scheduling" description="Connect every conversation, call, meeting, and appointment to the right customer." /><CardGrid items={byKeys(communication)} onAction={onAction} onRequest={requestIntegration} /></section>
-        <section className="directory-section" id="marketing"><SectionTitle title="Marketing, Leads & Automation" description="Capture leads, understand campaign performance, and automate work across your business." /><CardGrid items={byKeys(marketing)} onAction={onAction} onRequest={requestIntegration} className="marketing-grid" /></section>
-        <section className="directory-section" id="ecommerce"><SectionTitle title="E-Commerce Operations" description="Connect stores, payments, affiliates, and fraud tools to see every sale from one place." /><h3 className="directory-group-title">STORES</h3><CardGrid items={byKeys(stores)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">MERCHANT ACCOUNTS, PAYMENTS & ACCOUNTING</h3><CardGrid items={byKeys(payments)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">AFFILIATE TRACKING</h3><CardGrid items={byKeys(affiliates)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">CHARGEBACKS & FRAUD</h3><CardGrid items={byKeys(fraud)} onAction={onAction} onRequest={requestIntegration} /></section>
-        <section className="directory-section" id="customer-service"><SectionTitle title="Customer Service & Call Centers" description="Bring customer support, calls, recordings, and team activity into one connected view." /><h3 className="directory-group-title">CUSTOMER SERVICE</h3><CardGrid items={byKeys(customerService)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">CALL CENTERS & BUSINESS PHONE SYSTEMS</h3><CardGrid items={byKeys(callCenters)} onAction={onAction} onRequest={requestIntegration} /></section>
-        <section className="directory-section" id="data-developer"><SectionTitle title="Data, Migration, Files & Developer Tools" description="Move your data, connect your files, and extend Cortexa with secure developer tools." /><h3 className="directory-group-title">CRM MIGRATION & IMPORTS</h3><CardGrid items={byKeys(migration)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">FILES & DOCUMENTS</h3><CardGrid items={byKeys(files)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">DEVELOPER TOOLS</h3><CardGrid items={byKeys(developer)} onAction={onAction} onRequest={requestIntegration} /></section>
-        <section className="directory-section" id="workspaces"><SectionTitle title="Workspace Integrations" description="Connect specialized tools built for the way your team and industry work." /><h3 className="directory-group-title">TEAM WORKSPACE</h3><CardGrid items={byKeys(teamWorkspace)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">REAL ESTATE</h3><CardGrid items={byKeys(realEstate)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">INSURANCE</h3><CardGrid items={byKeys(insurance)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">FINANCIAL SERVICES</h3><CardGrid items={byKeys(finance)} onAction={onAction} onRequest={requestIntegration} /></section>
+        <section className="directory-section" id="communication"><SectionTitle title={t("integrations.directory.sections.communication.title")} description={t("integrations.directory.sections.communication.description")} /><CardGrid items={byKeys(communication)} onAction={onAction} onRequest={requestIntegration} t={t} /></section>
+        <section className="directory-section" id="marketing"><SectionTitle title={t("integrations.directory.sections.marketing.title")} description={t("integrations.directory.sections.marketing.description")} /><CardGrid items={byKeys(marketing)} onAction={onAction} onRequest={requestIntegration} t={t} className="marketing-grid" /></section>
+        <section className="directory-section" id="ecommerce"><SectionTitle title={t("integrations.directory.sections.ecommerce.title")} description={t("integrations.directory.sections.ecommerce.description")} /><h3 className="directory-group-title">{t("integrations.directory.groups.stores")}</h3><CardGrid items={byKeys(stores)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.payments")}</h3><CardGrid items={byKeys(payments)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.affiliate")}</h3><CardGrid items={byKeys(affiliates)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.fraud")}</h3><CardGrid items={byKeys(fraud)} onAction={onAction} onRequest={requestIntegration} t={t} /></section>
+        <section className="directory-section" id="customer-service"><SectionTitle title={t("integrations.directory.sections.customerService.title")} description={t("integrations.directory.sections.customerService.description")} /><h3 className="directory-group-title">{t("integrations.directory.groups.customerService")}</h3><CardGrid items={byKeys(customerService)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.callCenters")}</h3><CardGrid items={byKeys(callCenters)} onAction={onAction} onRequest={requestIntegration} t={t} /></section>
+        <section className="directory-section" id="data-developer"><SectionTitle title={t("integrations.directory.sections.data.title")} description={t("integrations.directory.sections.data.description")} /><h3 className="directory-group-title">{t("integrations.directory.groups.crmMigration")}</h3><CardGrid items={byKeys(migration)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.files")}</h3><CardGrid items={byKeys(files)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.developer")}</h3><CardGrid items={byKeys(developer)} onAction={onAction} onRequest={requestIntegration} t={t} /></section>
+        <section className="directory-section" id="workspaces"><SectionTitle title={t("integrations.directory.sections.workspaces.title")} description={t("integrations.directory.sections.workspaces.description")} /><h3 className="directory-group-title">{t("integrations.directory.groups.teamWorkspace")}</h3><CardGrid items={byKeys(teamWorkspace)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.realEstate")}</h3><CardGrid items={byKeys(realEstate)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.insurance")}</h3><CardGrid items={byKeys(insurance)} onAction={onAction} onRequest={requestIntegration} t={t} /><h3 className="directory-group-title">{t("integrations.directory.groups.financialServices")}</h3><CardGrid items={byKeys(finance)} onAction={onAction} onRequest={requestIntegration} t={t} /></section>
       </>}
 
-      <section className="directory-final-cta" id="integration-final-cta"><span>CUSTOM INTEGRATIONS</span><h2>Don’t see the tool you need?</h2><p>Request an integration or build a secure custom connection with the Cortexa API.</p><div><button type="button" onClick={() => requestIntegration()}>Request an Integration</button><button type="button" onClick={() => navigate("/dashboard/integrations/api-access")}>Build with the Cortexa API</button><button type="button" className="outline" onClick={() => navigate("/dashboard/integrations/api-access")}>Developer Documentation</button></div></section>
+      <section className="directory-final-cta" id="integration-final-cta"><span>{t("integrations.directory.cta.eyebrow")}</span><h2>{t("integrations.directory.cta.title")}</h2><p>{t("integrations.directory.cta.description")}</p><div><button type="button" onClick={() => requestIntegration()}>{t("integrations.directory.actions.request")}</button><button type="button" onClick={() => navigate("/dashboard/integrations/api-access")}>{t("integrations.directory.actions.buildApi")}</button><button type="button" className="outline" onClick={() => navigate("/dashboard/integrations/api-access")}>{t("integrations.directory.actions.developerDocs")}</button></div></section>
       {requestModal && <div className="integration-request-overlay" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) closeRequestModal(); }}>
         <div className="integration-request-modal" role="dialog" aria-modal="true" aria-labelledby="integration-request-title">
-          <button type="button" className="integration-request-close" onClick={closeRequestModal} aria-label="Close"><X size={20} /></button>
-          <span className="integration-request-kicker">INTEGRATION REQUEST</span>
-          <h3 id="integration-request-title">Request {requestModal.title}</h3>
-          <p className="integration-request-intro">Tell us what you would like Cortexa to connect or sync. This request does not activate a connection or promise an implementation date.</p>
+          <button type="button" className="integration-request-close" onClick={closeRequestModal} aria-label={t("integrations.directory.request.close")}><X size={20} /></button>
+          <span className="integration-request-kicker">{t("integrations.directory.request.kicker")}</span>
+          <h3 id="integration-request-title">{t("integrations.directory.request.title", { integration: requestModal.title })}</h3>
+          <p className="integration-request-intro">{t("integrations.directory.request.intro")}</p>
           {requestSuccess ? <div className="integration-request-success">{requestSuccess}</div> : <form onSubmit={submitIntegrationRequest}>
             <div className="integration-request-details">
-              <label><span>Integration</span><input value={requestModal.title} readOnly /></label>
-              <label><span>Name</span><input value={requestContext.name || ""} readOnly /></label>
-              <label><span>Email</span><input value={requestContext.email || ""} readOnly /></label>
-              <label><span>Workspace</span><input value={requestContext.workspace || ""} readOnly /></label>
+              <label><span>{t("integrations.directory.request.integration")}</span><input value={requestModal.title} readOnly /></label>
+              <label><span>{t("integrations.directory.request.name")}</span><input value={requestContext.name || ""} readOnly /></label>
+              <label><span>{t("integrations.directory.request.email")}</span><input value={requestContext.email || ""} readOnly /></label>
+              <label><span>{t("integrations.directory.request.workspace")}</span><input value={requestContext.workspace || ""} readOnly /></label>
             </div>
-            <label className="integration-request-message"><span>What would you like to connect or sync?</span><textarea rows="4" maxLength="3000" value={requestMessage} onChange={(e) => setRequestMessage(e.target.value)} placeholder="Add a short message about the data, workflow, or connection you need." required /></label>
+            <label className="integration-request-message"><span>{t("integrations.directory.request.messageLabel")}</span><textarea rows="4" maxLength="3000" value={requestMessage} onChange={(e) => setRequestMessage(e.target.value)} placeholder={t("integrations.directory.request.messagePlaceholder")} required /></label>
             {requestError && <div className="integration-request-error">{requestError}</div>}
-            <div className="integration-request-actions"><button type="button" className="secondary" onClick={closeRequestModal}>Cancel</button><button type="submit" disabled={requestLoading || !requestMessage.trim()}>{requestLoading ? "Sending…" : "Send Request"}</button></div>
+            <div className="integration-request-actions"><button type="button" className="secondary" onClick={closeRequestModal}>{t("integrations.directory.request.cancel")}</button><button type="submit" disabled={requestLoading || !requestMessage.trim()}>{requestLoading ? t("integrations.directory.request.sending") : t("integrations.directory.request.send")}</button></div>
           </form>}
         </div>
       </div>}
 
-      {usage?.isFree && <div className="directory-plan-note"><b>Free plan:</b> {usage.usage?.integrationsConnected ?? 0} of {usage.limits?.integrations ?? 1} connected integrations used. <button onClick={() => navigate("/pricing")}>View plans</button></div>}
-      <footer className="directory-footer"><strong>CORTEXA</strong><div><span>Product</span><a href="#integration-directory">Integrations</a><a href="#workspaces">Workspaces</a></div><div><span>Resources</span><button onClick={() => navigate("/dashboard/integrations/api-access")}>Developer Docs</button><button onClick={requestIntegration}>Contact Support</button></div><div><span>Legal</span><button type="button">Privacy</button><button type="button">Terms</button></div><small>© 2026 Cortexa S.A.S. All rights reserved.</small></footer>
+      {usage?.isFree && <div className="directory-plan-note"><b>{t("integrations.directory.plan.freePlan")}</b> {usage.usage?.integrationsConnected ?? 0} {t("integrations.directory.plan.of")} {usage.limits?.integrations ?? 1} {t("integrations.directory.plan.connectedUsed")}. <button onClick={() => navigate("/pricing")}>{t("integrations.directory.plan.viewPlans")}</button></div>}
+      <footer className="directory-footer"><strong>CORTEXA</strong><div><span>{t("integrations.directory.footer.product")}</span><a href="#integration-directory">{t("integrations.directory.footer.integrations")}</a><a href="#workspaces">{t("integrations.directory.footer.workspaces")}</a></div><div><span>{t("integrations.directory.footer.resources")}</span><button onClick={() => navigate("/dashboard/integrations/api-access")}>{t("integrations.directory.footer.developerDocs")}</button><button onClick={requestIntegration}>{t("integrations.directory.footer.contactSupport")}</button></div><div><span>{t("integrations.directory.footer.legal")}</span><button type="button">{t("integrations.directory.footer.privacy")}</button><button type="button">{t("integrations.directory.footer.terms")}</button></div><small>{t("integrations.directory.footer.copyright")}</small></footer>
     </div>
   );
 }

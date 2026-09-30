@@ -380,7 +380,10 @@ export class AuthService {
 
   // Start a password reset: store a hashed one-time token and email a link.
   // Always returns a generic response so we never reveal whether an email exists.
-  async forgotPassword(email: string) {
+  async forgotPassword(
+    email: string,
+    resetPath: '/reset-password' | '/e-commerce/reset-password' = '/reset-password',
+  ) {
     const normalized = (email || '').trim().toLowerCase();
     const genericResponse = {
       success: true,
@@ -407,7 +410,7 @@ export class AuthService {
     )
       .split(',')[0]
       .trim();
-    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+    const resetUrl = `${frontendUrl}${resetPath}?token=${encodeURIComponent(token)}`;
 
     await this.sendResetEmail(user.email, resetUrl);
     return genericResponse;

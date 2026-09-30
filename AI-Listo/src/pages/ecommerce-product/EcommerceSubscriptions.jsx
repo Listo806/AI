@@ -6,6 +6,8 @@ import {
  CircleAlert,CheckCircle2,UserPlus,Hourglass,ShieldCheck,TriangleAlert,XCircle
 } from "lucide-react";
 import "./ecommerce-subscriptions.css";
+import EcommerceAccountMenu from "./EcommerceAccountMenu";
+import {useEcommercePageLanguage} from "./EcommerceLocale";
 
 const EMPTY={summary:{registered:0,active:0,mrr:0,arr:0,conversion:0,free:0},customers:[],analytics:{}};
 const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(Number(n||0));
@@ -47,6 +49,7 @@ function Filters({query,setQuery,plan,setPlan,status,setStatus}){
  </div>
 }
 export default function EcommerceSubscriptions(){
+ useEcommercePageLanguage();
  const [data,reload]=useSubscriptions();
  const [tab,setTab]=useState("All Subscriptions");
  const [query,setQuery]=useState("");
@@ -73,7 +76,7 @@ export default function EcommerceSubscriptions(){
  };
  const tabCount=t=>t==="All Subscriptions"?data.customers.length:data.customers.filter(c=>String(c.status||"").toLowerCase()===t.toLowerCase().replace(" (sign-ups)","")).length;
  return <div className="ecs-page">
-  <header className="ecs-page-head"><div className="head"><h1>Subscriptions</h1><p>All registered accounts, subscriptions, and plans — everything in one place.</p></div><div><button><Download size={16}/>Export CSV</button><button><Upload size={16}/>Import Customers</button><button className="primary"><Plus size={17}/>Add Customer</button></div></header>
+  <header className="ecs-page-head"><div className="head"><h1>Subscriptions</h1><p>All registered accounts, subscriptions, and plans — everything in one place.</p></div><div className="ecs-head-right"><div className="ecs-head-actions"><button><Download size={16}/>Export CSV</button><button><Upload size={16}/>Import Customers</button><button className="primary"><Plus size={17}/>Add Customer</button></div><EcommerceAccountMenu/></div></header>
 
   <section className="ecs-stats">
    <Stat title="Total Registered" value={s.registered} sub="+0 this week" Icon={UsersRound} tone="blue"/>

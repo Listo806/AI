@@ -6,6 +6,8 @@ import {
   ChevronRight, ExternalLink, MoreVertical, XCircle, CircleAlert, HelpCircle
 } from "lucide-react";
 import "./ecommerce-integrations.css";
+import EcommerceAccountMenu from "./EcommerceAccountMenu";
+import {useEcommercePageLanguage} from "./EcommerceLocale";
 
 const categoryMeta=[
  ["payment","Payment Gateways","Accept payments and manage merchant accounts.",CreditCard],
@@ -47,7 +49,7 @@ const value=v=>v===null||v===undefined?"—":v;
 function Topbar(){
  return <header className="eci-topbar">
   <div className="head"><h1>Integrations</h1><p>Connect and manage your critical business services and API integrations.</p></div>
-  <div className="eci-account"><label><Search size={16}/><input placeholder="Search integrations..."/><kbd>⌘K</kbd></label><button className="eci-bell"><Bell size={19}/><i>7</i></button><span>H</span><b>Heisenberg<small>Super Admin</small></b><ChevronDown size={15}/></div>
+  <div className="eci-account"><label><Search size={16}/><input placeholder="Search integrations..."/><kbd>⌘K</kbd></label><button className="eci-bell"><Bell size={19}/><i>7</i></button><EcommerceAccountMenu/></div>
  </header>
 }
 function Summary({s,onFilter}){
@@ -81,6 +83,7 @@ function Recent({items}){
  return <section className="eci-recent"><header><h3>Recently Connected Integrations</h3><a>View all</a></header>{items.length?<div>{items.slice(0,5).map((x,i)=><article key={x.id||i}><span className="eci-provider-logo">{(x.name||"?").slice(0,1)}</span><div><b>{x.name}</b><em>{x.status||"Connected"}</em><small>{x.lastSync||x.connectedAt||""}</small></div><button><MoreVertical size={17}/></button></article>)}</div>:<p className="eci-empty">No integrations connected yet.</p>}</section>
 }
 export default function EcommerceIntegrations(){
+ useEcommercePageLanguage();
  const data=useIntegrationData();
  const [query,setQuery]=useState("");
  const [filter,setFilter]=useState("all");

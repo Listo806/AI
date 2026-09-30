@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
+import apiClient from "../../api/apiClient";
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { ecT, useEcommercePageLanguage } from "./EcommerceLocale";
 import {
   ArrowRight, PlayCircle, ShoppingCart, RefreshCw, Users, Megaphone, Store,
   CheckCircle2, UserRound, CalendarDays, LayoutDashboard, CreditCard,
@@ -12,6 +14,7 @@ import "./ecommerce-product.css";
 import { trackEvent } from "../../utils/track";
 import EcommerceIntegrationsPage from "./EcommerceIntegrations";
 import EcommerceSubscriptionsPage from "./EcommerceSubscriptions";
+import {rememberEcommerceUser} from "./EcommerceAccountMenu";
 import heroDashboard from "./assets/cortexa-ecommerce-subscription-crm-billing-calendar.webp";
 import connectedDiagram from "./assets/cortexa-ecommerce-subscription-crm-connected-platform.webp";
 import subscriberDashboard from "./assets/cortexa-ecommerce-subscription-crm-subscriber-management.webp";
@@ -28,21 +31,36 @@ import adaptiveLogoWordmark from "./assets/cortexa-wordmark-adaptive.png";
 
 const EcAuthContext = createContext(null);
 const EC_TOKEN = "cortexa_ecommerce_access_token";
+const EC_REFRESH_TOKEN = "cortexa_ecommerce_refresh_token";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://backend.cortexaaicrm.com/api";
 
 export function EcommerceAuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(EC_TOKEN));
   const value = useMemo(() => ({
     token,
     isAuthenticated: Boolean(token),
-    // Frontend-ready isolation. Replace this local fallback with /e-commerce/auth/login when backend is connected.
     login: async ({ email, password }) => {
       if (!email || !password) throw new Error("Enter your email and password.");
-      const demoToken = `ec_${Date.now()}`;
-      localStorage.setItem(EC_TOKEN, demoToken);
-      setToken(demoToken);
-      return true;
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.accessToken) {
+        throw new Error(data?.message || "Invalid email or password.");
+      }
+      localStorage.setItem(EC_TOKEN, data.accessToken);
+      rememberEcommerceUser({name:data?.user?.name||data?.user?.fullName||data?.name||"",email:data?.user?.email||data?.email||email.trim().toLowerCase()});
+      if (data.refreshToken) localStorage.setItem(EC_REFRESH_TOKEN, data.refreshToken);
+      setToken(data.accessToken);
+      return data;
     },
-    logout: () => { localStorage.removeItem(EC_TOKEN); setToken(null); },
+    logout: () => {
+      localStorage.removeItem(EC_TOKEN);
+      localStorage.removeItem(EC_REFRESH_TOKEN);
+      setToken(null);
+    },
   }), [token]);
   return <EcAuthContext.Provider value={value}>{children}</EcAuthContext.Provider>;
 }
@@ -197,9 +215,76 @@ function AuthCard({mode}){ const nav=useNavigate(); const auth=useEcAuth(); cons
  sessionStorage.setItem("ec_signup",JSON.stringify({...form,billing}));
  nav(`/e-commerce/checkout?billing=${billing}`);
  return;
-}try{await auth.login(form);nav("/e-commerce/dashboard",{replace:true});}catch(err){setError(err.message)}}; return <div className="ec-auth-page"><Link to="/e-commerce"><Logo/></Link><form className="ec-auth-card" onSubmit={submit}><h1>{mode==="login"?"Welcome back":"Start with Cortexa E-Commerce CRM"}</h1><p>{mode==="login"?"Login to your E-Commerce CRM account.":"Create your dedicated E-Commerce account."}</p>{mode==="signup"&&<label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label>}<label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/></label><label>Password<input type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/></label>{error&&<div className="ec-error">{error}</div>}<button className="ec-btn" type="submit">{mode==="login"?"Login":"Continue to Checkout"}</button><p className="ec-switch">{mode==="login"?<>New to E-Commerce CRM? <Link to="/e-commerce/signup">Get Started</Link></>:<>Already have an account? <Link to="/e-commerce/login">Login</Link></>}</p></form></div> }
+}try{await auth.login(form);nav("/e-commerce/dashboard",{replace:true});}catch(err){setError(err.message)}}; return <div className="ec-auth-page"><Link to="/e-commerce"><Logo/></Link><form className="ec-auth-card" onSubmit={submit}><h1>{mode==="login"?"Welcome back":"Start with Cortexa E-Commerce CRM"}</h1><p>{mode==="login"?"Login to your E-Commerce CRM account.":"Create your dedicated E-Commerce account."}</p>{mode==="signup"&&<label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label>}<label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/></label><label>Password<input type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/></label>{mode==="login"&&<div className="ec-forgot-link"><Link to="/e-commerce/forgot-password">Forgot password?</Link></div>}{error&&<div className="ec-error">{error}</div>}<button className="ec-btn" type="submit">{mode==="login"?"Login":"Continue to Checkout"}</button><p className="ec-switch">{mode==="login"?<>New to E-Commerce CRM? <Link to="/e-commerce/signup">Get Started</Link></>:<>Already have an account? <Link to="/e-commerce/login">Login</Link></>}</p></form></div> }
 export const EcommerceLogin=()=> <AuthCard mode="login"/>;
 export const EcommerceSignup=()=> <AuthCard mode="signup"/>;
+
+export function EcommerceForgotPassword(){
+ const [email,setEmail]=useState("");
+ const [loading,setLoading]=useState(false);
+ const [sent,setSent]=useState(false);
+ const [error,setError]=useState("");
+ const submit=async(e)=>{
+  e.preventDefault(); setError(""); setLoading(true);
+  try{
+   await apiClient.request("/auth/forgot-password",{
+    method:"POST",
+    body:JSON.stringify({email:email.trim().toLowerCase(),resetPath:"/e-commerce/reset-password"})
+   });
+   setSent(true);
+  }catch(err){ setError(err?.message||"Unable to send the reset link. Please try again."); }
+  finally{ setLoading(false); }
+ };
+ return <div className="ec-auth-page"><Link to="/e-commerce"><Logo/></Link><div className="ec-auth-card">
+  <h1>Reset your password</h1>
+  <p>Enter your account email and we’ll send you a secure password reset link.</p>
+  {sent?<>
+   <div className="ec-success">If an account exists for that email, a reset link is on its way. Check your inbox and spam folder.</div>
+   <p className="ec-switch"><Link to="/e-commerce/login">Back to login</Link></p>
+  </>:<form onSubmit={submit}>
+   <label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required disabled={loading} autoCapitalize="none" autoCorrect="off" spellCheck={false}/></label>
+   {error&&<div className="ec-error">{error}</div>}
+   <button className="ec-btn" type="submit" disabled={loading}>{loading?"Sending…":"Send reset link"}</button>
+   <p className="ec-switch"><Link to="/e-commerce/login">Back to login</Link></p>
+  </form>}
+ </div></div>;
+}
+
+export function EcommerceResetPassword(){
+ const location=useLocation();
+ const nav=useNavigate();
+ const token=new URLSearchParams(location.search).get("token")||"";
+ const [password,setPassword]=useState("");
+ const [confirm,setConfirm]=useState("");
+ const [loading,setLoading]=useState(false);
+ const [done,setDone]=useState(false);
+ const [error,setError]=useState("");
+ const submit=async(e)=>{
+  e.preventDefault(); setError("");
+  if(!token){setError("This reset link is missing its token. Please request a new one.");return;}
+  if(password.length<8){setError("Password must be at least 8 characters.");return;}
+  if(password!==confirm){setError("The two passwords do not match.");return;}
+  setLoading(true);
+  try{
+   await apiClient.request("/auth/reset-password",{method:"POST",body:JSON.stringify({token,password})});
+   setDone(true); setTimeout(()=>nav("/e-commerce/login",{replace:true}),2500);
+  }catch(err){setError(err?.message||"This reset link is invalid or has expired.");}
+  finally{setLoading(false);}
+ };
+ return <div className="ec-auth-page"><Link to="/e-commerce"><Logo/></Link><div className="ec-auth-card">
+  <h1>Set a new password</h1><p>Choose a new password for your E-Commerce CRM account.</p>
+  {done?<>
+   <div className="ec-success">Your password has been reset. Redirecting you to login…</div>
+   <p className="ec-switch"><Link to="/e-commerce/login">Go to login</Link></p>
+  </>:<form onSubmit={submit}>
+   {error&&<div className="ec-error">{error}</div>}
+   <label>New password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required disabled={loading} minLength={8}/></label>
+   <label>Confirm new password<input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} required disabled={loading} minLength={8}/></label>
+   <button className="ec-btn" type="submit" disabled={loading}>{loading?"Resetting…":"Reset password"}</button>
+   <p className="ec-switch"><Link to="/e-commerce/login">Back to login</Link></p>
+  </form>}
+ </div></div>;
+}
 
 export function EcommerceCheckout(){
  const nav=useNavigate();
@@ -263,6 +348,7 @@ export function EcommerceAppLayout(){
  const [collapsed,setCollapsed]=useState(false);
  const [mobileOpen,setMobileOpen]=useState(false);
  const location=useLocation();
+ const ecommerceLang=useEcommercePageLanguage();
 
  React.useEffect(()=>{ setMobileOpen(false); },[location.pathname]);
 
@@ -283,13 +369,13 @@ export function EcommerceAppLayout(){
    </div>
 
    <nav onClick={()=>setMobileOpen(false)}>
-    <NavLink to="/e-commerce/dashboard" title="Dashboard"><LayoutDashboard size={17}/><span>Dashboard</span></NavLink>
-    <NavLink to="/e-commerce/subscriptions" title="Subscriptions"><CreditCard size={17}/><span>Subscriptions</span></NavLink>
-    <NavLink to="/e-commerce/integrations" title="Integrations"><Plug size={17}/><span>Integrations</span></NavLink>
+    <NavLink to="/e-commerce/dashboard" title={ecT("Dashboard")}><LayoutDashboard size={17}/><span>{ecT("Dashboard")}</span></NavLink>
+    <NavLink to="/e-commerce/subscriptions" title={ecT("Subscriptions")}><CreditCard size={17}/><span>{ecT("Subscriptions")}</span></NavLink>
+    <NavLink to="/e-commerce/integrations" title={ecT("Integrations")}><Plug size={17}/><span>{ecT("Integrations")}</span></NavLink>
    </nav>
 
-   <button className="ec-sidebar-logout" onClick={()=>{setMobileOpen(false);auth.logout();}} title="Log out">
-    <LogOut size={16}/><span>Log out</span>
+   <button className="ec-sidebar-logout" onClick={()=>{setMobileOpen(false);auth.logout();}} title={ecT("Log out")}>
+    <LogOut size={16}/><span>{ecT("Log out")}</span>
    </button>
   </aside>
 
@@ -297,7 +383,7 @@ export function EcommerceAppLayout(){
    <button type="button" className="ec-mobile-menu-button" onClick={()=>setMobileOpen(v=>!v)} aria-label={mobileOpen?"Close menu":"Open menu"} aria-expanded={mobileOpen}>
     <Menu size={27}/>
    </button>
-   <Outlet/>
+   <Outlet key={`${location.pathname}-${ecommerceLang}`}/>
   </main>
  </div>
 }

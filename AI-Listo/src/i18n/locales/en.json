@@ -1957,6 +1957,422 @@
       "testFailed": "Test failed: {{error}}",
       "unknownError": "Unknown error",
       "testSendFailed": "Failed to send test event"
+    },
+    "directory": {
+      "hero": {
+        "eyebrow": "CORTEXA INTEGRATIONS",
+        "titleLine1": "Connect Cortexa with the tools",
+        "titleLine2": "you already use",
+        "description": "Bring your conversations, calendars, payments, customer data, and business tools together in one intelligent workspace.",
+        "searchPlaceholder": "Search integrations",
+        "connectedApp": "connected app",
+        "connectedApps": "connected apps"
+      },
+      "actions": {
+        "request": "Request Integration",
+        "requestAnIntegration": "Request an integration",
+        "buildApi": "Build with the Cortexa API",
+        "developerDocs": "Developer Documentation"
+      },
+      "benefits": {
+        "saveTime": "Save time",
+        "saveTimeDesc": "Automate manual work and sync data across your stack.",
+        "workSmarter": "Work smarter",
+        "workSmarterDesc": "Keep all your tools connected in one place.",
+        "growFaster": "Grow faster",
+        "growFasterDesc": "Unlock new possibilities with powerful integrations."
+      },
+      "explore": {
+        "title": "Explore integrations",
+        "description": "Browse and connect your favorite tools to extend what Cortexa can do."
+      },
+      "status": {
+        "connected": "Connected",
+        "available": "Available"
+      },
+      "search": {
+        "eyebrow": "SEARCH RESULTS",
+        "resultsFor": "Results for “{{search}}”",
+        "oneFound": "1 integration found.",
+        "manyFound": "{{count}} integrations found.",
+        "empty": "No integrations match your search."
+      },
+      "request": {
+        "customIntegration": "Custom Integration",
+        "loadAccountError": "Unable to load your account details. Please try again.",
+        "success": "Request received. Our team will contact you to discuss this integration.",
+        "submitError": "We couldn't send your request. Please try again.",
+        "close": "Close",
+        "kicker": "INTEGRATION REQUEST",
+        "title": "Request {{integration}}",
+        "intro": "Tell us what you would like Cortexa to connect or sync. This request does not activate a connection or promise an implementation date.",
+        "integration": "Integration",
+        "name": "Name",
+        "email": "Email",
+        "workspace": "Workspace",
+        "messageLabel": "What would you like to connect or sync?",
+        "messagePlaceholder": "Add a short message about the data, workflow, or connection you need.",
+        "cancel": "Cancel",
+        "sending": "Sending…",
+        "send": "Send Request"
+      },
+      "cta": {
+        "eyebrow": "CUSTOM INTEGRATIONS",
+        "title": "Don’t see the tool you need?",
+        "description": "Request an integration or build a secure custom connection with the Cortexa API."
+      },
+      "plan": {
+        "freePlan": "Free plan:",
+        "connectedUsed": "connected integrations used",
+        "viewPlans": "View plans",
+        "of": "of"
+      },
+      "footer": {
+        "product": "Product",
+        "integrations": "Integrations",
+        "workspaces": "Workspaces",
+        "resources": "Resources",
+        "developerDocs": "Developer Docs",
+        "contactSupport": "Contact Support",
+        "legal": "Legal",
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "copyright": "© 2026 Cortexa S.A.S. All rights reserved."
+      },
+      "filters": {
+        "All": "All",
+        "Communication": "Communication",
+        "Scheduling": "Scheduling",
+        "Marketing & Leads": "Marketing & Leads",
+        "E-Commerce": "E-Commerce",
+        "Customer Service": "Customer Service",
+        "Data & Developer": "Data & Developer",
+        "Workspaces": "Workspaces"
+      },
+      "categories": {
+        "All": "All",
+        "Communication": "Communication",
+        "Scheduling": "Scheduling",
+        "Marketing & Leads": "Marketing & Leads",
+        "E-Commerce": "E-Commerce",
+        "Customer Service": "Customer Service",
+        "Data & Developer": "Data & Developer",
+        "Workspaces": "Workspaces",
+        "Automation": "Automation"
+      },
+      "sections": {
+        "communication": {
+          "title": "Communication & Scheduling",
+          "description": "Connect every conversation, call, meeting, and appointment to the right customer."
+        },
+        "marketing": {
+          "title": "Marketing, Leads & Automation",
+          "description": "Capture leads, understand campaign performance, and automate work across your business."
+        },
+        "ecommerce": {
+          "title": "E-Commerce Operations",
+          "description": "Connect stores, payments, affiliates, and fraud tools to see every sale from one place."
+        },
+        "customerService": {
+          "title": "Customer Service & Call Centers",
+          "description": "Bring customer support, calls, recordings, and team activity into one connected view."
+        },
+        "data": {
+          "title": "Data, Migration, Files & Developer Tools",
+          "description": "Move your data, connect your files, and extend Cortexa with secure developer tools."
+        },
+        "workspaces": {
+          "title": "Workspace Integrations",
+          "description": "Connect specialized tools built for the way your team and industry work."
+        }
+      },
+      "groups": {
+        "stores": "STORES",
+        "payments": "MERCHANT ACCOUNTS, PAYMENTS & ACCOUNTING",
+        "affiliate": "AFFILIATE TRACKING",
+        "fraud": "CHARGEBACKS & FRAUD",
+        "customerService": "CUSTOMER SERVICE",
+        "callCenters": "CALL CENTERS & BUSINESS PHONE SYSTEMS",
+        "crmMigration": "CRM MIGRATION & IMPORTS",
+        "files": "FILES & DOCUMENTS",
+        "developer": "DEVELOPER TOOLS",
+        "teamWorkspace": "TEAM WORKSPACE",
+        "realEstate": "REAL ESTATE",
+        "insurance": "INSURANCE",
+        "financialServices": "FINANCIAL SERVICES"
+      },
+      "apps": {
+        "whatsapp": {
+          "description": "Sync conversations and let your AI agent engage leads."
+        },
+        "gmail": {
+          "description": "Send, receive, and track customer email inside Cortexa."
+        },
+        "outlook": {
+          "description": "Sync Outlook email, contacts, and customer activity."
+        },
+        "custom_smtp": {
+          "description": "Connect another email provider securely through SMTP."
+        },
+        "twilio": {
+          "description": "Power business SMS and voice calls from one connection."
+        },
+        "google_calendar": {
+          "description": "Sync appointments, availability, and meeting updates."
+        },
+        "outlook_calendar": {
+          "description": "Keep Microsoft 365 calendars and Cortexa in sync."
+        },
+        "calendly": {
+          "description": "Bring scheduled meetings and invitees into Cortexa."
+        },
+        "zoom": {
+          "description": "Create meetings and attach details to customer records."
+        },
+        "google_meet": {
+          "description": "Launch and track Google Meet appointments."
+        },
+        "slack": {
+          "description": "Send team alerts and customer activity to Slack."
+        },
+        "microsoft_teams": {
+          "description": "Connect collaboration, meetings, and team alerts."
+        },
+        "google_ads": {
+          "description": "Track campaigns, leads, and advertising performance inside Cortexa."
+        },
+        "tiktok": {
+          "description": "Bring TikTok leads directly into your Cortexa pipeline."
+        },
+        "mailchimp": {
+          "description": "Sync contacts, audiences, and campaign engagement."
+        },
+        "zapier": {
+          "description": "Connect Cortexa with thousands of apps and automated workflows."
+        },
+        "make": {
+          "description": "Build advanced visual automations across your business tools."
+        },
+        "meta_lead_ads": {
+          "description": "Capture Facebook and Instagram leads automatically."
+        },
+        "linkedin_leads": {
+          "description": "Send professional-network leads directly into Cortexa."
+        },
+        "n8n": {
+          "description": "Create flexible, developer-friendly workflow automations."
+        },
+        "shopify": {
+          "description": "Sync customers, products, orders, refunds, and subscriptions."
+        },
+        "woocommerce": {
+          "description": "Bring WordPress store activity and customer data into Cortexa."
+        },
+        "bigcommerce": {
+          "description": "Connect orders, products, customers, and store performance."
+        },
+        "custom_payment": {
+          "description": "Request a provider that is not currently listed."
+        },
+        "zendesk": {
+          "description": "Sync customer tickets, conversations, status, and priority."
+        },
+        "intercom": {
+          "description": "Connect customer conversations, AI handoffs, and support activity."
+        },
+        "freshdesk": {
+          "description": "Bring tickets, contacts, assignments, and resolutions into Cortexa."
+        },
+        "crm_import": {
+          "description": "Choose a supported CRM and import its customer and pipeline data."
+        },
+        "hubspot_migration": {
+          "description": "Import contacts, companies, deals, and pipeline data."
+        },
+        "salesforce_migration": {
+          "description": "Transfer accounts, contacts, opportunities, and activities."
+        },
+        "pipedrive_migration": {
+          "description": "Bring contacts, deals, stages, notes, and activities."
+        },
+        "zoho_migration": {
+          "description": "Import leads, contacts, accounts, deals, and tasks."
+        },
+        "dynamics_migration": {
+          "description": "Transfer customers, opportunities, and sales activity."
+        },
+        "close_migration": {
+          "description": "Bring leads, contacts, opportunities, emails, and calls."
+        },
+        "highlevel_migration": {
+          "description": "Import contacts, opportunities, pipelines, and conversations."
+        },
+        "clickup_migration": {
+          "description": "Transfer CRM records, tasks, lists, and custom fields."
+        },
+        "monday_migration": {
+          "description": "Bring contacts, deals, boards, and mapped columns."
+        },
+        "keap_migration": {
+          "description": "Import contacts, opportunities, tags, and automation data."
+        },
+        "freshsales_migration": {
+          "description": "Transfer contacts, accounts, deals, and activities."
+        },
+        "csv_lead_import": {
+          "description": "Upload leads and customers with guided field mapping."
+        },
+        "google_drive": {
+          "description": "Attach contracts, documents, and customer files from Drive."
+        },
+        "onedrive": {
+          "description": "Connect Microsoft files and folders to customer records."
+        },
+        "dropbox": {
+          "description": "Bring shared files and documents into Cortexa."
+        },
+        "box": {
+          "description": "Connect secure business content and shared files."
+        },
+        "docusign": {
+          "description": "Track agreements, signatures, and completed documents."
+        },
+        "pandadoc": {
+          "description": "Connect proposals, quotes, contracts, and signatures."
+        },
+        "api_access": {
+          "description": "Connect external systems securely through the Cortexa API."
+        },
+        "webhooks": {
+          "description": "Send and receive real-time events for custom automations."
+        },
+        "api_keys": {
+          "description": "Create and manage secure application credentials."
+        },
+        "developer_docs": {
+          "description": "Explore authentication, endpoints, events, and guides."
+        },
+        "oauth_apps": {
+          "description": "Build authorized connections without sharing credentials."
+        },
+        "integration_logs": {
+          "description": "Monitor sync activity, delivery status, and errors."
+        },
+        "jira": {
+          "description": "Sync projects, issues, tasks, and development workflows."
+        },
+        "asana": {
+          "description": "Connect projects, assignments, deadlines, and team activity."
+        },
+        "trello": {
+          "description": "Bring boards, cards, checklists, and task updates into Cortexa."
+        },
+        "mls_idx_feed": {
+          "description": "Import and synchronize property listings from approved feeds."
+        },
+        "property_feed_sync": {
+          "description": "Connect regional property data and listing updates."
+        },
+        "property_portals": {
+          "description": "Connect approved property portals when access is available."
+        },
+        "agencyzoom": {
+          "description": "Connect insurance leads, policies, activities, and retention workflows."
+        },
+        "applied_epic": {
+          "description": "Sync agency customers, policies, activities, and account data."
+        },
+        "ezlynx": {
+          "description": "Bring insurance leads, applicants, policies, and customer activity."
+        },
+        "plaid": {
+          "description": "Connect approved account and transaction data securely."
+        },
+        "mx": {
+          "description": "Bring permissioned financial account and transaction data into Cortexa."
+        },
+        "yodlee": {
+          "description": "Connect approved financial data and account insights."
+        },
+        "stripe": {
+          "description": "Track payments, subscriptions, refunds, fees, and disputes."
+        },
+        "paypal": {
+          "description": "Sync PayPal and Braintree transaction activity."
+        },
+        "square": {
+          "description": "Connect online and in-person payments with customer records."
+        },
+        "authorize_net": {
+          "description": "Link gateway transactions to customers and sales."
+        },
+        "adyen": {
+          "description": "Bring global payment activity and status updates into Cortexa."
+        },
+        "nmi": {
+          "description": "Connect independent merchant accounts through the NMI gateway."
+        },
+        "checkout": {
+          "description": "Track merchant payments, refunds, and transaction outcomes."
+        },
+        "mercado_pago": {
+          "description": "Sync Latin American payments and customer transactions."
+        },
+        "dlocal": {
+          "description": "Connect local payment methods across emerging markets."
+        },
+        "payu": {
+          "description": "Bring regional payment activity and order status into Cortexa."
+        },
+        "kushki": {
+          "description": "Connect digital payments across Latin America."
+        },
+        "quickbooks": {
+          "description": "Sync customers, invoices, payments, and accounting records."
+        },
+        "xero": {
+          "description": "Keep invoices, contacts, and payment data aligned."
+        },
+        "impact": {
+          "description": "Attribute customers, sales, and commissions to partners."
+        },
+        "partnerstack": {
+          "description": "Track partner referrals, recurring revenue, and commissions."
+        },
+        "rewardful": {
+          "description": "Connect Stripe-based affiliate and recurring subscription data."
+        },
+        "firstpromoter": {
+          "description": "Track referrals, conversions, commissions, and payouts."
+        },
+        "chargeflow": {
+          "description": "Monitor disputes, evidence deadlines, and recovered revenue."
+        },
+        "chargebacks911": {
+          "description": "Connect chargeback prevention, disputes, and outcomes."
+        },
+        "riskified": {
+          "description": "Bring fraud decisions, alerts, and order risk into Cortexa."
+        },
+        "aircall": {
+          "description": "Log calls, recordings, contacts, and follow-up activity."
+        },
+        "ringcentral": {
+          "description": "Connect business calls, messages, recordings, and teams."
+        },
+        "dialpad": {
+          "description": "Sync calls, AI transcripts, summaries, and customer activity."
+        },
+        "justcall": {
+          "description": "Bring sales calls, SMS, dispositions, and notes into Cortexa."
+        },
+        "five9": {
+          "description": "Connect enterprise contact-center calls, agents, and outcomes."
+        },
+        "talkdesk": {
+          "description": "Sync contact-center conversations, recordings, and performance."
+        }
+      }
     }
   },
   "analytics": {

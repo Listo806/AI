@@ -179,6 +179,8 @@ import {
   EcommercePricing,
   EcommerceLogin,
   EcommerceSignup,
+  EcommerceForgotPassword,
+  EcommerceResetPassword,
   EcommerceCheckout,
   EcommerceAppLayout,
   EcommerceDashboard,
@@ -361,6 +363,8 @@ function AppRoutes() {
         <Route index element={<EcommerceLanding />} />
         <Route path="pricing" element={<EcommercePricing />} />
         <Route path="login" element={<EcommerceLogin />} />
+        <Route path="forgot-password" element={<EcommerceForgotPassword />} />
+        <Route path="reset-password" element={<EcommerceResetPassword />} />
         <Route path="signup" element={<EcommerceSignup />} />
         <Route path="checkout" element={<EcommerceCheckout />} />
         <Route path="terms" element={<EcommerceTerms />} />

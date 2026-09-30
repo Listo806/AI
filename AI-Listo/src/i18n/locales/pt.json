@@ -1957,6 +1957,422 @@
       "testFailed": "Falha no teste: {{error}}",
       "unknownError": "Erro desconhecido",
       "testSendFailed": "Falha ao enviar o evento de teste"
+    },
+    "directory": {
+      "hero": {
+        "eyebrow": "INTEGRAÇÕES CORTEXA",
+        "titleLine1": "Conecte a Cortexa às ferramentas",
+        "titleLine2": "que você já usa",
+        "description": "Reúna suas conversas, calendários, pagamentos, dados de clientes e ferramentas de negócios em um espaço de trabalho inteligente.",
+        "searchPlaceholder": "Buscar integrações",
+        "connectedApp": "aplicativo conectado",
+        "connectedApps": "aplicativos conectados"
+      },
+      "actions": {
+        "request": "Solicitar integração",
+        "requestAnIntegration": "Solicitar uma integração",
+        "buildApi": "Criar com a API da Cortexa",
+        "developerDocs": "Documentação para desenvolvedores"
+      },
+      "benefits": {
+        "saveTime": "Economize tempo",
+        "saveTimeDesc": "Automatize o trabalho manual e sincronize dados em todo o seu ecossistema.",
+        "workSmarter": "Trabalhe melhor",
+        "workSmarterDesc": "Mantenha todas as suas ferramentas conectadas em um só lugar.",
+        "growFaster": "Cresça mais rápido",
+        "growFasterDesc": "Descubra novas possibilidades com integrações poderosas."
+      },
+      "explore": {
+        "title": "Explorar integrações",
+        "description": "Explore e conecte suas ferramentas favoritas para ampliar o que a Cortexa pode fazer."
+      },
+      "status": {
+        "connected": "Conectado",
+        "available": "Disponível"
+      },
+      "search": {
+        "eyebrow": "RESULTADOS DA BUSCA",
+        "resultsFor": "Resultados para “{{search}}”",
+        "oneFound": "1 integração encontrada.",
+        "manyFound": "{{count}} integrações encontradas.",
+        "empty": "Nenhuma integração corresponde à sua busca."
+      },
+      "request": {
+        "customIntegration": "Integração personalizada",
+        "loadAccountError": "Não foi possível carregar os dados da sua conta. Tente novamente.",
+        "success": "Solicitação recebida. Nossa equipe entrará em contato para conversar sobre esta integração.",
+        "submitError": "Não foi possível enviar sua solicitação. Tente novamente.",
+        "close": "Fechar",
+        "kicker": "SOLICITAÇÃO DE INTEGRAÇÃO",
+        "title": "Solicitar {{integration}}",
+        "intro": "Conte o que você gostaria que a Cortexa conectasse ou sincronizasse. Esta solicitação não ativa uma conexão nem promete uma data de implementação.",
+        "integration": "Integração",
+        "name": "Nome",
+        "email": "E-mail",
+        "workspace": "Espaço de trabalho",
+        "messageLabel": "O que você gostaria de conectar ou sincronizar?",
+        "messagePlaceholder": "Adicione uma mensagem curta sobre os dados, fluxo de trabalho ou conexão de que precisa.",
+        "cancel": "Cancelar",
+        "sending": "Enviando…",
+        "send": "Enviar solicitação"
+      },
+      "cta": {
+        "eyebrow": "INTEGRAÇÕES PERSONALIZADAS",
+        "title": "Não encontrou a ferramenta que precisa?",
+        "description": "Solicite uma integração ou crie uma conexão personalizada segura com a API da Cortexa."
+      },
+      "plan": {
+        "freePlan": "Plano gratuito:",
+        "connectedUsed": "integrações conectadas utilizadas",
+        "viewPlans": "Ver planos",
+        "of": "de"
+      },
+      "footer": {
+        "product": "Produto",
+        "integrations": "Integrações",
+        "workspaces": "Espaços de trabalho",
+        "resources": "Recursos",
+        "developerDocs": "Docs para desenvolvedores",
+        "contactSupport": "Contatar suporte",
+        "legal": "Legal",
+        "privacy": "Privacidade",
+        "terms": "Termos",
+        "copyright": "© 2026 Cortexa S.A.S. Todos os direitos reservados."
+      },
+      "filters": {
+        "All": "Todos",
+        "Communication": "Comunicação",
+        "Scheduling": "Agendamento",
+        "Marketing & Leads": "Marketing e leads",
+        "E-Commerce": "E-commerce",
+        "Customer Service": "Atendimento ao cliente",
+        "Data & Developer": "Dados e desenvolvimento",
+        "Workspaces": "Espaços de trabalho"
+      },
+      "categories": {
+        "All": "Todos",
+        "Communication": "Comunicação",
+        "Scheduling": "Agendamento",
+        "Marketing & Leads": "Marketing e leads",
+        "E-Commerce": "E-commerce",
+        "Customer Service": "Atendimento ao cliente",
+        "Data & Developer": "Dados e desenvolvimento",
+        "Workspaces": "Espaços de trabalho",
+        "Automation": "Automação"
+      },
+      "sections": {
+        "communication": {
+          "title": "Comunicação e agendamento",
+          "description": "Conecte cada conversa, chamada, reunião e compromisso ao cliente certo."
+        },
+        "marketing": {
+          "title": "Marketing, leads e automação",
+          "description": "Capture leads, entenda o desempenho das campanhas e automatize o trabalho em toda a empresa."
+        },
+        "ecommerce": {
+          "title": "Operações de e-commerce",
+          "description": "Conecte lojas, pagamentos, afiliados e ferramentas antifraude para ver cada venda em um só lugar."
+        },
+        "customerService": {
+          "title": "Atendimento ao cliente e call centers",
+          "description": "Reúna suporte, chamadas, gravações e atividade da equipe em uma visão conectada."
+        },
+        "data": {
+          "title": "Dados, migração, arquivos e ferramentas para desenvolvedores",
+          "description": "Mova seus dados, conecte seus arquivos e amplie a Cortexa com ferramentas seguras para desenvolvedores."
+        },
+        "workspaces": {
+          "title": "Integrações por espaço de trabalho",
+          "description": "Conecte ferramentas especializadas criadas para a forma como sua equipe e seu setor trabalham."
+        }
+      },
+      "groups": {
+        "stores": "LOJAS",
+        "payments": "CONTAS COMERCIAIS, PAGAMENTOS E CONTABILIDADE",
+        "affiliate": "RASTREAMENTO DE AFILIADOS",
+        "fraud": "CHARGEBACKS E FRAUDE",
+        "customerService": "ATENDIMENTO AO CLIENTE",
+        "callCenters": "CALL CENTERS E TELEFONIA EMPRESARIAL",
+        "crmMigration": "MIGRAÇÃO E IMPORTAÇÕES DE CRM",
+        "files": "ARQUIVOS E DOCUMENTOS",
+        "developer": "FERRAMENTAS PARA DESENVOLVEDORES",
+        "teamWorkspace": "ESPAÇO DE TRABALHO DA EQUIPE",
+        "realEstate": "IMÓVEIS",
+        "insurance": "SEGUROS",
+        "financialServices": "SERVIÇOS FINANCEIROS"
+      },
+      "apps": {
+        "whatsapp": {
+          "description": "Conecte WhatsApp Business à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "gmail": {
+          "description": "Conecte Gmail à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "outlook": {
+          "description": "Conecte Microsoft Outlook à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "custom_smtp": {
+          "description": "Conecte Custom SMTP à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "twilio": {
+          "description": "Conecte Twilio à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "google_calendar": {
+          "description": "Conecte Google Calendar à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "outlook_calendar": {
+          "description": "Conecte Outlook Calendar à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "calendly": {
+          "description": "Conecte Calendly à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "zoom": {
+          "description": "Conecte Zoom à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "google_meet": {
+          "description": "Conecte Google Meet à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "slack": {
+          "description": "Conecte Slack à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "microsoft_teams": {
+          "description": "Conecte Microsoft Teams à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "google_ads": {
+          "description": "Conecte Google Ads à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "tiktok": {
+          "description": "Conecte TikTok Lead Sync à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "mailchimp": {
+          "description": "Conecte Mailchimp à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "zapier": {
+          "description": "Conecte Zapier à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "make": {
+          "description": "Conecte Make à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "meta_lead_ads": {
+          "description": "Conecte Meta Lead Ads à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "linkedin_leads": {
+          "description": "Conecte LinkedIn Lead Gen Forms à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "n8n": {
+          "description": "Conecte n8n à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "shopify": {
+          "description": "Conecte Shopify à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "woocommerce": {
+          "description": "Conecte WooCommerce à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "bigcommerce": {
+          "description": "Conecte BigCommerce à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "custom_payment": {
+          "description": "Conecte Custom Payment Gateway à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "zendesk": {
+          "description": "Conecte Zendesk à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "intercom": {
+          "description": "Conecte Intercom à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "freshdesk": {
+          "description": "Conecte Freshdesk à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "crm_import": {
+          "description": "Conecte CRM Migration à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "hubspot_migration": {
+          "description": "Conecte HubSpot à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "salesforce_migration": {
+          "description": "Conecte Salesforce à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "pipedrive_migration": {
+          "description": "Conecte Pipedrive à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "zoho_migration": {
+          "description": "Conecte Zoho CRM à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "dynamics_migration": {
+          "description": "Conecte Microsoft Dynamics 365 à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "close_migration": {
+          "description": "Conecte Close à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "highlevel_migration": {
+          "description": "Conecte HighLevel à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "clickup_migration": {
+          "description": "Conecte ClickUp à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "monday_migration": {
+          "description": "Conecte monday CRM à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "keap_migration": {
+          "description": "Conecte Keap à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "freshsales_migration": {
+          "description": "Conecte Freshsales à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "csv_lead_import": {
+          "description": "Conecte CSV Import à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "google_drive": {
+          "description": "Conecte Google Drive à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "onedrive": {
+          "description": "Conecte Microsoft OneDrive à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "dropbox": {
+          "description": "Conecte Dropbox à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "box": {
+          "description": "Conecte Box à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "docusign": {
+          "description": "Conecte DocuSign à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "pandadoc": {
+          "description": "Conecte PandaDoc à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "api_access": {
+          "description": "Conecte API Access à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "webhooks": {
+          "description": "Conecte Webhooks à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "api_keys": {
+          "description": "Conecte API Keys à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "developer_docs": {
+          "description": "Conecte Developer Documentation à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "oauth_apps": {
+          "description": "Conecte OAuth Apps à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "integration_logs": {
+          "description": "Conecte Integration Logs à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "jira": {
+          "description": "Conecte Jira à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "asana": {
+          "description": "Conecte Asana à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "trello": {
+          "description": "Conecte Trello à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "mls_idx_feed": {
+          "description": "Conecte MLS / IDX à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "property_feed_sync": {
+          "description": "Conecte Property Feed Sync à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "property_portals": {
+          "description": "Conecte Authorized Property Portals à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "agencyzoom": {
+          "description": "Conecte AgencyZoom à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "applied_epic": {
+          "description": "Conecte Applied Epic à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "ezlynx": {
+          "description": "Conecte EZLynx à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "plaid": {
+          "description": "Conecte Plaid à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "mx": {
+          "description": "Conecte MX à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "yodlee": {
+          "description": "Conecte Envestnet Yodlee à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "stripe": {
+          "description": "Conecte Stripe à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "paypal": {
+          "description": "Conecte PayPal / Braintree à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "square": {
+          "description": "Conecte Square à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "authorize_net": {
+          "description": "Conecte Authorize.net à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "adyen": {
+          "description": "Conecte Adyen à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "nmi": {
+          "description": "Conecte NMI à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "checkout": {
+          "description": "Conecte Checkout.com à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "mercado_pago": {
+          "description": "Conecte Mercado Pago à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "dlocal": {
+          "description": "Conecte dLocal à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "payu": {
+          "description": "Conecte PayU à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "kushki": {
+          "description": "Conecte Kushki à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "quickbooks": {
+          "description": "Conecte QuickBooks Online à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "xero": {
+          "description": "Conecte Xero à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "impact": {
+          "description": "Conecte Impact.com à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "partnerstack": {
+          "description": "Conecte PartnerStack à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "rewardful": {
+          "description": "Conecte Rewardful à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "firstpromoter": {
+          "description": "Conecte FirstPromoter à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "chargeflow": {
+          "description": "Conecte Chargeflow à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "chargebacks911": {
+          "description": "Conecte Chargebacks911 à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "riskified": {
+          "description": "Conecte Riskified à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "aircall": {
+          "description": "Conecte Aircall à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "ringcentral": {
+          "description": "Conecte RingCentral à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "dialpad": {
+          "description": "Conecte Dialpad à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "justcall": {
+          "description": "Conecte JustCall à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "five9": {
+          "description": "Conecte Five9 à Cortexa para sincronizar dados e atividades com segurança."
+        },
+        "talkdesk": {
+          "description": "Conecte Talkdesk à Cortexa para sincronizar dados e atividades com segurança."
+        }
+      }
     }
   },
   "analytics": {
