@@ -4,7 +4,7 @@ import {
   ArrowRight, PlayCircle, ShoppingCart, RefreshCw, Users, Megaphone, Store,
   CheckCircle2, UserRound, CalendarDays, LayoutDashboard, CreditCard,
   PackageCheck, BadgeDollarSign, Plug, Workflow, BarChart3, LogOut,
-  ChevronDown, CircleDollarSign, WalletCards, PanelLeftClose, PanelLeftOpen, RotateCcw, Truck, Tags,
+  ChevronDown, CircleDollarSign, WalletCards, ChevronsRight, ChevronsLeft, RotateCcw, Truck, Tags,
   Link2, MessageSquareText, FileBarChart2, Menu, X
 } from "lucide-react";
 
@@ -278,7 +278,7 @@ export function EcommerceAppLayout(){
      aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
      title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
     >
-     {collapsed ? <PanelLeftOpen size={17}/> : <PanelLeftClose size={17}/>}
+     {collapsed ? <ChevronsRight size={18}/> : <ChevronsLeft size={18}/>}
     </button>
    </div>
 

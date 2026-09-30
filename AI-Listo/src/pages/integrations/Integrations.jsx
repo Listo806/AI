@@ -16,6 +16,7 @@ import {
   MessageCircle,
   Search,
   Settings2,
+  X,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
@@ -217,13 +218,17 @@ function IntegrationLogo({ item }) {
   return <Icon size={32} strokeWidth={1.8} />;
 }
 
-function StatusText({ status }) {
-  const labels = { connected: "Connected", active: "Connected", available: "Available", coming_soon: "Coming Soon", request: "Request Integration" };
-  return <span className={`directory-status is-${status || "coming_soon"}`}>{labels[status] || "Available"}</span>;
+function StatusText({ status, onRequest }) {
+  const labels = { connected: "Connected", active: "Connected", available: "Available" };
+  if (status === "coming_soon" || status === "request") {
+    return <button type="button" className="directory-request-btn" onClick={(e) => { e.stopPropagation(); onRequest?.(); }}>Request Integration</button>;
+  }
+  return <span className={`directory-status is-${status || "available"}`}>{labels[status] || "Available"}</span>;
 }
 
-function DirectoryCard({ item, onAction }) {
-  const clickable = item.status !== "coming_soon";
+function DirectoryCard({ item, onAction, onRequest }) {
+  const unavailable = item.status === "coming_soon" || item.status === "request";
+  const clickable = !unavailable;
   return (
     <article className={`directory-card ${clickable ? "is-clickable" : ""}`} onClick={() => clickable && onAction(item)}>
       <div className="directory-logo"><IntegrationLogo item={item} /></div>
@@ -234,14 +239,14 @@ function DirectoryCard({ item, onAction }) {
         </div>
         <p>{item.description}</p>
         <span className="directory-category">{item.category}</span>
-        <StatusText status={item.status} />
+        <StatusText status={item.status} onRequest={() => onRequest(item)} />
       </div>
     </article>
   );
 }
 
-function CardGrid({ items, onAction, className = "" }) {
-  return <div className={`directory-grid ${className}`.trim()}>{items.map((item) => <DirectoryCard key={item.key} item={item} onAction={onAction} />)}</div>;
+function CardGrid({ items, onAction, onRequest, className = "" }) {
+  return <div className={`directory-grid ${className}`.trim()}>{items.map((item) => <DirectoryCard key={item.key} item={item} onAction={onAction} onRequest={onRequest} />)}</div>;
 }
 
 function SectionTitle({ eyebrow, title, description }) {
@@ -253,6 +258,12 @@ export default function AppsIntegrationsHub() {
   const [search, setSearch] = useState("");
   const [states, setStates] = useState({});
   const [usage, setUsage] = useState(null);
+  const [requestModal, setRequestModal] = useState(null);
+  const [requestContext, setRequestContext] = useState({ name: "", email: "", workspace: "" });
+  const [requestMessage, setRequestMessage] = useState("");
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestError, setRequestError] = useState("");
+  const [requestSuccess, setRequestSuccess] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -302,13 +313,51 @@ export default function AppsIntegrationsHub() {
   const searchResults = query ? hydrated.filter((item) => `${item.title} ${item.description} ${item.category}`.toLowerCase().includes(query)) : [];
   const connectedCount = hydrated.filter((item) => item.status === "connected").length;
 
-  const requestIntegration = () => {
-    document.getElementById("integration-final-cta")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const requestIntegration = async (item = null) => {
+    setRequestModal(item || { key: "custom", title: "Custom Integration" });
+    setRequestError("");
+    setRequestSuccess("");
+    try {
+      const res = await apiClient.request("/integrations/request-context");
+      setRequestContext(res?.customer || { name: "", email: "", workspace: "" });
+    } catch (error) {
+      setRequestError(error?.message || "Unable to load your account details. Please try again.");
+    }
+  };
+
+  const closeRequestModal = () => {
+    if (requestLoading) return;
+    setRequestModal(null);
+    setRequestMessage("");
+    setRequestError("");
+    setRequestSuccess("");
+  };
+
+  const submitIntegrationRequest = async (e) => {
+    e.preventDefault();
+    if (!requestModal || !requestMessage.trim()) return;
+    setRequestLoading(true);
+    setRequestError("");
+    try {
+      const res = await apiClient.request("/integrations/request", {
+        method: "POST",
+        body: JSON.stringify({
+          integrationKey: requestModal.key,
+          integrationName: requestModal.title,
+          message: requestMessage.trim(),
+        }),
+      });
+      setRequestSuccess(res?.message || "Request received. Our team will contact you to discuss this integration.");
+    } catch (error) {
+      // Deliberately keep requestMessage unchanged so the customer can retry.
+      setRequestError(error?.message || "We couldn't send your request. Please try again.");
+    } finally {
+      setRequestLoading(false);
+    }
   };
 
   const onAction = async (item) => {
-    if (item.status === "request") return requestIntegration();
-    if (item.status === "coming_soon") return;
+    if (item.status === "request" || item.status === "coming_soon") return requestIntegration(item);
     const actionKey = item.action || item.key;
     if (actionKey === "google_calendar") {
       try {
@@ -352,17 +401,37 @@ export default function AppsIntegrationsHub() {
       </section>
 
       {query ? (
-        <section className="directory-section search-results"><SectionTitle eyebrow="SEARCH RESULTS" title={`Results for “${search}”`} description={`${searchResults.length} integration${searchResults.length === 1 ? "" : "s"} found.`} />{searchResults.length ? <CardGrid items={searchResults} onAction={onAction} /> : <div className="directory-empty">No integrations match your search.</div>}</section>
+        <section className="directory-section search-results"><SectionTitle eyebrow="SEARCH RESULTS" title={`Results for “${search}”`} description={`${searchResults.length} integration${searchResults.length === 1 ? "" : "s"} found.`} />{searchResults.length ? <CardGrid items={searchResults} onAction={onAction} onRequest={requestIntegration} /> : <div className="directory-empty">No integrations match your search.</div>}</section>
       ) : <>
-        <section className="directory-section" id="communication"><SectionTitle title="Communication & Scheduling" description="Connect every conversation, call, meeting, and appointment to the right customer." /><CardGrid items={byKeys(communication)} onAction={onAction} /></section>
-        <section className="directory-section" id="marketing"><SectionTitle title="Marketing, Leads & Automation" description="Capture leads, understand campaign performance, and automate work across your business." /><CardGrid items={byKeys(marketing)} onAction={onAction} className="marketing-grid" /></section>
-        <section className="directory-section" id="ecommerce"><SectionTitle title="E-Commerce Operations" description="Connect stores, payments, affiliates, and fraud tools to see every sale from one place." /><h3 className="directory-group-title">STORES</h3><CardGrid items={byKeys(stores)} onAction={onAction} /><h3 className="directory-group-title">MERCHANT ACCOUNTS, PAYMENTS & ACCOUNTING</h3><CardGrid items={byKeys(payments)} onAction={onAction} /><h3 className="directory-group-title">AFFILIATE TRACKING</h3><CardGrid items={byKeys(affiliates)} onAction={onAction} /><h3 className="directory-group-title">CHARGEBACKS & FRAUD</h3><CardGrid items={byKeys(fraud)} onAction={onAction} /></section>
-        <section className="directory-section" id="customer-service"><SectionTitle title="Customer Service & Call Centers" description="Bring customer support, calls, recordings, and team activity into one connected view." /><h3 className="directory-group-title">CUSTOMER SERVICE</h3><CardGrid items={byKeys(customerService)} onAction={onAction} /><h3 className="directory-group-title">CALL CENTERS & BUSINESS PHONE SYSTEMS</h3><CardGrid items={byKeys(callCenters)} onAction={onAction} /></section>
-        <section className="directory-section" id="data-developer"><SectionTitle title="Data, Migration, Files & Developer Tools" description="Move your data, connect your files, and extend Cortexa with secure developer tools." /><h3 className="directory-group-title">CRM MIGRATION & IMPORTS</h3><CardGrid items={byKeys(migration)} onAction={onAction} /><h3 className="directory-group-title">FILES & DOCUMENTS</h3><CardGrid items={byKeys(files)} onAction={onAction} /><h3 className="directory-group-title">DEVELOPER TOOLS</h3><CardGrid items={byKeys(developer)} onAction={onAction} /></section>
-        <section className="directory-section" id="workspaces"><SectionTitle title="Workspace Integrations" description="Connect specialized tools built for the way your team and industry work." /><h3 className="directory-group-title">TEAM WORKSPACE</h3><CardGrid items={byKeys(teamWorkspace)} onAction={onAction} /><h3 className="directory-group-title">REAL ESTATE</h3><CardGrid items={byKeys(realEstate)} onAction={onAction} /><h3 className="directory-group-title">INSURANCE</h3><CardGrid items={byKeys(insurance)} onAction={onAction} /><h3 className="directory-group-title">FINANCIAL SERVICES</h3><CardGrid items={byKeys(finance)} onAction={onAction} /></section>
+        <section className="directory-section" id="communication"><SectionTitle title="Communication & Scheduling" description="Connect every conversation, call, meeting, and appointment to the right customer." /><CardGrid items={byKeys(communication)} onAction={onAction} onRequest={requestIntegration} /></section>
+        <section className="directory-section" id="marketing"><SectionTitle title="Marketing, Leads & Automation" description="Capture leads, understand campaign performance, and automate work across your business." /><CardGrid items={byKeys(marketing)} onAction={onAction} onRequest={requestIntegration} className="marketing-grid" /></section>
+        <section className="directory-section" id="ecommerce"><SectionTitle title="E-Commerce Operations" description="Connect stores, payments, affiliates, and fraud tools to see every sale from one place." /><h3 className="directory-group-title">STORES</h3><CardGrid items={byKeys(stores)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">MERCHANT ACCOUNTS, PAYMENTS & ACCOUNTING</h3><CardGrid items={byKeys(payments)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">AFFILIATE TRACKING</h3><CardGrid items={byKeys(affiliates)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">CHARGEBACKS & FRAUD</h3><CardGrid items={byKeys(fraud)} onAction={onAction} onRequest={requestIntegration} /></section>
+        <section className="directory-section" id="customer-service"><SectionTitle title="Customer Service & Call Centers" description="Bring customer support, calls, recordings, and team activity into one connected view." /><h3 className="directory-group-title">CUSTOMER SERVICE</h3><CardGrid items={byKeys(customerService)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">CALL CENTERS & BUSINESS PHONE SYSTEMS</h3><CardGrid items={byKeys(callCenters)} onAction={onAction} onRequest={requestIntegration} /></section>
+        <section className="directory-section" id="data-developer"><SectionTitle title="Data, Migration, Files & Developer Tools" description="Move your data, connect your files, and extend Cortexa with secure developer tools." /><h3 className="directory-group-title">CRM MIGRATION & IMPORTS</h3><CardGrid items={byKeys(migration)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">FILES & DOCUMENTS</h3><CardGrid items={byKeys(files)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">DEVELOPER TOOLS</h3><CardGrid items={byKeys(developer)} onAction={onAction} onRequest={requestIntegration} /></section>
+        <section className="directory-section" id="workspaces"><SectionTitle title="Workspace Integrations" description="Connect specialized tools built for the way your team and industry work." /><h3 className="directory-group-title">TEAM WORKSPACE</h3><CardGrid items={byKeys(teamWorkspace)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">REAL ESTATE</h3><CardGrid items={byKeys(realEstate)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">INSURANCE</h3><CardGrid items={byKeys(insurance)} onAction={onAction} onRequest={requestIntegration} /><h3 className="directory-group-title">FINANCIAL SERVICES</h3><CardGrid items={byKeys(finance)} onAction={onAction} onRequest={requestIntegration} /></section>
       </>}
 
-      <section className="directory-final-cta" id="integration-final-cta"><span>CUSTOM INTEGRATIONS</span><h2>Don’t see the tool you need?</h2><p>Request an integration or build a secure custom connection with the Cortexa API.</p><div><button type="button" onClick={() => navigate("/dashboard/integrations/api-access")}>Build with the Cortexa API</button><button type="button" className="outline" onClick={() => navigate("/dashboard/integrations/api-access")}>Developer Documentation</button></div></section>
+      <section className="directory-final-cta" id="integration-final-cta"><span>CUSTOM INTEGRATIONS</span><h2>Don’t see the tool you need?</h2><p>Request an integration or build a secure custom connection with the Cortexa API.</p><div><button type="button" onClick={() => requestIntegration()}>Request an Integration</button><button type="button" onClick={() => navigate("/dashboard/integrations/api-access")}>Build with the Cortexa API</button><button type="button" className="outline" onClick={() => navigate("/dashboard/integrations/api-access")}>Developer Documentation</button></div></section>
+      {requestModal && <div className="integration-request-overlay" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) closeRequestModal(); }}>
+        <div className="integration-request-modal" role="dialog" aria-modal="true" aria-labelledby="integration-request-title">
+          <button type="button" className="integration-request-close" onClick={closeRequestModal} aria-label="Close"><X size={20} /></button>
+          <span className="integration-request-kicker">INTEGRATION REQUEST</span>
+          <h3 id="integration-request-title">Request {requestModal.title}</h3>
+          <p className="integration-request-intro">Tell us what you would like Cortexa to connect or sync. This request does not activate a connection or promise an implementation date.</p>
+          {requestSuccess ? <div className="integration-request-success">{requestSuccess}</div> : <form onSubmit={submitIntegrationRequest}>
+            <div className="integration-request-details">
+              <label><span>Integration</span><input value={requestModal.title} readOnly /></label>
+              <label><span>Name</span><input value={requestContext.name || ""} readOnly /></label>
+              <label><span>Email</span><input value={requestContext.email || ""} readOnly /></label>
+              <label><span>Workspace</span><input value={requestContext.workspace || ""} readOnly /></label>
+            </div>
+            <label className="integration-request-message"><span>What would you like to connect or sync?</span><textarea rows="4" maxLength="3000" value={requestMessage} onChange={(e) => setRequestMessage(e.target.value)} placeholder="Add a short message about the data, workflow, or connection you need." required /></label>
+            {requestError && <div className="integration-request-error">{requestError}</div>}
+            <div className="integration-request-actions"><button type="button" className="secondary" onClick={closeRequestModal}>Cancel</button><button type="submit" disabled={requestLoading || !requestMessage.trim()}>{requestLoading ? "Sending…" : "Send Request"}</button></div>
+          </form>}
+        </div>
+      </div>}
+
       {usage?.isFree && <div className="directory-plan-note"><b>Free plan:</b> {usage.usage?.integrationsConnected ?? 0} of {usage.limits?.integrations ?? 1} connected integrations used. <button onClick={() => navigate("/pricing")}>View plans</button></div>}
       <footer className="directory-footer"><strong>CORTEXA</strong><div><span>Product</span><a href="#integration-directory">Integrations</a><a href="#workspaces">Workspaces</a></div><div><span>Resources</span><button onClick={() => navigate("/dashboard/integrations/api-access")}>Developer Docs</button><button onClick={requestIntegration}>Contact Support</button></div><div><span>Legal</span><button type="button">Privacy</button><button type="button">Terms</button></div><small>© 2026 Cortexa S.A.S. All rights reserved.</small></footer>
     </div>

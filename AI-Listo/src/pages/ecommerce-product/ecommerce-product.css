@@ -85,8 +85,13 @@
   cursor:pointer;
   z-index:5;
 }
-.ec-sidebar-collapse:hover{background:rgba(255,255,255,.16)!important}
-.ec-sidebar-collapse svg{stroke:#fff!important}
+
+.ec-sidebar-collapse svg{
+  stroke:#0f172a!important;
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.5;
+}
 .ec-sidebar nav a{
   display:flex;
   align-items:center;
@@ -143,7 +148,7 @@
   background:#fff!important;
   color:#12204b!important;
   border-right:1px solid #e4e9f3;
-  padding:20px 12px!important;
+  padding:0px 12px!important;
 }
 .ec-sidebar .ec-logo{color:#101a3b!important}
 .ec-sidebar .ec-logo-mark{
@@ -162,17 +167,12 @@
   color:#4e2cff!important;
 }
 .ec-sidebar-collapse{
-  top:52px!important;
+  top:60px!important;
   width:28px!important;
   height:28px!important;
-  border:0!important;
-  border-radius:50%!important;
-  background:#5830ff!important;
-  color:#fff!important;
   box-shadow:0 3px 10px rgba(70,43,200,.2);
 }
-.ec-sidebar-collapse:hover{background:#4521ea!important}
-.ec-sidebar-collapse svg{stroke:#fff!important}
+
 .ec-sidebar-logout{
   color:#53648f!important;
   border:1px solid #e1e6f0!important;
@@ -184,8 +184,6 @@
 .ec-app .ec-sidebar{background:#fff!important;color:#101a3b!important;border-right:1px solid #e2e8f2!important}
 .ec-app .ec-sidebar nav a{color:#233b78!important}
 .ec-app .ec-sidebar nav a.active{background:#f0edff!important;color:#532cff!important}
-.ec-app .ec-sidebar .ec-sidebar-collapse{background:#5a2cff!important;color:#fff!important}
-.ec-app .ec-sidebar .ec-sidebar-collapse svg{stroke:#fff!important}
 
 /* E-Commerce pricing billing selector */
 .ec-toggle .ec-billing-option{width:auto;height:auto;border:0;border-radius:0;background:transparent;padding:5px 2px;color:#6b7489;font-size:17px;cursor:pointer}

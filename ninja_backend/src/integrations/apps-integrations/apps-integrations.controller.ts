@@ -40,6 +40,16 @@ export class AppsIntegrationsController {
     };
   }
 
+  @Get("request-context")
+  async getRequestContext(@Req() req: any) {
+    return { success: true, customer: await this.service.getRequestContext(req.user) };
+  }
+
+  @Post("request")
+  async requestIntegration(@Req() req: any, @Body() body: any) {
+    return this.service.requestIntegration(req.user, body);
+  }
+
   @Get()
   async getAll(@Req() req: any) {
     const { teamId, userId } = this.getAuthData(req);
