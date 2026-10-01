@@ -31,37 +31,31 @@ export class SetupService {
    );
    if(uq.rows[0]?.team_id) return uq.rows[0].team_id;
 
-   // Source of truth #2: the account may own a team even when users.team_id was
-   // never backfilled (common for older owner accounts). Setup must still resolve
-   // that workspace instead of returning 403 and blanking the setup UI.
-   const oq=await this.db.query(
-     `SELECT id AS team_id
-        FROM teams
-       WHERE owner_id=$1
-       ORDER BY created_at ASC
-       LIMIT 1`,
-     [userId]
-   );
-   if(oq.rows[0]?.team_id) return oq.rows[0].team_id;
-
-   // Source of truth #3: active team membership for member accounts whose
-   // users.team_id has not yet been populated. Normalize status defensively for
-   // legacy rows that used different casing/whitespace.
+   // Source of truth #2: active team membership for accounts whose users.team_id
+   // has not yet been populated.
    const mq=await this.db.query(
      `SELECT team_id
         FROM team_members
        WHERE user_id=$1
-         AND LOWER(TRIM(COALESCE(status,'')))='active'
+         AND status='active'
        ORDER BY joined_at ASC NULLS LAST, created_at ASC
        LIMIT 1`,
      [userId]
    );
    if(mq.rows[0]?.team_id) return mq.rows[0].team_id;
 
+   // Owners are not required to have a team_members row and older accounts may
+   // also have users.team_id = NULL. In that case teams.owner_id is authoritative.
+   const oq=await this.db.query(
+     `SELECT id FROM teams WHERE owner_id=$1 ORDER BY created_at ASC LIMIT 1`,
+     [userId]
+   );
+   if(oq.rows[0]?.id) return oq.rows[0].id;
+
    throw new ForbiddenException('Authenticated user is not attached to a team');
  }
 
- private async workspace(teamId:string, requested?:string){
+ private async workspace(teamId:string, requested?:string, userId?:string|null){
    if(!teamId) throw new ForbiddenException('Authenticated user is not attached to a team');
 
    // New workspace-enabled accounts: enforce the team's active entitlements.
@@ -83,10 +77,27 @@ export class SetupService {
      return q.rows[0].workspace_id;
    }
 
-   // Customer setup is workspace-scoped. Never create/use a synthetic `default`
-   // setup record when the team has no active entitlement: doing so can mix setup
-   // state across workspaces and lets direct /setup requests bypass selection.
-   throw new ForbiddenException('No active workspace is assigned to this account');
+   // If entitlement provisioning has not completed yet, only allow the workspace
+   // that onboarding already persisted for this same user. This keeps setup usable
+   // for legacy/recovered accounts without turning the missing-entitlement case
+   // into an arbitrary workspace bypass.
+   if(userId){
+     const saved=await this.db.query(
+       `SELECT onboarding_workspace_id FROM users WHERE id=$1 LIMIT 1`,
+       [userId]
+     );
+     const onboardingWs=saved.rows[0]?.onboarding_workspace_id || null;
+     if(onboardingWs){
+       if(requested && requested!==onboardingWs){
+         throw new ForbiddenException('Workspace access denied');
+       }
+       return onboardingWs;
+     }
+   }
+
+   // Pre-workspace legacy accounts keep the historical default setup record.
+   if(requested && requested!=='default') throw new ForbiddenException('Workspace access denied');
+   return 'default';
  }
  private async ensure(){ await this.db.query(`
  CREATE TABLE IF NOT EXISTS customer_setup_configs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),team_id uuid NOT NULL,workspace_id text NOT NULL,ai_agent_id uuid NULL,selected_objective text NULL,config jsonb NOT NULL DEFAULT '{}'::jsonb,tests jsonb NOT NULL DEFAULT '[]'::jsonb,status text NOT NULL DEFAULT 'setup',activated_at timestamptz NULL,activated_by uuid NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(team_id,workspace_id));
@@ -140,7 +151,7 @@ export class SetupService {
  async get(u:any,requested?:string){
    await this.ensure();
    const teamId=await this.resolveTeamId(u);
-   const ws=await this.workspace(teamId,requested);
+   const ws=await this.workspace(teamId,requested,this.userId(u));
    let setup=await this.loadResolved(teamId,ws);
 
    // Existing AI Agent setup is the training source of truth.
@@ -227,7 +238,7 @@ export class SetupService {
  async patch(u:any,requested:string|undefined,body:any){
    await this.ensure();
    const teamId=await this.resolveTeamId(u);
-   const ws=await this.workspace(teamId,requested);
+   const ws=await this.workspace(teamId,requested,this.userId(u));
    const old=await this.loadResolved(teamId,ws);
 
    const allowed=['customerChannels','website','phone','whatsapp','marketing','consent','conversion','routing','handoff','trainingComplete','assistanceDismissed'];
@@ -269,7 +280,7 @@ export class SetupService {
    const teamId=await this.resolveTeamId(u);
    const userId=this.userId(u);
    if(!userId) throw new ForbiddenException('Authenticated user is missing an id');
-   const ws=await this.workspace(teamId,requested);
+   const ws=await this.workspace(teamId,requested,this.userId(u));
    const c=await this.loadResolved(teamId,ws);
    const cfg=c.config||{};
 
@@ -420,7 +431,7 @@ export class SetupService {
    const teamId=await this.resolveTeamId(u);
    const userId=this.userId(u);
    if(!userId) throw new ForbiddenException('Authenticated user is missing an id');
-   const ws=await this.workspace(teamId,requested);
+   const ws=await this.workspace(teamId,requested,this.userId(u));
    const c=await this.loadResolved(teamId,ws);
    if(!c.readiness.ready)
      throw new BadRequestException('Complete all required launch-readiness checks before activation.');
@@ -447,40 +458,33 @@ export class SetupService {
      }
    };
 
-   // Launch is one atomic state transition. Never leave ai_agent_settings.launched=true
-   // while the workspace setup record is still incomplete (or vice versa).
-   await this.db.transaction(async (client)=>{
-     const updated=await client.query(
-       `UPDATE customer_setup_configs
-           SET status='active',
-               activated_at=NOW(),
-               activated_by=$3,
-               config=$4::jsonb,
-               updated_at=NOW()
-         WHERE team_id=$1 AND workspace_id=$2
-         RETURNING id`,
-       [teamId,ws,userId,JSON.stringify(config)]
-     );
-     if(updated.rowCount!==1)
-       throw new BadRequestException('Unable to activate this workspace setup. Reload setup and try again.');
+   // The AI runtime reads ai_agent_settings.launched. Activation must update
+   // that source of truth; changing only the setup wizard status is not enough.
+   await this.db.query(
+     `INSERT INTO ai_agent_settings(team_id,launched,paused,updated_at)
+      VALUES($1,true,false,NOW())
+      ON CONFLICT(team_id)
+      DO UPDATE SET launched=true,paused=false,updated_at=NOW()`,
+     [teamId]
+   );
 
-     // The AI runtime reads ai_agent_settings.launched. Keep it in the same
-     // transaction as the customer setup activation above.
-     await client.query(
-       `INSERT INTO ai_agent_settings(team_id,launched,paused,updated_at)
-        VALUES($1,true,false,NOW())
-        ON CONFLICT(team_id)
-        DO UPDATE SET launched=true,paused=false,updated_at=NOW()`,
-       [teamId]
-     );
-   });
+   await this.db.query(
+     `UPDATE customer_setup_configs
+         SET status='active',
+             activated_at=NOW(),
+             activated_by=$3,
+             config=$4::jsonb,
+             updated_at=NOW()
+       WHERE team_id=$1 AND workspace_id=$2`,
+     [teamId,ws,userId,JSON.stringify(config)]
+   );
 
    return this.loadResolved(teamId,ws);
  }
  async assistance(u:any,requested:string|undefined,b:any){
    await this.ensure();
    const teamId=await this.resolveTeamId(u);
-   const ws=await this.workspace(teamId,requested);
+   const ws=await this.workspace(teamId,requested,this.userId(u));
    const userId=this.userId(u);
    if(!userId) throw new ForbiddenException('Authenticated user is missing an id');
    if(!['AI Agent Setup Assistance','Website & Connection Assistance'].includes(b.assistanceType))
