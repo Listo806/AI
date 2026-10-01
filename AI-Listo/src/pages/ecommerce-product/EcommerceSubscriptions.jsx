@@ -17,11 +17,25 @@ function useSubscriptions(){
  const load=async()=>{
   setData(x=>({...x,loading:true}));
   try{
-   const token=localStorage.getItem("cortexa_ecommerce_access_token");
-   const r=await fetch("/api/e-commerce/subscriptions",{headers:token?{Authorization:`Bearer ${token}`}:{}}); 
-   if(!r.ok) throw new Error("Subscriptions endpoint is not available yet.");
-   const j=await r.json();
-   setData({...EMPTY,...j,summary:{...EMPTY.summary,...(j.summary||{})},customers:j.customers||[],loading:false,error:""});
+   const token=localStorage.getItem("cortexa_ecommerce_access_token")||localStorage.getItem("listo_access_token")||localStorage.getItem("access_token")||localStorage.getItem("token");
+   const apiBase=(import.meta.env.VITE_API_BASE_URL||"https://backend.cortexaaicrm.com/api").replace(/\/$/,"");
+   const headers=token?{Authorization:`Bearer ${token}`}:{ };
+   const [listRes,summaryRes]=await Promise.all([
+    fetch(`${apiBase}/ecommerce/customers-hub?limit=1000`,{headers}),
+    fetch(`${apiBase}/ecommerce/customers-hub/summary`,{headers}),
+   ]);
+   if(!listRes.ok||!summaryRes.ok){
+    const failed=!listRes.ok?listRes:summaryRes;
+    if(failed.status===401){
+     window.dispatchEvent(new Event("cortexa:ecommerce-unauthorized"));
+     throw new Error("Your E-Commerce session has expired. Please sign in again.");
+    }
+    const body=await failed.json().catch(()=>({}));
+    throw new Error(Array.isArray(body?.message)?body.message.join(", "):body?.message||`Subscriptions request failed (${failed.status}).`);
+   }
+   const [list,summary]=await Promise.all([listRes.json(),summaryRes.json()]);
+   const k=summary?.kpis||{};
+   setData({...EMPTY,summary:{registered:k.totalRegistered??0,active:k.activeCustomers??0,mrr:k.mrr??0,arr:k.arr??0,conversion:k.conversionRate??0,free:k.freeAccounts??0},customers:list?.data||[],analytics:summary,loading:false,error:""});
   }catch(e){setData({...EMPTY,loading:false,error:e.message||"Unable to load subscriptions."})}
  };
  useEffect(()=>{load()},[]);
@@ -56,6 +70,9 @@ export default function EcommerceSubscriptions(){
  const [plan,setPlan]=useState("All Plans");
  const [status,setStatus]=useState("All Statuses");
  const s=data.summary;
+ const breakdowns=data.analytics?.breakdowns||{};
+ const breakdownCount=(group,label)=>Number((breakdowns[group]||[]).find(x=>String(x.key).toLowerCase()===String(label).toLowerCase())?.count||0);
+ const pct=(count)=>data.customers.length?`${Math.round(Number(count||0)/data.customers.length*100)}%`:"0%";
  const rows=useMemo(()=>data.customers.filter(c=>{
   const q=query.toLowerCase();
   const okQ=!q||`${c.name||""} ${c.email||""} ${c.company||""}`.toLowerCase().includes(q);
@@ -88,10 +105,10 @@ export default function EcommerceSubscriptions(){
   </section>
 
   <section className="ecs-insights">
-   <article className="ecs-insight ecs-plans"><header><div><h3>Customers by Plan</h3><p>Customers by their selected plan.</p></div><span><UsersRound size={14}/>{data.customers.length} Customers</span></header><div className="ecs-plan-rings">{["FREE","SOLO","BUSINESS","SCALE"].map(x=><div key={x}><i><b>{data.customers.filter(c=>String(c.plan||"").toUpperCase()===x).length}</b></i><strong>{x}</strong><small>0%</small></div>)}</div></article>
-   <DonutCard title="Customer Status" subtitle="Where your customers stand" Icon={UsersRound} total={data.customers.length}>{[["Free","#ff7a00"],["Checkout Pending","#ffbe19"],["Registered / No Plan","#ff3c3c"],["Paid","#0dbb63"]].map(x=><p key={x[0]}><i style={{background:x[1]}}/><span>{x[0]}</span><b>0</b><small>0%</small></p>)}</DonutCard>
-   <DonutCard title="Customer Activity" subtitle="Based on last 30 days" Icon={Zap} total={data.customers.length}>{[["Active Today","#08bb64"],["Active Last 7 Days","#1887ff"],["Inactive 7–30 Days","#ff9c13"],["Inactive 30+ Days","#f22e37"]].map(x=><p key={x[0]}><i style={{background:x[1]}}/><span>{x[0]}</span><b>0</b><small>0%</small></p>)}</DonutCard>
-   <DonutCard title="Workspace Opportunity" subtitle="Your workspace upsell potential" Icon={Rocket} total={data.customers.length}>{[["No Workspace","#f32b34"],["Has Workspace","#0ab95f"],["Workspace Trial / Pending","#ffad13"],["Paid Workspace","#304bd9"]].map(x=><p key={x[0]}><i style={{background:x[1]}}/><span>{x[0]}</span><b>0</b><small>0%</small></p>)}</DonutCard>
+   <article className="ecs-insight ecs-plans"><header><div><h3>Customers by Plan</h3><p>Customers by their selected plan.</p></div><span><UsersRound size={14}/>{data.customers.length} Customers</span></header><div className="ecs-plan-rings">{["FREE","SOLO","BUSINESS","SCALE"].map(x=>{const count=data.customers.filter(c=>String(c.plan||c.plan_id||"").toUpperCase()===x).length;return <div key={x}><i><b>{count}</b></i><strong>{x}</strong><small>{pct(count)}</small></div>})}</div></article>
+   <DonutCard title="Customer Status" subtitle="Where your customers stand" Icon={UsersRound} total={data.customers.length}>{[["Free","#ff7a00"],["Checkout Pending","#ffbe19"],["Registered / No Plan","#ff3c3c"],["Paid","#0dbb63"]].map(x=>{const count=breakdownCount("customerStatus",x[0]);return <p key={x[0]}><i style={{background:x[1]}}/><span>{x[0]}</span><b>{count}</b><small>{pct(count)}</small></p>})}</DonutCard>
+   <DonutCard title="Customer Activity" subtitle="Based on last 30 days" Icon={Zap} total={data.customers.length}>{[["Active Today","#08bb64"],["Active Last 7 Days","#1887ff"],["Inactive 7–30 Days","#ff9c13"],["Inactive 30+ Days","#f22e37"]].map(x=>{const count=breakdownCount("customerActivity",x[0]);return <p key={x[0]}><i style={{background:x[1]}}/><span>{x[0]}</span><b>{count}</b><small>{pct(count)}</small></p>})}</DonutCard>
+   <DonutCard title="Workspace Opportunity" subtitle="Your workspace upsell potential" Icon={Rocket} total={data.customers.length}>{[["No Workspace","#f32b34"],["Has Workspace","#0ab95f"],["Workspace Trial / Pending","#ffad13"],["Paid Workspace","#304bd9"]].map(x=>{const count=breakdownCount("workspaceOpportunity",x[0]);return <p key={x[0]}><i style={{background:x[1]}}/><span>{x[0]}</span><b>{count}</b><small>{pct(count)}</small></p>})}</DonutCard>
   </section>
 
   <section className="ecs-table-card">

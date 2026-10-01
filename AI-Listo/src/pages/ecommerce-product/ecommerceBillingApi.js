@@ -1,7 +1,11 @@
-const token=()=>localStorage.getItem("cortexa_ecommerce_access_token")||localStorage.getItem("access_token")||localStorage.getItem("token");
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://backend.cortexaaicrm.com/api").replace(/\/$/, "");
+const token=()=>localStorage.getItem("cortexa_ecommerce_access_token")||localStorage.getItem("listo_access_token")||localStorage.getItem("access_token")||localStorage.getItem("token");
 async function req(path,options={}){
-  const r=await fetch(`/api/ecommerce/customers-hub/billing-calendar${path}`,{...options,headers:{"Content-Type":"application/json",...(token()?{Authorization:`Bearer ${token()}`}:{}) ,...(options.headers||{})}});
+  const r=await fetch(`${API_BASE_URL}/ecommerce/customers-hub/billing-calendar${path}`,{...options,headers:{"Content-Type":"application/json",...(token()?{Authorization:`Bearer ${token()}`}:{}) ,...(options.headers||{})}});
   const j=await r.json().catch(()=>({}));
+  if(r.status===401){
+    window.dispatchEvent(new Event("cortexa:ecommerce-unauthorized"));
+  }
   if(!r.ok){
     const raw=Array.isArray(j?.message)?j.message.join(", "):j?.message;
     const message=raw||`Billing request failed (${r.status})`;

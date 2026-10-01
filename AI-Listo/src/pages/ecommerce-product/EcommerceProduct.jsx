@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import apiClient from "../../api/apiClient";
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ecT, useEcommercePageLanguage } from "./EcommerceLocale";
@@ -36,6 +36,16 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://backend.corte
 
 export function EcommerceAuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(EC_TOKEN));
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem(EC_TOKEN);
+      localStorage.removeItem(EC_REFRESH_TOKEN);
+      setToken(null);
+    };
+    window.addEventListener("cortexa:ecommerce-unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("cortexa:ecommerce-unauthorized", handleUnauthorized);
+  }, []);
   const value = useMemo(() => ({
     token,
     isAuthenticated: Boolean(token),
@@ -215,7 +225,7 @@ function AuthCard({mode}){ const nav=useNavigate(); const auth=useEcAuth(); cons
  sessionStorage.setItem("ec_signup",JSON.stringify({...form,billing}));
  nav(`/e-commerce/checkout?billing=${billing}`);
  return;
-}try{await auth.login(form);nav("/e-commerce/dashboard",{replace:true});}catch(err){setError(err.message)}}; return <div className="ec-auth-page"><Link to="/e-commerce"><Logo/></Link><form className="ec-auth-card" onSubmit={submit}><h1>{mode==="login"?"Welcome back":"Start with Cortexa E-Commerce CRM"}</h1><p>{mode==="login"?"Login to your E-Commerce CRM account.":"Create your dedicated E-Commerce account."}</p>{mode==="signup"&&<label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label>}<label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/></label><label>Password<input type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/></label>{mode==="login"&&<div className="ec-forgot-link"><Link to="/e-commerce/forgot-password">Forgot password?</Link></div>}{error&&<div className="ec-error">{error}</div>}<button className="ec-btn" type="submit">{mode==="login"?"Login":"Continue to Checkout"}</button><p className="ec-switch">{mode==="login"?<>New to E-Commerce CRM? <Link to="/e-commerce/signup">Get Started</Link></>:<>Already have an account? <Link to="/e-commerce/login">Login</Link></>}</p></form></div> }
+}try{await auth.login(form);nav("/e-commerce/dashboard",{replace:true});}catch(err){setError(err.message)}}; return <div className={`ec-auth-page ${mode==="signup"?"ec-auth-signup":"ec-auth-login"}`}><form className="ec-auth-card" onSubmit={submit}><h1>{mode==="login"?"Welcome back":"Start with Cortexa E-Commerce CRM"}</h1><p>{mode==="login"?"Login to your E-Commerce CRM account.":"Create your dedicated E-Commerce account."}</p>{mode==="signup"&&<label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label>}<label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/></label><label>Password<input type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/></label>{mode==="login"&&<div className="ec-forgot-link"><Link to="/e-commerce/forgot-password">Forgot password?</Link></div>}{error&&<div className="ec-error">{error}</div>}<button className="ec-btn" type="submit">{mode==="login"?"Login":"Continue to Checkout"}</button><p className="ec-switch">{mode==="login"?<>New to E-Commerce CRM? <Link to="/e-commerce/signup">Get Started</Link></>:<>Already have an account? <Link to="/e-commerce/login">Login</Link></>}</p></form></div> }
 export const EcommerceLogin=()=> <AuthCard mode="login"/>;
 export const EcommerceSignup=()=> <AuthCard mode="signup"/>;
 

@@ -34,8 +34,13 @@ function useIntegrationData(){
   let live=true;
   (async()=>{
    try{
-    const token=localStorage.getItem("cortexa_ecommerce_access_token")||localStorage.getItem("access_token")||localStorage.getItem("token");
-    const res=await fetch("/api/ecommerce/customers-hub/integrations/dashboard",{headers:token?{Authorization:`Bearer ${token}`}:{}}); 
+    const token=localStorage.getItem("cortexa_ecommerce_access_token")||localStorage.getItem("listo_access_token")||localStorage.getItem("access_token")||localStorage.getItem("token");
+    const apiBase=(import.meta.env.VITE_API_BASE_URL||"https://backend.cortexaaicrm.com/api").replace(/\/$/,"");
+    const res=await fetch(`${apiBase}/ecommerce/customers-hub/integrations/dashboard`,{headers:token?{Authorization:`Bearer ${token}`}:{}});
+    if(res.status===401){
+      window.dispatchEvent(new Event("cortexa:ecommerce-unauthorized"));
+      throw new Error("Your E-Commerce session has expired. Please sign in again.");
+    }
     if(!res.ok) throw new Error("Integration data is not available yet.");
     const data=await res.json();
     if(live)setState({loading:false,error:"",summary:{...emptySummary,...(data.summary||{})},health:{...emptyHealth,...(data.health||{})},categories:data.categories||[],events:data.events||[],recent:data.recent||[],popular:data.popular||[]});

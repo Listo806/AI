@@ -15,8 +15,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { EcommerceWorkspaceService } from './ecommerce-workspace.service';
 import { EcommerceBillingService } from './ecommerce-billing.service';
-import { WorkspaceLockGuard } from '../workspaces/workspace-lock.guard';
-import { RequiresWorkspace } from '../workspaces/requires-workspace.decorator';
 
 const CSV_FIELDS = [
   'email',
@@ -54,12 +52,15 @@ function csvCell(value: any): string {
  * Customer-facing E-Commerce Workspace.
  *
  * Unlike /admin/customers-hub, these endpoints are available to authenticated
- * workspace users and every operation is tenant-scoped inside the service.
+ * E-Commerce CRM users and every operation is tenant-scoped inside the service.
+ *
+ * IMPORTANT: E-Commerce CRM is a standalone product. Do not protect these routes
+ * with the generic $97 CRM workspace add-on guard. Authentication is required here;
+ * the service resolves the caller's own team/workspace and scopes every query to it.
  */
 @ApiTags('ecommerce-workspace')
-@RequiresWorkspace('ecommerce')
 @Controller('ecommerce/customers-hub')
-@UseGuards(JwtAuthGuard, WorkspaceLockGuard)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class EcommerceWorkspaceController {
   constructor(private readonly ecommerce: EcommerceWorkspaceService, private readonly billing: EcommerceBillingService) {}
