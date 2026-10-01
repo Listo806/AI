@@ -31,6 +31,7 @@ export class AppsIntegrationsService implements OnModuleInit {
       CREATE TABLE IF NOT EXISTS integration_requests (
         id BIGSERIAL PRIMARY KEY,
         integration_key TEXT,
+        request_key TEXT,
         integration_name TEXT NOT NULL,
         user_id UUID NOT NULL,
         team_id UUID NOT NULL,
@@ -45,7 +46,9 @@ export class AppsIntegrationsService implements OnModuleInit {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
+    await this.db.query(`ALTER TABLE integration_requests ADD COLUMN IF NOT EXISTS request_key TEXT`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS idx_integration_requests_team_created ON integration_requests(team_id, created_at DESC)`);
+    await this.db.query(`CREATE UNIQUE INDEX IF NOT EXISTS integration_requests_team_request_key_uidx ON integration_requests(team_id, request_key) WHERE request_key IS NOT NULL`);
   }
 
   private esc(value: unknown): string {
@@ -91,22 +94,47 @@ export class AppsIntegrationsService implements OnModuleInit {
     const integrationKey = String(body?.integrationKey || '').trim().slice(0, 120) || null;
     const integrationName = String(body?.integrationName || '').trim().slice(0, 160);
     const message = String(body?.message || '').trim();
+    const requestKey = String(body?.requestKey || '').trim().slice(0, 160) || null;
     if (!integrationName) throw new BadRequestException('Integration name is required');
     if (!message) throw new BadRequestException('Message is required');
     if (message.length > 3000) throw new BadRequestException('Message must be at most 3000 characters');
+    if (!requestKey) throw new BadRequestException('Request key is required');
 
     const context = await this.getRequestContext(user);
     if (!context.email) throw new BadRequestException('Customer email is missing');
     const to = 'support@cortexaaicrm.com';
 
-    // Store first. The UI only shows success after this insert has completed.
+    // The client keeps requestKey stable while retrying the same form submission.
+    // This makes retries idempotent even when the first attempt was saved but email
+    // delivery failed or the browser did not receive the response.
     const saved = await this.db.query(
       `INSERT INTO integration_requests
-        (integration_key,integration_name,user_id,team_id,customer_name,customer_email,workspace_id,message,email_to)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
-      [integrationKey, integrationName, userId, teamId, context.name || context.email, context.email, context.workspace, message, to],
+        (integration_key,request_key,integration_name,user_id,team_id,customer_name,customer_email,workspace_id,message,email_to)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       ON CONFLICT (team_id, request_key) WHERE request_key IS NOT NULL
+       DO UPDATE SET request_key=EXCLUDED.request_key
+       RETURNING id,email_status`,
+      [integrationKey, requestKey, integrationName, userId, teamId, context.name || context.email, context.email, context.workspace, message, to],
     );
     const id = String(saved.rows[0].id);
+    const priorStatus = String(saved.rows[0].email_status || 'pending');
+
+    if (priorStatus === 'sent') {
+      return { success: true, id, duplicate: true, message: 'Request received. Our team will contact you to discuss this integration.' };
+    }
+
+    // Claim notification delivery. A simultaneous retry cannot send the same
+    // support notification twice.
+    const claim = await this.db.query(
+      `UPDATE integration_requests
+          SET email_status='sending', email_error=NULL
+        WHERE id=$1 AND email_status IN ('pending','failed')
+        RETURNING id`,
+      [id],
+    );
+    if (!claim.rowCount) {
+      return { success: true, id, duplicate: true, message: 'Request received. Our team will contact you to discuss this integration.' };
+    }
 
     const html = `<div style="font-family:Arial,sans-serif;max-width:680px;color:#0f172a">
       <h2>Integration request</h2>
@@ -130,7 +158,7 @@ export class AppsIntegrationsService implements OnModuleInit {
       await this.db.query(`UPDATE integration_requests SET email_status='sent', emailed_at=NOW(), email_error=NULL WHERE id=$1`, [id]);
     } catch (err: any) {
       await this.db.query(`UPDATE integration_requests SET email_status='failed', email_error=$2 WHERE id=$1`, [id, String(err?.message || 'send_failed').slice(0,500)]);
-      throw new BadGatewayException({ success: false, stored: true, message: 'Request was saved, but the notification email could not be sent. Please retry.' });
+      throw new BadGatewayException({ success: false, stored: true, requestId: id, message: 'Request was saved, but the notification email could not be sent. Please retry.' });
     }
 
     return { success: true, id, message: 'Request received. Our team will contact you to discuss this integration.' };

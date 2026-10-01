@@ -69,7 +69,7 @@ const communication = [
   app("gmail", "Gmail", "Send, receive, and track customer email inside Cortexa.", { category: "Communication", logo: logo("gmail"), status: "available", action: "email_provider" }),
   app("outlook", "Microsoft Outlook", "Sync Outlook email, contacts, and customer activity.", { category: "Communication", logo: logo("microsoftoutlook"), status: "available", action: "email_provider" }),
   app("custom_smtp", "Custom SMTP", "Connect another email provider securely through SMTP.", { category: "Communication", icon: Mail, status: "available", action: "email_provider" }),
-  app("twilio", "Twilio", "Power business SMS and voice calls from one connection.", { category: "Communication", logo: logo("twilio"), status: "available", action: "twilio" }),
+  app("twilio", "Twilio", "Power business SMS and voice calls from one connection.", { category: "Communication", logo: logo("twilio"), status: "request" }),
   app("google_calendar", "Google Calendar", "Sync appointments, availability, and meeting updates.", { category: "Scheduling", logo: logo("googlecalendar") }),
   app("outlook_calendar", "Outlook Calendar", "Keep Microsoft 365 calendars and Cortexa in sync.", { category: "Scheduling", logo: logo("microsoftoutlook") }),
   app("calendly", "Calendly", "Bring scheduled meetings and invitees into Cortexa.", { category: "Scheduling", logo: logo("calendly") }),
@@ -82,7 +82,7 @@ const communication = [
 const marketing = [
   app("google_ads", "Google Ads", "Track campaigns, leads, and advertising performance inside Cortexa.", { category: "Marketing & Leads", logo: logo("googleads") }),
   app("tiktok", "TikTok Lead Sync", "Bring TikTok leads directly into your Cortexa pipeline.", { category: "Marketing & Leads", logo: logo("tiktok") }),
-  app("mailchimp", "Mailchimp", "Sync contacts, audiences, and campaign engagement.", { category: "Marketing & Leads", logo: logo("mailchimp"), status: "available", action: "mailchimp" }),
+  app("mailchimp", "Mailchimp", "Sync contacts, audiences, and campaign engagement.", { category: "Marketing & Leads", logo: logo("mailchimp"), status: "request" }),
   app("zapier", "Zapier", "Connect Cortexa with thousands of apps and automated workflows.", { category: "Automation", logo: logo("zapier") }),
   app("make", "Make", "Build advanced visual automations across your business tools.", { category: "Automation", logo: logo("make") }),
   app("meta_lead_ads", "Meta Lead Ads", "Capture Facebook and Instagram leads automatically.", { category: "Marketing & Leads", logo: logo("meta") }),
@@ -266,6 +266,7 @@ export default function AppsIntegrationsHub() {
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestError, setRequestError] = useState("");
   const [requestSuccess, setRequestSuccess] = useState("");
+  const [requestKey, setRequestKey] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -317,6 +318,7 @@ export default function AppsIntegrationsHub() {
 
   const requestIntegration = async (item = null) => {
     setRequestModal(item || { key: "custom", title: t("integrations.directory.request.customIntegration") });
+    setRequestKey(globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`);
     setRequestError("");
     setRequestSuccess("");
     try {
@@ -333,6 +335,7 @@ export default function AppsIntegrationsHub() {
     setRequestMessage("");
     setRequestError("");
     setRequestSuccess("");
+    setRequestKey("");
   };
 
   const submitIntegrationRequest = async (e) => {
@@ -347,6 +350,7 @@ export default function AppsIntegrationsHub() {
           integrationKey: requestModal.key,
           integrationName: requestModal.title,
           message: requestMessage.trim(),
+          requestKey,
         }),
       });
       setRequestSuccess(t("integrations.directory.request.success"));

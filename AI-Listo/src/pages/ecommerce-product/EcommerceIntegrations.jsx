@@ -28,21 +28,22 @@ const emptySummary={connected:null,total:null,healthy:null,healthyPercent:null,s
 const emptyHealth={healthy:0,warning:0,error:0,notConnected:0,total:0};
 
 function useIntegrationData(){
+ const [reloadKey,setReloadKey]=useState(0);
  const [state,setState]=useState({loading:true,error:"",summary:emptySummary,health:emptyHealth,categories:[],events:[],recent:[],popular:[]});
  useEffect(()=>{
   let live=true;
   (async()=>{
    try{
-    const token=localStorage.getItem("cortexa_ecommerce_access_token");
-    const res=await fetch("/api/e-commerce/integrations/dashboard",{headers:token?{Authorization:`Bearer ${token}`}:{}}); 
+    const token=localStorage.getItem("cortexa_ecommerce_access_token")||localStorage.getItem("access_token")||localStorage.getItem("token");
+    const res=await fetch("/api/ecommerce/customers-hub/integrations/dashboard",{headers:token?{Authorization:`Bearer ${token}`}:{}}); 
     if(!res.ok) throw new Error("Integration data is not available yet.");
     const data=await res.json();
     if(live)setState({loading:false,error:"",summary:{...emptySummary,...(data.summary||{})},health:{...emptyHealth,...(data.health||{})},categories:data.categories||[],events:data.events||[],recent:data.recent||[],popular:data.popular||[]});
    }catch(e){if(live)setState(s=>({...s,loading:false,error:e.message||"Unable to load integrations."}))}
   })();
   return()=>{live=false};
- },[]);
- return state;
+ },[reloadKey]);
+ return {...state,reload:()=>setReloadKey(v=>v+1)};
 }
 
 const value=v=>v===null||v===undefined?"—":v;
@@ -108,6 +109,7 @@ export default function EcommerceIntegrations(){
  return <div className="eci-page">
   <Topbar/>
   <div className="eci-content">
+   {data.error&&<div className="eci-filter-empty"><CircleAlert size={17}/><b>{data.error}</b><span>Integration totals are unavailable until the request succeeds.</span><button onClick={data.reload}><RefreshCw size={15}/>Retry</button></div>}
    <div className="eci-head-actions"><div/><button onClick={()=>setShowDirectory(true)}><Plus size={17}/>Add Integration</button></div>
    <div className="eci-layout">
     <main className="eci-main">

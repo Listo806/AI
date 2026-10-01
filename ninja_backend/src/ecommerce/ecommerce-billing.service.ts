@@ -73,4 +73,52 @@ export class EcommerceBillingService {
   async reminder(user:any,id:string){ const s=await this.sub(user,id); if(!s.user_email) throw new BadRequestException('Customer email is unavailable'); let url:string|null=null; if(s.provider==='paddle'&&s.paddle_subscription_id){ const p:any=await this.paddle.getSubscription(s.paddle_subscription_id); url=p?.managementUrls?.updatePaymentMethod||p?.management_urls?.update_payment_method||p?.data?.managementUrls?.updatePaymentMethod||null; }
     const subject='Billing reminder from Cortexa'; const html=`<p>Hello ${String(s.user_name||'there').replace(/[<>]/g,'')},</p><p>This is a reminder about your Cortexa subscription billing.</p>${url?`<p><a href="${url}">Review payment method</a></p>`:''}`; const sent=await this.mailer.sendCustomEmail({to:s.user_email,userId:s.user_id,subject,html,template:'ecommerce_billing_reminder'}); return {success:sent.status === 'sent',status:sent.status,reason:sent.reason || null,provider:s.provider||null}; }
   async retry(user:any,id:string){ const s=await this.sub(user,id); return {success:false,disabled:true,provider:s.provider||null,message:'Automatic retry/dunning is managed by the connected payment provider. Cortexa will not create a duplicate charge.'}; }
+  async integrationsDashboard(user:any){
+    const team=await this.teamId(user);
+    const {rows}=await this.db.query(
+      `SELECT key,name,category,status,last_synced_at,last_error,created_at,updated_at
+         FROM integrations
+        WHERE team_id=$1
+        ORDER BY updated_at DESC`,
+      [team],
+    );
+    const connected=rows.filter((r:any)=>['connected','active'].includes(String(r.status||'').toLowerCase()));
+    const healthy=connected.filter((r:any)=>!r.last_error);
+    const warning=connected.filter((r:any)=>Boolean(r.last_error));
+    const categoryKey=(v:any)=>{
+      const x=String(v||'').toLowerCase();
+      if(x.includes('payment')) return 'payments';
+      if(x.includes('commerce')) return 'ecommerce';
+      if(x.includes('email')||x.includes('communication')) return 'messaging';
+      if(x.includes('fulfill')||x.includes('shipping')) return 'fulfillment';
+      if(x.includes('fraud')||x.includes('risk')) return 'fraud';
+      if(x.includes('crm')||x.includes('import')) return 'crm';
+      if(x.includes('marketing')||x.includes('automation')) return 'marketing';
+      if(x.includes('account')||x.includes('tax')) return 'accounting';
+      if(x.includes('storage')) return 'storage';
+      if(x.includes('api')||x.includes('webhook')) return 'api';
+      if(x.includes('identity')||x.includes('verification')) return 'identity';
+      return 'api';
+    };
+    const grouped=new Map<string,{key:string,total:number,connected:number,warning:number,error:number,status:string}>();
+    for(const r of rows){
+      const key=categoryKey(r.category); const cur=grouped.get(key)||{key,total:0,connected:0,warning:0,error:0,status:'not_connected'};
+      cur.total++;
+      if(['connected','active'].includes(String(r.status||'').toLowerCase())) cur.connected++;
+      if(r.last_error) cur.warning++;
+      if(['error','failed'].includes(String(r.status||'').toLowerCase())) cur.error++;
+      if(cur.connected) cur.status='connected';
+      grouped.set(key,cur);
+    }
+    const syncDates=rows.map((r:any)=>r.last_synced_at).filter(Boolean).sort((a:any,b:any)=>new Date(b).getTime()-new Date(a).getTime());
+    return {
+      summary:{connected:connected.length,total:rows.length,healthy:healthy.length,healthyPercent:connected.length?Math.round(healthy.length/connected.length*100):null,syncs30d:null,syncGrowth:null,failed30d:null,failedChange:null,lastSync:syncDates[0]||null},
+      health:{healthy:healthy.length,warning:warning.length,error:rows.filter((r:any)=>['error','failed'].includes(String(r.status||'').toLowerCase())).length,notConnected:rows.filter((r:any)=>!['connected','active','error','failed'].includes(String(r.status||'').toLowerCase())).length,total:rows.length},
+      categories:Array.from(grouped.values()),
+      events:[],
+      recent:connected.slice(0,5).map((r:any)=>({id:r.key,name:r.name,status:r.last_error?'warning':'Connected',lastSync:r.last_synced_at,connectedAt:r.updated_at,categoryKey:categoryKey(r.category)})),
+      popular:[],
+    };
+  }
+
 }

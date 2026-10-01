@@ -2775,7 +2775,7 @@ body .next-action-card svg {
 
   .dashboard-page .cx-free-ai-units {
     position: absolute !important;
-    top: -20px;
+    top: 4px;
     left: 36%;
     z-index: 5;
     width: 355px !important;

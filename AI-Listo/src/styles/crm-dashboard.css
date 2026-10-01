@@ -1266,6 +1266,7 @@ body.crm-dark .crm-theme-toggle .crm-theme-option.active {
   overflow-x: hidden;
   color: var(--text);
   padding-right: 12px;
+  padding-top: 0;
 }
 
 .crm-content h1,
@@ -1824,7 +1825,7 @@ body.crm-dark .crm-error {
 .crm-dark #root .automation-health-list-rows-stack,
 .crm-dark #root .sidebar-section:not(:last-child),
 .crm-dark #root .sidebar-section, .crm-dark #root .insights-card,
-.crm-dark #root .insight-item-box,, .crm-dark #root .team-card,
+.crm-dark #root .insight-item-box,.crm-dark #root .team-card,
 .crm-dark #root .lead-row-item-line, .crm-dark #root .layout-view-toggle-buttons-group,
 .crm-dark #root .full-width-center-btn, .crm-dark #root .circle-btn,
 .crm-dark .contacts-page .form-group textarea,
@@ -4123,3 +4124,9 @@ body.crm-dark .crm-workspace-flyout-close {
 .crm-workspace-detail-icon.crm-workspace-icon-slate {
   background: linear-gradient(135deg, #334155, #2563eb);
 }
+.heading_page{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sub_head{font-size: 13px;}

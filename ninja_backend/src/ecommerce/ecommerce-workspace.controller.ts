@@ -65,6 +65,9 @@ export class EcommerceWorkspaceController {
   constructor(private readonly ecommerce: EcommerceWorkspaceService, private readonly billing: EcommerceBillingService) {}
 
 
+  @Get('integrations/dashboard')
+  integrationsDashboard(@CurrentUser() user: any) { return this.billing.integrationsDashboard(user); }
+
   @Get('billing-calendar/dashboard')
   billingDashboard(@CurrentUser() user: any, @Query('month') month?: string) { return this.billing.dashboard(user, month); }
 
