@@ -31,13 +31,27 @@ export class SetupService {
    );
    if(uq.rows[0]?.team_id) return uq.rows[0].team_id;
 
-   // Source of truth #2: active team membership for accounts whose users.team_id
-   // has not yet been populated.
+   // Source of truth #2: the account may own a team even when users.team_id was
+   // never backfilled (common for older owner accounts). Setup must still resolve
+   // that workspace instead of returning 403 and blanking the setup UI.
+   const oq=await this.db.query(
+     `SELECT id AS team_id
+        FROM teams
+       WHERE owner_id=$1
+       ORDER BY created_at ASC
+       LIMIT 1`,
+     [userId]
+   );
+   if(oq.rows[0]?.team_id) return oq.rows[0].team_id;
+
+   // Source of truth #3: active team membership for member accounts whose
+   // users.team_id has not yet been populated. Normalize status defensively for
+   // legacy rows that used different casing/whitespace.
    const mq=await this.db.query(
      `SELECT team_id
         FROM team_members
        WHERE user_id=$1
-         AND status='active'
+         AND LOWER(TRIM(COALESCE(status,'')))='active'
        ORDER BY joined_at ASC NULLS LAST, created_at ASC
        LIMIT 1`,
      [userId]
