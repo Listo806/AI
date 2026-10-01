@@ -125,6 +125,17 @@ const normalizeWhatsAppPhone = (value) => {
   return String(value || "").replace(/\D/g, "");
 };
 
+// Match the WhatsApp QR API's E.164 requirement. Do not guess a country code
+// for local-format lead numbers (for example 0987654321).
+const toWhatsAppIntelligencePhone = (value) => {
+  const raw = String(value || "").trim().replace(/^whatsapp:/i, "");
+  if (!raw || /@(lid|g\.us|broadcast|newsletter)$/i.test(raw)) return null;
+  const number = raw.includes("@") ? raw.split("@")[0].split(":")[0] : raw;
+  const digits = number.replace(/\D/g, "");
+  if (!/^[1-9]\d{7,14}$/.test(digits)) return null;
+  return `+${digits}`;
+};
+
 const normalizeRealtimeMessage = (payload) => {
   const createdAt =
     payload?.createdAt || payload?.sentAt || new Date().toISOString();
@@ -1013,7 +1024,10 @@ export default function LeadsPage() {
   };
 
   const fetchConversationIntelligence = async (phone) => {
-    if (!phone) {
+    const contactPhone = toWhatsAppIntelligencePhone(phone);
+    if (!contactPhone) {
+      // A local number is not an internationally identifiable WhatsApp number.
+      // Leave AI intelligence unavailable instead of sending an invalid request.
       setConversationIntelligence(null);
       setConversationIntelligenceLoading(false);
       return;
@@ -1023,7 +1037,7 @@ export default function LeadsPage() {
       setConversationIntelligenceLoading(true);
 
       const response = await apiClient.request(
-        `/whatsapp-qr/conversations/${encodeURIComponent(phone)}/intelligence`,
+        `/whatsapp-qr/conversations/${encodeURIComponent(contactPhone)}/intelligence`,
         {
           method: "GET",
         },
@@ -1644,8 +1658,12 @@ export default function LeadsPage() {
     recordingCancelledRef.current = false;
     mediaRecorderRef.current?.stop();
   };
-  // Suggested replies must come from the AI/backend. Do not present canned
-  // demo copy as if it were an AI-generated result.
+  const fallbackSuggestedReplies = [
+    t("leads.suggestReplyProperties"),
+    t("leads.suggestReplyBudget"),
+    t("leads.suggestReplyViewing"),
+  ];
+
   const aiSuggestedReplies = (() => {
     const rawReplies =
       conversationIntelligence?.suggestedReplies ||
@@ -1653,17 +1671,26 @@ export default function LeadsPage() {
       conversationIntelligence?.replies ||
       [];
 
-    if (!Array.isArray(rawReplies)) return [];
+    if (!Array.isArray(rawReplies)) {
+      return fallbackSuggestedReplies;
+    }
 
-    return rawReplies
+    const normalizedReplies = rawReplies
       .map((reply) => {
-        if (typeof reply === "string") return reply.trim();
+        if (typeof reply === "string") {
+          return reply.trim();
+        }
+
         return String(
           reply?.text || reply?.message || reply?.reply || reply?.content || "",
         ).trim();
       })
       .filter(Boolean)
       .slice(0, 3);
+
+    return normalizedReplies.length
+      ? normalizedReplies
+      : fallbackSuggestedReplies;
   })();
 
   const renderMessageStatus = (message) => {
@@ -3824,31 +3851,29 @@ export default function LeadsPage() {
             )}
           </div>
 
-          {/* AI SUGGESTED REPLIES — render only when the backend actually returned them. */}
-          {aiSuggestedReplies.length > 0 && (
-            <div className="suggested-replies-container">
-              <div className="suggested-title">
-                <span>
-                  <Sparkles size={12} /> {t("leads.aiSuggestedReplies")}
-                </span>
-                <button type="button" className="mobile-suggested-more">
-                  See more
-                </button>
-              </div>
-              <div className="suggested-chips-scroll">
-                {aiSuggestedReplies.map((reply, index) => (
-                  <button
-                    className="chip-btn"
-                    type="button"
-                    key={`${reply}-${index}`}
-                    onClick={() => setChatMessage(reply)}
-                  >
-                    {reply}
-                  </button>
-                ))}
-              </div>
+          {/* AI SUGGESTED REPLIES */}
+          <div className="suggested-replies-container">
+            <div className="suggested-title">
+              <span>
+                <Sparkles size={12} /> {t("leads.aiSuggestedReplies")}
+              </span>
+              <button type="button" className="mobile-suggested-more">
+                See more
+              </button>
             </div>
-          )}
+            <div className="suggested-chips-scroll">
+              {aiSuggestedReplies.map((reply, index) => (
+                <button
+                  className="chip-btn"
+                  type="button"
+                  key={`${reply}-${index}`}
+                  onClick={() => setChatMessage(reply)}
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* INPUT FORM */}
           <div className="chat-input-box">

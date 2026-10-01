@@ -582,6 +582,17 @@ export class TeamsService {
     if (result.rowCount === 0) {
       throw new NotFoundException("Member not found in this team");
     }
+
+    // Invalidate the removed member's existing JWT/refresh-token chain.
+    // Without this, a token issued before removal can remain usable until it
+    // expires even though the membership row is already marked removed.
+    await this.db.query(
+      `UPDATE users
+       SET token_version = COALESCE(token_version, 1) + 1, updated_at = NOW()
+       WHERE id = $1`,
+      [userId],
+    );
+
     // Log event
     await this.eventLogger.logTeamMemberRemoved(
       teamId,

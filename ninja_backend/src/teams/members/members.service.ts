@@ -45,19 +45,16 @@ export class MembersService {
   }
 
   async inviteMember(teamId: string, dto: any, userId: string) {
-    const user = await this.usersService.findByEmail(dto.email);
-
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
-
-    console.log("FOUND USER", user);
-
-    await this.teamsService.addMember(teamId, user.id, userId, dto.role);
-
-    return {
-      success: true,
-    };
+    // An invitation must work for both existing and brand-new customers.
+    // Reuse the canonical invitation flow so email delivery, expiration,
+    // pending-invite deduplication and seat enforcement stay consistent.
+    return this.teamsService.inviteMemberByEmail(
+      teamId,
+      dto.email,
+      userId,
+      dto.role || "agent",
+      dto.name || null,
+    );
   }
 
   async removeMember(teamId: string, memberId: string, userId: string) {
