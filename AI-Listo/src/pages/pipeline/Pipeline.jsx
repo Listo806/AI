@@ -392,7 +392,7 @@ export default function PipelinePage() {
         });
     }, 100);
   };
-  const renderTrend = (trend, fallback = "→ 0%") => {
+  const renderTrend = (trend, fallback = "—") => {
     if (!trend) return fallback;
     if (typeof trend === "string") return trend;
     return trend.text || fallback;

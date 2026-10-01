@@ -44,6 +44,38 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     this.touchLastSeen(user.id);
 
+    // Resolve the effective CRM team from the database instead of relying only
+    // on users.team_id. Legacy owner accounts can legitimately have a null
+    // users.team_id while still owning a team (teams.owner_id) or belonging to
+    // one through team_members. Keeping this on the authenticated user makes
+    // every downstream CRM module use the same tenant context.
+    let resolvedTeamId = user.teamId || (user as any).team_id || null;
+    if (!resolvedTeamId) {
+      const teamResult = await this.db.query(
+        `SELECT team_id
+           FROM (
+             SELECT tm.team_id, 1 AS priority
+               FROM team_members tm
+              WHERE tm.user_id = $1
+                AND COALESCE(tm.status, 'active') = 'active'
+             UNION ALL
+             SELECT t.id AS team_id, 2 AS priority
+               FROM teams t
+              WHERE t.owner_id = $1
+           ) candidates
+          ORDER BY priority
+          LIMIT 1`,
+        [user.id],
+      );
+      resolvedTeamId = teamResult.rows[0]?.team_id || null;
+    }
+
+    const authenticatedUser = {
+      ...user,
+      teamId: resolvedTeamId,
+      team_id: resolvedTeamId,
+    };
+
     if (!(await this.security.sessionValid(user.id, payload.sid))) {
       throw new UnauthorizedException('Session has been signed out');
     }
@@ -59,10 +91,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             ia.status as internal_access_status,
             ia.permissions as internal_permissions
          FROM users u
-         LEFT JOIN teams t ON t.id = u.team_id
+         LEFT JOIN teams t ON t.id = $2
          LEFT JOIN internal_user_access ia ON ia.user_id = u.id
          WHERE u.id = $1`,
-        [user.id],
+        [user.id, resolvedTeamId],
       );
 
       if (rows.length === 0) throw new UnauthorizedException();
@@ -99,7 +131,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         privilegedLegacyRole && !internalActive ? 'user' : user.role;
 
       return {
-        ...user,
+        ...authenticatedUser,
         role: effectiveRole,
         internalRole: internalActive ? (row.internal_role ?? null) : null,
         internalAccessStatus: row.internal_access_status ?? null,
@@ -111,7 +143,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     } catch (error: any) {
       // Backward compatibility while migration is being deployed.
       if (error?.code === '42P01' || error?.code === '42703') {
-        return user;
+        return authenticatedUser;
       }
       throw error;
     }

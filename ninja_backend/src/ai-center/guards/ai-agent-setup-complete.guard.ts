@@ -22,15 +22,49 @@ export class AiAgentSetupCompleteGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    // Legacy owner accounts can legitimately have no users.team_id and no
+    // team_members row. Resolve their owned team here once and attach it to
+    // request.user so every AI Center controller action receives the same
+    // tenant context, including endpoints marked @AllowBeforeAgentSetup().
+    let teamId = user?.teamId || user?.team_id || null;
+
+    if (!teamId && user?.id) {
+      const resolved = await this.db.query(
+        `
+        SELECT team_id
+        FROM (
+          SELECT tm.team_id, 1 AS priority
+          FROM team_members tm
+          WHERE tm.user_id = $1
+            AND COALESCE(tm.status, 'active') = 'active'
+
+          UNION ALL
+
+          SELECT t.id AS team_id, 2 AS priority
+          FROM teams t
+          WHERE t.owner_id = $1
+        ) candidate
+        ORDER BY priority ASC
+        LIMIT 1
+        `,
+        [user.id],
+      );
+
+      teamId = resolved.rows[0]?.team_id || null;
+
+      if (teamId) {
+        user.teamId = teamId;
+        user.team_id = teamId;
+      }
+    }
+
     if (allowBeforeSetup) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-
-    const user = request.user;
-
-    const teamId = user?.teamId || user?.team_id || null;
     if (!teamId) {
       throw new ForbiddenException({
         code: "AI_AGENT_TEAM_REQUIRED",

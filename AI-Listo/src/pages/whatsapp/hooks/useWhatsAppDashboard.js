@@ -350,22 +350,21 @@ export function useWhatsAppDashboard() {
       };
     }
 
-    const score = selectedConversation.score || 0;
-
+    // Do not synthesize AI metrics from a conversation score. If the AI
+    // intelligence endpoint has not returned data, keep these values explicitly
+    // unavailable so the UI never presents estimates as persisted/AI results.
     return {
-      score,
-      sentiment: score >= 60 ? "Positive" : "Neutral",
-      intent: score >= 80 ? "Very High" : score >= 60 ? "Medium" : "Low",
-      responseLikelihood: `${Math.min(95, score + 4)}%`,
-      closeProbability: `${Math.max(8, score - 10)}%`,
-      expectedRevenue: "$0",
+      score: null,
+      sentiment: "Unknown",
+      intent: "Unknown",
+      responseLikelihood: "—",
+      closeProbability: "—",
+      expectedRevenue: "—",
       budget: "Unknown",
       timeline: "Unknown",
-      ghostRisk: `${Math.max(5, 100 - score)}%`,
+      ghostRisk: "—",
       summary: selectedConversation.lastMessage || "No recent activity.",
-      recommendedAction: selectedConversation.ai_enabled
-        ? "Let AI handle the next reply or send property options."
-        : "Human owner selected. Review conversation and reply manually.",
+      recommendedAction: "",
       suggestedReplies: [],
     };
   }, [aiIntelligence, selectedConversation]);

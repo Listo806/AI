@@ -7,6 +7,7 @@ export default function AppointmentIntegrationPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const [form, setForm] = useState({
     provider: "google_calendar",
 
@@ -41,12 +42,12 @@ export default function AppointmentIntegrationPage() {
 
   const load = async () => {
     try {
+      setLoading(true);
+      setLoadError("");
       const res = await apiClient.request(
         "/integrations/ai-appointment",
       );
-        console.log("APPOINTMENT API:", res);
-      const data = res.integration || res;
-        console.log("APPOINTMENT DATA:", data);
+      const data = res?.integration ?? res;
         if (data) {
           setForm((prev) => ({
             ...prev,
@@ -61,6 +62,7 @@ export default function AppointmentIntegrationPage() {
         }
     } catch (err) {
       console.error(err);
+      setLoadError(err?.message || "Unable to load appointment settings.");
     } finally {
       setLoading(false);
     }
@@ -100,6 +102,15 @@ export default function AppointmentIntegrationPage() {
 
   if (loading) {
     return <div style={{ padding: 40 }}>{t("integrations.appointment.loading")}</div>;
+  }
+
+  if (loadError) {
+    return (
+      <div style={{ padding: 40 }}>
+        <div style={{ marginBottom: 16 }}>{loadError}</div>
+        <button type="button" onClick={load}>Retry</button>
+      </div>
+    );
   }
 
   return (

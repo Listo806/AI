@@ -1644,12 +1644,8 @@ export default function LeadsPage() {
     recordingCancelledRef.current = false;
     mediaRecorderRef.current?.stop();
   };
-  const fallbackSuggestedReplies = [
-    t("leads.suggestReplyProperties"),
-    t("leads.suggestReplyBudget"),
-    t("leads.suggestReplyViewing"),
-  ];
-
+  // Suggested replies must come from the AI/backend. Do not present canned
+  // demo copy as if it were an AI-generated result.
   const aiSuggestedReplies = (() => {
     const rawReplies =
       conversationIntelligence?.suggestedReplies ||
@@ -1657,26 +1653,17 @@ export default function LeadsPage() {
       conversationIntelligence?.replies ||
       [];
 
-    if (!Array.isArray(rawReplies)) {
-      return fallbackSuggestedReplies;
-    }
+    if (!Array.isArray(rawReplies)) return [];
 
-    const normalizedReplies = rawReplies
+    return rawReplies
       .map((reply) => {
-        if (typeof reply === "string") {
-          return reply.trim();
-        }
-
+        if (typeof reply === "string") return reply.trim();
         return String(
           reply?.text || reply?.message || reply?.reply || reply?.content || "",
         ).trim();
       })
       .filter(Boolean)
       .slice(0, 3);
-
-    return normalizedReplies.length
-      ? normalizedReplies
-      : fallbackSuggestedReplies;
   })();
 
   const renderMessageStatus = (message) => {
@@ -3837,29 +3824,31 @@ export default function LeadsPage() {
             )}
           </div>
 
-          {/* AI SUGGESTED REPLIES */}
-          <div className="suggested-replies-container">
-            <div className="suggested-title">
-              <span>
-                <Sparkles size={12} /> {t("leads.aiSuggestedReplies")}
-              </span>
-              <button type="button" className="mobile-suggested-more">
-                See more
-              </button>
-            </div>
-            <div className="suggested-chips-scroll">
-              {aiSuggestedReplies.map((reply, index) => (
-                <button
-                  className="chip-btn"
-                  type="button"
-                  key={`${reply}-${index}`}
-                  onClick={() => setChatMessage(reply)}
-                >
-                  {reply}
+          {/* AI SUGGESTED REPLIES — render only when the backend actually returned them. */}
+          {aiSuggestedReplies.length > 0 && (
+            <div className="suggested-replies-container">
+              <div className="suggested-title">
+                <span>
+                  <Sparkles size={12} /> {t("leads.aiSuggestedReplies")}
+                </span>
+                <button type="button" className="mobile-suggested-more">
+                  See more
                 </button>
-              ))}
+              </div>
+              <div className="suggested-chips-scroll">
+                {aiSuggestedReplies.map((reply, index) => (
+                  <button
+                    className="chip-btn"
+                    type="button"
+                    key={`${reply}-${index}`}
+                    onClick={() => setChatMessage(reply)}
+                  >
+                    {reply}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* INPUT FORM */}
           <div className="chat-input-box">

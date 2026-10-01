@@ -180,15 +180,29 @@ export default function CortexaDashboard() {
       setLoading(true);
       setError(null);
       try {
-        const [dashRes, summaryRes, activityRes] = await Promise.all([
+        // Load the three core dashboard sources independently. One failing API
+        // must not blank the entire dashboard or turn failed metrics into confirmed zeros.
+        const [dashResult, summaryResult, activityResult] = await Promise.allSettled([
           getAnalyticsDashboard(range),
           getDashboardSummary(),
           getActivityMetrics(range),
         ]);
         if (cancelled) return;
+
+        const dashRes = dashResult.status === "fulfilled" ? dashResult.value : null;
+        const summaryRes = summaryResult.status === "fulfilled" ? summaryResult.value : null;
+        const activityRes = activityResult.status === "fulfilled" ? activityResult.value : null;
+
         setDash(dashRes || null);
         setSummary(summaryRes || null);
         setActivity(activityRes || null);
+
+        if (!dashRes && !summaryRes && !activityRes) {
+          const firstError = [dashResult, summaryResult, activityResult].find(
+            (result) => result.status === "rejected",
+          );
+          throw firstError?.reason || new Error(t("dashboard.loadError"));
+        }
 
         // Owner leads require CRM access (PRO PLUS+) and may 403 – never let
         // it break the page.

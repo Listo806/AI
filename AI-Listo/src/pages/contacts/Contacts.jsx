@@ -849,7 +849,7 @@ export default function ContactsRelationshipsPage() {
     });
   };
 
-  const mobileStatValue = (index, fallback = 0) => {
+  const mobileStatValue = (index, fallback = "—") => {
     const raw = stats?.[index]?.value;
     return raw === undefined || raw === null || raw === "" ? fallback : raw;
   };

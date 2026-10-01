@@ -91,7 +91,6 @@ export async function getActivityMetrics(dateRangeValue = '30d') {
 export async function getOwnerLeads(limit = 500) {
   const res = await apiClient.request("/leads");
 
-  console.log("[Dashboard] /leads response:", res);
 
   let items = [];
 
@@ -109,7 +108,6 @@ export async function getOwnerLeads(limit = 500) {
     items = res.data.leads;
   }
 
-  console.log("[Dashboard] parsed leads:", items);
 
   return items.slice(0, Math.max(1, Number(limit) || 500));
 }
