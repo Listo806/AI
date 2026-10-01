@@ -107,22 +107,14 @@ export default function DashboardLayout() {
     // resolveEffectivePlan treats "trialing" as paid); never bounce it to checkout.
     const paid = status === "active" || status === "paid" || status === "trialing";
     if (paid) return;
-    // An ended subscription (past due, suspended, canceled, refunded) drops the
-    // account to the Free tier; it is not an unfinished checkout to bounce to.
-    if (["past_due", "suspended", "canceled", "refunded"].includes(status)) return;
-    // Free tier has CRM access without paying, so never bounce a Free owner.
-    if (String(user.selectedPlan || "").toLowerCase() === "free") return;
-    if (user.role !== "owner" || !user.selectedPlan || !status) return;
-    // The account pages (profile / billing / settings) stay reachable while a
-    // checkout is unfinished: the checkout's "Edit" link points here.
-    if (location.pathname.startsWith("/account")) return;
-    const paidAt = Number(localStorage.getItem("cortexa_paid_at") || 0);
-    if (paidAt && Date.now() - paidAt < 30 * 60 * 1000) return;
-    // The CRM is unprefixed; checkout is a localized public page, so send the
-    // owner to it in their own language (es -> /es, pt -> /pt, Ecuador /es-ec).
-    navigate(`${userLocalePrefix(user)}/checkout?plan=${encodeURIComponent(user.selectedPlan)}`, {
-      replace: true,
-    });
+    if (user.role !== "owner") return;
+    // Do not trust a browser-side payment grace flag. Access is granted only
+    // after the backend reports a paid/trialing status.
+    const plan = String(user.selectedPlan || "").trim();
+    const prefix = userLocalePrefix(user);
+    navigate(plan && plan.toLowerCase() !== 'free'
+      ? `${prefix}/checkout?plan=${encodeURIComponent(plan)}`
+      : `${prefix}/pricing`, { replace: true });
   }, [user, navigate, location.pathname]);
 
   // The CRM has no language prefix (no LocaleLayout), so after an English

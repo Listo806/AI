@@ -335,12 +335,27 @@ export default function CheckoutPage() {
     // the verification email. Never grant CRM access from this browser result.
     let fresh = null;
     try { fresh = await refreshUser(); } catch (e) {}
-    const pending = String(fresh?.paymentStatus || "").toLowerCase() === "paid_email_verification_pending" || String(fresh?.accountStatus || "").toLowerCase() === "paid_email_verification_pending";
-    if (pending) {
+    const paymentStatus = String(fresh?.paymentStatus || "").toLowerCase();
+    const accountStatus = String(fresh?.accountStatus || "").toLowerCase();
+    const emailVerified = !!fresh?.emailVerifiedAt;
+    const pending = paymentStatus === "paid_email_verification_pending" || accountStatus === "paid_email_verification_pending";
+
+    if (pending || !emailVerified) {
       const verifyPath = isEcuadorFlow ? "/es-ec/verify-email" : buildLocalizedPath("/verify-email", lang);
       navigate(verifyPath, { replace: true });
       return;
     }
+
+    // Returning customers whose backend already reports a paid/trialing state
+    // and a verified email must not be sent back to email verification. Enter
+    // the backend-gated onboarding route, which either resumes workspace setup
+    // or forwards a completed customer to the correct CRM route.
+    if (["active", "paid", "trialing"].includes(paymentStatus)) {
+      const onboardingPath = isEcuadorFlow ? "/es-ec/onboarding" : buildLocalizedPath("/onboarding", lang);
+      navigate(onboardingPath, { replace: true });
+      return;
+    }
+
     // Callback/reconciliation can land a few moments after the browser result.
     // Stay in the safe verification flow instead of opening the CRM.
     const verifyPath = isEcuadorFlow ? "/es-ec/verify-email" : buildLocalizedPath("/verify-email", lang);

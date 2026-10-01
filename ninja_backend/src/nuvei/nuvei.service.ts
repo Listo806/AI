@@ -1023,7 +1023,9 @@ export class NuveiService {
 
     const teamId = await this.resolveTeamId(input.userId);
     const returnUrl = this.safeReturnUrl(input.termUrl, plan.key);
-    const { rows: subRows } = await this.db.query(
+    let subscriptionId: string;
+    try {
+      const { rows: subRows } = await this.db.query(
       `INSERT INTO nuvei_subscriptions
          (user_id, team_id, email, plan_key, provision_plan, status,
           activation_amount, monthly_amount, card_id, dev_reference,
@@ -1050,7 +1052,32 @@ export class NuveiService {
         }),
       ],
     );
-    const subscriptionId = subRows[0].id;
+      subscriptionId = subRows[0].id;
+    } catch (err: any) {
+      // Final concurrency guard: two tabs can both pass the earlier SELECTs
+      // before either INSERT is visible. The partial unique index lets only
+      // one open/payable subscription exist for this customer.
+      if (String(err?.code || '') === '23505' && String(err?.constraint || '').includes('nuvei_one_open_subscription_per_user')) {
+        const { rows } = await this.db.query(
+          `SELECT id, status FROM nuvei_subscriptions
+            WHERE user_id = $1
+              AND status IN ('pending_activation','verification_pending','trialing','active')
+            ORDER BY created_at DESC LIMIT 1`,
+          [input.userId],
+        );
+        const existing = rows[0];
+        if (existing) {
+          return {
+            status: existing.status,
+            subscriptionId: existing.id,
+            message: existing.status === 'pending_activation'
+              ? 'Your payment is already being verified. Please wait for confirmation before trying again.'
+              : 'Your account already has a confirmed activation.',
+          };
+        }
+      }
+      throw err;
+    }
 
     // 3DS2 for the customer-present activation charge. term_url is OUR server:
     // the ACS posts the challenge result (CRes) there via the browser, we hand
@@ -2818,11 +2845,33 @@ export class NuveiService {
       [subscriptionId],
     );
     await this.mirrorBilling(subscriptionId, 'refunded', null);
-    await this.db.query(
-      `UPDATE users SET payment_status = 'refunded', updated_at = NOW()
-        WHERE nuvei_subscription_id = $1`,
+    // A reversal before email verification must also revoke the pending
+    // activation credential. Keep payment_confirmed_at as immutable audit
+    // evidence, but make the account non-activatable and invalidate every
+    // outstanding verification link.
+    const { rows: affectedUsers } = await this.db.query(
+      `UPDATE users
+          SET payment_status = 'refunded',
+              pending_payment_status = NULL,
+              account_status = CASE
+                WHEN email_verified_at IS NULL THEN 'payment_refunded'
+                ELSE account_status
+              END,
+              updated_at = NOW()
+        WHERE nuvei_subscription_id = $1
+        RETURNING id`,
       [subscriptionId],
     );
+    for (const u of affectedUsers) {
+      await this.db.query(
+        `UPDATE email_verification_tokens
+            SET invalidated_at = COALESCE(invalidated_at, NOW())
+          WHERE user_id = $1
+            AND used_at IS NULL
+            AND invalidated_at IS NULL`,
+        [u.id],
+      ).catch(() => undefined);
+    }
   }
 
   private async markEventVerified(dedupe: string): Promise<void> {

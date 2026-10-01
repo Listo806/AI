@@ -188,10 +188,54 @@ export function AuthProvider({ children }) {
   };
 
   const completeTwoFactorLogin = async (challengeToken, code, options = {}) => {
-    const response = await apiClient.request('/auth/2fa/verify-login', { method:'POST', body:JSON.stringify({ challengeToken, code }) });
+    const response = await apiClient.request('/auth/2fa/verify-login', {
+      method: 'POST',
+      body: JSON.stringify({ challengeToken, code }),
+    });
     if (!response?.accessToken) throw new Error('Two-factor verification failed');
-    apiClient.setTokens(response.accessToken,response.refreshToken); setUser(response.user); localStorage.setItem(STORAGE_PREFIX+'user',JSON.stringify(response.user)); applyUserLanguage(response.user);
-    if (options.redirect !== false) navigate('/dashboard');
+
+    apiClient.setTokens(response.accessToken, response.refreshToken);
+    setUser(response.user);
+    localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
+    applyUserLanguage(response.user);
+
+    // A 2FA login must go through the same activation gates as a normal login.
+    // Otherwise an unpaid/unverified customer with 2FA enabled could be sent
+    // directly to the CRM after entering the second factor.
+    if (options.redirect !== false) {
+      const u = response.user || {};
+
+      if (isInternalAccount(u)) {
+        navigate('/dashboard/admin/listings');
+        return response;
+      }
+
+      const verificationPending =
+        String(u.paymentStatus || '').toLowerCase() === 'paid_email_verification_pending' ||
+        String(u.accountStatus || '').toLowerCase() === 'paid_email_verification_pending' ||
+        (!!u.paymentConfirmedAt && !u.emailVerifiedAt);
+
+      if (verificationPending) {
+        navigate(`${userLocalePrefix(u)}/verify-email`);
+        return response;
+      }
+
+      const paid =
+        ['active', 'paid', 'trialing'].includes(String(u.paymentStatus || '').toLowerCase()) ||
+        !!u.paymentConfirmedAt;
+
+      if (!paid) {
+        if (u.selectedPlan) {
+          navigate(`${userLocalePrefix(u)}/checkout?plan=${encodeURIComponent(u.selectedPlan)}`);
+        } else {
+          navigate(`${userLocalePrefix(u)}/pricing`);
+        }
+        return response;
+      }
+
+      navigate('/onboarding');
+    }
+
     return response;
   };
 

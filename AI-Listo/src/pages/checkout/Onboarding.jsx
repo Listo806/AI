@@ -77,9 +77,14 @@ export default function Onboarding() {
       return true;
     }
     if (status === 403) {
-      // Paid but the email link has not been clicked yet.
-      navigate(verifyPath, { replace: true });
-      return true;
+      const code = String(err?.data?.code || err?.response?.data?.code || err?.code || '');
+      const message = String(err?.data?.message || err?.response?.data?.message || err?.message || '');
+      // Only verification-specific 403s belong on Verify Email. Workspace/plan
+      // permission errors must remain visible here instead of causing a false redirect.
+      if (code === 'EMAIL_VERIFICATION_REQUIRED' || /email.*verif/i.test(message)) {
+        navigate(verifyPath, { replace: true });
+        return true;
+      }
     }
     return false;
   };
@@ -105,7 +110,13 @@ export default function Onboarding() {
           return;
         }
 
-        setWorkspaces(Array.isArray(data?.workspaces) ? data.workspaces : []);
+        const available = Array.isArray(data?.workspaces) ? data.workspaces : [];
+        setWorkspaces(available);
+        // Restore a previously saved choice after an interrupted/failed activation,
+        // but never invent a selection that the backend did not return.
+        if (data?.workspaceId && available.some((ws) => ws.id === data.workspaceId)) {
+          setForm((prev) => prev.businessType ? prev : { ...prev, businessType: data.workspaceId });
+        }
         // onboarding_started: once per browser session for this account.
         trackEventOnce(`onboarding_started:${user?.id || "session"}`, "onboarding_started", { language: pageLang });
       } catch (err) {
@@ -212,7 +223,8 @@ export default function Onboarding() {
     } catch (err) {
       if (handleAuthError(err)) return;
       console.error("SAVE ONBOARDING ERROR:", err);
-      setError(err?.status === 400 ? t("onboarding.selectToContinue") : t("onboarding.serverError"));
+      const message = err?.data?.message || err?.response?.data?.message || err?.message;
+      setError(err?.status === 400 ? t("onboarding.selectToContinue") : (message || t("onboarding.serverError")));
     } finally {
       setLoading(false);
     }

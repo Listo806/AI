@@ -180,7 +180,8 @@ export default function CustomerEntryPoints() {
   const { i18n } = useTranslation();
   const lang = setupLanguage(i18n);
   const tr = copy[lang];
-  const { data, state, save, load } = useSetup();
+  const { data, state, save, load, flush } = useSetup();
+  const saveThenNavigate = async (to, extra = {}) => { await flush(); n(setupPath(to, extra)); };
 
   const requestedSection = params.get("section");
   const initial = sectionKeys.includes(requestedSection) ? requestedSection : "website";
@@ -190,6 +191,13 @@ export default function CustomerEntryPoints() {
   });
 
   const c = data?.config || {};
+  const setupPath = (path, extra = {}) => {
+    const qs = new URLSearchParams(extra);
+    const ws = data?.workspace_id && data.workspace_id !== "default" ? data.workspace_id : "";
+    if (ws) qs.set("workspace_id", ws);
+    const query = qs.toString();
+    return `${path}${query ? `?${query}` : ""}`;
+  };
 
   useEffect(() => {
     if (!data?.id) return;
@@ -300,7 +308,7 @@ export default function CustomerEntryPoints() {
 
       <div className="cep-field-block">
         <h4>{tr.primaryGoal}</h4>
-        <button className="cep-goal" onClick={() => n("/dashboard/ai-cortexa-setup")}>
+        <button className="cep-goal" onClick={() => saveThenNavigate("/dashboard/ai-cortexa-setup")}>
           <span className="cep-goal-icon"><ShoppingCart/></span>
           <span><b>{data.selected_objective || (lang === "es" ? "Selecciona un objetivo" : lang === "pt" ? "Selecione um objetivo" : "Select an objective")}</b><small>{tr.recommended}</small></span>
           <em>{tr.changeGoal} <ChevronRight/></em>
@@ -398,7 +406,7 @@ export default function CustomerEntryPoints() {
       {cardHead(Phone, labels[lang][2], setupCopy[lang].phoneSub)}
       <div className="cep-action-panel">
         <div><b>{c.phone?.number || "No business number connected"}</b><small>{c.phone?.connectionStatus === "connected" ? "Connected and available to this setup." : "Connect or configure a business number before Voice/SMS can be launch-ready."}</small></div>
-        <button className="cep-primary" onClick={() => n("/dashboard/ai-cortexa-setup/customer-entry-points/business-phone")}>Configure business phone</button>
+        <button className="cep-primary" onClick={() => n(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points/business-phone"))}>Configure business phone</button>
       </div>
     </div>;
 
@@ -494,7 +502,7 @@ export default function CustomerEntryPoints() {
       {cardHead(FlaskConical, labels[lang][8], "Run the end-to-end connection test after selected channels, consent and CRM routing are configured.")}
       <div className="cep-action-panel">
         <div><b>{sectionStatus(c,"test",data.tests)==="complete" ? "Connection test passed" : "Connection test not completed"}</b><small>Test evidence is stored with this setup and is used by launch readiness.</small></div>
-        <button className="cep-primary" onClick={() => n("/dashboard/ai-cortexa-setup/test-launch")}>Open Test & Launch</button>
+        <button className="cep-primary" onClick={() => n(setupPath("/dashboard/ai-cortexa-setup/test-launch"))}>Open Test & Launch</button>
       </div>
     </div>;
 
@@ -508,7 +516,7 @@ export default function CustomerEntryPoints() {
       <span className="cep-header-icon"><Share2/></span>
       <div><h1>{setupCopy[lang].entryTitle}</h1><p>{setupCopy[lang].entrySub}</p></div>
       <span className="cep-head-status"><Info/>{tr.inProgress}</span>
-      <button className="cep-secondary">{tr.saveExit}</button>
+      <button className="cep-secondary" onClick={() => saveThenNavigate("/dashboard/ai-cortexa-setup")}>{tr.saveExit}</button>
       <button className="cep-secondary"><ExternalLink/>{tr.preview}</button>
     </header>
 
@@ -557,9 +565,9 @@ export default function CustomerEntryPoints() {
     </div>
 
     <footer className="cep-footer">
-      <button className="cep-secondary" onClick={() => n("/dashboard/ai-cortexa-setup")}><ArrowLeft/>{tr.back}</button>
-      <div><span>{tr.help}</span><button onClick={() => n("/dashboard/ai-cortexa-setup/assistance")}>{tr.request}</button></div>
-      <button className="cep-primary" onClick={() => n("/dashboard/ai-cortexa-setup/customer-entry-points/business-phone")}>{tr.continue}<ArrowRight/></button>
+      <button className="cep-secondary" onClick={() => n(setupPath("/dashboard/ai-cortexa-setup"))}><ArrowLeft/>{tr.back}</button>
+      <div><span>{tr.help}</span><button onClick={() => n(setupPath("/dashboard/ai-cortexa-setup/assistance"))}>{tr.request}</button></div>
+      <button className="cep-primary" onClick={() => saveThenNavigate("/dashboard/ai-cortexa-setup/customer-entry-points/business-phone")}>{tr.continue}<ArrowRight/></button>
     </footer>
   </main>;
 }

@@ -334,7 +334,7 @@ export default function BusinessPhoneSetup() {
   const lang = setupLanguage(i18n);
   const t = COPY[lang] || COPY.en;
 
-  const { data, state, save, load } = useSetup();
+  const { data, state, save, load, flush } = useSetup();
 
   const [mode, setMode] = useState("existing");
   const [testing, setTesting] = useState(false);
@@ -356,6 +356,12 @@ export default function BusinessPhoneSetup() {
   const phone = c.phone || {};
   const current = 2;
   const workspaceId = data?.workspace_id && data.workspace_id !== "default" ? data.workspace_id : "";
+  const setupPath = (path, extra = {}) => {
+    const qs = new URLSearchParams(extra);
+    if (workspaceId) qs.set("workspace_id", workspaceId);
+    const query = qs.toString();
+    return `${path}${query ? `?${query}` : ""}`;
+  };
 
   useEffect(() => {
     if (!data) return;
@@ -504,7 +510,7 @@ export default function BusinessPhoneSetup() {
           <Info />
           {t.status}
         </span>
-        <button className="phone3-outline" onClick={() => navigate("/dashboard/ai-cortexa-setup")}>{t.save}</button>
+        <button className="phone3-outline" onClick={async () => { await flush(); navigate(setupPath("/dashboard/ai-cortexa-setup")); }}>{t.save}</button>
         <button className="phone3-outline" onClick={() => document.querySelector(".phone3-test")?.scrollIntoView({behavior:"smooth",block:"center"})}>
           <PhoneCall />
           {t.testNumber}
@@ -531,7 +537,7 @@ export default function BusinessPhoneSetup() {
               <button key={label} className={active ? "active" : ""} onClick={() => {
                 if (i === 2) return;
                 const keys=["channels","website","phone","whatsapp","marketing","consent","conversion","routing","test"];
-                navigate(`/dashboard/ai-cortexa-setup/customer-entry-points?section=${keys[i]}`);
+                navigate(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points", { section: keys[i] }));
               }}>
                 <span className={`phone3-step-wrap ${done ? "done" : ""}`}>
                   <span className={`phone3-num ${active ? "active" : ""}`}>{i + 1}</span>
@@ -561,7 +567,7 @@ export default function BusinessPhoneSetup() {
               </div>
               <div>This number will answer product questions, capture customer information, and guide callers toward checkout or a human team member.</div>
             </div>
-            <button onClick={() => navigate("/dashboard/ai-cortexa-setup")}>
+            <button onClick={() => navigate(setupPath("/dashboard/ai-cortexa-setup"))}>
               {t.change}<ChevronRight />
             </button>
           </div>
@@ -769,7 +775,7 @@ export default function BusinessPhoneSetup() {
                 />
               </label>
             
-            <button className="phone3-advanced" onClick={() => navigate("/dashboard/ai-cortexa-setup/customer-entry-points?section=routing")}>
+            <button className="phone3-advanced" onClick={() => navigate(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points", { section: "routing" }))}>
               <Settings2 />
               {t.advanced}
               <ChevronRight />
@@ -875,9 +881,10 @@ export default function BusinessPhoneSetup() {
       <footer className="phone3-footer">
         <button
           className="phone3-back"
-          onClick={() =>
-            navigate("/dashboard/ai-cortexa-setup/customer-entry-points")
-          }
+          onClick={async () => {
+            await flush();
+            navigate(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points"));
+          }}
         >
           <ArrowLeft />
           {t.back}
@@ -888,11 +895,10 @@ export default function BusinessPhoneSetup() {
         </span>
         <button
           className="phone3-next"
-          onClick={() =>
-            navigate(
-              "/dashboard/ai-cortexa-setup/customer-entry-points?section=whatsapp",
-            )
-          }
+          onClick={async () => {
+            await flush();
+            navigate(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points", { section: "whatsapp" }));
+          }}
         >
           {t.next}
           <ArrowRight />

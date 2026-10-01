@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { User, UserRole } from './entities/user.entity';
 
@@ -39,13 +39,24 @@ export class UsersService {
     const lang = ['en', 'es', 'pt'].includes(String(data.preferredLanguage))
       ? data.preferredLanguage
       : 'en';
-    const { rows } = await this.db.query(
-      `INSERT INTO users (email, password, role, team_id, preferred_language, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
-       RETURNING id, email, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
-      [data.email, data.password, data.role, data.teamId || null, lang],
-    );
-    return rows[0];
+    try {
+      const { rows } = await this.db.query(
+        `INSERT INTO users (email, password, role, team_id, preferred_language, is_active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
+         RETURNING id, email, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
+        [data.email.trim().toLowerCase(), data.password, data.role, data.teamId || null, lang],
+      );
+      return rows[0];
+    } catch (error: any) {
+      // The database unique index is the final authority. The pre-check in
+      // AuthService is useful for UX, but two concurrent signup requests can
+      // both pass it before either INSERT commits. Convert that race into the
+      // same safe 409 response instead of creating two customer accounts.
+      if (error?.code === '23505') {
+        throw new ConflictException('User already exists');
+      }
+      throw error;
+    }
   }
 
   async findByEmail(email: string): Promise<User | null> {

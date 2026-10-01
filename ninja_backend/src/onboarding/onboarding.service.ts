@@ -1,10 +1,9 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { WorkspaceEntitlementsService } from '../workspaces/workspace-entitlements.service';
 import {
   WORKSPACE_CATALOG,
   getWorkspace,
-  isWorkspaceLocked,
 } from '../workspaces/workspace-registry';
 
 // Post-activation onboarding (verified email -> workspace selection -> CRM).
@@ -107,14 +106,16 @@ export class OnboardingService {
     // legacy entitlement) is done: the page sends it straight there.
     // Without an active workspace (e.g. the plan was not active yet when the
     // answers were saved) a completed onboarding lands on the CRM home instead.
-    const completed = !!row.onboarding_completed_at || !!teamWorkspace;
+    // Access is entitlement-backed. A stale onboarding_completed_at flag must never
+    // skip Workspace Selection when the entitlement is missing/revoked.
+    const completed = !!teamWorkspace;
     const teamWs = teamWorkspace ? getWorkspace(teamWorkspace) : null;
     const savedWs = row.onboarding_workspace_id ? getWorkspace(row.onboarding_workspace_id) : null;
 
     return {
       completed,
       workspaceId: teamWs?.id || savedWs?.id || null,
-      route: teamWs?.route || (completed ? '/dashboard' : null),
+      route: teamWs?.route || null,
       canSelectWorkspace: BILLING_ADMIN_ROLES.includes(String(user?.role || '').toLowerCase()),
       workspaces: this.workspaceList(),
     };
@@ -175,12 +176,24 @@ export class OnboardingService {
       }
     }
 
-    if (activationNote && !activated) {
+    if (!activated) {
       this.logger.warn(
-        `onboarding: workspace '${requested.id}' saved for user ${user.id} but not activated (${activationNote})`,
+        `onboarding: refused completion for workspace '${requested.id}' user ${user.id} (${activationNote || 'activation_failed'})`,
       );
+      if (activationNote === 'not_account_admin') {
+        throw new ForbiddenException('Only an account owner or authorized administrator can select the included workspace.');
+      }
+      if (activationNote === 'no_team') {
+        throw new ServiceUnavailableException('Your account is not attached to a workspace team yet. Please retry or contact support.');
+      }
+      if (activationNote === 'no_active_plan') {
+        throw new ForbiddenException('An active CRM plan is required before selecting a workspace.');
+      }
+      throw new ServiceUnavailableException('Workspace activation could not be completed. Please retry.');
     }
 
+    // Mark onboarding complete only after the entitlement exists. This prevents a
+    // failed activation from becoming a permanent "completed" browser/account state.
     await this.db.query(
       `UPDATE users
           SET onboarding_completed_at = COALESCE(onboarding_completed_at, NOW()),
@@ -198,14 +211,13 @@ export class OnboardingService {
     const ws = getWorkspace(workspaceId)!;
     // Only send the customer into a workspace they can open; if activation could
     // not happen (no active plan yet, invited member), fall back to the CRM home.
-    const accessible = activated || !isWorkspaceLocked(ws.id);
     return {
       success: true,
       completed: true,
       workspaceId: ws.id,
-      activated,
+      activated: true,
       note: activationNote,
-      route: accessible ? ws.route : '/dashboard',
+      route: ws.route,
     };
   }
 }

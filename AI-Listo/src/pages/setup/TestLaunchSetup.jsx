@@ -22,12 +22,25 @@ export default function TestLaunchSetup(){
  const [f,setF]=useState({channel:"",scenario:SCENARIOS[0],entryPoint:"",name:"",phone:"",email:""});
  const [result,setResult]=useState(null); const [busy,setBusy]=useState(false); const [error,setError]=useState("");
  const c=data?.config||{}, readiness=data?.readiness||{}, selected=c.customerChannels||[];
+ const setupPath=(path,extra={})=>{const qs=new URLSearchParams(extra);const ws=data?.workspace_id&&data.workspace_id!=="default"?data.workspace_id:"";if(ws)qs.set("workspace_id",ws);const q=qs.toString();return `${path}${q?`?${q}`:""}`};
  const connected=useMemo(()=>{const x=[];if(selected.includes("website")&&readiness.website)x.push("website");if(selected.includes("phone")&&readiness.phone)x.push("voice");if(selected.includes("sms")&&readiness.phone)x.push("sms");if(selected.includes("whatsapp")&&readiness.whatsapp)x.push("whatsapp");return x},[selected,readiness.website,readiness.phone,readiness.whatsapp]);
  const channel=f.channel||connected[0]||""; const passCount=KEYS.filter(k=>readiness[k]).length; const pct=Math.round(passCount/KEYS.length*100);
  const latest=result||((data?.tests||[]).length?data.tests[data.tests.length-1]:null); const testPassed=latest?.status==="pass";
  if(!data)return <main className="setup-shell pass4-page"><div className="setup-loading">Loading setup…</div></main>;
  const run=async()=>{if(!channel||!f.entryPoint||!f.name)return;setError("");setBusy(true);try{const r=await setupApi.test({...f,channel}, data?.workspace_id);setResult(r?.result||null);await load();if(r?.result?.status==="fail")setError(r.result.errorDetails||"End-to-end test did not pass.");}catch(e){setError(e?.message||"Unable to run the end-to-end test.");}finally{setBusy(false)}};
- const activate=async()=>{if(!readiness.ready||busy)return;if(!window.confirm("Activate the AI Agent on the approved channels?"))return;setBusy(true);try{await setupApi.activate(data?.workspace_id);await load()}finally{setBusy(false)}};
+ const activate=async()=>{
+  if(!readiness.ready||busy)return;
+  if(!window.confirm("Activate the AI Agent on the approved channels?"))return;
+  setError("");setBusy(true);
+  try{
+   const activated=await setupApi.activate(data?.workspace_id);
+   if(activated?.status!=="active") throw new Error("Activation was not confirmed by the server.");
+   await load();
+   navigate("/dashboard/ai-cortexa",{replace:true});
+  }catch(e){
+   setError(e?.message||"Unable to activate the AI Agent. Your setup has been preserved; please retry.");
+  }finally{setBusy(false)}
+ };
  const ch=(id,label,Icon)=><button disabled={!connected.includes(id)} className={channel===id?"active":""} onClick={()=>setF({...f,channel:id})}><Icon/>{label}</button>;
  const doneSteps=[selected.length>0,!!readiness.trained,!!(readiness.website||readiness.phone||readiness.whatsapp),false,!!readiness.handoff,false];
  const channelLabels={website:"Website",voice:"Voice",sms:"SMS",whatsapp:"WhatsApp"};
@@ -36,7 +49,7 @@ export default function TestLaunchSetup(){
  const ev=latest?.evidence||{}; const evidence=[!!ev.contactReceived,!!ev.aiResponded,!!ev.crmRecordCreated,!!ev.sourceRecorded,!!ev.pipelineUpdated,!!(ev.conversionVerified||ev.handoffVerified)];
  return <main className="setup-shell pass4-page">
   <div className="p4-crumb"><span>AI Agent Setup</span><ChevronRight/><b>Test & Launch</b></div>
-  <header className="p4-header"><span className="p4-title-icon"><Play/></span><div><h1>{t.title}</h1><p>{t.subtitle}</p></div><span className={`p4-ready ${readiness.ready ? "" : "not-ready"}`}>{readiness.ready ? <CheckCircle2/> : <CircleAlert/>}{readiness.ready ? t.ready : "Setup incomplete"}</span><button className="p4-outline" onClick={()=>navigate("/dashboard/ai-cortexa-setup")}>{t.save}</button><button className="p4-outline" onClick={()=>navigate("/dashboard/ai-cortexa-setup/customer-entry-points")}>{t.summary}</button></header>
+  <header className="p4-header"><span className="p4-title-icon"><Play/></span><div><h1>{t.title}</h1><p>{t.subtitle}</p></div><span className={`p4-ready ${readiness.ready ? "" : "not-ready"}`}>{readiness.ready ? <CheckCircle2/> : <CircleAlert/>}{readiness.ready ? t.ready : "Setup incomplete"}</span><button className="p4-outline" onClick={()=>navigate(setupPath("/dashboard/ai-cortexa-setup"))}>{t.save}</button><button className="p4-outline" onClick={()=>navigate(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points"))}>{t.summary}</button></header>
   <section className="p4-progress"><b>{t.launch}</b><span>{passCount} of {KEYS.length} {t.passed}</span><div><i style={{width:`${pct}%`}}/></div><strong>{pct}% {t.readyPct}</strong></section>
   <div className="p4-layout">
    <aside className="p4-nav">{t.steps.map((name,i)=>{const done=doneSteps[i],active=i===3,locked=i===5&&!readiness.ready;return <div className={active?"active":""} key={name}><span className={`p4-step-num ${done?"done":active?"active":""}`}>{i+1}</span>{done&&<span className="p4-step-check"><Check/></span>}{locked&&<span className="p4-step-lock"><LockKeyhole/></span>}<section><b>{name}</b><small className={done?"done":active?"active":locked?"locked":""}>{done?t.complete:active?t.progress:locked?t.locked:""}</small></section></div>})}<div className="p4-auto"><Info/>{t.auto}</div></aside>
@@ -72,6 +85,6 @@ export default function TestLaunchSetup(){
     <section className="p4-activate"><div><ShieldCheck/><b>{data.status==="active"?"AI Agent is active":t.available}</b></div>{data.status==="active"&&activeChannels.length>0&&<p className="p4-live-channels">Live channels: {activeChannels.map(x=>channelLabels[x]||x).join(", ")}</p>}<button disabled={!readiness.ready||busy||data.status==="active"} onClick={activate}>{data.status==="active"?"AI Agent Active":t.activate}</button>{!readiness.ready&&<p><CircleAlert/>{t.unlock}</p>}</section>
    </aside>
   </div>
-  <footer className="p4-footer"><button className="back" onClick={()=>navigate("/dashboard/ai-cortexa-setup/customer-entry-points?section=conversion")}><ArrowLeft/>{t.back}</button><span><CheckCircle2/>{state||t.saved}</span><div><button className="reset" onClick={()=>setResult(null)}>{t.reset}</button><button className="finish" disabled={!testPassed} onClick={async()=>{await load();document.querySelector(".p4-readiness")?.scrollIntoView({behavior:"smooth",block:"center"})}}>{t.finish}<ArrowRight/></button></div></footer>
+  <footer className="p4-footer"><button className="back" onClick={()=>navigate(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points",{section:"conversion"}))}><ArrowLeft/>{t.back}</button><span><CheckCircle2/>{state||t.saved}</span><div><button className="reset" onClick={()=>setResult(null)}>{t.reset}</button><button className="finish" disabled={!testPassed} onClick={async()=>{const latestSetup=await load();if(latestSetup?.status==="active")navigate("/dashboard/ai-cortexa",{replace:true});else document.querySelector(".p4-readiness")?.scrollIntoView({behavior:"smooth",block:"center"})}}>{data.status==="active"?"Open AI Agent":t.finish}<ArrowRight/></button></div></footer>
  </main>
 }

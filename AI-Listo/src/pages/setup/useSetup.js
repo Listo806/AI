@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { setupApi } from "./setupApi";
 
 const NESTED_GROUPS = new Set([
@@ -36,6 +37,8 @@ const mergePatchIntoSetup = (current, patch) => {
 };
 
 export function useSetup() {
+  const [searchParams] = useSearchParams();
+  const requestedWorkspaceId = searchParams.get("workspace_id") || "";
   const [data, setData] = useState(null);
   const [state, setState] = useState("");
   const timer = useRef(null);
@@ -50,9 +53,9 @@ export function useSetup() {
   }, []);
 
   const load = useCallback(async () => {
-    const next = await setupApi.get();
+    const next = await setupApi.get(requestedWorkspaceId);
     return applyData(next);
-  }, [applyData]);
+  }, [applyData, requestedWorkspaceId]);
 
   useEffect(() => {
     load().catch((e) => setState(e?.message || "Unable to load setup"));
@@ -130,5 +133,5 @@ export function useSetup() {
     }, 500);
   }, [flush, mergePending]);
 
-  return { data, state, save, load };
+  return { data, state, save, load, flush };
 }

@@ -11,9 +11,10 @@ export default function SetupHome(){
   const {data,state,save}=useSetup();
   if(!data) return <main className="setup-shell"><div className="setup-loading">{tr.loading}</div></main>;
   const c=data.config||{};
+  const setupPath=(path,extra={})=>{const qs=new URLSearchParams(extra);const ws=data?.workspace_id&&data.workspace_id!=="default"?data.workspace_id:"";if(ws)qs.set("workspace_id",ws);const q=qs.toString();return `${path}${q?`?${q}`:""}`};
   const done=[!!c.trainingComplete,!!(c.customerChannels||[]).length,!!(c.routing?.pipelineId&&c.routing?.stageId),!!data.readiness?.ready];
   const count=done.filter(Boolean).length,pct=Math.round(count/4*100);
-  const go=[()=>n("/dashboard/ai-cortexa-setup/training"),()=>n("/dashboard/ai-cortexa-setup/customer-entry-points"),()=>n("/dashboard/ai-cortexa-setup/customer-entry-points?section=conversion"),()=>n("/dashboard/ai-cortexa-setup/test-launch")];
+  const go=[()=>n(setupPath("/dashboard/ai-cortexa-setup/training")),()=>n(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points")),()=>n(setupPath("/dashboard/ai-cortexa-setup/customer-entry-points",{section:"conversion"})),()=>n(setupPath("/dashboard/ai-cortexa-setup/test-launch"))];
   const stageIcons=[Sparkles,Share2,GitBranch,Play];
   return <main className="setup-shell setup-home-ref">
     <header className="setup-ref-head"><span className="setup-ref-logo"><Sparkles/></span><div><h1>{tr.homeTitle}</h1><p>{tr.homeSub}</p></div></header>
@@ -22,7 +23,7 @@ export default function SetupHome(){
     </section>
     <section className="setup-ref-progress"><b>{tr.setupProgress}</b><span>{count} of 4 {tr.stepsComplete}</span><div><i style={{width:`${pct}%`}}/></div><span>{pct}% complete</span></section>
     <section className="stage-ref-list">{tr.stages.map((s,i)=>{const I=stageIcons[i];const status=i===0?(done[i]?tr.complete:tr.inProgress):i===3?(done[i]?tr.complete:tr.readyTest):(done[i]?tr.complete:tr.notConfigured);return <article key={s[0]} className="stage-ref-row"><span className="stage-ref-num">{i+1}</span><span className={`stage-ref-icon s${i}`}><I/></span><div className="stage-ref-copy"><h3>{s[0]}</h3><p>{s[1]}</p></div><span className={`stage-ref-status ${done[i]?"done":i===0?"progress":i===3?"test":""}`}>{i===0&&!done[i]?<Clock3/>:<CheckCircle2/>}{status}</span><button className={`stage-ref-btn ${i===0||i===3?"primary":""}`} onClick={go[i]}>{done[i]&&i!==3?"Review":s[2]}</button><ChevronDown/></article>})}</section>
-    {!c.assistanceDismissed&&<section className="assist-ref"><span className="assist-ref-icon"><Headphones/></span><div><h3>{tr.assistance}</h3><p>{tr.assistanceSub}</p><div><span>✦ AI Agent Setup Assistance</span><span>◉ Website & Connection Assistance</span></div><small>Optional paid services quoted separately based on your requirements.</small></div><button className="stage-ref-btn" onClick={()=>n("/dashboard/ai-cortexa-setup/assistance")}>{tr.request}</button><button className="assist-x" onClick={()=>save({assistanceDismissed:true},true)}><X/></button></section>}
-    <footer className="setup-ref-footer"><span><ShieldCheck/>{tr.autoSave}</span><span>{tr.needHelp} <button onClick={()=>n("/dashboard/ai-cortexa-setup/assistance")}>{tr.support} ↗</button></span></footer>
+    {!c.assistanceDismissed&&<section className="assist-ref"><span className="assist-ref-icon"><Headphones/></span><div><h3>{tr.assistance}</h3><p>{tr.assistanceSub}</p><div><span>✦ AI Agent Setup Assistance</span><span>◉ Website & Connection Assistance</span></div><small>Optional paid services quoted separately based on your requirements.</small></div><button className="stage-ref-btn" onClick={()=>n(setupPath("/dashboard/ai-cortexa-setup/assistance"))}>{tr.request}</button><button className="assist-x" onClick={()=>save({assistanceDismissed:true},true)}><X/></button></section>}
+    <footer className="setup-ref-footer"><span><ShieldCheck/>{tr.autoSave}</span><span>{tr.needHelp} <button onClick={()=>n(setupPath("/dashboard/ai-cortexa-setup/assistance"))}>{tr.support} ↗</button></span></footer>
   </main>
 }

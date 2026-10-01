@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { UserRole } from '../../users/entities/user.entity';
-import { getPlan, resolveEffectivePlan } from '../../plans/plan-config';
 
 /**
  * PaymentGuard — server-side WORKSPACE payment gate.
@@ -50,7 +49,7 @@ import { getPlan, resolveEffectivePlan } from '../../plans/plan-config';
 export class PaymentGuard implements CanActivate {
   // Owner payment_status values that grant workspace access. 'free' is included
   // because the Free tier has CRM access without paying.
-  private static readonly ALLOWED_STATUSES: string[] = ['active', 'paid', 'free'];
+  private static readonly ALLOWED_STATUSES: string[] = ['active', 'paid', 'trialing'];
 
   // Roles that never pay and are always allowed through.
   private static readonly EXEMPT_ROLES: string[] = [
@@ -99,24 +98,27 @@ export class PaymentGuard implements CanActivate {
         [user.id],
       );
 
-      // No row for this user at all — anomalous (JWT said they exist). Fail-open.
+      // If the authenticated customer cannot be resolved in the database, fail closed.
+      // A JWT alone is never proof of an active paid workspace.
       if (!rows || rows.length === 0) {
-        console.warn(
-          `[PaymentGuard] No user row for id=${user.id}; allowing (fail-open).`,
+        console.warn(`[PaymentGuard] No user row for id=${user.id}; denying CRM access.`);
+        throw new ForbiddenException(
+          '🔒 We could not verify your workspace subscription. Please sign in again or contact support.',
         );
-        return true;
       }
 
       const row = rows[0];
 
-      // Could not resolve a workspace owner (user has no team, or team has no
-      // owner_id). Not confident enough to block a possibly-legitimate account.
+      // No workspace owner means there is no authoritative entitlement record.
+      // This is normal before workspace setup, but it must not grant CRM access.
       if (!row.owner_id) {
         console.warn(
           `[PaymentGuard] No workspace owner resolvable for user id=${user.id} ` +
-            `(teamId=${user.teamId ?? 'null'}); allowing (fail-open).`,
+            `(teamId=${user.teamId ?? 'null'}); denying CRM access.`,
         );
-        return true;
+        throw new ForbiddenException(
+          '🔒 Complete workspace setup before accessing the CRM.',
+        );
       }
 
       const status = (row.status ?? '').toString().trim().toLowerCase();
@@ -125,43 +127,26 @@ export class PaymentGuard implements CanActivate {
         return true;
       }
 
-      // Not an obviously-allowed status. Resolve the effective plan with the SAME
-      // rule the entitlement layer uses (resolveEffectivePlan): selected_plan is
-      // intent only, a paid tier is grandfathered from the `plan` column unless it
-      // has terminated, and everything else is Free. Free and every paid tier
-      // include CRM access, so allow whenever the effective plan grants CRM. This
-      // keeps an unpaid plan-selector on Free access (premium still locked by the
-      // feature layer), never falsely blocks a legacy/grandfathered paid account,
-      // and drops a canceled account back to Free rather than locking it out —
-      // exactly matching UsageService.resolveTeamPlan so the two never disagree.
-      const eff = resolveEffectivePlan({
-        selected_plan: row.selected_plan,
-        plan: row.plan,
-        payment_status: row.status,
-        checkout_status: row.checkout_status,
-      });
-      if (getPlan(eff.planId).features.crm) {
-        return true;
-      }
-
-      // Defense-in-depth: the effective plan does not grant CRM access. Not
-      // reachable with the current plan catalog (Free and all paid tiers include
-      // CRM), but kept so a future no-CRM plan blocks correctly.
+      // Current launch policy has no unrestricted unpaid/Free CRM bypass.
+      // A selected plan, checkout redirect, or browser-side success flag is not
+      // proof of payment; only the owner's backend payment status grants access.
       throw new ForbiddenException(
-        '🔒 Your subscription is not active. Please complete checkout to access the CRM.',
+        '🔒 Your activation payment has not been confirmed. Please complete checkout to access the CRM.',
       );
     } catch (err) {
       // Never swallow our own deliberate block.
       if (err instanceof ForbiddenException) {
         throw err;
       }
-      // Any DB/unexpected error: fail-open so an outage can't lock everyone out.
+      // Entitlement/payment verification is security-sensitive. If the database
+      // check fails, do not turn an infrastructure error into unpaid CRM access.
       console.error(
-        `[PaymentGuard] Payment status check failed for user id=${user?.id}; ` +
-          `allowing (fail-open).`,
+        `[PaymentGuard] Payment status check failed for user id=${user?.id}; denying access.`,
         err,
       );
-      return true;
+      throw new ForbiddenException(
+        '🔒 We could not verify your subscription right now. Please retry shortly.',
+      );
     }
   }
 }

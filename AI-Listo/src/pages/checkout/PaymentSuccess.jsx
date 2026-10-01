@@ -19,7 +19,10 @@ export default function PaymentSuccess() {
         } catch (e) {
           // ignore; webhook + next load will reconcile status
         }
-        navigate("/dashboard", { replace: true });
+        // A browser success page is never an activation authority. Route into
+        // the backend-gated onboarding flow; it will require confirmed payment
+        // + verified email before workspace selection can open.
+        navigate(withLocalePrefix(localePrefixFromPath(window.location.pathname), "/onboarding"), { replace: true });
       } else {
         // Keep the page's language (/es/payment-success -> /es/sign-in).
         navigate(withLocalePrefix(localePrefixFromPath(window.location.pathname), "/sign-in"), { replace: true });

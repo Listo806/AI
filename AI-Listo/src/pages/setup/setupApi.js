@@ -18,7 +18,7 @@ const endpoint = (path = "", workspaceId = "") => {
 };
 
 export const setupApi = {
-  get: () => apiClient.request(endpoint()),
+  get: (workspaceId) => apiClient.request(endpoint("", workspaceId)),
 
   save: (body, workspaceId) =>
     apiClient.request(endpoint("", workspaceId), {

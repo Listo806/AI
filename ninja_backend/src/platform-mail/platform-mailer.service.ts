@@ -559,6 +559,7 @@ export class PlatformMailerService {
       `account_activated_at TIMESTAMPTZ`,
       `verification_email_sent_at TIMESTAMPTZ`,
       `verification_email_resent_at TIMESTAMPTZ`,
+      `verification_email_initial_claimed_at TIMESTAMPTZ`,
       `pending_email_changed_at TIMESTAMPTZ`,
       `verification_failed_at TIMESTAMPTZ`,
       `pending_payment_status VARCHAR(32)`,
@@ -680,17 +681,60 @@ export class PlatformMailerService {
 
   async beginPaidEmailVerification(userId: string, finalPaymentStatus: 'trialing' | 'active' = 'active'): Promise<void> {
     await this.ensurePaidVerificationSchema();
-    // Atomic first-callback claim. Duplicate Nuvei notifications see an existing
-    // payment_confirmed_at and never send a second verification email.
-    const claim = await this.db.query(
-      `UPDATE users SET payment_confirmed_at=COALESCE(payment_confirmed_at,NOW()),
-                        account_status='paid_email_verification_pending',
-                        payment_status='paid_email_verification_pending', pending_payment_status=$2, checkout_status='paid', updated_at=NOW()
-        WHERE id=$1 AND email_verified_at IS NULL AND payment_confirmed_at IS NULL
-        RETURNING id`, [userId, finalPaymentStatus]);
-    if (!claim.rows.length) return;
+
+    // Payment confirmation and the first verification-email delivery are two
+    // separate side effects. A provider callback may be retried after payment
+    // was committed but before (or while) email delivery failed. Claim the
+    // initial email independently so that state is recoverable without allowing
+    // concurrent callback deliveries to send duplicate verification emails.
+    const claim = await this.db.transaction(async (client) => {
+      // Serialize this very small claim section per customer. The external mail
+      // call happens after the transaction is released.
+      await client.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [String(userId)]);
+
+      const { rows } = await client.query(
+        `UPDATE users
+            SET payment_confirmed_at=COALESCE(payment_confirmed_at,NOW()),
+                account_status='paid_email_verification_pending',
+                payment_status='paid_email_verification_pending',
+                pending_payment_status=COALESCE(pending_payment_status,$2),
+                checkout_status='paid',
+                verification_email_initial_claimed_at=NOW(),
+                updated_at=NOW()
+          WHERE id=$1
+            AND email_verified_at IS NULL
+            AND verification_email_sent_at IS NULL
+            AND (verification_email_initial_claimed_at IS NULL
+                 OR verification_email_initial_claimed_at < NOW() - INTERVAL '5 minutes')
+          RETURNING id, (payment_confirmed_at = updated_at) AS first_payment_claim`,
+        [userId, finalPaymentStatus],
+      );
+      return rows[0] || null;
+    });
+
+    if (!claim) return;
+
+    // activationEvent is intentionally idempotent only at the reporting level;
+    // record payment confirmation when this path first establishes it.
     await this.activationEvent(userId, 'payment_confirmed');
-    await this.issuePaidVerification(userId, 'initial');
+
+    try {
+      const result = await this.issuePaidVerification(userId, 'initial');
+      if (!result.sent) {
+        // Release the delivery claim immediately so a verified Nuvei callback
+        // retry (or a later recovery attempt) can try the email again.
+        await this.db.query(
+          `UPDATE users SET verification_email_initial_claimed_at=NULL WHERE id=$1 AND verification_email_sent_at IS NULL`,
+          [userId],
+        );
+      }
+    } catch (err) {
+      await this.db.query(
+        `UPDATE users SET verification_email_initial_claimed_at=NULL WHERE id=$1 AND verification_email_sent_at IS NULL`,
+        [userId],
+      ).catch(() => undefined);
+      throw err;
+    }
   }
 
   async getEmailVerificationStatus(userId: string) {
@@ -743,9 +787,11 @@ export class PlatformMailerService {
     // Cheap pre-check gives friendly invalid/expired/already-verified responses.
     const pre = await this.db.query(
       `SELECT t.id,t.user_id,t.expires_at,t.used_at,t.invalidated_at,
-              u.email_verified_at,u.payment_confirmed_at,u.pending_payment_status
+              u.email_verified_at,u.payment_confirmed_at,u.pending_payment_status,
+              u.payment_status,u.nuvei_subscription_id,ns.status AS nuvei_subscription_status
          FROM email_verification_tokens t
          JOIN users u ON u.id=t.user_id
+         LEFT JOIN nuvei_subscriptions ns ON ns.id=u.nuvei_subscription_id
         WHERE t.token_hash=$1
         LIMIT 1`,
       [hash],
@@ -760,6 +806,12 @@ export class PlatformMailerService {
         reason: 'payment_not_confirmed',
       });
       throw new ForbiddenException('Payment has not been confirmed.');
+    }
+    const terminalPayment = ['refunded','canceled','cancelled','suspended','expired','failed','payment_failed'];
+    if (terminalPayment.includes(String(first.payment_status || '').toLowerCase()) ||
+        (first.nuvei_subscription_id && String(first.nuvei_subscription_status || '') !== 'verification_pending')) {
+      await this.activationEvent(first.user_id, 'verification_failed', { reason: 'payment_no_longer_eligible' });
+      throw new ForbiddenException('This payment is no longer eligible for account activation.');
     }
     if (first.invalidated_at || first.used_at) {
       await this.activationEvent(first.user_id, 'verification_failed', {
@@ -781,9 +833,11 @@ export class PlatformMailerService {
     const result = await this.db.transaction(async (client) => {
       const locked = await client.query(
         `SELECT t.id,t.user_id,t.expires_at,t.used_at,t.invalidated_at,
-                u.email_verified_at,u.payment_confirmed_at,u.pending_payment_status
+                u.email_verified_at,u.payment_confirmed_at,u.pending_payment_status,
+                u.payment_status,u.nuvei_subscription_id,ns.status AS nuvei_subscription_status
            FROM email_verification_tokens t
            JOIN users u ON u.id=t.user_id
+           LEFT JOIN nuvei_subscriptions ns ON ns.id=u.nuvei_subscription_id
           WHERE t.token_hash=$1
           LIMIT 1
           FOR UPDATE OF t,u`,
@@ -794,8 +848,11 @@ export class PlatformMailerService {
       if (r.email_verified_at) {
         return { verified: true, alreadyVerified: true, userId: r.user_id };
       }
+      const terminalPaymentLocked = ['refunded','canceled','cancelled','suspended','expired','failed','payment_failed'];
       if (
         !r.payment_confirmed_at ||
+        terminalPaymentLocked.includes(String(r.payment_status || '').toLowerCase()) ||
+        (r.nuvei_subscription_id && String(r.nuvei_subscription_status || '') !== 'verification_pending') ||
         r.invalidated_at ||
         r.used_at ||
         new Date(r.expires_at).getTime() <= Date.now()

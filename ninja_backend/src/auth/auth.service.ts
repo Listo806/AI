@@ -421,12 +421,21 @@ export class AuthService {
   async resetPassword(token: string, newPassword: string) {
     if (!token) throw new BadRequestException('Reset token is required');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const hashed = await bcrypt.hash(newPassword, 10);
 
+    // Consume the reset token atomically. This prevents two simultaneous uses of
+    // the same link from both succeeding (SELECT + UPDATE would have a race).
     const { rows } = await this.db.query(
-      `SELECT id FROM users
-       WHERE reset_token_hash = $1 AND reset_token_expires_at > NOW()
-       LIMIT 1`,
-      [tokenHash],
+      `UPDATE users
+       SET password = $1,
+           reset_token_hash = NULL,
+           reset_token_expires_at = NULL,
+           token_version = COALESCE(token_version, 1) + 1,
+           updated_at = NOW()
+       WHERE reset_token_hash = $2
+         AND reset_token_expires_at > NOW()
+       RETURNING id`,
+      [hashed, tokenHash],
     );
     if (!rows.length) {
       throw new BadRequestException(
@@ -434,17 +443,19 @@ export class AuthService {
       );
     }
 
-    const hashed = await bcrypt.hash(newPassword, 10);
+    const userId = rows[0].id;
+
+    // A password reset is an account-recovery event. Revoke every existing
+    // session as well as bumping token_version above. This is required because a
+    // previously issued refresh token must not be able to create a fresh session
+    // after the password has been changed.
     await this.db.query(
-      `UPDATE users
-       SET password = $1,
-           reset_token_hash = NULL,
-           reset_token_expires_at = NULL,
-           token_version = COALESCE(token_version, 1) + 1,
-           updated_at = NOW()
-       WHERE id = $2`,
-      [hashed, rows[0].id],
+      `UPDATE auth_sessions
+       SET revoked_at = COALESCE(revoked_at, NOW())
+       WHERE user_id = $1 AND revoked_at IS NULL`,
+      [userId],
     );
+    await this.security.passwordChanged(userId, { source: 'password_reset' });
 
     return {
       success: true,

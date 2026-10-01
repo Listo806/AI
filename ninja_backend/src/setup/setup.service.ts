@@ -69,12 +69,10 @@ export class SetupService {
      return q.rows[0].workspace_id;
    }
 
-   // Legacy/current accounts can legitimately have no workspace_entitlements yet.
-   // Keep one stable team-scoped setup record until entitlements are provisioned.
-   if(requested && requested!=='default'){
-     throw new ForbiddenException('Workspace access denied');
-   }
-   return 'default';
+   // Customer setup is workspace-scoped. Never create/use a synthetic `default`
+   // setup record when the team has no active entitlement: doing so can mix setup
+   // state across workspaces and lets direct /setup requests bypass selection.
+   throw new ForbiddenException('No active workspace is assigned to this account');
  }
  private async ensure(){ await this.db.query(`
  CREATE TABLE IF NOT EXISTS customer_setup_configs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),team_id uuid NOT NULL,workspace_id text NOT NULL,ai_agent_id uuid NULL,selected_objective text NULL,config jsonb NOT NULL DEFAULT '{}'::jsonb,tests jsonb NOT NULL DEFAULT '[]'::jsonb,status text NOT NULL DEFAULT 'setup',activated_at timestamptz NULL,activated_by uuid NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(team_id,workspace_id));
@@ -435,26 +433,33 @@ export class SetupService {
      }
    };
 
-   // The AI runtime reads ai_agent_settings.launched. Activation must update
-   // that source of truth; changing only the setup wizard status is not enough.
-   await this.db.query(
-     `INSERT INTO ai_agent_settings(team_id,launched,paused,updated_at)
-      VALUES($1,true,false,NOW())
-      ON CONFLICT(team_id)
-      DO UPDATE SET launched=true,paused=false,updated_at=NOW()`,
-     [teamId]
-   );
+   // Launch is one atomic state transition. Never leave ai_agent_settings.launched=true
+   // while the workspace setup record is still incomplete (or vice versa).
+   await this.db.transaction(async (client)=>{
+     const updated=await client.query(
+       `UPDATE customer_setup_configs
+           SET status='active',
+               activated_at=NOW(),
+               activated_by=$3,
+               config=$4::jsonb,
+               updated_at=NOW()
+         WHERE team_id=$1 AND workspace_id=$2
+         RETURNING id`,
+       [teamId,ws,userId,JSON.stringify(config)]
+     );
+     if(updated.rowCount!==1)
+       throw new BadRequestException('Unable to activate this workspace setup. Reload setup and try again.');
 
-   await this.db.query(
-     `UPDATE customer_setup_configs
-         SET status='active',
-             activated_at=NOW(),
-             activated_by=$3,
-             config=$4::jsonb,
-             updated_at=NOW()
-       WHERE team_id=$1 AND workspace_id=$2`,
-     [teamId,ws,userId,JSON.stringify(config)]
-   );
+     // The AI runtime reads ai_agent_settings.launched. Keep it in the same
+     // transaction as the customer setup activation above.
+     await client.query(
+       `INSERT INTO ai_agent_settings(team_id,launched,paused,updated_at)
+        VALUES($1,true,false,NOW())
+        ON CONFLICT(team_id)
+        DO UPDATE SET launched=true,paused=false,updated_at=NOW()`,
+       [teamId]
+     );
+   });
 
    return this.loadResolved(teamId,ws);
  }
