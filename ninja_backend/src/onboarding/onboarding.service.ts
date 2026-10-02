@@ -63,6 +63,30 @@ export class OnboardingService {
     return ONBOARDING_WORKSPACES.map((w) => ({ id: w.id, name: w.name, route: w.route }));
   }
 
+  /** Account-admin permission is team-scoped. A self-signup owner's global
+   * users.role can still be "user", so never use that legacy role alone to
+   * decide whether they may select their included workspace. */
+  private async canManageTeam(user: any, teamId: string | null): Promise<boolean> {
+    if (!user?.id || !teamId) return false;
+    const globalRole = String(user?.role || '').toLowerCase();
+    if (globalRole === 'super_admin' || globalRole === 'developer') return true;
+
+    const { rows } = await this.db.query(
+      `SELECT EXISTS (
+         SELECT 1 FROM teams t
+          WHERE t.id = $2 AND t.owner_id = $1
+       ) OR EXISTS (
+         SELECT 1 FROM team_members tm
+          WHERE tm.team_id = $2
+            AND tm.user_id = $1
+            AND COALESCE(tm.status, 'active') = 'active'
+            AND LOWER(COALESCE(tm.role, '')) IN ('owner', 'admin')
+       ) AS allowed`,
+      [user.id, teamId],
+    );
+    return rows[0]?.allowed === true;
+  }
+
   private async activeCrmSubscription(teamId: string) {
     const { rows } = await this.db.query(
       `SELECT id, plan_id AS "planId"
@@ -219,7 +243,7 @@ export class OnboardingService {
       completed,
       workspaceId: teamWs?.id || savedWs?.id || null,
       route: teamWs?.route || null,
-      canSelectWorkspace: BILLING_ADMIN_ROLES.includes(String(user?.role || '').toLowerCase()),
+      canSelectWorkspace: await this.canManageTeam(user, teamId),
       workspaces: this.workspaceList(),
     };
   }
@@ -261,7 +285,7 @@ export class OnboardingService {
       if (existing !== requested.id) activationNote = 'workspace_already_selected';
     } else if (!teamId) {
       activationNote = 'no_team';
-    } else if (!BILLING_ADMIN_ROLES.includes(String(user?.role || '').toLowerCase())) {
+    } else if (!(await this.canManageTeam(user, teamId))) {
       activationNote = 'not_account_admin';
     } else {
       const sub = await this.activeCrmSubscription(teamId);
