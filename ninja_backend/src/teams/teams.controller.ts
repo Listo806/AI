@@ -270,7 +270,9 @@ export class TeamsController {
     return { message: "Member removed successfully" };
   }
 
-  @RequiresWorkspace('team')
+  // Core CRM team dashboard. This endpoint is used by /dashboard/home for
+  // every CRM account and must not require the paid Team Workspace add-on.
+  // Tenant isolation is still enforced by ensureCanAccessTeam below.
   @Get(":id/dashboard")
   async getDashboard(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
