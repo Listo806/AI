@@ -80,6 +80,36 @@ export class AuthService {
       preferredLanguage: signupDto.language || null,
     });
 
+    // Every self-service CRM customer needs a tenant team before checkout/onboarding.
+    // The legacy /auth/signup path used to create users with teamId=null, while the
+    // newer trial path created a team. That split left paid, verified customers
+    // stranded at Finish Setup with onboarding:no_team. Provision the same owner
+    // team here and attach the user immediately.
+    if (!user.teamId) {
+      const teamName = user.name ? `${String(user.name).trim().split(/\s+/)[0]}'s Team` : 'My Team';
+      const { rows: teamRows } = await this.db.query(
+        `INSERT INTO teams (name, owner_id, created_at, updated_at)
+         VALUES ($1, $2, NOW(), NOW())
+         RETURNING id`,
+        [teamName, user.id],
+      );
+      const teamId = teamRows[0]?.id;
+      if (!teamId) throw new Error('Could not provision customer team');
+
+      await this.db.query(
+        `UPDATE users SET team_id = $2, updated_at = NOW() WHERE id = $1`,
+        [user.id, teamId],
+      );
+      await this.db.query(
+        `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
+         VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
+         ON CONFLICT (team_id, user_id) DO UPDATE
+           SET role = 'owner', status = 'active', updated_at = NOW()`,
+        [teamId, user.id],
+      );
+      user.teamId = teamId;
+    }
+
     // Registration country (best-effort, non-blocking): Cloudflare country header
     // first, IP fallback. Never blocks or fails signup; missing shows as Unknown.
     void captureSignupCountry(this.db, user.id, geo || {});

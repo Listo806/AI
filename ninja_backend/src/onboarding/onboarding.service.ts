@@ -62,6 +62,94 @@ export class OnboardingService {
     return ONBOARDING_WORKSPACES.map((w) => ({ id: w.id, name: w.name, route: w.route }));
   }
 
+  /**
+   * Repair customers created by the legacy /auth/signup flow, which stored
+   * team_id=NULL. Only an account owner is eligible for this recovery. Besides
+   * creating the tenant team, attach any existing Nuvei subscription and mirror
+   * an already-confirmed trial/active subscription into the canonical
+   * subscriptions table so workspace activation can continue normally.
+   */
+  private async ensureOwnerTeam(user: any): Promise<string | null> {
+    const resolved = await this.entitlements.resolveTeamId(user);
+    if (resolved) return resolved;
+    if (!user?.id || String(user?.role || '').toLowerCase() !== 'owner') return null;
+
+    return this.db.transaction(async (client) => {
+      const existing = await client.query(
+        `SELECT COALESCE(u.team_id, (SELECT t.id FROM teams t WHERE t.owner_id = u.id LIMIT 1)) AS team_id,
+                u.name
+           FROM users u WHERE u.id = $1 FOR UPDATE`,
+        [user.id],
+      );
+      let teamId = existing.rows[0]?.team_id || null;
+      if (!teamId) {
+        const first = String(existing.rows[0]?.name || '').trim().split(/\s+/)[0];
+        const created = await client.query(
+          `INSERT INTO teams (name, owner_id, created_at, updated_at)
+           VALUES ($1, $2, NOW(), NOW()) RETURNING id`,
+          [first ? `${first}'s Team` : 'My Team', user.id],
+        );
+        teamId = created.rows[0]?.id || null;
+      }
+      if (!teamId) return null;
+
+      await client.query(
+        `UPDATE users SET team_id = $2, updated_at = NOW() WHERE id = $1`,
+        [user.id, teamId],
+      );
+      await client.query(
+        `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
+         VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
+         ON CONFLICT (team_id, user_id) DO UPDATE
+           SET role = 'owner', status = 'active', updated_at = NOW()`,
+        [teamId, user.id],
+      );
+
+      // Payments made while the account had no team must be brought under the
+      // newly-created tenant. Do not alter payment status or invent entitlement.
+      await client.query(
+        `UPDATE nuvei_subscriptions SET team_id = $2, updated_at = NOW()
+          WHERE user_id = $1 AND team_id IS NULL`,
+        [user.id, teamId],
+      );
+
+      // Mirror only provider-confirmed states. Pending/failed payments never
+      // become active subscriptions and therefore cannot unlock a workspace.
+      const paid = await client.query(
+        `SELECT id, provision_plan, status, next_billing_date
+           FROM nuvei_subscriptions
+          WHERE user_id = $1 AND status IN ('trialing','active')
+          ORDER BY updated_at DESC LIMIT 1`,
+        [user.id],
+      );
+      const n = paid.rows[0];
+      if (n) {
+        const existingSub = await client.query(
+          `SELECT id FROM subscriptions WHERE nuvei_subscription_id = $1 LIMIT 1`,
+          [n.id],
+        );
+        if (existingSub.rows[0]) {
+          await client.query(
+            `UPDATE subscriptions
+                SET team_id = $2, status = $3, current_period_end = COALESCE($4, current_period_end), updated_at = NOW()
+              WHERE id = $1`,
+            [existingSub.rows[0].id, teamId, n.status, n.next_billing_date || null],
+          );
+        } else {
+          await client.query(
+            `INSERT INTO subscriptions
+               (team_id, plan_id, provider, status, nuvei_subscription_id, current_period_end, created_at, updated_at)
+             VALUES ($1, $2, 'nuvei', $3, $4, $5, NOW(), NOW())`,
+            [teamId, n.provision_plan || null, n.status, n.id, n.next_billing_date || null],
+          );
+        }
+      }
+
+      this.logger.log(`onboarding: repaired missing team for owner ${user.id}`);
+      return teamId;
+    });
+  }
+
   private async activeCrmSubscription(teamId: string) {
     const { rows } = await this.db.query(
       `SELECT id, plan_id AS "planId"
@@ -137,7 +225,9 @@ export class OnboardingService {
       : [];
     const mainGoal = String(body?.mainGoal ?? '').trim().slice(0, 500);
 
-    const teamId = await this.entitlements.resolveTeamId(user);
+    // New signups have a team at registration. This recovery also repairs
+    // customers who registered before that fix and already completed payment.
+    const teamId = await this.ensureOwnerTeam(user);
     let workspaceId = requested.id;
     let activated = false;
     let activationNote: string | null = null;
