@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import "./CalendarPage.css";
 import { useAuth } from "../../context/AuthContext";
+import workspaceApi from "../../api/workspaceApi";
 import {
   fetchAppointments,
   fetchAppointmentStats,
@@ -167,18 +168,42 @@ export default function CalendarPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Load the "Assigned Agent" options and the property list once.
+  // Load shared Calendar data once. Properties belong to the Real Estate
+  // workspace, so never call its protected API unless this account actually
+  // has that workspace entitlement. This keeps Calendar usable for Sales and
+  // the other CRM workspaces without generating an expected 403.
   useEffect(() => {
+    let alive = true;
+
     (async () => {
       try {
         const m = await fetchTeamMembers();
-        setMembers(Array.isArray(m) ? m : m?.data || []);
-      } catch { setMembers([]); }
+        if (alive) setMembers(Array.isArray(m) ? m : m?.data || []);
+      } catch {
+        if (alive) setMembers([]);
+      }
+
       try {
+        const access = await workspaceApi.getAccess();
+        const realEstate = Array.isArray(access?.workspaces)
+          ? access.workspaces.find((w) => w?.id === "real-estate")
+          : null;
+
+        if (!realEstate?.entitled && !realEstate?.accessible) {
+          if (alive) setProperties([]);
+          return;
+        }
+
         const p = await fetchProperties();
-        setProperties(Array.isArray(p) ? p : p?.data || []);
-      } catch { setProperties([]); }
+        if (alive) setProperties(Array.isArray(p) ? p : p?.data || []);
+      } catch {
+        if (alive) setProperties([]);
+      }
     })();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   // Debounced CRM search while the picker is open.
