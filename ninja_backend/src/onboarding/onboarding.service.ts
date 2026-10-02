@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { WorkspaceEntitlementsService } from '../workspaces/workspace-entitlements.service';
+import { getSeatLimit } from '../plans/plan-config';
 import {
   WORKSPACE_CATALOG,
   getWorkspace,
@@ -62,94 +63,6 @@ export class OnboardingService {
     return ONBOARDING_WORKSPACES.map((w) => ({ id: w.id, name: w.name, route: w.route }));
   }
 
-  /**
-   * Repair customers created by the legacy /auth/signup flow, which stored
-   * team_id=NULL. Only an account owner is eligible for this recovery. Besides
-   * creating the tenant team, attach any existing Nuvei subscription and mirror
-   * an already-confirmed trial/active subscription into the canonical
-   * subscriptions table so workspace activation can continue normally.
-   */
-  private async ensureOwnerTeam(user: any): Promise<string | null> {
-    const resolved = await this.entitlements.resolveTeamId(user);
-    if (resolved) return resolved;
-    if (!user?.id || String(user?.role || '').toLowerCase() !== 'owner') return null;
-
-    return this.db.transaction(async (client) => {
-      const existing = await client.query(
-        `SELECT COALESCE(u.team_id, (SELECT t.id FROM teams t WHERE t.owner_id = u.id LIMIT 1)) AS team_id,
-                u.name
-           FROM users u WHERE u.id = $1 FOR UPDATE`,
-        [user.id],
-      );
-      let teamId = existing.rows[0]?.team_id || null;
-      if (!teamId) {
-        const first = String(existing.rows[0]?.name || '').trim().split(/\s+/)[0];
-        const created = await client.query(
-          `INSERT INTO teams (name, owner_id, created_at, updated_at)
-           VALUES ($1, $2, NOW(), NOW()) RETURNING id`,
-          [first ? `${first}'s Team` : 'My Team', user.id],
-        );
-        teamId = created.rows[0]?.id || null;
-      }
-      if (!teamId) return null;
-
-      await client.query(
-        `UPDATE users SET team_id = $2, updated_at = NOW() WHERE id = $1`,
-        [user.id, teamId],
-      );
-      await client.query(
-        `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
-         VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
-         ON CONFLICT (team_id, user_id) DO UPDATE
-           SET role = 'owner', status = 'active', updated_at = NOW()`,
-        [teamId, user.id],
-      );
-
-      // Payments made while the account had no team must be brought under the
-      // newly-created tenant. Do not alter payment status or invent entitlement.
-      await client.query(
-        `UPDATE nuvei_subscriptions SET team_id = $2, updated_at = NOW()
-          WHERE user_id = $1 AND team_id IS NULL`,
-        [user.id, teamId],
-      );
-
-      // Mirror only provider-confirmed states. Pending/failed payments never
-      // become active subscriptions and therefore cannot unlock a workspace.
-      const paid = await client.query(
-        `SELECT id, provision_plan, status, next_billing_date
-           FROM nuvei_subscriptions
-          WHERE user_id = $1 AND status IN ('trialing','active')
-          ORDER BY updated_at DESC LIMIT 1`,
-        [user.id],
-      );
-      const n = paid.rows[0];
-      if (n) {
-        const existingSub = await client.query(
-          `SELECT id FROM subscriptions WHERE nuvei_subscription_id = $1 LIMIT 1`,
-          [n.id],
-        );
-        if (existingSub.rows[0]) {
-          await client.query(
-            `UPDATE subscriptions
-                SET team_id = $2, status = $3, current_period_end = COALESCE($4, current_period_end), updated_at = NOW()
-              WHERE id = $1`,
-            [existingSub.rows[0].id, teamId, n.status, n.next_billing_date || null],
-          );
-        } else {
-          await client.query(
-            `INSERT INTO subscriptions
-               (team_id, plan_id, provider, status, nuvei_subscription_id, current_period_end, created_at, updated_at)
-             VALUES ($1, $2, 'nuvei', $3, $4, $5, NOW(), NOW())`,
-            [teamId, n.provision_plan || null, n.status, n.id, n.next_billing_date || null],
-          );
-        }
-      }
-
-      this.logger.log(`onboarding: repaired missing team for owner ${user.id}`);
-      return teamId;
-    });
-  }
-
   private async activeCrmSubscription(teamId: string) {
     const { rows } = await this.db.query(
       `SELECT id, plan_id AS "planId"
@@ -162,6 +75,108 @@ export class OnboardingService {
       [teamId],
     );
     return rows[0] || null;
+  }
+
+  /** Repair legacy/self-signup customers created before /auth/signup provisioned
+   * a tenant. This creates tenant identity only; it never fabricates payment.
+   * A CRM subscription is mirrored only from a confirmed active/trialing Nuvei
+   * subscription belonging to this exact user. */
+  private async repairMissingTeam(user: any): Promise<string | null> {
+    if (!user?.id) return null;
+
+    // Idempotency/race safety: another request may already have repaired it.
+    const existing = await this.db.query(
+      `SELECT COALESCE(
+          (SELECT u.team_id FROM users u WHERE u.id = $1),
+          (SELECT t.id FROM teams t WHERE t.owner_id = $1 ORDER BY t.created_at LIMIT 1),
+          (SELECT tm.team_id FROM team_members tm
+            WHERE tm.user_id = $1 AND COALESCE(tm.status, 'active') = 'active'
+            ORDER BY tm.created_at LIMIT 1)
+        ) AS team_id`,
+      [user.id],
+    );
+    let teamId = existing.rows[0]?.team_id || null;
+
+    if (!teamId) {
+      const emailRow = await this.db.query(`SELECT email FROM users WHERE id = $1 LIMIT 1`, [user.id]);
+      const email = String(emailRow.rows[0]?.email || 'My');
+      const teamName = `${email.split('@')[0] || 'My'}'s Team`;
+
+      teamId = await this.db.transaction(async (client) => {
+        // Serialize repair attempts for this user and re-check after locking.
+        const locked = await client.query(`SELECT team_id FROM users WHERE id = $1 FOR UPDATE`, [user.id]);
+        if (!locked.rows[0]) throw new Error('user_not_found');
+        if (locked.rows[0].team_id) return locked.rows[0].team_id;
+
+        const owned = await client.query(
+          `SELECT id FROM teams WHERE owner_id = $1 ORDER BY created_at LIMIT 1`,
+          [user.id],
+        );
+        let id = owned.rows[0]?.id || null;
+        if (!id) {
+          const created = await client.query(
+            `INSERT INTO teams (name, owner_id, seat_limit, created_at, updated_at)
+             VALUES ($1, $2, 1, NOW(), NOW()) RETURNING id`,
+            [teamName, user.id],
+          );
+          id = created.rows[0].id;
+        }
+
+        await client.query(
+          `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
+           VALUES ($1, $2, 'admin', 'active', NOW(), NOW())
+           ON CONFLICT (team_id, user_id)
+           DO UPDATE SET status = 'active', updated_at = NOW()`,
+          [id, user.id],
+        );
+        await client.query(`UPDATE users SET team_id = $2, updated_at = NOW() WHERE id = $1`, [user.id, id]);
+        return id;
+      });
+    } else {
+      await this.db.query(`UPDATE users SET team_id = $2, updated_at = NOW() WHERE id = $1 AND team_id IS NULL`, [user.id, teamId]);
+    }
+
+    // Payment is the authority. Attach only this user's already-confirmed Nuvei
+    // subscription, then rebuild the shared team-scoped subscription mirror that
+    // could not be created when payment happened while team_id was NULL.
+    const paid = await this.db.query(
+      `SELECT id, provision_plan, status, next_billing_date
+         FROM nuvei_subscriptions
+        WHERE user_id = $1
+          AND LOWER(status::text) IN ('active', 'trialing')
+        ORDER BY updated_at DESC, created_at DESC
+        LIMIT 1`,
+      [user.id],
+    );
+    const nuvei = paid.rows[0] || null;
+    if (nuvei) {
+      const seatLimit = getSeatLimit(nuvei.provision_plan);
+      await this.db.transaction(async (client) => {
+        await client.query(
+          `UPDATE nuvei_subscriptions SET team_id = $2, updated_at = NOW() WHERE id = $1`,
+          [nuvei.id, teamId],
+        );
+        await client.query(
+          `UPDATE teams SET seat_limit = GREATEST(COALESCE(seat_limit, 1), $2), updated_at = NOW() WHERE id = $1`,
+          [teamId, seatLimit],
+        );
+        await client.query(
+          `INSERT INTO subscriptions
+             (team_id, provider, status, seat_limit, nuvei_subscription_id, current_period_end, created_at, updated_at)
+           VALUES ($1, 'nuvei', $2, $3, $4, $5, NOW(), NOW())
+           ON CONFLICT (nuvei_subscription_id) WHERE nuvei_subscription_id IS NOT NULL
+           DO UPDATE SET team_id = EXCLUDED.team_id,
+                         status = EXCLUDED.status,
+                         seat_limit = EXCLUDED.seat_limit,
+                         current_period_end = EXCLUDED.current_period_end,
+                         updated_at = NOW()`,
+          [teamId, String(nuvei.status).toLowerCase(), seatLimit, nuvei.id, nuvei.next_billing_date],
+        );
+      });
+    }
+
+    this.logger.log(`onboarding: repaired missing team for owner ${user.id} -> ${teamId}`);
+    return teamId;
   }
 
   /** The workspace this team already runs in: the plan-included selection first,
@@ -225,9 +240,15 @@ export class OnboardingService {
       : [];
     const mainGoal = String(body?.mainGoal ?? '').trim().slice(0, 500);
 
-    // New signups have a team at registration. This recovery also repairs
-    // customers who registered before that fix and already completed payment.
-    const teamId = await this.ensureOwnerTeam(user);
+    let teamId = await this.entitlements.resolveTeamId(user);
+    if (!teamId) {
+      try {
+        teamId = await this.repairMissingTeam(user);
+      } catch (err: any) {
+        this.logger.error(`onboarding: team recovery failed for ${user.id}: ${err?.message}`);
+        throw new ServiceUnavailableException('Your account workspace could not be prepared. Please retry.');
+      }
+    }
     let workspaceId = requested.id;
     let activated = false;
     let activationNote: string | null = null;

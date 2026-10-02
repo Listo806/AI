@@ -80,34 +80,43 @@ export class AuthService {
       preferredLanguage: signupDto.language || null,
     });
 
-    // Every self-service CRM customer needs a tenant team before checkout/onboarding.
-    // The legacy /auth/signup path used to create users with teamId=null, while the
-    // newer trial path created a team. That split left paid, verified customers
-    // stranded at Finish Setup with onboarding:no_team. Provision the same owner
-    // team here and attach the user immediately.
-    if (!user.teamId) {
-      const teamName = user.name ? `${String(user.name).trim().split(/\s+/)[0]}'s Team` : 'My Team';
-      const { rows: teamRows } = await this.db.query(
-        `INSERT INTO teams (name, owner_id, created_at, updated_at)
-         VALUES ($1, $2, NOW(), NOW())
-         RETURNING id`,
-        [teamName, user.id],
-      );
-      const teamId = teamRows[0]?.id;
-      if (!teamId) throw new Error('Could not provision customer team');
-
-      await this.db.query(
-        `UPDATE users SET team_id = $2, updated_at = NOW() WHERE id = $1`,
-        [user.id, teamId],
-      );
-      await this.db.query(
-        `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
-         VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
-         ON CONFLICT (team_id, user_id) DO UPDATE
-           SET role = 'owner', status = 'active', updated_at = NOW()`,
-        [teamId, user.id],
-      );
+    // Every customer account needs a tenant before onboarding can select a
+    // workspace. /auth/signup historically left team_id NULL, which allowed the
+    // customer to pay + verify successfully but made Finish Setup fail with
+    // `(no_team)`. Provision the tenant here; access is still payment/entitlement
+    // gated, so creating the tenant does not unlock CRM access.
+    const teamName = `${email.split('@')[0] || 'My'}'s Team`;
+    try {
+      const teamId = await this.db.transaction(async (client) => {
+        const teamResult = await client.query(
+          `INSERT INTO teams (name, owner_id, seat_limit, created_at, updated_at)
+           VALUES ($1, $2, 1, NOW(), NOW())
+           RETURNING id`,
+          [teamName, user.id],
+        );
+        const createdTeamId = teamResult.rows[0].id;
+        // `admin` is accepted by the team_members schema; ownership itself is
+        // authoritative on teams.owner_id and users.role='owner'.
+        await client.query(
+          `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
+           VALUES ($1, $2, 'admin', 'active', NOW(), NOW())
+           ON CONFLICT (team_id, user_id)
+           DO UPDATE SET status = 'active', updated_at = NOW()`,
+          [createdTeamId, user.id],
+        );
+        await client.query(
+          `UPDATE users SET team_id = $2, updated_at = NOW() WHERE id = $1`,
+          [user.id, createdTeamId],
+        );
+        return createdTeamId;
+      });
       user.teamId = teamId;
+    } catch (err: any) {
+      // Do not leave a half-created signup that can never be retried because the
+      // email is already unique. Team creation is essential for customer flow.
+      await this.db.query(`DELETE FROM users WHERE id = $1`, [user.id]).catch(() => {});
+      this.logger.error(`signup tenant provisioning failed for ${user.id}: ${err?.message}`);
+      throw new BadRequestException('Account workspace could not be created. Please retry.');
     }
 
     // Registration country (best-effort, non-blocking): Cloudflare country header
