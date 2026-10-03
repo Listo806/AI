@@ -114,7 +114,7 @@ export default function SignIn({ variant = 'crm' }) {
 
           <div className="auth-field">
             <label htmlFor="password">{t('auth.passwordLabel')}</label>
-            <div style={{ position: 'relative', width: '100%' }}>
+            <div className="password-wrapper">
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -123,23 +123,11 @@ export default function SignIn({ variant = 'crm' }) {
                 placeholder={t('auth.passwordPlaceholder')}
                 required
                 disabled={loading}
-                style={{ width: '100%', paddingRight: '40px', boxSizing: 'border-box' }}
               />
               <button
                 type="button"
                 className="toggle-password"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
               >
                 {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>

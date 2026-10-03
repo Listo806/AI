@@ -980,3 +980,11 @@
 .ec-auth-page.ec-auth-signup{height:100dvh;min-height:100dvh;padding:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .ec-auth-page.ec-auth-signup .ec-auth-card{margin:0;max-height:calc(100dvh - 32px);overflow:auto;}
 @media (max-width:520px){.ec-auth-page.ec-auth-signup{padding:10px}.ec-auth-page.ec-auth-signup .ec-auth-card{max-height:calc(100dvh - 20px);padding:22px 18px}}
+
+/* Password visibility controls */
+.ec-password-field{position:relative;width:100%;}
+.ec-auth-card .ec-password-field input{width:100%;padding-right:46px;box-sizing:border-box;}
+.ec-password-field input::-ms-reveal,.ec-password-field input::-ms-clear{display:none;}
+.ec-password-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;padding:0;margin:0;display:flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:transparent;color:#64748b;cursor:pointer;}
+.ec-password-toggle:hover{background:#f1f5f9;color:#07142c;}
+.ec-password-toggle:focus-visible{outline:2px solid #3028ff;outline-offset:2px;}

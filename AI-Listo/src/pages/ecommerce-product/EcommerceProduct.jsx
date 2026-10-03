@@ -7,7 +7,7 @@ import {
   CheckCircle2, UserRound, CalendarDays, LayoutDashboard, CreditCard,
   PackageCheck, BadgeDollarSign, Plug, Workflow, BarChart3, LogOut,
   ChevronDown, CircleDollarSign, WalletCards, ChevronsRight, ChevronsLeft, RotateCcw, Truck, Tags,
-  Link2, MessageSquareText, FileBarChart2, Menu, X
+  Link2, MessageSquareText, FileBarChart2, Menu, X, Eye, EyeOff
 } from "lucide-react";
 
 import "./ecommerce-product.css";
@@ -217,7 +217,7 @@ export function EcommercePricing(){
  </div>
 }
 
-function AuthCard({mode}){ const nav=useNavigate(); const auth=useEcAuth(); const [error,setError]=useState(""); const [form,setForm]=useState({name:"",email:"",password:""}); const submit=async e=>{e.preventDefault();setError("");if(mode==="signup"){
+function AuthCard({mode}){ const nav=useNavigate(); const auth=useEcAuth(); const [error,setError]=useState(""); const [showPassword,setShowPassword]=useState(false); const [form,setForm]=useState({name:"",email:"",password:""}); const submit=async e=>{e.preventDefault();setError("");if(mode==="signup"){
  const params=new URLSearchParams(window.location.search);
  const billing=params.get("billing")||sessionStorage.getItem("ec_billing_cycle")||"monthly";
  sessionStorage.setItem("ec_billing_cycle",billing);
@@ -225,7 +225,7 @@ function AuthCard({mode}){ const nav=useNavigate(); const auth=useEcAuth(); cons
  sessionStorage.setItem("ec_signup",JSON.stringify({...form,billing}));
  nav(`/e-commerce/checkout?billing=${billing}`);
  return;
-}try{await auth.login(form);nav("/e-commerce/dashboard",{replace:true});}catch(err){setError(err.message)}}; return <div className={`ec-auth-page ${mode==="signup"?"ec-auth-signup":"ec-auth-login"}`}><form className="ec-auth-card" onSubmit={submit}><h1>{mode==="login"?"Welcome back":"Start with Cortexa E-Commerce CRM"}</h1><p>{mode==="login"?"Login to your E-Commerce CRM account.":"Create your dedicated E-Commerce account."}</p>{mode==="signup"&&<label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label>}<label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/></label><label>Password<input type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/></label>{mode==="login"&&<div className="ec-forgot-link"><Link to="/e-commerce/forgot-password">Forgot password?</Link></div>}{error&&<div className="ec-error">{error}</div>}<button className="ec-btn" type="submit">{mode==="login"?"Login":"Continue to Checkout"}</button><p className="ec-switch">{mode==="login"?<>New to E-Commerce CRM? <Link to="/e-commerce/signup">Get Started</Link></>:<>Already have an account? <Link to="/e-commerce/login">Login</Link></>}</p></form></div> }
+}try{await auth.login(form);nav("/e-commerce/dashboard",{replace:true});}catch(err){setError(err.message)}}; return <div className={`ec-auth-page ${mode==="signup"?"ec-auth-signup":"ec-auth-login"}`}><form className="ec-auth-card" onSubmit={submit}><h1>{mode==="login"?"Welcome back":"Start with Cortexa E-Commerce CRM"}</h1><p>{mode==="login"?"Login to your E-Commerce CRM account.":"Create your dedicated E-Commerce account."}</p>{mode==="signup"&&<label>Full name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></label>}<label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required/></label><label>Password<div className="ec-password-field"><input type={showPassword?"text":"password"} value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/><button type="button" className="ec-password-toggle" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?"Hide password":"Show password"} aria-pressed={showPassword}>{showPassword?<Eye size={18}/>:<EyeOff size={18}/>}</button></div></label>{mode==="login"&&<div className="ec-forgot-link"><Link to="/e-commerce/forgot-password">Forgot password?</Link></div>}{error&&<div className="ec-error">{error}</div>}<button className="ec-btn" type="submit">{mode==="login"?"Login":"Continue to Checkout"}</button><p className="ec-switch">{mode==="login"?<>New to E-Commerce CRM? <Link to="/e-commerce/signup">Get Started</Link></>:<>Already have an account? <Link to="/e-commerce/login">Login</Link></>}</p></form></div> }
 export const EcommerceLogin=()=> <AuthCard mode="login"/>;
 export const EcommerceSignup=()=> <AuthCard mode="signup"/>;
 

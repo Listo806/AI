@@ -149,29 +149,42 @@
 }
 .password-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
+  width: 100%;
 }
 
 .password-wrapper input {
   width: 100%;
-  padding-right: 40px; /* chừa chỗ cho icon */
-}
-.toggle-password {
-    background: none;
-    border: none;
-    cursor: pointer;
-    align-items: center;
-    margin-top: -38px;
-    margin-left: 315px;
-}
-.toggle-password svg {
-  stroke: #888;
+  padding-right: 44px;
+  box-sizing: border-box;
 }
 
-.toggle-password:hover svg {
-  stroke: #000;
+.password-wrapper input::-ms-reveal,
+.password-wrapper input::-ms-clear {
+  display: none;
 }
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.toggle-password svg { stroke: currentColor; }
+.toggle-password:hover { color: #0f172a; background: #f1f5f9; }
+.toggle-password:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
 .dev-auth-page {
   min-height: 100vh;
   background: #fafafa;
