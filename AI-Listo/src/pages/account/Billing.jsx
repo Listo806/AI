@@ -20,6 +20,7 @@ import {
   getTeamFeatures,
 } from "../../api/subscriptionApi";
 import { getMyTeams } from "../../api/platformApi";
+import { nuveiWorkspaceAddons, nuveiWorkspaceAddonCancel } from "../../api/nuveiApi";
 import "./account.css";
 
 const ACTIVE_LIKE = ["active", "trialing", "past_due"];
@@ -121,6 +122,38 @@ export default function Billing() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Paid Workspace add-ons ($97/month each, billed through Nuvei). Loaded on
+  // their own so a failure here never affects the plan section.
+  const [addons, setAddons] = useState([]);
+  const [canManageAddons, setCanManageAddons] = useState(false);
+  const [cancelingAddon, setCancelingAddon] = useState(null);
+  const loadAddons = useCallback(async () => {
+    try {
+      const res = await nuveiWorkspaceAddons();
+      const list = Array.isArray(res?.addons) ? res.addons : [];
+      setAddons(list.filter((a) => ["active", "past_due", "suspended"].includes(a.status)));
+      setCanManageAddons(!!res?.canManage);
+    } catch {
+      setAddons([]);
+    }
+  }, []);
+  useEffect(() => {
+    if (teamId) loadAddons();
+  }, [teamId, loadAddons]);
+
+  const cancelAddon = async (addon) => {
+    if (!window.confirm(t("account.billing.cancelAddonConfirm", { name: addon.workspaceName }))) return;
+    setCancelingAddon(addon.id);
+    try {
+      await nuveiWorkspaceAddonCancel(addon.id);
+      await loadAddons();
+    } catch (err) {
+      showError(err?.message || t("common.error"));
+    } finally {
+      setCancelingAddon(null);
+    }
+  };
 
   // Derive the real current plan from the fetched subscription + plans.
   const currentPlan = subscription?.planId
@@ -353,6 +386,40 @@ export default function Billing() {
                     </span>
                   )}
                 </div>
+                {addons.map((addon) => (
+                  <div className="metric-row-item" key={addon.id}>
+                    <div className="metric-label-group">
+                      <CheckCircle2 size={14} />{" "}
+                      <span>
+                        {t("account.billing.addonRow", {
+                          name: addon.workspaceName,
+                          price: formatPrice(addon.amount),
+                        })}
+                        {addon.status !== "active" ? ` · ${statusLabel(addon.status)}` : ""}
+                      </span>
+                    </div>
+                    {addon.cancelAtPeriodEnd ? (
+                      <span className="metric-value-output">
+                        {t("account.billing.addonEnds", {
+                          date: formatDate(addon.nextBillingDate) || "—",
+                        })}
+                      </span>
+                    ) : (addon.canCancel ?? canManageAddons) ? (
+                      <button
+                        type="button"
+                        className="btn-link-navigation"
+                        disabled={cancelingAddon === addon.id}
+                        onClick={() => cancelAddon(addon)}
+                      >
+                        {t("account.billing.cancelAddon")}
+                      </button>
+                    ) : (
+                      <span className="badge-workspace-enabled">
+                        {statusLabel(addon.status)}
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
 
               <button

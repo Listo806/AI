@@ -17,6 +17,8 @@ import { decryptToken, encryptToken, tokenFingerprint } from './nuvei-crypto.uti
 import { PLANS, PlanId, getSeatLimit, normalizePlanId } from '../plans/plan-config';
 import { ensureAcquisitionColumns, landingSlug } from '../common/acquisition.util';
 import { cleanGaClientId, ga4Settings, sendGa4Event } from '../common/ga4-measurement.util';
+import { WorkspaceEntitlementsService } from '../workspaces/workspace-entitlements.service';
+import { getWorkspace, WorkspaceDef } from '../workspaces/workspace-registry';
 
 /**
  * Nuvei / Datafast (Paymentez) subscription engine.
@@ -58,10 +60,53 @@ export type SubStatus =
 
 const APPROVED_STATUS_DETAIL = 3;
 
+// Paid Workspace add-on: each additional Workspace is $97/month, billed as its
+// own Nuvei add-on (nuvei_workspace_addons), never through nuvei_subscriptions
+// (that table holds exactly one base CRM plan per customer). Server-side
+// price; NUVEI_WORKSPACE_ADDON_CENTS can override it per environment.
+const WORKSPACE_ADDON_MONTHLY_CENTS = 9700;
+
+export type AddonStatus =
+  | 'pending'
+  | 'active'
+  | 'past_due'
+  | 'suspended'
+  | 'canceled'
+  | 'refunded'
+  | 'payment_failed';
+
+/** Transaction kinds of a Workspace add-on charge (nuvei_transactions.kind ≤ 16). */
+const ADDON_KINDS = ['addon', 'addon_renewal'];
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** What the Workspace add-on endpoints answer (the gate UI reads `status`). */
+export interface WorkspaceAddonResult {
+  // 'confirm' = quote only (nothing charged); 'card_required' = no saved card.
+  status: AddonStatus | 'confirm' | 'card_required';
+  workspaceId: string;
+  workspaceRoute: string;
+  amount: number;
+  currency: string;
+  addonId?: string;
+  alreadyEntitled?: boolean;
+  comped?: boolean;
+  supportAccess?: boolean;
+  requires3ds?: boolean;
+  challenge?: any;
+  transactionId?: string;
+  card?: { id: string; last4: string | null; brand: string | null } | null;
+  code?: string;
+  message?: string;
+  nextBillingDate?: string | null;
+  cancelAtPeriodEnd?: boolean;
+}
+
 @Injectable()
 export class NuveiService {
   private readonly logger = new Logger(NuveiService.name);
   private schemaReady = false;
+  private addonSchemaReady = false;
 
   constructor(
     private readonly config: ConfigService,
@@ -69,6 +114,7 @@ export class NuveiService {
     private readonly mailer: PlatformMailerService,
     private readonly client: NuveiClientService,
     private readonly renewalReporting: RenewalReportingService,
+    private readonly workspaceEntitlements: WorkspaceEntitlementsService,
   ) {
     // Email verification is the final activation boundary for paid Nuvei accounts.
     // Register the promotion hook here so verification and subscription activation
@@ -1828,12 +1874,24 @@ export class NuveiService {
     }
   }
 
-  private async markClaim(subscriptionId: string, period: string, status: string, message: string, raw?: any): Promise<void> {
+  private async markClaim(
+    subscriptionId: string,
+    period: string,
+    status: string,
+    message: string,
+    raw?: any,
+    kind: 'recurring' | 'addon_renewal' = 'recurring',
+  ): Promise<void> {
+    // Only an open claim (pending / unconfirmed) is ever re-marked: a callback
+    // that already recorded the real outcome (e.g. 'success') is never
+    // downgraded by a late timeout or error write. Every normal transition
+    // (pending -> unconfirmed / error, unconfirmed -> error) is unchanged.
     await this.db.query(
       `UPDATE nuvei_transactions
           SET status = $3, message = $4, raw = COALESCE($5::jsonb, raw)
-        WHERE subscription_id = $1 AND kind = 'recurring' AND period_key = $2`,
-      [subscriptionId, period, status, String(message || '').slice(0, 500), raw ? JSON.stringify(raw) : null],
+        WHERE subscription_id = $1 AND kind = $6 AND period_key = $2
+          AND status IN ('pending','unconfirmed')`,
+      [subscriptionId, period, status, String(message || '').slice(0, 500), raw ? JSON.stringify(raw) : null, kind],
     );
   }
 
@@ -2386,6 +2444,13 @@ export class NuveiService {
       [devReference, providerTxId],
     );
     const txRow = txRowRes.rows[0] || null;
+
+    // Workspace add-on charges ($97/month) belong to nuvei_workspace_addons,
+    // never to a plan subscription: settle them before any plan logic runs.
+    // (An unknown reference falls through and is acknowledged as no-match.)
+    if (txRow && ADDON_KINDS.includes(String(txRow.kind))) {
+      return this.processAddonCallback(payload, tx, txRow, providerTxId);
+    }
     const subRes = await this.db.query(
       `SELECT id, user_id, email, plan_key, provision_plan, activation_amount,
               monthly_amount, status, dev_reference, next_billing_date
@@ -3003,8 +3068,12 @@ export class NuveiService {
       [txRow.id, full ? 'refunded' : `partially refunded ${this.money(Number(claimed[0].refunded_amount))}`],
     );
     // Only a FULL refund of a charge ends the subscription; a partial refund
-    // (goodwill credit) keeps the customer's plan.
-    if (full && txRow.subscription_id) {
+    // (goodwill credit) keeps the customer's plan. A Workspace add-on charge
+    // ends that add-on (and locks its Workspace), never the base plan.
+    const isAddonCharge = ADDON_KINDS.includes(String(txRow.kind));
+    if (full && txRow.subscription_id && isAddonCharge) {
+      await this.revokeAddonForRefund(txRow.subscription_id);
+    } else if (full && txRow.subscription_id) {
       await this.revokeForRefund(txRow.subscription_id);
     }
     if (full && !txRow.subscription_id) {
@@ -3017,8 +3086,11 @@ export class NuveiService {
         .catch(() => undefined);
     }
 
-    // Refund confirmation email.
-    const email = await this.emailForTransaction(transactionId);
+    // Refund confirmation email. Add-on charges have no plan subscription row,
+    // so their address comes from the paying user.
+    const email =
+      (await this.emailForTransaction(transactionId)) ||
+      (isAddonCharge ? await this.emailForUser(txRow.user_id) : null);
     if (email) {
       await this.sendConfirmation({
         to: email,
@@ -3029,9 +3101,13 @@ export class NuveiService {
           ['Original transaction', transactionId],
           ['Status', full ? 'Refunded' : 'Partially refunded'],
         ],
-        note: full
-          ? 'Your subscription has ended and no further charges will be made.'
-          : 'Your subscription continues; this is a partial refund of the charge above.',
+        note: isAddonCharge
+          ? full
+            ? 'Your workspace add-on has ended and no further charges will be made for it. Your CRM plan is not affected.'
+            : 'Your workspace add-on continues; this is a partial refund of the charge above.'
+          : full
+            ? 'Your subscription has ended and no further charges will be made.'
+            : 'Your subscription continues; this is a partial refund of the charge above.',
       });
     }
 
@@ -3401,6 +3477,19 @@ export class NuveiService {
         'This card pays for an active subscription. Add another card first, or cancel the subscription.',
       );
     }
+    // Same for a Workspace add-on's monthly renewal.
+    await this.ensureAddonSchema();
+    const { rows: addonInUse } = await this.db.query(
+      `SELECT id FROM nuvei_workspace_addons
+        WHERE card_id = $1 AND status IN ('active','past_due')
+        LIMIT 1`,
+      [cardId],
+    );
+    if (addonInUse[0]) {
+      throw new BadRequestException(
+        'This card pays for an active workspace add-on. Cancel the add-on first, or keep this card.',
+      );
+    }
     const token = decryptToken(rows[0].token_enc, this.config.get('NUVEI_TOKEN_ENC_KEY'));
     const res = await this.client.deleteCard(String(userId), token);
     const ok = res.ok || res.body?.message === 'card deleted' || res.httpStatus === 404;
@@ -3602,6 +3691,1722 @@ export class NuveiService {
     };
   }
 
+  // ---- workspace add-ons ($97/month per additional Workspace) ----------
+  //
+  // Each additional Workspace is its OWN Nuvei add-on: a customer-present first
+  // charge (3DS) on the purchasing user's saved card, then a monthly stored-
+  // token renewal (no 3DS) by its own hourly sweep. Access is granted ONLY by a
+  // workspace_entitlements row (source 'nuvei_addon', key 'nuvei:<add-on id>')
+  // once Nuvei confirms the payment, so it is computed server-side and survives
+  // logout/login, and a failed payment never unlocks anything. Add-ons never
+  // touch nuvei_subscriptions, provisionAccount or mirrorBilling: nothing that
+  // happens to an add-on changes the customer's base CRM plan.
+
+  private async ensureAddonSchema(): Promise<void> {
+    if (this.addonSchemaReady) return;
+    await this.ensureSchema();
+    // Mirrors migration 182 so the add-on works before it is applied.
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS nuvei_workspace_addons (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        team_id UUID NOT NULL,
+        workspace_id VARCHAR(64) NOT NULL,
+        email TEXT,
+        card_id UUID,
+        amount NUMERIC(12,2) NOT NULL,
+        currency VARCHAR(8) NOT NULL DEFAULT 'USD',
+        status VARCHAR(24) NOT NULL DEFAULT 'pending',
+        dev_reference TEXT UNIQUE,
+        return_url TEXT,
+        next_billing_date TIMESTAMPTZ,
+        last_charge_at TIMESTAMPTZ,
+        activated_at TIMESTAMPTZ,
+        cancel_at_period_end BOOLEAN NOT NULL DEFAULT false,
+        canceled_at TIMESTAMPTZ,
+        consent_at TIMESTAMPTZ,
+        consent_ip TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    // One open (payable) add-on per account and Workspace, enforced by the
+    // database: two tabs can never start two $97 subscriptions for it.
+    await this.db.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_ws_addon_one_open_uidx
+         ON nuvei_workspace_addons (team_id, workspace_id)
+         WHERE status IN ('pending','active','past_due')`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS nuvei_ws_addon_team_idx ON nuvei_workspace_addons (team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS nuvei_ws_addon_due_idx
+         ON nuvei_workspace_addons (next_billing_date)
+         WHERE status IN ('active','past_due')`,
+    );
+    this.addonSchemaReady = true;
+  }
+
+  /** The add-on's monthly price in USD (server-authoritative, never the client's). */
+  private addonAmount(): number {
+    const raw = Number(String(this.config.get('NUVEI_WORKSPACE_ADDON_CENTS') || '').trim());
+    const cents = Number.isInteger(raw) && raw > 0 ? raw : WORKSPACE_ADDON_MONTHLY_CENTS;
+    return Number((cents / 100).toFixed(2));
+  }
+
+  /** workspace_entitlements key of an add-on. Non-blank, so legacy-audit keeps it. */
+  private addonKey(addonId: string): string {
+    return `nuvei:${addonId}`;
+  }
+
+  private addonLabel(addon: any): string {
+    return getWorkspace(addon?.workspace_id)?.name || 'Workspace';
+  }
+
+  private addonBase(ws: WorkspaceDef | null, workspaceId: string, amount: number) {
+    return {
+      workspaceId: ws?.id || workspaceId,
+      workspaceRoute: ws?.route || '/dashboard',
+      amount,
+      currency: 'USD',
+    };
+  }
+
+  /**
+   * Where the browser lands after a 3DS challenge: the page the customer was
+   * on (our own frontend only), else the Workspace's route. No open redirect.
+   */
+  private safeAddonReturnUrl(candidate: string | undefined, route: string): string {
+    const fallback = `${this.frontendUrl()}${route}`;
+    const raw = String(candidate || '').trim();
+    if (!raw) return fallback;
+    try {
+      const u = new URL(raw);
+      if (!new Set(this.frontendOrigins()).has(u.origin)) return fallback;
+      u.searchParams.delete('threeds');
+      u.searchParams.delete('addon');
+      u.hash = '';
+      return u.toString();
+    } catch {
+      return fallback;
+    }
+  }
+
+  /** The return URL plus the markers the gate polls with. */
+  private addonRedirect(addon: any): string {
+    const route = getWorkspace(addon?.workspace_id)?.route || '/dashboard';
+    try {
+      const u = new URL(addon?.return_url || `${this.frontendUrl()}${route}`);
+      u.searchParams.set('threeds', 'return');
+      if (addon?.id) u.searchParams.set('addon', String(addon.id));
+      return u.toString();
+    } catch {
+      return `${this.frontendUrl()}${route}`;
+    }
+  }
+
+  /**
+   * The saved card an add-on is charged to: the one the customer picked (it
+   * must be theirs), else the card their live plan bills to, else their most
+   * recent card. Nuvei binds a token to the user who tokenized it, so this is
+   * always the purchasing user's OWN card.
+   */
+  private async addonCard(
+    userId: string,
+    cardId?: string,
+  ): Promise<{ id: string; last4: string | null; brand: string | null } | null> {
+    const wanted = String(cardId || '').trim();
+    if (wanted) {
+      if (!UUID_RE.test(wanted)) throw new BadRequestException('A saved card is required.');
+      const { rows } = await this.db.query(
+        `SELECT id, last4, brand FROM nuvei_cards
+          WHERE id = $1 AND user_id = $2 AND status <> 'rejected'`,
+        [wanted, userId],
+      );
+      if (!rows[0]) throw new BadRequestException('A saved card of this account is required.');
+      return rows[0];
+    }
+    const { rows } = await this.db.query(
+      `SELECT c.id, c.last4, c.brand
+         FROM nuvei_cards c
+        WHERE c.user_id = $1 AND c.status <> 'rejected'
+        ORDER BY (c.id = (SELECT s.card_id FROM nuvei_subscriptions s
+                           WHERE s.user_id = $1
+                             AND s.status IN ('verification_pending','trialing','active','past_due')
+                           ORDER BY s.created_at DESC LIMIT 1)) DESC NULLS LAST,
+                 c.updated_at DESC, c.created_at DESC
+        LIMIT 1`,
+      [userId],
+    );
+    return rows[0] || null;
+  }
+
+  /** A charge on this add-on is still awaiting the bank (3DS / review / no answer). */
+  private async addonHasInflightCharge(addonId: string): Promise<boolean> {
+    const { rows } = await this.db.query(
+      `SELECT 1 FROM nuvei_transactions
+        WHERE subscription_id = $1 AND kind IN ('addon','addon_renewal')
+          AND status IN ('pending','unconfirmed')
+          AND created_at > NOW() - interval '48 hours'
+        LIMIT 1`,
+      [addonId],
+    );
+    return rows.length > 0;
+  }
+
+  /** pending -> payment_failed only: never overwrites an approved add-on. */
+  private async failPendingAddon(addonId: string): Promise<void> {
+    await this.db.query(
+      `UPDATE nuvei_workspace_addons SET status = 'payment_failed', updated_at = NOW()
+        WHERE id = $1 AND status = 'pending'`,
+      [addonId],
+    );
+  }
+
+  /** Grant (idempotently) the Workspace a paid add-on unlocks. */
+  private async grantAddonEntitlement(addon: any): Promise<void> {
+    const ok = await this.workspaceEntitlements.grant({
+      subscriptionId: this.addonKey(addon.id),
+      workspaceId: addon.workspace_id,
+      teamId: addon.team_id,
+      userId: addon.user_id,
+      source: 'nuvei_addon',
+    });
+    if (!ok) {
+      this.logger.error(`workspace add-on ${addon.id}: entitlement could not be granted (team ${addon.team_id}, workspace ${addon.workspace_id})`);
+    }
+  }
+
+  /**
+   * Close an add-on (canceled / refunded) from one of `from` and revoke its
+   * Workspace. Returns the closed row, or null if it was not in `from`.
+   */
+  private async closeAddon(
+    addonId: string,
+    status: 'canceled' | 'refunded',
+    from: AddonStatus[],
+  ): Promise<any | null> {
+    const { rows } = await this.db.query(
+      `UPDATE nuvei_workspace_addons
+          SET status = $2::varchar,
+              next_billing_date = NULL,
+              canceled_at = CASE WHEN $2::varchar = 'canceled' THEN COALESCE(canceled_at, NOW()) ELSE canceled_at END,
+              updated_at = NOW()
+        WHERE id = $1 AND status = ANY($3::text[])
+        RETURNING *`,
+      [addonId, status, from],
+    );
+    if (!rows[0]) return null;
+    await this.workspaceEntitlements.revoke(this.addonKey(addonId), status);
+    return rows[0];
+  }
+
+  /**
+   * Buy an additional Workspace ($97/month) on the purchasing user's saved
+   * card, with 3DS. With `quote: true` it only validates and answers what would
+   * be charged and to which card (status 'confirm'); nothing is charged.
+   *
+   * Order of checks mirrors WorkspacesController.purchase: platform support
+   * never pays; only an account admin with an active CRM plan can buy; an
+   * already-entitled account is never charged; a promotional included-workspace
+   * credit comps it for free. Only then is the card charged.
+   */
+  async startWorkspaceAddon(input: {
+    user: any;
+    workspaceId: string;
+    cardId?: string;
+    quote?: boolean;
+    browserInfo?: any;
+    termUrl?: string;
+    consentIp?: string;
+    testScenario?: string; // STAGING ONLY, same scenarios as the plan activation
+  }): Promise<WorkspaceAddonResult> {
+    this.assertEnabled();
+    await this.ensureAddonSchema();
+    const ws = getWorkspace(input.workspaceId);
+    if (!ws) throw new BadRequestException(`Unknown workspace: ${input.workspaceId}`);
+    const amount = this.addonAmount();
+    const base = this.addonBase(ws, ws.id, amount);
+    const user = input.user;
+    if (!user?.id) throw new ForbiddenException();
+
+    // Platform support never pays and never creates customer billing records.
+    if (String(user.role || '').toLowerCase() === 'super_admin') {
+      return { ...base, status: 'active', alreadyEntitled: true, supportAccess: true };
+    }
+
+    const teamId = await this.workspaceEntitlements.resolveTeamId(user);
+    if (!teamId) {
+      throw new BadRequestException('A CRM team/account is required to add a workspace.');
+    }
+    if (!(await this.workspaceEntitlements.canManageWorkspaceBilling(user, teamId))) {
+      throw new ForbiddenException('Only an account admin can add workspace add-ons');
+    }
+    const crmSub = await this.workspaceEntitlements.getActiveCrmSubscription(teamId);
+    if (!crmSub) {
+      throw new BadRequestException(
+        'An active CRM plan is required before a workspace add-on can be purchased.',
+      );
+    }
+    if (await this.workspaceEntitlements.hasActiveEntitlement(teamId, ws.id)) {
+      return { ...base, status: 'active', alreadyEntitled: true };
+    }
+    // Every CRM plan includes ONE Workspace. If this account has not used it
+    // yet (same rule as onboarding: any active Workspace other than a paid
+    // Nuvei add-on counts as the included one; Lead Generator is never the
+    // included one), this Workspace becomes the included one: no charge.
+    if (ws.id !== 'lead-generator') {
+      const held = await this.workspaceEntitlements.listActiveWorkspaceInstances(teamId);
+      const includedUsed = held.some(
+        (r) => r.source !== 'nuvei_addon' && r.workspace_id !== 'lead-generator',
+      );
+      if (!includedUsed) {
+        const res = await this.workspaceEntitlements.activateForPlan({
+          teamId,
+          workspaceId: ws.id,
+          planSubscriptionId: crmSub.id,
+          planId: crmSub.planId || null,
+          userId: user.id,
+        });
+        if (res.activated) {
+          this.logger.log(`workspace '${ws.id}' unlocked as the plan's included workspace for team ${teamId} (no charge)`);
+          return { ...base, status: 'active', comped: true, alreadyEntitled: !!res.alreadyEntitled };
+        }
+      }
+    }
+    // A promotional plan's included-workspace credit unlocks it for free.
+    const included = await this.workspaceEntitlements.claimIncludedWorkspace({
+      teamId,
+      workspaceId: ws.id,
+      userId: user.id,
+    });
+    if (included.comped) return { ...base, status: 'active', comped: true };
+
+    // An add-on for this Workspace that is still open.
+    const { rows: openRows } = await this.db.query(
+      `SELECT * FROM nuvei_workspace_addons
+        WHERE team_id = $1 AND workspace_id = $2 AND status IN ('pending','active','past_due')
+        ORDER BY created_at DESC LIMIT 1`,
+      [teamId, ws.id],
+    );
+    const open = openRows[0] || null;
+    if (open?.status === 'active') {
+      // Paid, but its entitlement is missing (an interrupted grant): repair it.
+      await this.grantAddonEntitlement(open);
+      return { ...base, status: 'active', alreadyEntitled: true, addonId: open.id };
+    }
+    if (open?.status === 'pending') {
+      const st = await this.reconcilePendingAddon(open.id);
+      if (st === 'active') return { ...base, status: 'active', addonId: open.id };
+      if (st === 'pending') {
+        // Same windows as the plan activation: an abandoned 3DS challenge may
+        // be retried after 3 minutes, an unanswered charge after 15 minutes,
+        // a bank review after 2 hours. A late approval of the abandoned one is
+        // refunded as a duplicate (activateAddon), so waiting longer protects
+        // nobody.
+        const { rows: txr } = await this.db.query(
+          `SELECT status, status_detail, provider_transaction_id, created_at FROM nuvei_transactions
+            WHERE subscription_id = $1 AND kind = 'addon'
+            ORDER BY created_at DESC LIMIT 1`,
+          [open.id],
+        );
+        const t = txr[0];
+        const ageMs = Date.now() - new Date(t?.created_at || open.created_at || Date.now()).getTime();
+        const detail = Number(t?.status_detail);
+        const threeDs = detail === 35 || detail === 36;
+        // A charge Nuvei never answered (no transaction id) may still have
+        // gone through: nothing can be verified, so a new charge is blocked
+        // until its callback settles it or Nuvei's 48h callback window ends
+        // (reconcilePendingAddon then closes it).
+        const unknownOutcome =
+          !t?.provider_transaction_id && ['pending', 'unconfirmed'].includes(String(t?.status || ''));
+        const limitMs = unknownOutcome
+          ? 48 * 60 * 60_000
+          : threeDs
+            ? 3 * 60_000
+            : 2 * 60 * 60_000;
+        if (ageMs < limitMs) {
+          return {
+            ...base,
+            status: 'pending',
+            addonId: open.id,
+            message: 'A payment for this workspace is still being verified. It will unlock automatically once confirmed.',
+          };
+        }
+        if (!input.quote) {
+          this.logger.warn(`workspace add-on ${open.id} abandoned (${threeDs ? '3DS' : t?.status || 'no charge'}, ${Math.round(ageMs / 1000)}s); allowing a new attempt`);
+          await this.failPendingAddon(open.id);
+        }
+      }
+    }
+    if (open?.status === 'past_due' && (await this.addonHasInflightCharge(open.id))) {
+      return {
+        ...base,
+        status: 'pending',
+        addonId: open.id,
+        message: 'A payment for this workspace is still being confirmed. Please try again in a few minutes.',
+      };
+    }
+
+    const card = await this.addonCard(user.id, input.cardId);
+    if (input.quote) {
+      return {
+        ...base,
+        status: 'confirm',
+        card: card ? { id: card.id, last4: card.last4, brand: card.brand } : null,
+      };
+    }
+    if (!card) {
+      return {
+        ...base,
+        status: 'card_required',
+        code: 'card_required',
+        message: 'Add a card to buy this workspace add-on.',
+      };
+    }
+
+    if (open?.status === 'past_due') {
+      // Paying again replaces the unpaid add-on (nothing was paid for its
+      // current period, so nothing is owed back); the new one starts a fresh
+      // monthly cycle today.
+      await this.closeAddon(open.id, 'canceled', ['past_due']);
+      this.logger.log(`workspace add-on ${open.id} (past due) replaced by a new purchase`);
+    }
+
+    const userRow = await this.userRow(user.id);
+    const token = await this.cardToken(card.id, user.id);
+
+    // Nuvei's documented staging 3DS cards need a specific description and
+    // amount; honored ONLY on the staging gateway (as in startActivation).
+    let chargeAmount = amount;
+    let description = `Cortexa ${ws.name} add-on`;
+    const scenario = String(input.testScenario || '').trim().toLowerCase();
+    if (scenario && this.client.environment() === 'staging') {
+      if (scenario === '3ds_challenge') {
+        chargeAmount = 151;
+        description = '3DS Challenge';
+      } else if (scenario === '3ds_frictionless') {
+        chargeAmount = 150;
+        description = '3DS FrictionLess';
+      } else if (scenario === 'review') {
+        description = 'Reviewed transaction';
+      } else if (scenario === 'denied') {
+        description = 'Denied transaction';
+      }
+    }
+
+    const dev_reference = this.devRef('WSA');
+    let addonId: string;
+    try {
+      const { rows } = await this.db.query(
+        `INSERT INTO nuvei_workspace_addons
+           (user_id, team_id, workspace_id, email, card_id, amount, currency, status,
+            dev_reference, return_url, consent_at, consent_ip)
+         VALUES ($1,$2,$3,$4,$5,$6,'USD','pending',$7,$8,NOW(),$9)
+         RETURNING id`,
+        [
+          user.id,
+          teamId,
+          ws.id,
+          userRow.email,
+          card.id,
+          amount,
+          dev_reference,
+          this.safeAddonReturnUrl(input.termUrl, ws.route),
+          input.consentIp || null,
+        ],
+      );
+      addonId = rows[0].id;
+    } catch (err: any) {
+      // Another tab / click opened an add-on for this Workspace first.
+      if (String(err?.code || '') !== '23505') throw err;
+      const { rows } = await this.db.query(
+        `SELECT id, status FROM nuvei_workspace_addons
+          WHERE team_id = $1 AND workspace_id = $2 AND status IN ('pending','active','past_due')
+          ORDER BY created_at DESC LIMIT 1`,
+        [teamId, ws.id],
+      );
+      const other = rows[0];
+      if (other?.status === 'active') {
+        return { ...base, status: 'active', alreadyEntitled: true, addonId: other.id };
+      }
+      return {
+        ...base,
+        status: 'pending',
+        addonId: other?.id,
+        message: 'A payment for this workspace is already being verified. It will unlock automatically once confirmed.',
+      };
+    }
+
+    // 3DS2 for the customer-present charge; the ACS posts the CRes to OUR
+    // server, which sends the browser back to the Workspace page.
+    const browserInfo =
+      input.browserInfo && typeof input.browserInfo === 'object' ? { ...input.browserInfo } : null;
+    if (browserInfo && !browserInfo.ip && /^\d{1,3}(\.\d{1,3}){3}$/.test(String(input.consentIp || ''))) {
+      browserInfo.ip = input.consentIp;
+    }
+    const extraParams = {
+      threeDS2_data: {
+        term_url: `${this.backendUrl()}/api/nuvei/workspace-addons/3ds/return/${addonId}`,
+        device_type: 'browser',
+        process_anyway: false,
+      },
+      ...(browserInfo ? { browser_info: browserInfo } : {}),
+    };
+
+    // The charge row exists BEFORE the bank is asked (in-flight marker).
+    await this.db.query(
+      `INSERT INTO nuvei_transactions
+         (subscription_id, user_id, kind, dev_reference, amount, status, message)
+       VALUES ($1,$2,'addon',$3,$4,'pending','charge in progress')`,
+      [addonId, user.id, dev_reference, chargeAmount],
+    );
+
+    const res = await this.client.debit(
+      this.toNuveiUser(userRow),
+      { amount: chargeAmount, description, dev_reference },
+      token,
+      extraParams,
+    );
+    const tx = res.body?.transaction || {};
+    // No answer / gateway 5xx: the charge may or may not have reached the
+    // bank. Never call it declined (a retry could double charge) and never
+    // unlock unpaid: the callback or the status poll settles it.
+    const unconfirmed = res.httpStatus === 0 || !res.body || (res.httpStatus >= 500 && !tx?.status);
+    await this.recordTransaction({
+      subscriptionId: addonId,
+      userId: user.id,
+      kind: 'addon',
+      dev_reference,
+      amount: chargeAmount,
+      body: res.body,
+      statusOverride: unconfirmed ? 'unconfirmed' : undefined,
+    });
+    const out = { ...base, addonId };
+
+    if (unconfirmed) {
+      this.logger.error(
+        `Nuvei workspace add-on charge unconfirmed for ${addonId}: HTTP ${res.httpStatus} ${res.error || JSON.stringify(res.body || {}).slice(0, 200)}`,
+      );
+      return {
+        ...out,
+        status: 'pending',
+        message: 'We could not confirm the payment yet. The workspace will unlock automatically once it is confirmed.',
+      };
+    }
+
+    if (this.isApproved(res.body)) {
+      const st = await this.activateAddon(addonId, tx);
+      if (st === 'active') {
+        return { ...out, status: 'active', transactionId: tx.id, message: 'Payment received. Your workspace is unlocked.' };
+      }
+      // A duplicate: the account already holds this Workspace (the UI opens it).
+      return {
+        ...out,
+        status: st,
+        alreadyEntitled: await this.workspaceEntitlements.hasActiveEntitlement(teamId, ws.id),
+        transactionId: tx.id,
+        message: `This workspace is already active on your account. This payment has been ${st === 'refunded' ? 'refunded' : 'flagged for refund'}.`,
+      };
+    }
+
+    if (this.is3dsPending(res.body)) {
+      return {
+        ...out,
+        status: 'pending',
+        requires3ds: true,
+        challenge: this.threeDsBrowserResponse(res.body) || {},
+        transactionId: tx.id,
+      };
+    }
+
+    // Pending WITHOUT 3DS content (anti-fraud / bank review).
+    if (String(tx?.status || '').toLowerCase() === 'pending') {
+      return {
+        ...out,
+        status: 'pending',
+        transactionId: tx.id,
+        message: 'Your payment is being verified. The workspace will unlock automatically once confirmed.',
+      };
+    }
+
+    // A gateway / integration error is not a card decline.
+    if (!res.ok && !tx?.status) {
+      await this.failPendingAddon(addonId);
+      this.logger.error(
+        `Nuvei workspace add-on gateway error for ${addonId}: HTTP ${res.httpStatus} ${JSON.stringify(res.body).slice(0, 400)}`,
+      );
+      return {
+        ...out,
+        status: 'payment_failed',
+        message: 'The payment could not be processed right now. Please try again in a moment.',
+      };
+    }
+
+    // Declined by the issuer: stays locked. Never surface a raw provider string.
+    await this.failPendingAddon(addonId);
+    this.logger.warn(
+      `Nuvei workspace add-on declined for ${addonId}: ${tx.message || res.error || 'no message'}`,
+    );
+    return {
+      ...out,
+      status: 'payment_failed',
+      transactionId: tx.id,
+      message: 'The payment could not be completed. Please try another card.',
+    };
+  }
+
+  /**
+   * The first payment of an add-on was approved: start its monthly cycle,
+   * grant the Workspace and send the receipt. Idempotent (browser result,
+   * 3DS return, poll and callback can all arrive). A charge for a Workspace the
+   * account meanwhile got another way is a duplicate and is refunded.
+   * Returns the add-on's resulting status.
+   */
+  private async activateAddon(addonId: string, tx: any): Promise<AddonStatus> {
+    const { rows } = await this.db.query(`SELECT * FROM nuvei_workspace_addons WHERE id = $1`, [addonId]);
+    const addon = rows[0];
+    if (!addon) return 'payment_failed';
+    if (addon.status === 'active') {
+      await this.grantAddonEntitlement(addon);
+      return 'active';
+    }
+    if (!['pending', 'payment_failed'].includes(addon.status)) return addon.status;
+
+    // Duplicate = the account holds this Workspace through ANOTHER entitlement
+    // (never this add-on's own 'nuvei:<id>' row, which a concurrent settle of
+    // the same payment may already have granted).
+    if (
+      await this.workspaceEntitlements.hasActiveEntitlementExcept(
+        addon.team_id,
+        addon.workspace_id,
+        this.addonKey(addon.id),
+      )
+    ) {
+      return this.refundDuplicateAddon(addon, tx);
+    }
+
+    // The browser result, the 3DS return, the status poll and the callback can
+    // all settle the same payment at once: serialize the transition on the
+    // add-on row, so exactly one of them activates it and the others see
+    // 'active'.
+    const next = this.addMonths(new Date(), 1);
+    let updated: any = null;
+    let current: any = null;
+    try {
+      await this.db.transaction(async (client) => {
+        const { rows: locked } = await client.query(
+          `SELECT * FROM nuvei_workspace_addons WHERE id = $1 FOR UPDATE`,
+          [addonId],
+        );
+        current = locked[0] || null;
+        if (!current || !['pending', 'payment_failed'].includes(current.status)) return;
+        const r = await client.query(
+          `UPDATE nuvei_workspace_addons
+              SET status = 'active', next_billing_date = $2, last_charge_at = NOW(),
+                  activated_at = COALESCE(activated_at, NOW()), updated_at = NOW()
+            WHERE id = $1
+            RETURNING *`,
+          [addonId, next],
+        );
+        updated = r.rows[0] || null;
+      });
+    } catch (err: any) {
+      // The database refused a second open add-on for this Workspace (a newer
+      // purchase won): this late approval is a duplicate payment.
+      if (String(err?.code || '') !== '23505') throw err;
+      return this.refundDuplicateAddon(addon, tx);
+    }
+    if (!updated) {
+      // Settled concurrently (browser result vs. callback): report it as is.
+      if (current?.status === 'active') {
+        await this.grantAddonEntitlement(current);
+        return 'active';
+      }
+      return (current?.status || 'payment_failed') as AddonStatus;
+    }
+
+    await this.grantAddonEntitlement(updated);
+    this.logger.log(
+      `Workspace add-on ${addonId} active: '${updated.workspace_id}' unlocked for team ${updated.team_id}`,
+    );
+    const label = this.addonLabel(updated);
+    await this.sendConfirmation({
+      to: updated.email || (await this.emailForUser(updated.user_id)) || '',
+      userId: updated.user_id,
+      subject: `Cortexa ${label} add-on — payment received`,
+      lines: [
+        ['Workspace', label],
+        ['Amount', this.money(Number(tx?.amount ?? updated.amount))],
+        ['Billing', `${this.money(Number(updated.amount))} / month`],
+        ['Status', 'Paid'],
+        ['Transaction ID', tx?.id || '—'],
+        ['Authorization code', tx?.authorization_code || '—'],
+        ['Next charge', next.toISOString().slice(0, 10)],
+      ],
+      note: 'The workspace is now unlocked for your whole account. You can cancel the add-on anytime from Billing.',
+    });
+    return 'active';
+  }
+
+  /**
+   * Refund an add-on's approved first charge that duplicates access the
+   * account already has. The add-on row is CLAIMED first (pending /
+   * payment_failed -> refunded), so concurrent settles can never refund twice
+   * and an add-on that another settle just activated is never refunded.
+   */
+  private async refundDuplicateAddon(addon: any, tx: any): Promise<AddonStatus> {
+    const { rows: claimed } = await this.db.query(
+      `UPDATE nuvei_workspace_addons SET status = 'refunded', next_billing_date = NULL, updated_at = NOW()
+        WHERE id = $1 AND status IN ('pending','payment_failed')
+        RETURNING id`,
+      [addon.id],
+    );
+    if (!claimed[0]) {
+      const { rows: now } = await this.db.query(`SELECT status FROM nuvei_workspace_addons WHERE id = $1`, [addon.id]);
+      return (now[0]?.status || 'payment_failed') as AddonStatus;
+    }
+    const txId = tx?.id ? String(tx.id) : null;
+    let refunded = false;
+    if (txId) {
+      try {
+        const r = await this.client.refund(txId);
+        refunded = String(r.body?.status || '').toLowerCase() === 'success';
+      } catch (err: any) {
+        this.logger.error(`duplicate workspace add-on refund call failed for ${txId}: ${err?.message}`);
+      }
+    }
+    const status: AddonStatus = refunded ? 'refunded' : 'payment_failed';
+    if (!refunded) {
+      // Not refunded at Nuvei: release the claim (flagged for an admin refund
+      // below); a later settle of the same payment may try again.
+      await this.db.query(
+        `UPDATE nuvei_workspace_addons SET status = 'payment_failed', updated_at = NOW()
+          WHERE id = $1 AND status = 'refunded'`,
+        [addon.id],
+      );
+    }
+    if (txId) {
+      await this.db.query(
+        `UPDATE nuvei_transactions
+            SET status = CASE WHEN $2::boolean THEN 'refunded' ELSE status END,
+                refunded_amount = CASE WHEN $2::boolean THEN amount ELSE refunded_amount END,
+                message = $3
+          WHERE provider_transaction_id = $1`,
+        [txId, refunded, refunded ? 'duplicate workspace add-on — refunded automatically' : 'DUPLICATE WORKSPACE ADD-ON — REFUND REQUIRED'],
+      );
+    }
+    this.logger.error(
+      `Nuvei duplicate workspace add-on ${addon.id} (team ${addon.team_id}, '${addon.workspace_id}', tx ${txId || '-'}): ${refunded ? 'refunded automatically' : 'REFUND REQUIRED'}`,
+    );
+    if (refunded) {
+      await this.sendConfirmation({
+        to: addon.email || (await this.emailForUser(addon.user_id)) || '',
+        userId: addon.user_id,
+        subject: 'Duplicate payment refunded',
+        lines: [
+          ['Workspace', this.addonLabel(addon)],
+          ['Amount refunded', this.money(Number(tx?.amount ?? addon.amount ?? 0))],
+          ['Transaction', txId || '—'],
+          ['Status', 'Refunded'],
+        ],
+        note: 'This workspace was already active on your account, so this payment has been refunded. Your access is unchanged.',
+      });
+    }
+    return status;
+  }
+
+  /**
+   * For an add-on still awaiting its first payment, ask Nuvei for the charge's
+   * real status and finalize: approved -> active, definitive failure ->
+   * payment_failed, otherwise still pending.
+   */
+  private async reconcilePendingAddon(addonId: string): Promise<AddonStatus | null> {
+    const { rows } = await this.db.query(
+      `SELECT a.id, a.status, a.created_at, t.provider_transaction_id, t.amount AS tx_amount
+         FROM nuvei_workspace_addons a
+         LEFT JOIN nuvei_transactions t ON t.subscription_id = a.id AND t.kind = 'addon'
+        WHERE a.id = $1
+        ORDER BY t.created_at DESC
+        LIMIT 1`,
+      [addonId],
+    );
+    const a = rows[0];
+    if (!a) return null;
+    if (a.status !== 'pending') return a.status;
+    if (!a.provider_transaction_id) {
+      // Nothing to verify; after Nuvei's 48h callback window nothing can
+      // confirm it any more (a later callback still settles it).
+      const { rowCount } = await this.db.query(
+        `UPDATE nuvei_workspace_addons SET status = 'payment_failed', updated_at = NOW()
+          WHERE id = $1 AND status = 'pending' AND created_at < NOW() - interval '48 hours'`,
+        [a.id],
+      );
+      return rowCount ? 'payment_failed' : 'pending';
+    }
+    const info = await this.client.verifyTransaction(a.provider_transaction_id);
+    if (!info.ok || !info.body?.transaction) return 'pending';
+    const tx = info.body.transaction;
+    if (this.isApproved(info.body)) {
+      if (!this.amountMatches(tx.amount, a.tx_amount)) {
+        this.logger.warn(`Nuvei workspace add-on amount mismatch for ${a.id}: got ${tx.amount}, expected ${a.tx_amount}`);
+        return 'pending';
+      }
+      await this.db.query(
+        `UPDATE nuvei_transactions
+            SET status = 'success', status_detail = 3, authorization_code = COALESCE($2, authorization_code),
+                current_status = $3, message = $4
+          WHERE provider_transaction_id = $1`,
+        [a.provider_transaction_id, tx.authorization_code || null, tx.current_status || null, tx.message || null],
+      );
+      return this.activateAddon(a.id, tx);
+    }
+    if (this.isDefinitiveFailure(info.body)) {
+      await this.failPendingAddon(a.id);
+      await this.db.query(
+        `UPDATE nuvei_transactions SET status = $2, status_detail = $3, message = $4
+          WHERE provider_transaction_id = $1`,
+        [a.provider_transaction_id, String(tx.status || 'failure'), tx.status_detail ?? null, tx.message || null],
+      );
+      return 'payment_failed';
+    }
+    return 'pending';
+  }
+
+  /** Browser step after the 3DS "method" iframe: continue the authentication. */
+  async workspaceAddonThreeDsContinue(addonId: string, userId: string): Promise<WorkspaceAddonResult> {
+    this.assertEnabled();
+    await this.ensureAddonSchema();
+    const { rows } = await this.db.query(
+      `SELECT a.id, a.user_id, a.status, a.workspace_id, a.amount, t.provider_transaction_id
+         FROM nuvei_workspace_addons a
+         LEFT JOIN nuvei_transactions t ON t.subscription_id = a.id AND t.kind = 'addon'
+        WHERE a.id = $1
+        ORDER BY t.created_at DESC LIMIT 1`,
+      [addonId],
+    );
+    const a = rows[0];
+    if (!a) throw new NotFoundException('Workspace add-on not found');
+    if (String(a.user_id) !== String(userId)) throw new ForbiddenException();
+    const base = { ...this.addonBase(getWorkspace(a.workspace_id), a.workspace_id, Number(a.amount)), addonId };
+    if (a.status !== 'pending') return { ...base, status: a.status };
+    if (a.provider_transaction_id) {
+      const res = await this.client.threeDsContinue(a.user_id, a.provider_transaction_id);
+      this.logger.log(
+        `Nuvei 3DS continue for workspace add-on ${a.id}: HTTP ${res.httpStatus} ` +
+          `status ${res.body?.transaction?.status ?? '-'}/${res.body?.transaction?.status_detail ?? '-'}`,
+      );
+      const br = this.threeDsBrowserResponse(res.body);
+      if (br?.challenge_request) return { ...base, status: 'pending', requires3ds: true, challenge: br };
+    }
+    const st = (await this.reconcilePendingAddon(addonId)) || 'pending';
+    return {
+      ...base,
+      status: st,
+      message:
+        st === 'payment_failed'
+          ? 'The payment could not be completed. Please try another card.'
+          : st === 'pending'
+            ? 'Your payment is being verified. The workspace will unlock automatically once confirmed.'
+            : undefined,
+    };
+  }
+
+  /**
+   * 3DS term_url of an add-on charge: hand the CRes to Nuvei, finalize from
+   * the charge's real status, and send the browser back to the Workspace page
+   * (which polls the add-on's status).
+   */
+  async workspaceAddonThreeDsReturn(addonId: string, form: any): Promise<{ redirect: string }> {
+    await this.ensureAddonSchema();
+    const id = String(addonId || '').trim();
+    if (!UUID_RE.test(id)) return { redirect: `${this.frontendUrl()}/dashboard` };
+    const { rows } = await this.db.query(
+      `SELECT a.*, t.provider_transaction_id
+         FROM nuvei_workspace_addons a
+         LEFT JOIN nuvei_transactions t ON t.subscription_id = a.id AND t.kind = 'addon'
+        WHERE a.id = $1
+        ORDER BY t.created_at DESC LIMIT 1`,
+      [id],
+    );
+    const a = rows[0];
+    if (!a) return { redirect: `${this.frontendUrl()}/dashboard` };
+    const redirect = this.addonRedirect(a);
+    if (a.status !== 'pending') return { redirect };
+    const cres = String(form?.cres || form?.CRes || form?.CRES || '').trim();
+    if (a.provider_transaction_id && cres) {
+      const v = await this.client.threeDsVerify(a.user_id, a.provider_transaction_id, cres);
+      this.logger.log(
+        `Nuvei 3DS challenge result for workspace add-on ${a.id}: HTTP ${v.httpStatus} ` +
+          `status ${v.body?.transaction?.status ?? '-'}/${v.body?.transaction?.status_detail ?? '-'}`,
+      );
+    } else {
+      this.logger.warn(`Nuvei 3DS return for workspace add-on ${a.id} without a CRes (keys: ${Object.keys(form || {}).join(',')})`);
+    }
+    try {
+      await this.reconcilePendingAddon(a.id);
+    } catch (err: any) {
+      this.logger.warn(`3DS return reconcile failed for workspace add-on ${a.id}: ${err?.message}`);
+    }
+    return { redirect };
+  }
+
+  /**
+   * Who may read / cancel an add-on: the paying user (their card is charged,
+   * even if they have since left the team), a billing admin of the add-on's
+   * account, or platform support / developers (canManageWorkspaceBilling).
+   * A customer's users.role 'admin' alone is NOT enough.
+   */
+  private async canManageAddon(user: any, a: any): Promise<boolean> {
+    if (!user?.id || !a) return false;
+    if (String(a.user_id) === String(user.id)) return true;
+    return this.workspaceEntitlements.canManageWorkspaceBilling(user, a.team_id);
+  }
+
+  /** True once the add-on table exists (no DDL; used while Nuvei is off). */
+  private async addonTableExists(): Promise<boolean> {
+    if (this.addonSchemaReady) return true;
+    try {
+      const { rows } = await this.db.query(`SELECT to_regclass('nuvei_workspace_addons') AS t`);
+      return !!rows[0]?.t;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * One add-on's status (the gate polls it after 3DS / a bank review). The
+   * paying user, an admin of that account, or platform support may read it.
+   */
+  async getWorkspaceAddon(addonId: string, user: any): Promise<WorkspaceAddonResult> {
+    await this.ensureAddonSchema();
+    const { rows } = await this.db.query(`SELECT * FROM nuvei_workspace_addons WHERE id = $1`, [addonId]);
+    let a = rows[0];
+    if (!a) throw new NotFoundException('Workspace add-on not found');
+    if (!(await this.canManageAddon(user, a))) throw new ForbiddenException();
+    if (a.status === 'pending' && this.enabled()) {
+      try {
+        await this.reconcilePendingAddon(a.id);
+      } catch (err: any) {
+        this.logger.warn(`workspace add-on reconcile failed for ${a.id}: ${err?.message}`);
+      }
+      a = (await this.db.query(`SELECT * FROM nuvei_workspace_addons WHERE id = $1`, [addonId])).rows[0] || a;
+    }
+    if (a.status === 'active' && !(await this.workspaceEntitlements.hasActiveEntitlement(a.team_id, a.workspace_id))) {
+      await this.grantAddonEntitlement(a); // repair an interrupted grant
+    }
+    return {
+      ...this.addonBase(getWorkspace(a.workspace_id), a.workspace_id, Number(a.amount)),
+      addonId: a.id,
+      status: a.status,
+      nextBillingDate: a.next_billing_date ? new Date(a.next_billing_date).toISOString() : null,
+      cancelAtPeriodEnd: !!a.cancel_at_period_end,
+      message:
+        a.status === 'payment_failed'
+          ? 'The payment could not be completed. Please try another card.'
+          : a.status === 'pending'
+            ? 'Your payment is being verified. The workspace will unlock automatically once confirmed.'
+            : undefined,
+    };
+  }
+
+  /**
+   * The account's open Workspace add-ons, plus any add-on this user pays for on
+   * another account (e.g. a former admin whose card is still charged), so the
+   * payer can always see and stop it (Billing page).
+   */
+  async listWorkspaceAddons(user: any): Promise<{ canManage: boolean; addons: any[] }> {
+    if (!user?.id) return { canManage: false, addons: [] };
+    // No DDL on a Billing page load while Nuvei is off: list only if the
+    // table already exists (add-ons bought before a switch-off stay visible).
+    if (this.enabled()) await this.ensureAddonSchema();
+    else if (!(await this.addonTableExists())) return { canManage: false, addons: [] };
+    const teamId = await this.workspaceEntitlements.resolveTeamId(user);
+    const { rows } = await this.db.query(
+      `SELECT id, user_id, team_id, workspace_id, status, amount, currency, next_billing_date,
+              cancel_at_period_end, activated_at, created_at
+         FROM nuvei_workspace_addons
+        WHERE (team_id = $1 OR user_id = $2)
+          AND status IN ('pending','active','past_due','suspended')
+        ORDER BY created_at DESC
+        LIMIT 50`,
+      [teamId, user.id],
+    );
+    const canManageTeam = teamId
+      ? await this.workspaceEntitlements.canManageWorkspaceBilling(user, teamId)
+      : false;
+    const addons: any[] = [];
+    for (const r of rows) {
+      const canCancel =
+        String(r.user_id) === String(user.id) ||
+        (String(r.team_id) === String(teamId) ? canManageTeam : await this.canManageAddon(user, r));
+      addons.push({
+        id: r.id,
+        workspaceId: r.workspace_id,
+        workspaceName: this.addonLabel(r),
+        workspaceRoute: getWorkspace(r.workspace_id)?.route || null,
+        status: r.status,
+        amount: Number(r.amount),
+        currency: r.currency || 'USD',
+        nextBillingDate: r.next_billing_date ? new Date(r.next_billing_date).toISOString() : null,
+        cancelAtPeriodEnd: !!r.cancel_at_period_end,
+        activatedAt: r.activated_at ? new Date(r.activated_at).toISOString() : null,
+        canCancel,
+      });
+    }
+    return { canManage: canManageTeam, addons };
+  }
+
+  /**
+   * Cancel an add-on (the paying user or an account admin). A paid-ahead
+   * add-on stays unlocked until its next billing date, then the sweep closes
+   * it and locks the Workspace; one with nothing paid ahead (past due /
+   * suspended) ends now.
+   */
+  async cancelWorkspaceAddon(
+    addonId: string,
+    user: any,
+  ): Promise<{ ok: boolean; status: string; endsAt: string | null; immediate: boolean }> {
+    await this.ensureAddonSchema();
+    const { rows } = await this.db.query(`SELECT * FROM nuvei_workspace_addons WHERE id = $1`, [addonId]);
+    const a = rows[0];
+    if (!a) throw new NotFoundException('Workspace add-on not found');
+    if (!(await this.canManageAddon(user, a))) {
+      throw new ForbiddenException('Only an account admin can manage workspace add-ons');
+    }
+    if (['canceled', 'refunded', 'payment_failed'].includes(a.status)) {
+      return { ok: true, status: a.status, endsAt: null, immediate: true };
+    }
+    // A charge still being confirmed must settle first, or an approval could
+    // land on a canceled add-on: money taken, no service.
+    if (await this.addonHasInflightCharge(a.id)) {
+      throw new BadRequestException(
+        'A payment on this workspace add-on is still being confirmed. Please try again in a few minutes.',
+      );
+    }
+    const label = this.addonLabel(a);
+    const to = a.email || (await this.emailForUser(a.user_id)) || '';
+    const paidAhead =
+      a.status === 'active' && a.next_billing_date && new Date(a.next_billing_date).getTime() > Date.now();
+    if (paidAhead) {
+      if (!a.cancel_at_period_end) {
+        await this.db.query(
+          `UPDATE nuvei_workspace_addons
+              SET cancel_at_period_end = true, canceled_at = NOW(), updated_at = NOW()
+            WHERE id = $1`,
+          [a.id],
+        );
+        await this.sendConfirmation({
+          to,
+          userId: a.user_id,
+          subject: `Your Cortexa ${label} add-on cancellation is scheduled`,
+          lines: [
+            ['Workspace', label],
+            ['Access until', new Date(a.next_billing_date).toISOString().slice(0, 10)],
+            ['Charges', 'No further charges will be made for this add-on.'],
+          ],
+          note: 'The workspace stays unlocked until the date above. Your CRM plan is not affected.',
+        });
+      }
+      return { ok: true, status: 'active', endsAt: new Date(a.next_billing_date).toISOString(), immediate: false };
+    }
+    const closed = await this.closeAddon(a.id, 'canceled', ['pending', 'active', 'past_due', 'suspended']);
+    if (closed) {
+      await this.sendConfirmation({
+        to,
+        userId: a.user_id,
+        subject: `Your Cortexa ${label} add-on has been canceled`,
+        lines: [
+          ['Workspace', label],
+          ['Status', 'Canceled'],
+          ['Charges', 'No further charges will be made for this add-on.'],
+        ],
+      });
+    }
+    return { ok: true, status: 'canceled', endsAt: new Date().toISOString(), immediate: true };
+  }
+
+  /** A scheduled cancellation reached its date: close it and lock the Workspace. */
+  private async finalizeAddonCancellation(addonId: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM nuvei_workspace_addons WHERE id = $1 AND cancel_at_period_end = true`,
+      [addonId],
+    );
+    if (!rows[0]) return;
+    const a = await this.closeAddon(addonId, 'canceled', ['active', 'past_due']);
+    if (!a) return;
+    const label = this.addonLabel(a);
+    await this.sendConfirmation({
+      to: a.email || (await this.emailForUser(a.user_id)) || '',
+      userId: a.user_id,
+      subject: `Your Cortexa ${label} add-on has ended`,
+      lines: [
+        ['Workspace', label],
+        ['Status', 'Canceled'],
+        ['Charges', 'No further charges will be made for this add-on.'],
+      ],
+      note: 'You can add the workspace again at any time. Your CRM plan is not affected.',
+    });
+  }
+
+  /** Full refund / chargeback of an add-on charge: the add-on ends, its Workspace locks. */
+  private async revokeAddonForRefund(addonId: string): Promise<void> {
+    await this.ensureAddonSchema();
+    const closed = await this.closeAddon(addonId, 'refunded', [
+      'pending',
+      'active',
+      'past_due',
+      'suspended',
+      'canceled',
+      'payment_failed',
+    ]);
+    if (!closed) {
+      // Already refunded: keep the entitlement revoked all the same.
+      await this.workspaceEntitlements.revoke(this.addonKey(addonId), 'refunded');
+    }
+  }
+
+  // ---- workspace add-on renewals (stored token, no 3DS) -----------------
+
+  private sweepingAddons = false;
+
+  /**
+   * Hourly sweep of Workspace add-on renewals, separate from the plan sweep.
+   * Idempotent per (add-on, billing period) through the nuvei_transactions
+   * period claim. Never charges a canceled / refunded / suspended add-on.
+   */
+  @Cron(CronExpression.EVERY_HOUR)
+  async debitDueWorkspaceAddons(addonId?: string): Promise<void> {
+    // Scheduled cancellations close on their date even while charging is
+    // paused or Nuvei is switched off (NUVEI_ENABLED / NUVEI_RECURRING_ENABLED
+    // =false must never keep a canceled Workspace unlocked). With Nuvei off no
+    // DDL runs: nothing to close if the table was never created.
+    const on = this.enabled();
+    if (on) await this.ensureAddonSchema();
+    else if (!(await this.addonTableExists())) return;
+    try {
+      const { rows: ending } = await this.db.query(
+        `SELECT id FROM nuvei_workspace_addons
+          WHERE cancel_at_period_end = true
+            AND status IN ('active','past_due')
+            AND next_billing_date IS NOT NULL AND next_billing_date <= NOW()
+            ${addonId ? 'AND id = $1' : ''}
+          LIMIT 200`,
+        addonId ? [addonId] : [],
+      );
+      for (const row of ending) await this.finalizeAddonCancellation(row.id);
+    } catch (err: any) {
+      this.logger.error(`workspace add-on cancellation pass failed: ${err?.message}`);
+    }
+    if (!on || !this.recurringEnabled()) return;
+    if (!addonId) {
+      if (this.sweepingAddons) return;
+      this.sweepingAddons = true;
+    }
+    try {
+      const params: any[] = [];
+      let only = '';
+      if (addonId) {
+        params.push(addonId);
+        only = ` AND a.id = $1`;
+      }
+      const { rows } = await this.db.query(
+        `SELECT a.id
+           FROM nuvei_workspace_addons a
+          WHERE a.status IN ('active','past_due')
+            AND a.cancel_at_period_end = false
+            AND a.next_billing_date IS NOT NULL
+            AND a.next_billing_date <= NOW()${only}
+            AND NOT EXISTS (
+              SELECT 1 FROM nuvei_transactions t
+               WHERE t.subscription_id = a.id AND t.kind = 'addon_renewal'
+                 AND t.period_key = to_char(a.next_billing_date AT TIME ZONE 'UTC', 'YYYY-MM-DD')
+                 AND t.status IN ('pending','unconfirmed')
+                 AND t.provider_transaction_id IS NULL
+                 AND t.created_at > NOW() - interval '48 hours')
+          ORDER BY a.next_billing_date ASC
+          LIMIT 200`,
+        params,
+      );
+      for (const row of rows) {
+        try {
+          await this.chargeAddonRenewal(row.id);
+        } catch (err: any) {
+          this.logger.error(`Workspace add-on renewal failed for ${row.id}: ${err?.message}`);
+        }
+      }
+    } finally {
+      if (!addonId) this.sweepingAddons = false;
+    }
+  }
+
+  private async chargeAddonRenewal(addonId: string): Promise<void> {
+    // Re-read right before acting (the customer may have canceled meanwhile).
+    const { rows } = await this.db.query(`SELECT * FROM nuvei_workspace_addons WHERE id = $1`, [addonId]);
+    const addon = rows[0];
+    if (!addon || !['active', 'past_due'].includes(addon.status)) return;
+    if (!addon.next_billing_date || new Date(addon.next_billing_date).getTime() > Date.now()) return;
+    if (addon.cancel_at_period_end) {
+      await this.finalizeAddonCancellation(addon.id);
+      return;
+    }
+    // Charge the price the customer agreed to, never a later config change.
+    const amount = Number(addon.amount) > 0 ? Number(addon.amount) : this.addonAmount();
+    const period = this.periodKey(addon.next_billing_date);
+    const dev_reference = this.devRef('WSR');
+
+    // Claim this billing period atomically; an existing claim is settled from
+    // its row instead of sending a second debit.
+    try {
+      await this.db.query(
+        `INSERT INTO nuvei_transactions
+           (subscription_id, user_id, kind, period_key, dev_reference, amount, status, message)
+         VALUES ($1,$2,'addon_renewal',$3,$4,$5,'pending','charge in progress')`,
+        [addon.id, addon.user_id, period, dev_reference, amount],
+      );
+    } catch (err: any) {
+      if (err?.code !== '23505') throw err;
+      await this.settleAddonClaimedPeriod(addon, period, amount);
+      return;
+    }
+
+    let res: any;
+    try {
+      const user = await this.userRow(addon.user_id);
+      const token = await this.cardToken(addon.card_id, addon.user_id);
+      // Not customer-present: no 3DS (the Recurrence flow does not support it).
+      res = await this.client.debit(
+        this.toNuveiUser(user),
+        { amount, description: `Cortexa ${this.addonLabel(addon)} add-on monthly`, dev_reference },
+        token,
+      );
+    } catch (err: any) {
+      // Nothing reached the bank (card removed, token unreadable, user gone).
+      const why = String(err?.message || 'error before charge');
+      await this.markClaim(addon.id, period, 'error', why, undefined, 'addon_renewal');
+      await this.escalateAddonBillingErrors(addon, amount, why);
+      throw err;
+    }
+
+    const tx = res.body?.transaction || {};
+    const gatewayError = !res.ok && !tx?.status;
+    if (res.httpStatus === 0 || !res.body || (gatewayError && res.httpStatus >= 500)) {
+      // No usable answer: keep the claim; the callback (or the 48h rule in
+      // settleAddonClaimedPeriod) settles it. Nothing is re-sent blindly.
+      this.logger.error(
+        `Nuvei workspace add-on renewal unconfirmed for ${addon.id} period ${period}: HTTP ${res.httpStatus} ${res.error || JSON.stringify(res.body || {}).slice(0, 200)}`,
+      );
+      await this.markClaim(addon.id, period, 'unconfirmed', String(res.error || `HTTP ${res.httpStatus}`).slice(0, 500), res.body, 'addon_renewal');
+      return;
+    }
+    if (gatewayError) {
+      const detail = JSON.stringify(res.body?.error || res.body || {}).slice(0, 500);
+      this.logger.error(`Nuvei workspace add-on renewal gateway error for ${addon.id} period ${period}: HTTP ${res.httpStatus} ${detail}`);
+      await this.markClaim(addon.id, period, 'error', `HTTP ${res.httpStatus} ${detail}`, res.body, 'addon_renewal');
+      await this.escalateAddonBillingErrors(addon, amount, `HTTP ${res.httpStatus}`);
+      return;
+    }
+
+    const { rowCount: settledHere } = await this.db.query(
+      `UPDATE nuvei_transactions
+         SET provider_transaction_id = $2, authorization_code = $3, status = $4,
+             status_detail = $5, current_status = $6, message = $7, raw = $8
+       WHERE subscription_id = $1 AND kind = 'addon_renewal' AND period_key = $9
+         AND status = 'pending'`,
+      [
+        addon.id,
+        tx.id || null,
+        tx.authorization_code || null,
+        String(tx.status || 'failure'),
+        Number.isFinite(Number(tx.status_detail)) ? Number(tx.status_detail) : null,
+        tx.current_status || null,
+        tx.message || res.error || null,
+        JSON.stringify(res.body || {}),
+        period,
+      ],
+    );
+    // The callback may have written the outcome first; it applies it then.
+    if (!settledHere) return;
+
+    if (this.isApproved(res.body)) {
+      await this.applyAddonRenewalSuccess(addon, tx, amount);
+    } else if (String(tx.status || '').toLowerCase() === 'pending') {
+      this.logger.warn(`Nuvei workspace add-on renewal pending review for ${addon.id} period ${period} (tx ${tx.id || '-'})`);
+    } else {
+      await this.applyAddonRenewalDecline(addon, tx, amount, tx.message || res.error || 'no message');
+    }
+  }
+
+  /** Repeated integration errors: retry tomorrow; after 3 in 7 days, treat as a decline. */
+  private async escalateAddonBillingErrors(addon: any, amount: number, reason: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM nuvei_transactions
+        WHERE subscription_id = $1 AND kind = 'addon_renewal' AND status = 'error'
+          AND created_at > NOW() - interval '7 days'`,
+      [addon.id],
+    );
+    if (Number(rows[0]?.n || 0) >= 3) {
+      await this.applyAddonRenewalDecline(addon, {}, amount, `billing error: ${reason}`);
+      return;
+    }
+    await this.db.query(
+      `UPDATE nuvei_workspace_addons SET next_billing_date = NOW() + interval '1 day', updated_at = NOW() WHERE id = $1`,
+      [addon.id],
+    );
+  }
+
+  /** The renewal period already has a claim row: settle from it (see settleClaimedPeriod). */
+  private async settleAddonClaimedPeriod(addon: any, period: string, amount: number): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id, status, provider_transaction_id, authorization_code, created_at
+         FROM nuvei_transactions
+        WHERE subscription_id = $1 AND kind = 'addon_renewal' AND period_key = $2`,
+      [addon.id, period],
+    );
+    const row = rows[0];
+    if (!row) return;
+    const status = String(row.status || '');
+    const ageMs = Date.now() - new Date(row.created_at || Date.now()).getTime();
+    const tomorrow = async () =>
+      this.db.query(
+        `UPDATE nuvei_workspace_addons SET next_billing_date = NOW() + interval '1 day', updated_at = NOW() WHERE id = $1`,
+        [addon.id],
+      );
+
+    if (status === 'success') {
+      if (addon.status !== 'active') {
+        await this.applyAddonRenewalSuccess(
+          addon,
+          { id: row.provider_transaction_id, authorization_code: row.authorization_code },
+          amount,
+        );
+      } else {
+        await this.db.query(
+          `UPDATE nuvei_workspace_addons SET next_billing_date = $2, updated_at = NOW() WHERE id = $1`,
+          [addon.id, this.addMonths(new Date(addon.next_billing_date), 1)],
+        );
+      }
+      return;
+    }
+    if ((status === 'pending' || status === 'unconfirmed') && row.provider_transaction_id) {
+      const info = await this.client.verifyTransaction(row.provider_transaction_id);
+      if (info.ok && info.body?.transaction) {
+        const t = info.body.transaction;
+        if (this.isApproved(info.body)) {
+          const { rowCount } = await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'success', status_detail = 3,
+                    authorization_code = COALESCE($2, authorization_code), message = COALESCE($3, message)
+              WHERE id = $1 AND status IN ('pending','unconfirmed')`,
+            [row.id, t.authorization_code || null, t.message || null],
+          );
+          if (rowCount) await this.applyAddonRenewalSuccess(addon, t, amount);
+          return;
+        }
+        if (this.isDefinitiveFailure(info.body)) {
+          const { rowCount } = await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message)
+              WHERE id = $1 AND status IN ('pending','unconfirmed')`,
+            [row.id, Number.isFinite(Number(t.status_detail)) ? Number(t.status_detail) : null, t.message || null],
+          );
+          if (rowCount) await this.applyAddonRenewalDecline(addon, t, amount, t.message || 'declined');
+          return;
+        }
+      }
+      return; // still pending at Nuvei (or could not verify): wait
+    }
+    if (status === 'pending') {
+      if (ageMs < 2 * 60 * 60 * 1000) return; // another run is charging it
+      if (ageMs < 48 * 60 * 60 * 1000) {
+        if (ageMs < 3 * 60 * 60 * 1000) {
+          this.logger.error(`Nuvei workspace add-on renewal claim for ${addon.id} period ${period} has no outcome after 2h; holding for Nuvei's callback`);
+          await this.markClaim(addon.id, period, 'unconfirmed', 'no outcome recorded (process interrupted)', undefined, 'addon_renewal');
+        }
+        return;
+      }
+      await this.markClaim(addon.id, period, 'error', 'no outcome recorded (process interrupted), no callback in 48h', undefined, 'addon_renewal');
+      await tomorrow();
+      return;
+    }
+    if (status === 'unconfirmed') {
+      if (ageMs < 48 * 60 * 60 * 1000) return; // Nuvei's callback may still arrive
+      this.logger.error(`Nuvei workspace add-on renewal for ${addon.id} period ${period} unconfirmed for 48h; retrying tomorrow`);
+      await this.markClaim(addon.id, period, 'error', 'unconfirmed for 48h, no callback received', undefined, 'addon_renewal');
+      await tomorrow();
+      return;
+    }
+    // failure / error: retry with a fresh period key tomorrow.
+    await tomorrow();
+  }
+
+  /**
+   * A renewal was declined: lock the Workspace (past_due), retry daily with a
+   * fresh period key, and suspend after 5 real declines in 30 days.
+   */
+  private async applyAddonRenewalDecline(addon: any, tx: any, amount: number, reason: string): Promise<void> {
+    const { rows: fails } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM nuvei_transactions
+        WHERE subscription_id = $1 AND kind = 'addon_renewal'
+          AND status IN ('failure','error') AND created_at > NOW() - interval '30 days'`,
+      [addon.id],
+    );
+    const failures = Math.max(1, Number(fails[0]?.n || 0));
+    const suspend = failures >= 5;
+    const { rowCount } = await this.db.query(
+      `UPDATE nuvei_workspace_addons
+          SET status = $2,
+              next_billing_date = CASE WHEN $3::boolean THEN NULL ELSE NOW() + interval '1 day' END,
+              updated_at = NOW()
+        WHERE id = $1 AND status IN ('active','past_due')`,
+      [addon.id, suspend ? 'suspended' : 'past_due', suspend],
+    );
+    if (!rowCount) return; // canceled / refunded meanwhile
+    await this.workspaceEntitlements.setStatus(this.addonKey(addon.id), suspend ? 'suspended' : 'past_due');
+    this.logger.warn(
+      `Workspace add-on renewal declined for ${addon.id} (${failures} failure(s) in 30d${suspend ? ', SUSPENDED' : ', retry tomorrow'}): ${reason}`,
+    );
+    const label = this.addonLabel(addon);
+    await this.sendConfirmation({
+      to: addon.email || (await this.emailForUser(addon.user_id)) || '',
+      userId: addon.user_id,
+      subject: `Cortexa ${label} add-on — payment failed`,
+      lines: [
+        ['Workspace', label],
+        ['Amount', this.money(amount)],
+        ['Status', 'Declined'],
+        ['What happens next', suspend
+          ? 'The add-on has been suspended after repeated failed payments and the workspace is locked. You can add it again with another card.'
+          : 'The workspace is locked until the payment goes through. We will retry automatically tomorrow.'],
+      ],
+    });
+  }
+
+  /** A renewal was approved: next charge one month out, Workspace (re)unlocked, receipt. */
+  private async applyAddonRenewalSuccess(addon: any, tx: any, amount: number): Promise<void> {
+    // After a long lapse the paid month starts today (never several months
+    // charged in consecutive hourly runs).
+    const scheduled = new Date(addon.next_billing_date || Date.now());
+    const base = scheduled.getTime() < Date.now() - 15 * 24 * 60 * 60 * 1000 ? new Date() : scheduled;
+    const next = this.addMonths(base, 1);
+    let rowCount = 0;
+    try {
+      const r = await this.db.query(
+        `UPDATE nuvei_workspace_addons
+            SET status = 'active', next_billing_date = $2, last_charge_at = NOW(), updated_at = NOW()
+          WHERE id = $1 AND status IN ('active','past_due','suspended')`,
+        [addon.id, next],
+      );
+      rowCount = r.rowCount || 0;
+    } catch (err: any) {
+      // A suspended add-on whose Workspace was meanwhile bought again (a new
+      // open add-on): it cannot come back, so this late payment is refunded
+      // below instead of failing (and retrying) forever.
+      if (String(err?.code || '') !== '23505') throw err;
+      rowCount = 0;
+    }
+    if (!rowCount) {
+      // The add-on ended while this charge was in flight: return the money.
+      const txId = tx?.id ? String(tx.id) : null;
+      let refunded = false;
+      if (txId) {
+        try {
+          const r = await this.client.refund(txId);
+          refunded = String(r.body?.status || '').toLowerCase() === 'success';
+          if (refunded) {
+            await this.db.query(
+              `UPDATE nuvei_transactions SET status = 'refunded', refunded_amount = amount, message = 'charged after the add-on ended — refunded automatically' WHERE provider_transaction_id = $1`,
+              [txId],
+            );
+          }
+        } catch (err: any) {
+          this.logger.error(`refund of post-cancellation add-on charge ${txId} failed: ${err?.message}`);
+        }
+        if (!refunded) {
+          await this.db
+            .query(
+              `UPDATE nuvei_transactions SET message = 'CHARGED AFTER THE ADD-ON ENDED — REFUND REQUIRED' WHERE provider_transaction_id = $1`,
+              [txId],
+            )
+            .catch(() => undefined);
+        }
+      }
+      this.logger.error(
+        `Nuvei workspace add-on renewal landed on a closed add-on ${addon.id} (tx ${txId || '-'}): ${refunded ? 'refunded automatically' : 'REFUND REQUIRED'}`,
+      );
+      return;
+    }
+    if (!(await this.workspaceEntitlements.reactivate(this.addonKey(addon.id)))) {
+      await this.grantAddonEntitlement(addon);
+    }
+    const label = this.addonLabel(addon);
+    await this.sendConfirmation({
+      to: addon.email || (await this.emailForUser(addon.user_id)) || '',
+      userId: addon.user_id,
+      subject: `Cortexa ${label} add-on — payment received`,
+      lines: [
+        ['Workspace', label],
+        ['Amount', this.money(amount)],
+        ['Status', 'Paid'],
+        ['Transaction ID', tx?.id || '—'],
+        ['Authorization code', tx?.authorization_code || '—'],
+        ['Next charge', next.toISOString().slice(0, 10)],
+      ],
+    });
+  }
+
+  /**
+   * STAGING-ONLY test hook: make an add-on's renewal due now and run its
+   * sweep once (exercises renewal, decline -> past_due and duplicate-charge
+   * prevention). Refused unless NUVEI_ENVIRONMENT is staging.
+   */
+  async simulateWorkspaceAddonRenewal(addonId: string, user: any): Promise<WorkspaceAddonResult> {
+    if (this.client.environment() !== 'staging') {
+      throw new ForbiddenException('Renewal simulation is only available in staging.');
+    }
+    await this.ensureAddonSchema();
+    const { rows } = await this.db.query(
+      `SELECT id, user_id, team_id, status FROM nuvei_workspace_addons WHERE id = $1`,
+      [addonId],
+    );
+    const a = rows[0];
+    if (!a) throw new NotFoundException('Workspace add-on not found');
+    if (!(await this.canManageAddon(user, a))) throw new ForbiddenException();
+    // Move the due date only while no renewal is in flight; otherwise the
+    // sweep and this run could charge two different billing periods.
+    const { rowCount } = await this.db.query(
+      `UPDATE nuvei_workspace_addons
+          SET next_billing_date = NOW() - interval '1 minute', updated_at = NOW()
+        WHERE id = $1 AND status IN ('active','past_due')
+          AND NOT EXISTS (
+            SELECT 1 FROM nuvei_transactions t
+             WHERE t.subscription_id = $1 AND t.kind IN ('addon','addon_renewal')
+               AND t.status IN ('pending','unconfirmed'))`,
+      [addonId],
+    );
+    if (!rowCount) {
+      throw new BadRequestException(
+        !['active', 'past_due'].includes(a.status)
+          ? `Workspace add-on is ${a.status}; renewal does not apply.`
+          : 'A payment on this workspace add-on is still being confirmed. Try again once it settles.',
+      );
+    }
+    await this.debitDueWorkspaceAddons(addonId);
+    return this.getWorkspaceAddon(addonId, user);
+  }
+
+  /**
+   * Verified callback for a Workspace add-on charge (first payment or
+   * renewal). Same rules as the plan: approval only on success + detail 3 with
+   * the recorded amount; a decline of the first payment leaves it locked; a
+   * full reversal ends the add-on and locks the Workspace. Idempotent.
+   */
+  private async processAddonCallback(
+    payload: any,
+    tx: any,
+    txRow: any,
+    providerTxId: string | null,
+  ): Promise<{ handled: string; verified: boolean }> {
+    await this.ensureAddonSchema();
+    const approved = this.isApproved(payload);
+    const failed = this.isDefinitiveFailure(payload);
+    const reversal = this.isReversal(payload);
+    let confirmed = approved;
+    if (confirmed && this.config.getBoolean('NUVEI_VERIFY_ENABLED', false) && providerTxId) {
+      const v = await this.client.verifyTransaction(providerTxId);
+      if (v.ok && v.body?.transaction) confirmed = this.isApproved(v.body);
+    }
+    if (providerTxId) {
+      await this.db
+        .query(
+          `UPDATE nuvei_transactions
+              SET provider_transaction_id = COALESCE(provider_transaction_id, $2),
+                  authorization_code = COALESCE($3, authorization_code)
+            WHERE id = $1`,
+          [txRow.id, providerTxId, tx?.authorization_code || null],
+        )
+        .catch(() => undefined);
+    }
+
+    const { rows } = await this.db.query(`SELECT * FROM nuvei_workspace_addons WHERE id = $1`, [txRow.subscription_id]);
+    const addon = rows[0];
+    if (!addon) {
+      this.logger.warn(`Nuvei callback for a workspace add-on charge with no add-on (tx row ${txRow.id})`);
+      return { handled: 'addon_unknown', verified: false };
+    }
+    const txStatus = String(txRow.status || '');
+    const open = ['pending', 'unconfirmed'].includes(txStatus);
+    const charged = ['success', 'partially_refunded', 'refund_pending'].includes(txStatus);
+    const asSub = { id: addon.id, user_id: addon.user_id, email: addon.email || (await this.emailForUser(addon.user_id)) };
+
+    if (String(txRow.kind) === 'addon') {
+      if (confirmed) {
+        if (!this.amountMatches(tx?.amount, txRow.amount)) {
+          this.logger.warn(`Nuvei add-on callback amount mismatch for ${txRow.dev_reference}: got ${tx?.amount}, expected ${txRow.amount}`);
+          return { handled: 'amount_mismatch', verified: false };
+        }
+        if (['canceled', 'refunded'].includes(addon.status)) {
+          // Money without service. Claim the still-open charge row first, so
+          // only one settle of this payment ever asks Nuvei for the refund (a
+          // duplicate refund already in progress has marked it 'success').
+          const { rows: claim } = await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'success', status_detail = 3
+              WHERE id = $1 AND status IN ('pending','unconfirmed','failure','error')
+              RETURNING id`,
+            [txRow.id],
+          );
+          if (!claim[0]) return { handled: 'already_processed', verified: true };
+          return this.refundStrayCharge(
+            asSub,
+            { ...txRow, status: 'success' },
+            providerTxId,
+            'workspace add-on payment approved after the add-on ended',
+          );
+        }
+        if (!charged) {
+          await this.db.query(
+            `UPDATE nuvei_transactions SET status = 'success', status_detail = 3 WHERE id = $1`,
+            [txRow.id],
+          );
+        }
+        if (['pending', 'payment_failed', 'active'].includes(addon.status)) {
+          const st = await this.activateAddon(addon.id, tx);
+          return { handled: st === 'active' ? 'addon_active' : `addon_${st}`, verified: true };
+        }
+        return { handled: 'already_processed', verified: true };
+      }
+      if (failed && open) {
+        await this.db.query(
+          `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message)
+            WHERE id = $1 AND status IN ('pending','unconfirmed')`,
+          [txRow.id, Number.isFinite(Number(tx?.status_detail)) ? Number(tx.status_detail) : null, tx?.message || null],
+        );
+        await this.failPendingAddon(addon.id);
+        return { handled: 'addon_declined', verified: true };
+      }
+    } else {
+      // addon_renewal
+      if (confirmed) {
+        if (charged || txStatus === 'refunded') return { handled: 'already_processed', verified: true };
+        if (!this.amountMatches(tx?.amount, txRow.amount)) {
+          this.logger.warn(`Nuvei add-on renewal callback amount mismatch for ${txRow.dev_reference}: got ${tx?.amount}, expected ${txRow.amount}`);
+          return { handled: 'amount_mismatch', verified: false };
+        }
+        const { rowCount } = await this.db.query(
+          `UPDATE nuvei_transactions
+              SET status = 'success', status_detail = 3,
+                  authorization_code = COALESCE($2, authorization_code),
+                  message = COALESCE($3, message)
+            WHERE id = $1 AND status IN ('pending','unconfirmed','error','failure')`,
+          [txRow.id, tx?.authorization_code || null, tx?.message || null],
+        );
+        if (!rowCount) return { handled: 'already_processed', verified: true };
+        // A LATER renewal already succeeded (the period was retried after
+        // Nuvei stayed silent): this is a second payment for the same month.
+        const { rows: later } = await this.db.query(
+          `SELECT id FROM nuvei_transactions
+            WHERE subscription_id = $1 AND kind = 'addon_renewal' AND status = 'success'
+              AND id <> $2 AND created_at > (SELECT created_at FROM nuvei_transactions WHERE id = $2)
+            LIMIT 1`,
+          [addon.id, txRow.id],
+        );
+        if (later[0]) {
+          let refunded = false;
+          if (providerTxId) {
+            try {
+              const r = await this.client.refund(providerTxId);
+              refunded = String(r.body?.status || '').toLowerCase() === 'success';
+            } catch (err: any) {
+              this.logger.error(`duplicate add-on renewal refund call failed for ${providerTxId}: ${err?.message}`);
+            }
+          }
+          await this.db.query(
+            `UPDATE nuvei_transactions
+                SET status = CASE WHEN $2::boolean THEN 'refunded' ELSE status END,
+                    refunded_amount = CASE WHEN $2::boolean THEN amount ELSE refunded_amount END,
+                    message = $3
+              WHERE id = $1`,
+            [txRow.id, refunded, refunded ? 'duplicate add-on renewal — refunded automatically' : 'DUPLICATE ADD-ON RENEWAL — REFUND REQUIRED'],
+          );
+          this.logger.error(`Nuvei duplicate add-on renewal on ${addon.id} (tx ${providerTxId || '-'}): ${refunded ? 'refunded automatically' : 'REFUND REQUIRED'}`);
+          return { handled: refunded ? 'duplicate_refunded' : 'duplicate_needs_refund', verified: true };
+        }
+        if (['active', 'past_due', 'suspended'].includes(addon.status)) {
+          await this.applyAddonRenewalSuccess(
+            { ...addon, next_billing_date: addon.next_billing_date || new Date() },
+            tx,
+            Number(txRow.amount),
+          );
+          return { handled: 'addon_renewal_confirmed', verified: true };
+        }
+        return this.refundStrayCharge(asSub, txRow, providerTxId, 'workspace add-on renewal approved after the add-on ended');
+      }
+      if (failed && open) {
+        const { rowCount } = await this.db.query(
+          `UPDATE nuvei_transactions SET status = 'failure', status_detail = $2, message = COALESCE($3, message)
+            WHERE id = $1 AND status IN ('pending','unconfirmed')`,
+          [txRow.id, Number.isFinite(Number(tx?.status_detail)) ? Number(tx.status_detail) : null, tx?.message || null],
+        );
+        if (!rowCount) return { handled: 'already_processed', verified: true };
+        if (['active', 'past_due'].includes(addon.status)) {
+          await this.applyAddonRenewalDecline(addon, tx, Number(txRow.amount), tx?.message || 'declined (callback)');
+        }
+        return { handled: 'addon_renewal_declined', verified: true };
+      }
+    }
+
+    if (reversal) {
+      if (charged) return this.applyAddonReversal(addon, txRow, tx);
+      // Nothing was captured (abandoned 3DS / annulled authorization): note
+      // it, never "refund" money the customer never paid.
+      await this.db.query(
+        `UPDATE nuvei_transactions SET message = COALESCE($2, message)
+          WHERE id = $1 AND status IN ('pending','unconfirmed','failure','error')`,
+        [txRow.id, tx?.message || 'annulled by Nuvei'],
+      );
+      if (String(txRow.kind) === 'addon') await this.failPendingAddon(addon.id);
+      return { handled: 'reversal_noted', verified: true };
+    }
+    return { handled: confirmed ? 'already_processed' : 'ignored', verified: false };
+  }
+
+  /** Nuvei reported a refund / chargeback of an add-on charge (status 2). */
+  private async applyAddonReversal(addon: any, txRow: any, tx: any): Promise<{ handled: string; verified: boolean }> {
+    if (Number(tx?.status_detail) === 34) {
+      await this.db.query(
+        `UPDATE nuvei_transactions SET status = 'partially_refunded' WHERE id = $1 AND status <> 'refunded'`,
+        [txRow.id],
+      );
+      return { handled: 'partial_refund_noted', verified: true };
+    }
+    await this.db.query(
+      `UPDATE nuvei_transactions
+          SET status = 'refunded',
+              refunded_amount = GREATEST(refunded_amount, amount),
+              message = COALESCE(message, 'refunded by Nuvei')
+        WHERE id = $1 AND status <> 'refunded'`,
+      [txRow.id],
+    );
+    const wasRefunded = addon.status === 'refunded';
+    await this.revokeAddonForRefund(addon.id);
+    if (!wasRefunded) {
+      const label = this.addonLabel(addon);
+      await this.sendConfirmation({
+        to: addon.email || (await this.emailForUser(addon.user_id)) || '',
+        userId: addon.user_id,
+        subject: 'Your Cortexa refund has been processed',
+        lines: [
+          ['Workspace', label],
+          ['Amount refunded', this.money(Number(tx?.amount ?? txRow?.amount ?? 0))],
+          ['Original transaction', String(tx?.id || txRow?.provider_transaction_id || '—')],
+          ['Status', 'Refunded'],
+        ],
+        note: 'The workspace add-on has ended and the workspace is locked. Your CRM plan is not affected.',
+      });
+      return { handled: 'addon_reversed', verified: true };
+    }
+    return { handled: 'reversal_noted', verified: true };
+  }
+
   // ---- provisioning (account access + admin billing mirror) ------------
 
   /** Write the account's plan access exactly like the Paddle path does. */
@@ -3702,6 +5507,10 @@ export class NuveiService {
     const status = input.statusOverride || String(tx.status || 'failure');
     const detail = Number.isFinite(Number(tx.status_detail)) ? Number(tx.status_detail) : null;
     const message = tx.message || input.body?.error?.description || input.body?.error?.type || input.body?.error || null;
+    // An override ('unconfirmed' after a timeout) is OUR guess, not Nuvei's
+    // answer: it may only replace the in-flight 'pending' marker, never an
+    // outcome the callback already recorded meanwhile (e.g. 'success').
+    const onlyPending = !!input.statusOverride;
     try {
       // The row may already exist as an in-flight claim (written before the
       // charge was sent): complete it instead of inserting a second one.
@@ -3711,7 +5520,8 @@ export class NuveiService {
                 authorization_code = COALESCE($3, authorization_code),
                 status = $4, status_detail = $5, current_status = $6,
                 message = $7, raw = $8
-          WHERE dev_reference = $1 AND kind = $9`,
+          WHERE dev_reference = $1 AND kind = $9
+            ${onlyPending ? `AND status = 'pending'` : ''}`,
         [
           input.dev_reference,
           tx.id || null,
@@ -3725,6 +5535,14 @@ export class NuveiService {
         ],
       );
       if (rowCount) return;
+      if (onlyPending) {
+        // The row exists but is already settled: keep the real outcome.
+        const { rows: existing } = await this.db.query(
+          `SELECT 1 FROM nuvei_transactions WHERE dev_reference = $1 AND kind = $2 LIMIT 1`,
+          [input.dev_reference, input.kind],
+        );
+        if (existing[0]) return;
+      }
       await this.db.query(
         `INSERT INTO nuvei_transactions
            (subscription_id, user_id, kind, dev_reference, provider_transaction_id,

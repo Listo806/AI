@@ -89,6 +89,51 @@ export async function nuveiCreateLinkToPay(payload) {
   return res?.data ?? res;
 }
 
+// Paid Workspace add-on ($97/month per additional Workspace).
+// { workspaceId, quote: true } only validates and returns the price + the saved
+// card that would be charged ({ status: 'confirm', card }); with a cardId it
+// charges (3DS like the plan activation). The server unlocks the Workspace only
+// after Nuvei confirms the payment.
+export async function nuveiWorkspaceAddon(payload) {
+  const res = await apiClient.request("/nuvei/workspace-addons", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return res?.data ?? res;
+}
+
+// 3DS: after the hidden "method" iframe was shown, continue the add-on charge.
+export async function nuveiWorkspaceAddonContinue(addonId) {
+  const res = await apiClient.request(
+    `/nuvei/workspace-addons/${encodeURIComponent(addonId)}/3ds/continue`,
+    { method: "POST" },
+  );
+  return res?.data ?? res;
+}
+
+// One add-on's status (polled after 3DS / a bank review).
+export async function nuveiWorkspaceAddonStatus(addonId) {
+  const res = await apiClient.request(
+    `/nuvei/workspace-addons/${encodeURIComponent(addonId)}`,
+  );
+  return res?.data ?? res;
+}
+
+// The account's Workspace add-ons: { canManage, addons: [...] }.
+export async function nuveiWorkspaceAddons() {
+  const res = await apiClient.request("/nuvei/workspace-addons");
+  return res?.data ?? res;
+}
+
+// Cancel an add-on (stays unlocked until the paid month ends).
+export async function nuveiWorkspaceAddonCancel(addonId) {
+  const res = await apiClient.request(
+    `/nuvei/workspace-addons/${encodeURIComponent(addonId)}/cancel`,
+    { method: "POST" },
+  );
+  return res?.data ?? res;
+}
+
 // Admin: refund a transaction.
 export async function nuveiRefund(transactionId, amount) {
   const res = await apiClient.request("/nuvei/refund", {

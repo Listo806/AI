@@ -2934,7 +2934,11 @@
       "manageUsers": "Gestionar usuarios",
       "footerHint": "Los controles de facturación adicionales se conectarán cuando la pasarela de pago esté activa.",
       "statusTrialing": "En prueba",
-      "statusPastDue": "Pago vencido"
+      "statusPastDue": "Pago vencido",
+      "addonRow": "Complemento {{name}} · {{price}}/mes",
+      "addonEnds": "Finaliza el {{date}}",
+      "cancelAddon": "Cancelar complemento",
+      "cancelAddonConfirm": "¿Cancelar el complemento {{name}}? Seguirá desbloqueado hasta el final del mes que ya pagaste."
     },
     "settings": {
       "title": "Configuración",

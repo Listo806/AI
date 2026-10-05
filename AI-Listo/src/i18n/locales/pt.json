@@ -2934,7 +2934,11 @@
       "manageUsers": "Gerenciar usuários",
       "footerHint": "Controles de cobrança adicionais serão conectados quando o gateway de pagamento estiver ativo.",
       "statusTrialing": "Em avaliação",
-      "statusPastDue": "Pagamento vencido"
+      "statusPastDue": "Pagamento vencido",
+      "addonRow": "Complemento {{name}} · {{price}}/mês",
+      "addonEnds": "Termina em {{date}}",
+      "cancelAddon": "Cancelar complemento",
+      "cancelAddonConfirm": "Cancelar o complemento {{name}}? Ele continua desbloqueado até o fim do mês já pago."
     },
     "settings": {
       "title": "Configurações",
