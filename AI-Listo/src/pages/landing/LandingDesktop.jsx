@@ -318,7 +318,6 @@ export default function Landing() {
       ],
 
       trial: "Get Started",
-      login: "Log in",
 
       stripTitlebk: "Your CRM shouldn’t slow you down.",
       stripSubbk: "Join teams using CORTEXA...",
@@ -343,10 +342,6 @@ export default function Landing() {
       faqCtaTitle: "Still have a question about your business?",
       faqCta: "Contact Cortexa",
       faqCtaNote: "Our team can help you understand the platform before you get started.",
-      finalTitle:
-        "Automate your workflow with AI agents — powered by Cortexa Agentic CRM",
-      finalDesc:
-        "Capture leads, follow up instantly, and move every opportunity forward automatically inside one intelligent operating system.",
       footer: {
         desc: "The AI-powered CRM that helps teams close more deals, faster.",
         btn: "Get Started →",
@@ -535,7 +530,6 @@ export default function Landing() {
       topHighlight: "Agentic CRM",
       topLine3:
         "for businesses tired of complicated, overpriced CRM software.",
-      pricing: "Pricing",
       webSolutions: "Web & Software Development Systems Integration",
 
       finalTitle: "Connect Your Entire Workflow",
@@ -741,7 +735,6 @@ export default function Landing() {
         "Testimonios",
       ],
       trial: "Comenzar",
-      login: "Iniciar sesión",
 
       stripTitlebk: "Tu CRM no debería ralentizarte.",
       stripSubbk: "Únete a equipos que usan CORTEXA...",
@@ -766,9 +759,6 @@ export default function Landing() {
       faqCtaTitle: "¿Aún tienes una pregunta sobre tu negocio?",
       faqCta: "Contactar a Cortexa",
       faqCtaNote: "Nuestro equipo puede ayudarte a entender la plataforma antes de comenzar.",
-      finalTitle: "Automatiza todo tu flujo de trabajo",
-      finalDesc:
-        "CORTEXA capta clientes potenciales, automatiza los seguimientos, actualiza tu pipeline y mantiene a tu equipo en movimiento, para que puedas concentrarte en cerrar más negocios.",
       footer: {
         desc: "El CRM con IA que ayuda a los equipos a cerrar más ventas más rápido.",
         btn: "Comenzar →",
@@ -963,7 +953,6 @@ export default function Landing() {
       topHighlight: "CRM agéntico",
       topLine3:
         "para negocios cansados de software CRM complicado y costoso.",
-      pricing: "Precios",
       webSolutions: "Desarrollo Web y de Software e Integración de Sistemas",
 
       finalTitle: "Conecta Todo Tu Flujo de Trabajo",
@@ -1165,7 +1154,6 @@ export default function Landing() {
         "Testemunhos",
       ],
       trial: "Começar",
-      login: "Entrar",
 
       stripTitlebk: "Seu CRM não deve te atrasar.",
       stripSubbk: "Junte-se a equipes usando CORTEXA...",
@@ -1190,10 +1178,6 @@ export default function Landing() {
       faqCtaTitle: "Ainda tem alguma dúvida sobre o seu negócio?",
       faqCta: "Falar com a Cortexa",
       faqCtaNote: "Nossa equipe pode ajudar você a entender a plataforma antes de começar.",
-      finalTitle:
-        "Automatize seus processos com agentes de IA impulsionados pelo Cortexa Agentic CRM",
-      finalDesc:
-        "Capture leads, faça acompanhamentos instantaneamente e avance cada oportunidade automaticamente dentro de um sistema operacional inteligente.",
       footer: {
         desc: "O CRM com IA que ajuda equipes a fechar mais negócios rapidamente.",
         btn: "Começar →",
@@ -1389,7 +1373,6 @@ export default function Landing() {
       topHighlight: "CRM agêntico",
       topLine3:
         "para empresas cansadas de software de CRM complicado e caro.",
-      pricing: "Preços",
       webSolutions: "Desenvolvimento Web e de Software e Integração de Sistemas",
 
       finalTitle: "Conecte Todo o Seu Fluxo de Trabalho",

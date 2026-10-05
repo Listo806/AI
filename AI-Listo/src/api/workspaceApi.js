@@ -1,9 +1,10 @@
 import apiClient from "./apiClient";
 
-// Customer Workspaces are attached directly to the account's active CRM plan.
-// Selecting the included Workspace does NOT open a separate Paddle checkout.
+// Paid Workspace add-ons. Access is granted only by an active entitlement.
+// A promotional included-workspace credit may comp one selection; otherwise the
+// purchase endpoint returns a Paddle checkout intent.
 const workspaceApi = {
-  // { includedWithPlan, includedWorkspaceLimit, available, workspaces: [...] }
+  // { monthlyPrice, available, workspaces: [...] }
   getCatalog() {
     return apiClient.request("/workspaces/catalog", {
       method: "GET",
@@ -39,19 +40,7 @@ const workspaceApi = {
   // ACTIVATE WORKSPACE
   // ============================================================
   //
-  // Adds the selected Workspace directly to the customer's
-  // current ACTIVE CRM plan.
-  //
-  // IMPORTANT:
-  // - No Paddle checkout.
-  // - No separate Workspace payment.
-  // - Backend validates the active CRM subscription.
-  // - Backend creates/returns a unique Workspace instance UUID.
-  // - Workspace is linked to:
-  //      customer/user
-  //      team/account
-  //      active CRM subscription
-  //      active CRM plan
+  // Platform-support activation endpoint. Normal customers must use purchase().
   //
   activate(workspaceId) {
     if (!workspaceId) {
@@ -78,14 +67,8 @@ const workspaceApi = {
   //
   // workspaceApi.purchase(workspaceId)
   //
-  // Keep this method temporarily so older frontend code does not
-  // immediately break.
-  //
-  // IMPORTANT:
-  // The backend purchase endpoint has been changed to use the
-  // SAME no-payment activation flow.
-  //
-  // It must NOT return Paddle checkout information anymore.
+  // Normal customer flow: returns alreadyEntitled/comped when no payment is
+  // needed, otherwise returns Paddle priceId + customData for secure checkout.
   //
   purchase(workspaceId) {
     if (!workspaceId) {

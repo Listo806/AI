@@ -33,11 +33,37 @@ export class WorkspacesController {
     private readonly db: DatabaseService,
   ) {}
 
-  // Workspace-plan changes are restricted to the account owner/admin roles.
-  private assertBillingAdmin(user: any) {
+  // Workspace purchases are billing actions. Platform super-admins may access
+  // every workspace without buying it; customer purchases must be made by the
+  // owning account or an active team owner/admin. Do not rely on users.role alone:
+  // normal customer owners are commonly users.role='user'.
+  private async assertWorkspaceBillingAdmin(user: any, teamId: string) {
     const role = String(user?.role || '').toLowerCase();
-    if (!['admin', 'super_admin', 'owner', 'developer'].includes(role)) {
-      throw new ForbiddenException('Only account admins can manage workspace add-ons');
+    if (role === 'super_admin' || role === 'developer') return;
+    if (!user?.id || !teamId) {
+      throw new ForbiddenException('Only an account admin can add workspace add-ons');
+    }
+
+    const { rows } = await this.db.query(
+      `SELECT 1
+         FROM teams t
+        WHERE t.id = $1
+          AND (
+            t.owner_id = $2
+            OR EXISTS (
+              SELECT 1
+                FROM team_members tm
+               WHERE tm.team_id = t.id
+                 AND tm.user_id = $2
+                 AND LOWER(COALESCE(tm.status::text, 'active')) = 'active'
+                 AND LOWER(COALESCE(tm.role::text, '')) IN ('owner', 'admin')
+            )
+          )
+        LIMIT 1`,
+      [teamId, user.id],
+    );
+    if (!rows.length) {
+      throw new ForbiddenException('Only an account admin can add workspace add-ons');
     }
   }
 
@@ -59,9 +85,9 @@ export class WorkspacesController {
   @ApiOperation({ summary: 'List Workspaces available for the CRM plan' })
   async getCatalog() {
     return {
-      includedWithPlan: true,
-      includedWorkspaceLimit: 1,
-      available: true,
+      includedWithPlan: false,
+      monthlyPrice: 97,
+      available: !!String(process.env.PADDLE_PRICE_WORKSPACE || '').trim(),
       workspaces: WORKSPACE_CATALOG.map((w) => ({
         id: w.id,
         name: w.name,
@@ -74,11 +100,12 @@ export class WorkspacesController {
   @ApiOperation({ summary: "The current team's Workspace entitlements" })
   async getEntitlements(@CurrentUser() user: any) {
     const teamId = await this.entitlements.resolveTeamId(user);
-    const [rows, activeWorkspaceIds] = await Promise.all([
+    const [rows, activeWorkspaceIds, includedWorkspaceCredits] = await Promise.all([
       this.entitlements.listForTeam(teamId),
       this.entitlements.listActiveWorkspaceIds(teamId),
+      this.entitlements.availableIncludedCredits(teamId),
     ]);
-    return { entitlements: rows, activeWorkspaceIds };
+    return { entitlements: rows, activeWorkspaceIds, includedWorkspaceCredits };
   }
 
   @Get('access')
@@ -97,7 +124,10 @@ export class WorkspacesController {
       workspaces: WORKSPACE_CATALOG.map((w) => {
         const locked = isWorkspaceLocked(w.id);
         const instance = instanceByWorkspace.get(w.id);
-        const entitled = !!instance;
+        // Platform super-admins are support users and can open every workspace
+        // without creating a customer entitlement or triggering billing. Returning
+        // entitled=true also makes the sidebar badge read ACTIVE for super-admin.
+        const entitled = !!instance || isSupport;
         return {
           id: w.id,
           name: w.name,
@@ -256,72 +286,113 @@ export class WorkspacesController {
   }
 
   @Post(':workspaceId/activate')
-  @ApiOperation({
-    summary: 'Attach the selected Workspace directly to the active CRM plan',
-  })
+  @ApiOperation({ summary: 'Platform support: open a Workspace without customer billing' })
   async activate(
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: any,
   ) {
-    this.assertBillingAdmin(user);
-
-    const workspace = getWorkspace(workspaceId);
-    if (!workspace) {
-      throw new BadRequestException(`Unknown workspace: ${workspaceId}`);
-    }
-
-    const teamId = await this.entitlements.resolveTeamId(user);
-    if (!teamId) {
-      throw new BadRequestException('A CRM team/account is required to activate a workspace.');
-    }
-
-    const activeSubscription = await this.getActiveCrmSubscription(teamId);
-    if (!activeSubscription) {
-      throw new BadRequestException(
-        'An active CRM plan is required before a workspace can be added.',
+    if (String(user?.role || '').toLowerCase() !== 'super_admin') {
+      throw new ForbiddenException(
+        'Customer workspaces must be unlocked through the workspace purchase flow.',
       );
     }
-
-    const result = await this.entitlements.activateForPlan({
-      teamId,
-      workspaceId: workspace.id,
-      planSubscriptionId: activeSubscription.id,
-      planId: activeSubscription.planId || null,
-      userId: user?.id || null,
-    });
-
-    if (!result.activated) {
-      if (result.reason === 'already_has_plan_workspace') {
-        throw new BadRequestException(
-          'This CRM plan already has its included Workspace selected. Open the active Workspace or contact support to change the selection.',
-        );
-      }
-      throw new BadRequestException('The workspace could not be activated for this CRM plan.');
-    }
-
+    const workspace = getWorkspace(workspaceId);
+    if (!workspace) throw new BadRequestException(`Unknown workspace: ${workspaceId}`);
     return {
       success: true,
       activated: true,
-      alreadyEntitled: !!result.alreadyEntitled,
+      alreadyEntitled: true,
+      supportAccess: true,
       workspaceId: workspace.id,
-      workspaceInstanceId: result.workspaceInstanceId,
-      planSubscriptionId: result.planSubscriptionId,
-      planId: result.planId,
       route: workspace.route,
-      source: 'plan_included',
       paymentRequired: false,
     };
   }
 
-  // Backwards-compatible alias for older frontend builds. It intentionally performs
-  // the same no-payment plan activation and never returns Paddle checkout data.
   @Post(':workspaceId/purchase')
-  @ApiOperation({ summary: 'Deprecated alias: activate Workspace on CRM plan' })
+  @ApiOperation({ summary: 'Start or complete the paid Workspace add-on flow' })
   async purchase(
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: any,
   ) {
-    return this.activate(workspaceId, user);
+    const workspace = getWorkspace(workspaceId);
+    if (!workspace) throw new BadRequestException(`Unknown workspace: ${workspaceId}`);
+
+    // Platform support never pays and never creates customer billing records.
+    if (String(user?.role || '').toLowerCase() === 'super_admin') {
+      return {
+        success: true,
+        alreadyEntitled: true,
+        supportAccess: true,
+        workspaceId: workspace.id,
+        route: workspace.route,
+        paymentRequired: false,
+      };
+    }
+
+    const teamId = await this.entitlements.resolveTeamId(user);
+    if (!teamId) {
+      throw new BadRequestException('A CRM team/account is required to add a workspace.');
+    }
+    await this.assertWorkspaceBillingAdmin(user, teamId);
+
+    // Workspace add-ons are only available to a customer with an active/trialing
+    // base CRM subscription. This preserves the paid-account flow.
+    const activeSubscription = await this.getActiveCrmSubscription(teamId);
+    if (!activeSubscription) {
+      throw new BadRequestException(
+        'An active CRM plan is required before a workspace add-on can be purchased.',
+      );
+    }
+
+    if (await this.entitlements.hasActiveEntitlement(teamId, workspace.id)) {
+      return {
+        success: true,
+        alreadyEntitled: true,
+        workspaceId: workspace.id,
+        route: workspace.route,
+        paymentRequired: false,
+      };
+    }
+
+    // Promotional plans may include one workspace credit. Consume that credit
+    // server-side first; only accounts without a credit continue to Paddle.
+    const included = await this.entitlements.claimIncludedWorkspace({
+      teamId,
+      workspaceId: workspace.id,
+      userId: user?.id || null,
+    });
+    if (included.comped) {
+      return {
+        success: true,
+        comped: true,
+        workspaceId: workspace.id,
+        route: workspace.route,
+        paymentRequired: false,
+      };
+    }
+
+    const priceId = String(process.env.PADDLE_PRICE_WORKSPACE || '').trim();
+    if (!priceId) {
+      throw new BadRequestException(
+        'Workspace checkout is not configured. Please contact support.',
+      );
+    }
+
+    // The signed Paddle webhook is the ONLY path that grants a normal paid
+    // workspace entitlement. teamId is deliberately not trusted through checkout;
+    // the webhook resolves it again from this authenticated user id.
+    return {
+      success: true,
+      paymentRequired: true,
+      priceId,
+      email: user?.email || null,
+      customData: {
+        addon: 'workspace',
+        workspaceId: workspace.id,
+        userId: user?.id || null,
+      },
+    };
   }
 
 }

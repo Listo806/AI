@@ -176,57 +176,15 @@ export default function Sidebar({
     }
   }, []);
 
-  // Add the selected Workspace directly to the customer's active CRM plan.
-  // The backend creates/returns the stable Workspace instance UUID and links it
-  // to the current customer/team + CRM subscription. No Paddle checkout is opened.
-  const activateWorkspace = useCallback(
-    async (ws) => {
-      const catalogId = ws.id === "financial" ? "financial_services" : ws.id;
-      setWsError(null);
-      setWsBusy(true);
-
-      try {
-        const result = await workspaceApi.activate(catalogId);
-
-        if (!result?.activated && !result?.alreadyEntitled) {
-          setWsError(
-            result?.message ||
-              "Could not add this workspace to your CRM plan. Please try again.",
-          );
-          return;
-        }
-
-        await loadAccess();
-        setWsError(null);
-        setHoveredWorkspace(null);
-
-        // Always open the route defined by the sidebar catalog.
-        // Do not trust a generic/fallback backend route (for example "/"),
-        // because a newly-added workspace may not yet have its route registered
-        // in the backend workspace registry.
-        const backendRoute =
-          typeof result?.route === "string" ? result.route.trim() : "";
-        const nextRoute =
-          backendRoute.startsWith("/dashboard/clinic-medical")
-            ? backendRoute
-            : ws.path;
-
-        if (nextRoute) {
-          window.location.href = nextRoute;
-        }
-      } catch (e) {
-        setWsError(
-          e?.response?.data?.message ||
-            e?.data?.message ||
-            e?.message ||
-            "Could not add this workspace to your CRM plan. Please try again.",
-        );
-      } finally {
-        setWsBusy(false);
-      }
-    },
-    [loadAccess],
-  );
+  // Locked customer workspaces must never be activated for free from the sidebar.
+  // Navigate to the workspace route; WorkspaceGate then handles entitlement, any
+  // included promotional credit, and the $97/month Paddle checkout. Super-admins
+  // are reported as entitled by /workspaces/access and therefore open directly.
+  const activateWorkspace = useCallback((ws) => {
+    setWsError(null);
+    setHoveredWorkspace(null);
+    if (ws?.path) window.location.href = ws.path;
+  }, []);
 
   // Reset the Add-to-Plan feedback whenever a different workspace is hovered.
   useEffect(() => {
@@ -1742,7 +1700,7 @@ export default function Sidebar({
                 {!isWorkspaceActive(hoveredWorkspace) && (
                   <div className="crm-workspace-preview-price">
                     <strong style={{ color: "#16a34a" }}>
-                      {t("nav.workspaces.included", "Included with your plan")}
+                      {t("nav.workspaces.addOnPrice", "$97/month add-on")}
                     </strong>
                   </div>
                 )}
@@ -1772,10 +1730,10 @@ export default function Sidebar({
                           hoveredWorkspace,
                         )} ${t("nav.workspaces.activeSuffix")}`
                     : wsBusy
-                      ? t("nav.workspaces.activating", "Adding to your plan...")
+                      ? t("nav.workspaces.activating", "Opening...")
                       : hoveredWorkspace.id === "clinic-medical"
                         ? "Choose Clinic & Medical"
-                        : t("nav.workspaces.addToPlan", "Add to My Plan")}
+                        : t("nav.workspaces.addToPlan", "Unlock Workspace")}
                 </button>
 
                 {wsError && !isWorkspaceActive(hoveredWorkspace) ? (
@@ -1795,8 +1753,8 @@ export default function Sidebar({
                     style={{ color: "#16a34a" }}
                   >
                     {t(
-                      "nav.workspaces.includedNoCharge",
-                      "This workspace will be added directly to your active CRM plan. No additional checkout is required.",
+                      "nav.workspaces.addOnCheckout",
+                      "Unlock this workspace with the $97/month add-on. Promotional included-workspace credits are applied automatically.",
                     )}
                   </p>
                 )}
