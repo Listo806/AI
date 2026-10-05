@@ -257,6 +257,99 @@ export class NuveiController {
     );
   }
 
+  // ---- Workspace add-ons ($97/month per additional Workspace) ----------
+
+  /**
+   * Buy an additional Workspace on the purchasing user's own saved card (3DS,
+   * like the plan activation). `quote: true` only validates and answers the
+   * price + card that would be charged; nothing is charged. The Workspace is
+   * unlocked only after Nuvei confirms the payment.
+   */
+  @Post('workspace-addons')
+  @UseGuards(JwtAuthGuard)
+  async startWorkspaceAddon(@CurrentUser() user: any, @Body() body: any, @Req() req: any) {
+    return this.nuvei.startWorkspaceAddon({
+      user,
+      workspaceId: String(body?.workspaceId || ''),
+      cardId: body?.cardId ? String(body.cardId) : undefined,
+      quote: body?.quote === true,
+      browserInfo: body?.browserInfo,
+      termUrl: body?.termUrl,
+      consentIp: clientIp(req),
+      testScenario: body?.testScenario,
+    });
+  }
+
+  // The account's Workspace add-ons (Billing page).
+  @Get('workspace-addons')
+  @UseGuards(JwtAuthGuard)
+  async workspaceAddons(@CurrentUser() user: any) {
+    return this.nuvei.listWorkspaceAddons(user);
+  }
+
+  // One add-on's status (polled after 3DS / a bank review). Authorized in the
+  // service: the payer, a billing admin of that account, or platform support
+  // (users.role 'admin' alone is not enough: customer owners can have it).
+  @Get('workspace-addons/:id')
+  @UseGuards(JwtAuthGuard)
+  async workspaceAddon(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.nuvei.getWorkspaceAddon(requireUuid(id, 'add-on id'), user);
+  }
+
+  // 3DS "method" step done in the browser: continue the authentication.
+  @Post('workspace-addons/:id/3ds/continue')
+  @UseGuards(JwtAuthGuard)
+  async workspaceAddonThreeDsContinue(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.nuvei.workspaceAddonThreeDsContinue(requireUuid(id, 'add-on id'), user?.id);
+  }
+
+  // Cancel (the paying user or an account admin): stays unlocked until the
+  // paid month ends.
+  @Post('workspace-addons/:id/cancel')
+  @UseGuards(JwtAuthGuard)
+  async cancelWorkspaceAddon(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.nuvei.cancelWorkspaceAddon(requireUuid(id, 'add-on id'), user);
+  }
+
+  // STAGING-ONLY test hook: make the add-on's renewal due now and run it.
+  @Post('workspace-addons/:id/simulate-renewal')
+  @UseGuards(JwtAuthGuard)
+  async simulateWorkspaceAddonRenewal(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.nuvei.simulateWorkspaceAddonRenewal(requireUuid(id, 'add-on id'), user);
+  }
+
+  /**
+   * 3DS term_url of a Workspace add-on charge (public, like the plan one): hand
+   * the CRes to Nuvei, settle the add-on, send the browser back to the
+   * Workspace page. It can only ever redirect to our own frontend.
+   */
+  @Post('workspace-addons/3ds/return/:id')
+  async workspaceAddonThreeDsReturnPost(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Query() query: any,
+    @Res() res: any,
+  ) {
+    return this.workspaceAddonThreeDsReturn(id, { ...(query || {}), ...(body || {}) }, res);
+  }
+
+  @Get('workspace-addons/3ds/return/:id')
+  async workspaceAddonThreeDsReturnGet(@Param('id') id: string, @Query() query: any, @Res() res: any) {
+    return this.workspaceAddonThreeDsReturn(id, query || {}, res);
+  }
+
+  private async workspaceAddonThreeDsReturn(id: string, form: any, res: any) {
+    let redirect = 'https://www.cortexaaicrm.com/dashboard';
+    try {
+      const out = await this.nuvei.workspaceAddonThreeDsReturn(id, form);
+      redirect = out.redirect || redirect;
+    } catch (err: any) {
+      // Never strand the customer: the Workspace page polls the real outcome.
+      this.logger.warn(`workspace add-on 3DS return failed for ${id}: ${err?.message}`);
+    }
+    res.redirect(302, redirect);
+  }
+
   /**
    * Nuvei verified callback / webhook. Public endpoint. Confirmation of service
    * happens here (not on any frontend redirect). Idempotent. Answers 200 when

@@ -2934,7 +2934,11 @@
       "manageUsers": "Manage users",
       "footerHint": "Additional billing controls will be connected once the payment gateway is live.",
       "statusTrialing": "Trialing",
-      "statusPastDue": "Past Due"
+      "statusPastDue": "Past Due",
+      "addonRow": "{{name}} add-on · {{price}}/month",
+      "addonEnds": "Ends {{date}}",
+      "cancelAddon": "Cancel add-on",
+      "cancelAddonConfirm": "Cancel the {{name}} add-on? It stays unlocked until the end of the month you already paid for."
     },
     "settings": {
       "title": "Settings",

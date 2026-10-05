@@ -154,6 +154,9 @@ export class WorkspaceEntitlementsService {
     teamId: string;
     priceId?: string | null;
     userId?: string | null;
+    // Who sold it. Omitted = 'paddle' (the column default) for the Paddle
+    // webhook; the Nuvei add-on passes 'nuvei_addon' with a 'nuvei:<id>' key.
+    source?: string | null;
   }): Promise<boolean> {
     const workspaceId = normalizeWorkspaceId(params.workspaceId);
     if (!params.subscriptionId || !workspaceId || !params.teamId) {
@@ -163,13 +166,14 @@ export class WorkspaceEntitlementsService {
     const res = await this.db.query(
       `INSERT INTO workspace_entitlements
          (team_id, workspace_id, paddle_subscription_id, paddle_price_id,
-          status, created_by, activated_at, revoked_at, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, 'active', $5, NOW(), NULL, NOW(), NOW())
+          status, created_by, source, activated_at, revoked_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, 'active', $5, COALESCE($6::varchar, 'paddle'), NOW(), NULL, NOW(), NOW())
        ON CONFLICT (paddle_subscription_id) DO UPDATE SET
          status = 'active',
          team_id = EXCLUDED.team_id,
          workspace_id = EXCLUDED.workspace_id,
          paddle_price_id = COALESCE(EXCLUDED.paddle_price_id, workspace_entitlements.paddle_price_id),
+         source = COALESCE($6::varchar, workspace_entitlements.source),
          activated_at = COALESCE(workspace_entitlements.activated_at, NOW()),
          revoked_at = NULL,
          updated_at = NOW()`,
@@ -179,6 +183,7 @@ export class WorkspaceEntitlementsService {
         params.subscriptionId,
         params.priceId || null,
         params.userId || null,
+        params.source || null,
       ],
     );
     this.logger.log(
@@ -302,6 +307,77 @@ export class WorkspaceEntitlementsService {
       [teamId, id],
     );
     return rows.length > 0;
+  }
+
+  /**
+   * True if the team holds an active entitlement for the workspace OTHER than
+   * the one keyed `exceptSubscriptionId` (e.g. a Nuvei add-on's own
+   * 'nuvei:<id>' row must never count as a duplicate of itself).
+   */
+  async hasActiveEntitlementExcept(
+    teamId: string,
+    workspaceId: string,
+    exceptSubscriptionId: string,
+  ): Promise<boolean> {
+    if (!teamId) return false;
+    const id = normalizeWorkspaceId(workspaceId);
+    if (!id) return false;
+    await this.ensureSchema();
+    const { rows } = await this.db.query(
+      `SELECT 1 FROM workspace_entitlements
+        WHERE team_id = $1 AND workspace_id = $2 AND status = 'active'
+          AND paddle_subscription_id IS DISTINCT FROM $3
+        LIMIT 1`,
+      [teamId, id, exceptSubscriptionId],
+    );
+    return rows.length > 0;
+  }
+
+  /**
+   * Workspace purchases are billing actions: platform support/developers, the
+   * team owner, or an active team owner/admin member. Same rule as
+   * WorkspacesController.assertWorkspaceBillingAdmin (users.role alone is not
+   * enough: normal customer owners are commonly users.role='user').
+   */
+  async canManageWorkspaceBilling(user: any, teamId: string | null): Promise<boolean> {
+    const role = String(user?.role || '').toLowerCase();
+    if (role === 'super_admin' || role === 'developer') return true;
+    if (!user?.id || !teamId) return false;
+    const { rows } = await this.db.query(
+      `SELECT 1
+         FROM teams t
+        WHERE t.id = $1
+          AND (
+            t.owner_id = $2
+            OR EXISTS (
+              SELECT 1
+                FROM team_members tm
+               WHERE tm.team_id = t.id
+                 AND tm.user_id = $2
+                 AND LOWER(COALESCE(tm.status::text, 'active')) = 'active'
+                 AND LOWER(COALESCE(tm.role::text, '')) IN ('owner', 'admin')
+            )
+          )
+        LIMIT 1`,
+      [teamId, user.id],
+    );
+    return rows.length > 0;
+  }
+
+  /** The team's active/trialing base CRM subscription (any provider), or null. */
+  async getActiveCrmSubscription(teamId: string | null): Promise<any | null> {
+    if (!teamId) return null;
+    const { rows } = await this.db.query(
+      `SELECT id, team_id AS "teamId", plan_id AS "planId", status, provider
+         FROM subscriptions
+        WHERE team_id = $1
+          AND LOWER(status::text) IN ('active', 'trialing')
+        ORDER BY CASE WHEN LOWER(status::text) = 'active' THEN 0 ELSE 1 END,
+                 updated_at DESC, created_at DESC
+        LIMIT 1`,
+      [teamId],
+    );
+    return rows[0] || null;
   }
 
   /** Active workspace instances for access responses, including the stable UUID. */

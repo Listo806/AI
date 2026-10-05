@@ -204,12 +204,16 @@ export class OnboardingService {
   }
 
   /** The workspace this team already runs in: the plan-included selection first,
-   *  otherwise any other active workspace entitlement (e.g. a legacy paid one). */
+   *  otherwise any other active workspace entitlement (e.g. a legacy paid one).
+   *  A $97 Nuvei add-on is an EXTRA workspace and never uses up the plan's
+   *  included pick. */
   private async currentTeamWorkspace(teamId: string | null): Promise<string | null> {
     if (!teamId) return null;
     try {
       const rows = await this.entitlements.listActiveWorkspaceInstances(teamId);
-      const selectable = rows.filter((r) => !NOT_SELECTABLE.has(r.workspace_id));
+      const selectable = rows.filter(
+        (r) => !NOT_SELECTABLE.has(r.workspace_id) && r.source !== 'nuvei_addon',
+      );
       const planIncluded = selectable.find((r) => (r as any).source === 'plan_included');
       return (planIncluded || selectable[0])?.workspace_id || null;
     } catch (err: any) {
