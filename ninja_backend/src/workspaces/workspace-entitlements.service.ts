@@ -357,6 +357,20 @@ export class WorkspaceEntitlementsService {
                  AND LOWER(COALESCE(tm.status::text, 'active')) = 'active'
                  AND LOWER(COALESCE(tm.role::text, '')) IN ('owner', 'admin')
             )
+            -- A successfully paying Nuvei customer is authoritative for the
+            -- exact team/account attached to that subscription. Older accounts
+            -- can still have users.role='agent' (or a stale team_members role)
+            -- even though they created and paid for the account. This fallback
+            -- repairs authorization without granting billing rights to ordinary
+            -- invited agents: they have no Nuvei subscription for this team.
+            OR EXISTS (
+              SELECT 1
+                FROM nuvei_subscriptions ns
+               WHERE ns.team_id = t.id
+                 AND ns.user_id = $2
+                 AND LOWER(COALESCE(ns.status::text, '')) IN
+                     ('verification_pending', 'trialing', 'active')
+            )
           )
         LIMIT 1`,
       [teamId, user.id],

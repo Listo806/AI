@@ -67,24 +67,11 @@ export class OnboardingService {
    * users.role can still be "user", so never use that legacy role alone to
    * decide whether they may select their included workspace. */
   private async canManageTeam(user: any, teamId: string | null): Promise<boolean> {
-    if (!user?.id || !teamId) return false;
-    const globalRole = String(user?.role || '').toLowerCase();
-    if (globalRole === 'super_admin' || globalRole === 'developer') return true;
-
-    const { rows } = await this.db.query(
-      `SELECT EXISTS (
-         SELECT 1 FROM teams t
-          WHERE t.id = $2 AND t.owner_id = $1
-       ) OR EXISTS (
-         SELECT 1 FROM team_members tm
-          WHERE tm.team_id = $2
-            AND tm.user_id = $1
-            AND COALESCE(tm.status, 'active') = 'active'
-            AND LOWER(COALESCE(tm.role, '')) IN ('owner', 'admin')
-       ) AS allowed`,
-      [user.id, teamId],
-    );
-    return rows[0]?.allowed === true;
+    // Keep onboarding and paid Workspace billing on one account-admin rule.
+    // This also supports legacy paid self-signups whose global users.role is
+    // still `agent`/`user`: the Nuvei payer for this exact team is allowed,
+    // while ordinary invited agents remain blocked.
+    return this.entitlements.canManageWorkspaceBilling(user, teamId);
   }
 
   private async activeCrmSubscription(teamId: string) {
