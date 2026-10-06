@@ -216,6 +216,24 @@ export class SubscriptionsService {
       throw new BadRequestException('An active Nuvei CRM subscription is required before adding a paid team member.');
     }
 
+    // Idempotency/recovery guard: a previous request may already have provisioned
+    // a paid seat before the invitation failed. If the team currently has free
+    // capacity, reuse that paid capacity instead of billing/provisioning another
+    // $97 seat on retry.
+    const [seatLimit, seatUsage] = await Promise.all([
+      this.teamsService.getTeamSeatLimit(teamId),
+      this.teamsService.getTeamSeatUsage(teamId),
+    ]);
+    if (seatUsage < seatLimit) {
+      const extraSeats = await this.getTeamExtraSeatCount(teamId);
+      return {
+        success: true,
+        extraSeats,
+        provider: 'nuvei',
+        nextMonthlyAmount: Number(subs[0].monthly_amount || 0) + extraSeats * 97,
+      };
+    }
+
     await this.db.query(
       `INSERT INTO team_addon_history (team_id, addon_key, enabled_at, created_at)
        VALUES ($1, 'seat', NOW(), NOW())`,

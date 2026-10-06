@@ -2300,15 +2300,29 @@ export class TeamsService {
    */
   async inviteToOwnTeam(
     requestingUserId: string,
+    preferredTeamId: string | null,
     email: string,
     role: string | null = null,
     name: string | null = null,
   ) {
-    const { rows } = await this.db.query(
-      `SELECT id FROM teams WHERE owner_id = $1 ORDER BY created_at ASC LIMIT 1`,
-      [requestingUserId],
-    );
-    const teamId = rows[0]?.id;
+    // Use the authenticated/current team first. This must be the same team that
+    // /subscriptions/seats/add billed. Falling back to the oldest owned team can
+    // split the paid-seat ledger and the invitation across two teams.
+    let teamId = preferredTeamId ? String(preferredTeamId) : "";
+    if (teamId) {
+      const current = await this.db.query(
+        `SELECT id FROM teams WHERE id = $1 AND owner_id = $2 LIMIT 1`,
+        [teamId, requestingUserId],
+      );
+      if (!current.rows[0]) teamId = "";
+    }
+    if (!teamId) {
+      const { rows } = await this.db.query(
+        `SELECT id FROM teams WHERE owner_id = $1 ORDER BY created_at ASC LIMIT 1`,
+        [requestingUserId],
+      );
+      teamId = rows[0]?.id || "";
+    }
     if (!teamId) {
       throw new BadRequestException(
         "No workspace found for this account yet. Please try again in a moment.",

@@ -164,6 +164,7 @@ export class TeamsController {
   ) {
     return this.teamsService.inviteToOwnTeam(
       user.id,
+      user?.teamId || null,
       body?.email?.trim?.() || "",
       body?.role || "agent",
       body?.name?.trim?.() || null,
