@@ -2791,18 +2791,14 @@ export class TeamsService {
     const alreadyMember = existing.rows.length > 0;
 
     if (!alreadyMember) {
-      // Re-check the seat cap. Exclude THIS invitation from usage: accepting it
-      // converts a held pending seat, so it must not count against the cap.
-      // Core-CRM growth invites bypass the paid seat cap (same policy as the
-      // invite-time check); paid Team Workspace invites are unaffected.
-      if (invitation.source !== "core_crm") {
-        const [limit, usage] = await Promise.all([
-          this.getTeamSeatLimit(teamId),
-          this.getTeamSeatUsage(teamId, token),
-        ]);
-        if (usage >= limit) {
-          throw new ForbiddenException(TeamsService.SEAT_LIMIT_MESSAGE);
-        }
+      // Re-check the seat cap for every invitation. The core CRM invite now
+      // follows the same paid-seat rules as every other team invitation.
+      const [limit, usage] = await Promise.all([
+        this.getTeamSeatLimit(teamId),
+        this.getTeamSeatUsage(teamId, token),
+      ]);
+      if (usage >= limit) {
+        throw new ForbiddenException(TeamsService.SEAT_LIMIT_MESSAGE);
       }
 
       await this.db.query(
