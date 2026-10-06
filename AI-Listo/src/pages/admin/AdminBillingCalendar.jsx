@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import billingCalendarApi from "../../api/billingCalendarApi";
+import nuveiRefundApi from "../../api/nuveiRefundApi";
 import "./AdminBillingCalendar.css";
 
 const STATUS_META = {
@@ -150,6 +151,8 @@ export default function AdminBillingCalendar() {
   const [refundItemId, setRefundItemId] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState("requested_by_admin");
+  const [nuveiRefundRows, setNuveiRefundRows] = useState([]);
+  const [refundSearch, setRefundSearch] = useState("");
 
   const days = useMemo(() => monthDays(month), [month]);
   const currentWeek = useMemo(() => weekDays(selectedDate), [selectedDate]);
@@ -424,29 +427,36 @@ export default function AdminBillingCalendar() {
     finally { setBusy(false); }
   };
 
-  const openRefund = async (row) => {
-    setOpenMenu(null); setRefundRow(row); setRefundTxn(null); setRefundType("full"); setRefundItemId(""); setRefundAmount(""); setRefundReason("requested_by_admin");
-    setModal({ type: "refund" }); setModalLoading(true);
+  const loadNuveiRefunds = async (params = {}) => {
+    setModalLoading(true);
     try {
-      const txn = await billingCalendarApi.transaction(row.paddleTransactionId);
-      setRefundTxn(txn?.data || txn);
-    } catch (e) { setError(e?.message || "Unable to load Paddle transaction."); setModal(null); }
+      const r = await nuveiRefundApi.history({ ...params, limit: 100 });
+      setNuveiRefundRows(r?.data || []);
+    } catch (e) { setError(e?.message || "Unable to load Nuvei payment history."); }
     finally { setModalLoading(false); }
   };
 
-  const submitRefund = async () => {
-    if (!refundRow?.subscriptionId || !refundRow?.paddleTransactionId) return;
+  const openRefund = async (row) => {
+    setOpenMenu(null); setRefundRow(row); setRefundSearch("");
+    setModal({ type: "nuveiRefund" });
+    await loadNuveiRefunds({ userId: row?.customerId });
+  };
+
+  const openRefundSearch = async () => {
+    setRefundRow(null); setRefundSearch(""); setModal({ type: "nuveiRefund" });
+    await loadNuveiRefunds();
+  };
+
+  const submitNuveiRefund = async (tx) => {
+    const remaining = Math.max(0, Number(tx?.amount || 0) - Number(tx?.refundedAmount || 0));
+    if (!tx?.transactionId || !window.confirm(`Refund ${money(remaining, tx.currency || "USD", locale)} for ${tx.transactionId}?\n\nThis action is sent to Nuvei and updates the Cortexa transaction record.`)) return;
     setBusy(true);
     try {
-      const result = await billingCalendarApi.refund(refundRow.subscriptionId, {
-        transactionId: refundRow.paddleTransactionId, type: refundType, reason: refundReason,
-        itemId: refundType === "partial" ? refundItemId : undefined,
-        amount: refundType === "partial" ? refundAmount : undefined,
-      });
-      setModal(null);
-      showNotice(result?.status === "pending_approval" ? "Refund requested in Paddle and is pending approval." : "Refund request accepted by Paddle.");
+      const result = await nuveiRefundApi.refund(tx.transactionId);
+      showNotice(`${result?.message || "Refund processed."} Transaction ${tx.transactionId}`);
+      await loadNuveiRefunds(refundRow?.customerId ? { userId: refundRow.customerId } : { search: refundSearch });
       await refreshAll();
-    } catch (e) { setError(e?.message || "Refund request failed."); }
+    } catch (e) { setError(e?.message || "Nuvei refund failed."); }
     finally { setBusy(false); }
   };
 
@@ -476,7 +486,7 @@ export default function AdminBillingCalendar() {
 
     <section className={`abc-main ${dayPanelOpen ? "" : "day-closed"}`}>
       <article className="abc-calendar">
-        <header><h2>{t("adminBillingCalendar.title")}</h2><div className="abc-view">
+        <header><h2>{t("adminBillingCalendar.title")}</h2><div className="abc-view"><button className="abc-refund-top" onClick={openRefundSearch}><RotateCcw /> Refund Payment</button>
           {["month", "week", "list"].map((x) => <button key={x} className={view === x ? "active" : ""} onClick={() => setView(x)}>{t(`adminBillingCalendar.views.${x}`)}</button>)}
           <div className="abc-filter-wrap"><button className={calendarFilter !== "all" ? "active-filter" : ""} onClick={() => setFilterOpen((v) => !v)}><Filter /></button>{filterOpen && <div className="abc-filter-menu">
             <button className={calendarFilter === "all" ? "active" : ""} onClick={() => { setCalendarFilter("all"); setFilterOpen(false); }}>{t("common.all")}</button>
@@ -505,7 +515,7 @@ export default function AdminBillingCalendar() {
             <button onClick={() => pauseRow(r)}>{t("adminBillingCalendar.actions.pauseSubscription")}</button>
             <button onClick={() => cancelRow(r)}>{t("adminBillingCalendar.actions.cancelSubscription")}</button>
             <button onClick={() => reminderRow(r)}>{t("adminBillingCalendar.actions.sendReminder")}</button>
-            {r.refundEligible && <button onClick={() => openRefund(r)}>{t("adminBillingCalendar.actions.refund")}</button>}
+            {(r.refundEligible || r.status === "paid") && <button onClick={() => openRefund(r)}>Refund Payment</button>}
             {r.retryEligible && <button onClick={() => retrySingle(r)}>{t("adminBillingCalendar.actions.retryPayment")}</button>}
           </div>}</td></tr>;
         })}</tbody></table>
@@ -530,13 +540,14 @@ export default function AdminBillingCalendar() {
 
     <footer className="abc-footer"><div><CircleDollarSign />{t("adminBillingCalendar.syncedWithPaddle")}</div><div><span />{t("adminBillingCalendar.paddleStatus")} · {t("adminBillingCalendar.lastSync")}: {overview.lastSyncLabel || "—"}<button onClick={refreshAll}><RefreshCw /></button></div></footer>
 
-    {modal && <Modal wide={["upcoming", "activity", "exceptions", "customer"].includes(modal.type)} title={
+    {modal && <Modal wide={["upcoming", "activity", "exceptions", "customer", "nuveiRefund"].includes(modal.type)} title={
       modal.type === "upcoming" ? t("adminBillingCalendar.sections.upcomingBillingDays") :
       modal.type === "activity" ? t("adminBillingCalendar.sections.recentActivity") :
       modal.type === "exceptions" ? t("adminBillingCalendar.sections.billingExceptions") :
       modal.type === "customer" ? t("adminBillingCalendar.actions.viewCustomer") :
       modal.type === "reschedule" ? t("adminBillingCalendar.actions.rescheduleBilling") :
       modal.type === "change-plan" ? t("adminBillingCalendar.actions.changePlan") :
+      modal.type === "nuveiRefund" ? "Refund Payment" :
       modal.type === "refund" ? t("adminBillingCalendar.actions.refund") :
       modal.type === "retry-results" ? t("adminBillingCalendar.actions.retryFailed") : "Activity"
     } onClose={() => setModal(null)}>
@@ -556,7 +567,15 @@ export default function AdminBillingCalendar() {
 
       {modal.type === "change-plan" && <div className="abc-form"><p>{changePlanRow?.customerName}</p><label>Plan</label><select value={newPlan} onChange={(e) => setNewPlan(e.target.value)}><option value="solo">Solo</option><option value="business">Business</option><option value="scale">Scale</option></select><label>Billing cycle</label><select value={newCycle} onChange={(e) => setNewCycle(e.target.value)}><option value="monthly">Monthly</option><option value="annual">Annual</option></select><button className="abc-primary" disabled={busy} onClick={saveChangePlan}>{t("adminBillingCalendar.actions.changePlan")}</button></div>}
 
-      {modal.type === "refund" && <div className="abc-form"><p>{refundRow?.customerName}</p><label>Transaction</label><div className="abc-readonly">{refundRow?.paddleTransactionId}</div><label>Refund type</label><select value={refundType} onChange={(e) => setRefundType(e.target.value)}><option value="full">Full refund</option><option value="partial">Partial refund</option></select>{refundType === "partial" && <><label>Transaction item</label><select value={refundItemId} onChange={(e) => setRefundItemId(e.target.value)}><option value="">Select item</option>{(refundTxn?.details?.lineItems || refundTxn?.details?.line_items || []).map((it) => <option key={it.id} value={it.id}>{it.product?.name || it.price?.name || it.id} — {it.totals?.total || ""}</option>)}</select><label>Amount (minor currency units, e.g. 1000 = $10.00)</label><input value={refundAmount} onChange={(e) => setRefundAmount(e.target.value.replace(/\D/g, ""))} /></>}<label>Reason</label><input value={refundReason} onChange={(e) => setRefundReason(e.target.value)} /><button className="abc-primary" disabled={busy || !refundTxn || (refundType === "partial" && (!refundItemId || !refundAmount))} onClick={submitRefund}>Request refund in Paddle</button><small>Most live Paddle refunds may remain pending approval until Paddle confirms them.</small></div>}
+      {modal.type === "nuveiRefund" && <div className="abc-form">
+        {!refundRow && <><label>Search older Nuvei payments</label><div className="abc-search"><div><Search /><input value={refundSearch} onChange={(e) => setRefundSearch(e.target.value)} placeholder="Transaction ID, customer name, email or reference" /></div><button onClick={() => loadNuveiRefunds({ search: refundSearch })}>Search</button></div></>}
+        {refundRow && <p><b>{refundRow.customerName}</b> — select a successful Nuvei transaction to refund.</p>}
+        {modalLoading ? <p>Loading payments…</p> : nuveiRefundRows.length === 0 ? <p>No Nuvei payments found.</p> : <div className="abc-refund-list">{nuveiRefundRows.map((tx) => {
+          const eligible = ["success", "partially_refunded"].includes(String(tx.status));
+          const remaining = Math.max(0, Number(tx.amount || 0) - Number(tx.refundedAmount || 0));
+          return <div className="abc-refund-row" key={tx.id}><div><b>{tx.transactionId}</b><small>{tx.customerName || tx.customerEmail || "Customer"} · {dateTimeLabel(tx.createdAt, locale)}</small><small>{tx.kind} · {tx.status}</small></div><strong>{money(tx.amount, tx.currency || "USD", locale)}</strong>{eligible ? <button className="abc-primary" disabled={busy} onClick={() => submitNuveiRefund(tx)}>Refund {money(remaining, tx.currency || "USD", locale)}</button> : <span>{tx.status}</span>}</div>;
+        })}</div>}
+      </div>}
 
       {modal.type === "retry-results" && <div className="abc-modal-list">{(modal.data || []).map((r, i) => <div className="abc-retry-row" key={i}><span><b>{r.row?.customerName}</b><small>{r.error || r.message || "Paddle automatic recovery is active."}</small></span>{r.updatePaymentMethodUrl && <button onClick={() => window.open(r.updatePaymentMethodUrl, "_blank", "noopener,noreferrer")}>Open secure payment update</button>}</div>)}</div>}
     </Modal>}

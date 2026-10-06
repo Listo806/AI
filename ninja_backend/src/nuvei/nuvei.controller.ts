@@ -375,6 +375,18 @@ export class NuveiController {
     return out;
   }
 
+  // Admin: searchable Nuvei payment history used by both refund entry points.
+  @Get('admin/refund-transactions')
+  @UseGuards(JwtAuthGuard)
+  async refundTransactions(@CurrentUser() user: any, @Query() query: any) {
+    this.requireTrueAdmin(user);
+    return this.nuvei.refundTransactions({
+      userId: query?.userId,
+      search: query?.search,
+      limit: query?.limit,
+    });
+  }
+
   // Admin: refund a transaction (full, or partial with `amount`).
   @Post('refund')
   @UseGuards(JwtAuthGuard)

@@ -76,6 +76,7 @@ import {
   getCustomerIds,
 } from "../../api/platformApi";
 import aiUnitsApi from "../../api/aiUnitsApi";
+import nuveiRefundApi from "../../api/nuveiRefundApi";
 import AdminPlans from "./AdminPlans";
 import BulkEmailModal from "../../components/BulkEmailModal";
 import EmailAuditModal from "../../components/EmailAuditModal";
@@ -97,8 +98,8 @@ const TABS = [
 
 const PLAN_OPTIONS = [
   { value: "free", label: "Free ($0)" },
-  { value: "solo", label: "Solo ($127)" },
-  { value: "business", label: "Business ($297)" },
+  { value: "solo", label: "Solo ($197)" },
+  { value: "business", label: "Business ($347)" },
   { value: "scale", label: "Scale ($497)" },
 ];
 
@@ -1071,7 +1072,7 @@ export default function AdminCustomers() {
 
     const match = planBreakdown.find((item) => {
       // Match on the stable machine id first (free/solo/business/scale); the
-      // display label (e.g. "Solo ($127)") is not a reliable key.
+      // display label (e.g. "Solo ($197)") is not a reliable key.
       const id = String(item?.id ?? "")
         .trim()
         .toLowerCase();
@@ -1101,7 +1102,7 @@ export default function AdminCustomers() {
       key: "solo",
       label: "SOLO",
       count: getPlanCount("solo"),
-      price: "$127 / month",
+      price: "$197 / month",
       Icon: UserRound,
       tone: "solo",
     },
@@ -1109,7 +1110,7 @@ export default function AdminCustomers() {
       key: "business",
       label: "BUSINESS",
       count: getPlanCount("business", "team"),
-      price: "$297 / month",
+      price: "$347 / month",
       Icon: BriefcaseBusiness,
       tone: "business",
     },
@@ -2017,10 +2018,10 @@ export default function AdminCustomers() {
                                   className="cxc-menu-item"
                                   onClick={() => {
                                     setRowMenu(null);
-                                    setDetail({ id: r.id, tab: "payments" });
+                                    setDetail({ id: r.id, tab: "payments", refund: true });
                                   }}
                                 >
-                                  View payments
+                                  Refund Payment
                                 </button>
                                 <button
                                   className="cxc-menu-item"
@@ -2119,6 +2120,7 @@ export default function AdminCustomers() {
         <CustomerModal
           id={detail.id}
           tab={detail.tab}
+          refundMode={!!detail.refund}
           onClose={() => setDetail({ id: null, tab: "overview" })}
           onSelectTab={(t) => setDetail((d) => ({ ...d, tab: t }))}
           onChanged={load}
@@ -2237,6 +2239,7 @@ function PayStatusBadge({ status }) {
 function CustomerModal({
   id,
   tab,
+  refundMode = false,
   onClose,
   onSelectTab,
   onChanged,
@@ -2253,6 +2256,9 @@ function CustomerModal({
   const [savingEdit, setSavingEdit] = useState(false);
   const [mobileStep, setMobileStep] = useState(1);
   const [mobileAddingNote, setMobileAddingNote] = useState(false);
+  const [nuveiPayments, setNuveiPayments] = useState([]);
+  const [refundBusy, setRefundBusy] = useState(false);
+  const [refundError, setRefundError] = useState("");
   const activeTab = tab || "overview";
 
   const reload = useCallback(() => {
@@ -2296,6 +2302,26 @@ function CustomerModal({
   const sub = data?.subscription;
   const usage = data?.usage;
   const payments = data?.payments || [];
+  useEffect(() => {
+    if (!id || activeTab !== "payments") return;
+    nuveiRefundApi.history({ userId: id, limit: 100 })
+      .then((r) => setNuveiPayments(r?.data || []))
+      .catch((e) => setRefundError(e?.message || "Unable to load Nuvei payment history."));
+  }, [id, activeTab]);
+
+  const refundNuveiPayment = async (p) => {
+    if (!p?.transactionId || !["success", "partially_refunded"].includes(String(p.status))) return;
+    const remaining = Math.max(0, Number(p.amount || 0) - Number(p.refundedAmount || 0));
+    if (!window.confirm(`Refund ${usd(remaining)} ${p.currency || "USD"} for transaction ${p.transactionId}?\n\nThis sends the refund through Nuvei staging and updates the same Cortexa payment record.`)) return;
+    setRefundBusy(true); setRefundError("");
+    try {
+      await nuveiRefundApi.refund(p.transactionId);
+      const r = await nuveiRefundApi.history({ userId: id, limit: 100 });
+      setNuveiPayments(r?.data || []);
+      onChanged && onChanged();
+    } catch (e) { setRefundError(e?.message || "Refund failed."); }
+    finally { setRefundBusy(false); }
+  };
   const activity = data?.activity || [];
   const notes = data?.notes || [];
   const emailHistory = data?.emailHistory || null;
@@ -3008,20 +3034,21 @@ function CustomerModal({
                       <span>Original Source</span>
                       <strong>{c.source_label || "Unknown"}</strong>
                     </div>
-                    {payments.length === 0 ? (
-                      <div className="cxc-new-empty">No recorded payments.</div>
+                    {refundMode && <div className="cxc-new-kv"><span>Refund Payment</span><strong>Select a successful Nuvei transaction below</strong></div>}
+                    {refundError && <div className="cxc-new-empty">{refundError}</div>}
+                    {nuveiPayments.length === 0 ? (
+                      <div className="cxc-new-empty">No Nuvei payments found for this customer.</div>
                     ) : (
-                      payments.map((p) => (
-                        <div className="cxc-new-payment-row" key={p.id}>
-                          <span>
-                            {fmtDateTime(p.payment_date || p.created_at)}
-                          </span>
-                          <strong>
-                            {usd(p.amount)} {p.currency || "USD"}
-                          </strong>
-                          <PayStatusBadge status={p.status} />
-                        </div>
-                      ))
+                      nuveiPayments.map((p) => {
+                        const eligible = ["success", "partially_refunded"].includes(String(p.status));
+                        const remaining = Math.max(0, Number(p.amount || 0) - Number(p.refundedAmount || 0));
+                        return <div className="cxc-new-payment-row" key={p.id}>
+                          <span>{fmtDateTime(p.createdAt)}<small style={{display:"block"}}>{p.transactionId}</small></span>
+                          <strong>{usd(p.amount)} {p.currency || "USD"}</strong>
+                          <PayStatusBadge status={p.status === "success" ? "succeeded" : p.status} />
+                          {eligible && <button className="cxc-btn cxc-btn-sm" disabled={refundBusy} onClick={() => refundNuveiPayment(p)}>Refund {usd(remaining)}</button>}
+                        </div>;
+                      })
                     )}
                   </div>
                 )}

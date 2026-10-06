@@ -589,3 +589,6 @@
     flex-direction: column;
   }
 }
+
+/* Nuvei refund UX — shared transaction source for calendar + subscriptions */
+.abc-refund-top{display:inline-flex!important;align-items:center;gap:7px;padding:8px 12px!important;border:1px solid #d8dee9!important;border-radius:8px!important;background:#fff!important;color:#182230!important;font-weight:600}.abc-refund-top svg{width:15px;height:15px}.abc-refund-list{display:flex;flex-direction:column;gap:10px;max-height:440px;overflow:auto}.abc-refund-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:12px;border:1px solid #e5e7eb;border-radius:10px}.abc-refund-row div{display:flex;flex-direction:column;gap:3px;min-width:0}.abc-refund-row small{color:#667085;overflow:hidden;text-overflow:ellipsis}.abc-refund-row .abc-primary{width:auto;margin:0}@media(max-width:760px){.abc-refund-row{grid-template-columns:1fr}.abc-refund-top{width:100%;justify-content:center}}
