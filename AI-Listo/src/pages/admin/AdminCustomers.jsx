@@ -76,7 +76,7 @@ import {
   getCustomerIds,
 } from "../../api/platformApi";
 import aiUnitsApi from "../../api/aiUnitsApi";
-import nuveiRefundApi from "../../api/nuveiRefundApi";
+import { nuveiRefund, nuveiRefundTransactions } from "../../api/nuveiApi";
 import AdminPlans from "./AdminPlans";
 import BulkEmailModal from "../../components/BulkEmailModal";
 import EmailAuditModal from "../../components/EmailAuditModal";
@@ -2304,7 +2304,7 @@ function CustomerModal({
   const payments = data?.payments || [];
   useEffect(() => {
     if (!id || activeTab !== "payments") return;
-    nuveiRefundApi.history({ userId: id, limit: 100 })
+    nuveiRefundTransactions({ userId: id, limit: 100 })
       .then((r) => setNuveiPayments(r?.data || []))
       .catch((e) => setRefundError(e?.message || "Unable to load Nuvei payment history."));
   }, [id, activeTab]);
@@ -2315,8 +2315,8 @@ function CustomerModal({
     if (!window.confirm(`Refund ${usd(remaining)} ${p.currency || "USD"} for transaction ${p.transactionId}?\n\nThis sends the refund through Nuvei staging and updates the same Cortexa payment record.`)) return;
     setRefundBusy(true); setRefundError("");
     try {
-      await nuveiRefundApi.refund(p.transactionId);
-      const r = await nuveiRefundApi.history({ userId: id, limit: 100 });
+      await nuveiRefund(p.transactionId);
+      const r = await nuveiRefundTransactions({ userId: id, limit: 100 });
       setNuveiPayments(r?.data || []);
       onChanged && onChanged();
     } catch (e) { setRefundError(e?.message || "Refund failed."); }

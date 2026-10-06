@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import billingCalendarApi from "../../api/billingCalendarApi";
-import nuveiRefundApi from "../../api/nuveiRefundApi";
+import { nuveiRefund, nuveiRefundTransactions } from "../../api/nuveiApi";
 import "./AdminBillingCalendar.css";
 
 const STATUS_META = {
@@ -430,7 +430,7 @@ export default function AdminBillingCalendar() {
   const loadNuveiRefunds = async (params = {}) => {
     setModalLoading(true);
     try {
-      const r = await nuveiRefundApi.history({ ...params, limit: 100 });
+      const r = await nuveiRefundTransactions({ ...params, limit: 100 });
       setNuveiRefundRows(r?.data || []);
     } catch (e) { setError(e?.message || "Unable to load Nuvei payment history."); }
     finally { setModalLoading(false); }
@@ -452,7 +452,7 @@ export default function AdminBillingCalendar() {
     if (!tx?.transactionId || !window.confirm(`Refund ${money(remaining, tx.currency || "USD", locale)} for ${tx.transactionId}?\n\nThis action is sent to Nuvei and updates the Cortexa transaction record.`)) return;
     setBusy(true);
     try {
-      const result = await nuveiRefundApi.refund(tx.transactionId);
+      const result = await nuveiRefund(tx.transactionId);
       showNotice(`${result?.message || "Refund processed."} Transaction ${tx.transactionId}`);
       await loadNuveiRefunds(refundRow?.customerId ? { userId: refundRow.customerId } : { search: refundSearch });
       await refreshAll();

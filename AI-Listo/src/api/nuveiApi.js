@@ -134,6 +134,18 @@ export async function nuveiWorkspaceAddonCancel(addonId) {
   return res?.data ?? res;
 }
 
+// Admin: searchable Nuvei payment history used by both Billing Calendar and
+// Subscriptions refund UIs. Both locations still refund through /nuvei/refund.
+export async function nuveiRefundTransactions(params = {}) {
+  const q = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") q.set(key, String(value));
+  });
+  const suffix = q.toString() ? `?${q.toString()}` : "";
+  const res = await apiClient.request(`/nuvei/admin/refund-transactions${suffix}`);
+  return res?.data ?? res;
+}
+
 // Admin: refund a transaction.
 export async function nuveiRefund(transactionId, amount) {
   const res = await apiClient.request("/nuvei/refund", {
