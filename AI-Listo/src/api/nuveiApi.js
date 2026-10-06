@@ -143,7 +143,21 @@ export async function nuveiRefundTransactions(params = {}) {
   });
   const suffix = q.toString() ? `?${q.toString()}` : "";
   const res = await apiClient.request(`/nuvei/admin/refund-transactions${suffix}`);
-  return res?.data ?? res;
+
+  // apiClient may return either the parsed JSON body directly or an Axios-like
+  // { data: body } response.  The backend body itself is { data: rows, total }.
+  // Always preserve that envelope because both Admin Customers and Billing
+  // Calendar consume result.data.  Previously this function unwrapped one level
+  // too far, returning the rows array; the callers then read array.data and
+  // incorrectly displayed “No Nuvei payments found”.
+  const payload = res?.data ?? res;
+  if (Array.isArray(payload)) {
+    return { data: payload, total: payload.length };
+  }
+  if (payload && Array.isArray(payload.data)) {
+    return payload;
+  }
+  return { data: [], total: 0 };
 }
 
 // Admin: refund a transaction.
