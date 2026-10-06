@@ -161,19 +161,31 @@ export class SubscriptionsController {
   }
 
   @Post('seats/add')
-  @ApiOperation({ summary: 'Buy one extra $97/month team seat' })
+  @ApiOperation({ summary: 'Add one $97/month team seat to Nuvei recurring billing' })
   @ApiResponse({ status: 201, description: 'Seat added; returns extraSeats' })
   async addSeat(@CurrentUser() user: any) {
-    this.assertPlanAdmin(user);
-    return this.subscriptionsService.addSeat(user?.teamId);
+    const teamId = await this.subscriptionsService.resolveBillingTeamId(user?.id, user?.teamId);
+    if (!teamId) throw new ForbiddenException('No billing team is available for this account.');
+    const platformRole = String(user?.role || '').toLowerCase();
+    const support = ['admin', 'super_admin', 'developer'].includes(platformRole);
+    if (!support && !(await this.subscriptionsService.canManageTeamBilling(user?.id, teamId))) {
+      throw new ForbiddenException('Only the account owner or a team billing admin can add paid seats.');
+    }
+    return this.subscriptionsService.addSeat(teamId);
   }
 
   @Post('seats/remove')
   @ApiOperation({ summary: 'Remove one paid team seat' })
   @ApiResponse({ status: 201, description: 'Seat removed; returns extraSeats' })
   async removeSeat(@CurrentUser() user: any) {
-    this.assertPlanAdmin(user);
-    return this.subscriptionsService.removeSeat(user?.teamId);
+    const teamId = await this.subscriptionsService.resolveBillingTeamId(user?.id, user?.teamId);
+    if (!teamId) throw new ForbiddenException('No billing team is available for this account.');
+    const platformRole = String(user?.role || '').toLowerCase();
+    const support = ['admin', 'super_admin', 'developer'].includes(platformRole);
+    if (!support && !(await this.subscriptionsService.canManageTeamBilling(user?.id, teamId))) {
+      throw new ForbiddenException('Only the account owner or a team billing admin can remove paid seats.');
+    }
+    return this.subscriptionsService.removeSeat(teamId);
   }
 
   @Post(':id/cancel')

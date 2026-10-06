@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Lock, RefreshCw } from "lucide-react";
 import workspaceApi from "../api/workspaceApi";
-import { fetchPaddleConfig } from "../api/paddleApi";
-import { initPaddle, openWorkspaceCheckout } from "../pages/checkout/paddleCheckout";
 
-// Billing surface for the paid Workspace add-ons. Each Workspace is its own
-// $97/month Paddle subscription, unlocked per account by a workspace entitlement.
-// Buying opens the Paddle checkout; the signature-verified webhook grants the
-// entitlement server-side, so after checkout completes we refresh a few times to
-// pick up the grant. Enforcement (locking the workspaces) is a separate step; this
-// panel only manages purchasing/entitlement visibility.
+// Billing surface for paid Workspace add-ons. Each additional Workspace is
+// $97/month through Nuvei. This list never opens Paddle; paid purchases continue
+// through the WorkspaceGate on the workspace route, while included credits can
+// still be claimed server-side without payment.
 export default function WorkspaceAddOns() {
   const [catalog, setCatalog] = useState(null);
   const [activeIds, setActiveIds] = useState([]);
@@ -17,7 +13,6 @@ export default function WorkspaceAddOns() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
-  const paddleReadyRef = useRef(false);
   const refreshTimers = useRef([]);
 
   const loadEntitlements = async () => {
@@ -63,45 +58,30 @@ export default function WorkspaceAddOns() {
     );
   };
 
-  const ensurePaddle = async () => {
-    if (paddleReadyRef.current) return true;
-    const cfg = await fetchPaddleConfig();
-    if (!cfg?.clientToken) return false;
-    await initPaddle(cfg, (ev) => {
-      if (ev?.name === "checkout.completed") scheduleRefresh();
-    });
-    paddleReadyRef.current = true;
-    return true;
-  };
-
   const buy = async (workspace) => {
     setBusyId(workspace.id);
     setError("");
     try {
       const intent = await workspaceApi.purchase(workspace.id);
-      // Comped by an included-workspace credit (e.g. the $257 promo): activated
-      // server-side with no charge — just refresh, never open Paddle.
       if (intent?.comped || intent?.alreadyEntitled) {
         await loadEntitlements();
         return;
       }
-      const ok = await ensurePaddle();
-      if (!ok) {
-        setError("Checkout is not available right now. Please try again shortly.");
+      // Paid add-ons are completed by WorkspaceGate using Nuvei. Navigating to
+      // the workspace keeps one payment implementation and avoids any legacy
+      // Paddle checkout path from this management surface.
+      if (intent?.paymentRequired) {
+        window.location.assign(workspace.route || `/dashboard/${workspace.id}`);
         return;
       }
-      openWorkspaceCheckout({
-        priceId: intent.priceId,
-        customData: intent.customData,
-        email: intent.email,
-      });
-      scheduleRefresh();
+      setError("Workspace checkout is not available right now.");
     } catch (e) {
       setError(e?.message || "Could not start checkout.");
     } finally {
       setBusyId(null);
     }
   };
+
 
   if (loading) {
     return (

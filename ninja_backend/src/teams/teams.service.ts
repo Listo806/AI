@@ -2294,12 +2294,9 @@ export class TeamsService {
   }
 
   /**
-   * Core-CRM "Invite Team Member" growth flow. Invites a teammate into the
-   * caller's OWN account/team, reusing the exact token + email + accept/join
-   * mechanics as the paid Team Workspace invite, but WITHOUT the paid seat cap
-   * (so Free/Solo can build a team; monetization is via AI usage). The paid Team
-   * Workspace invite path is untouched. Marked source='core_crm' so accept also
-   * bypasses the seat re-check.
+   * Core-CRM "Invite Team Member" flow. It uses the same plan seat cap as the
+   * Team page. Included seats are free; paid extra seats must already exist in
+   * team_addon_history before an invitation beyond the plan allowance is sent.
    */
   async inviteToOwnTeam(
     requestingUserId: string,
@@ -2323,7 +2320,7 @@ export class TeamsService {
       requestingUserId,
       role || "agent",
       name || null,
-      { skipSeatLimit: true, source: "core_crm" },
+      { skipSeatLimit: false, source: "core_crm" },
     );
   }
 

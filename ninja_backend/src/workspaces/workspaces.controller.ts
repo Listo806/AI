@@ -85,9 +85,10 @@ export class WorkspacesController {
   @ApiOperation({ summary: 'List Workspaces available for the CRM plan' })
   async getCatalog() {
     return {
-      includedWithPlan: false,
-      monthlyPrice: 97,
-      available: !!String(process.env.PADDLE_PRICE_WORKSPACE || '').trim(),
+      includedWithPlan: true,
+      additionalWorkspaceMonthlyPrice: 97,
+      provider: 'nuvei',
+      available: String(process.env.NUVEI_ENABLED || '').trim().toLowerCase() === 'true',
       workspaces: WORKSPACE_CATALOG.map((w) => ({
         id: w.id,
         name: w.name,

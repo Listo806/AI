@@ -69,7 +69,6 @@ import CountryPage from "./pages/common/CountryPage";
 import Pricing from "./pages/common/Pricing";
 import Trial from "./pages/common/Trial";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
-import PromoBusinessCheckout from "./pages/checkout/PromoBusinessCheckout";
 import NuveiLinkToPay from "./pages/admin/NuveiLinkToPay";
 import EditorialFunnel from "./pages/editorial/EditorialFunnel";
 import EditorialFunnelEs from "./pages/editorial/EditorialFunnelEs";
@@ -291,10 +290,7 @@ function publicRoutes(prefix) {
       />
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
-      <Route
-        path={`${p}/checkout-business-offer`}
-        element={<PromoBusinessCheckout />}
-      />
+      <Route path={`${p}/checkout-business-offer`} element={<Navigate to={`${p}/checkout?plan=team`} replace />} />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
       <Route path={`${p}/verify-email`} element={<EmailVerificationPage />} />
       <Route path={`${p}/onboarding`} element={<Onboarding />} />

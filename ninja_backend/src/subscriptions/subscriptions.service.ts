@@ -54,7 +54,6 @@ export class SubscriptionsService {
   // Add-on key -> the env var holding its Paddle recurring price id.
   private readonly ADDON_PRICE_ENV: Record<string, string> = {
     lead_generator: 'PADDLE_PRICE_LEAD_GENERATOR',
-    seat: 'PADDLE_PRICE_SEAT',
   };
 
   /** Resolve the team's Paddle subscription id (preferring the owner's row). */
@@ -137,6 +136,33 @@ export class SubscriptionsService {
     return { success: true, addon: addonKey };
   }
 
+  async resolveBillingTeamId(userId: string, preferred?: string | null): Promise<string | null> {
+    if (preferred) return preferred;
+    const { rows } = await this.db.query(
+      `SELECT COALESCE(u.team_id, t.id) AS team_id
+         FROM users u LEFT JOIN teams t ON t.owner_id = u.id
+        WHERE u.id = $1 ORDER BY t.created_at ASC NULLS LAST LIMIT 1`,
+      [userId],
+    );
+    return rows[0]?.team_id || null;
+  }
+
+  /** Customer billing permission is team-scoped. A normal users.role='user'
+   * may still be the account owner; do not confuse platform role with team role. */
+  async canManageTeamBilling(userId: string, teamId: string): Promise<boolean> {
+    if (!userId || !teamId) return false;
+    const { rows } = await this.db.query(
+      `SELECT 1
+         FROM teams t
+         LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = $1 AND tm.status = 'active'
+        WHERE t.id = $2
+          AND (t.owner_id = $1 OR LOWER(COALESCE(tm.role,'')) IN ('owner','admin'))
+        LIMIT 1`,
+      [userId, teamId],
+    );
+    return rows.length > 0;
+  }
+
   /** Count of paid extra seats (each active 'seat' add-on = +1 seat). */
   async getTeamExtraSeatCount(teamId: string): Promise<number> {
     if (!teamId) return 0;
@@ -153,74 +179,53 @@ export class SubscriptionsService {
     }
   }
 
-  /**
-   * Buy one extra $97/month seat: bump the seat add-on quantity on the team's
-   * Paddle subscription (prorated) and record it, so the plan's effective seat
-   * limit rises by one. Requires PADDLE_PRICE_SEAT. Sandbox-verify before go-live.
-   */
-  async addSeat(teamId: string): Promise<{ success: boolean; extraSeats: number }> {
+  /** Buy one extra $97/month seat. No Paddle call is made. The active seat
+   * row is the billing ledger consumed by the Nuvei recurring engine, which
+   * adds $97 per active row to the account's next monthly debit. */
+  async addSeat(teamId: string): Promise<{ success: boolean; extraSeats: number; provider: string; nextMonthlyAmount: number }> {
     if (!teamId) throw new BadRequestException('A team is required.');
-    const priceId = process.env.PADDLE_PRICE_SEAT;
-    if (!priceId) {
-      throw new BadRequestException(
-        'PADDLE_PRICE_SEAT is not configured yet. Add the Paddle seat price id to enable adding seats.',
-      );
-    }
-    const subscriptionId = await this.getTeamPaddleSubscriptionId(teamId);
-    if (!subscriptionId) {
-      throw new BadRequestException(
-        'No active Paddle subscription was found for this team.',
-      );
+
+    const { rows: subs } = await this.db.query(
+      `SELECT monthly_amount FROM nuvei_subscriptions
+        WHERE team_id = $1 AND status IN ('trialing','active','past_due')
+        ORDER BY created_at DESC LIMIT 1`,
+      [teamId],
+    );
+    if (!subs[0]) {
+      throw new BadRequestException('An active Nuvei CRM subscription is required before adding a paid team member.');
     }
 
-    const nextCount = (await this.getTeamExtraSeatCount(teamId)) + 1;
-    await this.paddleService.setSubscriptionAddonQuantity(
-      subscriptionId,
-      priceId,
-      nextCount,
-    );
     await this.db.query(
       `INSERT INTO team_addon_history (team_id, addon_key, enabled_at, created_at)
        VALUES ($1, 'seat', NOW(), NOW())`,
       [teamId],
     );
-    return { success: true, extraSeats: nextCount };
+    const extraSeats = await this.getTeamExtraSeatCount(teamId);
+    return {
+      success: true,
+      extraSeats,
+      provider: 'nuvei',
+      nextMonthlyAmount: Number(subs[0].monthly_amount || 0) + extraSeats * 97,
+    };
   }
 
-  /**
-   * Drop one paid seat: lower the seat add-on quantity on Paddle and close one
-   * seat record. Base plan seats are never billed, so this only removes paid
-   * extra seats.
-   */
-  async removeSeat(teamId: string): Promise<{ success: boolean; extraSeats: number }> {
+  /** Remove one paid seat from future Nuvei monthly billing. Base-plan seats
+   * are never represented here and therefore can never be removed. */
+  async removeSeat(teamId: string): Promise<{ success: boolean; extraSeats: number; provider: string }> {
     if (!teamId) throw new BadRequestException('A team is required.');
     const current = await this.getTeamExtraSeatCount(teamId);
-    if (current <= 0) {
-      return { success: true, extraSeats: 0 };
-    }
+    if (current <= 0) return { success: true, extraSeats: 0, provider: 'nuvei' };
 
-    const nextCount = current - 1;
-    const priceId = process.env.PADDLE_PRICE_SEAT;
-    const subscriptionId = await this.getTeamPaddleSubscriptionId(teamId);
-    if (priceId && subscriptionId) {
-      await this.paddleService.setSubscriptionAddonQuantity(
-        subscriptionId,
-        priceId,
-        nextCount,
-      );
-    }
     await this.db.query(
-      `UPDATE team_addon_history
-          SET disabled_at = NOW()
+      `UPDATE team_addon_history SET disabled_at = NOW()
         WHERE id = (
           SELECT id FROM team_addon_history
            WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL
-           ORDER BY enabled_at DESC
-           LIMIT 1
+           ORDER BY enabled_at DESC LIMIT 1
         )`,
       [teamId],
     );
-    return { success: true, extraSeats: nextCount };
+    return { success: true, extraSeats: current - 1, provider: 'nuvei' };
   }
 
   async create(createSubscriptionDto: CreateSubscriptionDto, userId: string): Promise<{ subscription: Subscription; checkoutUrl: string; transactionId: string | null }> {

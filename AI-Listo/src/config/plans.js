@@ -33,7 +33,7 @@ export const PLANS = {
     popular: false,
     seats: 1,
     entersCrmImmediately: false,
-    pricing: { intro: 7, monthly: 197, annual: 1891.2 },
+    pricing: { intro: 11, monthly: 127, annual: 1219.2 },
     limits: { aiConversationsPerMonth: null, automationWorkflows: null, integrations: null, whatsappConnections: null },
     features: {
       crm: true, aiAgent: true, automations: true, emailSmsMarketing: true,
@@ -51,7 +51,7 @@ export const PLANS = {
     popular: true,
     seats: 3,
     entersCrmImmediately: false,
-    pricing: { intro: 14, monthly: 347, annual: 3331.2 },
+    pricing: { intro: 22, monthly: 297, annual: 2851.2 },
     limits: { aiConversationsPerMonth: null, automationWorkflows: null, integrations: null, whatsappConnections: null },
     features: {
       crm: true, aiAgent: true, automations: true, emailSmsMarketing: true,
@@ -69,7 +69,7 @@ export const PLANS = {
     popular: false,
     seats: 5,
     entersCrmImmediately: false,
-    pricing: { intro: 21, monthly: 497, annual: 4771.2 },
+    pricing: { intro: 33, monthly: 497, annual: 4771.2 },
     limits: { aiConversationsPerMonth: null, automationWorkflows: null, integrations: null, whatsappConnections: null },
     features: {
       crm: true, aiAgent: true, automations: true, emailSmsMarketing: true,
@@ -102,7 +102,7 @@ export function annualSavings(id) {
   return Math.max(0, p.monthly * 12 - p.annual);
 }
 
-// Format a USD amount: whole numbers show no cents ($197), fractional keep two
+// Format a USD amount: whole numbers show no cents ($127), fractional keep two
 // ($1,891.20), always with thousands separators.
 export function formatUsd(n) {
   const hasCents = Number(n) % 1 !== 0;

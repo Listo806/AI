@@ -97,8 +97,8 @@ const TABS = [
 
 const PLAN_OPTIONS = [
   { value: "free", label: "Free ($0)" },
-  { value: "solo", label: "Solo ($197)" },
-  { value: "business", label: "Business ($347)" },
+  { value: "solo", label: "Solo ($127)" },
+  { value: "business", label: "Business ($297)" },
   { value: "scale", label: "Scale ($497)" },
 ];
 
@@ -1071,7 +1071,7 @@ export default function AdminCustomers() {
 
     const match = planBreakdown.find((item) => {
       // Match on the stable machine id first (free/solo/business/scale); the
-      // display label (e.g. "Solo ($197)") is not a reliable key.
+      // display label (e.g. "Solo ($127)") is not a reliable key.
       const id = String(item?.id ?? "")
         .trim()
         .toLowerCase();
@@ -1101,7 +1101,7 @@ export default function AdminCustomers() {
       key: "solo",
       label: "SOLO",
       count: getPlanCount("solo"),
-      price: "$197 / month",
+      price: "$127 / month",
       Icon: UserRound,
       tone: "solo",
     },
@@ -1109,7 +1109,7 @@ export default function AdminCustomers() {
       key: "business",
       label: "BUSINESS",
       count: getPlanCount("business", "team"),
-      price: "$347 / month",
+      price: "$297 / month",
       Icon: BriefcaseBusiness,
       tone: "business",
     },

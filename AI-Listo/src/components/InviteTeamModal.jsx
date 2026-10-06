@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { UserPlus, X, Mail, User, Shield, Check } from "lucide-react";
-import { coreInviteTeamMember } from "../api/platformApi";
+import { coreInviteTeamMember, getMyTeams, getTeamSeatUsage } from "../api/platformApi";
+import apiClient from "../api/apiClient";
 import "./InviteTeamModal.css";
 
 const ROLES = [
@@ -14,8 +15,9 @@ const ROLES = [
  * Core-CRM "Invite Team Member" modal. Opened from the persistent sidebar action
  * (window event `cortexa:open-invite-team`) and from the Day-3 onboarding email
  * CTA deep link (/dashboard/...?invite=team). Sends a real pending invitation +
- * email through the existing team backend, without the paid seat limit. It is NOT
- * the paid Team Workspace invite.
+ * email through the existing team backend. Plan-included users are free; when
+ * the plan has no seat left, the customer must explicitly confirm the $97/month
+ * Nuvei seat add-on before the invitation is sent.
  */
 export default function InviteTeamModal() {
   const [open, setOpen] = useState(false);
@@ -25,6 +27,8 @@ export default function InviteTeamModal() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(null);
   const [err, setErr] = useState(null);
+  const [confirmSeat, setConfirmSeat] = useState(false);
+  const [pendingInvite, setPendingInvite] = useState(null);
 
   const reset = () => {
     setName("");
@@ -33,6 +37,8 @@ export default function InviteTeamModal() {
     setBusy(false);
     setDone(null);
     setErr(null);
+    setConfirmSeat(false);
+    setPendingInvite(null);
   };
 
   const close = useCallback(() => {
@@ -78,6 +84,16 @@ export default function InviteTeamModal() {
       setBusy(true);
       setErr(null);
       try {
+        const teams = await getMyTeams();
+        const ownTeam = Array.isArray(teams) ? teams[0] : null;
+        if (ownTeam?.id) {
+          const seats = await getTeamSeatUsage(ownTeam.id);
+          if (Number(seats?.available ?? 0) <= 0) {
+            setPendingInvite({ name, email: cleanEmail, role });
+            setConfirmSeat(true);
+            return;
+          }
+        }
         await coreInviteTeamMember({ name, email: cleanEmail, role });
         setDone(cleanEmail);
       } catch (e2) {
@@ -88,6 +104,23 @@ export default function InviteTeamModal() {
     },
     [name, email, role],
   );
+
+  const confirmPaidSeatAndInvite = useCallback(async () => {
+    if (!pendingInvite || busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      await apiClient.request("/subscriptions/seats/add", { method: "POST" });
+      await coreInviteTeamMember(pendingInvite);
+      setConfirmSeat(false);
+      setDone(pendingInvite.email);
+      setPendingInvite(null);
+    } catch (e2) {
+      setErr(e2?.message || "Could not add the Nuvei seat and send the invitation.");
+    } finally {
+      setBusy(false);
+    }
+  }, [pendingInvite, busy]);
 
   if (!open) return null;
 
@@ -113,7 +146,22 @@ export default function InviteTeamModal() {
           </div>
         </div>
 
-        {done ? (
+        {confirmSeat ? (
+          <div className="itm-success">
+            <div className="itm-success-title">Additional team member</div>
+            <div className="itm-success-sub">
+              Your plan has no included seats remaining. Adding <b>{pendingInvite?.email}</b>
+              will add <b>$97/month</b> to your Nuvei monthly bill.
+            </div>
+            {err && <div className="itm-error">{err}</div>}
+            <div className="itm-success-actions">
+              <button className="itm-btn itm-btn-ghost" disabled={busy} onClick={() => { setConfirmSeat(false); setPendingInvite(null); }}>Cancel</button>
+              <button className="itm-btn itm-btn-primary" disabled={busy} onClick={confirmPaidSeatAndInvite}>
+                {busy ? "Adding…" : "Confirm $97/month & Send Invite"}
+              </button>
+            </div>
+          </div>
+        ) : done ? (
           <div className="itm-success">
             <div className="itm-success-ico">
               <Check size={26} />

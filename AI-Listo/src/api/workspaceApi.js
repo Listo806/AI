@@ -2,7 +2,7 @@ import apiClient from "./apiClient";
 
 // Paid Workspace add-ons. Access is granted only by an active entitlement.
 // A promotional included-workspace credit may comp one selection; otherwise the
-// purchase endpoint returns a Paddle checkout intent.
+// purchase endpoint returns entitlement/credit state or a Nuvei payment-required intent.
 const workspaceApi = {
   // { monthlyPrice, available, workspaces: [...] }
   getCatalog() {
@@ -68,7 +68,7 @@ const workspaceApi = {
   // workspaceApi.purchase(workspaceId)
   //
   // Normal customer flow: returns alreadyEntitled/comped when no payment is
-  // needed, otherwise returns Paddle priceId + customData for secure checkout.
+  // needed, otherwise returns paymentRequired with provider=nuvei.
   //
   purchase(workspaceId) {
     if (!workspaceId) {

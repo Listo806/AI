@@ -662,7 +662,7 @@ export class CustomersAdminService {
 
     // A paid or grandfathered paid tier shows its real label and recurring price.
     // An account that only clicked Solo without paying is NOT shown as an assigned
-    // "Solo $197/month" plan.
+    // "Solo $127/month" plan.
     if (!eff.isFree) {
       const recurringCents =
         cycle === 'annual' ? cfg.pricing.annualCents : cfg.pricing.monthlyCents;
@@ -1219,8 +1219,8 @@ export class CustomersAdminService {
     );
     const planLabels: Record<string, string> = {
       free: 'Free ($0)',
-      solo: 'Solo ($197)',
-      business: 'Business ($347)',
+      solo: 'Solo ($127)',
+      business: 'Business ($297)',
       scale: 'Scale ($497)',
       unselected: 'Registered - No Plan',
     };

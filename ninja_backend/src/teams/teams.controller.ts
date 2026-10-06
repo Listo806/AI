@@ -154,10 +154,9 @@ export class TeamsController {
     );
   }
 
-  // Core-CRM "Invite Team Member" growth flow (persistent sidebar action + Day-3
-  // email). Invites into the caller's OWN account/team, reusing the same token +
-  // email + accept/join mechanics but WITHOUT the paid seat cap. This is NOT the
-  // paid Team Workspace invite (which stays at :id/members/invite).
+  // Core-CRM "Invite Team Member" flow (persistent sidebar action + Day-3 email).
+  // Uses the same plan + paid-seat cap as the Team page; the UI must add a
+  // confirmed $97/month Nuvei seat first when the included allowance is full.
   @Post("core-invite")
   async coreInvite(
     @Body() body: { email?: string; role?: string; name?: string },

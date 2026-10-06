@@ -66,10 +66,6 @@ export const MANUAL_EMAIL_CATALOG: ManualTemplateEntry[] = [
   { name: 'abandoned_3', label: 'Abandoned Signup — Reminder 3 (Final)', category: 'Re-engagement', description: 'Final activation reminder.', bulkAllowed: false },
 
   // ── Promotions (BULK ONLY) ──
-  // The "Business Plan — 25% off ($257/mo)" broadcast offer. Its CTA opens the
-  // $257 promotional checkout. Only offered in the bulk selector; deliberately
-  // kept out of the single-customer dropdown (bulkOnly).
-  { name: 'promo_business_257', label: 'Business Plan — 25% Off Promo ($257/mo)', category: 'Promotions', description: 'Limited-time 25% off Business ($257/mo, was $347). EN / ES / PT — choose the language before sending.', bulkOnly: true },
 ];
 
 // Single-customer ("Send Email") templates EXCLUDE bulk-only promotions, so a

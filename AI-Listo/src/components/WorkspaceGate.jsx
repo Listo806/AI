@@ -3,8 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Lock, ShieldCheck, RefreshCw } from "lucide-react";
 import workspaceApi from "../api/workspaceApi";
 import WorkspaceSkeleton from "./WorkspaceSkeleton";
-import { fetchPaddleConfig } from "../api/paddleApi";
-import { initPaddle, openWorkspaceCheckout } from "../pages/checkout/paddleCheckout";
 import {
   fetchNuveiConfig,
   nuveiWorkspaceAddon,
@@ -24,10 +22,9 @@ import { useAuth } from "../context/AuthContext";
 // says the workspace is locked and this account is not entitled — so no existing
 // customer is ever blocked until the client turns a lock on.
 //
-// Payment: when Nuvei is enabled (/nuvei/config) the $97/month add-on is paid
-// with the customer's saved Nuvei card (or a card entered in Nuvei's secure
-// form) right inside this card; Paddle is used only when Nuvei is off. Either
-// way the server unlocks the workspace only after the payment is confirmed.
+// Payment: the $97/month add-on is Nuvei-only. The customer uses a saved
+// Nuvei card (or the secure Nuvei SDK form). If Nuvei is unavailable, the
+// workspace remains locked; there is deliberately no Paddle fallback.
 
 let accessCache = null; // { at, promise }
 const ACCESS_TTL = 30000;
@@ -103,7 +100,6 @@ export default function WorkspaceGate({ workspaceId, children }) {
   const [ws, setWs] = useState(null);
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState("");
-  const paddleReady = useRef(false);
   const timers = useRef([]);
 
   // Nuvei add-on payment step: idle | confirm (saved card) | card (secure form)
@@ -467,48 +463,19 @@ export default function WorkspaceGate({ workspaceId, children }) {
     setError("");
     setNotice("");
     try {
+      // Workspace add-ons are Nuvei-only. Never fall back to Paddle: if Nuvei
+      // is disabled/misconfigured, keep the workspace locked and surface a
+      // recoverable configuration error instead of routing money elsewhere.
       const ncfg = await fetchNuveiConfig();
-      if (ncfg?.enabled) {
-        nuveiCfg.current = ncfg;
-        await startNuvei();
+      if (!ncfg?.enabled) {
+        setError(
+          "Workspace checkout is temporarily unavailable. Nuvei payment is not enabled for this environment.",
+        );
         return;
       }
-      // Payment options could not be loaded at all (offline / blocked): never
-      // guess and open a checkout the account may not be able to use.
-      if (!ncfg) {
-        setError("Checkout is not available right now. Please try again shortly.");
-        return;
-      }
-      const intent = await workspaceApi.purchase(workspaceId);
-      if (intent?.alreadyEntitled) {
-        await refresh(true);
-        return;
-      }
-      // Included with the plan (e.g. the $257 Business promo's one free
-      // workspace): comped server-side with no charge — refresh, never open Paddle.
-      if (intent?.comped) {
-        await refresh(true);
-        return;
-      }
-      const cfg = await fetchPaddleConfig();
-      if (!cfg?.clientToken) {
-        setError("Checkout is not available right now. Please try again shortly.");
-        return;
-      }
-      if (!paddleReady.current) {
-        await initPaddle(cfg, (ev) => {
-          if (ev?.name === "checkout.completed") scheduleRefresh();
-        });
-        paddleReady.current = true;
-      }
-      openWorkspaceCheckout({
-        priceId: intent.priceId,
-        customData: intent.customData,
-        email: intent.email,
-      });
-      scheduleRefresh();
+      nuveiCfg.current = ncfg;
+      await startNuvei();
     } catch (e) {
-      // Non-admins can't purchase (billing action); surface a helpful message.
       const msg = e?.message || "Could not start checkout.";
       setError(
         e?.status === 403 || /admin/i.test(msg)

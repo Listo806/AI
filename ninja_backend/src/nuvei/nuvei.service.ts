@@ -35,7 +35,7 @@ import { getWorkspace, WorkspaceDef } from '../workspaces/workspace-registry';
  * when status === 'success' AND status_detail === 3.
  */
 
-type NuveiPlanKey = 'solo' | 'business' | 'scale' | 'business_promo_257';
+type NuveiPlanKey = 'solo' | 'business' | 'scale';
 
 interface NuveiPlan {
   key: NuveiPlanKey;
@@ -160,17 +160,6 @@ export class NuveiService {
 
   private plan(key: string): NuveiPlan {
     const k = String(key || '').trim().toLowerCase() as NuveiPlanKey;
-    if (k === 'business_promo_257') {
-      return {
-        key: k,
-        provisionPlan: 'business',
-        label: 'Business (25% off promo)',
-        activation: 257,
-        monthly: 257,
-        trialDays: 0, // charged $257 immediately, then $257/mo — no trial
-        grantsIncludedWorkspace: true,
-      };
-    }
     if (k === 'solo' || k === 'business' || k === 'scale') {
       const p = PLANS[k];
       return {
@@ -409,7 +398,7 @@ export class NuveiService {
     return {
       enabled: this.enabled(),
       ...this.client.publicConfig(),
-      plans: (['solo', 'business', 'scale', 'business_promo_257'] as NuveiPlanKey[]).map(
+      plans: (['solo', 'business', 'scale'] as NuveiPlanKey[]).map(
         (k) => {
           const p = this.plan(k);
           return {
@@ -1271,7 +1260,7 @@ export class NuveiService {
    */
   private safeReturnUrl(candidate: string | undefined, planKey: NuveiPlanKey): string {
     const checkoutKey =
-      planKey === 'business' || planKey === 'business_promo_257'
+      planKey === 'business'
         ? 'team'
         : planKey === 'scale'
           ? 'growth'
@@ -1678,7 +1667,7 @@ export class NuveiService {
         only = ` AND s.id = $1`;
       }
       const { rows } = await this.db.query(
-        `SELECT s.id, s.user_id, s.email, s.plan_key, s.provision_plan, s.monthly_amount,
+        `SELECT s.id, s.user_id, s.team_id, s.email, s.plan_key, s.provision_plan, s.monthly_amount,
                 s.card_id, s.next_billing_date, s.cancel_at_period_end, s.status
            FROM nuvei_subscriptions s
           WHERE s.status IN ('trialing','active','past_due')
@@ -1713,11 +1702,28 @@ export class NuveiService {
     return new Date(d).toISOString().slice(0, 10);
   }
 
+  /** Active paid team seats are billed by Nuvei together with the base plan.
+   * The base plan amount remains immutable; each active seat history row adds
+   * exactly $97 to the next recurring debit. */
+  private async recurringSeatAddonAmount(teamId: string | null): Promise<number> {
+    if (!teamId) return 0;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT COUNT(*)::int AS n FROM team_addon_history
+          WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL`,
+        [teamId],
+      );
+      return Number(rows[0]?.n || 0) * 97;
+    } catch {
+      return 0;
+    }
+  }
+
   private async chargeRecurring(snapshot: any): Promise<void> {
     // Re-read right before acting: the batch snapshot may be minutes old and
     // the customer may have canceled / been refunded meanwhile.
     const { rows: fresh } = await this.db.query(
-      `SELECT id, user_id, email, plan_key, provision_plan, monthly_amount,
+      `SELECT id, user_id, team_id, email, plan_key, provision_plan, monthly_amount,
               card_id, next_billing_date, cancel_at_period_end, status
          FROM nuvei_subscriptions WHERE id = $1`,
       [snapshot.id],
@@ -1741,7 +1747,9 @@ export class NuveiService {
     }
     // Charge the price the customer consented to at checkout, never a later
     // catalog change.
-    const monthly = Number(sub.monthly_amount) > 0 ? Number(sub.monthly_amount) : plan.monthly;
+    const baseMonthly = Number(sub.monthly_amount) > 0 ? Number(sub.monthly_amount) : plan.monthly;
+    const seatAddonMonthly = await this.recurringSeatAddonAmount(sub.team_id || null);
+    const monthly = Number((baseMonthly + seatAddonMonthly).toFixed(2));
     const period = this.periodKey(sub.next_billing_date);
     const dev_reference = this.devRef('REC');
 
@@ -1782,7 +1790,7 @@ export class NuveiService {
         this.toNuveiUser(user),
         {
           amount: monthly,
-          description: `Cortexa ${plan.label} monthly`,
+          description: seatAddonMonthly > 0 ? `Cortexa ${plan.label} monthly + team seats` : `Cortexa ${plan.label} monthly`,
           dev_reference,
         },
         token,
@@ -5446,7 +5454,13 @@ export class NuveiService {
       );
       const sub = rows[0];
       if (!sub?.team_id) return;
-      const seat = getSeatLimit(sub.provision_plan);
+      const baseSeats = getSeatLimit(sub.provision_plan);
+      const { rows: extraSeatRows } = await this.db.query(
+        `SELECT COUNT(*)::int AS n FROM team_addon_history
+          WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL`,
+        [sub.team_id],
+      );
+      const seat = baseSeats + Number(extraSeatRows[0]?.n || 0);
       // Map to the subscriptions.status CHECK domain (which has no 'refunded').
       const mapped =
         status === 'refunded'
