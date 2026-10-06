@@ -147,16 +147,37 @@ export class SubscriptionsService {
     return rows[0]?.team_id || null;
   }
 
-  /** Customer billing permission is team-scoped. A normal users.role='user'
-   * may still be the account owner; do not confuse platform role with team role. */
+  /** Customer billing permission is team-scoped. Platform users.role is not
+   * authoritative for customer accounts: a customer who created/paid for an
+   * account can legitimately still have users.role='agent'. Accept the team
+   * owner/admin relationship first, then the confirmed Nuvei payer for this
+   * exact team. Ordinary invited agents do not have a Nuvei subscription for
+   * the team, so this does not grant them billing access. */
   async canManageTeamBilling(userId: string, teamId: string): Promise<boolean> {
     if (!userId || !teamId) return false;
     const { rows } = await this.db.query(
       `SELECT 1
          FROM teams t
-         LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = $1 AND tm.status = 'active'
         WHERE t.id = $2
-          AND (t.owner_id = $1 OR LOWER(COALESCE(tm.role,'')) IN ('owner','admin'))
+          AND (
+            t.owner_id = $1
+            OR EXISTS (
+              SELECT 1
+                FROM team_members tm
+               WHERE tm.team_id = t.id
+                 AND tm.user_id = $1
+                 AND LOWER(COALESCE(tm.status::text, 'active')) = 'active'
+                 AND LOWER(COALESCE(tm.role::text, '')) IN ('owner', 'admin')
+            )
+            OR EXISTS (
+              SELECT 1
+                FROM nuvei_subscriptions ns
+               WHERE ns.team_id = t.id
+                 AND ns.user_id = $1
+                 AND LOWER(COALESCE(ns.status::text, '')) IN
+                     ('verification_pending', 'trialing', 'active')
+            )
+          )
         LIMIT 1`,
       [userId, teamId],
     );
