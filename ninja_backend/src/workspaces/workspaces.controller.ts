@@ -356,7 +356,7 @@ export class WorkspacesController {
     }
 
     // Promotional plans may include one workspace credit. Consume that credit
-    // server-side first; only accounts without a credit continue to Paddle.
+    // server-side first; only accounts without a credit continue to Nuvei.
     const included = await this.entitlements.claimIncludedWorkspace({
       teamId,
       workspaceId: workspace.id,
@@ -372,26 +372,16 @@ export class WorkspacesController {
       };
     }
 
-    const priceId = String(process.env.PADDLE_PRICE_WORKSPACE || '').trim();
-    if (!priceId) {
-      throw new BadRequestException(
-        'Workspace checkout is not configured. Please contact support.',
-      );
-    }
-
-    // The signed Paddle webhook is the ONLY path that grants a normal paid
-    // workspace entitlement. teamId is deliberately not trusted through checkout;
-    // the webhook resolves it again from this authenticated user id.
+    // Paid Workspace purchases are Nuvei-only. The actual card/token charge is
+    // started through POST /nuvei/workspace-addons and the workspace is unlocked
+    // only after Nuvei confirms the transaction. This endpoint intentionally
+    // returns no Paddle price/token so legacy clients cannot fall back to Paddle.
     return {
       success: true,
       paymentRequired: true,
-      priceId,
-      email: user?.email || null,
-      customData: {
-        addon: 'workspace',
-        workspaceId: workspace.id,
-        userId: user?.id || null,
-      },
+      provider: 'nuvei',
+      workspaceId: workspace.id,
+      route: workspace.route,
     };
   }
 
