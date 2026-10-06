@@ -2062,6 +2062,36 @@ export class TeamsService {
     }
   }
 
+  /** Billing/invite authority for the exact team. This deliberately mirrors
+   * the Nuvei billing authority used by paid-seat provisioning, so a legacy
+   * customer payer is not mistaken for a normal invited agent. */
+  private async canManageTeamInvites(userId: string, teamId: string): Promise<boolean> {
+    if (!userId || !teamId) return false;
+    const { rows } = await this.db.query(
+      `SELECT 1
+         FROM teams t
+        WHERE t.id = $2
+          AND (
+            t.owner_id = $1
+            OR EXISTS (
+              SELECT 1 FROM team_members tm
+               WHERE tm.team_id = t.id AND tm.user_id = $1
+                 AND tm.status = 'active'
+                 AND LOWER(COALESCE(tm.role::text, '')) IN ('owner','admin')
+            )
+            OR EXISTS (
+              SELECT 1 FROM nuvei_subscriptions ns
+               WHERE ns.team_id = t.id AND ns.user_id = $1
+                 AND LOWER(COALESCE(ns.status::text, '')) IN
+                     ('verification_pending','trialing','active','past_due')
+            )
+          )
+        LIMIT 1`,
+      [userId, teamId],
+    );
+    return rows.length > 0;
+  }
+
   async inviteMemberByEmail(
     teamId: string,
     email: string,
@@ -2096,8 +2126,8 @@ export class TeamsService {
       throw new NotFoundException("Team not found");
     }
 
-    if (String(team.ownerId) !== String(requestingUserId)) {
-      throw new ForbiddenException("Only team owner can invite members");
+    if (!(await this.canManageTeamInvites(requestingUserId, teamId))) {
+      throw new ForbiddenException("Only the account owner or a team admin can invite members");
     }
 
     const existingMember = await this.db.query(
@@ -2309,16 +2339,38 @@ export class TeamsService {
     // /subscriptions/seats/add billed. Falling back to the oldest owned team can
     // split the paid-seat ledger and the invitation across two teams.
     let teamId = preferredTeamId ? String(preferredTeamId) : "";
-    if (teamId) {
-      const current = await this.db.query(
-        `SELECT id FROM teams WHERE id = $1 AND owner_id = $2 LIMIT 1`,
-        [teamId, requestingUserId],
-      );
-      if (!current.rows[0]) teamId = "";
+    if (teamId && !(await this.canManageTeamInvites(requestingUserId, teamId))) {
+      teamId = "";
     }
     if (!teamId) {
+      // Legacy customer accounts can have users.role='agent' even though the
+      // user is the Nuvei payer for the account. Resolve the same billing team
+      // used by /subscriptions/seats/add instead of falling back to an unrelated
+      // older owned team.
       const { rows } = await this.db.query(
-        `SELECT id FROM teams WHERE owner_id = $1 ORDER BY created_at ASC LIMIT 1`,
+        `SELECT t.id
+           FROM teams t
+          WHERE t.owner_id = $1
+             OR EXISTS (
+                  SELECT 1 FROM team_members tm
+                   WHERE tm.team_id = t.id AND tm.user_id = $1
+                     AND tm.status = 'active'
+                     AND LOWER(COALESCE(tm.role::text, '')) IN ('owner','admin')
+                )
+             OR EXISTS (
+                  SELECT 1 FROM nuvei_subscriptions ns
+                   WHERE ns.team_id = t.id AND ns.user_id = $1
+                     AND LOWER(COALESCE(ns.status::text, '')) IN
+                         ('verification_pending','trialing','active','past_due')
+                )
+          ORDER BY CASE WHEN EXISTS (
+                     SELECT 1 FROM nuvei_subscriptions ns2
+                      WHERE ns2.team_id = t.id AND ns2.user_id = $1
+                        AND LOWER(COALESCE(ns2.status::text, '')) IN
+                            ('verification_pending','trialing','active','past_due')
+                   ) THEN 0 ELSE 1 END,
+                   t.created_at DESC
+          LIMIT 1`,
         [requestingUserId],
       );
       teamId = rows[0]?.id || "";

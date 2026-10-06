@@ -159,12 +159,12 @@ export class TeamsController {
   // confirmed $97/month Nuvei seat first when the included allowance is full.
   @Post("core-invite")
   async coreInvite(
-    @Body() body: { email?: string; role?: string; name?: string },
+    @Body() body: { email?: string; role?: string; name?: string; teamId?: string },
     @CurrentUser() user: any,
   ) {
     return this.teamsService.inviteToOwnTeam(
       user.id,
-      user?.teamId || null,
+      body?.teamId || user?.teamId || null,
       body?.email?.trim?.() || "",
       body?.role || "agent",
       body?.name?.trim?.() || null,

@@ -110,8 +110,13 @@ export default function InviteTeamModal() {
     setBusy(true);
     setErr(null);
     try {
-      await apiClient.request("/subscriptions/seats/add", { method: "POST" });
-      await coreInviteTeamMember(pendingInvite);
+      const seatRes = await apiClient.request("/subscriptions/seats/add", { method: "POST" });
+      const seatData = seatRes?.data ?? seatRes;
+      // Invite against the exact team that received/reused the paid Nuvei seat.
+      await coreInviteTeamMember({
+        ...pendingInvite,
+        teamId: seatData?.teamId || undefined,
+      });
       setConfirmSeat(false);
       setDone(pendingInvite.email);
       setPendingInvite(null);

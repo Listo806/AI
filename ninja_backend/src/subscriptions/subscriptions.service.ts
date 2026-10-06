@@ -203,7 +203,7 @@ export class SubscriptionsService {
   /** Buy one extra $97/month seat. No Paddle call is made. The active seat
    * row is the billing ledger consumed by the Nuvei recurring engine, which
    * adds $97 per active row to the account's next monthly debit. */
-  async addSeat(teamId: string): Promise<{ success: boolean; extraSeats: number; provider: string; nextMonthlyAmount: number }> {
+  async addSeat(teamId: string): Promise<{ success: boolean; teamId: string; extraSeats: number; provider: string; nextMonthlyAmount: number }> {
     if (!teamId) throw new BadRequestException('A team is required.');
 
     const { rows: subs } = await this.db.query(
@@ -228,6 +228,7 @@ export class SubscriptionsService {
       const extraSeats = await this.getTeamExtraSeatCount(teamId);
       return {
         success: true,
+        teamId,
         extraSeats,
         provider: 'nuvei',
         nextMonthlyAmount: Number(subs[0].monthly_amount || 0) + extraSeats * 97,
@@ -242,6 +243,7 @@ export class SubscriptionsService {
     const extraSeats = await this.getTeamExtraSeatCount(teamId);
     return {
       success: true,
+      teamId,
       extraSeats,
       provider: 'nuvei',
       nextMonthlyAmount: Number(subs[0].monthly_amount || 0) + extraSeats * 97,
