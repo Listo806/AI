@@ -1687,6 +1687,17 @@ export default function AdminCustomers() {
               className="cxc-btn"
               onClick={() => {
                 const c = oneSelected();
+                if (c) setDetail({ id: c.id, tab: "payments", refund: true });
+              }}
+              title="Select one customer, then choose a successful Nuvei transaction to refund"
+            >
+              Refund Payment
+            </button>
+
+            <button
+              className="cxc-btn"
+              onClick={() => {
+                const c = oneSelected();
                 if (c) setDetail({ id: c.id, tab: "subscription" });
               }}
             >
@@ -2123,6 +2134,7 @@ export default function AdminCustomers() {
           refundMode={!!detail.refund}
           onClose={() => setDetail({ id: null, tab: "overview" })}
           onSelectTab={(t) => setDetail((d) => ({ ...d, tab: t }))}
+          onRefundPayment={() => setDetail((d) => ({ ...d, tab: "payments", refund: true }))}
           onChanged={load}
           onChangePlan={(c) => setChangePlanFor(c)}
           onSendEmail={(c) => setSendEmailFor(c)}
@@ -2242,6 +2254,7 @@ function CustomerModal({
   refundMode = false,
   onClose,
   onSelectTab,
+  onRefundPayment,
   onChanged,
   onChangePlan,
   onSendEmail,
@@ -2259,7 +2272,19 @@ function CustomerModal({
   const [nuveiPayments, setNuveiPayments] = useState([]);
   const [refundBusy, setRefundBusy] = useState(false);
   const [refundError, setRefundError] = useState("");
-  const activeTab = tab || "overview";
+  // Keep the detail tab locally as well as in the parent. This makes actions
+  // inside the modal (especially More Actions -> Refund Payment) switch the
+  // visible panel immediately instead of waiting for the parent detail state.
+  const [localTab, setLocalTab] = useState(tab || "overview");
+  const [localRefundMode, setLocalRefundMode] = useState(!!refundMode);
+  const activeTab = localTab;
+
+  useEffect(() => {
+    setLocalTab(tab || "overview");
+  }, [tab, id]);
+  useEffect(() => {
+    setLocalRefundMode(!!refundMode);
+  }, [refundMode, id]);
 
   const reload = useCallback(() => {
     if (!id) {
@@ -2297,7 +2322,18 @@ function CustomerModal({
     };
   }, [id]);
 
-  const setTab = (t) => onSelectTab && onSelectTab(t);
+  const setTab = (t) => {
+    setLocalTab(t);
+    if (t !== "payments") setLocalRefundMode(false);
+    onSelectTab && onSelectTab(t);
+  };
+  const openRefundPayments = () => {
+    setMoreOpen(false);
+    setLocalRefundMode(true);
+    setLocalTab("payments");
+    onRefundPayment && onRefundPayment();
+    if (!onRefundPayment) onSelectTab && onSelectTab("payments");
+  };
   const c = data?.customer;
   const sub = data?.subscription;
   const usage = data?.usage;
@@ -2540,7 +2576,20 @@ function CustomerModal({
         onClose={() => setMoreOpen(false)}
         className="up-right down"
       >
-        
+        <button
+          type="button"
+          className="cxc-menu-item"
+          onMouseDown={(e) => {
+            // Menu installs a document-level mousedown listener. Handle this
+            // action on mousedown so the menu cannot unmount before the action
+            // runs in browsers where click is swallowed after the dropdown closes.
+            e.preventDefault();
+            e.stopPropagation();
+            openRefundPayments();
+          }}
+        >
+          Refund Payment
+        </button>
         <button className="cxc-menu-item" onClick={doDeactivate}>
           Deactivate
         </button>
@@ -3034,7 +3083,7 @@ function CustomerModal({
                       <span>Original Source</span>
                       <strong>{c.source_label || "Unknown"}</strong>
                     </div>
-                    {refundMode && <div className="cxc-new-kv"><span>Refund Payment</span><strong>Select a successful Nuvei transaction below</strong></div>}
+                    {localRefundMode && <div className="cxc-new-kv"><span>Refund Payment</span><strong>Select a successful Nuvei transaction below</strong></div>}
                     {refundError && <div className="cxc-new-empty">{refundError}</div>}
                     {nuveiPayments.length === 0 ? (
                       <div className="cxc-new-empty">No Nuvei payments found for this customer.</div>
