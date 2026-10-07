@@ -324,19 +324,62 @@ export function EcommerceCheckout(){
  const params=new URLSearchParams(location.search);
  const billing=params.get("billing")||saved.billing||sessionStorage.getItem("ec_billing_cycle")||"monthly";
  const [config,setConfig]=useState(null),[user,setUser]=useState(null),[ready,setReady]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
- const submitRef=React.useRef(null), mountedRef=React.useRef(false);
+ const [savedCard,setSavedCard]=useState(null),[useSavedCard,setUseSavedCard]=useState(false);
+ const submitRef=React.useRef(null), mountedRef=React.useRef(false), processingRef=React.useRef(false);
  const monthly=billing==="monthly";
 
- useEffect(()=>{ if(!localStorage.getItem(EC_TOKEN)){nav(`/e-commerce/signup?billing=${billing}`,{replace:true});return;} Promise.all([ecNuveiConfig(),ecMe(),ecNuveiSubscription()]).then(([cfg,me,sub])=>{setConfig(cfg);setUser(me);if(sub&&["active","trialing"].includes(String(sub.status)))nav("/e-commerce/dashboard",{replace:true});}).catch(e=>setError(e?.message||"Unable to load checkout.")); },[]);
+ useEffect(()=>{
+  let alive=true;
+  if(!localStorage.getItem(EC_TOKEN)){nav(`/e-commerce/signup?billing=${billing}`,{replace:true});return()=>{};}
+  Promise.all([ecNuveiConfig(),ecMe(),ecNuveiSubscription(),ecNuveiCards().catch(()=>({cards:[]}))])
+   .then(([cfg,me,sub,cardData])=>{
+    if(!alive)return;
+    setConfig(cfg);setUser(me);
+    if(sub&&["active","trialing"].includes(String(sub.status))){nav("/e-commerce/dashboard",{replace:true});return;}
+    const cards=Array.isArray(cardData?.cards)?cardData.cards:[];
+    // A previous tokenization may already have stored the card. Reuse it instead
+    // of asking PaymentEz to add the same card again (which can return 403).
+    if(cards.length===1&&cards[0]?.id){setSavedCard(cards[0]);setUseSavedCard(true);setReady(true);}
+   })
+   .catch(e=>{if(alive)setError(e?.message||"Unable to load checkout.");});
+  return()=>{alive=false;};
+ },[]);
 
  const finish=(result)=>{ if(result?.status==="active"){sessionStorage.removeItem("ec_signup");nav("/e-commerce/dashboard",{replace:true});return true;} return false; };
- const run3ds=async(result)=>{const ch=result?.challenge||{};const req=String(ch.challenge_request||"");if(/^https?:\/\//i.test(req.trim())){window.location.href=req.trim();return;}if(req.trim()){document.open();document.write(req);document.close();return;}if(ch.hidden_iframe){const frame=document.createElement("iframe");frame.style.cssText="position:absolute;width:0;height:0;border:0;visibility:hidden";document.body.appendChild(frame);const d=frame.contentDocument||frame.contentWindow?.document;if(d){d.open();d.write(ch.hidden_iframe);d.close();}await new Promise(r=>setTimeout(r,5500));const next=await ecNuveiThreeDsContinue(result.subscriptionId);if(next?.requires3ds)return run3ds(next);if(finish(next))return;} setError("Payment is still being verified. Please wait a moment and refresh this page.");setBusy(false);};
- const tokenized=async(card)=>{try{let cardId;if(card?.reuseSavedCard&&!card?.token){const list=await ecNuveiCards();const cards=list?.cards||[];const match=card.last4?cards.find(c=>c.last4===card.last4):(cards.length===1?cards[0]:null);if(!match?.id)throw new Error("Saved card could not be found.");cardId=match.id;}else{const out=await ecNuveiSaveToken(card);cardId=out?.cardId;if(!cardId)throw new Error("Card tokenization could not be saved.");}const result=await ecNuveiActivate({cardId,browserInfo:ecBrowserInfo(),termUrl:`${window.location.origin}/e-commerce/checkout?billing=monthly&threeds=return`});if(finish(result))return;if(result?.requires3ds)return run3ds(result);if(result?.status==="pending_activation"){setError("Payment is being verified. Please wait a moment and refresh this page.");setBusy(false);return;}throw new Error(result?.message||"Payment was not approved.");}catch(e){setBusy(false);setError(e?.message||"Payment could not be completed.");}};
- useEffect(()=>{if(!config?.enabled||!user||mountedRef.current||!monthly)return;mountedRef.current=true;(async()=>{try{const form=await mountNuveiForm({containerSelector:"#ec-nuvei-card-form",environment:config.environment,appCode:config.clientAppCode,appKey:config.clientAppKey,user:{id:user.id,email:user.email},country:"ECU",locale:"en",onIncomplete:()=>{setBusy(false);setError("Please complete the secure card form.");}});submitRef.current=form.submit;form.ready.then(ok=>setReady(!!ok));const card=await form.done;await tokenized(card);}catch(e){setBusy(false);setError(e?.message||"Nuvei secure card form could not be loaded.");}})();},[config,user,monthly]);
+ const run3ds=async(result)=>{const ch=result?.challenge||{};const req=String(ch.challenge_request||"");if(/^https?:\/\//i.test(req.trim())){window.location.href=req.trim();return;}if(req.trim()){document.open();document.write(req);document.close();return;}if(ch.hidden_iframe){const frame=document.createElement("iframe");frame.style.cssText="position:absolute;width:0;height:0;border:0;visibility:hidden";document.body.appendChild(frame);const d=frame.contentDocument||frame.contentWindow?.document;if(d){d.open();d.write(ch.hidden_iframe);d.close();}await new Promise(r=>setTimeout(r,5500));const next=await ecNuveiThreeDsContinue(result.subscriptionId);if(next?.requires3ds)return run3ds(next);if(finish(next))return;} setError("Payment is still being verified. Please wait a moment and refresh this page.");setBusy(false);processingRef.current=false;};
+ const activateCard=async(cardId)=>{const result=await ecNuveiActivate({cardId,browserInfo:ecBrowserInfo(),termUrl:`${window.location.origin}/e-commerce/checkout?billing=monthly&threeds=return`});if(finish(result))return;if(result?.requires3ds)return run3ds(result);if(result?.status==="pending_activation"){setError("Payment is being verified. Please wait a moment and refresh this page.");setBusy(false);processingRef.current=false;return;}throw new Error(result?.message||"Payment was not approved.");};
+ const tokenized=async(card)=>{
+  if(processingRef.current!==true)return;
+  try{
+   let cardId;
+   if(card?.reuseSavedCard&&!card?.token){const list=await ecNuveiCards();const cards=list?.cards||[];const match=card.last4?cards.find(c=>String(c.last4||c.number||"").endsWith(String(card.last4))):(cards.length===1?cards[0]:null);if(!match?.id)throw new Error("Saved card could not be found.");cardId=match.id;}
+   else{const out=await ecNuveiSaveToken(card);cardId=out?.cardId;if(!cardId)throw new Error("Card tokenization could not be saved.");}
+   await activateCard(cardId);
+  }catch(e){processingRef.current=false;setBusy(false);setError(e?.message||"Payment could not be completed.");}
+ };
+ useEffect(()=>{
+  if(!config?.enabled||!user||mountedRef.current||!monthly||useSavedCard)return;
+  if(!user?.id||!user?.email){setError("Your account is missing the user information required for secure payment.");return;}
+  mountedRef.current=true;
+  (async()=>{try{const form=await mountNuveiForm({containerSelector:"#ec-nuvei-card-form",environment:config.environment,appCode:config.clientAppCode,appKey:config.clientAppKey,user:{id:user.id,email:user.email},country:"ECU",locale:"en",onIncomplete:()=>{processingRef.current=false;setBusy(false);setError("Please complete the secure card form.");}});submitRef.current=form.submit;form.ready.then(ok=>setReady(!!ok));const card=await form.done;await tokenized(card);}catch(e){processingRef.current=false;setBusy(false);setError(e?.message||"Nuvei secure card form could not be loaded.");}})();
+ },[config,user,monthly,useSavedCard]);
  useEffect(()=>{if(params.get("threeds")!=="return")return;const timer=setInterval(()=>ecNuveiSubscription().then(sub=>{if(sub?.status==="active"){clearInterval(timer);nav("/e-commerce/dashboard",{replace:true});}}).catch(()=>{}),2000);return()=>clearInterval(timer);},[]);
- const pay=()=>{setError("");if(!monthly){setError("This checkout is connected to the approved $397/month E-Commerce plan only.");return;}if(!ready||busy)return;setBusy(true);const ok=submitRef.current?.();if(!ok){setBusy(false);setError("Please complete the secure card form.");}};
+ const pay=async()=>{
+  setError("");
+  if(!monthly){setError("This checkout is connected to the approved $397/month E-Commerce plan only.");return;}
+  // State updates are asynchronous; the ref closes the double-click window and
+  // guarantees one tokenization/activation attempt per Pay action.
+  if(processingRef.current||busy)return;
+  if(useSavedCard&&savedCard?.id){processingRef.current=true;setBusy(true);try{await activateCard(savedCard.id);}catch(e){processingRef.current=false;setBusy(false);setError(e?.message||"Payment could not be completed.");}return;}
+  if(!ready||!submitRef.current)return;
+  processingRef.current=true;setBusy(true);
+  const ok=submitRef.current();
+  if(!ok){processingRef.current=false;setBusy(false);setError("Please complete the secure card form.");}
+ };
+ const chooseDifferentCard=()=>{setUseSavedCard(false);setSavedCard(null);setReady(false);mountedRef.current=false;submitRef.current=null;processingRef.current=false;setBusy(false);setError("");};
 
- return <div className="ec-auth-page"><Logo/><div className="ec-checkout"><section><h1>Complete your E-Commerce CRM subscription</h1><p>$397/month. No Agentic CRM activation fee and no Agentic CRM trial are applied.</p><label>Full name<input value={saved.name||user?.name||""} readOnly/></label><label>Email<input value={saved.email||user?.email||""} readOnly/></label><div id="ec-nuvei-card-form" style={{minHeight:190}}/>{error&&<div className="ec-error">{error}</div>}</section><aside><h2>Payments &amp; Subscriptions CRM</h2><div><span>Billing</span><b>Monthly</b></div><div><span>Subscription</span><b>$397 / month</b></div><div><span>Activation fee</span><b>$0</b></div><div><span>Trial</span><b>None</b></div><hr/><div><strong>Due today</strong><strong>$397</strong></div><button className="ec-btn" onClick={pay} disabled={!ready||busy||!config?.enabled}>{busy?"Processing securely…":ready?"Pay $397 Securely":"Loading secure payment…"}</button><small>Secure tokenization and recurring billing processed by Nuvei / Datafast. Your saved card is charged $397 monthly until canceled.</small></aside></div></div>;
+ const cardLast4=savedCard?.last4||savedCard?.number||"";
+ return <div className="ec-auth-page"><Logo/><div className="ec-checkout"><section><h1>Complete your E-Commerce CRM subscription</h1><p>$397/month. No Agentic CRM activation fee and no Agentic CRM trial are applied.</p><label>Full name<input value={saved.name||user?.name||""} readOnly/></label><label>Email<input value={saved.email||user?.email||""} readOnly/></label>{useSavedCard&&savedCard?<div className="ec-saved-payment" style={{padding:"14px 16px",border:"1px solid #d9dce3",borderRadius:10,marginTop:14}}><strong>Saved payment method</strong><p style={{margin:"6px 0"}}>{savedCard.brand||savedCard.type||"Card"}{cardLast4?` •••• ${String(cardLast4).slice(-4)}`:""}</p><button type="button" onClick={chooseDifferentCard} disabled={busy} style={{background:"none",border:0,padding:0,textDecoration:"underline",cursor:"pointer"}}>Use a different card</button></div>:<div id="ec-nuvei-card-form" style={{minHeight:190}}/>}{error&&<div className="ec-error">{error}</div>}</section><aside><h2>Payments &amp; Subscriptions CRM</h2><div><span>Billing</span><b>Monthly</b></div><div><span>Subscription</span><b>$397 / month</b></div><div><span>Activation fee</span><b>$0</b></div><div><span>Trial</span><b>None</b></div><hr/><div><strong>Due today</strong><strong>$397</strong></div><button className="ec-btn" onClick={pay} disabled={busy||!config?.enabled||(!useSavedCard&&!ready)}>{busy?"Processing securely…":useSavedCard?"Pay $397 with saved card":ready?"Pay $397 Securely":"Loading secure payment…"}</button><small>Secure tokenization and recurring billing processed by Nuvei / Datafast. Your saved card is charged $397 monthly until canceled.</small></aside></div></div>;
 }
 export function EcommerceAppLayout(){
  const auth=useEcAuth();

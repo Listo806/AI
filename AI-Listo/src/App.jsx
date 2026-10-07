@@ -750,6 +750,7 @@ function AppRoutes() {
       >
         <Route path="profile" element={<Profile />} />
         <Route path="billing" element={<AccountBilling />} />
+        {/* TEMP: remove after Nuvei /card/add 403 diagnostic is complete. */}
         <Route path="settings" element={<AccountSettings />} />
       </Route>
 
