@@ -179,9 +179,17 @@ export class NuveiService {
          FROM subscription_plans
         WHERE is_active = TRUE AND deleted_at IS NULL
           AND price = 397
-          AND (LOWER(name) LIKE '%e-commerce%' OR LOWER(name) LIKE '%ecommerce%'
-               OR LOWER(COALESCE(plan_category,'')) IN ('ecommerce','e-commerce'))
-        ORDER BY CASE WHEN LOWER(name) LIKE '%e-commerce%' OR LOWER(name) LIKE '%ecommerce%' THEN 0 ELSE 1 END, created_at ASC
+          AND (
+               LOWER(name) LIKE '%e-commerce%'
+               OR LOWER(name) LIKE '%ecommerce%'
+               OR (LOWER(name) LIKE '%payment%' AND LOWER(name) LIKE '%subscription%')
+               OR LOWER(COALESCE(plan_category,'')) IN ('ecommerce','e-commerce')
+          )
+        ORDER BY CASE
+          WHEN LOWER(name) LIKE '%e-commerce%' OR LOWER(name) LIKE '%ecommerce%' THEN 0
+          WHEN LOWER(name) LIKE '%payment%' AND LOWER(name) LIKE '%subscription%' THEN 1
+          ELSE 2
+        END, created_at ASC
         LIMIT 1`,
     );
     if (!rows[0]) {
