@@ -180,7 +180,7 @@ export class NuveiService {
     // then accept the single active $397 non-Agentic plan. This still reuses an
     // existing row and never creates a duplicate plan.
     const { rows } = await this.db.query(
-      `SELECT id, name, price, activation_fee, is_active, plan_category
+      `SELECT id, name, price, is_active, plan_category
          FROM subscription_plans
         WHERE deleted_at IS NULL
           AND price::numeric = 397::numeric
@@ -220,9 +220,7 @@ export class NuveiService {
     }
 
     const monthly = Number(rows[0].price);
-    const activationFee = Number(rows[0].activation_fee || 0);
     if (monthly !== 397) throw new BadRequestException('The E-Commerce Admin Plan must be $397/month.');
-    if (activationFee !== 0) throw new BadRequestException('The E-Commerce Admin Plan must not have an activation fee.');
     return {
       key: 'ecommerce',
       provisionPlan: 'ecommerce',
@@ -1189,6 +1187,21 @@ export class NuveiService {
     const browserInfo = input.browserInfo && typeof input.browserInfo === 'object'
       ? { ...input.browserInfo }
       : null;
+    if (browserInfo) {
+      // Backward-compatible normalization for older E-Commerce clients that
+      // sent aliases not accepted by Nuvei's browser_info validator.
+      if (browserInfo.js_enabled == null && browserInfo.javascript_enabled != null) {
+        browserInfo.js_enabled = Boolean(browserInfo.javascript_enabled);
+      }
+      if (browserInfo.timezone_offset == null && browserInfo.timezone != null) {
+        browserInfo.timezone_offset = Number(browserInfo.timezone);
+      }
+      if (!browserInfo.accept_header) {
+        browserInfo.accept_header = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';
+      }
+      delete browserInfo.javascript_enabled;
+      delete browserInfo.timezone;
+    }
     if (browserInfo && !browserInfo.ip && /^\d{1,3}(\.\d{1,3}){3}$/.test(String(input.consentIp || ''))) {
       browserInfo.ip = input.consentIp;
     }

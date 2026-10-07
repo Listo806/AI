@@ -25,14 +25,18 @@ export const ecNuveiActivate = (payload) => ecRequest("/nuvei/activate", { metho
 export const ecNuveiThreeDsContinue = (subscriptionId) => ecRequest("/nuvei/3ds/continue", { method: "POST", body: JSON.stringify({ subscriptionId }) });
 
 export function ecBrowserInfo() {
+  // Keep these field names aligned with Nuvei/Paymentez browser_info.
+  // The gateway validates js_enabled, timezone_offset and accept_header
+  // before it can start 3DS2.
   return {
-    user_agent: navigator.userAgent,
+    user_agent: navigator.userAgent || "",
     language: navigator.language || "en-US",
     color_depth: window.screen?.colorDepth || 24,
     screen_height: window.screen?.height || 0,
     screen_width: window.screen?.width || 0,
-    timezone: new Date().getTimezoneOffset(),
+    timezone_offset: new Date().getTimezoneOffset(),
     java_enabled: false,
-    javascript_enabled: true,
+    js_enabled: true,
+    accept_header: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   };
 }
