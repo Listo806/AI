@@ -174,30 +174,61 @@ export class NuveiService {
 
   /** Reuse the existing Admin Plans record for E-Commerce; never creates a plan. */
   private async ecommercePlan(): Promise<NuveiPlan> {
+    // Admin Plans is the source of truth. Do not rely on one historical label:
+    // the E-Commerce product has been displayed as both "E-Commerce CRM" and
+    // "Payments & Subscriptions CRM". We first prefer those explicit labels,
+    // then accept the single active $397 non-Agentic plan. This still reuses an
+    // existing row and never creates a duplicate plan.
     const { rows } = await this.db.query(
-      `SELECT name, price
+      `SELECT id, name, price, is_active, plan_category
          FROM subscription_plans
-        WHERE is_active = TRUE AND deleted_at IS NULL
-          AND price = 397
-          AND (
-               LOWER(name) LIKE '%e-commerce%'
-               OR LOWER(name) LIKE '%ecommerce%'
-               OR (LOWER(name) LIKE '%payment%' AND LOWER(name) LIKE '%subscription%')
-               OR LOWER(COALESCE(plan_category,'')) IN ('ecommerce','e-commerce')
-          )
+        WHERE deleted_at IS NULL
+          AND price::numeric = 397::numeric
+          AND is_active = TRUE
+          AND LOWER(TRIM(name)) NOT IN ('scale', 'scale plan', 'business', 'business plan', 'solo', 'solo plan', 'free')
         ORDER BY CASE
           WHEN LOWER(name) LIKE '%e-commerce%' OR LOWER(name) LIKE '%ecommerce%' THEN 0
           WHEN LOWER(name) LIKE '%payment%' AND LOWER(name) LIKE '%subscription%' THEN 1
-          ELSE 2
-        END, created_at ASC
+          WHEN LOWER(COALESCE(plan_category,'')) IN ('ecommerce','e-commerce') THEN 2
+          ELSE 3
+        END,
+        created_at ASC
         LIMIT 1`,
     );
+
     if (!rows[0]) {
-      throw new BadRequestException('The existing $397/month E-Commerce plan is not active in Admin Plans.');
+      // Give an actionable error instead of pretending the row does not exist.
+      // This diagnostic intentionally returns plan metadata only, never secrets.
+      const { rows: candidates } = await this.db.query(
+        `SELECT name, price, is_active, plan_category
+           FROM subscription_plans
+          WHERE deleted_at IS NULL
+            AND (
+              price::numeric = 397::numeric
+              OR LOWER(name) LIKE '%e-commerce%'
+              OR LOWER(name) LIKE '%ecommerce%'
+              OR (LOWER(name) LIKE '%payment%' AND LOWER(name) LIKE '%subscription%')
+              OR LOWER(COALESCE(plan_category,'')) IN ('ecommerce','e-commerce')
+            )
+          ORDER BY created_at ASC
+          LIMIT 10`,
+      );
+      const detail = candidates.length
+        ? candidates.map((r: any) => `${r.name} ($${Number(r.price)}, ${r.is_active ? 'active' : 'inactive'}, ${r.plan_category || 'no category'})`).join('; ')
+        : 'no matching Admin Plans row';
+      throw new BadRequestException(`E-Commerce checkout could not resolve the existing $397/month Admin Plan: ${detail}.`);
     }
+
     const monthly = Number(rows[0].price);
     if (monthly !== 397) throw new BadRequestException('The E-Commerce Admin Plan must be $397/month.');
-    return { key: 'ecommerce', provisionPlan: 'ecommerce', label: rows[0].name || 'E-Commerce CRM', activation: monthly, monthly, trialDays: 0 };
+    return {
+      key: 'ecommerce',
+      provisionPlan: 'ecommerce',
+      label: rows[0].name || 'Payments & Subscriptions CRM',
+      activation: monthly,
+      monthly,
+      trialDays: 0,
+    };
   }
 
   // ---- schema ----------------------------------------------------------
