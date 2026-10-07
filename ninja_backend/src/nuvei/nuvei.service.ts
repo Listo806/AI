@@ -180,7 +180,7 @@ export class NuveiService {
     // then accept the single active $397 non-Agentic plan. This still reuses an
     // existing row and never creates a duplicate plan.
     const { rows } = await this.db.query(
-      `SELECT id, name, price, is_active, plan_category
+      `SELECT id, name, price, activation_fee, is_active, plan_category
          FROM subscription_plans
         WHERE deleted_at IS NULL
           AND price::numeric = 397::numeric
@@ -220,7 +220,9 @@ export class NuveiService {
     }
 
     const monthly = Number(rows[0].price);
+    const activationFee = Number(rows[0].activation_fee || 0);
     if (monthly !== 397) throw new BadRequestException('The E-Commerce Admin Plan must be $397/month.');
+    if (activationFee !== 0) throw new BadRequestException('The E-Commerce Admin Plan must not have an activation fee.');
     return {
       key: 'ecommerce',
       provisionPlan: 'ecommerce',
