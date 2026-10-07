@@ -35,11 +35,11 @@ import { getWorkspace, WorkspaceDef } from '../workspaces/workspace-registry';
  * when status === 'success' AND status_detail === 3.
  */
 
-type NuveiPlanKey = 'solo' | 'business' | 'scale' | 'business_promo_257';
+type NuveiPlanKey = 'solo' | 'business' | 'scale' | 'ecommerce';
 
 interface NuveiPlan {
   key: NuveiPlanKey;
-  provisionPlan: PlanId; // what the account's `plan` becomes
+  provisionPlan: PlanId | 'ecommerce'; // Agentic plan id, or the standalone E-Commerce product
   label: string;
   activation: number; // customer-present charge today (USD)
   monthly: number; // recurring charge (USD)
@@ -160,29 +160,36 @@ export class NuveiService {
 
   private plan(key: string): NuveiPlan {
     const k = String(key || '').trim().toLowerCase() as NuveiPlanKey;
-    if (k === 'business_promo_257') {
-      return {
-        key: k,
-        provisionPlan: 'business',
-        label: 'Business (25% off promo)',
-        activation: 257,
-        monthly: 257,
-        trialDays: 0, // charged $257 immediately, then $257/mo — no trial
-        grantsIncludedWorkspace: true,
-      };
-    }
     if (k === 'solo' || k === 'business' || k === 'scale') {
       const p = PLANS[k];
-      return {
-        key: k,
-        provisionPlan: k,
-        label: p.label,
-        activation: p.pricing.introCents / 100,
-        monthly: p.pricing.monthlyCents / 100,
-        trialDays: 14,
-      };
+      return { key: k, provisionPlan: k, label: p.label, activation: p.pricing.introCents / 100, monthly: p.pricing.monthlyCents / 100, trialDays: 14 };
+    }
+    // Runtime fallback only. E-Commerce checkout itself always loads the existing
+    // Admin Plans row with ecommercePlan() before any amount is charged.
+    if (k === 'ecommerce') {
+      return { key: 'ecommerce', provisionPlan: 'ecommerce', label: 'E-Commerce CRM', activation: 397, monthly: 397, trialDays: 0 };
     }
     throw new BadRequestException(`Unknown Nuvei plan: ${key}`);
+  }
+
+  /** Reuse the existing Admin Plans record for E-Commerce; never creates a plan. */
+  private async ecommercePlan(): Promise<NuveiPlan> {
+    const { rows } = await this.db.query(
+      `SELECT name, price
+         FROM subscription_plans
+        WHERE is_active = TRUE AND deleted_at IS NULL
+          AND price = 397
+          AND (LOWER(name) LIKE '%e-commerce%' OR LOWER(name) LIKE '%ecommerce%'
+               OR LOWER(COALESCE(plan_category,'')) IN ('ecommerce','e-commerce'))
+        ORDER BY CASE WHEN LOWER(name) LIKE '%e-commerce%' OR LOWER(name) LIKE '%ecommerce%' THEN 0 ELSE 1 END, created_at ASC
+        LIMIT 1`,
+    );
+    if (!rows[0]) {
+      throw new BadRequestException('The existing $397/month E-Commerce plan is not active in Admin Plans.');
+    }
+    const monthly = Number(rows[0].price);
+    if (monthly !== 397) throw new BadRequestException('The E-Commerce Admin Plan must be $397/month.');
+    return { key: 'ecommerce', provisionPlan: 'ecommerce', label: rows[0].name || 'E-Commerce CRM', activation: monthly, monthly, trialDays: 0 };
   }
 
   // ---- schema ----------------------------------------------------------
@@ -221,6 +228,7 @@ export class NuveiService {
         team_id UUID,
         email TEXT,
         plan_key VARCHAR(32) NOT NULL,
+        product_key VARCHAR(32) NOT NULL DEFAULT 'agentic',
         provision_plan VARCHAR(32) NOT NULL,
         status VARCHAR(24) NOT NULL DEFAULT 'pending_activation',
         activation_amount NUMERIC(12,2) NOT NULL,
@@ -242,6 +250,11 @@ export class NuveiService {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
+    `);
+
+    await this.db.query(`
+      ALTER TABLE nuvei_subscriptions
+        ADD COLUMN IF NOT EXISTS product_key VARCHAR(32) NOT NULL DEFAULT 'agentic'
     `);
 
     await this.db.query(`
@@ -409,7 +422,7 @@ export class NuveiService {
     return {
       enabled: this.enabled(),
       ...this.client.publicConfig(),
-      plans: (['solo', 'business', 'scale', 'business_promo_257'] as NuveiPlanKey[]).map(
+      plans: (['solo', 'business', 'scale'] as NuveiPlanKey[]).map(
         (k) => {
           const p = this.plan(k);
           return {
@@ -425,7 +438,7 @@ export class NuveiService {
   }
 
   /** The signed-in user's latest Nuvei subscription snapshot (account page). */
-  async getUserSubscription(userId: string) {
+  async getUserSubscription(userId: string, productKey?: string) {
     await this.ensureSchema();
     const { rows } = await this.db.query(
       `SELECT s.id, s.plan_key, s.provision_plan, s.status, s.activation_amount,
@@ -436,11 +449,12 @@ export class NuveiService {
                 ORDER BY t.created_at DESC LIMIT 1) AS activation_transaction_id
          FROM nuvei_subscriptions s
         WHERE s.user_id = $1
+          AND ($2::text IS NULL OR s.product_key = $2)
         ORDER BY (s.status IN ('verification_pending','trialing','active')) DESC,
                  (s.status = 'pending_activation' AND s.created_at > NOW() - interval '48 hours') DESC,
                  s.created_at DESC
         LIMIT 1`,
-      [userId],
+      [userId, productKey ? String(productKey).toLowerCase() : null],
     );
     let sub = rows[0] || null;
     // The checkout polls this while a 3DS challenge / bank review is pending.
@@ -517,7 +531,7 @@ export class NuveiService {
       );
       const plan = this.plan(sub.plan_key);
       const outcome = await this.activateLate(sub, plan, tx);
-      if (outcome === 'verification_pending') return 'verification_pending';
+      if (outcome === 'verification_pending' || outcome === 'active') return outcome;
       return outcome === 'duplicate_refunded' ? 'refunded' : 'payment_failed';
     }
     if (this.isDefinitiveFailure(info.body)) {
@@ -969,14 +983,16 @@ export class NuveiService {
   }> {
     this.assertEnabled();
     await this.ensureSchema();
-    const plan = this.plan(input.planKey);
+    const requestedKey = String(input.planKey || '').trim().toLowerCase();
+    const plan = requestedKey === 'ecommerce' ? await this.ecommercePlan() : this.plan(requestedKey);
+    const productKey = plan.key === 'ecommerce' ? 'ecommerce' : 'agentic';
     const user = await this.userRow(input.userId);
 
     // Nuvei's documented staging cards for 3DS require a specific order
     // description + amount ("3DS Challenge" 151 / "3DS FrictionLess" >=150).
     // Honored ONLY on the staging gateway so the challenge screen can be tested.
     let activationAmount = plan.activation;
-    let activationDescription = `Cortexa ${plan.label} activation`;
+    let activationDescription = plan.key === 'ecommerce' ? `Cortexa ${plan.label} monthly subscription` : `Cortexa ${plan.label} activation`;
     const scenario = String(input.testScenario || '').trim().toLowerCase();
     if (scenario && this.client.environment() === 'staging') {
       if (scenario === '3ds_challenge') {
@@ -1005,9 +1021,9 @@ export class NuveiService {
     // second subscription (double monthly billing) and overwrote the plan.
     const { rows: live } = await this.db.query(
       `SELECT id, plan_key, status FROM nuvei_subscriptions
-        WHERE user_id = $1 AND status IN ('verification_pending','trialing','active')
+        WHERE user_id = $1 AND product_key = $2 AND status IN ('verification_pending','trialing','active')
         ORDER BY created_at DESC LIMIT 1`,
-      [input.userId],
+      [input.userId, productKey],
     );
     if (live[0]) {
       const current = this.plan(live[0].plan_key).label;
@@ -1023,11 +1039,11 @@ export class NuveiService {
          FROM nuvei_subscriptions s
          JOIN nuvei_transactions t
            ON t.subscription_id = s.id AND t.kind = 'activation'
-        WHERE s.user_id = $1 AND s.status = 'pending_activation'
+        WHERE s.user_id = $1 AND s.product_key = $2 AND s.status = 'pending_activation'
           AND s.created_at > NOW() - interval '2 hours'
           AND t.status IN ('pending','unconfirmed')
         ORDER BY s.created_at DESC LIMIT 1`,
-      [input.userId],
+      [input.userId, productKey],
     );
     if (pendingRows[0]) {
       const p = pendingRows[0];
@@ -1073,16 +1089,17 @@ export class NuveiService {
     try {
       const { rows: subRows } = await this.db.query(
       `INSERT INTO nuvei_subscriptions
-         (user_id, team_id, email, plan_key, provision_plan, status,
+         (user_id, team_id, email, plan_key, product_key, provision_plan, status,
           activation_amount, monthly_amount, card_id, dev_reference,
           consent_at, consent_ip, return_url, acquisition)
-       VALUES ($1,$2,$3,$4,$5,'pending_activation',$6,$7,$8,$9,NOW(),$10,$11,$12)
+       VALUES ($1,$2,$3,$4,$5,$6,'pending_activation',$7,$8,$9,$10,NOW(),$11,$12,$13)
        RETURNING id`,
       [
         input.userId,
         teamId,
         user.email,
         plan.key,
+        productKey,
         plan.provisionPlan,
         activationAmount,
         plan.monthly,
@@ -1106,10 +1123,10 @@ export class NuveiService {
       if (String(err?.code || '') === '23505' && String(err?.constraint || '').includes('nuvei_one_open_subscription_per_user')) {
         const { rows } = await this.db.query(
           `SELECT id, status FROM nuvei_subscriptions
-            WHERE user_id = $1
+            WHERE user_id = $1 AND product_key = $2
               AND status IN ('pending_activation','verification_pending','trialing','active')
             ORDER BY created_at DESC LIMIT 1`,
-          [input.userId],
+          [input.userId, productKey],
         );
         const existing = rows[0];
         if (existing) {
@@ -1195,21 +1212,17 @@ export class NuveiService {
         plan,
         tx,
       );
+      if (outcome === 'active') {
+        return { status: 'active', subscriptionId, transactionId: tx.id, message: 'Payment received. Your E-Commerce CRM is active.' };
+      }
       if (outcome !== 'verification_pending') {
-        // Two activations raced each other; this one was refunded (or flagged).
         return {
           status: outcome === 'duplicate_refunded' ? 'refunded' : 'payment_failed',
-          subscriptionId,
-          transactionId: tx.id,
+          subscriptionId, transactionId: tx.id,
           message: `You already have an active ${plan.label} subscription. This payment has been ${outcome === 'duplicate_refunded' ? 'refunded' : 'flagged for refund'}.`,
         };
       }
-      return {
-        status: 'verification_pending',
-        subscriptionId,
-        transactionId: tx.id,
-        message: 'Payment received. Verify your email to activate your account.',
-      };
+      return { status: 'verification_pending', subscriptionId, transactionId: tx.id, message: 'Payment received. Verify your email to activate your account.' };
     }
 
     if (this.is3dsPending(res.body)) {
@@ -1271,12 +1284,14 @@ export class NuveiService {
    */
   private safeReturnUrl(candidate: string | undefined, planKey: NuveiPlanKey): string {
     const checkoutKey =
-      planKey === 'business' || planKey === 'business_promo_257'
+      planKey === 'business'
         ? 'team'
         : planKey === 'scale'
           ? 'growth'
           : 'solo';
-    const fallback = `${this.frontendUrl()}/checkout?plan=${checkoutKey}&threeds=return`;
+    const fallback = planKey === 'ecommerce'
+      ? `${this.frontendUrl()}/e-commerce/checkout?billing=monthly&threeds=return`
+      : `${this.frontendUrl()}/checkout?plan=${checkoutKey}&threeds=return`;
     const raw = String(candidate || '').trim();
     if (!raw) return fallback;
     try {
@@ -1446,6 +1461,37 @@ export class NuveiService {
     // clock or grant CRM/workspace access here.
     let userId: string | null = null;
 
+    // E-Commerce has no Agentic activation fee or 14-day trial. Its first
+    // $397 monthly payment is the first paid month, so access starts as soon as
+    // Nuvei confirms the charge. The saved token is then reused by the same
+    // recurring engine one month later.
+    if (plan.key === 'ecommerce') {
+      const now = new Date();
+      const next = this.addMonths(now, 1);
+      const { rows } = await this.db.query(
+        `UPDATE nuvei_subscriptions
+            SET status='active', trial_end=NULL, next_billing_date=$2,
+                last_charge_at=NOW(), updated_at=NOW()
+          WHERE id=$1 AND status IN ('pending_activation','payment_failed')
+          RETURNING user_id,email`,
+        [subscriptionId, next],
+      );
+      const sub = rows[0];
+      if (!sub) return;
+      await this.provisionAccount({ userId: sub.user_id, subscriptionId, plan: 'ecommerce', paymentStatus: 'active', trialEnd: null });
+      await this.sendConfirmation({
+        to: sub.email, userId: sub.user_id,
+        subject: 'Cortexa E-Commerce CRM — payment received',
+        lines: [
+          ['Plan', plan.label], ['Amount', this.money(Number(tx?.amount ?? plan.monthly))],
+          ['Status', 'Paid'], ['Transaction ID', tx?.id || '—'],
+          ['Authorization code', tx?.authorization_code || '—'],
+          ['Next charge', next.toISOString().slice(0, 10)],
+        ],
+      });
+      return;
+    }
+
     await this.db.transaction(async (client) => {
       const { rows } = await client.query(
         `UPDATE nuvei_subscriptions
@@ -1570,17 +1616,18 @@ export class NuveiService {
     sub: any,
     plan: NuveiPlan,
     tx: any,
-  ): Promise<'verification_pending' | 'duplicate_refunded' | 'duplicate_needs_refund'> {
+  ): Promise<'verification_pending' | 'active' | 'duplicate_refunded' | 'duplicate_needs_refund'> {
     const { rows: live } = await this.db.query(
       `SELECT id FROM nuvei_subscriptions
-        WHERE user_id = $1 AND id <> $2 AND status IN ('verification_pending','trialing','active','past_due')
+        WHERE user_id = $1 AND id <> $2 AND product_key = $3
+          AND status IN ('verification_pending','trialing','active','past_due')
         LIMIT 1`,
-      [sub.user_id, sub.id],
+      [sub.user_id, sub.id, plan.key === 'ecommerce' ? 'ecommerce' : 'agentic'],
     );
     if (!live[0]) {
       try {
         await this.markActivated(sub.id, plan, tx);
-        return 'verification_pending';
+        return plan.key === 'ecommerce' ? 'active' : 'verification_pending';
       } catch (err: any) {
         // The database refused a second live subscription (a concurrent
         // activation won the race): fall through and refund this charge.
@@ -1678,7 +1725,7 @@ export class NuveiService {
         only = ` AND s.id = $1`;
       }
       const { rows } = await this.db.query(
-        `SELECT s.id, s.user_id, s.email, s.plan_key, s.provision_plan, s.monthly_amount,
+        `SELECT s.id, s.user_id, s.team_id, s.email, s.plan_key, s.provision_plan, s.monthly_amount,
                 s.card_id, s.next_billing_date, s.cancel_at_period_end, s.status
            FROM nuvei_subscriptions s
           WHERE s.status IN ('trialing','active','past_due')
@@ -1713,11 +1760,28 @@ export class NuveiService {
     return new Date(d).toISOString().slice(0, 10);
   }
 
+  /** Active paid team seats are billed by Nuvei together with the base plan.
+   * The base plan amount remains immutable; each active seat history row adds
+   * exactly $97 to the next recurring debit. */
+  private async recurringSeatAddonAmount(teamId: string | null): Promise<number> {
+    if (!teamId) return 0;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT COUNT(*)::int AS n FROM team_addon_history
+          WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL`,
+        [teamId],
+      );
+      return Number(rows[0]?.n || 0) * 97;
+    } catch {
+      return 0;
+    }
+  }
+
   private async chargeRecurring(snapshot: any): Promise<void> {
     // Re-read right before acting: the batch snapshot may be minutes old and
     // the customer may have canceled / been refunded meanwhile.
     const { rows: fresh } = await this.db.query(
-      `SELECT id, user_id, email, plan_key, provision_plan, monthly_amount,
+      `SELECT id, user_id, team_id, email, plan_key, provision_plan, monthly_amount,
               card_id, next_billing_date, cancel_at_period_end, status
          FROM nuvei_subscriptions WHERE id = $1`,
       [snapshot.id],
@@ -1741,7 +1805,9 @@ export class NuveiService {
     }
     // Charge the price the customer consented to at checkout, never a later
     // catalog change.
-    const monthly = Number(sub.monthly_amount) > 0 ? Number(sub.monthly_amount) : plan.monthly;
+    const baseMonthly = Number(sub.monthly_amount) > 0 ? Number(sub.monthly_amount) : plan.monthly;
+    const seatAddonMonthly = String(sub.plan_key) === 'ecommerce' ? 0 : await this.recurringSeatAddonAmount(sub.team_id || null);
+    const monthly = Number((baseMonthly + seatAddonMonthly).toFixed(2));
     const period = this.periodKey(sub.next_billing_date);
     const dev_reference = this.devRef('REC');
 
@@ -1782,7 +1848,7 @@ export class NuveiService {
         this.toNuveiUser(user),
         {
           amount: monthly,
-          description: `Cortexa ${plan.label} monthly`,
+          description: seatAddonMonthly > 0 ? `Cortexa ${plan.label} monthly + team seats` : `Cortexa ${plan.label} monthly`,
           dev_reference,
         },
         token,
@@ -2944,34 +3010,6 @@ export class NuveiService {
       `UPDATE nuvei_webhook_events SET verified = true WHERE dedupe_key = $1`,
       [dedupe],
     );
-  }
-
-  async refundTransactions(input: { userId?: string; search?: string; limit?: number }) {
-    this.assertEnabled();
-    await this.ensureSchema();
-    const userId = String(input.userId || '').trim();
-    const search = String(input.search || '').trim();
-    const limit = Math.min(Math.max(Number(input.limit) || 50, 1), 100);
-    const params: any[] = [];
-    const where: string[] = ["t.provider_transaction_id IS NOT NULL"];
-    if (userId) { params.push(userId); where.push(`t.user_id = $${params.length}`); }
-    if (search) {
-      params.push(`%${search}%`);
-      const n = params.length;
-      where.push(`(t.provider_transaction_id ILIKE $${n} OR COALESCE(u.email,'') ILIKE $${n} OR COALESCE(u.name,'') ILIKE $${n} OR COALESCE(t.dev_reference,'') ILIKE $${n})`);
-    }
-    params.push(limit);
-    const { rows } = await this.db.query(
-      `SELECT t.id, t.provider_transaction_id AS "transactionId", t.authorization_code AS "authorizationCode",
-              t.kind, t.amount::float AS amount, t.currency, t.status, t.refunded_amount::float AS "refundedAmount",
-              t.dev_reference AS "reference", t.created_at AS "createdAt", t.user_id AS "userId",
-              u.name AS "customerName", u.email AS "customerEmail"
-         FROM nuvei_transactions t
-         LEFT JOIN users u ON u.id = t.user_id
-        WHERE ${where.join(' AND ')}
-        ORDER BY t.created_at DESC
-        LIMIT $${params.length}`, params);
-    return { data: rows, total: rows.length };
   }
 
   // ---- refunds ---------------------------------------------------------
@@ -5445,6 +5483,16 @@ export class NuveiService {
     paymentStatus: 'trialing' | 'active';
     trialEnd: Date | null;
   }): Promise<void> {
+    if (String(input.plan).toLowerCase() === 'ecommerce') {
+      await this.db.query(
+        `UPDATE users
+           SET payment_status=$2, is_active=true, checkout_status='paid',
+               nuvei_subscription_id=$3, updated_at=NOW()
+         WHERE id=$1`,
+        [input.userId, input.paymentStatus, input.subscriptionId],
+      );
+      return;
+    }
     const planId = normalizePlanId(input.plan);
     await this.db.query(
       `UPDATE users
@@ -5474,7 +5522,13 @@ export class NuveiService {
       );
       const sub = rows[0];
       if (!sub?.team_id) return;
-      const seat = getSeatLimit(sub.provision_plan);
+      const baseSeats = String(sub.provision_plan) === 'ecommerce' ? 1 : getSeatLimit(sub.provision_plan);
+      const { rows: extraSeatRows } = await this.db.query(
+        `SELECT COUNT(*)::int AS n FROM team_addon_history
+          WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL`,
+        [sub.team_id],
+      );
+      const seat = baseSeats + Number(extraSeatRows[0]?.n || 0);
       // Map to the subscriptions.status CHECK domain (which has no 'refunded').
       const mapped =
         status === 'refunded'

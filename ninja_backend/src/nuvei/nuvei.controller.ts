@@ -57,8 +57,8 @@ export class NuveiController {
   // Current user's Nuvei subscription snapshot (checkout polling, account page).
   @Get('subscription')
   @UseGuards(JwtAuthGuard)
-  async subscription(@CurrentUser() user: any) {
-    return this.nuvei.getUserSubscription(user?.id);
+  async subscription(@CurrentUser() user: any, @Query('product') product?: string) {
+    return this.nuvei.getUserSubscription(user?.id, product);
   }
 
   // Audit view: card (last4), every transaction with transaction_ID +
@@ -373,18 +373,6 @@ export class NuveiController {
     );
     res.status(out.httpStatus || 200);
     return out;
-  }
-
-  // Admin: searchable Nuvei payment history used by both refund entry points.
-  @Get('admin/refund-transactions')
-  @UseGuards(JwtAuthGuard)
-  async refundTransactions(@CurrentUser() user: any, @Query() query: any) {
-    this.requireTrueAdmin(user);
-    return this.nuvei.refundTransactions({
-      userId: query?.userId,
-      search: query?.search,
-      limit: query?.limit,
-    });
   }
 
   // Admin: refund a transaction (full, or partial with `amount`).
