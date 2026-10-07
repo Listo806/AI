@@ -368,9 +368,10 @@ export class NuveiService {
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS nuvei_subscription_id UUID`,
     );
 
-    // One LIVE subscription per customer, enforced by the database: two
-    // activations approved at the same instant cannot both become live.
-    // Any pre-existing duplicate (from before this rule) is retired first,
+    // One LIVE subscription per customer *per product*. Agentic CRM and the
+    // standalone E-Commerce CRM may coexist for the same user. Two activations
+    // of the same product approved at the same instant cannot both become live.
+    // Any pre-existing same-product duplicate is retired first,
     // keeping the one the account actually points at, otherwise the newest.
     try {
       const { rows: dupes } = await this.db.query(
@@ -381,6 +382,7 @@ export class NuveiService {
             AND EXISTS (
               SELECT 1 FROM nuvei_subscriptions o
                WHERE o.user_id = s.user_id AND o.id <> s.id
+                 AND o.product_key = s.product_key
                  AND o.status IN ('verification_pending','trialing','active')
                  AND (o.id = (SELECT u.nuvei_subscription_id FROM users u WHERE u.id = s.user_id)
                       OR (s.id <> (SELECT u.nuvei_subscription_id FROM users u WHERE u.id = s.user_id) IS NOT FALSE
@@ -393,8 +395,11 @@ export class NuveiService {
         );
       }
       await this.db.query(
+        `DROP INDEX IF EXISTS nuvei_sub_one_live_uidx`,
+      );
+      await this.db.query(
         `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_sub_one_live_uidx
-           ON nuvei_subscriptions (user_id)
+           ON nuvei_subscriptions (user_id, product_key)
            WHERE status IN ('verification_pending','trialing','active')`,
       );
     } catch (err: any) {
