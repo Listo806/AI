@@ -830,3 +830,7 @@
     display: none;
   }
 }
+
+/* Marketplace-linked ListoPlaza brand */
+.lq-vacation-header-brand { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.lq-vacation-marketplace-mark { display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 39px; background: #1265f5; clip-path: polygon(50% 0, 100% 26%, 100% 100%, 0 100%, 0 26%); color: #fff; font-size: 12px; font-weight: 800; text-shadow: none; }

@@ -227,7 +227,7 @@ export default function Header({
               className="lq-header-action-link lq-ai-help"
             >
               <span>
-                {t("header.aiCrm")}
+                Agentic CRM
               </span>
 
               <Bot
@@ -458,7 +458,7 @@ export default function Header({
               setMobileOpen(false)
             }
           >
-            {t("header.aiCrm")}
+            Agentic CRM
           </Link>
         </nav>
 

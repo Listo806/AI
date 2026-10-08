@@ -57,10 +57,11 @@ export default function VacationRentalsHeader() {
     <header className="lq-vacation-header">
       <div className="lq-vacation-header-inner">
         <Link
-          to="/vacation-rentals"
+          to="/"
           className="lq-vacation-header-brand"
         >
-          ListoStays
+          <span className="lq-vacation-marketplace-mark" aria-hidden="true"><span>LQ</span></span>
+          <span>ListoPlaza</span>
         </Link>
 
         <nav className="lq-vacation-header-actions">
