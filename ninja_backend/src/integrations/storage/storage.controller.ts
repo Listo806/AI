@@ -58,6 +58,13 @@ export class StorageController {
     });
   }
 
+  @Post('listing-media/upload')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }))
+  async uploadListingMedia(@UploadedFile() file: Express.Multer.File, @CurrentUser() user: any, @Body('draftId') draftId: string) {
+    if (!file || !/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(draftId || '')) throw new BadRequestException('Valid draftId and file required');
+    return this.storageService.uploadFile({file, folder: `marketplace/listings/${draftId}`, userId: user.id, teamId: user.teamId}, true);
+  }
+
   @Get('files')
   @ApiOperation({ summary: 'List files' })
   @ApiQuery({ name: 'teamId', required: false, description: 'Team ID filter' })

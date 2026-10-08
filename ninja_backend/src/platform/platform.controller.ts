@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { SubscriptionRequiredGuard } from '../subscriptions/guards/subscription-required.guard';
+import { ListingLimitGuard } from '../subscriptions/guards/listing-limit.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { PlatformListingsService } from './platform-listings.service';
 import { CreatePropertyDto } from '../properties/dto/create-property.dto';
@@ -41,5 +43,33 @@ export class PlatformController {
       user.teamId,
     );
     return { data: listing };
+  }
+
+  @Post('listings/drafts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  async createDraft(@Body() dto: CreatePropertyDto, @CurrentUser() user: any) {
+    return {data:await this.platformListings.createDraft(dto,user.id,user.teamId)};
+  }
+
+  @Patch('listings/drafts/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  async updateDraft(@Param('id') id:string,@Body() dto:CreatePropertyDto,@CurrentUser() user:any) {
+    return {data:await this.platformListings.updateDraft(id,dto,user.id)};
+  }
+
+  @Post('listings/drafts/:id/media')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  async attachMedia(@Param('id') id:string,@Body('fileId') fileId:string,@CurrentUser() user:any) {
+    return {data:await this.platformListings.addDraftMedia(id,user.id,fileId)};
+  }
+
+  @Post('listings/drafts/:id/submit')
+  @UseGuards(JwtAuthGuard, RolesGuard, SubscriptionRequiredGuard, ListingLimitGuard)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  async submitDraft(@Param('id') id:string,@CurrentUser() user:any) {
+    return {data:await this.platformListings.submitDraft(id,user.id)};
   }
 }

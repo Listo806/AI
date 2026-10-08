@@ -1,4 +1,6 @@
 import React from "react";
+import CreateListingPage from "./pages/CreateListing/CreateListingPage";
+import MarketplaceLoginPage from "./pages/CreateListing/MarketplaceLoginPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Home/HomePage";
 import OwnersPage from "./pages/Owners/OwnersPage";
@@ -17,6 +19,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
 
+        <Route path="/marketplace/login" element={<MarketplaceLoginPage />} />
+        <Route path="/create-listing" element={<CreateListingPage />} />
+        <Route path="/owners/create" element={<CreateListingPage />} />
         <Route path="/owners" element={<OwnersPage />} />
 
         <Route path="/sell" element={<OwnersPage />} />
@@ -28,7 +33,8 @@ export default function App() {
 
         <Route path="/ai-crm" element={<AiCrmPage />} />
 
-        <Route path="/ai-help" element={<AiCrmPage />} />\n        <Route path="/ai-help/pricing" element={<AiHelpPricingPage />} />
+        <Route path="/ai-help" element={<AiCrmPage />} />
+        <Route path="/ai-help/pricing" element={<AiHelpPricingPage />} />
         <Route path="/vacation-rentals" element={<VacationRentalsPage />} />
         
         <Route path="/owner-plans" element={<OwnerPlansPage />} />

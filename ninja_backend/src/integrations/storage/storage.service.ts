@@ -111,7 +111,7 @@ export class StorageService {
   /**
    * Upload a file to S3
    */
-  async uploadFile(uploadDto: UploadFileDto): Promise<StoredFile> {
+  async uploadFile(uploadDto: UploadFileDto, listingMedia = false): Promise<StoredFile> {
     if (!this.isConfigured || !this.s3Client) {
       throw new BadRequestException('Storage service is not configured');
     }
@@ -124,14 +124,14 @@ export class StorageService {
 
     // Validate MIME type (jpg, png, webp only)
     const mimeType = (file.mimetype || '').toLowerCase();
-    if (!ALLOWED_IMAGE_MIME_TYPES.includes(mimeType)) {
+    if (!(listingMedia && ['video/mp4', 'video/webm', 'video/quicktime'].includes(mimeType)) && !ALLOWED_IMAGE_MIME_TYPES.includes(mimeType)) {
       throw new BadRequestException(
         `Invalid file type. Allowed: JPEG, PNG, WebP. Got: ${file.mimetype || 'unknown'}`,
       );
     }
 
     // Validate file size (max 5MB)
-    if (file.size > MAX_FILE_SIZE_BYTES) {
+    if (file.size > (listingMedia && mimeType.startsWith('video/') ? 50 * 1024 * 1024 : MAX_FILE_SIZE_BYTES)) {
       throw new BadRequestException(
         `File too large. Maximum size: 5MB. Got: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
       );
