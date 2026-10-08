@@ -61,7 +61,7 @@ export default function VacationRentalsHeader() {
           className="lq-vacation-header-brand"
         >
           <span className="lq-vacation-marketplace-mark" aria-hidden="true"><span>LQ</span></span>
-          <span>ListoPlaza</span>
+          <span>ListoQasa</span>
         </Link>
 
         <nav className="lq-vacation-header-actions">

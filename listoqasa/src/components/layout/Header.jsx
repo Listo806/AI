@@ -8,7 +8,6 @@ import {
 import {
   Menu,
   X,
-  Bot,
   Globe2,
   Check,
   Home,
@@ -230,10 +229,6 @@ export default function Header({
                 Agentic CRM
               </span>
 
-              <Bot
-                size={18}
-                strokeWidth={1.8}
-              />
             </Link>
 
             {/* LANGUAGE */}

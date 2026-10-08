@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
-  Volume2,
   Home,
   KeyRound,
   Building2,
@@ -282,34 +281,18 @@ export default function HomePage() {
               </button>
             </div>
 
-            <form className="lq-home-search" onSubmit={submitSearch}>
-              <Search size={25} />
-
+            <form className="lq-home-search" onSubmit={submitSearch} role="search">
               <input
-                type="text"
+                type="search"
+                aria-label={t("home.searchPlaceholder", { defaultValue: "Search by city, neighborhood, or property" })}
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 placeholder={t("home.searchPlaceholder", {
-                  defaultValue:
-                    "Search by city, neighborhood, or property",
+                  defaultValue: "Search by city, neighborhood, or property",
                 })}
               />
-
-              <button
-                type="button"
-                className="lq-search-voice"
-                aria-label="Voice search"
-              >
-                <Volume2 size={26} />
-              </button>
-
-              <button
-                type="submit"
-                className="lq-home-search-submit"
-              >
-                {t("home.searchButton", {
-                  defaultValue: "Search",
-                })}
+              <button type="submit" className="lq-home-search-icon-button" aria-label={t("home.searchButton", { defaultValue: "Search" })}>
+                <Search size={32} strokeWidth={2} aria-hidden="true" />
               </button>
             </form>
 
