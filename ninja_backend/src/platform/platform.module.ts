@@ -11,5 +11,6 @@ import { PlatformListingsService } from './platform-listings.service';
   imports: [DatabaseModule, SubscriptionsModule, NuveiModule],
   controllers: [PlatformController, MarketplacePlansController],
   providers: [PlatformListingsService, MarketplacePlansService],
+  exports: [MarketplacePlansService],
 })
 export class PlatformModule {}

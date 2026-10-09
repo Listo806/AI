@@ -47,7 +47,7 @@ export class MarketplacePlansService {
   }
   async mine(userId:string) {
     await this.schema();
-    const r=await this.db.query(`SELECT id,plan_key,status,price_cents,currency,created_at FROM marketplace_plan_enrollments WHERE user_id=$1 ORDER BY created_at DESC`,[userId]);
+    const r=await this.db.query(`SELECT id,plan_key,status,price_cents,currency,payment_reference,created_at FROM marketplace_plan_enrollments WHERE user_id=$1 ORDER BY created_at DESC`,[userId]);
     return { data:r.rows, active:r.rows.some(x=>x.status==='active') };
   }
   async requireEntitlement(userId:string) {
@@ -56,47 +56,81 @@ export class MarketplacePlansService {
     return state;
   }
 
-  async checkout(userId: string, enrollmentId: string) {
+  paymentConfig() {
+    const config = this.nuvei.publicConfig();
+    return { environment: config.environment, clientAppCode: config.clientAppCode,
+      clientAppKey: config.clientAppKey, configured: config.configured && !!config.clientAppCode && !!config.clientAppKey };
+  }
+
+  // A token is created inside Nuvei's own iframe. PAN/CVC never enter this API.
+  async checkout(userId: string, enrollmentId: string, token: string) {
     await this.schema();
-    const result = await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId]);
-    const e=result.rows[0];
-    if(!e) throw new NotFoundException('Marketplace enrollment not found');
-    if(e.status==='active') return {status:'active',next:'/create-listing'};
-    if(e.status!=='pending_payment'||Number(e.price_cents)<=0) throw new BadRequestException('This enrollment cannot be charged');
-    if(e.payment_reference) throw new BadRequestException('A checkout already exists for this enrollment. Check its payment status before retrying.');
-    if(!this.nuvei.isConfigured()) throw new BadRequestException('Nuvei is not configured');
-    // The existing users schema does not require first_name / last_name columns.
+    if (!/^[a-zA-Z0-9_-]{6,512}$/.test(token)) throw new BadRequestException('Invalid secure card token');
+    const row = (await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`, [enrollmentId,userId])).rows[0];
+    if (!row) throw new NotFoundException('Marketplace enrollment not found');
+    if (row.status === 'active') return { status:'active', next:'/create-listing' };
+    if (row.status !== 'pending_payment' || Number(row.price_cents) <= 0) throw new BadRequestException('Enrollment is not payable');
+    if (!this.nuvei.isConfigured()) throw new ServiceUnavailableException('Nuvei is not configured');
     const user = (await this.db.query(`SELECT id,email FROM users WHERE id=$1`,[userId])).rows[0];
-    if(!user) throw new NotFoundException('Customer not found');
-    const reference=`LQ-${e.id}`;
-    const claim=await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=$3,updated_at=NOW() WHERE id=$1 AND user_id=$2 AND payment_reference IS NULL RETURNING id`,[e.id,userId,reference]);
-    if(!claim.rows.length) throw new BadRequestException('Checkout already started');
+    if (!user) throw new NotFoundException('Customer not found');
+    const reference = `LQ-${row.id}`;
+    // Claim once: never initiate a second charge for a pending/unknown first charge.
+    const claim = await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=$3,updated_at=NOW()
+      WHERE id=$1 AND user_id=$2 AND payment_reference IS NULL AND status='pending_payment' RETURNING id`,[row.id,userId,reference]);
+    if (!claim.rows.length) throw new BadRequestException('Payment already submitted. Await verification before retrying.');
+    let response: any;
     try {
-      const resultNuvei=await this.nuvei.initReference({user:{id:user.id,email:user.email,first_name:'',last_name:''},order:{amount:Number(e.price_cents)/100,description:`ListoQasa ${e.plan_key}`,dev_reference:reference,currency:'USD'},locale:'en'});
-      const body=resultNuvei.body || {};
-      const url=body.checkout_url || body.checkoutUrl || body.data?.checkout_url || body.data?.checkoutUrl || body.payment?.checkout_url || body.payment?.checkoutUrl || body.redirect_url || body.data?.redirect_url;
-      if(!resultNuvei.ok || !url || !/^https:\/\//i.test(String(url))){
-        this.logger.error(`Marketplace Nuvei checkout failed: http=${resultNuvei.httpStatus}, providerCode=${String(body.error?.code||body.code||'unknown')}, message=${String(body.error?.message||body.message||resultNuvei.error||'No valid checkout URL').slice(0,250)}`);
-        throw new ServiceUnavailableException('Secure Nuvei checkout is temporarily unavailable. Please retry or contact support. Your plan has not been charged or activated.');
-      }
-      // The v3 PaymentCheckout SDK accepts the provider reference, not the full hosted URL.
-      // Do not expose payment credentials or trust client-side payment success.
-      const providerReference = String(body.reference || body.data?.reference || body.payment?.reference || new URL(String(url)).searchParams.get('reference') || '');
-      if (!providerReference || !/^[a-zA-Z0-9_-]{6,128}$/.test(providerReference)) {
-        throw new ServiceUnavailableException('Nuvei returned an invalid checkout reference');
-      }
-      return {status:'pending_payment',checkoutMode:'modal',reference:providerReference,enrollmentId:e.id};
-    } catch(err){
-      await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=NULL,updated_at=NOW() WHERE id=$1 AND status='pending_payment' AND provider_transaction_id IS NULL`,[e.id]).catch(dbErr=>this.logger.error('Unable to release failed Marketplace checkout claim',dbErr?.stack));
-      if(err instanceof ServiceUnavailableException)throw err;
-      this.logger.error('Marketplace Nuvei initialization exception',err instanceof Error?err.stack:String(err));
-      throw new ServiceUnavailableException('Unable to initialize Nuvei checkout. Your plan has not been charged or activated.');
+      response = await this.nuvei.debit({id:String(user.id),email:String(user.email)},
+        {amount:Number(row.price_cents)/100,description:`ListoQasa ${row.plan_key}`,dev_reference:reference,currency:'USD'},token);
+    } catch (err) {
+      // A network exception is ambiguous: the processor might have charged the card.
+      this.logger.error('Marketplace Nuvei debit uncertain',err instanceof Error?err.stack:String(err));
+      return {status:'pending_payment',message:'Payment submitted; awaiting provider verification'};
+    }
+    const tx = response?.body?.transaction || {};
+    const transactionId = String(tx.id || '');
+    if (transactionId) await this.db.query(`UPDATE marketplace_plan_enrollments SET provider_transaction_id=$2,updated_at=NOW()
+      WHERE id=$1 AND status='pending_payment'`,[row.id,transactionId]);
+    if (transactionId) {
+      try { await this.verifyEnrollmentTransaction(row.id,transactionId); }
+      catch(err) { this.logger.warn('Marketplace verification deferred: '+String(err)); }
+    }
+    const state = (await this.db.query(`SELECT status FROM marketplace_plan_enrollments WHERE id=$1`,[row.id])).rows[0]?.status;
+    if (state === 'active') return {status:'active',next:'/create-listing'};
+    if (state === 'failed') return {status:'failed',message:'Nuvei declined the payment'};
+    return {status:'pending_payment',message:'Waiting for secure payment confirmation'};
+  }
+
+  private async verifyEnrollmentTransaction(enrollmentId:string, transactionId:string) {
+    const verification = await this.nuvei.verifyTransaction(transactionId);
+    if (!verification.ok || !verification.body?.transaction) return;
+    const tx = verification.body.transaction;
+    const row = (await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE id=$1`,[enrollmentId])).rows[0];
+    if (!row || row.status !== 'pending_payment' || row.provider_transaction_id !== transactionId) return;
+    const ref = String(tx.dev_reference || verification.body?.order?.dev_reference || '');
+    const amount = Number(tx.amount ?? verification.body?.order?.amount);
+    const currency = String(tx.currency || verification.body?.order?.currency || '').toUpperCase();
+    if (ref !== row.payment_reference || !Number.isFinite(amount) || Math.abs(amount-Number(row.price_cents)/100) > 0.01 || currency !== row.currency) {
+      this.logger.error(`Marketplace payment verification mismatch enrollment=${enrollmentId}`);
+      return;
+    }
+    const status = String(tx.status||'').toLowerCase();
+    if (['success','1'].includes(status) && Number(tx.status_detail) === 3) {
+      await this.db.query(`UPDATE marketplace_plan_enrollments SET status='active',updated_at=NOW() WHERE id=$1 AND status='pending_payment'`,[enrollmentId]);
+    } else if (['failure','failed','2','cancelled','canceled','rejected'].includes(status)) {
+      await this.db.query(`UPDATE marketplace_plan_enrollments SET status='failed',updated_at=NOW() WHERE id=$1 AND status='pending_payment'`,[enrollmentId]);
     }
   }
   async paymentStatus(userId:string,enrollmentId:string){
     await this.schema();
     const r=await this.db.query(`SELECT id,plan_key,status,created_at FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId]);
     if(!r.rows.length) throw new NotFoundException('Enrollment not found');
+    if(r.rows[0].status==='pending_payment') {
+      const tx=(await this.db.query(`SELECT provider_transaction_id FROM marketplace_plan_enrollments WHERE id=$1`,[enrollmentId])).rows[0]?.provider_transaction_id;
+      if(tx) await this.verifyEnrollmentTransaction(enrollmentId,tx).catch(err=>this.logger.warn(String(err)));
+      const updated=(await this.db.query(`SELECT id,plan_key,status,created_at FROM marketplace_plan_enrollments WHERE id=$1`,[enrollmentId])).rows[0];
+      return updated;
+    }
     return r.rows[0];
   }
   private safeEqual(a:string,b:string){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&crypto.timingSafeEqual(x,y)}

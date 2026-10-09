@@ -1,3 +1,5 @@
+import { ModuleRef } from '@nestjs/core';
+import { MarketplacePlansService } from '../platform/marketplace-plans.service';
 import {
   BadRequestException,
   Body,
@@ -46,7 +48,7 @@ function requireUuid(value: any, what = 'id'): string {
 export class NuveiController {
   private readonly logger = new Logger(NuveiController.name);
 
-  constructor(private readonly nuvei: NuveiService) {}
+  constructor(private readonly nuvei: NuveiService, private readonly moduleRef: ModuleRef) {}
 
   // Public config for the checkout page (environment + CLIENT app code + plans).
   @Get('config')
@@ -364,6 +366,13 @@ export class NuveiController {
     @Req() req: any,
     @Res({ passthrough: true }) res: any,
   ) {
+    const ref = String(body?.transaction?.dev_reference || body?.order?.dev_reference || '');
+    if (/^LQ-[0-9a-f-]{36}$/i.test(ref)) {
+      const plans = this.moduleRef.get(MarketplacePlansService, {strict:false});
+      const out = await plans.handlePaymentCallback(body, token || authToken);
+      this.logger.log(`Marketplace callback reference ${ref} -> ${out.handled}`);
+      return out;
+    }
     const out = await this.nuvei.handleCallback(body, token || authToken);
     // One line per delivery, so support can confirm Nuvei is reaching us.
     const tx = body?.transaction || body || {};
