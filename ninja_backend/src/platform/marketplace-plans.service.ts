@@ -79,7 +79,13 @@ export class MarketplacePlansService {
         this.logger.error(`Marketplace Nuvei checkout failed: http=${resultNuvei.httpStatus}, providerCode=${String(body.error?.code||body.code||'unknown')}, message=${String(body.error?.message||body.message||resultNuvei.error||'No valid checkout URL').slice(0,250)}`);
         throw new ServiceUnavailableException('Secure Nuvei checkout is temporarily unavailable. Please retry or contact support. Your plan has not been charged or activated.');
       }
-      return {status:'pending_payment',checkoutUrl:String(url),enrollmentId:e.id};
+      // The v3 PaymentCheckout SDK accepts the provider reference, not the full hosted URL.
+      // Do not expose payment credentials or trust client-side payment success.
+      const providerReference = String(body.reference || body.data?.reference || body.payment?.reference || new URL(String(url)).searchParams.get('reference') || '');
+      if (!providerReference || !/^[a-zA-Z0-9_-]{6,128}$/.test(providerReference)) {
+        throw new ServiceUnavailableException('Nuvei returned an invalid checkout reference');
+      }
+      return {status:'pending_payment',checkoutMode:'modal',reference:providerReference,enrollmentId:e.id};
     } catch(err){
       await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=NULL,updated_at=NOW() WHERE id=$1 AND status='pending_payment' AND provider_transaction_id IS NULL`,[e.id]).catch(dbErr=>this.logger.error('Unable to release failed Marketplace checkout claim',dbErr?.stack));
       if(err instanceof ServiceUnavailableException)throw err;
