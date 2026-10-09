@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { NuveiClientService } from '../nuvei/nuvei-client.service';
 import { ConfigService } from '../config/config.service';
@@ -17,6 +17,7 @@ const PLANS = {
 
 @Injectable()
 export class MarketplacePlansService {
+  private readonly logger = new Logger(MarketplacePlansService.name);
   constructor(private readonly db: DatabaseService, private readonly nuvei: NuveiClientService, private readonly config: ConfigService) {}
   private async schema() {
     await this.db.query(`CREATE TABLE IF NOT EXISTS marketplace_plan_enrollments (
@@ -69,13 +70,21 @@ export class MarketplacePlansService {
     const reference=`LQ-${e.id}`;
     const claim=await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=$3,updated_at=NOW() WHERE id=$1 AND user_id=$2 AND payment_reference IS NULL RETURNING id`,[e.id,userId,reference]);
     if(!claim.rows.length) throw new BadRequestException('Checkout already started');
-    const resultNuvei=await this.nuvei.initReference({user:{id:user.id,email:user.email,first_name:user.first_name||'',last_name:user.last_name||''},order:{amount:Number(e.price_cents)/100,description:`ListoQasa ${e.plan_key}`,dev_reference:reference,currency:'USD'},locale:'en'});
-    const url=resultNuvei.body?.checkout_url||resultNuvei.body?.data?.checkout_url||resultNuvei.body?.payment?.checkout_url;
-    if(!resultNuvei.ok||!url||!/^https:\/\//i.test(String(url))) {
-      await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=NULL,updated_at=NOW() WHERE id=$1 AND status='pending_payment' AND provider_transaction_id IS NULL`,[e.id]);
-      throw new BadRequestException('Nuvei checkout could not be created; no entitlement was activated');
+    try {
+      const resultNuvei=await this.nuvei.initReference({user:{id:user.id,email:user.email,first_name:user.first_name||'',last_name:user.last_name||''},order:{amount:Number(e.price_cents)/100,description:`ListoQasa ${e.plan_key}`,dev_reference:reference,currency:'USD'},locale:'en'});
+      const body=resultNuvei.body || {};
+      const url=body.checkout_url || body.checkoutUrl || body.data?.checkout_url || body.data?.checkoutUrl || body.payment?.checkout_url || body.payment?.checkoutUrl || body.redirect_url || body.data?.redirect_url;
+      if(!resultNuvei.ok || !url || !/^https:\/\//i.test(String(url))){
+        this.logger.error(`Marketplace Nuvei checkout failed: http=${resultNuvei.httpStatus}, providerCode=${String(body.error?.code||body.code||'unknown')}, message=${String(body.error?.message||body.message||resultNuvei.error||'No valid checkout URL').slice(0,250)}`);
+        throw new ServiceUnavailableException('Secure Nuvei checkout is temporarily unavailable. Please retry or contact support. Your plan has not been charged or activated.');
+      }
+      return {status:'pending_payment',checkoutUrl:String(url),enrollmentId:e.id};
+    } catch(err){
+      await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=NULL,updated_at=NOW() WHERE id=$1 AND status='pending_payment' AND provider_transaction_id IS NULL`,[e.id]).catch(dbErr=>this.logger.error('Unable to release failed Marketplace checkout claim',dbErr?.stack));
+      if(err instanceof ServiceUnavailableException)throw err;
+      this.logger.error('Marketplace Nuvei initialization exception',err instanceof Error?err.stack:String(err));
+      throw new ServiceUnavailableException('Unable to initialize Nuvei checkout. Your plan has not been charged or activated.');
     }
-    return {status:'pending_payment',checkoutUrl:url,enrollmentId:e.id};
   }
   async paymentStatus(userId:string,enrollmentId:string){
     await this.schema();

@@ -91,7 +91,7 @@ export default function AgentDeveloperPlansPage() {
         yearlySaving:
           304.8,
 
-        cta: "/trial?addon=ai-crm",
+        cta: "https://www.cortexaaicrm.com/",
 
         features: [
           "agent247",
