@@ -111,7 +111,7 @@ export class MarketplacePlansService {
     const rawAmount = tx.amount ?? tx.order?.amount ?? verification.body?.order?.amount;
     const amount = rawAmount === undefined || rawAmount === null || rawAmount === '' ? NaN : Number(rawAmount);
     const currency = String(tx.currency || tx.order?.currency || verification.body?.order?.currency || '').toUpperCase();
-    if (ref !== row.payment_reference || !Number.isFinite(amount) || Math.abs(amount-Number(row.price_cents)/100) > 0.01 || currency !== row.currency) {
+    if (ref !== row.payment_reference || !Number.isFinite(amount) || Math.abs(amount-Number(row.price_cents)/100) > 0.01 || (currency !== '' && currency !== String(row.currency).toUpperCase())) {
       // Log only non-sensitive verification metadata. Never log card tokens, PAN or full provider payload.
       this.logger.error(`Marketplace payment verification mismatch enrollment=${enrollmentId} tx=${transactionId} ` +
         `reference=${ref ? (ref === row.payment_reference ? 'match' : 'different') : 'missing'} ` +
@@ -172,7 +172,7 @@ export class MarketplacePlansService {
     const verifiedRef=String(verified.dev_reference||verification.body?.order?.dev_reference||'');
     const amount=Number(verified.amount);
     const verifiedCurrency=String(verified.currency||verification.body?.order?.currency||'').toUpperCase();
-    if(!verifiedCurrency||verifiedCurrency!==String(row.currency).toUpperCase()||!verifiedRef||verifiedRef!==reference||!Number.isFinite(amount)||Math.abs(amount-Number(row.price_cents)/100)>0.01)throw new BadRequestException('Nuvei transaction reference or amount mismatch');
+    if((verifiedCurrency !== '' && verifiedCurrency!==String(row.currency).toUpperCase())||!verifiedRef||verifiedRef!==reference||!Number.isFinite(amount)||Math.abs(amount-Number(row.price_cents)/100)>0.01)throw new BadRequestException('Nuvei transaction reference or amount mismatch');
     if(approved){
       await this.db.query(`UPDATE marketplace_plan_enrollments SET status='active',provider_transaction_id=$2,updated_at=NOW() WHERE id=$1 AND status='pending_payment'`,[row.id,id]);
       return {handled:'activated'};
