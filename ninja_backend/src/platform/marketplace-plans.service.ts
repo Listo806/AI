@@ -65,13 +65,14 @@ export class MarketplacePlansService {
     if(e.status!=='pending_payment'||Number(e.price_cents)<=0) throw new BadRequestException('This enrollment cannot be charged');
     if(e.payment_reference) throw new BadRequestException('A checkout already exists for this enrollment. Check its payment status before retrying.');
     if(!this.nuvei.isConfigured()) throw new BadRequestException('Nuvei is not configured');
-    const user = (await this.db.query(`SELECT id,email,first_name,last_name FROM users WHERE id=$1`,[userId])).rows[0];
+    // The existing users schema does not require first_name / last_name columns.
+    const user = (await this.db.query(`SELECT id,email FROM users WHERE id=$1`,[userId])).rows[0];
     if(!user) throw new NotFoundException('Customer not found');
     const reference=`LQ-${e.id}`;
     const claim=await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=$3,updated_at=NOW() WHERE id=$1 AND user_id=$2 AND payment_reference IS NULL RETURNING id`,[e.id,userId,reference]);
     if(!claim.rows.length) throw new BadRequestException('Checkout already started');
     try {
-      const resultNuvei=await this.nuvei.initReference({user:{id:user.id,email:user.email,first_name:user.first_name||'',last_name:user.last_name||''},order:{amount:Number(e.price_cents)/100,description:`ListoQasa ${e.plan_key}`,dev_reference:reference,currency:'USD'},locale:'en'});
+      const resultNuvei=await this.nuvei.initReference({user:{id:user.id,email:user.email,first_name:'',last_name:''},order:{amount:Number(e.price_cents)/100,description:`ListoQasa ${e.plan_key}`,dev_reference:reference,currency:'USD'},locale:'en'});
       const body=resultNuvei.body || {};
       const url=body.checkout_url || body.checkoutUrl || body.data?.checkout_url || body.data?.checkoutUrl || body.payment?.checkout_url || body.payment?.checkoutUrl || body.redirect_url || body.data?.redirect_url;
       if(!resultNuvei.ok || !url || !/^https:\/\//i.test(String(url))){
