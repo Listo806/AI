@@ -2,6 +2,7 @@ import React from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");const plan=p.get("plan");const billing=p.get("billing")==="yearly"?"yearly":"monthly";if(addon==="ai-crm")return <Navigate to="/agent-plans" replace />;return <Navigate to={`/marketplace/signup?audience=agent&plan=${encodeURIComponent(plan||"essential")}&billing=${billing}`} replace />;}
 import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
+import MarketplaceSubscriptionPage from "./pages/CreateListing/MarketplaceSubscriptionPage";
 import MarketplaceCheckoutPage from "./pages/CreateListing/MarketplaceCheckoutPage";
 import CreateListingPage from "./pages/CreateListing/CreateListingPage";
 import MarketplaceLoginPage from "./pages/CreateListing/MarketplaceLoginPage";
@@ -25,6 +26,7 @@ export default function App() {
 
         <Route path="/trial" element={<TrialRedirect />} />
         <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />
+        <Route path="/marketplace/subscription" element={<MarketplaceSubscriptionPage />} />
         <Route path="/marketplace/checkout" element={<MarketplaceCheckoutPage />} />
         <Route path="/marketplace/login" element={<MarketplaceLoginPage />} />
         <Route path="/create-listing" element={<CreateListingPage />} />

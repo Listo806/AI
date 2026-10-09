@@ -11,5 +11,9 @@ export class MarketplacePlansController {
   @Post('checkout') @UseGuards(JwtAuthGuard) checkout(@CurrentUser() user:any,@Body() body:{enrollmentId:string;token:string}){return this.plans.checkout(user.id,String(body?.enrollmentId||''),String(body?.token||''))}
   @Get('payment/:id') @UseGuards(JwtAuthGuard) payment(@CurrentUser() user:any,@Param('id') id:string){return this.plans.paymentStatus(user.id,id)}
   @Post('nuvei-callback') callback(@Body() body:any,@Headers('x-nuvei-token') token?:string){return this.plans.handlePaymentCallback(body,token)}
+  @Post('cancel') @UseGuards(JwtAuthGuard) cancel(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.cancel(user.id,String(body?.enrollmentId||''))}
+  @Get('billing-history') @UseGuards(JwtAuthGuard) history(@CurrentUser() user:any){return this.plans.billingHistory(user.id)}
+  @Post('renew') @UseGuards(JwtAuthGuard) renew(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.renew(user.id,String(body?.enrollmentId||''))}
+  @Post('resume') @UseGuards(JwtAuthGuard) resume(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.resume(user.id,String(body?.enrollmentId||''))}
   @Post('enroll') @UseGuards(JwtAuthGuard) enroll(@CurrentUser() user:any,@Body() body:{planKey:string}){return this.plans.enroll(user.id,String(body?.planKey||''))}
 }

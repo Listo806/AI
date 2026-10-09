@@ -28,13 +28,71 @@ export class MarketplacePlansService {
       updated_at timestamptz NOT NULL DEFAULT NOW()
     )`);
     await this.db.query(`ALTER TABLE marketplace_plan_enrollments ADD COLUMN IF NOT EXISTS provider_transaction_id text`);
+    await this.db.query(`ALTER TABLE marketplace_plan_enrollments ADD COLUMN IF NOT EXISTS current_period_start timestamptz`);
+    await this.db.query(`ALTER TABLE marketplace_plan_enrollments ADD COLUMN IF NOT EXISTS current_period_end timestamptz`);
+    await this.db.query(`ALTER TABLE marketplace_plan_enrollments ADD COLUMN IF NOT EXISTS cancel_at_period_end boolean NOT NULL DEFAULT false`);
+    await this.db.query(`ALTER TABLE marketplace_plan_enrollments ADD COLUMN IF NOT EXISTS canceled_at timestamptz`);
+    await this.db.query(`ALTER TABLE marketplace_plan_enrollments ADD COLUMN IF NOT EXISTS billing_interval text NOT NULL DEFAULT 'monthly'`);
+    // Legacy paid activations: derive an initial monthly period from activation timestamp.
+    // This prevents paid entitlements from remaining active indefinitely after the first charge.
+    await this.db.query(`UPDATE marketplace_plan_enrollments SET current_period_start=updated_at,
+      current_period_end=updated_at + INTERVAL '1 month'
+      WHERE status='active' AND price_cents>0 AND current_period_end IS NULL`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS marketplace_enrollments_user_idx ON marketplace_plan_enrollments(user_id,created_at DESC)`);
   }
   plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD'})); }
+  private async expireDue(userId?:string) {
+    await this.db.query(`UPDATE marketplace_plan_enrollments SET status='canceled',updated_at=NOW()
+      WHERE status='active' AND price_cents>0 AND current_period_end IS NOT NULL
+      AND current_period_end<=NOW() AND ($1::uuid IS NULL OR user_id=$1::uuid)`,[userId||null]);
+  }
+  async cancel(userId:string,enrollmentId:string) {
+    await this.schema();
+    await this.expireDue(userId);
+    const r=await this.db.query(`UPDATE marketplace_plan_enrollments SET
+      cancel_at_period_end=true,canceled_at=NOW(),updated_at=NOW()
+      WHERE id=$1 AND user_id=$2 AND status='active' AND price_cents>0
+      RETURNING id,plan_key,status,current_period_end,cancel_at_period_end`,[enrollmentId,userId]);
+    if(!r.rows.length) throw new BadRequestException('No active paid enrollment to cancel');
+    return {enrollment:r.rows[0],message:'Auto-renewal is not enabled; access ends at the current period end'};
+  }
+  // Explicit customer-initiated renewal: creates a new payable enrollment, never charges
+  // a saved card automatically. An existing verified transaction is never charged twice.
+  async renew(userId:string, enrollmentId:string) {
+    await this.schema();
+    await this.expireDue(userId);
+    const old=(await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId])).rows[0];
+    if(!old) throw new NotFoundException('Enrollment not found');
+    if(Number(old.price_cents)<=0) throw new BadRequestException('Free plans do not require renewal');
+    if(old.status==='active' && old.current_period_end && new Date(old.current_period_end).getTime()>Date.now()+7*86400000)
+      throw new BadRequestException('Renewal is available within seven days of expiration');
+    const pending=(await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE user_id=$1 AND plan_key=$2 AND status='pending_payment' ORDER BY created_at DESC LIMIT 1`,[userId,old.plan_key])).rows[0];
+    if(pending) return {enrollment:pending,next:'/marketplace/checkout',requiresPayment:true};
+    const result=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents,currency,billing_interval)
+      VALUES($1,$2,'pending_payment',$3,$4,$5) RETURNING *`,[userId,old.plan_key,old.price_cents,old.currency,old.billing_interval||'monthly']);
+    return {enrollment:result.rows[0],next:'/marketplace/checkout',requiresPayment:true};
+  }
+  async resume(userId:string,enrollmentId:string) {
+    await this.schema();
+    const result=await this.db.query(`UPDATE marketplace_plan_enrollments SET cancel_at_period_end=false,canceled_at=NULL,updated_at=NOW()
+      WHERE id=$1 AND user_id=$2 AND status='active' AND current_period_end>NOW()
+      RETURNING id,plan_key,status,current_period_end,cancel_at_period_end`,[enrollmentId,userId]);
+    if(!result.rows.length) throw new BadRequestException('No active enrollment to resume');
+    // No recurring billing is configured: resuming only reverses the cancellation flag.
+    return {enrollment:result.rows[0],autoRenewEnabled:false};
+  }
+  async billingHistory(userId:string) {
+    await this.schema();
+    const result=await this.db.query(`SELECT id,plan_key,status,price_cents,currency,provider_transaction_id,
+      current_period_start,current_period_end,created_at FROM marketplace_plan_enrollments
+      WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100`,[userId]);
+    return {data:result.rows};
+  }
   async enroll(userId: string, planKey: string) {
     const plan = PLANS[planKey as keyof typeof PLANS];
     if (!plan) throw new BadRequestException('Invalid Marketplace plan');
     await this.schema();
+    await this.expireDue(userId);
     if (plan.priceCents === 0) {
       // Free launch is a distinct Marketplace entitlement; never calls Nuvei.
       const existing = await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE user_id=$1 AND plan_key=$2 AND status='active' ORDER BY created_at DESC LIMIT 1`,[userId,planKey]);
@@ -42,18 +100,28 @@ export class MarketplacePlansService {
       const r=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents) VALUES ($1,$2,'active',0) RETURNING *`,[userId,planKey]);
       return { enrollment:r.rows[0], next:'/create-listing', message:'Your account is ready. Create your first listing' };
     }
-    const r=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents) VALUES ($1,$2,'pending_payment',$3) RETURNING *`,[userId,planKey,plan.priceCents]);
+    const existing=await this.db.query(`SELECT * FROM marketplace_plan_enrollments
+      WHERE user_id=$1 AND plan_key=$2 AND status='pending_payment'
+      ORDER BY created_at DESC LIMIT 1`,[userId,planKey]);
+    if(existing.rows.length) return {enrollment:existing.rows[0],next:'/marketplace/checkout',requiresPayment:true};
+    const r=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents)
+      VALUES ($1,$2,'pending_payment',$3) RETURNING *`,[userId,planKey,plan.priceCents]);
     return {enrollment:r.rows[0],next:'/marketplace/checkout',requiresPayment:true};
   }
   async mine(userId:string) {
     await this.schema();
-    const r=await this.db.query(`SELECT id,plan_key,status,price_cents,currency,payment_reference,created_at FROM marketplace_plan_enrollments WHERE user_id=$1 ORDER BY created_at DESC`,[userId]);
+    await this.expireDue(userId);
+    const r=await this.db.query(`SELECT id,plan_key,status,price_cents,currency,payment_reference,
+      current_period_start,current_period_end,cancel_at_period_end,billing_interval,created_at
+      FROM marketplace_plan_enrollments WHERE user_id=$1 ORDER BY created_at DESC`,[userId]);
     return { data:r.rows, active:r.rows.some(x=>x.status==='active') };
   }
   async requireEntitlement(userId:string) {
     const state=await this.mine(userId);
-    if (!state.active) throw new BadRequestException('Activate a Marketplace plan before submitting a listing');
-    return state;
+    const active=state.data.find(x=>x.status==='active' && x.price_cents>0) || state.data.find(x=>x.status==='active');
+    if (!active) throw new BadRequestException('Activate or renew a Marketplace plan before submitting a listing');
+    const plan=PLANS[active.plan_key as keyof typeof PLANS];
+    return {...state,entitlement:active,maxListings:plan?.maxListings ?? null};
   }
 
   paymentConfig() {
@@ -101,6 +169,20 @@ export class MarketplacePlansService {
     return {status:'pending_payment',message:'Waiting for secure payment confirmation'};
   }
 
+  private async activateVerifiedEnrollment(enrollmentId:string,transactionId?:string) {
+    // A verified renewal starts after the previous paid period, never discarding
+    // already-paid time. The conditional update makes duplicate callbacks idempotent.
+    await this.db.query(`UPDATE marketplace_plan_enrollments AS e SET
+      status='active',provider_transaction_id=COALESCE($2,e.provider_transaction_id),
+      current_period_start=GREATEST(NOW(),COALESCE((SELECT MAX(p.current_period_end)
+        FROM marketplace_plan_enrollments p WHERE p.user_id=e.user_id AND p.id<>e.id
+        AND p.status='active' AND p.plan_key=e.plan_key AND p.current_period_end>NOW()),NOW())),
+      current_period_end=GREATEST(NOW(),COALESCE((SELECT MAX(p.current_period_end)
+        FROM marketplace_plan_enrollments p WHERE p.user_id=e.user_id AND p.id<>e.id
+        AND p.status='active' AND p.plan_key=e.plan_key AND p.current_period_end>NOW()),NOW()))
+        + CASE WHEN e.billing_interval='yearly' THEN INTERVAL '1 year' ELSE INTERVAL '1 month' END,
+      updated_at=NOW() WHERE e.id=$1 AND e.status='pending_payment'`,[enrollmentId,transactionId||null]);
+  }
   private async verifyEnrollmentTransaction(enrollmentId:string, transactionId:string) {
     const verification = await this.nuvei.verifyTransaction(transactionId);
     if (!verification.ok || !verification.body?.transaction) return;
@@ -123,14 +205,15 @@ export class MarketplacePlansService {
     }
     const status = String(tx.status||'').toLowerCase();
     if (['success','1'].includes(status) && Number(tx.status_detail) === 3) {
-      await this.db.query(`UPDATE marketplace_plan_enrollments SET status='active',updated_at=NOW() WHERE id=$1 AND status='pending_payment'`,[enrollmentId]);
+      await this.activateVerifiedEnrollment(enrollmentId);
     } else if (['failure','failed','2','cancelled','canceled','rejected'].includes(status)) {
       await this.db.query(`UPDATE marketplace_plan_enrollments SET status='failed',updated_at=NOW() WHERE id=$1 AND status='pending_payment'`,[enrollmentId]);
     }
   }
   async paymentStatus(userId:string,enrollmentId:string){
     await this.schema();
-    const r=await this.db.query(`SELECT id,plan_key,status,created_at FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId]);
+    await this.expireDue(userId);
+    const r=await this.db.query(`SELECT id,plan_key,status,current_period_end,created_at FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId]);
     if(!r.rows.length) throw new NotFoundException('Enrollment not found');
     if(r.rows[0].status==='pending_payment') {
       const tx=(await this.db.query(`SELECT provider_transaction_id FROM marketplace_plan_enrollments WHERE id=$1`,[enrollmentId])).rows[0]?.provider_transaction_id;
@@ -174,7 +257,7 @@ export class MarketplacePlansService {
     const verifiedCurrency=String(verified.currency||verification.body?.order?.currency||'').toUpperCase();
     if((verifiedCurrency !== '' && verifiedCurrency!==String(row.currency).toUpperCase())||!verifiedRef||verifiedRef!==reference||!Number.isFinite(amount)||Math.abs(amount-Number(row.price_cents)/100)>0.01)throw new BadRequestException('Nuvei transaction reference or amount mismatch');
     if(approved){
-      await this.db.query(`UPDATE marketplace_plan_enrollments SET status='active',provider_transaction_id=$2,updated_at=NOW() WHERE id=$1 AND status='pending_payment'`,[row.id,id]);
+      await this.activateVerifiedEnrollment(row.id,id);
       return {handled:'activated'};
     }
     const failed=['failure','failed','2','cancelled','canceled','rejected'].includes(String(verified.status).toLowerCase());

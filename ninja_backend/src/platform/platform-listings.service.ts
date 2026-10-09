@@ -13,8 +13,17 @@ import { UserRole } from '../users/entities/user.entity';
 export class PlatformListingsService {
   constructor(private readonly db: DatabaseService, private readonly marketplacePlans: MarketplacePlansService) {}
 
+  private async checkListingCapacity(userId:string) {
+    const state=await this.marketplacePlans.requireEntitlement(userId);
+    if(state.maxListings===null) return;
+    const result=await this.db.query(`SELECT COUNT(*)::int AS total FROM properties
+      WHERE created_by=$1 AND origin='platform' AND status NOT IN ('draft','rejected','deleted','archived')`,[userId]);
+    if(Number(result.rows[0]?.total||0)>=state.maxListings)
+      throw new BadRequestException(`Your plan permits ${state.maxListings} active listings. Upgrade or archive an existing listing.`);
+  }
+
   async create(dto: CreatePropertyDto, userId: string, teamId: string | null): Promise<any> {
-    await this.marketplacePlans.requireEntitlement(userId);
+    await this.checkListingCapacity(userId);
     const status = PropertyStatus.PENDING_REVIEW;
     const origin = PropertyOrigin.PLATFORM;
 
@@ -94,7 +103,7 @@ export class PlatformListingsService {
   }
 
   async submitDraft(id: string,userId: string) {
-    await this.marketplacePlans.requireEntitlement(userId);
+    await this.checkListingCapacity(userId);
     const draft=await this.ownedDraft(id,userId);
     if (!draft.title || draft.title==='Untitled draft' || !draft.description || !draft.address || !draft.city || !draft.price || Number(draft.price)<=0)
       throw new BadRequestException('Complete title, description, address, city and price before submission');
