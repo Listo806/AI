@@ -24,6 +24,7 @@ import PropertyCard from "../../components/property/PropertyCard";
 import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
 import "./HomePage.css";
 import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
+import rentHeroImage from "../../assets/public/images/listoqasa/home-rent-hero.png";
 import MarketplaceBrowseSections from "../../components/marketplace/MarketplaceBrowseSections";
 
 const FALLBACK_PROPERTY_IMAGE = "/images/listoqasa/properties/property-placeholder.jpg";
@@ -239,7 +240,7 @@ export default function HomePage() {
       <section
         className={`lq-home-hero lq-home-hero-${searchMode}`}
         style={{
-          "--lq-home-hero-image": `url(${homeHeroImage})`,
+          "--lq-home-hero-image": `url(${searchMode === "rent" ? rentHeroImage : homeHeroImage})`,
         }}
       >
         <div className="lq-container lq-home-hero-inner">
