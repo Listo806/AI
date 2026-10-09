@@ -107,11 +107,18 @@ export class MarketplacePlansService {
     const tx = verification.body.transaction;
     const row = (await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE id=$1`,[enrollmentId])).rows[0];
     if (!row || row.status !== 'pending_payment' || row.provider_transaction_id !== transactionId) return;
-    const ref = String(tx.dev_reference || verification.body?.order?.dev_reference || '');
-    const amount = Number(tx.amount ?? verification.body?.order?.amount);
-    const currency = String(tx.currency || verification.body?.order?.currency || '').toUpperCase();
+    const ref = String(tx.dev_reference || tx.order?.dev_reference || verification.body?.order?.dev_reference || '');
+    const rawAmount = tx.amount ?? tx.order?.amount ?? verification.body?.order?.amount;
+    const amount = rawAmount === undefined || rawAmount === null || rawAmount === '' ? NaN : Number(rawAmount);
+    const currency = String(tx.currency || tx.order?.currency || verification.body?.order?.currency || '').toUpperCase();
     if (ref !== row.payment_reference || !Number.isFinite(amount) || Math.abs(amount-Number(row.price_cents)/100) > 0.01 || currency !== row.currency) {
-      this.logger.error(`Marketplace payment verification mismatch enrollment=${enrollmentId}`);
+      // Log only non-sensitive verification metadata. Never log card tokens, PAN or full provider payload.
+      this.logger.error(`Marketplace payment verification mismatch enrollment=${enrollmentId} tx=${transactionId} ` +
+        `reference=${ref ? (ref === row.payment_reference ? 'match' : 'different') : 'missing'} ` +
+        `amount=${Number.isFinite(amount) ? amount : 'missing'} expectedAmount=${Number(row.price_cents)/100} ` +
+        `currency=${currency || 'missing'} expectedCurrency=${row.currency} ` +
+        `status=${String(tx.status ?? 'missing')} detail=${String(tx.status_detail ?? 'missing')} ` +
+        `transactionKeys=${Object.keys(tx).filter(k => !/card|token|pan|cvv|cvc|email|phone|name/i.test(k)).slice(0,30).join(',')}`);
       return;
     }
     const status = String(tx.status||'').toLowerCase();
