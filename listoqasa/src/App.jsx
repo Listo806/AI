@@ -1,10 +1,10 @@
 import React from "react";
+import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
+import MarketplaceCheckoutPage from "./pages/CreateListing/MarketplaceCheckoutPage";
 import CreateListingPage from "./pages/CreateListing/CreateListingPage";
 import MarketplaceLoginPage from "./pages/CreateListing/MarketplaceLoginPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Home/HomePage";
-import Listings from "./pages/Listings/Listings";
-import ListingDetail from "./pages/Listings/ListingDetail";
 import OwnersPage from "./pages/Owners/OwnersPage";
 import AgentsPage from "./pages/Agents/AgentsPage";
 import FindAgentPage from "./pages/FindAgent/FindAgentPage";
@@ -20,11 +20,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/buy" element={<Listings />} />
-        <Route path="/rent" element={<Listings />} />
-        <Route path="/listings" element={<Listings />} />
-        <Route path="/listings/:id" element={<ListingDetail />} />
 
+        <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />
+        <Route path="/marketplace/checkout" element={<MarketplaceCheckoutPage />} />
         <Route path="/marketplace/login" element={<MarketplaceLoginPage />} />
         <Route path="/create-listing" element={<CreateListingPage />} />
         <Route path="/owners/create" element={<CreateListingPage />} />

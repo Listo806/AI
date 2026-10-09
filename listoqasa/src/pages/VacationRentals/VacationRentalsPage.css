@@ -831,6 +831,20 @@
   }
 }
 
-/* Marketplace-linked ListoPlaza brand */
-.lq-vacation-header-brand { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
-.lq-vacation-marketplace-mark { display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 39px; background: #1265f5; clip-path: polygon(50% 0, 100% 26%, 100% 100%, 0 100%, 0 26%); color: #fff; font-size: 12px; font-weight: 800; text-shadow: none; }
+/* Reference f2: dedicated Vacation Rentals footer */
+.lq-vacation-footer-reference { background: #101012; }
+
+.lq-vacation-footer-reference .lq-vacation-footer-grid { grid-template-columns: minmax(310px, 1.55fr) repeat(4, minmax(150px, 1fr)); gap: clamp(24px, 4vw, 95px); }
+.lq-vacation-footer-reference .lq-vacation-footer-brand { max-width: 440px; }
+.lq-vacation-footer-reference .lq-vacation-footer-logo { display: inline-flex; align-items: center; gap: 24px; font-size: clamp(28px, 2.8vw, 52px); font-weight: 700; letter-spacing: -1px; white-space: nowrap; }
+.lq-vacation-footer-mark { display: grid; place-items: center; width: 55px; height: 65px; background: #0968f8; color: #fff; font-size: 25px; clip-path: polygon(50% 0%, 100% 23%, 100% 100%, 0 100%, 0 23%); letter-spacing: 0; }
+.lq-vacation-footer-blue { color: #0968f8; }
+.lq-vacation-footer-reference .lq-vacation-footer-brand p { margin-top: 28px; color: #b9bac7; font-size: clamp(17px, 1.35vw, 26px); line-height: 1.45; }
+
+.lq-vacation-footer-reference .lq-vacation-footer-column h3 { margin: 0 0 15px; font-size: clamp(18px, 1.45vw, 27px); font-weight: 700; }
+.lq-vacation-footer-reference .lq-vacation-footer-column a { color: #b9bac7; font-size: clamp(16px, 1.2vw, 22px); line-height: 1.5; }
+.lq-vacation-footer-reference .lq-vacation-footer-bottom { font-size: clamp(15px, 1.1vw, 21px); }
+.lq-vacation-footer-reference .lq-vacation-footer-languages { gap: 25px; }
+.lq-vacation-footer-reference .lq-vacation-footer-languages button { font-size: clamp(15px, 1.1vw, 21px); }
+@media (max-width: 1150px) { .lq-vacation-footer-reference .lq-vacation-footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .lq-vacation-footer-reference .lq-vacation-footer-inner { padding-top: 70px; } }
+@media (max-width: 650px) { .lq-vacation-footer-reference .lq-vacation-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 20px; } .lq-vacation-footer-reference .lq-vacation-footer-brand { grid-column: 1 / -1; } .lq-vacation-footer-reference .lq-vacation-footer-logo { font-size: 30px; gap: 14px; } .lq-vacation-footer-mark { width: 50px; height: 58px; font-size: 21px; } .lq-vacation-footer-reference .lq-vacation-footer-bottom { margin-top: 45px; padding-top: 25px; flex-wrap: wrap; } }

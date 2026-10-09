@@ -219,7 +219,6 @@
     0.82fr
     0.9fr
     1.45fr;
-  gap: 25px;
   padding: 0 0 28px;
 }
 .lq-footer-logo .lq-logo-text {
@@ -574,3 +573,18 @@
     display: none;
   }
 }
+
+/* Reference f1: Marketplace footer */
+.lq-footer-reference { padding: 0; background: radial-gradient(ellipse at 73% 30%, #0a376c 0%, #05254e 35%, #00152d 75%, #001027 100%); }
+.lq-footer-reference .lq-footer-inner { width: min(1880px, calc(100% - 8%)); }
+.lq-footer-reference .lq-footer-top { grid-template-columns: minmax(300px, 1.7fr) repeat(5, minmax(130px, 1fr));  padding: 80px 0 32px; }
+.lq-footer-reference-logo { display: inline-flex; align-items: center; gap: 22px; color: #fff; text-decoration: none; font-size: clamp(28px, 2.5vw, 46px); font-weight: 700; letter-spacing: -1.4px; white-space: nowrap; }
+.lq-footer-reference-mark { display: grid; place-items: center; width: 55px; height: 65px; background: #0968f8; color: white; font-size: 25px; font-weight: 700; clip-path: polygon(50% 0%, 100% 23%, 100% 100%, 0 100%, 0 23%); letter-spacing: 0; }
+.lq-footer-reference-blue { color: #0968f8; }
+.lq-footer-reference .lq-footer-description { max-width: none; margin: 24px 0 0; color: #d9e0ee; font-size: clamp(15px, 1.2vw, 22px); line-height: 1.5; }
+.lq-footer-reference .lq-footer-column h4 { margin: 0 0 28px; font-size: clamp(17px, 1.3vw, 24px); font-weight: 600; }
+.lq-footer-reference .lq-footer-column > a { color: #c9d4e7; font-size: 13px; line-height: 1.4; }
+.lq-footer-reference .lq-footer-column > a:hover { color: #fff; }
+.lq-footer-reference .lq-footer-bottom { padding: 30px 0 42px; font-size: clamp(15px, 1.18vw, 21px); color: #c9d4e7; border-top: 1px solid rgba(190,210,236,.23); }
+@media (max-width: 1150px) { .lq-footer-reference .lq-footer-top { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 65px 0 45px; } }
+@media (max-width: 650px) { .lq-footer-reference .lq-footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 20px; padding: 45px 0 30px; } .lq-footer-reference .lq-footer-brand-column { grid-column: 1 / -1; } .lq-footer-reference-logo { font-size: 30px; gap: 14px; } .lq-footer-reference-mark { width: 50px; height: 58px; font-size: 21px; } .lq-footer-reference .lq-footer-bottom { padding: 28px 0; } }

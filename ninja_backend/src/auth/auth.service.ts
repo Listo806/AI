@@ -131,6 +131,14 @@ export class AuthService {
     // over it, so both the original and the closing source are known.
     void captureLastTouch(this.db, user.id, signupDto);
 
+    // Persist marketplace customer name on the canonical user record.
+    const fullName = String(signupDto.fullName || '').trim();
+    if (fullName) {
+      if (fullName.length > 160) throw new BadRequestException('Full name is too long');
+      await this.db.query('UPDATE users SET name = $2, updated_at = NOW() WHERE id = $1', [user.id, fullName]);
+      user.name = fullName;
+    }
+
     // Generate tokens
     const tokens = await this.generateTokens(user);
 

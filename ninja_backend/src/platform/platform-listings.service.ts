@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { DatabaseService } from '../database/database.service';
 import { PropertyStatus, PropertyOrigin } from '../properties/entities/property.entity';
 import { CreatePropertyDto } from '../properties/dto/create-property.dto';
+import { MarketplacePlansService } from './marketplace-plans.service';
 import { UserRole } from '../users/entities/user.entity';
 
 /**
@@ -10,9 +11,10 @@ import { UserRole } from '../users/entities/user.entity';
  */
 @Injectable()
 export class PlatformListingsService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DatabaseService, private readonly marketplacePlans: MarketplacePlansService) {}
 
   async create(dto: CreatePropertyDto, userId: string, teamId: string | null): Promise<any> {
+    await this.marketplacePlans.requireEntitlement(userId);
     const status = PropertyStatus.PENDING_REVIEW;
     const origin = PropertyOrigin.PLATFORM;
 
@@ -82,17 +84,17 @@ export class PlatformListingsService {
     const stored = await this.db.query(`SELECT url, mime_type FROM stored_files WHERE id=$1 AND user_id=$2 AND folder=$3`,[fileId,userId,`marketplace/listings/${id}`]);
     if (!stored.rows.length) throw new BadRequestException('Uploaded file not found for this listing');
     const {url,mime_type}=stored.rows[0];
-    const mediaType = ['video/mp4','video/webm','video/quicktime'].includes(mime_type) ? 'video' : ['image/jpeg','image/png','image/webp'].includes(mime_type) ? 'image' : null;
-    if (!mediaType) throw new BadRequestException('Unsupported media type');
+    if (!['image/jpeg','image/png','image/webp'].includes(mime_type)) throw new BadRequestException('Unsupported image type');
     const existing=await this.db.query(`SELECT * FROM property_media WHERE property_id=$1 AND url=$2 LIMIT 1`,[id,url]);
     if(existing.rows.length)return existing.rows[0];
     const {rows}=await this.db.query(`INSERT INTO property_media (property_id,url,type,is_primary,display_order,created_at)
-      VALUES ($1,$2,$3,($3='image' AND NOT EXISTS(SELECT 1 FROM property_media WHERE property_id=$1 AND type='image')),
-      (SELECT COUNT(*) FROM property_media WHERE property_id=$1),NOW()) RETURNING *`,[id,url,mediaType]);
+      VALUES ($1,$2,'image',NOT EXISTS(SELECT 1 FROM property_media WHERE property_id=$1),
+      (SELECT COUNT(*) FROM property_media WHERE property_id=$1),NOW()) RETURNING *`,[id,url]);
     return rows[0];
   }
 
   async submitDraft(id: string,userId: string) {
+    await this.marketplacePlans.requireEntitlement(userId);
     const draft=await this.ownedDraft(id,userId);
     if (!draft.title || draft.title==='Untitled draft' || !draft.description || !draft.address || !draft.city || !draft.price || Number(draft.price)<=0)
       throw new BadRequestException('Complete title, description, address, city and price before submission');
@@ -118,8 +120,7 @@ export class PlatformListingsService {
       `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status, origin,
               bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
               created_by as "createdBy", team_id as "teamId", reviewed_by as "reviewedBy", reviewed_at as "reviewedAt",
-              rejection_reason as "rejectionReason", created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt",
-              (SELECT COUNT(*)::int FROM property_media pm WHERE pm.property_id=properties.id AND pm.type='image') as "imageCount"
+              rejection_reason as "rejectionReason", created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
        FROM properties
        WHERE ${conditions}
        ORDER BY created_at DESC`,

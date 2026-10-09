@@ -41,7 +41,7 @@ export default function AgentDeveloperPlansPage() {
         key: "essential",
         icon: Home,
         monthlyPrice: 97,
-        cta: "/trial?plan=essential",
+        cta: "/marketplace/signup?audience=agent&plan=essential",
         features: [
           "listings20",
           "aiEnhancements",
@@ -59,7 +59,7 @@ export default function AgentDeveloperPlansPage() {
         icon: Rocket,
         monthlyPrice: 147,
         popular: true,
-        cta: "/trial?plan=growth",
+        cta: "/marketplace/signup?audience=agent&plan=growth",
         features: [
           "everythingEssential",
           "unlimitedListings",

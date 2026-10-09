@@ -11,6 +11,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../users/entities/user.entity';
 
 export class SignupDto {
+  @ApiPropertyOptional({ description: "Customer full name" })
+  @IsOptional()
+  @IsString()
+  fullName?: string;
+
   @ApiProperty({ example: 'user@example.com', description: 'User email address' })
   @IsEmail()
   @IsNotEmpty()
