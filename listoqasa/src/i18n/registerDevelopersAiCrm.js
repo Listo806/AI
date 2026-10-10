@@ -63,7 +63,7 @@ const bundles = {
 
     aiCrm: {
       heroEyebrow: "AI AGENTIC REVENUE OPERATING SYSTEM",
-      heroTitle1: "AI Revenue",
+      heroTitle1: "Agentix CRM",
       heroTitle2: "Operating System",
       heroTitleHighlight: "Built for Real Estate",
       heroDescription: "AI Agent, WhatsApp, leads, contacts, pipeline, appointments, calendar and analytics — connected in one intelligent system.",
@@ -183,7 +183,7 @@ const bundles = {
 
     aiCrm: {
       heroEyebrow: "SISTEMA OPERATIVO DE INGRESOS CON IA",
-      heroTitle1: "Sistema de Ingresos",
+      heroTitle1: "Agentix CRM",
       heroTitle2: "Impulsado por IA",
       heroTitleHighlight: "Creado para Bienes Raíces",
       heroDescription: "Agente IA, WhatsApp, leads, contactos, pipeline, citas, calendario y analítica — conectados en un sistema inteligente.",
@@ -303,7 +303,7 @@ const bundles = {
 
     aiCrm: {
       heroEyebrow: "SISTEMA OPERACIONAL DE RECEITA COM IA",
-      heroTitle1: "Sistema de Receita",
+      heroTitle1: "Agentix CRM",
       heroTitle2: "Impulsionado por IA",
       heroTitleHighlight: "Criado para Imóveis",
       heroDescription: "Agente IA, WhatsApp, leads, contatos, pipeline, compromissos, calendário e análises — conectados em um sistema inteligente.",

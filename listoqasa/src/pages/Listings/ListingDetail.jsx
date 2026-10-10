@@ -100,12 +100,13 @@ export default function ListingDetail() {
     setError('');
 
     try {
-      const [data, mediaList] = await Promise.all([
+      const [rawData, mediaList] = await Promise.all([
         apiClient.request(`/properties/${id}`),
         getPropertyMedia(id).catch(() => []),
       ]);
 
-      if (data?.status !== 'published') {
+      const data = rawData?.data || rawData;
+      if (String(data?.status || '').toLowerCase() !== 'published') {
         setError('Property not available');
         return;
       }
@@ -150,9 +151,8 @@ export default function ListingDetail() {
 
   const gallery = useMemo(() => {
     const urls = media.map(imageUrl).filter(Boolean);
-    if (property?.thumbnailUrl && !urls.includes(property.thumbnailUrl)) {
-      urls.unshift(property.thumbnailUrl);
-    }
+    const cover = property?.thumbnailUrl || property?.thumbnail_url || property?.coverImage || property?.imageUrl;
+    if (cover && !urls.includes(cover)) urls.unshift(cover);
     return urls;
   }, [media, property]);
 

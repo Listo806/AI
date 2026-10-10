@@ -12,3 +12,16 @@
 .ms-card .ms-submit{width:100%;min-height:48px;background:#176aff;color:#fff}
 @media(max-height:760px){.ms-main{justify-content:flex-start;padding-top:14px}.ms-steps{margin-bottom:12px}.ms-card{padding:18px 26px}.ms-card form{gap:9px}}
 @media(max-width:600px){.ms-main{padding:12px 14px;justify-content:flex-start}.ms-card{padding:20px 17px}.ms-steps{font-size:11px}.ms-card h1{font-size:25px}}
+
+/* Standalone account screen: no business header or agreement checkbox. */
+.ms-page{min-height:100dvh;height:auto;overflow:visible;display:block}
+.ms-main{width:100%;max-width:590px;min-height:100dvh;height:auto;overflow:visible;margin:0 auto;padding:clamp(14px,3vh,30px) 18px;display:flex;flex-direction:column;justify-content:center;box-sizing:border-box}
+.ms-steps{margin:0 0 clamp(12px,2vh,22px)}
+.ms-card{padding:clamp(20px,3vh,30px) 30px}
+.ms-card>p{margin-bottom:clamp(14px,2vh,22px)}
+.ms-card form{gap:clamp(10px,1.5vh,15px)}
+.ms-card form>label{gap:6px}
+.ms-card input:not([type=checkbox]){padding:10px 14px;min-height:42px}
+.ms-card .ms-submit{min-height:46px}
+@media(max-width:600px){.ms-main{justify-content:flex-start;padding:18px 14px 28px}.ms-card{padding:22px 18px}.ms-steps{font-size:11px;gap:4px}}
+@media(max-height:690px) and (min-width:601px){.ms-main{justify-content:flex-start}.ms-card{padding:18px 26px}.ms-card form{gap:9px}.ms-steps{margin-bottom:12px}}

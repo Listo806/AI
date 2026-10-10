@@ -64,8 +64,6 @@ export default function AiCrmPage() {
               <h1>
                 {t("aiCrm.heroTitle1")}
                 <br />
-                {t("aiCrm.heroTitle2")}
-                <br />
                 <strong>{t("aiCrm.heroTitleHighlight")}</strong>
               </h1>
 

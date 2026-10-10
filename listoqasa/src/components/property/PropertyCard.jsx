@@ -1,21 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 import { Heart, MapPin, BedDouble, Bath, Maximize2 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
 
 export default function PropertyCard({ property, showNew = false }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const image = property.image || property.thumbnailUrl || property.thumbnail_url || property.coverImage || property.images?.[0]?.url || property.images?.[0];
+  const target = `/property/${encodeURIComponent(property.id)}?type=${encodeURIComponent(property.type || "sale")}`;
   const { t } = useTranslation();
 
   return (
     <article className="lq-property-card">
       <div className="lq-property-image-wrap">
-        <img
-          src={property.image}
+        <Link to={target} aria-label={`View ${property.title}`}>
+        {!imageFailed && image ? <img
+          src={image}
           alt={property.title}
           className="lq-property-image"
-        />
+          onError={() => setImageFailed(true)}
+        /> : <div className="lq-property-image lq-property-image-empty" role="img" aria-label="Property photo unavailable" style={{display:"grid",placeItems:"center",background:"#eef2f7",color:"#667085",minHeight:160}}>Photo unavailable</div>}
 
+        </Link>
         {showNew && <span className="lq-property-new">{t("home.new")}</span>}
 
         <button
@@ -28,7 +35,7 @@ export default function PropertyCard({ property, showNew = false }) {
       </div>
 
       <div className="lq-property-body">
-        <h3>{property.title}</h3>
+        <h3><Link to={target}>{property.title}</Link></h3>
 
         <div className="lq-property-location">
           <MapPin size={13} />

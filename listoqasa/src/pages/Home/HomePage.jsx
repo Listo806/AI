@@ -24,7 +24,6 @@ import PropertyCard from "../../components/property/PropertyCard";
 import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
 import "./HomePage.css";
 import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
-import rentHeroImage from "../../assets/public/images/listoqasa/home-rent-hero.png";
 import MarketplaceBrowseSections from "../../components/marketplace/MarketplaceBrowseSections";
 
 const FALLBACK_PROPERTY_IMAGE = "/images/listoqasa/properties/property-placeholder.jpg";
@@ -46,7 +45,7 @@ function normalizeListing(listing) {
     beds: listing.bedrooms ?? listing.beds ?? null,
     baths: listing.bathrooms ?? listing.baths ?? null,
     area: listing.squareFeet ?? listing.square_feet ?? listing.area ?? listing.lotSize ?? null,
-    image: listing.thumbnailUrl || listing.thumbnail_url || listing.coverImage || (Array.isArray(listing.images) ? listing.images[0] : null) || FALLBACK_PROPERTY_IMAGE,
+    image: listing.thumbnailUrl || listing.thumbnail_url || listing.coverImage || listing.imageUrl || listing.image_url || (Array.isArray(listing.images) ? (listing.images[0]?.url || listing.images[0]) : null) || FALLBACK_PROPERTY_IMAGE,
     type: listing.type ?? null,
     listingType: listing.listingType ?? listing.listing_type ?? null,
     propertyType: listing.propertyType ?? null,
@@ -72,7 +71,7 @@ function ListingSection({ title, properties, loading, error, newBadge = false, v
       ) : (
         <div className="lq-property-grid">
           {properties.map((property) => (
-            <PropertyCard key={property.id} property={property} showNew={newBadge} to={`/property?id=${property.id}`} />
+            <PropertyCard key={property.id} property={property} showNew={newBadge} to={`/property/${property.id}?type=${property.type || "sale"}`} />
           ))}
         </div>
       )}
@@ -240,7 +239,7 @@ export default function HomePage() {
       <section
         className={`lq-home-hero lq-home-hero-${searchMode}`}
         style={{
-          "--lq-home-hero-image": `url(${searchMode === "rent" ? rentHeroImage : homeHeroImage})`,
+          "--lq-home-hero-image": `url(${homeHeroImage})`,
         }}
       >
         <div className="lq-container lq-home-hero-inner">

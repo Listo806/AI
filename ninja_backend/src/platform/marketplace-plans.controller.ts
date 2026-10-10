@@ -7,6 +7,10 @@ export class MarketplacePlansController {
   constructor(private readonly plans:MarketplacePlansService){}
   @Get() list(){return this.plans.plans()}
   @Get('mine') @UseGuards(JwtAuthGuard) mine(@CurrentUser() user:any){return this.plans.mine(user.id)}
+  @Get('bank-details') bankDetails(){return this.plans.bankDetails()}
+  @Post('bank-transfer') @UseGuards(JwtAuthGuard) bankTransfer(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.bankTransfer(user.id,String(body?.enrollmentId||''))}
+  @Post('bank-confirmation') @UseGuards(JwtAuthGuard) bankConfirmation(@CurrentUser() user:any,@Body() body:any){return this.plans.submitBankConfirmation(user.id,String(body?.enrollmentId||''),String(body?.bankTransactionReference||''),body?.note)}
+  @Get('bank-confirmation/:id') @UseGuards(JwtAuthGuard) bankStatus(@CurrentUser() user:any,@Param('id') id:string){return this.plans.bankRequestStatus(user.id,id)}
   @Get('payment-config') config(){return this.plans.paymentConfig()}
   @Post('checkout') @UseGuards(JwtAuthGuard) checkout(@CurrentUser() user:any,@Body() body:{enrollmentId:string;token:string}){return this.plans.checkout(user.id,String(body?.enrollmentId||''),String(body?.token||''))}
   @Get('payment/:id') @UseGuards(JwtAuthGuard) payment(@CurrentUser() user:any,@Param('id') id:string){return this.plans.paymentStatus(user.id,id)}

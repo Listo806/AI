@@ -1,67 +1,50 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {Link,useNavigate,useSearchParams} from 'react-router-dom';
+import {useNavigate,useSearchParams} from 'react-router-dom';
 import {getMarketplaceUser,marketplaceRequest} from '../../api/marketplaceApi';
 import {mountNuveiForm} from './nuveiSdk';
-import './MarketplaceSignupPage.css';
-
+import './MarketplaceCheckoutPage.css';
+const TITLES={'owner-standard':'Standard','owner-enhanced':'Enhanced Exposure','owner-maximum':'Maximum Exposure','agent-essential':'Essential','agent-growth':'Growth','owner-free-launch':'Free Launch','agent-free-launch':'Free Launch'};
 export default function MarketplaceCheckoutPage(){
- const [query]=useSearchParams(),nav=useNavigate();
+ const [query]=useSearchParams(),navigate=useNavigate(),user=getMarketplaceUser();
  const planKey=/^(owner|agent)-/.test(query.get('plan')||'')?query.get('plan'):null;
- const [enrollment,setEnrollment]=useState(null),[status,setStatus]=useState(''),[error,setError]=useState('');
- const [busy,setBusy]=useState(false),[ready,setReady]=useState(false),[message,setMessage]=useState('');
- const gateway=useRef(null),mounted=useRef(false);
- const user=getMarketplaceUser();
- useEffect(()=>{if(!user)nav('/marketplace/login?next='+encodeURIComponent('/marketplace/checkout?plan='+planKey),{replace:true});},[nav,planKey]);
- useEffect(()=>{let alive=true;marketplaceRequest('/marketplace/plans/mine').then(r=>{
-  if(!alive)return;
-  const list=Array.isArray(r.data)?r.data:Array.isArray(r.enrollments)?r.enrollments:[];
-  const selected=list.find(x=>x.id===sessionStorage.getItem('listoqasa_pending_enrollment')&&x.plan_key===planKey)||list.find(x=>x.plan_key===planKey&&x.status==='active')||list.find(x=>x.plan_key===planKey&&x.status==='pending_payment')||list.find(x=>x.plan_key===planKey);
-  if(selected){setEnrollment(selected);setStatus(selected.status);if(selected.status==='active')nav('/create-listing',{replace:true});}else setStatus('not_started');
- }).catch(e=>alive&&setError(e.message));return()=>{alive=false};},[planKey,nav]);
- useEffect(()=>{if(!user||mounted.current||!enrollment||enrollment.status==='active'||enrollment.payment_reference||status==='active'||(status==='pending_payment'&&enrollment.payment_reference))return;mounted.current=true;let active=true;
-  marketplaceRequest('/marketplace/plans/payment-config').then(cfg=>{
-   if(!cfg.configured)throw Error('Secure Nuvei card form is not configured.');
-   return mountNuveiForm({containerSelector:'#lq-nuvei-card',environment:cfg.environment,
-    appCode:cfg.clientAppCode,appKey:cfg.clientAppKey,
-    user:{id:user.id,email:user.email},locale:'en',onIncomplete:msg=>setError(msg||'Complete the card details.')});
-  }).then(async form=>{if(!active)return;gateway.current=form;const ok=await form.ready;if(active)setReady(ok);
-   if(!ok)throw Error('Secure card form could not be displayed.');
-   form.done.then(card=>{if(active)charge(card.token)}).catch(e=>{if(active){setBusy(false);setError(e.message)}});
-  }).catch(e=>active&&setError(e.message));return()=>{active=false};},[user?.id,enrollment?.id,enrollment?.payment_reference,status]);
- const check=async(id=enrollment?.id)=>{if(!id)return;const r=await marketplaceRequest('/marketplace/plans/payment/'+encodeURIComponent(id));setStatus(r.status);
-  if(r.status==='active'){sessionStorage.removeItem('listoqasa_pending_enrollment');nav('/create-listing',{replace:true,state:{message:'Payment confirmed. Create your listing.'}});}
-  if(r.status==='failed')setError('Payment was declined. Contact support before retrying to avoid duplicate charges.');
- };
- useEffect(()=>{if(!enrollment?.id||status!=='pending_payment')return;let alive=true;
-  const timer=setInterval(()=>{if(alive)check(enrollment.id).catch(()=>{})},4000);
-  return()=>{alive=false;clearInterval(timer)};
- },[enrollment?.id,status]);
- const charge=async(token)=>{setBusy(true);setError('');try{
-  let e=enrollment;
-  if(!e){if(!planKey)throw Error('Select a plan first.');const r=await marketplaceRequest('/marketplace/plans/enroll',{method:'POST',body:JSON.stringify({planKey})});e=r.enrollment;
-   if(!e?.id)throw Error('Enrollment could not be created.');setEnrollment(e);sessionStorage.setItem('listoqasa_pending_enrollment',e.id);
-  }
-  if(e.status==='active'){sessionStorage.removeItem('listoqasa_pending_enrollment');nav('/create-listing');return;}
-  if(e.payment_reference)throw Error('A payment is already in progress. Please wait for verification.');
-  const r=await marketplaceRequest('/marketplace/plans/checkout',{method:'POST',body:JSON.stringify({enrollmentId:e.id,token})});
-  setStatus(r.status);setEnrollment(prev=>prev?{...prev,payment_reference:r.status==='pending_payment'?'processing':prev.payment_reference}:prev);setMessage(r.message||'Payment submitted. Waiting for verification.');
-  if(r.status==='active'){sessionStorage.removeItem('listoqasa_pending_enrollment');nav('/create-listing',{replace:true});}
-  else if(r.status==='failed')setError('Payment was declined. Please contact support.');
- }catch(e){setError(e.message)}finally{setBusy(false)} };
- const submit=async()=>{if(busy||!ready||!gateway.current)return;setError('');setBusy(true);
-  if(!gateway.current.submit()){setBusy(false);setError('Unable to submit secure card form.');}
- };
- return <div className="ms-page"><header className="ms-header"><Link to="/" className="ms-logo"><span>LQ</span> ListoQasa</Link></header>
-  <main className="ms-main" style={{maxWidth:650,margin:'28px auto',padding:'0 16px'}}><section className="ms-card" style={{textAlign:'left'}}>
-   <h1 style={{textAlign:'center'}}>Secure Marketplace Checkout</h1><p style={{textAlign:'center'}}>Selected plan: {planKey||'Not selected'}</p>
-   <p style={{textAlign:'center'}}>Payment status: {status||'Loading...'}</p>
-   {status==='active'?<Link to="/create-listing">Create Your Listing</Link>:<>
-    {status==='pending_payment'&&enrollment?.payment_reference&&<p role="status">Payment is being verified. This page will continue automatically once confirmed.</p>}
-     <div id="lq-nuvei-card" style={{minHeight: status==='pending_payment'&&enrollment?.payment_reference?0:220,width:'100%',margin:'20px 0',display:status==='pending_payment'&&enrollment?.payment_reference?'none':'block'}} aria-label="Secure Nuvei card fields" />
-     {!(status==='pending_payment'&&enrollment?.payment_reference)&&<button type="button" className="ms-submit" disabled={busy||!ready||!planKey} onClick={submit}>{busy?'Processing…':'Pay securely and continue'}</button>}
-    {message&&<p role="status">{message}</p>}
-    {error&&<p role="alert" style={{color:'#b42318'}}>{error}</p>}
-    {enrollment&&<button type="button" onClick={()=>check().catch(e=>setError(e.message))} style={{marginTop:12}}>Refresh payment status</button>}
-   </>}
-  </section></main></div>;
+ const [enrollment,setEnrollment]=useState(null),[plans,setPlans]=useState([]),[bank,setBank]=useState(null),[bankReference,setBankReference]=useState('');
+ const [status,setStatus]=useState('loading'),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[agree,setAgree]=useState(false);
+ const [bankTxRef,setBankTxRef]=useState('');const [bankNote,setBankNote]=useState('');
+ const [profile,setProfile]=useState({name:'',email:'',phone:''});const gateway=useRef(null),mounted=useRef(false),active=useRef(true);
+ const price=enrollment?.price_cents!=null?Number(enrollment.price_cents)/100:plans.find(p=>p.key===planKey)?.priceCents/100;
+ const amount=Number.isFinite(price)?`$${price.toFixed(2)}`:'—';
+ useEffect(()=>{if(!user){navigate('/marketplace/login?next='+encodeURIComponent('/marketplace/checkout?plan='+encodeURIComponent(planKey||'')),{replace:true});return;}
+ setProfile({name:user.fullName||user.full_name||user.name||[user.firstName,user.lastName].filter(Boolean).join(' ')||'',email:user.email||'',phone:user.phone||user.phone_number||''});},[user?.id,navigate,planKey]);
+ useEffect(()=>{active.current=true;Promise.all([marketplaceRequest('/marketplace/plans/mine'),marketplaceRequest('/marketplace/plans'),marketplaceRequest('/marketplace/plans/bank-details').catch(()=>null)]).then(([r,p,b])=>{
+ if(!active.current)return;setPlans(Array.isArray(p)?p:p.data||[]);setBank(b?.configured?b:null);
+ const list=Array.isArray(r.data)?r.data:Array.isArray(r.enrollments)?r.enrollments:[];
+ const found=list.find(x=>x.id===sessionStorage.getItem('listoqasa_pending_enrollment')&&x.plan_key===planKey)||list.find(x=>x.plan_key===planKey&&x.status==='pending_payment')||list.find(x=>x.plan_key===planKey&&x.status==='active')||list.find(x=>x.plan_key===planKey);
+ if(found){setEnrollment(found);if(String(found.payment_reference||'').startsWith('LQB-'))setBankReference(found.payment_reference);setStatus(found.status);if(found.status==='active')navigate('/create-listing',{replace:true});}else setStatus('not_started');
+ }).catch(e=>active.current&&setError(e.message));return()=>{active.current=false};},[planKey,navigate]);
+ const check=async(id=enrollment?.id)=>{if(!id)return;const r=await marketplaceRequest('/marketplace/plans/payment/'+encodeURIComponent(id));if(!active.current)return;setStatus(r.status);
+ if(r.status==='active'){sessionStorage.removeItem('listoqasa_pending_enrollment');navigate('/create-listing',{replace:true});}
+ if(r.status==='failed')setError('Payment was declined. Please contact support before trying again.');};
+ useEffect(()=>{if(!enrollment?.id||status!=='pending_payment')return;const t=setInterval(()=>check(enrollment.id).catch(()=>{}),4000);return()=>clearInterval(t);},[enrollment?.id,status]);
+ const paymentStarted=!!enrollment?.payment_reference;
+ useEffect(()=>{if(!user||mounted.current||!enrollment||enrollment.status==='active'||paymentStarted||status==='active')return;
+ mounted.current=true;let valid=true;
+ marketplaceRequest('/marketplace/plans/payment-config').then(cfg=>{if(!cfg.configured)throw Error('Secure card payment is unavailable.');return mountNuveiForm({containerSelector:'#lq-nuvei-card',environment:cfg.environment,appCode:cfg.clientAppCode,appKey:cfg.clientAppKey,user:{id:user.id,email:user.email},locale:'en',onIncomplete:m=>setError(m||'Complete your card details.')});}).then(async form=>{
+ if(!valid)return;gateway.current=form;const ok=await form.ready;if(valid)setReady(ok);if(!ok)throw Error('Secure card form could not be displayed.');form.done.then(card=>{if(valid)charge(card.token)}).catch(e=>{if(valid){setBusy(false);setError(e.message)}});
+ }).catch(e=>valid&&setError(e.message));return()=>{valid=false};},[user?.id,enrollment?.id,paymentStarted,status]);
+ const charge=async token=>{setBusy(true);setError('');try{let e=enrollment;if(!e){const r=await marketplaceRequest('/marketplace/plans/enroll',{method:'POST',body:JSON.stringify({planKey})});e=r.enrollment;setEnrollment(e);sessionStorage.setItem('listoqasa_pending_enrollment',e.id)}
+ if(e.payment_reference)throw Error('Payment already submitted. Awaiting confirmation.');const r=await marketplaceRequest('/marketplace/plans/checkout',{method:'POST',body:JSON.stringify({enrollmentId:e.id,token})});setStatus(r.status);setEnrollment(old=>({...old,...e,payment_reference:r.status==='pending_payment'?'processing':e.payment_reference}));setMessage(r.message||'Waiting for secure payment confirmation.');if(r.status==='active')navigate('/create-listing',{replace:true});else if(r.status==='failed')setError('Payment declined.');}catch(e){setError(e.message)}finally{setBusy(false)}};
+ const confirmTransfer=async()=>{if(!enrollment?.id)return;setBusy(true);setError('');try{await marketplaceRequest('/marketplace/plans/bank-confirmation',{method:'POST',body:JSON.stringify({enrollmentId:enrollment.id,bankTransactionReference:bankTxRef,note:bankNote})});navigate('/marketplace/payment-pending?enrollmentId='+encodeURIComponent(enrollment.id));}catch(e){setError(e.message)}finally{setBusy(false)}};
+ const pay=()=>{if(!agree){setError('Please accept the Terms and Conditions and Privacy Policy.');return}if(!gateway.current||!ready||busy)return;setError('');setBusy(true);if(!gateway.current.submit()){setBusy(false);setError('Unable to submit the secure card form.')}};
+ const copy=value=>{if(value&&navigator.clipboard)navigator.clipboard.writeText(String(value)).catch(()=>{})};
+ const transfer=async()=>{if(!bank?.configured||!enrollment?.id)return;setBusy(true);setError('');try{const r=await marketplaceRequest('/marketplace/plans/bank-transfer',{method:'POST',body:JSON.stringify({enrollmentId:enrollment.id})});setBankReference(r.reference);setMessage('Transfer reference created. Your plan activates only after the bank transfer is verified.');}catch(e){setError(e.message)}finally{setBusy(false)}};
+ return <main className="lq-checkout"><div className="lq-progress"><span className="done">✓ <b>1. Account</b><small>Completed</small></span><i/><span className="done">✓ <b>2. Plan</b><small>Completed</small></span><i/><span className="current">3 <b>3. Secure Payment</b><small>Your payment details</small></span></div>
+ <div className="lq-columns"><div className="lq-left"><section className="lq-panel"><div className="lq-heading"><span className="lq-symbol">♙</span><div><h2>Your information</h2><p>Your marketplace account details.</p></div></div><label>Full Name<input value={profile.name} onChange={e=>setProfile({...profile,name:e.target.value})} autoComplete="name"/></label><label>Email Address<input value={profile.email} readOnly/></label><label>Phone Number<input value={profile.phone} onChange={e=>setProfile({...profile,phone:e.target.value})} autoComplete="tel"/></label></section>
+ <section className="lq-panel lq-plan"><div className="lq-heading"><span className="lq-symbol">▱</span><div><h2>Your selected plan</h2><p>Review your plan details.</p></div><a href={planKey?.startsWith('agent-')?'/agent-plans':'/owner-plans'}>Change plan ↗</a></div><h3>{TITLES[planKey]||planKey||'No plan selected'}</h3><strong>{amount} <small>/ month</small></strong><p>{plans.find(p=>p.key===planKey)?.maxListings==null?'Unlimited active listings':`${plans.find(p=>p.key===planKey)?.maxListings||'—'} active listings`}</p><div className="lq-summary">🏦 <span>Bank transfer</span><b>{amount} today</b></div><div className="lq-summary">▣ <span>Card</span><b>{amount} today</b></div><div className="lq-note">ⓘ Choose your payment method on the right.</div></section></div>
+ <div className="lq-right"><section className="lq-panel lq-bank"><div className="lq-heading"><span className="lq-symbol">▤</span><div><h2>1. Bank transfer</h2><p>Pay for your plan by bank transfer.</p></div>{bank?.configured&&<span className="lq-available">Available in Ecuador</span>}</div>{bank?.configured?<><div className="lq-bank-grid"><div><small>Amount to transfer</small><b>{amount}</b><button onClick={()=>copy(amount.replace('$',''))} aria-label="Copy amount">▢</button></div><div><small>Payment reference</small><b>{bankReference||'Generate for your account'}</b><button onClick={()=>copy(bankReference)} aria-label="Copy reference">▢</button></div></div><div className="lq-bank-data">{[['Bank',bank.bankName],['Account holder',bank.accountHolder],['Account type',bank.accountType],['Account number',bank.accountNumber],['RUC',bank.ruc]].map(([label,value])=><div key={label}><span>{label}:</span><b>{value||'—'}</b><button onClick={()=>copy(value)} aria-label={`Copy ${label}`}>▢</button></div>)}</div><button className="lq-transfer" disabled={busy||!enrollment||!!bankReference} onClick={transfer}>{bankReference?'Transfer reference generated':'Generate bank transfer reference'}</button>{bankReference&&<div className="lq-bank-confirm"><label>Bank transaction reference<input value={bankTxRef} maxLength={120} onChange={e=>setBankTxRef(e.target.value)} /></label><label>Transfer note (optional)<input value={bankNote} maxLength={1000} onChange={e=>setBankNote(e.target.value)} /></label><button className="lq-transfer" disabled={busy||bankTxRef.trim().length<4} onClick={confirmTransfer}>Submit transfer confirmation</button></div>}<small className="lq-footnote">Your plan activates only after an admin verifies the received funds.</small></>:<div className="lq-bank-unavailable">Bank transfer is not available until verified bank details are configured.</div>}</section>
+ <div className="lq-or">OR</div><section className="lq-panel lq-card"><div className="lq-heading"><span className="lq-symbol">▣</span><div><h2>2. Credit or debit card</h2><p>Pay securely for your plan.</p></div><span className="lq-cards">VISA　●●</span></div>
+ {paymentStarted?<div className="lq-wait">Payment is being verified. This page will continue automatically when confirmed.</div>:<div id="lq-nuvei-card" className="lq-card-frame" aria-label="Nuvei secure card fields"/>}
+ {!paymentStarted&&<><label className="lq-consent"><input type="checkbox" checked={agree} onChange={e=>setAgree(e.target.checked)}/><span>I accept the <a href="/terms" target="_blank" rel="noreferrer">Terms and Conditions</a> and <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span></label><button className="lq-pay" disabled={!agree||!ready||busy||!enrollment} onClick={pay}>♙ {busy?'Processing…':`Pay ${amount} and continue`}</button></>}
+ <div className="lq-security">♢ Secure tokenization　　♙ 3DS protection</div><small className="lq-footnote">Secure payments processed by Nuvei / Datafast.</small></section></div></div>
+ {message&&<p className="lq-feedback" role="status">{message}</p>}{error&&<p className="lq-feedback error" role="alert">{error}</p>}
+ {enrollment&&<button className="lq-refresh" onClick={()=>check().catch(e=>setError(e.message))}>Refresh payment status</button>}</main>;
 }

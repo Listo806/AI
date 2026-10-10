@@ -8,6 +8,8 @@ import CreateListingPage from "./pages/CreateListing/CreateListingPage";
 import MarketplaceLoginPage from "./pages/CreateListing/MarketplaceLoginPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Home/HomePage";
+import ListingDetail from "./pages/Listings/ListingDetail";
+import Listings from "./pages/Listings/Listings";
 import OwnersPage from "./pages/Owners/OwnersPage";
 import AgentsPage from "./pages/Agents/AgentsPage";
 import FindAgentPage from "./pages/FindAgent/FindAgentPage";
@@ -18,11 +20,16 @@ import OwnerPlansPage from "./pages/OwnerPlans/OwnerPlansPage";
 import AgentDeveloperPlansPage from "./pages/AgentDeveloperPlans/AgentDeveloperPlansPage";
 import VacationRentalPlansPage from "./pages/VacationRentalPlans/VacationRentalPlansPage";
 import AiHelpPricingPage from "./pages/AiHelpPricing/AiHelpPricingPage";
+function LegacyPropertyRedirect(){const [params]=useSearchParams();const id=params.get("id");return <Navigate replace to={id?`/property/${encodeURIComponent(id)}`:"/"}/>;}
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/property/:id" element={<ListingDetail />} />
+        <Route path="/property" element={<LegacyPropertyRedirect />} />
+        <Route path="/buy" element={<Listings />} />
+        <Route path="/rent" element={<Listings />} />
 
         <Route path="/trial" element={<TrialRedirect />} />
         <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />

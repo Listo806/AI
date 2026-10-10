@@ -124,6 +124,94 @@ export class MarketplacePlansService {
     return {...state,entitlement:active,maxListings:plan?.maxListings ?? null};
   }
 
+  bankDetails() {
+    // Bank details are configured by the merchant; never return invented account information.
+    const get=(key:string)=>String(process.env[key]||'').trim();
+    const bankName=get('MARKETPLACE_BANK_NAME');
+    const accountHolder=get('MARKETPLACE_BANK_ACCOUNT_HOLDER');
+    const accountNumber=get('MARKETPLACE_BANK_ACCOUNT_NUMBER');
+    const accountType=get('MARKETPLACE_BANK_ACCOUNT_TYPE');
+    const ruc=get('MARKETPLACE_BANK_RUC');
+    const configured=!!(bankName&&accountHolder&&accountNumber&&accountType);
+    return {configured,bankName:configured?bankName:null,accountHolder:configured?accountHolder:null,
+      accountNumber:configured?accountNumber:null,accountType:configured?accountType:null,ruc:configured?ruc:null,currency:'USD'};
+  }
+  async bankTransfer(userId:string,enrollmentId:string) {
+    await this.schema();
+    if(!this.bankDetails().configured) throw new ServiceUnavailableException('Verified bank transfer details are not configured');
+    const row=(await this.db.query(`SELECT id,status,price_cents,payment_reference FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId])).rows[0];
+    if(!row) throw new NotFoundException('Marketplace enrollment not found');
+    if(row.status!=='pending_payment'||Number(row.price_cents)<=0) throw new BadRequestException('Enrollment is not payable');
+    if(row.payment_reference && !String(row.payment_reference).startsWith('LQB-')) throw new BadRequestException('A card payment is already in progress');
+    const reference=`LQB-${row.id}`;
+    await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=$3,updated_at=NOW()
+      WHERE id=$1 AND user_id=$2 AND payment_reference IS NULL`,[enrollmentId,userId,reference]);
+    // Bank transfers are never activated automatically from a browser claim.
+    // Operations must reconcile actual bank settlement before activating.
+    return {reference,status:'pending_payment',amount:Number(row.price_cents)/100,currency:'USD',requiresManualVerification:true};
+  }
+
+  private async transferSchema() {
+    await this.schema();
+    await this.db.query(`CREATE TABLE IF NOT EXISTS marketplace_bank_transfer_requests (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(), enrollment_id uuid NOT NULL UNIQUE REFERENCES marketplace_plan_enrollments(id),
+      user_id uuid NOT NULL REFERENCES users(id), reference text NOT NULL UNIQUE,
+      bank_transaction_reference text NOT NULL, note text, status text NOT NULL DEFAULT 'pending_review'
+      CHECK(status IN ('pending_review','approved','rejected')),
+      reviewed_by uuid REFERENCES users(id), reviewed_at timestamptz, review_note text,
+      created_at timestamptz NOT NULL DEFAULT NOW(), updated_at timestamptz NOT NULL DEFAULT NOW()
+    )`);
+  }
+  async submitBankConfirmation(userId:string,enrollmentId:string,bankTransactionReference:string,note?:string) {
+    await this.transferSchema();
+    const ref=String(bankTransactionReference||'').trim();
+    if(ref.length<4||ref.length>120) throw new BadRequestException('Provide your bank transaction reference (4–120 characters)');
+    const row=(await this.db.query(`SELECT id,status,price_cents,payment_reference FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId])).rows[0];
+    if(!row) throw new NotFoundException('Enrollment not found');
+    if(row.status!=='pending_payment'||!String(row.payment_reference||'').startsWith('LQB-')) throw new BadRequestException('Generate a bank transfer reference before submitting confirmation');
+    const result=await this.db.query(`INSERT INTO marketplace_bank_transfer_requests(enrollment_id,user_id,reference,bank_transaction_reference,note)
+      VALUES($1,$2,$3,$4,$5) ON CONFLICT(enrollment_id) DO UPDATE SET
+      bank_transaction_reference=EXCLUDED.bank_transaction_reference,note=EXCLUDED.note,updated_at=NOW()
+      WHERE marketplace_bank_transfer_requests.status='rejected'
+      RETURNING id,status,reference,created_at`,[enrollmentId,userId,row.payment_reference,ref,String(note||'').slice(0,1000)]);
+    if(!result.rows.length) throw new BadRequestException('This transfer is already awaiting review or approved');
+    return {request:result.rows[0],next:'/marketplace/payment-pending'};
+  }
+  async bankRequestStatus(userId:string,enrollmentId:string) {
+    await this.transferSchema();
+    const result=await this.db.query(`SELECT r.id,r.reference,r.status,r.review_note,r.created_at,e.plan_key,e.price_cents,e.currency,e.status AS enrollment_status
+      FROM marketplace_bank_transfer_requests r JOIN marketplace_plan_enrollments e ON e.id=r.enrollment_id
+      WHERE r.enrollment_id=$1 AND r.user_id=$2`,[enrollmentId,userId]);
+    if(!result.rows.length) throw new NotFoundException('Bank transfer request not found');
+    return {request:result.rows[0]};
+  }
+  async adminBankRequests(status?:string) {
+    await this.transferSchema();
+    if(status && !['pending_review','approved','rejected'].includes(status)) throw new BadRequestException('Invalid status');
+    const result=await this.db.query(`SELECT r.*,e.plan_key,e.price_cents,e.currency,e.status AS enrollment_status,u.email AS customer_email
+      FROM marketplace_bank_transfer_requests r JOIN marketplace_plan_enrollments e ON e.id=r.enrollment_id
+      JOIN users u ON u.id=r.user_id WHERE ($1::text IS NULL OR r.status=$1) ORDER BY r.created_at DESC LIMIT 200`,[status||null]);
+    return {data:result.rows};
+  }
+  async adminReviewBankRequest(id:string,adminId:string,approve:boolean,note:string) {
+    await this.transferSchema();
+    if(!String(note||'').trim()) throw new BadRequestException('Review note is required');
+    // Atomic, idempotent review: only pending_review requests can change state.
+    const result=await this.db.query(`WITH claimed AS (
+      UPDATE marketplace_bank_transfer_requests SET status=$2,reviewed_by=$3,reviewed_at=NOW(),review_note=$4,updated_at=NOW()
+      WHERE id=$1 AND status='pending_review' AND ($2='rejected' OR EXISTS (SELECT 1 FROM marketplace_plan_enrollments e WHERE e.id=enrollment_id AND e.status='pending_payment' AND e.payment_reference LIKE 'LQB-%')) RETURNING enrollment_id,status
+    ), activated AS (
+      UPDATE marketplace_plan_enrollments e SET status='active',
+      current_period_start=NOW(),current_period_end=NOW()+INTERVAL '1 month',updated_at=NOW()
+      FROM claimed c WHERE c.status='approved' AND e.id=c.enrollment_id AND e.status='pending_payment'
+      AND e.payment_reference LIKE 'LQB-%' RETURNING e.id
+    ) SELECT (SELECT enrollment_id FROM claimed) AS enrollment_id,(SELECT status FROM claimed) AS status,
+      (SELECT id FROM activated) AS activated_id`,[id,approve?'approved':'rejected',adminId,String(note).trim().slice(0,1000)]);
+    const row=result.rows[0];
+    if(!row?.enrollment_id) throw new BadRequestException('Request already reviewed or not found');
+    if(approve&&!row.activated_id) throw new BadRequestException('Enrollment not activated; investigate payment state');
+    return {id,status:row.status,enrollmentId:row.enrollment_id};
+  }
   paymentConfig() {
     const config = this.nuvei.publicConfig();
     return { environment: config.environment, clientAppCode: config.clientAppCode,
