@@ -161,6 +161,7 @@ import SetupGuidePage from "./pages/common/SetupGuidePage";
 import IntegrationsPage from "./pages/common/IntegrationsPage";
 import FeaturesPage from "./pages/common/FeaturesPage";
 import AdminBillingCalendar from "./pages/admin/AdminBillingCalendar";
+import MarketplaceBankTransferApprovals from "./pages/admin/MarketplaceBankTransferApprovals";
 import AestheticWellnessWorkspace from "./pages/aesthetic-wellness/AestheticWellnessWorkspace";
 import AestheticClients from "./pages/aesthetic-wellness/AestheticClients";
 import AestheticClientProfile from "./pages/aesthetic-wellness/AestheticClientProfile";
@@ -434,6 +435,7 @@ function AppRoutes() {
         <Route path="admin/users" element={<AdminUsers />} />
         <Route path="admin/customers" element={<AdminCustomers />} />
         <Route path="admin/billing-calendar" element={<AdminBillingCalendar />}  />
+        <Route path="admin/marketplace/bank-transfers" element={<MarketplaceBankTransferApprovals />} />
         <Route path="admin/signups" element={<AdminSignups />} />
         <Route
           path="admin/customers-legacy"
@@ -750,7 +752,6 @@ function AppRoutes() {
       >
         <Route path="profile" element={<Profile />} />
         <Route path="billing" element={<AccountBilling />} />
-        {/* TEMP: remove after Nuvei /card/add 403 diagnostic is complete. */}
         <Route path="settings" element={<AccountSettings />} />
       </Route>
 

@@ -1109,6 +1109,12 @@ export default function Sidebar({
       labelKey: "nav.integrations",
     },
 
+    ...(["admin", "super_admin"].includes(role) ? [
+      { path: "/dashboard/admin/plans", icon: "credit-card", label: "Subscriptions" },
+      { path: "/dashboard/admin/billing-calendar", icon: "calendar-days", label: "Billing Calendar" },
+      { path: "/dashboard/admin/marketplace/bank-transfers", icon: "landmark", label: "Bank Transfer Approvals" },
+    ] : []),
+
     ...(canSeeAiCenter
       ? [
           {
