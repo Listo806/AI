@@ -5674,5 +5674,8 @@
       "metric": "Metric",
       "value": "Value"
     }
+  },
+  "marketplaceBankApprovals": {
+    "title": "Bank Transfer Approvals"
   }
 }
