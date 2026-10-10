@@ -25,6 +25,7 @@ import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
 import "./HomePage.css";
 import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
 import MarketplaceBrowseSections from "../../components/marketplace/MarketplaceBrowseSections";
+import { propertyCoverImage, isPublicMarketplaceProperty } from "../../api/propertyPresentation";
 
 const FALLBACK_PROPERTY_IMAGE = "/images/listoqasa/properties/property-placeholder.jpg";
 
@@ -45,7 +46,7 @@ function normalizeListing(listing) {
     beds: listing.bedrooms ?? listing.beds ?? null,
     baths: listing.bathrooms ?? listing.baths ?? null,
     area: listing.squareFeet ?? listing.square_feet ?? listing.area ?? listing.lotSize ?? null,
-    image: listing.thumbnailUrl || listing.thumbnail_url || listing.coverImage || listing.imageUrl || listing.image_url || (Array.isArray(listing.images) ? (listing.images[0]?.url || listing.images[0]) : null) || FALLBACK_PROPERTY_IMAGE,
+    image: propertyCoverImage(listing) || FALLBACK_PROPERTY_IMAGE,
     type: listing.type ?? null,
     listingType: listing.listingType ?? listing.listing_type ?? null,
     propertyType: listing.propertyType ?? null,
@@ -102,14 +103,14 @@ export default function HomePage() {
       if (controller.signal.aborted) return;
 
       if (newResult.status === "fulfilled") {
-        setNewListings(newResult.value.items.map(normalizeListing));
+        setNewListings(newResult.value.items.filter(isPublicMarketplaceProperty).map(normalizeListing));
       } else {
         console.error("Failed to load new listings:", newResult.reason);
         setNewError("failed");
       }
 
       if (luxuryResult.status === "fulfilled") {
-        setLuxuryListings(luxuryResult.value.items.map(normalizeListing));
+        setLuxuryListings(luxuryResult.value.items.filter(isPublicMarketplaceProperty).map(normalizeListing));
       } else {
         console.error("Failed to load luxury listings:", luxuryResult.reason);
         setLuxuryError("failed");

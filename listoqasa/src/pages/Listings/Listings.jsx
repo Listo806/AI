@@ -756,6 +756,10 @@ export default function Listings() {
                                   alt={property.title || ''}
                                   className="listings-card-image"
                                   loading="lazy"
+                                  onError={(event) => {
+                                    // Preserve the card image area without showing the browser's broken-image icon or alt text.
+                                    event.currentTarget.style.visibility = 'hidden';
+                                  }}
                                 />
                               ) : (
                                 <div

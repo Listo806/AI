@@ -1,3 +1,4 @@
+import { propertyCoverImage } from "../../api/propertyPresentation";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -7,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 export default function PropertyCard({ property, showNew = false }) {
   const [imageFailed, setImageFailed] = useState(false);
-  const image = property.image || property.thumbnailUrl || property.thumbnail_url || property.coverImage || property.images?.[0]?.url || property.images?.[0];
+  const image = propertyCoverImage(property);
   const target = `/property/${encodeURIComponent(property.id)}?type=${encodeURIComponent(property.type || "sale")}`;
   const { t } = useTranslation();
 
@@ -20,7 +21,7 @@ export default function PropertyCard({ property, showNew = false }) {
           alt={property.title}
           className="lq-property-image"
           onError={() => setImageFailed(true)}
-        /> : <div className="lq-property-image lq-property-image-empty" role="img" aria-label="Property photo unavailable" style={{display:"grid",placeItems:"center",background:"#eef2f7",color:"#667085",minHeight:160}}>Photo unavailable</div>}
+        /> : <div className="lq-property-image lq-property-image-empty" role="img" aria-label="Property photo unavailable" style={{display:"grid",placeItems:"center",background:"#eef2f7",color:"#667085",minHeight:160}}></div>}
 
         </Link>
         {showNew && <span className="lq-property-new">{t("home.new")}</span>}

@@ -848,3 +848,9 @@
 .lq-vacation-footer-reference .lq-vacation-footer-languages button { font-size: clamp(15px, 1.1vw, 21px); }
 @media (max-width: 1150px) { .lq-vacation-footer-reference .lq-vacation-footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .lq-vacation-footer-reference .lq-vacation-footer-inner { padding-top: 70px; } }
 @media (max-width: 650px) { .lq-vacation-footer-reference .lq-vacation-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 20px; } .lq-vacation-footer-reference .lq-vacation-footer-brand { grid-column: 1 / -1; } .lq-vacation-footer-reference .lq-vacation-footer-logo { font-size: 30px; gap: 14px; } .lq-vacation-footer-mark { width: 50px; height: 58px; font-size: 21px; } .lq-vacation-footer-reference .lq-vacation-footer-bottom { margin-top: 45px; padding-top: 25px; flex-wrap: wrap; } }
+
+/* Match the main ListoQasa logo lockup on the vacation landing page. */
+.lq-vacation-header-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 22px; white-space: nowrap; }
+.lq-vacation-marketplace-mark { display: inline-flex; align-items: center; justify-content: center; width: 31px; height: 38px; background: #0866f5; color: #fff; clip-path: polygon(50% 0,100% 25%,100% 100%,0 100%,0 25%); font-size: 14px; font-weight: 700; text-shadow: none; }
+.lq-vacation-marketplace-mark span{margin-top: 7px;}
+@media(max-width:600px) { .lq-vacation-header-brand { font-size: 18px; gap: 7px; } .lq-vacation-marketplace-mark { width: 31px; height: 38px; } }

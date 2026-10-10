@@ -214,12 +214,13 @@
   padding-left: 57px;
 }
 .lq-home-hero-content h1 {
-  margin: 0;
+  margin: 0 auto;
   color: #ffffff;
   font-size: clamp(50px, 5.3vw, 73px);
   line-height: 0.98;
   letter-spacing: -2.5px;
   font-weight: 750;
+  width: min(680px, 100%);
 }
 .lq-home-hero-content p {
   margin: 22px 0 26px;
@@ -391,6 +392,7 @@
   line-height: 1.25;
   font-weight: 650;
 }
+.lq-property-body h3 a{text-decoration: none;}
 .lq-property-location {
   display: flex;
   align-items: center;
@@ -695,4 +697,16 @@
   .lq-home-hero .lq-home-search input { font-size: 14px; }
   .lq-home-search-icon-button { width: 44px; height: 44px; }
   .lq-home-search-icon-button svg { width: 25px; height: 25px; }
+}
+
+/* Homepage hero: wide search field matching the supplied desktop design. */
+@media (min-width: 769px) {
+  .lq-home-hero .lq-home-hero-content {
+    width: min(1120px, 100%);
+    max-width: none;
+  }
+  .lq-home-hero .lq-home-search {
+    width: min(1120px, calc(100vw - 80px));
+    max-width: 100%;
+  }
 }

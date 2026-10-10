@@ -4,6 +4,7 @@ function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");
 import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
 import MarketplaceSubscriptionPage from "./pages/CreateListing/MarketplaceSubscriptionPage";
 import MarketplaceCheckoutPage from "./pages/CreateListing/MarketplaceCheckoutPage";
+import MarketplacePaymentPendingPage from "./pages/CreateListing/MarketplacePaymentPendingPage";
 import CreateListingPage from "./pages/CreateListing/CreateListingPage";
 import MarketplaceLoginPage from "./pages/CreateListing/MarketplaceLoginPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />
         <Route path="/marketplace/subscription" element={<MarketplaceSubscriptionPage />} />
         <Route path="/marketplace/checkout" element={<MarketplaceCheckoutPage />} />
+        <Route path="/marketplace/payment-pending" element={<MarketplacePaymentPendingPage />} />
         <Route path="/marketplace/login" element={<MarketplaceLoginPage />} />
         <Route path="/create-listing" element={<CreateListingPage />} />
         <Route path="/owners/create" element={<CreateListingPage />} />

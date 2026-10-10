@@ -159,15 +159,10 @@ export default function AgentDeveloperPlansPage() {
   };
 
   return (
-    <SiteLayout headerVariant="dark">
+    <SiteLayout headerVariant="dark" showHeader={false} showFooter={false}>
       <main className="lq-pricing-page">
         <div className="lq-pricing-container">
           <header className="lq-pricing-header">
-            <span className="lq-pricing-eyebrow">
-              {t(
-                "plans.agentDeveloper.eyebrow"
-              )}
-            </span>
 
             <h1>
               {t(

@@ -1,3 +1,4 @@
+import { isPublicMarketplaceProperty, matchesMarketplaceSection } from "./propertyPresentation";
 const API_BASE_URL = (
   import.meta.env.VITE_API_URL ||
   "https://backend.cortexaaicrm.com/api"
@@ -138,40 +139,12 @@ function getListingDate(item) {
   return Number.isFinite(time) ? time : 0;
 }
 
-export async function getNewestListings({
-  limit = 6,
-  poolSize = 30,
-  signal,
-} = {}) {
-  /*
-   * Existing backend has no "isNewProject" field.
-   * To avoid DB/backend changes, load a larger public pool,
-   * sort by publishedAt/createdAt in React/API layer,
-   * then take the newest N records.
-   *
-   * This section is therefore "newest listings" displayed
-   * under the New Projects design heading until the backend
-   * has real project metadata.
-   */
-  const result = await getPublicProperties(
-    {
-      country: "ecuador",
-      limit: Math.max(poolSize, limit),
-      offset: 0,
-    },
-    signal
-  );
-
-  const items = [...result.items]
-    .sort(
-      (a, b) =>
-        getListingDate(b) - getListingDate(a)
-    )
-    .slice(0, limit);
-
+export async function getNewestListings({ limit = 6, poolSize = 100, signal } = {}) {
+  const result = await getPublicProperties({ country: "ecuador", limit: Math.max(poolSize, limit), offset: 0 }, signal);
   return {
     ...result,
-    items,
+    items: result.items.filter(item => isPublicMarketplaceProperty(item) && matchesMarketplaceSection(item, "new"))
+      .sort((a, b) => getListingDate(b) - getListingDate(a)).slice(0, limit),
   };
 }
 

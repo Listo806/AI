@@ -19,6 +19,7 @@ import {
 } from "../../api/vacationRentalsApi";
 
 import "./MarketplaceBrowseSections.css";
+import { propertyCoverImage, isPublicMarketplaceProperty } from "../../api/propertyPresentation";
 
 const PROPERTY_PLACEHOLDER = "";
 
@@ -74,6 +75,7 @@ function formatPrice(value, type) {
 function normalizeProperty(item) {
   return {
     id: item.id,
+    type: item.type || item.mode || item.listingType || "sale",
     title: item.title || item.name || "Untitled Property",
     city: item.city || "",
     state: item.state || "",
@@ -87,11 +89,7 @@ function normalizeProperty(item) {
       item.lot_size ??
       null,
     image:
-      item.thumbnailUrl ||
-      item.thumbnail_url ||
-      item.coverImage ||
-      (Array.isArray(item.images) ? item.images[0] : null) ||
-      PROPERTY_PLACEHOLDER,
+      propertyCoverImage(item) || PROPERTY_PLACEHOLDER,
   };
 }
 
@@ -123,7 +121,7 @@ function MarketplacePropertyCard({ property, section }) {
   return (
     <article className="lq-vr-card">
       <Link
-        to={`/property?id=${property.id}`}
+        to={`/property/${encodeURIComponent(property.id)}?type=${encodeURIComponent(property.type)}`}
         className="lq-vr-card-link"
       >
         <div className="lq-vr-card-image-wrap">
@@ -217,6 +215,7 @@ function MarketplacePropertyRow({
 }) {
   const { t } = useTranslation();
   const rowRef = useRef(null);
+  if (!loading && items.length === 0) return null;
 
   const scrollRow = (direction) => {
     const element = rowRef.current;
@@ -319,13 +318,13 @@ export default function MarketplaceBrowseSections() {
 
         setData({
           homesForRent:
-            result.homesForRent.items.map(normalizeProperty),
+            result.homesForRent.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
           land:
-            result.land.items.map(normalizeProperty),
+            result.land.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
           commercial:
-            result.commercial.items.map(normalizeProperty),
+            result.commercial.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
           newProjects:
-            result.newProjects.items.map(normalizeProperty),
+            result.newProjects.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
         });
       } catch (error) {
         if (error?.name !== "AbortError") {
