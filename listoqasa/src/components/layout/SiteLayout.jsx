@@ -7,10 +7,12 @@ export default function SiteLayout({
   headerVariant = "light",
   showHeader = true,
   showFooter = true,
+  compactHeader = false,
+  onHeaderBack,
 }) {
   return (
     <div className="lq-site">
-      {showHeader && <Header variant={headerVariant} />}
+      {showHeader && <Header variant={headerVariant} compact={compactHeader} onBack={onHeaderBack} />}
 
       <main>{children}</main>
  

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -56,6 +56,27 @@ export default function Listings() {
   const urlCity = searchParams.get('city') || '';
   const urlPage = parseInt(searchParams.get('page') || '1', 10) || 1;
 
+  // Restore the previous results viewport when returning from a detail page.
+  const scrollKey = `listoqasa:results:${location.pathname}${location.search}`;
+  useLayoutEffect(() => {
+    const saved = sessionStorage.getItem(scrollKey);
+    if (saved == null) return;
+    let attempts = 0;
+    const restore = () => {
+      const target = Number(saved) || 0;
+      window.scrollTo(0, target);
+      if (++attempts < 12 && Math.abs(window.scrollY - target) > 3) {
+        window.setTimeout(restore, 100);
+      } else {
+        sessionStorage.removeItem(scrollKey);
+      }
+    };
+    window.setTimeout(restore, 60);
+  }, [scrollKey]);
+  const openDetail = (path) => {
+    sessionStorage.setItem(scrollKey, String(window.scrollY));
+    navigate(path, { state: { fromSearch: `${location.pathname}${location.search}` } });
+  };
   const PAGE_SIZE = 20;
 
   // Pagination
@@ -386,7 +407,7 @@ export default function Listings() {
   const mapProperties = properties.filter(p => p.latitude && p.longitude);
 
   return (
-    <SiteLayout headerVariant="dark" showFooter={false}>
+    <SiteLayout headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() => navigate(-1)}>
       <div className="listings-page">
         <main className="listings-main">
         <div className="listings-container listings-container--wide">
@@ -736,18 +757,20 @@ export default function Listings() {
                           className="listings-card listings-card--explore listings-card--clickable"
                           role="link"
                           tabIndex={0}
-                          onClick={() => navigate(detailPath)}
+                          onClick={() => openDetail(detailPath)}
                           onKeyDown={(event) => {
                             if (event.key === 'Enter' || event.key === ' ') {
                               event.preventDefault();
-                              navigate(detailPath);
+                              openDetail(detailPath);
                             }
                           }}
                         >
                           <div className="listings-card-media">
                             <Link
                               to={detailPath}
+                              state={{ fromSearch: `${location.pathname}${location.search}` }}
                               className="listings-card-image-wrap"
+                              onMouseDown={() => sessionStorage.setItem(scrollKey, String(window.scrollY))}
                               onClick={(event) => event.stopPropagation()}
                             >
                               {property.thumbnailUrl ? (
@@ -756,10 +779,6 @@ export default function Listings() {
                                   alt={property.title || ''}
                                   className="listings-card-image"
                                   loading="lazy"
-                                  onError={(event) => {
-                                    // Preserve the card image area without showing the browser's broken-image icon or alt text.
-                                    event.currentTarget.style.visibility = 'hidden';
-                                  }}
                                 />
                               ) : (
                                 <div
@@ -927,7 +946,7 @@ export default function Listings() {
                       const path = effectiveMode
                         ? `/property/${property.id}?type=${effectiveMode}`
                         : `/property/${property.id}`;
-                      navigate(path);
+                      openDetail(path);
                     }}
                   />
                 </div>

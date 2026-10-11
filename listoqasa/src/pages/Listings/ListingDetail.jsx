@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
   Bath,
@@ -50,8 +50,11 @@ function imageUrl(item) {
 export default function ListingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get('type') || '';
+  const searchReturn = location.state?.fromSearch || (typeParam === 'rent' ? '/rent' : '/buy');
+  const goBackToResults = () => navigate(searchReturn);
 
   const [property, setProperty] = useState(null);
   const [media, setMedia] = useState([]);
@@ -199,7 +202,7 @@ export default function ListingDetail() {
 
   if (loading) {
     return (
-      <SiteLayout headerVariant="dark">
+      <SiteLayout headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
         <main className="lq-detail-page">
           <div className="lq-detail-shell">
             <div className="listings-skeleton" />
@@ -212,11 +215,11 @@ export default function ListingDetail() {
 
   if (error || !property) {
     return (
-      <SiteLayout headerVariant="dark">
+      <SiteLayout headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
         <main className="lq-detail-page">
           <div className="lq-detail-shell">
             <div className="listings-error">{error || 'Property not found'}</div>
-            <Link to={typeParam === 'rent' ? '/rent' : '/buy'} className="lq-detail-back">
+            <Link to={searchReturn} className="lq-detail-back">
               <ArrowLeft size={16} />
               Back to search
             </Link>
@@ -259,12 +262,12 @@ export default function ListingDetail() {
       : null;
 
   return (
-    <SiteLayout headerVariant="dark">
+    <SiteLayout headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
       <main className="lq-detail-page">
         <div className="lq-detail-shell">
           <div className="lq-detail-topbar">
             <Link
-              to={typeParam === 'rent' ? '/rent' : '/buy'}
+              to={searchReturn}
               className="lq-detail-back"
             >
               <ArrowLeft size={16} />
@@ -496,7 +499,7 @@ export default function ListingDetail() {
             <section className="lq-detail-similar">
               <div className="lq-detail-similar-head">
                 <h2>Similar properties</h2>
-                <Link to={typeParam === 'rent' ? '/rent' : '/buy'}>View all →</Link>
+                <Link to={searchReturn}>View all →</Link>
               </div>
 
               <div className="lq-detail-similar-grid">

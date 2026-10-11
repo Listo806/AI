@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, XCircle, RefreshCw, Landmark } from 'lucide-react';
+import { CheckCircle2, XCircle, RefreshCw, Landmark, Clock3, DollarSign, Search, CalendarDays, FileText, History, AlertTriangle, X } from 'lucide-react';
 import apiClient from '../../api/apiClient';
 import { useTheme } from '../../theme/ThemeProvider';
 import { useTranslation } from 'react-i18next';
@@ -111,71 +111,139 @@ const copy = {
     "bankReference": "Referência bancária:"
   }
 };
-const endpoint = '/admin/marketplace/bank-transfers';
-const money = (cents, currency = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(Number(cents || 0) / 100);
-const date = (value) => value ? new Date(value).toLocaleString() : '—';
-const styles = {
-  page: { padding: '24px', maxWidth: 1320, margin: '0 auto', color: 'var(--text-primary, #132342)' },
-  panel: { background: 'var(--card-bg, #fff)', border: '1px solid #dbe3f0', borderRadius: 12, padding: 18 },
-  input: { width: '100%', minHeight: 40, border: '1px solid #cbd5e1', borderRadius: 8, padding: 10, background: 'transparent', color: 'inherit' },
-  button: { padding: '9px 13px', borderRadius: 8, border: '1px solid #cbd5e1', cursor: 'pointer', background: 'transparent', color: 'inherit' },
+
+const more = {
+ en: {period:'Reporting period',thisMonth:'This Month',allTime:'All time',pendingQueue:'Current outstanding queue',approvedAmount:'Approved Amount',search:'Search customer or bank reference',dateFilter:'Submitted date',start:'Start date',end:'End date',billing:'Billing period',monthly:'Monthly',yearly:'Yearly',name:'Customer name',email:'Email',receipt:'Payment receipt',noReceipt:'No receipt uploaded.',reviewHistory:'Review history',noHistory:'No previous reviews.',verify:'I confirmed this payment reached our bank account.',verifyNeeded:'Confirm receipt of funds before approving.',verifyWarning:'Verify the deposit in your bank account. A reference or receipt alone does not confirm payment.',approveActivate:'Approve & activate plan',rejectPayment:'Reject payment',footnote:'Approval activates the Marketplace plan. Rejection leaves it inactive.',notProvided:'Not provided',showing:'Showing',requests:'requests',all:'All statuses',reviewNote:'Record your verification details or reason for rejection.',noResults:'No matching transfers.',dateError:'Start date must not be after end date.'},
+ es: {period:'Período del informe',thisMonth:'Este mes',allTime:'Todo el período',pendingQueue:'Solicitudes pendientes',approvedAmount:'Importe aprobado',search:'Buscar cliente o referencia bancaria',dateFilter:'Fecha de envío',start:'Fecha inicial',end:'Fecha final',billing:'Período de facturación',monthly:'Mensual',yearly:'Anual',name:'Nombre del cliente',email:'Correo',receipt:'Comprobante de pago',noReceipt:'No se ha subido comprobante.',reviewHistory:'Historial de revisión',noHistory:'Sin revisiones anteriores.',verify:'Confirmo que el pago llegó a nuestra cuenta bancaria.',verifyNeeded:'Confirme la recepción de fondos antes de aprobar.',verifyWarning:'Verifique el depósito en su banco. Una referencia o comprobante no confirma el pago.',approveActivate:'Aprobar y activar plan',rejectPayment:'Rechazar pago',footnote:'La aprobación activa el plan. El rechazo lo deja inactivo.',notProvided:'No proporcionado',showing:'Mostrando',requests:'solicitudes',all:'Todos los estados',reviewNote:'Anote los detalles de verificación o el motivo del rechazo.',noResults:'No hay transferencias coincidentes.',dateError:'La fecha inicial no puede ser posterior a la final.'},
+ pt: {period:'Período do relatório',thisMonth:'Este mês',allTime:'Todo o período',pendingQueue:'Fila de análise pendente',approvedAmount:'Valor aprovado',search:'Buscar cliente ou referência bancária',dateFilter:'Data de envio',start:'Data inicial',end:'Data final',billing:'Período de cobrança',monthly:'Mensal',yearly:'Anual',name:'Nome do cliente',email:'E-mail',receipt:'Comprovante de pagamento',noReceipt:'Nenhum comprovante enviado.',reviewHistory:'Histórico de análise',noHistory:'Nenhuma análise anterior.',verify:'Confirmo que o pagamento chegou à nossa conta bancária.',verifyNeeded:'Confirme o recebimento dos fundos antes de aprovar.',verifyWarning:'Verifique o depósito na conta bancária. Uma referência ou comprovante não confirma o pagamento.',approveActivate:'Aprovar e ativar plano',rejectPayment:'Rejeitar pagamento',footnote:'A aprovação ativa o plano. A rejeição o mantém inativo.',notProvided:'Não informado',showing:'Exibindo',requests:'solicitações',all:'Todos os status',reviewNote:'Registre os detalhes da verificação ou o motivo da rejeição.',noResults:'Nenhuma transferência encontrada.',dateError:'A data inicial não pode ser posterior à final.'}
 };
-const asRows = (res) => Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : Array.isArray(res) ? res : [];
+const endpoint = '/admin/marketplace/bank-transfers';
+const rowsOf = (response) => Array.isArray(response?.data?.data) ? response.data.data : Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+const amount = (row) => Number(row.price_cents ?? row.amount_cents ?? 0) / 100;
+const money = (value, currency = 'USD', locale = 'en-US') => new Intl.NumberFormat(locale, {style:'currency',currency:currency || 'USD'}).format(Number(value || 0));
+const reference = r => r.bank_transaction_reference || r.transaction_reference || r.transfer_reference || r.reference || '—';
+const planName = (key) => {
+ const known = {'owner-standard':'Standard Exposure','owner-enhanced':'Enhanced Exposure','owner-maximum':'Maximum Exposure','agent-essential':'Essential','agent-growth':'Growth','agent-premium':'Premium'};
+ return known[key] || String(key || '—').split('-').filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+};
+const formatDateOnly = (d) => d ? new Date(d).toISOString().slice(0,10) : '';
+const isThisMonth = (value) => {if(!value)return false; const d=new Date(value),now=new Date();return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();};
 export default function MarketplaceBankTransferApprovals() {
-  const { isDark } = useTheme();
-  const { i18n } = useTranslation();
-  const lang = String(i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2);
-  const tr = copy[lang] || copy.en;
-  const locale = lang === 'es' ? 'es-EC' : lang === 'pt' ? 'pt-BR' : 'en-US';
-  const formatDate = (value) => value ? new Date(value).toLocaleString(locale) : '—';
-  const palette = isDark ? {
-    text: '#f1f5f9', muted: '#a9b8cf', panel: '#151c2b',
-    border: '#344258', input: '#1e293b', button: '#263348',
-    warning: '#fbbf24', row: '#344258'
-  } : {
-    text: '#14233d', muted: '#64748b', panel: '#ffffff',
-    border: '#dbe3f0', input: '#ffffff', button: '#ffffff',
-    warning: '#a45109', row: '#e2e8f0'
-  };
-  const panelStyle = { ...styles.panel, background: palette.panel, color: palette.text, borderColor: palette.border };
-  const buttonStyle = { ...styles.button, background: palette.button, color: palette.text, borderColor: palette.border };
-  const inputStyle = { ...styles.input, background: palette.input, color: palette.text, borderColor: palette.border };
-  const cellStyle = { padding: '12px 10px', borderBottom: `1px solid ${palette.row}`, color: palette.text, verticalAlign: 'top', overflowWrap: 'anywhere' };
-  const [status, setStatus] = useState('pending_review');
-  const [rows, setRows] = useState([]);
-  const [busy, setBusy] = useState(false);
-  const [reviewing, setReviewing] = useState(null);
-  const [note, setNote] = useState('');
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const load = useCallback(async () => {
-    setBusy(true); setError('');
-    try { setRows(asRows(await apiClient.request(`${endpoint}${status ? `?status=${encodeURIComponent(status)}` : ''}`))); }
-    catch (err) { setError(err?.message || tr.loadError); }
-    finally { setBusy(false); }
-  }, [status]);
-  useEffect(() => { load(); }, [load]);
-  async function review(approve) {
-    if (!reviewing || !note.trim()) { setError(tr.noteRequired); return; }
-    if (!window.confirm((approve ? tr.confirmApprove : tr.confirmReject))) return;
-    setBusy(true); setError(''); setMessage('');
-    try {
-      await apiClient.request(`${endpoint}/${encodeURIComponent(reviewing.id)}/review`, { method: 'POST', body: JSON.stringify({ approve, note: note.trim() }) });
-      setMessage((approve ? tr.successApprove : tr.successReject));
-      setReviewing(null); setNote(''); await load();
-    } catch (err) { setError(err?.message || tr.reviewError); }
-    finally { setBusy(false); }
-  }
-  return <div style={{ ...styles.page, color: palette.text }}>
-    <header style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20 }}>
-      <div><h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>{tr.title}</h1><p style={{ color: palette.muted, margin: '6px 0 0' }}>{tr.subtitle}</p></div>
-      <button style={buttonStyle} onClick={load} disabled={busy}><RefreshCw size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />{tr.refresh}</button>
-    </header>
-    {error && <p role="alert" style={{ color: '#b91c1c' }}>{error}</p>}{message && <p role="status" style={{ color: '#15803d' }}>{message}</p>}
-    <div style={{ ...panelStyle, marginBottom: 18, display: 'flex', gap: 12, alignItems: 'center' }}><Landmark size={20} /><label htmlFor="bank-status">{tr.status}</label><select id="bank-status" style={{ ...inputStyle, width: 200, colorScheme: isDark ? 'dark' : 'light' }} value={status} onChange={e => setStatus(e.target.value)}><option value="pending_review">{tr.pending}</option><option value="approved">{tr.approved}</option><option value="rejected">{tr.rejected}</option><option value="">{tr.history}</option></select></div>
-    <div style={{ ...panelStyle, overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 930, textAlign: 'left', fontSize: 14 }}><thead><tr>{[tr.submitted,tr.customer,tr.plan,tr.amount,tr.reference,tr.status,tr.reviewer,tr.actions].map(h => <th key={h} style={{ padding: '12px 10px', borderBottom: `1px solid ${palette.border}`, color: palette.text }}>{h}</th>)}</tr></thead><tbody>{rows.map(r => <tr key={r.id}>{[
-      formatDate(r.created_at), r.customer_email || r.user_id, r.plan_key, money(r.price_cents, r.currency), r.transaction_reference || r.bank_transaction_reference || r.transfer_reference || '—', (r.status === 'pending_review' ? tr.pending : r.status === 'approved' ? tr.approved : r.status === 'rejected' ? tr.rejected : r.status), r.reviewed_by ? `${r.reviewed_by} · ${formatDate(r.reviewed_at)}` : '—'
-    ].map((v, i) => <td key={i} style={cellStyle}>{v}</td>)}<td style={{ padding: 10, borderBottom: `1px solid ${palette.row}`, color: palette.text }}>{r.status === 'pending_review' ? <button style={buttonStyle} onClick={() => { setReviewing(r); setNote(''); setError(''); }}>{tr.review}</button> : <span title={r.review_note || ''}>{r.review_note || tr.reviewed}</span>}</td></tr>)}{!busy && rows.length === 0 && <tr><td colSpan={8} style={{ padding: 28, textAlign: 'center', color: palette.muted }}>{tr.empty}</td></tr>}</tbody></table>{busy && <p role="status">{tr.loading}</p>}</div>
-    {reviewing && <div role="dialog" aria-modal="true" aria-label={tr.reviewTitle} style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#0008', display: 'grid', placeItems: 'center', padding: 16 }}><div style={{ ...panelStyle, width: 'min(100%, 520px)', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', boxShadow: '0 18px 50px #0003' }}><h2 style={{ marginTop: 0 }}>{tr.reviewTitle}</h2><p><strong>{reviewing.customer_email}</strong> · {reviewing.plan_key} · {money(reviewing.price_cents, reviewing.currency)}</p><p>{tr.bankReference} {reviewing.transaction_reference || reviewing.bank_transaction_reference || reviewing.transfer_reference || '—'}</p><p style={{ color: palette.warning }}>{tr.warning}</p><label htmlFor="bank-review-note">{tr.notes}</label><textarea id="bank-review-note" style={{ ...inputStyle, minHeight: 100, marginTop: 8 }} value={note} maxLength={1000} onChange={e => setNote(e.target.value)} /><div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}><button style={{ ...buttonStyle, background: '#16a34a', color: '#fff' }} disabled={busy || !note.trim()} onClick={() => review(true)}><CheckCircle2 size={16} style={{ verticalAlign: 'middle' }} /> {tr.approve}</button><button style={{ ...buttonStyle, background: '#dc2626', color: '#fff' }} disabled={busy || !note.trim()} onClick={() => review(false)}><XCircle size={16} style={{ verticalAlign: 'middle' }} /> {tr.reject}</button><button style={buttonStyle} disabled={busy} onClick={() => setReviewing(null)}>{tr.cancel}</button></div></div></div>}
-  </div>;
+ const {isDark} = useTheme();
+ const {i18n} = useTranslation();
+ const lang = String(i18n.resolvedLanguage || i18n.language || 'en').slice(0,2);
+ const tr = {...(copy[lang] || copy.en),...(more[lang] || more.en)};
+ const locale = lang==='es'?'es-EC':lang==='pt'?'pt-BR':'en-US';
+ const date = d => d ? new Date(d).toLocaleString(locale) : '—';
+ const colors = isDark ? {bg:'#151d2b',text:'#f2f6fc',muted:'#a7b6ce',border:'#334258',input:'#202c40',sub:'#26344b'} : {bg:'#fff',text:'#13254b',muted:'#7586a7',border:'#d5e1f3',input:'#fff',sub:'#f5f8fd'};
+ const [allRows,setAllRows] = useState([]);
+ const [status,setStatus] = useState('pending_review');
+ const [search,setSearch] = useState('');
+ const [from,setFrom] = useState('');
+ const [to,setTo] = useState('');
+ const [period,setPeriod] = useState('month');
+ const [busy,setBusy] = useState(false);
+ const [reviewing,setReviewing] = useState(null);
+ const [note,setNote] = useState('');
+ const [verified,setVerified] = useState(false);
+ const [error,setError] = useState('');
+ const [message,setMessage] = useState('');
+ const [sortAsc,setSortAsc] = useState(false);
+ const load = useCallback(async () => {
+  setBusy(true);setError('');
+  try {setAllRows(rowsOf(await apiClient.request(endpoint)));}
+  catch(err){setError(err?.message || 'Unable to load bank transfers.');}
+  finally {setBusy(false);}
+ },[]);
+ useEffect(()=>{load();},[load]);
+ const filtered = allRows.filter(r => {
+  if(status && r.status!==status)return false;
+  if(from && formatDateOnly(r.created_at)<from)return false;
+  if(to && formatDateOnly(r.created_at)>to)return false;
+  const q=search.trim().toLowerCase();
+  return !q || [r.customer_email,r.customer_name,r.user_id,reference(r),r.plan_key].some(v=>String(v||'').toLowerCase().includes(q));
+ }).sort((a,b)=>sortAsc ? new Date(a.created_at)-new Date(b.created_at) : new Date(b.created_at)-new Date(a.created_at));
+ const periodRows=allRows.filter(r=>period==='all' || isThisMonth(r.reviewed_at || r.created_at));
+ const approvedRows=periodRows.filter(r=>r.status==='approved');
+ const pendingCount=allRows.filter(r=>r.status==='pending_review').length;
+ const approvedTotal=approvedRows.reduce((sum,r)=>sum+amount(r),0);
+ const panel={background:colors.bg,color:colors.text,border:`1px solid ${colors.border}`,borderRadius:12};
+ const field={background:colors.input,color:colors.text,border:`1px solid ${colors.border}`,borderRadius:8,padding:'5px 12px',minWidth:0,font:'inherit',colorScheme:isDark?'dark':'light'};
+ const btn={...field,cursor:'pointer',display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8};
+ const badge=(value)=>{const good=value==='approved',bad=value==='rejected';return <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:999,background:good?'#e5f8ec':bad?'#fee8e9':'#fff1d6',color:good?'#087d40':bad?'#ba1e2b':'#995300',fontWeight:600,whiteSpace:'nowrap'}}>{good?<CheckCircle2 size={15}/>:bad?<XCircle size={15}/>:<Clock3 size={15}/>} {good?tr.approved:bad?tr.rejected:tr.pending}</span>};
+ async function review(approve){
+  if(!reviewing || !note.trim()){setError(tr.noteRequired);return;}
+  if(approve&&!verified){setError(tr.verifyNeeded);return;}
+  if(!window.confirm(approve?tr.confirmApprove:tr.confirmReject))return;
+  setBusy(true);setError('');setMessage('');
+  try {
+   await apiClient.request(`${endpoint}/${encodeURIComponent(reviewing.id)}/review`,{method:'POST',body:JSON.stringify({approve,note:note.trim()})});
+   setMessage(approve?tr.successApprove:tr.successReject);setReviewing(null);setNote('');setVerified(false);await load();
+  }catch(err){setError(err?.message || tr.reviewError);}
+  finally{setBusy(false);}
+ }
+ const close=()=>{setReviewing(null);setNote('');setVerified(false);setError('');};
+ const statCards=[
+  {label:tr.pending,count:pendingCount,desc:tr.pendingQueue,Icon:Clock3,color:'#1681ef',bg:'#e7f1ff'},
+  {label:tr.approved,count:approvedRows.length,desc:period==='month'?tr.thisMonth:tr.allTime,Icon:CheckCircle2,color:'#0b9a50',bg:'#e6f8ed'},
+  {label:tr.rejected,count:periodRows.filter(r=>r.status==='rejected').length,desc:period==='month'?tr.thisMonth:tr.allTime,Icon:XCircle,color:'#d92535',bg:'#fee8eb'},
+  {label:tr.approvedAmount,count:money(approvedTotal,'USD',locale),desc:period==='month'?tr.thisMonth:tr.allTime,Icon:DollarSign,color:'#1681ef',bg:'#e7f1ff'}
+ ];
+ return <div style={{maxWidth:1900,margin:'0 auto',color:colors.text}}>
+  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:16,marginBottom:24}}>
+   <div><h1 style={{fontSize:'26px',fontWeight:700}}>{tr.title}</h1><p style={{fontSize:'14px',margin:0,color:colors.muted}}>{tr.subtitle}</p></div>
+   <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+    <label style={{...field,display:'flex',alignItems:'center',gap:9}}><CalendarDays size={18}/>{tr.period}: <select value={period} onChange={e=>setPeriod(e.target.value)} style={{background:'transparent',color:'inherit',border:0,font:'inherit'}}><option value="month" style={{color:'#14233d'}}>{tr.thisMonth}</option><option value="all" style={{color:'#14233d'}}>{tr.allTime}</option></select></label>
+    <button style={btn} disabled={busy} onClick={load}><RefreshCw size={17}/>{tr.refresh}</button>
+   </div>
+  </div>
+  {error&&!reviewing&&<p role="alert" style={{color:'#dc3545'}}>{error}</p>}
+  {message&&<p role="status" style={{color:'#16a34a'}}>{message}</p>}
+  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(215px,1fr))',gap:12,marginBottom:20}}>
+   {statCards.map(({label,count,desc,Icon,color,bg})=><div key={label} style={{...panel,padding:'18px 10px',display:'flex',alignItems:'center',gap:10}}>
+    <span style={{width:60,height:60,borderRadius:'50%',background:bg,color,display:'grid',placeItems:'center',flexShrink:0}}><Icon size={30}/></span><div><div style={{fontWeight:600,fontSize:17}}>{label}</div><div style={{fontSize:22,fontWeight:700,margin:'4px 0'}}>{count}</div><div style={{fontSize:14,color:colors.muted}}>{desc}</div></div>
+   </div>)}
+  </div>
+  <div style={{...panel,padding:18,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',marginBottom:20}}>
+   <label style={{...field,display:'flex',alignItems:'center',gap:9,flex:'2 1 300px'}}><Search size={19} color={colors.muted}/><input aria-label={tr.search} placeholder={tr.search} value={search} onChange={e=>setSearch(e.target.value)} style={{border:0,outline:0,background:'transparent',color:'inherit',font:'inherit',width:'100%'}}/></label>
+   <label style={{display:'flex',alignItems:'center',gap:8,flex:'1 1 210px'}}>{tr.status}<select style={{...field,flex:1}} value={status} onChange={e=>setStatus(e.target.value)}><option value="">{tr.all}</option><option value="pending_review">{tr.pending}</option><option value="approved">{tr.approved}</option><option value="rejected">{tr.rejected}</option></select></label>
+   <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}><span>{tr.dateFilter}</span><input aria-label={tr.start} title={tr.start} type="date" style={{...field,flex:'1 1 125px',width:125}} value={from} max={to||undefined} onChange={e=>setFrom(e.target.value)}/><span>–</span><input aria-label={tr.end} title={tr.end} type="date" style={{...field,flex:'1 1 125px',width:125}} value={to} min={from||undefined} onChange={e=>setTo(e.target.value)}/></div>
+  </div>
+  <div style={{...panel,overflowX:'auto'}}>
+   <table style={{width:'100%',borderCollapse:'collapse',minWidth:980,textAlign:'left',fontSize:12}}>
+    <thead><tr style={{background:colors.sub}}>{[tr.submitted,tr.customer,tr.plan,`${tr.amount} (USD)`,tr.reference,tr.status,tr.reviewer,tr.actions].map((h,i)=><th key={i} style={{padding:'17px 14px',borderBottom:`1px solid ${colors.border}`,fontWeight:700}}>{i===0?<button style={{background:'none',border:0,color:'inherit',font:'inherit',fontWeight:700,cursor:'pointer'}} onClick={()=>setSortAsc(v=>!v)}>{h} {sortAsc?'▴':'▾'}</button>:h}</th>)}</tr></thead>
+    <tbody>{filtered.map(r=><tr key={r.id} style={{borderBottom:`1px solid ${colors.border}`}}>
+     <td style={{padding:14,whiteSpace:'nowrap'}}>{date(r.created_at)}</td><td style={{padding:14,overflowWrap:'anywhere'}}>{r.customer_email||r.user_id||'—'}</td>
+     <td style={{padding:14}}>{planName(r.plan_key)}<div style={{color:colors.muted,marginTop:4}}>{(r.billing_period||r.billing_cycle) ? (String(r.billing_period||r.billing_cycle).toLowerCase().startsWith('year')?tr.yearly:tr.monthly) : '—'}</div></td>
+     <td style={{padding:14,whiteSpace:'nowrap'}}>{money(amount(r),r.currency,locale)}</td><td style={{padding:14,overflowWrap:'anywhere'}}>{reference(r)}</td><td style={{padding:14}}>{badge(r.status)}</td>
+     <td style={{padding:14}}>{r.reviewed_by? <>{r.reviewer_email||r.reviewed_by}<div style={{color:colors.muted}}>{date(r.reviewed_at)}</div></>:'—'}</td>
+     <td style={{padding:14}}>{r.status==='pending_review'?<button style={{...btn,color:'#1674ee',borderColor:'#2585ff'}} disabled={busy} onClick={()=>{setReviewing(r);setNote('');setVerified(false);setError('');}}>{tr.review}</button>:<button style={btn} onClick={()=>{setReviewing(r);setNote(r.review_note||'');setVerified(false);setError('');}}>{tr.history}</button>}</td>
+    </tr>)}
+    {!busy&&!filtered.length&&<tr><td colSpan={8} style={{padding:35,textAlign:'center',color:colors.muted}}>{tr.noResults}</td></tr>}</tbody>
+   </table>
+   <div style={{padding:'15px 20px',color:colors.muted}}>{busy?tr.loading:`${tr.showing} ${filtered.length} ${tr.requests}`}</div>
+  </div>
+  {reviewing&&<div role="presentation" style={{position:'fixed',inset:0,zIndex:10000,background:'rgba(9,17,30,.68)',display:'grid',placeItems:'center',padding:16}} onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)close();}}>
+   <div role="dialog" aria-modal="true" aria-label={tr.reviewTitle} style={{...panel,fontSize:'13px',width:'min(100%,780px)',maxHeight:'calc(100dvh - 32px)',overflowY:'auto',padding:'14px',boxShadow:'0 18px 55px #0004'}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}><h2 style={{margin:0,fontSize:21}}>{tr.reviewTitle}</h2><button aria-label={tr.cancel} onClick={close} style={{...btn,border:0}}><X size={22}/></button></div>
+    <div style={{margin:'0 0 8px'}}>{badge(reviewing.status)}</div>
+    <div style={{borderTop:`1px solid ${colors.border}`,paddingTop:16,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:'8px 24px'}}>
+     {[[tr.name,reviewing.customer_name||tr.notProvided],[tr.email,reviewing.customer_email||'—'],[tr.plan,planName(reviewing.plan_key)],[tr.billing,(reviewing.billing_period||reviewing.billing_cycle) ? (String(reviewing.billing_period||reviewing.billing_cycle).toLowerCase().startsWith('year')?tr.yearly:tr.monthly) : '—'],[tr.amount,money(amount(reviewing),reviewing.currency,locale)],[tr.submitted,date(reviewing.created_at)],[tr.reference,reference(reviewing)]].map(([label,value])=><div key={label} style={{display:'grid',gridTemplateColumns:'125px minmax(0,1fr)',gap:10}}><span style={{color:colors.muted,fontWeight:600}}>{label}</span><span style={{overflowWrap:'anywhere'}}>{value}</span></div>)}
+    </div>
+    <div style={{...panel,background:colors.sub,padding:'8px 15px',marginTop:20,display:'flex',gap:15,alignItems:'center'}}><FileText size={26} color="#287af0"/><div><strong>{tr.receipt}</strong><div style={{color:colors.muted,marginTop:4}}>{tr.noReceipt}</div></div></div>
+    <div style={{...panel,background:colors.sub,padding:'8px 15px',marginTop:14,display:'flex',gap:15,alignItems:'flex-start'}}><History size={26} color="#287af0"/><div><strong>{tr.reviewHistory}</strong><div style={{color:colors.muted,marginTop:5}}>{reviewing.reviewed_at?<>{badge(reviewing.status)} · {reviewing.reviewer_email||reviewing.reviewed_by||'—'} · {date(reviewing.reviewed_at)}{reviewing.review_note&&<div style={{marginTop:7}}>{reviewing.review_note}</div>}</>:tr.noHistory}</div></div></div>
+    {reviewing.status==='pending_review'&&<>
+     <div style={{fontSize:'13px',display:'flex',alignItems:'center',gap:10,background:isDark?'#453519':'#fff5e5',color:isDark?'#ffca78':'#a85d00',border:'1px solid #f8d99b',borderRadius:9,padding:"5px 12px",marginTop:14}}><AlertTriangle size={21}/>{tr.verifyWarning}</div>
+     <label style={{display:'flex',alignItems:'center',gap:10,marginTop:12,cursor:'pointer'}}><input type="checkbox" checked={verified} onChange={e=>setVerified(e.target.checked)}/>{tr.verify} <span style={{color:'#e11d48'}}>*</span></label>
+     <label htmlFor="bank-review-note" style={{display:'block',fontWeight:600,margin:'12px 0 7px'}}>{tr.notes} <span style={{color:'#e11d48'}}>*</span></label>
+     <textarea id="bank-review-note" placeholder={tr.reviewNote} value={note} maxLength={1000} onChange={e=>setNote(e.target.value)} style={{...field,width:'100%',boxSizing:'border-box',minHeight:65,resize:'vertical'}}/>
+     {error&&<p role="alert" style={{color:'#dc3545'}}>{error}</p>}
+    </>}
+    <div style={{borderTop:`1px solid ${colors.border}`,marginTop:11,paddingTop:12,display:'flex',justifyContent:'flex-end',gap:10,flexWrap:'wrap'}}>
+     <button style={btn} disabled={busy} onClick={close}>{tr.cancel}</button>
+     {reviewing.status==='pending_review'&&<><button style={{...btn,background:'#df2b34',borderColor:'#df2b34',color:'#fff'}} disabled={busy||!note.trim()} onClick={()=>review(false)}><XCircle size={17}/>{tr.rejectPayment}</button><button style={{...btn,background:'#16a05b',borderColor:'#16a05b',color:'#fff',opacity:busy||!note.trim()||!verified ? .55 : 1}} disabled={busy||!note.trim()||!verified} onClick={()=>review(true)}><CheckCircle2 size={17}/>{tr.approveActivate}</button></>}
+    </div><div style={{textAlign:'right',fontSize:12,color:colors.muted,marginTop:7}}>{tr.footnote}</div>
+   </div>
+  </div>}
+ </div>;
 }

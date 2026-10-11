@@ -146,3 +146,12 @@
     width: 300px;
   }
 }
+
+/* Compact header only on search results and individual property details. */
+.lq-header-compact .lq-main-nav,
+.lq-header-compact .lq-header-action-link { display: none !important; }
+.lq-header-compact .lq-header-inner { display: flex; align-items: center; }
+.lq-header-compact .lq-header-actions { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.lq-header-compact .lq-compact-back { display: inline-flex; align-items: center; gap: 7px; margin-left: 24px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.lq-header-compact .lq-account-dropdown { display: none !important; }
+@media(max-width: 600px) { .lq-header-compact .lq-compact-back { margin-left: 10px; } .lq-header-compact .lq-compact-back span { display: none; } .lq-header-compact .lq-header-actions { gap: 8px; } }

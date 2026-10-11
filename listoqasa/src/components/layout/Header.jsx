@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import {
   Link,
   NavLink,
+  useNavigate,
 } from "react-router-dom";
 
 import {
@@ -17,6 +18,7 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
@@ -24,8 +26,11 @@ import "./HeaderListProperty.css";
 
 export default function Header({
   variant = "light",
+  compact = false,
+  onBack,
 }) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const currentLanguage = (
     i18n.resolvedLanguage ||
     i18n.language ||
@@ -122,6 +127,7 @@ export default function Header({
     };
 
   const handleMenuButtonClick = () => {
+    if (compact) { setMobileOpen(true); return; }
     if (
       typeof window !== "undefined" &&
       window.matchMedia("(max-width: 900px)").matches
@@ -133,7 +139,7 @@ export default function Header({
   return (
     <>
       <header
-        className={`lq-header ${
+        className={`lq-header ${compact ? "lq-header-compact" : ""} ${
           isDark
             ? "lq-header-dark"
             : "lq-header-light"
@@ -157,6 +163,7 @@ export default function Header({
             </span>
           </Link>
 
+          {compact && <button type="button" className="lq-compact-back" aria-label="Go back" onClick={() => onBack ? onBack() : navigate(-1)}><ArrowLeft size={20}/><span>{t("common.back", { defaultValue: "Back" })}</span></button>}
           <nav className="lq-main-nav">
             <div
               className={`lq-list-property-nav ${
@@ -401,6 +408,7 @@ export default function Header({
         </div>
 
         <nav className="lq-mobile-nav">
+          {compact && <Link to="/sign-in" onClick={() => setMobileOpen(false)}>{t("header.accountMenu.signIn", { defaultValue: "Sign In" })}</Link>}
           <div className="lq-mobile-list-property">
             <span className="lq-mobile-list-property-title">
               {t("header.listProperty")}
