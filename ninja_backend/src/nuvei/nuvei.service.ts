@@ -316,6 +316,8 @@ export class NuveiService {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
+    await this.db.query(`ALTER TABLE nuvei_subscriptions ADD COLUMN IF NOT EXISTS billing_cycle VARCHAR(10) NOT NULL DEFAULT 'monthly'`);
+
     // Idempotency: one recurring charge per subscription per billing period.
     await this.db.query(
       `CREATE UNIQUE INDEX IF NOT EXISTS nuvei_tx_recurring_period_uidx
@@ -1011,6 +1013,7 @@ export class NuveiService {
   async startActivation(input: {
     userId: string;
     planKey: string;
+    billingCycle?: string;
     cardId: string;
     consentIp?: string;
     browserInfo?: any; // for 3DS2
@@ -1030,13 +1033,15 @@ export class NuveiService {
     const requestedKey = String(input.planKey || '').trim().toLowerCase();
     const plan = requestedKey === 'ecommerce' ? await this.ecommercePlan() : this.plan(requestedKey);
     const productKey = plan.key === 'ecommerce' ? 'ecommerce' : 'agentic';
+    const billingCycle = productKey === 'ecommerce' ? String(input.billingCycle || 'monthly').toLowerCase() : 'monthly';
+    if (!['monthly','annual'].includes(billingCycle)) throw new BadRequestException('Invalid billing cycle.');
     const user = await this.userRow(input.userId);
 
     // Nuvei's documented staging cards for 3DS require a specific order
     // description + amount ("3DS Challenge" 151 / "3DS FrictionLess" >=150).
     // Honored ONLY on the staging gateway so the challenge screen can be tested.
-    let activationAmount = plan.activation;
-    let activationDescription = plan.key === 'ecommerce' ? `Cortexa ${plan.label} monthly subscription` : `Cortexa ${plan.label} activation`;
+    let activationAmount = productKey === 'ecommerce' && billingCycle === 'annual' ? 3804 : plan.activation;
+    let activationDescription = plan.key === 'ecommerce' ? `Cortexa ${plan.label} ${billingCycle} subscription` : `Cortexa ${plan.label} activation`;
     const scenario = String(input.testScenario || '').trim().toLowerCase();
     if (scenario && this.client.environment() === 'staging') {
       if (scenario === '3ds_challenge') {
@@ -1134,9 +1139,9 @@ export class NuveiService {
       const { rows: subRows } = await this.db.query(
       `INSERT INTO nuvei_subscriptions
          (user_id, team_id, email, plan_key, product_key, provision_plan, status,
-          activation_amount, monthly_amount, card_id, dev_reference,
+          activation_amount, monthly_amount, billing_cycle, card_id, dev_reference,
           consent_at, consent_ip, return_url, acquisition)
-       VALUES ($1,$2,$3,$4,$5,$6,'pending_activation',$7,$8,$9,$10,NOW(),$11,$12,$13)
+       VALUES ($1,$2,$3,$4,$5,$6,'pending_activation',$7,$8,$14,$9,$10,NOW(),$11,$12,$13)
        RETURNING id`,
       [
         input.userId,
@@ -1146,7 +1151,7 @@ export class NuveiService {
         productKey,
         plan.provisionPlan,
         activationAmount,
-        plan.monthly,
+        productKey === 'ecommerce' && billingCycle === 'annual' ? 3804 : plan.monthly,
         cardId,
         dev_reference,
         input.consentIp || null,
@@ -1157,6 +1162,7 @@ export class NuveiService {
           // payment_confirmed_backend event joins the visitor's GA4 user.
           ga_client_id: cleanGaClientId(input.gaClientId),
         }),
+        billingCycle,
       ],
     );
       subscriptionId = subRows[0].id;
@@ -1526,7 +1532,8 @@ export class NuveiService {
     // recurring engine one month later.
     if (plan.key === 'ecommerce') {
       const now = new Date();
-      const next = this.addMonths(now, 1);
+      const { rows: cycleRows } = await this.db.query(`SELECT billing_cycle FROM nuvei_subscriptions WHERE id=$1`, [subscriptionId]);
+      const next = this.addMonths(now, cycleRows[0]?.billing_cycle === 'annual' ? 12 : 1);
       const { rows } = await this.db.query(
         `UPDATE nuvei_subscriptions
             SET status='active', trial_end=NULL, next_billing_date=$2,
@@ -1784,7 +1791,7 @@ export class NuveiService {
         only = ` AND s.id = $1`;
       }
       const { rows } = await this.db.query(
-        `SELECT s.id, s.user_id, s.team_id, s.email, s.plan_key, s.provision_plan, s.monthly_amount,
+        `SELECT s.id, s.user_id, s.team_id, s.email, s.plan_key, s.provision_plan, s.monthly_amount, s.billing_cycle,
                 s.card_id, s.next_billing_date, s.cancel_at_period_end, s.status
            FROM nuvei_subscriptions s
           WHERE s.status IN ('trialing','active','past_due')
@@ -1840,7 +1847,7 @@ export class NuveiService {
     // Re-read right before acting: the batch snapshot may be minutes old and
     // the customer may have canceled / been refunded meanwhile.
     const { rows: fresh } = await this.db.query(
-      `SELECT id, user_id, team_id, email, plan_key, provision_plan, monthly_amount,
+      `SELECT id, user_id, team_id, email, plan_key, provision_plan, monthly_amount, billing_cycle,
               card_id, next_billing_date, cancel_at_period_end, status
          FROM nuvei_subscriptions WHERE id = $1`,
       [snapshot.id],
@@ -1907,7 +1914,7 @@ export class NuveiService {
         this.toNuveiUser(user),
         {
           amount: monthly,
-          description: seatAddonMonthly > 0 ? `Cortexa ${plan.label} monthly + team seats` : `Cortexa ${plan.label} monthly`,
+          description: seatAddonMonthly > 0 ? `Cortexa ${plan.label} monthly + team seats` : `Cortexa ${plan.label} ${sub.billing_cycle === 'annual' ? 'annual' : 'monthly'}`,
           dev_reference,
         },
         token,
@@ -2208,7 +2215,8 @@ export class NuveiService {
     // never charged for several missed months in consecutive hourly runs.
     const scheduled = new Date(sub.next_billing_date || Date.now());
     const base = scheduled.getTime() < Date.now() - 15 * 24 * 60 * 60 * 1000 ? new Date() : scheduled;
-    const next = this.addMonths(base, 1);
+    const { rows: cycleRows } = await this.db.query(`SELECT billing_cycle FROM nuvei_subscriptions WHERE id=$1`, [sub.id]);
+    const next = this.addMonths(base, cycleRows[0]?.billing_cycle === 'annual' ? 12 : 1);
     const { rowCount } = await this.db.query(
       `UPDATE nuvei_subscriptions
          SET status = 'active', next_billing_date = $2, last_charge_at = NOW(), updated_at = NOW()

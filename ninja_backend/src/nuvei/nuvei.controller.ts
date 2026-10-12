@@ -147,6 +147,7 @@ export class NuveiController {
     return this.nuvei.startActivation({
       userId: user?.id,
       planKey: String(body?.planKey || body?.plan || ''),
+      billingCycle: String(body?.billingCycle || 'monthly'),
       cardId: String(body?.cardId || ''),
       consentIp: clientIp(req),
       browserInfo: body?.browserInfo,
