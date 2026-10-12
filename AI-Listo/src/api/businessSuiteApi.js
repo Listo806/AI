@@ -34,6 +34,7 @@ const businessSuiteApi = {
   updateSettings: (body) => apiClient.request("/business-suite/settings", { method: "PATCH", body: JSON.stringify(body) }),
   customersSummary: () => apiClient.request("/business-suite/customers-summary"),
   customers: (params = {}) => apiClient.request(`/business-suite/customers${qs(params)}`),
+  createCustomer: (body) => apiClient.request("/business-suite/customers", { method: "POST", body: JSON.stringify(body) }),
   documents: (params = {}) => apiClient.request(`/business-suite/documents${qs(params)}`),
   list(type, params = {}) {
     const ep = endpointByType[type];
