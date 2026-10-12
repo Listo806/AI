@@ -2,6 +2,7 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
+  BadRequestException,
 } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 import OpenAI from "openai";
@@ -1721,6 +1722,7 @@ export class AiCenterService {
       type?: string;
       status?: string;
       search?: string;
+      since?: string;
     },
   ) {
     const page = Math.max(Number(params.page || 1), 1);
@@ -1730,6 +1732,12 @@ export class AiCenterService {
     const where: string[] = ["a.team_id = $1"];
     const values: any[] = [teamId];
     let index = 2;
+    if (params.since) {
+      const sinceDate = new Date(params.since);
+      if (Number.isNaN(sinceDate.getTime())) throw new BadRequestException("Invalid since timestamp");
+      where.push(`a.created_at >= $${index++}::timestamptz`);
+      values.push(sinceDate.toISOString());
+    }
 
     const activityType = String(params.type || "all")
       .trim()
@@ -2004,9 +2012,10 @@ export class AiCenterService {
                WHERE LOWER(COALESCE(outcome, ''))
                  IN ('failed', 'error')
              )::int AS failed
-           FROM ai_activity
-           WHERE team_id = $1`,
-          [teamId],
+           FROM ai_activity a
+           LEFT JOIN leads l ON l.id = a.lead_id
+           WHERE ${whereSql}`,
+          values,
         ),
         this.db.query(
           `
@@ -2055,20 +2064,20 @@ export class AiCenterService {
 
             COUNT(*)::int AS total
           FROM ai_activity
-          WHERE team_id = $1
+          WHERE team_id = $1 ${params.since ? 'AND created_at >= $2::timestamptz' : ''}
           GROUP BY 1
           ORDER BY total DESC
           `,
-          [teamId],
+          params.since ? [teamId, new Date(params.since).toISOString()] : [teamId],
         ),
         this.db.query(
           `SELECT action, COUNT(*)::int AS total
            FROM ai_activity
-           WHERE team_id = $1
+           WHERE team_id = $1 ${params.since ? 'AND created_at >= $2::timestamptz' : ''}
            GROUP BY action
            ORDER BY total DESC
            LIMIT 5`,
-          [teamId],
+          params.since ? [teamId, new Date(params.since).toISOString()] : [teamId],
         ),
       ]);
 

@@ -381,6 +381,7 @@ export class AiCenterController {
     @Query("type") type?: string,
     @Query("status") status?: string,
     @Query("search") search?: string,
+    @Query("since") since?: string,
   ) {
     return this.service.getAgentActivityFeed(user.teamId, {
       page,
@@ -388,6 +389,7 @@ export class AiCenterController {
       type,
       status,
       search,
+      since,
     });
   }
 

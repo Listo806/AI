@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/AuthContext";
 import AiUsageMeter from "../../components/AiUsageMeter";
 import {
   ResponsiveContainer,
@@ -27,6 +28,7 @@ import {
   Calendar,
   Clock3,
   CheckCircle2,
+  CheckCircle,
   Target,
   Zap,
   AlertTriangle,
@@ -127,6 +129,7 @@ function relativeTime(value, t) {
 export default function CortexaDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
   );
@@ -146,6 +149,12 @@ export default function CortexaDashboard() {
 
   // AI Command Center actions
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignMembers, setAssignMembers] = useState([]);
+  const [assignLeadId, setAssignLeadId] = useState("");
+  const [assignUserId, setAssignUserId] = useState("");
+  const [assignBusy, setAssignBusy] = useState(false);
+  const [assignError, setAssignError] = useState("");
   const [followUpForm, setFollowUpForm] = useState({
     date: "",
     time: "",
@@ -154,6 +163,7 @@ export default function CortexaDashboard() {
   const [savingFollowUp, setSavingFollowUp] = useState(false);
   const [commandActionMessage, setCommandActionMessage] = useState("");
   const [selectedCommandLeadId, setSelectedCommandLeadId] = useState("");
+  const [commandPrompt, setCommandPrompt] = useState("");
 
   // ---- Data fetching (real backend) --------------------------------------
   // `range` is driven by the period selector in the header; changing it
@@ -171,7 +181,12 @@ export default function CortexaDashboard() {
   const [leadsList, setLeadsList] = useState([]); // getOwnerLeads() – CRM access only
   const [teamStats, setTeamStats] = useState(null); // team dashboard stats – real revenue/pipeline
   const [calStats, setCalStats] = useState(null); // getCalendarStats() – Appointments KPI
-  const [upcoming, setUpcoming] = useState([]); // getUpcomingAppointments() – Upcoming Closings
+  const [upcoming, setUpcoming] = useState([]); // getUpcomingAppointments()
+  const [tasksData, setTasksData] = useState(null);
+  const [contactsStats, setContactsStats] = useState(null);
+  const [aiFeed, setAiFeed] = useState(null);
+  const [taskLoadError, setTaskLoadError] = useState(false);
+  const [aiLoadError, setAiLoadError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -224,6 +239,41 @@ export default function CortexaDashboard() {
           if (!cancelled) setTeamStats(null);
         }
 
+        // Existing backend endpoints are team-scoped and use authenticated user membership.
+        // Keep failures distinct from an empty successful response.
+        const selectedTeamId = user?.teamId || user?.team_id || null;
+        // Fetch every task page. A first-page sample is not a reliable workspace total.
+        const loadAllTasks = async (teamId) => {
+          const endpoint = `/teams/${encodeURIComponent(teamId)}/workspace/tasks`;
+          const first = await apiClient.request(`${endpoint}?page=1&limit=100`);
+          if (!Array.isArray(first?.data)) throw new Error("Unexpected tasks response");
+          const totalPages = Math.max(1, Number(first.pagination?.totalPages || 1));
+          if (totalPages > 100) throw new Error("Task result exceeds dashboard pagination safety limit");
+          const pages = await Promise.all(Array.from({ length: totalPages - 1 }, (_, i) =>
+            apiClient.request(`${endpoint}?page=${i + 2}&limit=100`)));
+          const rows = [...first.data];
+          pages.forEach((page) => {
+            if (!Array.isArray(page?.data)) throw new Error("Incomplete tasks response");
+            rows.push(...page.data);
+          });
+          if (first.pagination?.total != null && rows.length !== Number(first.pagination.total))
+            throw new Error("Tasks changed during pagination; retry to refresh totals");
+          return { data: rows, pagination: { total: rows.length } };
+        };
+        const aiDays = range === "today" ? 1 : range === "7d" ? 7 : 30;
+        const aiSince = new Date(Date.now() - aiDays * 86400000).toISOString();
+        const [taskResult, aiResult, contactsResult] = await Promise.allSettled([
+          selectedTeamId ? loadAllTasks(selectedTeamId) : Promise.reject(new Error("No active team selected")),
+          apiClient.request(`/ai-center/agent/activity-feed?page=1&limit=100&since=${encodeURIComponent(aiSince)}`),
+          apiClient.request("/contacts/stats"),
+        ]);
+        if (cancelled) return;
+        setTasksData(taskResult.status === "fulfilled" ? taskResult.value : null);
+        setTaskLoadError(taskResult.status !== "fulfilled");
+        setAiFeed(aiResult.status === "fulfilled" ? aiResult.value : null);
+        setContactsStats(contactsResult.status === "fulfilled" ? contactsResult.value : null);
+        setAiLoadError(aiResult.status !== "fulfilled");
+
         // Calendar stats/appointments are team-scoped and 403 for users with no
         // team – degrade the Appointments KPI and Upcoming Closings to empty,
         // never break the page.
@@ -258,6 +308,17 @@ export default function CortexaDashboard() {
   const metrics = summary?.data?.metrics || null;
   const recentActivity = summary?.data?.recent_activity || [];
   const totalLeads = leads?.total ?? 0;
+  const taskRows = Array.isArray(tasksData?.data) ? tasksData.data : null;
+  const aiRows = Array.isArray(aiFeed?.items) ? aiFeed.items : null;
+  const taskIsOpen = (task) => !["completed", "done", "cancelled", "canceled", "closed"].includes(String(task?.status || "").toLowerCase());
+  // The backend limits task pages to 100. Never present a partial page as the complete team total.
+  const taskPageIncomplete = tasksData?.pagination?.total > (taskRows?.length ?? 0);
+  const pendingTasks = taskRows && !taskPageIncomplete ? taskRows.filter(taskIsOpen) : null;
+  const overdueTasks = pendingTasks?.filter(task => task.dueDate && new Date(task.dueDate).getTime() < Date.now()) ?? null;
+  const followupsDue = pendingTasks?.filter(task => /follow.?up/i.test(String(task.taskType || "") + " " + String(task.name || "")) && task.dueDate && new Date(task.dueDate).getTime() <= Date.now()) ?? null;
+  const aiFailed = aiFeed?.overview?.failed ?? null;
+  const aiCompleted = aiFeed?.overview?.completed ?? null;
+  const aiRecent = aiRows?.slice(0, 5) ?? null;
   const period = periodLabel(range, t);
   const hasLeads = (leadsList || []).length > 0;
 
@@ -272,109 +333,19 @@ export default function CortexaDashboard() {
   const eventsByDay =
     activity?.eventsByDay || dash?.activity?.eventsByDay || [];
 
-  // PRIMARY KPI CARDS – New Leads / Conversion Rate / AI Conversations are
-  // real; Active Deals value, Revenue and Appointments have no backend source.
+  // Command Center KPI row. Only use verified fields from existing API responses.
+  // A missing API value stays unknown (—), never an invented zero.
   const miniKpis = [
-    {
-      title: t("dashboard.newLeads"),
-      value: leads ? String(leads.created ?? 0) : NO_DATA, // leads.created (in period)
-      subtext: t("dashboard.leadsCreatedInPeriod"),
-      icon: <Users size={16} className="text-royal-blue" />,
-      iconBg: "bg-light-blue",
-      intime: period,
-    },
-    {
-      title: t("dashboard.activeDeals"),
-      value: teamStats ? money(teamStats.totalPipeline) : NO_DATA, // teamStats.totalPipeline (real pipeline value)
-      subtext: teamStats
-        ? t("dashboard.activePipelineValue")
-        : t("dashboard.noDealValueData"),
-      icon: <Briefcase size={16} className="text-purple" />,
-      iconBg: "bg-light-purple",
-      intime: period,
-    },
-    {
-      title: t("dashboard.revenue"),
-      value: teamStats ? money(teamStats.revenue) : NO_DATA, // teamStats.revenue (real won-deal value)
-      subtext: teamStats
-        ? t("dashboard.revenueFromWonDeals")
-        : t("dashboard.noRevenueData"),
-      icon: <DollarSign size={16} className="text-green" />,
-      iconBg: "bg-light-green",
-      intime: period,
-    },
-    {
-      title: t("dashboard.conversionRate"),
-      value: leads
-        ? `${Number(leads.conversionRate || 0).toFixed(1)}%`
-        : NO_DATA, // leads.conversionRate
-      subtext: t("dashboard.convertedVsTotalLeads"),
-      icon: <Percent size={16} className="text-orange" />,
-      iconBg: "bg-light-orange",
-      intime: period,
-    },
-    {
-      title: t("dashboard.aiConversations"),
-      value: metrics ? String(metrics.conversations_total ?? 0) : NO_DATA, // metrics.conversations_total
-      subtext: t("dashboard.totalConversations"),
-      icon: <MessageCircle size={16} className="text-royal-blue" />,
-      iconBg: "bg-light-blue",
-      intime: t("dashboard.allTime"),
-    },
-    {
-      title: t("dashboard.appointments"),
-      value: calStats ? String(calStats.total ?? 0) : NO_DATA, // calStats.total (team calendar)
-      subtext: calStats
-        ? t("dashboard.confirmedPending", {
-            confirmed: calStats.confirmed ?? 0,
-            pending: calStats.pending ?? 0,
-          })
-        : t("dashboard.noAppointmentData"),
-      icon: <Calendar size={16} className="text-green" />,
-      iconBg: "bg-light-green",
-      intime: t("dashboard.allTime"),
-    },
+    {title: t("dashboard.newContacts", "New Contacts"), value: contactsStats?.newContacts == null ? NO_DATA : String(contactsStats.newContacts), subtext: period, icon: <Users size={19}/>, iconBg:"bg-light-blue", intime:period},
+    {title: t("dashboard.aiConversations", "AI Conversations"), value: metrics?.conversations_total == null ? NO_DATA : String(metrics.conversations_total), subtext: period, icon:<MessageCircle size={19}/>, iconBg:"bg-light-purple", intime:period},
+    {title: t("dashboard.appointments", "Appointments"), value: calStats?.total == null ? NO_DATA : String(calStats.total), subtext:t("dashboard.upcoming", "Upcoming"), icon:<Calendar size={19}/>, iconBg:"bg-light-green", intime:period},
+    {title: t("dashboard.pendingTasks", "Pending Tasks"), value: pendingTasks == null ? NO_DATA : String(pendingTasks.length), subtext:t("dashboard.currentlyOpen", "Currently open"), icon:<CheckCircle2 size={19}/>, iconBg:"bg-light-orange", intime:period},
+    {title: t("dashboard.followUpsDue", "Follow-Ups Due"), value: followupsDue == null ? NO_DATA : String(followupsDue.length), subtext:t("dashboard.dueNow", "Due now"), icon:<Clock3 size={19}/>, iconBg:"bg-light-blue", intime:period},
+    {title: t("dashboard.aiActionsCompleted", "AI Actions Completed"), value: aiCompleted == null ? NO_DATA : String(aiCompleted), subtext:period, icon:<Activity size={19}/>, iconBg:"bg-light-purple", intime:period},
   ];
-
-  // SECONDARY KPI CARDS – only Follow-up Completion has an honest derivation.
-  const secondaryKpis = [
-    {
-      title: t("dashboard.firstResponseTime"),
-      value: NO_DATA, // no source
-      icon: <Clock3 size={16} className="text-royal-blue" />,
-      intime: period,
-    },
-    {
-      title: t("dashboard.followUpCompletion"),
-      value: followUpPct, // derived: contacted / total leads
-      icon: <CheckCircle2 size={16} className="text-green" />,
-      intime: period,
-    },
-    {
-      title: t("dashboard.leadQualityScore"),
-      value: NO_DATA, // no source
-      icon: <Award size={16} className="text-purple" />,
-      intime: period,
-    },
-    {
-      title: t("dashboard.pipelineVelocity"),
-      value: NO_DATA, // no source
-      icon: <Activity size={16} className="text-royal-blue" />,
-      intime: period,
-    },
-    {
-      title: t("dashboard.revenueAtRisk"),
-      value: NO_DATA, // no money source
-      icon: <AlertTriangle size={16} className="text-orange" />,
-      intime: period,
-    },
-    {
-      title: t("dashboard.whatsappResponse"),
-      value: NO_DATA, // no source
-      icon: <MessageCircle size={16} className="text-green" />,
-      intime: period,
-    },
-  ];
+  // Existing export code expects secondaryKpis; the redesigned Dashboard shows
+  // one six-card KPI row, so no unsupported second row is rendered.
+  const secondaryKpis = [];
 
   // Revenue & Lead Trend chart => real daily activity counts (labelled Leads,
   // NOT Revenue — there is no revenue source).
@@ -529,6 +500,7 @@ export default function CortexaDashboard() {
     title: a?.title || a?.attendeeName || t("dashboard.appointmentDefault"),
     when: shortDate(a?.startAt),
     status: a?.status || NO_DATA,
+    assignedTo: a?.assignedTo?.name || a?.assignedToName || a?.assignee?.name || a?.owner?.name || NO_DATA,
   }));
 
   // Pipeline Funnel => real lead funnel from leads.byStatus.
@@ -653,6 +625,53 @@ export default function CortexaDashboard() {
     }
 
     window.location.href = `tel:${phone.replace(/[^+\d]/g, "")}`;
+  };
+
+  const openCommandAssign = async () => {
+    setAssignError("");
+    setAssignLeadId(commandCenterLead?.id ? String(commandCenterLead.id) : "");
+    setAssignUserId("");
+    setAssignMembers([]);
+    setShowAssignModal(true);
+    try {
+      // Resolve membership from the active lead's team rather than navigating
+      // to a separate Team Workspace. Never silently use a different team.
+      const teamsResponse = await apiClient.request("/teams");
+      const teams = Array.isArray(teamsResponse) ? teamsResponse :
+        (Array.isArray(teamsResponse?.data) ? teamsResponse.data : teamsResponse?.data?.items || []);
+      const activeTeamId = commandCenterLead?.teamId || commandCenterLead?.team_id ||
+        user?.activeTeamId || user?.teamId;
+      const team = teams.find(item => String(item.id) === String(activeTeamId));
+      if (!team) {
+        setAssignError("Could not determine the selected workspace team. Select a lead belonging to your active workspace.");
+        return;
+      }
+      const response = await apiClient.request(`/teams/${team.id}/members`);
+      const payload = response?.data || response;
+      setAssignMembers(Array.isArray(payload) ? payload : payload?.members || payload?.items || []);
+    } catch (err) {
+      setAssignError(err?.message || "Could not load workspace members.");
+    }
+  };
+
+  const saveCommandAssign = async (event) => {
+    event.preventDefault();
+    if (!assignLeadId || !assignUserId || assignBusy) return;
+    setAssignBusy(true);
+    setAssignError("");
+    try {
+      await apiClient.request(`/leads/${assignLeadId}`, {
+        method: "PUT",
+        body: JSON.stringify({ assignedTo: assignUserId }),
+      });
+      setShowAssignModal(false);
+      setCommandActionMessage("Lead assigned successfully.");
+      refresh();
+    } catch (err) {
+      setAssignError(err?.message || "Failed to assign lead.");
+    } finally {
+      setAssignBusy(false);
+    }
   };
 
   const openCommandFollowUp = () => {
@@ -955,64 +974,29 @@ export default function CortexaDashboard() {
 
             <div className="ai-message-ctx">
               <span className="command-center-label">
-                {t("dashboard.aiCommandCenter")}
+                Command Center
               </span>
 
               <h2 className="command-center-question">
-                {t("dashboard.commandCenterQuestion")}
+                How can I help you?
               </h2>
             </div>
           </div>
 
           <div className="command-center-assistant">
             <div className="command-center-prompts">
-              <button
-                type="button"
-                onClick={() => navigate("/dashboard/ai-cortexa")}
-              >
-                <TrendingUp size={15} />
-                <span className="command-prompt-copy">
-                  <strong>{t("dashboard.livePipeline")}</strong>
-                  <small>{t("dashboard.commandOverview")}</small>
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate("/dashboard/leads")}
-              >
-                <Layers size={15} />
-                <span className="command-prompt-copy">
-                  <strong>{t("dashboard.aiPriority")}</strong>
-                  <small>{t("dashboard.commandQueue")}</small>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/dashboard/analytics")}
-              >
-                <DollarSign size={15} />
-                <span className="command-prompt-copy">
-                  <strong>{t("dashboard.revenue")}</strong>
-                  <small>{t("dashboard.commandOverview")}</small>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/dashboard/analytics")}
-              >
-                <Percent size={15} />
-                <span className="command-prompt-copy">
-                  <strong>{t("dashboard.conversionRate")}</strong>
-                  <small>{t("dashboard.commandOverview")}</small>
-                </span>
-              </button>
+              <button type="button" onClick={() => navigate("/dashboard/analytics")}><TrendingUp size={15}/><span>AI Activity</span></button>
+              <button type="button" onClick={() => navigate("/dashboard/leads")}><AlertTriangle size={15}/><span>Needs Attention</span></button>
+              <button type="button" onClick={() => navigate("/dashboard/calendar")}><Calendar size={15}/><span>Appointments</span></button>
+              <button type="button" onClick={openCommandFollowUp}><CheckCircle2 size={15}/><span>Tasks</span></button>
             </div>
           </div>
 
           <div className="command-center-input-row">
             <input
               type="text"
+              value={commandPrompt}
+              onChange={(e) => setCommandPrompt(e.target.value)}
               placeholder={t("dashboard.commandCenterPlaceholder")}
               aria-label={t("dashboard.commandCenterPlaceholder")}
               onKeyDown={(e) => {
@@ -1035,7 +1019,7 @@ export default function CortexaDashboard() {
             <Sparkles size={18} />
             <div>
               <strong>{t("dashboard.nextBestAction")}</strong>
-              <span>{t("dashboard.followUpNewestLeads")}</span>
+              <span>{commandCenterLead ? t("dashboard.followUpNewestLeads") : "No pending actions"}</span>
             </div>
             <ChevronRight size={22} className="command-next-chevron" />
           </div>
@@ -1044,7 +1028,7 @@ export default function CortexaDashboard() {
         <div className="banner-right">
           <div className="banner-right-top">
             <div className="mini-insight-card">
-              <div className="card-lbl">{t("dashboard.aiConfidence")}</div>
+              <div className="card-lbl">AI Actions</div>
               <div className="card-val-group">
                 <span className="command-mini-accent accent-green" />
                 <h3>{NO_DATA}</h3>
@@ -1052,7 +1036,7 @@ export default function CortexaDashboard() {
             </div>
 
             <div className="mini-insight-card">
-              <div className="card-lbl">{t("dashboard.revenueAtRisk")}</div>
+              <div className="card-lbl">Needs Attention</div>
               <div className="card-val-group">
                 <span className="command-mini-accent accent-orange" />
                 <h3>{NO_DATA}</h3>
@@ -1063,7 +1047,7 @@ export default function CortexaDashboard() {
               <Phone size={16} />
               <div>
                 <div className="card-lbl">{t("dashboard.nextBestAction")}</div>
-                <h4>{t("dashboard.followUpWithNewLeads")}</h4>
+                <h4>{commandCenterLead ? t("dashboard.followUpWithNewLeads") : "No pending actions"}</h4>
               </div>
             </div>
           </div>
@@ -1085,7 +1069,7 @@ export default function CortexaDashboard() {
 
             <button
               className="banner-btn btn-assign-color"
-              onClick={() => navigate("/dashboard/team")}
+              onClick={openCommandAssign}
             >
               <Users size={16} /> {t("dashboard.assign")}
             </button>
@@ -1103,6 +1087,35 @@ export default function CortexaDashboard() {
           )}
         </div>
       </section>
+
+      {showAssignModal && (
+        <div className="command-followup-overlay" onMouseDown={e => {
+          if (e.target === e.currentTarget && !assignBusy) setShowAssignModal(false);
+        }}>
+          <div className="command-followup-modal" role="dialog" aria-modal="true" aria-label="Assign lead">
+            <div className="command-followup-header">
+              <div><h3>Assign Lead</h3><p>Assign a lead within your active workspace</p></div>
+              <button type="button" className="command-followup-close" disabled={assignBusy} onClick={() => setShowAssignModal(false)} aria-label="Close">×</button>
+            </div>
+            <form onSubmit={saveCommandAssign}>
+              <label className="command-followup-lead"><span>Lead</span>
+                <select required value={assignLeadId} onChange={e => setAssignLeadId(e.target.value)}>
+                  <option value="">Select a lead</option>
+                  {leadsList.map(lead => <option key={lead.id} value={lead.id}>{lead.name || lead.email || "Unnamed lead"}</option>)}
+                </select>
+              </label>
+              <label className="command-followup-lead"><span>Assign to</span>
+                <select required value={assignUserId} onChange={e => setAssignUserId(e.target.value)}>
+                  <option value="">Select workspace member</option>
+                  {assignMembers.map(member => <option key={member.userId || member.id} value={member.userId || member.id}>{member.name || member.email || "Team member"}</option>)}
+                </select>
+              </label>
+              {assignError && <p role="alert" className="command-action-message">{assignError}</p>}
+              <button className="banner-btn btn-assign-color" type="submit" disabled={assignBusy || !assignLeadId || !assignUserId}>{assignBusy ? "Saving..." : "Assign"}</button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showFollowUpModal && (
         <div
@@ -1308,6 +1321,7 @@ export default function CortexaDashboard() {
         ))}
       </section>
 
+      <div className="dashboard-design-grid">
       {/* DASHBOARD ANALYTICS */}
       <section className="dashboard-chart-row dashboard-overview-analytics">
         {/* Lead Activity Trend */}
@@ -1315,7 +1329,7 @@ export default function CortexaDashboard() {
           <div className="card-top-header">
             <div className="title-left">
               <TrendingUp size={16} className="text-royal-blue" />
-              <h3>{t("dashboard.leadActivityTrend")}</h3>
+              <h3>{t("dashboard.activityTrend", "Activity Trend")}</h3>
             </div>
             <a
               className="card-text-link"
@@ -1422,14 +1436,14 @@ export default function CortexaDashboard() {
 
           <div className="overview-source-layout">
             <div className="overview-source-chart">
-              <ResponsiveContainer width="100%" height={180}>
+              {leadSources.length === 0 ? (
+                <div className="dashboard-source-empty" role="status">
+                  {t("dashboard.noActivityInThisPeriod", "No activity in this period")}
+                </div>
+              ) : <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie
-                    data={
-                      leadSources.length > 0
-                        ? leadSources
-                        : [{ source: "No data", leads: 1, color: "#e5e7eb" }]
-                    }
+                    data={leadSources}
                     dataKey="leads"
                     nameKey="source"
                     innerRadius={49}
@@ -1437,17 +1451,14 @@ export default function CortexaDashboard() {
                     paddingAngle={1}
                     stroke="none"
                   >
-                    {(leadSources.length > 0
-                      ? leadSources
-                      : [{ source: "No data", leads: 1, color: "#e5e7eb" }]
-                    ).map((entry, idx) => (
+                    {leadSources.map((entry, idx) => (
                       <Cell key={`source-${idx}`} fill={entry.color} />
                     ))}
                   </Pie>
 
                   <Tooltip />
                 </PieChart>
-              </ResponsiveContainer>
+              </ResponsiveContainer>}
 
               <div className="overview-source-total">
                 <strong>{leadSourceTotal}</strong>
@@ -1503,15 +1514,15 @@ export default function CortexaDashboard() {
           </div>
 
           <div className="overview-pipeline-list">
+            {dashboardPipelineStages.length === 0 && (
+              <p className="dashboard-workspace-empty" role="status">
+                {t("dashboard.noLeadData", "No pipeline records for this workspace")}
+              </p>
+            )}
             {dashboardPipelineStages.map((stage) => {
               const hasCount = typeof stage.count === "number";
-              const width = hasCount
-                ? `${Math.max(
-                    8,
-                    Math.round(
-                      (Number(stage.count || 0) / dashboardPipelineMax) * 100,
-                    ),
-                  )}%`
+              const width = hasCount && dashboardPipelineMax > 0
+                ? `${Math.round((Number(stage.count || 0) / dashboardPipelineMax) * 100)}%`
                 : "0%";
 
               return (
@@ -1519,7 +1530,7 @@ export default function CortexaDashboard() {
                   <span className="overview-stage-name">{stage.label}</span>
                   <strong>{stage.count}</strong>
                   <div className="overview-stage-track">
-                    {hasCount && (
+                    {hasCount && Number(stage.count) > 0 && (
                       <span
                         style={{
                           width,
@@ -1573,6 +1584,78 @@ export default function CortexaDashboard() {
           </div>
         </div>
       </section>
+
+      {/* Communication, attention, schedule and review: source-backed overview */}
+      <section className="dashboard-operations-redesign" aria-label="Dashboard operations overview">
+        <div className="content-card dashboard-operations-panel">
+          <div className="card-top-header">
+            <div className="title-left"><MessageCircle size={17} className="text-purple"/><h3>{t("dashboard.communicationOverview")}</h3></div>
+            <button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/analytics")}>{t("dashboard.viewAnalytics")} →</button>
+          </div>
+          <div className="dashboard-communication-list">
+            {[
+              {name:t("dashboard.calls"), icon:<Phone size={17}/>, tone:"blue", count:null},
+              {name:"WhatsApp", icon:<MessageCircle size={17}/>, tone:"green", count:null},
+              {name:t("dashboard.email"), icon:<Send size={17}/>, tone:"blue", count:null},
+              {name:t("dashboard.websiteChat"), icon:<MessageCircle size={17}/>, tone:"purple", count:null},
+            ].map(channel => (
+              <div className="dashboard-communication-row" key={channel.name}>
+                <span><i className={`dashboard-channel-icon tone-${channel.tone}`}>{channel.icon}</i>{channel.name}</span>
+                <strong title={t("dashboard.channelTooltip")}>{channel.count ?? NO_DATA}</strong>
+              </div>
+            ))}
+          </div>
+          <p className="dashboard-data-footnote">{t("dashboard.channelUnavailable")}</p>
+        </div>
+        <div className="content-card dashboard-operations-panel">
+          <div className="card-top-header">
+            <div className="title-left"><AlertTriangle size={17} className="text-orange"/><h3>{t("dashboard.needsAttention")}</h3></div>
+            <button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/leads")}>{t("dashboard.viewLeads")} →</button>
+          </div>
+          <div className="dashboard-attention-list">
+            {[
+              {name:t("dashboard.unansweredConversations"), icon:<MessageCircle size={16}/>, tone:"green", count:metrics?.conversations_unread},
+              {name:t("dashboard.overdueTasks"), icon:<CheckCircle size={16}/>, tone:"orange", count:overdueTasks?.length},
+              {name:t("dashboard.followUpsDue"), icon:<Clock3 size={16}/>, tone:"blue", count:followupsDue?.length},
+              {name:t("dashboard.failedAiActions"), icon:<AlertTriangle size={16}/>, tone:"red", count:aiFailed},
+            ].map(item => <div className="dashboard-attention-row" key={item.name}><span><i className={`dashboard-channel-icon tone-${item.tone}`}>{item.icon}</i>{item.name}</span><strong>{item.count == null ? NO_DATA : item.count}</strong></div>)}
+          </div>
+          <p className="dashboard-data-footnote">{t("dashboard.unavailableMetrics")}</p>
+        </div>
+        <div className="content-card dashboard-operations-panel dashboard-schedule-panel">
+          <div className="card-top-header">
+            <div className="title-left"><Calendar size={17} className="text-royal-blue"/><h3>{t("dashboard.upcomingSchedule")}</h3></div>
+            <button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/calendar")}>{t("dashboard.viewCalendar")} →</button>
+          </div>
+          {upcomingList.length ? (
+            <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.time")}</th><th>{t("dashboard.event")}</th><th>{t("dashboard.assignedTo")}</th><th>{t("dashboard.status")}</th></tr></thead><tbody>
+              {upcomingList.map((item, idx) => <tr key={idx}><td>{item.when}</td><td>{item.title}</td><td>{item.assignedTo ?? NO_DATA}</td><td><span className="dashboard-schedule-status">{item.status}</span></td></tr>)}
+            </tbody></table></div>
+          ) : <div className="dashboard-schedule-empty-state" role="status"><Calendar size={29}/><strong>{t("dashboard.noUpcomingAppointments")}</strong><span>{t("dashboard.appointmentsAppearHere")}</span></div>}
+        </div>
+        <div className="content-card dashboard-ai-review-panel">
+          <div className="card-top-header"><div className="title-left"><TrendingUp size={19}/><h3>{t("dashboard.aiDashboardReview")}</h3></div></div>
+          <p>{t("dashboard.reviewActivity")}</p>
+          <div className="dashboard-ai-wave" aria-hidden="true"><svg viewBox="0 0 320 72" preserveAspectRatio="none"><path d="M0 45 C60 -2 105 75 170 34 S260 6 320 26" fill="none" stroke="#4d72ff" strokeWidth="2"/><path d="M0 59 C75 15 100 82 180 42 S265 12 320 8" fill="none" stroke="#9447ff" strokeWidth="2"/></svg></div>
+          <button type="button" className="dashboard-run-ai-button" onClick={() => navigate("/dashboard/ai-cortexa")}><Sparkles size={16}/>{t("dashboard.runAiReview")}</button>
+        </div>
+      </section>
+
+        <div className="content-card dashboard-tasks-panel">
+          <div className="card-top-header"><div className="title-left"><CheckCircle size={17} className="text-royal-blue"/><h3>{t("dashboard.tasksAndFollowups")}</h3></div><button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/leads")}>{t("dashboard.viewAll")} →</button></div>
+          <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.task")}</th><th>{t("dashboard.assignedTo")}</th><th>{t("dashboard.due")}</th><th>{t("dashboard.status")}</th></tr></thead><tbody>{pendingTasks?.slice(0, 5).map(task => <tr key={task.id}><td>{task.name || NO_DATA}</td><td>{task.assignee || NO_DATA}</td><td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : NO_DATA}</td><td>{task.status || NO_DATA}</td></tr>)}</tbody></table></div>
+          {!pendingTasks?.length && <div className="dashboard-table-empty"><CheckCircle size={28}/><strong>{taskLoadError || taskPageIncomplete ? t("dashboard.taskTotalsUnavailable") : t("dashboard.noPendingTasks")}</strong><span>{taskLoadError ? t("dashboard.checkTeamAccess") : taskPageIncomplete ? t("dashboard.taskPageIncomplete") : t("dashboard.noOpenTasks")}</span></div>}
+        </div>
+        <div className="content-card dashboard-ai-actions-panel">
+          <div className="card-top-header"><div className="title-left"><Sparkles size={17} className="text-purple"/><h3>{t("dashboard.recentAiActions")}</h3></div><button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/ai-cortexa")}>{t("dashboard.viewAll")} →</button></div>
+          <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.dateAndTime")}</th><th>{t("dashboard.action")}</th><th>{t("dashboard.status")}</th><th>{t("dashboard.details")}</th></tr></thead><tbody>{aiRecent?.map(action => <tr key={action.id}><td>{action.timestamp ? new Date(action.timestamp).toLocaleString() : NO_DATA}</td><td>{action.title || action.action || NO_DATA}</td><td>{action.statusLabel || action.status || NO_DATA}</td><td>{action.description || NO_DATA}</td></tr>)}</tbody></table></div>
+          {!aiRecent?.length && <div className="dashboard-table-empty"><Activity size={27}/><strong>{aiLoadError ? t("dashboard.aiActivityLoadFailed") : t("dashboard.noAiActions")}</strong><span>{aiLoadError ? t("dashboard.retryAiFeed") : t("dashboard.aiActionsAppear")}</span></div>}
+        </div>
+        <div className="content-card dashboard-health-panel">
+          <div className="card-top-header"><div className="title-left"><Activity size={17} className="text-royal-blue"/><h3>{t("dashboard.automationHealth")}</h3></div><span className="dashboard-health-period">{t("dashboard.periodLast30Days")}</span></div>
+          <div className="dashboard-attention-list">{[{name:t("dashboard.successfulAiActions"),icon:<CheckCircle size={16}/>,count:aiCompleted},{name:t("dashboard.failedAiActions"),icon:<AlertTriangle size={16}/>,count:aiFailed},{name:t("dashboard.escalatedAiActions"),icon:<AlertTriangle size={16}/>,count:aiFeed?.overview?.escalated}].map(item=><div className="dashboard-attention-row" key={item.name}><span>{item.icon}{item.name}</span><strong>{item.count == null ? NO_DATA : item.count}</strong></div>)}</div>
+        </div>
+      </div>
 
       {/* DASHBOARD OPERATIONS */}
       <section className="dashboard-logs-row dashboard-overview-operations">
@@ -1832,7 +1915,7 @@ export default function CortexaDashboard() {
               onClick={refresh}
               disabled={loading}
             >
-              {t("dashboard.runAiDashboardReview")}{" "}
+              {t("dashboard.refreshDashboardData", "Refresh Dashboard Data")}{" "}
               <Zap size={14} fill="currentColor" />
             </button>
           </div>
