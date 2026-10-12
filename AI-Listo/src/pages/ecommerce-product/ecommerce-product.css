@@ -731,7 +731,6 @@
    customer's forced-dark browser, with transparent background.
    ========================================================= */
 .ec-logo-responsive{
-  display:none!important;
   align-items:center!important;
   background:transparent!important;
 }
