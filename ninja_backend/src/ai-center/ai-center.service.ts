@@ -1725,6 +1725,7 @@ export class AiCenterService {
       type?: string;
       status?: string;
       search?: string;
+      since?: string;
     },
   ) {
     const page = Math.max(Number(params.page || 1), 1);
@@ -1970,6 +1971,16 @@ export class AiCenterService {
       );
       values.push(`%${params.search.trim()}%`);
       index += 1;
+    }
+
+    // Optional ISO-8601 lower bound for activity feed. Reject invalid values
+    // rather than passing an invalid timestamp to PostgreSQL.
+    if (params.since?.trim()) {
+      const sinceDate = new Date(params.since.trim());
+      if (!Number.isNaN(sinceDate.getTime())) {
+        where.push(`a.created_at >= $${index++}::timestamptz`);
+        values.push(sinceDate.toISOString());
+      }
     }
 
     const whereSql = where.join(" AND ");
