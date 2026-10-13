@@ -2,7 +2,7 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
-  BadRequestException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 import OpenAI from "openai";
@@ -135,9 +135,12 @@ type AiAgentRuntimeControls = {
 
 @Injectable()
 export class AiCenterService {
-  private openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  private get openai(): OpenAI {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new ServiceUnavailableException("AI provider is not configured.");
+    }
+    return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
   constructor(
     private readonly db: DatabaseService,
     private readonly s3Service: S3Service,
@@ -1722,7 +1725,6 @@ export class AiCenterService {
       type?: string;
       status?: string;
       search?: string;
-      since?: string;
     },
   ) {
     const page = Math.max(Number(params.page || 1), 1);
@@ -1732,12 +1734,6 @@ export class AiCenterService {
     const where: string[] = ["a.team_id = $1"];
     const values: any[] = [teamId];
     let index = 2;
-    if (params.since) {
-      const sinceDate = new Date(params.since);
-      if (Number.isNaN(sinceDate.getTime())) throw new BadRequestException("Invalid since timestamp");
-      where.push(`a.created_at >= $${index++}::timestamptz`);
-      values.push(sinceDate.toISOString());
-    }
 
     const activityType = String(params.type || "all")
       .trim()
@@ -2012,10 +2008,9 @@ export class AiCenterService {
                WHERE LOWER(COALESCE(outcome, ''))
                  IN ('failed', 'error')
              )::int AS failed
-           FROM ai_activity a
-           LEFT JOIN leads l ON l.id = a.lead_id
-           WHERE ${whereSql}`,
-          values,
+           FROM ai_activity
+           WHERE team_id = $1`,
+          [teamId],
         ),
         this.db.query(
           `
@@ -2064,20 +2059,20 @@ export class AiCenterService {
 
             COUNT(*)::int AS total
           FROM ai_activity
-          WHERE team_id = $1 ${params.since ? 'AND created_at >= $2::timestamptz' : ''}
+          WHERE team_id = $1
           GROUP BY 1
           ORDER BY total DESC
           `,
-          params.since ? [teamId, new Date(params.since).toISOString()] : [teamId],
+          [teamId],
         ),
         this.db.query(
           `SELECT action, COUNT(*)::int AS total
            FROM ai_activity
-           WHERE team_id = $1 ${params.since ? 'AND created_at >= $2::timestamptz' : ''}
+           WHERE team_id = $1
            GROUP BY action
            ORDER BY total DESC
            LIMIT 5`,
-          params.since ? [teamId, new Date(params.since).toISOString()] : [teamId],
+          [teamId],
         ),
       ]);
 
@@ -3062,6 +3057,32 @@ export class AiCenterService {
       },
     );
 
+    // Capability discovery is a configuration question, not a request to execute
+    // an AI action. Answer from the authenticated team's actual controls so this
+    // continues working even when the external model provider is unavailable.
+    if (
+      !attachments.length &&
+      /(?:additional|available|supported|what|which|list|show|more|extra|otras|disponibles|recursos|funcionalidades|capacidades|tính năng|chức năng)/i.test(message) &&
+      /(?:capabilit(?:y|ies)|features?|functions?|funcionalidades|capacidades|recursos|tính năng|chức năng)/i.test(message)
+    ) {
+      const configured = Object.entries(runtimeControls.capabilities || {});
+      const enabled = configured.filter(([, value]) => value === true).map(([key]) => key);
+      const disabled = configured.filter(([, value]) => value === false).map(([key]) => key);
+      const answer = configured.length
+        ? [
+            enabled.length ? `Enabled AI Agent capabilities: ${enabled.join(", ")}.` : "No AI Agent capabilities are explicitly enabled.",
+            disabled.length ? `Disabled capabilities: ${disabled.join(", ")}.` : "",
+            "Availability depends on your connected channels, workspace configuration, permissions, and completed setup.",
+          ].filter(Boolean).join("\n")
+        : "No AI Agent capabilities have been configured for this workspace yet. Open AI Agent setup and controls to review available features and connect the required channels.";
+      return {
+        success: true,
+        answer,
+        conversationId: conversationId || null,
+        usage: null,
+      };
+    }
+
     const activeContext =
       this.normalizeAgentContext(rawActiveContext) ||
       this.detectAgentContext(message);
@@ -3141,7 +3162,9 @@ Give clear next steps when useful.
      * OPENAI CALL
      */
 
-    const response = await this.openai.responses.create({
+    let response: Awaited<ReturnType<typeof this.openai.responses.create>>;
+    try {
+      response = await this.openai.responses.create({
       model: "gpt-4.1-mini",
 
       input: [
@@ -3183,6 +3206,24 @@ Give clear next steps when useful.
         },
       ],
     });
+
+    } catch (error: any) {
+      // Do not expose provider tokens, prompt content or customer CRM data.
+      console.error("[AI_AGENT_PROVIDER_FAILURE]", {
+        teamId,
+        status: error?.status ?? null,
+        code: error?.code ?? null,
+        type: error?.type ?? null,
+        message: String(error?.message || "AI provider failed").slice(0, 250),
+      });
+      throw new ServiceUnavailableException(
+        "AI provider is temporarily unavailable. Please try again later.",
+      );
+    }
+    if (!response.output_text?.trim()) {
+      console.error("[AI_AGENT_EMPTY_RESPONSE]", { teamId });
+      throw new ServiceUnavailableException("AI provider returned an empty response.");
+    }
 
     /*
      * SAVE AI ACTIVITY
