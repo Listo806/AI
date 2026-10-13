@@ -111,6 +111,39 @@ export class AnalyticsService {
        (SELECT count(*)::int FROM ai_activity i WHERE i.team_id=$1
         AND i.created_at::date=day::date) AS ai_actions
        FROM generate_series($2::date,$3::date,interval '1 day') day ORDER BY day`,params);
+    const messages = await this.db.query(
+      `SELECT count(DISTINCT m.lead_id)::int AS handled,
+       count(*) FILTER (WHERE m.channel='whatsapp')::int AS whatsapp,
+       count(*) FILTER (WHERE m.channel='email')::int AS email
+       FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+       WHERE l.team_id=$1 AND m.created_at >= $2 AND m.created_at <= $3`,params);
+    const followup = await this.db.query(
+      `SELECT count(*) FILTER (WHERE due_date >= $2 AND due_date <= $3)::int AS due,
+       count(*) FILTER (WHERE completed_at >= $2 AND completed_at <= $3 AND completed_at <= due_date)::int AS on_time,
+       count(*) FILTER (WHERE completed_at >= $2 AND completed_at <= $3 AND completed_at > due_date)::int AS late,
+       count(*) FILTER (WHERE due_date >= $2 AND due_date <= LEAST($3::timestamp,now())
+         AND status NOT IN ('completed','cancelled'))::int AS missed
+       FROM team_tasks WHERE team_id=$1 AND task_type IN ('follow_up','follow-up','followup')`,params);
+    const team = await this.db.query(
+      `SELECT u.id,u.email,
+       (SELECT count(*)::int FROM team_tasks t WHERE t.team_id=$1 AND t.assigned_to=u.id
+         AND t.status='completed' AND t.completed_at >= $2 AND t.completed_at <= $3) AS tasks_completed,
+       (SELECT count(*)::int FROM team_tasks t WHERE t.team_id=$1 AND t.assigned_to=u.id
+         AND t.task_type IN ('follow_up','follow-up','followup')
+         AND t.completed_at >= $2 AND t.completed_at <= $3 AND t.completed_at <= t.due_date) AS followups_on_time,
+       (SELECT count(*)::int FROM team_tasks t WHERE t.team_id=$1 AND t.assigned_to=u.id
+         AND t.task_type IN ('follow_up','follow-up','followup')
+         AND t.completed_at >= $2 AND t.completed_at <= $3) AS followups_completed
+       FROM users u WHERE u.team_id=$1 AND u.is_active=true ORDER BY u.email`,params);
+    const msgSeries = await this.db.query(
+      `SELECT m.created_at::date::text AS date,count(DISTINCT m.lead_id)::int AS conversations
+       FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+       WHERE l.team_id=$1 AND m.created_at >= $2 AND m.created_at <= $3
+       GROUP BY 1`,params);
+    const conversationsByDay = new Map(msgSeries.rows.map((r:any)=>[r.date,r.conversations]));
+    const m = messages.rows[0];
+    const f = followup.rows[0];
+    const finished = f.on_time + f.late;
     const ap = appointments.rows[0];
     const aiResult = ai.rows[0];
     const auto = automation.rows[0];
@@ -119,20 +152,20 @@ export class AnalyticsService {
       period: {startDate:start.toISOString(),endDate:end.toISOString(),days},
       metrics: {
         newContacts:contacts.rows[0].total,
-        conversationsHandled:null,
+        conversationsHandled:m.handled,
         appointmentsBooked:ap.booked,
         aiActionsCompleted:aiResult.successful,
-        averageFirstResponse:null,bookingRate:null,followupCompletion:null,
+        averageFirstResponse:null,bookingRate:null,followupCompletion:finished ? Math.round(f.on_time*100/finished) : null,
         automationSuccess:denominator > 0 ? Math.round(auto.successful*100/denominator) : null
       },
-      activity:{series:series.rows.map((r:any)=>({...r,conversations:null}))},
-      channels:{calls:null,whatsapp:null,email:null,websiteChat:null},
+      activity:{series:series.rows.map((r:any)=>({...r,conversations:conversationsByDay.get(r.date) ?? 0}))},
+      channels:{calls:null,whatsapp:m.whatsapp,email:m.email,websiteChat:null},
       appointments:{booked:ap.booked,completed:ap.completed,canceled:ap.canceled,noShow:ap.no_show},
-      followups:{dueInPeriod:null,completedOnTime:null,completedLate:null,missed:null},
+      followups:{dueInPeriod:f.due,completedOnTime:f.on_time,completedLate:f.late,missed:f.missed},
       aiAutomation:{successful:auto.successful,failed:auto.failed,awaitingApproval:auto.awaiting_approval},
-      teamPerformance:null,
-      coverage:{workspace:false,conversations:false,channels:false,firstResponse:false,
-        bookingRate:false,followups:false,teamPerformance:false,activityConversations:false}
+      teamPerformance:team.rows.map((u:any)=>({id:u.id,name:u.email,tasksCompleted:u.tasks_completed,conversationsHandled:null,averageFirstResponse:null,followupCompletion:u.followups_completed ? Math.round(100*u.followups_on_time/u.followups_completed) : null})),
+      coverage:{workspace:false,conversations:true,channels:"whatsapp_email_only",firstResponse:false,
+        bookingRate:false,followups:"team_tasks_only",teamPerformance:"tasks_only",activityConversations:true}
     };
   }
 
