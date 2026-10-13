@@ -20,6 +20,22 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
+  @Get('overview-v2')
+  @ApiOperation({ summary: 'Workspace-scoped analytics overview with period filters' })
+  async getOverviewV2(
+    @CurrentUser() user: any,
+    @Query('days') days = '30',
+    @Query('workspaceId') workspaceId?: string,
+  ) {
+    const n = Number(days);
+    if (![1, 7, 30].includes(n)) throw new BadRequestException('days must be 1, 7 or 30');
+    if (!user.teamId) throw new BadRequestException('Active team is required');
+    if (workspaceId && !/^[a-z0-9_-]{1,80}$/i.test(workspaceId)) {
+      throw new BadRequestException('Invalid workspaceId');
+    }
+    return this.analyticsService.getOverviewV2(user.teamId, n, workspaceId);
+  }
+
   /**
    * Get dashboard metrics (comprehensive overview)
    */

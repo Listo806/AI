@@ -1,4 +1,4 @@
-import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { EventType, EntityType } from './events/event-logger.service';
 
@@ -71,6 +71,70 @@ export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
 
   constructor(private readonly db: DatabaseService) {}
+
+  /**
+   * Aggregate from persisted CRM records. All queries are restricted to the
+   * authenticated team. Null denotes a metric with no reliable source.
+   */
+  async getOverviewV2(teamId: string, days: number, workspaceId?: string) {
+    // This endpoint is team-scoped. Existing contacts/appointments/ai_activity
+    // migrations do not define workspace_id, so do not silently pretend to
+    // provide workspace-specific totals.
+    if (workspaceId) {
+      throw new BadRequestException('Workspace-specific analytics require a verified workspace mapping');
+    }
+    const end = new Date();
+    const start = new Date(end.getTime() - days * 86400000);
+    const params = [teamId, start, end];
+    const contacts = await this.db.query(
+      `SELECT count(*)::int AS total FROM contacts
+       WHERE team_id=$1 AND created_at >= $2 AND created_at <= $3`, params);
+    const appointments = await this.db.query(
+      `SELECT count(*)::int AS booked,
+       count(*) FILTER (WHERE lower(status)='completed')::int AS completed,
+       count(*) FILTER (WHERE lower(status) IN ('canceled','cancelled'))::int AS canceled,
+       count(*) FILTER (WHERE lower(status) IN ('no_show','no-show'))::int AS no_show
+       FROM appointments WHERE team_id=$1 AND created_at >= $2 AND created_at <= $3`, params);
+    const ai = await this.db.query(
+      `SELECT count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('success','completed','succeeded'))::int AS successful,
+       count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('failed','error'))::int AS failed
+       FROM ai_activity WHERE team_id=$1 AND created_at >= $2 AND created_at <= $3`,params);
+    const automation = await this.db.query(
+      `SELECT count(*) FILTER (WHERE status='applied')::int AS successful,
+       count(*) FILTER (WHERE status IN ('failed','error'))::int AS failed,
+       count(*) FILTER (WHERE status IN ('pending','awaiting_approval'))::int AS awaiting_approval
+       FROM mkt_automation_runs WHERE team_id=$1 AND created_at >= $2 AND created_at <= $3`,params);
+    const series = await this.db.query(
+      `SELECT day::date::text AS date,
+       (SELECT count(*)::int FROM appointments a WHERE a.team_id=$1
+        AND a.created_at::date=day::date) AS appointments,
+       (SELECT count(*)::int FROM ai_activity i WHERE i.team_id=$1
+        AND i.created_at::date=day::date) AS ai_actions
+       FROM generate_series($2::date,$3::date,interval '1 day') day ORDER BY day`,params);
+    const ap = appointments.rows[0];
+    const aiResult = ai.rows[0];
+    const auto = automation.rows[0];
+    const denominator = auto.successful + auto.failed;
+    return {
+      period: {startDate:start.toISOString(),endDate:end.toISOString(),days},
+      metrics: {
+        newContacts:contacts.rows[0].total,
+        conversationsHandled:null,
+        appointmentsBooked:ap.booked,
+        aiActionsCompleted:aiResult.successful,
+        averageFirstResponse:null,bookingRate:null,followupCompletion:null,
+        automationSuccess:denominator > 0 ? Math.round(auto.successful*100/denominator) : null
+      },
+      activity:{series:series.rows.map((r:any)=>({...r,conversations:null}))},
+      channels:{calls:null,whatsapp:null,email:null,websiteChat:null},
+      appointments:{booked:ap.booked,completed:ap.completed,canceled:ap.canceled,noShow:ap.no_show},
+      followups:{dueInPeriod:null,completedOnTime:null,completedLate:null,missed:null},
+      aiAutomation:{successful:auto.successful,failed:auto.failed,awaitingApproval:auto.awaiting_approval},
+      teamPerformance:null,
+      coverage:{workspace:false,conversations:false,channels:false,firstResponse:false,
+        bookingRate:false,followups:false,teamPerformance:false,activityConversations:false}
+    };
+  }
 
   /**
    * Get lead metrics for a time range.
