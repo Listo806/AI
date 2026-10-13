@@ -247,6 +247,8 @@ export default function LeadsPage() {
     stage: "all",
     agent: "all",
   });
+  const [designStatusFilter, setDesignStatusFilter] = useState("all");
+  const [designFollowUpFilter, setDesignFollowUpFilter] = useState("all");
   const [teamMembers, setTeamMembers] = useState([]);
   const [showingForm, setShowingForm] = useState({
     date: "",
@@ -1391,7 +1393,25 @@ export default function LeadsPage() {
     setAiView((prev) => !prev);
     setQueueFilter(null);
   };
+  const leadFollowUpDate = (lead) => lead?.nextFollowUp || lead?.nextFollowUpAt || lead?.next_follow_up || lead?.followUpAt || null;
+  const designFilterMatches = (lead) => {
+    const statusMatches = designStatusFilter === "all" || String(lead.status || "").toLowerCase() === designStatusFilter;
+    if (!statusMatches) return false;
+    if (designFollowUpFilter === "all") return true;
+    const raw = leadFollowUpDate(lead);
+    if (!raw) return designFollowUpFilter === "none";
+    const when = new Date(raw);
+    if (Number.isNaN(when.getTime())) return false;
+    const now = new Date();
+    if (designFollowUpFilter === "overdue") return when < now;
+    if (designFollowUpFilter === "upcoming") return when >= now;
+    return true;
+  };
+  const eventTitle = (event) => event?.metadata?.title || event?.title || event?.eventType?.replaceAll("_", " ") || event?.event_type?.replaceAll("_", " ") || null;
+  const eventDescription = (event) => event?.metadata?.sub || event?.metadata?.description || event?.description || null;
+  const eventTimestamp = (event) => event?.createdAt || event?.created_at || null;
   const visibleLeads = leadsData.filter((lead) => {
+    if (!designFilterMatches(lead)) return false;
     const matchesAiView = aiView
       ? lead.priority === "high" ||
         getLeadScore(lead) >= 70 ||
@@ -1926,12 +1946,12 @@ export default function LeadsPage() {
         <Users className="header-icon" size={20} />
         <h1>
           <span className="leads-title-mobile">{t("leads.pageTitle")}</span>
-          <span className="leads-title-desktop">{t("leads.desktop.title")}</span>
+          <span className="leads-title-desktop">{t("leadsDesign.title")}</span>
         </h1>
       </div>
       <p className="sub_head">
         <span className="leads-sub-mobile">{t("leads.subheading")}</span>
-        <span className="leads-sub-desktop">{t("leads.desktop.subtitle")}</span>
+        <span className="leads-sub-desktop">{t("leadsDesign.subtitle")}</span>
       </p>
       <div className="leads-header">
         <div className="header-actions">
@@ -2262,6 +2282,117 @@ export default function LeadsPage() {
               <option value="clear">{t("leads.bulkClearFilters")}</option>
             </select>
             <ChevronDown size={15} />
+          </div>
+        </div>
+      )}
+
+      {!isMobile && (
+        <div className="leads-design">
+          <section className="ld-stats" aria-label={t("leadsDesign.title")}>
+            {[
+              ["total",leadStats?.total,Users,"blue"],
+              ["qualified",leadStats?.qualified,Bot,"green"],
+              ["followups",leadStats?.needFollowUp,Clock3,"pink"],
+              ["appointments",leadStats?.appointments,Calendar,"orange"],
+              ["converted",leadStats?.converted,TrendingUp,"cyan"],
+              ["response",leadStats?.avgResponse,Clock3,"pink"],
+            ].map(([key,value,Icon,tone])=>(
+              <div className="ld-stat" key={key}>
+                <span className={`ld-stat-icon ld-${tone}`}><Icon size={25}/></span>
+                <div><strong>{value ?? "—"}</strong><span>{t(`leadsDesign.${key}`)}</span></div>
+              </div>
+            ))}
+          </section>
+          <div className="ld-columns">
+            <section className="ld-panel ld-list">
+              <header className="ld-panel-head"><h2>{t("leadsDesign.leadList")}</h2>
+                <button className="ld-primary" onClick={()=>setShowCreateLeadModal(true)}><Plus size={17}/>{t("leads.newLead")}</button></header>
+              <div className="ld-tab">{t("leadsDesign.allLeads")} <strong>{leadStats?.total ?? leadsData.length}</strong></div>
+              <div className="ld-search"><Search size={19}/><input value={leadSearch} onChange={e=>setLeadSearch(e.target.value)} placeholder={t("leadsDesign.search")}/>
+                <button type="button" onClick={()=>setShowFilters(true)} aria-label={t("leads.filters")}><SlidersHorizontal size={18}/></button></div>
+              <div className="ld-filter-grid">
+                <label>{t("leadsDesign.status")}
+                  <select value={designStatusFilter} onChange={e=>setDesignStatusFilter(e.target.value)}>
+                    <option value="all">{t("leadsDesign.all")}</option>
+                    {Array.from(new Set(leadsData.map(l=>String(l.status||"").toLowerCase()).filter(Boolean))).map(v=><option value={v} key={v}>{v}</option>)}
+                  </select></label>
+                <label>{t("leadsDesign.source")}
+                  <select value={leadFilters.source} onChange={e=>setLeadFilters(prev=>({...prev,source:e.target.value}))}>
+                    <option value="all">{t("leadsDesign.all")}</option>
+                    {Array.from(new Set(leadsData.map(l=>l.source).filter(Boolean))).map(v=><option value={String(v).toLowerCase()} key={String(v)}>{v}</option>)}
+                  </select></label>
+                <label>{t("leadsDesign.owner")}
+                  <select value={leadFilters.agent} onChange={e=>setLeadFilters(prev=>({...prev,agent:e.target.value}))}>
+                    <option value="all">{t("leadsDesign.all")}</option>
+                    {Array.from(new Set(leadsData.map(l=>l.assignedTo).filter(Boolean))).map(v=><option value={String(v).toLowerCase()} key={String(v)}>{v}</option>)}
+                  </select></label>
+                <label>{t("leadsDesign.followup")}
+                  <select value={designFollowUpFilter} onChange={e=>setDesignFollowUpFilter(e.target.value)}>
+                    <option value="all">{t("leadsDesign.all")}</option>
+                    <option value="overdue">{t("leadsDesign.overdue")}</option>
+                    <option value="upcoming">{t("leadsDesign.upcoming")}</option>
+                    <option value="none">{t("leadsDesign.noFollowup")}</option>
+                  </select></label>
+              </div>
+              <div className="ld-list-body">
+                {leadsLoading ? <p className="ld-muted">{t("leadsDesign.loading")}</p> :
+                visibleLeads.length ? visibleLeads.map(lead=>(
+                  <button type="button" className={`ld-lead ${selectedLead?.id===lead.id?"is-selected":""}`} key={lead.id} onClick={()=>selectLead(lead)}>
+                    <span className="ld-avatar">{getInitials(lead.name)}</span>
+                    <span><strong>{lead.name || lead.email || lead.phone}</strong><small>{lead.source || lead.status || "—"}</small></span>
+                    <ChevronRight size={16}/>
+                  </button>
+                )):<div className="ld-empty"><FileText size={31}/><strong>{t("leadsDesign.emptyLeads")}</strong><p>{t("leadsDesign.emptyLeadsDescription")}</p>
+                  <button className="ld-primary" onClick={()=>setShowCreateLeadModal(true)}><Plus size={16}/>{t("leads.newLead")}</button></div>}
+              </div>
+            </section>
+            <div className="ld-center">
+              <section className="ld-panel ld-detail">
+                {selectedLead ? <>
+                  <div className="ld-profile"><span className="ld-avatar ld-avatar-lg">{getInitials(selectedLead.name)}</span>
+                    <div><h2>{selectedLead.name}</h2><p>{[selectedLead.email,selectedLead.phone,selectedLead.source].filter(Boolean).join(" · ")}</p></div></div>
+                  <div className="ld-profile-data">
+                    <div><span>{t("leadsDesign.status")}</span><strong>{selectedLead.status || "—"}</strong></div>
+                    <div><span>{t("leadsDesign.priority")}</span><strong>{selectedLead.priority || "—"}</strong></div>
+                    <div><span>{t("leadsDesign.source")}</span><strong>{selectedLead.source || "—"}</strong></div>
+                    <div><span>{t("leadsDesign.nextFollowup")}</span><strong>{leadFollowUpDate(selectedLead) ? new Date(leadFollowUpDate(selectedLead)).toLocaleString() : "—"}</strong></div>
+                  </div>
+                  <div className="ld-contact-actions">
+                    <button onClick={callSelectedLead}><Phone size={16}/>{t("leadsDesign.call")}</button>
+                    <button onClick={()=>{const phone=normalizeWhatsAppPhone(selectedLead.phone);if(phone)window.open(`https://wa.me/${phone}`,"_blank","noopener,noreferrer");}}><MessageCircle size={16}/>{t("leadsDesign.whatsapp")}</button>
+                    <button onClick={()=>{if(selectedLead.email)window.location.href=`mailto:${selectedLead.email}`;}}><Mail size={16}/>{t("leadsDesign.email")}</button>
+                    <button onClick={openBookShowing}><Calendar size={16}/>{t("leadsDesign.schedule")}</button>
+                    <button onClick={handleLeadContactAction} disabled={convertingLead}><Users size={16}/>{t("leadsDesign.convert")}</button>
+                  </div>
+                </> : <div className="ld-empty ld-detail-empty"><Users size={52}/><strong>{t("leadsDesign.selectLead")}</strong><p>{t("leadsDesign.selectLeadDescription")}</p></div>}
+              </section>
+              <section className="ld-panel ld-activity">
+                <nav className="ld-activity-tabs">{["activity","notes","emails","calls","whatsapp","files","tasks"].map(k=>
+                  <button key={k} type="button" className={mobileConversationTab===k?"is-active":""} onClick={()=>setMobileConversationTab(k)}>{t(`leadsDesign.${k}`)}</button>)}</nav>
+                <div className="ld-activity-body">
+                  {!selectedLead ? <div className="ld-empty"><FileText size={32}/><p>{t("leadsDesign.activityEmpty")}</p></div> :
+                    mobileConversationTab==="notes" && selectedLead.notes ? <p className="ld-brief">{selectedLead.notes}</p> :
+                    (mobileConversationTab==="whatsapp" || mobileConversationTab==="emails") && leadMessages.length ?
+                      leadMessages.filter(m=>mobileConversationTab==="whatsapp" ? String(m.channel||"whatsapp").toLowerCase()==="whatsapp" : String(m.channel||"").toLowerCase()==="email")
+                        .slice(0,20).map((m,i)=><div className="ld-event" key={m.id||i}><MessageCircle size={16}/><span>{m.body||m.message||m.content||"—"}<small>{m.created_at ? new Date(m.created_at).toLocaleString():""}</small></span></div>) :
+                    (mobileConversationTab==="activity" || mobileConversationTab==="calls" || mobileConversationTab==="tasks") && leadEvents.length ?
+                      leadEvents.filter(e=>mobileConversationTab==="activity" || String(e.eventType||e.type||e.event_type||"").toLowerCase().includes(mobileConversationTab==="calls"?"call":"task"))
+                        .slice(0,15).map((e,i)=><div className="ld-event" key={e.id||i}><Clock3 size={16}/><span>{eventTitle(e) || eventDescription(e) || t("leadsDesign.unknown")}<small>{eventTimestamp(e) ? formatLeadEventDate(eventTimestamp(e)): ""}</small></span></div>) :
+                    <div className="ld-empty"><FileText size={32}/><p>{t("leadsDesign.noActivity")}</p></div>}
+                </div>
+              </section>
+            </div>
+            <aside className="ld-right">
+              <section className="ld-panel"><h2><Sparkles size={21}/>{t("leadsDesign.aiBrief")}</h2>
+                {selectedLead ? <p className="ld-brief">{leadIntelligence.summary || leadIntelligence.recommendedAction || t("leadsDesign.unknown")}</p> :
+                  <div className="ld-empty"><FileText size={32}/><p>{t("leadsDesign.aiBriefEmpty")}</p></div>}</section>
+              <section className="ld-panel"><h2><Users size={21}/>{t("leadsDesign.qualification")}</h2>
+                {[["priority",selectedLead?.priority],["qualificationStatus",selectedLead?.qualification || selectedLead?.qualificationStatus],["assignedTo",selectedLead?.assignedTo],["nextFollowup",leadFollowUpDate(selectedLead) ? new Date(leadFollowUpDate(selectedLead)).toLocaleString() : null]].map(([k,v])=>
+                  <div className="ld-qual-row" key={k}><span>{t(`leadsDesign.${k}`)}</span><strong>{v||"—"}</strong></div>)}</section>
+              <section className="ld-panel"><h2><Clock3 size={21}/>{t("leadsDesign.timeline")}</h2>
+                {selectedLead && leadEvents.length ? leadEvents.slice(0,6).map((e,i)=><div className="ld-event" key={e.id||i}><Clock3 size={15}/><span>{eventTitle(e) || eventDescription(e) || "—"}<small>{eventTimestamp(e) ? formatLeadEventDate(eventTimestamp(e)) : ""}</small></span></div>) :
+                  <div className="ld-empty"><FileText size={31}/><p>{t("leadsDesign.timelineEmpty")}</p></div>}</section>
+            </aside>
           </div>
         </div>
       )}
