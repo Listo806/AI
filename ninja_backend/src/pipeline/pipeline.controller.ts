@@ -33,6 +33,7 @@ export class PipelineController {
     @Req() req: any,
     @Query("forecastRange") forecastRange = "month",
     @Query("agentId") agentId = "all",
+    @Query("workspaceId") workspaceId?: string,
   ) {
     const user = req.user;
 
@@ -41,8 +42,24 @@ export class PipelineController {
       user.teamId || user.team_id || null,
       forecastRange,
       agentId,
+      workspaceId,
     );
   }
+  @Get("workspaces")
+  getWorkspaces(@Req() req:any) {
+    return this.pipelineService.getWorkspaces(req.user.id, req.user.teamId || req.user.team_id || null);
+  }
+
+  @Get("stages")
+  getStages(@Req() req:any, @Query("workspaceId") workspaceId?:string) {
+    return this.pipelineService.getConfiguredStages(req.user.id, req.user.teamId || req.user.team_id || null, workspaceId);
+  }
+
+  @Patch("stages")
+  saveStages(@Req() req:any, @Body() body:{workspaceId:string;stages:Array<{key:string;label:string;color?:string}>}) {
+    return this.pipelineService.saveConfiguredStages(req.user.id,req.user.teamId || req.user.team_id || null,body.workspaceId,body.stages);
+  }
+
   @Get("agents")
   getPipelineAgents(@Req() req: any) {
     const user = req.user;

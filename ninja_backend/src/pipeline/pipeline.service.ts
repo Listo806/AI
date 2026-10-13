@@ -25,7 +25,7 @@ export class PipelineService {
   });
   constructor(private readonly db: DatabaseService) {}
 
-  private getScope(userId: string, teamId?: string | null, agentId = "all") {
+  private getScope(userId: string, teamId?: string | null, agentId = "all", workspaceId?: string) {
     const params: any[] = [];
 
     if (teamId) {
@@ -38,6 +38,7 @@ export class PipelineService {
         where += ` AND d.assigned_to = $2`;
       }
 
+      if (workspaceId) { params.push(workspaceId); where += ` AND d.workspace_id = $${params.length}::uuid`; }
       return { where, params };
     }
 
@@ -50,7 +51,55 @@ export class PipelineService {
       where += ` AND d.assigned_to = $2`;
     }
 
+    if (workspaceId) { params.push(workspaceId); where += ` AND d.workspace_id = $${params.length}::uuid`; }
     return { where, params };
+  }
+
+
+  async getWorkspaces(userId: string, teamId?: string | null) {
+    // Only expose workspace IDs already associated with deals the caller can access.
+    // Empty workspaces must be provisioned by the workspace module, not guessed here.
+    const scope = this.getScope(userId, teamId);
+    const { rows } = await this.db.query(`SELECT DISTINCT d.workspace_id::text AS id
+      FROM deals d WHERE ${scope.where} AND d.workspace_id IS NOT NULL
+      ORDER BY id`, scope.params);
+    return rows;
+  }
+
+  async getConfiguredStages(userId: string, teamId?: string | null, workspaceId?: string) {
+    if (!workspaceId) return PIPELINE_STAGES;
+    const { rows: allowed } = await this.db.query(`SELECT 1 FROM deals d
+      WHERE ${this.getScope(userId, teamId, 'all', workspaceId).where} LIMIT 1`,
+      this.getScope(userId, teamId, 'all', workspaceId).params);
+    if (!allowed.length) throw new ForbiddenException('Workspace not accessible for this pipeline');
+    const { rows } = await this.db.query(`SELECT stage_key AS key, label, color, position
+      FROM pipeline_workspace_stages WHERE workspace_id=$1::uuid ORDER BY position`, [workspaceId]);
+    return rows.length ? rows : PIPELINE_STAGES;
+  }
+
+  async saveConfiguredStages(userId: string, teamId: string | null | undefined, workspaceId: string,
+    stages: Array<{key:string;label:string;color?:string}>) {
+    await this.getConfiguredStages(userId, teamId, workspaceId);
+    if (!Array.isArray(stages) || stages.length < 2 || stages.length > 20 ||
+        stages.some(s => !/^[a-z][a-z0-9_]{0,39}$/.test(s.key) || !s.label || s.label.length > 80) ||
+        new Set(stages.map(s=>s.key)).size !== stages.length) {
+      throw new ForbiddenException('Invalid stage configuration');
+    }
+    const existing = await this.db.query(`SELECT DISTINCT stage FROM deals
+      WHERE workspace_id=$1::uuid AND team_id=$2`, [workspaceId, teamId]);
+    if (existing.rows.some((r:any) => !stages.some(s => s.key === r.stage))) {
+      throw new ForbiddenException('Move existing deals before removing a stage');
+    }
+    await this.db.transaction(async (client) => {
+      await client.query('DELETE FROM pipeline_workspace_stages WHERE workspace_id=$1::uuid', [workspaceId]);
+      for (let i=0; i<stages.length; i++) {
+        const stage=stages[i];
+        await client.query(`INSERT INTO pipeline_workspace_stages(workspace_id,stage_key,label,color,position)
+          VALUES($1::uuid,$2,$3,$4,$5)`, [workspaceId,stage.key,stage.label,
+          /^#[0-9a-fA-F]{6}$/.test(stage.color||'') ? stage.color : '#3b82f6',i+1]);
+      }
+    });
+    return this.getConfiguredStages(userId,teamId,workspaceId);
   }
 
   private formatMoney(value: any) {
@@ -498,9 +547,11 @@ export class PipelineService {
     teamId?: string | null,
     forecastRange = "month",
     agentId = "all",
+    workspaceId?: string,
   ) {
-    const scope = this.getScope(userId, teamId, agentId);
+    const scope = this.getScope(userId, teamId, agentId, workspaceId);
 
+    const configuredStages = await this.getConfiguredStages(userId, teamId, workspaceId);
     const statsPeriod = this.getForecastPeriodSql("month");
     const forecastPeriod = this.getForecastPeriodSql(forecastRange);
 
@@ -545,6 +596,125 @@ export class PipelineService {
       scope.params,
     );
 
+    // Scoped, database-derived operational metrics. A deal's updated_at is a
+    // last-activity timestamp, not a reliable stage-entry timestamp; report
+    // stage age only where a stage-move event can establish entry time.
+    const { rows: operationalRows } = await this.db.query(`
+      SELECT
+        COUNT(*) FILTER (
+          WHERE d.stage NOT IN ('won', 'lost')
+            AND d.updated_at < NOW() - INTERVAL '7 days'
+        )::int AS "staleOpenItems",
+        COUNT(*) FILTER (
+          WHERE d.stage NOT IN ('won', 'lost')
+            AND d.created_at >= NOW() - INTERVAL '30 days'
+        )::int AS "addedThisPeriod",
+        COUNT(*) FILTER (
+          WHERE d.stage = 'won'
+            AND d.updated_at >= NOW() - INTERVAL '30 days'
+        )::int AS "completedThisPeriod"
+      FROM deals d WHERE ${scope.where}
+    `, scope.params);
+    const operationalMetrics = {
+      ...operationalRows[0],
+      // Deal follow-up due dates are not stored in the deals schema.
+      // Keep null until a scoped appointment/task due-date source is integrated.
+      overdueFollowUps: null as number | null,
+      averageTimeInStageDays: null as number | null,
+    };
+    // Stage transitions are recorded in events by moveDeal(). Use the most
+    // recent transition INTO the current stage; otherwise use deal creation
+    // only if no stage-change history exists. This avoids using updated_at,
+    // which also changes on unrelated edits and AI actions.
+    const { rows: stageAgeRows } = await this.db.query(`
+      SELECT ROUND(AVG(EXTRACT(EPOCH FROM (NOW() - COALESCE(
+        CASE WHEN history.move_count = 0 THEN d.created_at END,
+        CASE WHEN history.latest_stage = d.stage THEN history.latest_moved_at END
+      ))) / 86400)::numeric, 1) AS "averageDays"
+      FROM deals d
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS move_count,
+          (ARRAY_AGG(e.metadata->>'newStage' ORDER BY e.created_at DESC))[1] AS latest_stage,
+          MAX(e.created_at) AS latest_moved_at
+        FROM events e
+        WHERE e.entity_type = 'deal' AND e.entity_id = d.id
+          AND e.event_type = 'deal.stage_changed'
+      ) history ON TRUE
+      WHERE ${scope.where} AND d.stage NOT IN ('won', 'lost')
+    `, scope.params);
+    const stageAverage = stageAgeRows[0]?.averageDays;
+    operationalMetrics.averageTimeInStageDays = stageAverage == null
+      ? null : Number(stageAverage);
+    // A follow-up belongs to a deal only through its lead_id. Count distinct
+    // overdue tasks, scoped to the same deals as this dashboard.
+    const { rows: overdueRows } = await this.db.query(`
+      SELECT COUNT(DISTINCT t.id)::int AS "count"
+      FROM lead_tasks t
+      WHERE t.due_date < NOW()
+        AND t.status IN ('pending', 'in_progress')
+        AND EXISTS (
+          SELECT 1 FROM deals d
+          WHERE d.lead_id = t.lead_id
+            AND d.stage NOT IN ('won', 'lost')
+            AND ${scope.where}
+        )
+    `, scope.params);
+    operationalMetrics.overdueFollowUps = Number(overdueRows[0]?.count ?? 0);
+
+    // Per-stage average age uses the latest actual move event, or the deal
+    // creation timestamp if the deal has never moved. No updated_at proxy.
+    const { rows: stageRows } = await this.db.query(`
+      SELECT d.stage, COUNT(*)::int AS "items",
+        ROUND(AVG(EXTRACT(EPOCH FROM (NOW() - COALESCE(
+          CASE WHEN history.move_count = 0 THEN d.created_at END,
+          CASE WHEN history.latest_stage = d.stage THEN history.latest_moved_at END
+        ))) / 86400)::numeric, 1) AS "averageDays"
+      FROM deals d
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS move_count,
+          (ARRAY_AGG(e.metadata->>'newStage' ORDER BY e.created_at DESC))[1] AS latest_stage,
+          MAX(e.created_at) AS latest_moved_at
+        FROM events e
+        WHERE e.entity_type = 'deal' AND e.entity_id = d.id
+          AND e.event_type = 'deal.stage_changed'
+      ) history ON TRUE
+      WHERE ${scope.where}
+      GROUP BY d.stage
+    `, scope.params);
+    const stagePerformance = stageRows.map((row: any) => ({
+      stage: row.stage,
+      items: Number(row.items),
+      averageTimeInStageDays: row.averageDays == null ? null : Number(row.averageDays),
+    }));
+
+    // Marketing automations are team-scoped, not workspace-scoped. Expose
+    // observed status only, never infer that a scheduled job is healthy.
+    const automationHealth = [] as Array<{title: string; state: string; lastRunAt?: string | null}>;
+    if (teamId) {
+      const { rows: automationRows } = await this.db.query(`
+        SELECT a.name, a.status, a.last_run_at AS "lastRunAt",
+          r.status AS "lastRunStatus"
+        FROM mkt_automations a
+        LEFT JOIN LATERAL (
+          SELECT status FROM mkt_automation_runs r
+          WHERE r.automation_id = a.id AND r.team_id = a.team_id
+          ORDER BY r.created_at DESC LIMIT 1
+        ) r ON TRUE
+        WHERE a.team_id = $1
+        ORDER BY a.name ASC
+      `, [teamId]);
+      for (const row of automationRows) {
+        automationHealth.push({
+          title: row.name || 'Automation',
+          state: String(row.status).toLowerCase() !== 'active' ? 'Disabled'
+            : !row.lastRunAt ? 'Not run'
+            : ['failed', 'error'].includes(String(row.lastRunStatus).toLowerCase()) ? 'Failed'
+            : ['applied', 'succeeded', 'success', 'completed'].includes(String(row.lastRunStatus).toLowerCase()) ? 'Last run succeeded'
+            : 'Unknown',
+          lastRunAt: row.lastRunAt,
+        });
+      }
+    }
     const statsSummary = await this.getPeriodSummary(scope, statsPeriod);
     const forecastSummary = await this.getPeriodSummary(scope, forecastPeriod);
 
@@ -684,7 +854,7 @@ export class PipelineService {
       },
     ];
 
-    const columns = PIPELINE_STAGES.map((stage) => {
+    const columns = configuredStages.map((stage) => {
       const stageDeals = deals.filter((deal) => deal.stage === stage.key);
       const totalValue = stageDeals.reduce(
         (sum, deal) => sum + Number(deal.value || 0),
@@ -799,16 +969,9 @@ export class PipelineService {
       )} in revenue with ${aiCloseScore}% confidence for ${forecastPeriod.label.toLowerCase()} based on current pipeline health, deal velocity, and engagement signals.`,
     };
 
-    const automationHealth = [
-      { title: "AI Score Refresh", state: "Active" },
-      { title: "Auto Prioritization", state: "Active" },
-      { title: "Follow-Up Tasks", state: "Active" },
-      { title: "Pipeline Sync", state: "Active" },
-      {
-        title: "Risk Detection",
-        state: riskQueue.length ? "Active" : "Healthy",
-      },
-    ];
+    // These are configuration/health checks, not inferred from the presence
+    // of deals. Until real job status is connected, never claim they are active.
+
     const aiMetrics = {
       confidence: {
         label: "AI Confidence",
@@ -867,6 +1030,8 @@ export class PipelineService {
       riskQueue,
       forecast,
       automationHealth,
+      operationalMetrics,
+      stagePerformance,
       aiMetrics,
       summary: {
         totalDeals,
