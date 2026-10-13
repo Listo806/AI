@@ -2076,3 +2076,10 @@ body.crm-dark .admin-plan-table tbody tr:hover td {
     background: #111827;
    }
 }
+
+/* Product-scoped plan administration */
+.admin-plan-header-actions{display:flex;align-items:flex-end;flex-direction:column;gap:12px}
+.admin-plan-add-button{display:inline-flex;align-items:center;gap:8px;background:#2463eb;color:#fff;border:0;border-radius:10px;padding:13px 20px;font-weight:700;cursor:pointer}
+.admin-plan-filter-row{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-primary,inherit)}
+.admin-plan-filter-row select{min-width:220px;border:1px solid #d8e2f2;border-radius:8px;padding:10px;background:var(--card-bg,transparent);color:inherit}
+@media(max-width:600px){.admin-plan-header-actions{align-items:flex-start}.admin-plan-filter-row{flex-wrap:wrap}}

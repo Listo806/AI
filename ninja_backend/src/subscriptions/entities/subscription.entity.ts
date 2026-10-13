@@ -28,11 +28,19 @@ export enum AnalyticsLevel {
 export enum PlanCategory {
   MARKETPLACE = 'marketplace',
   AI_CRM = 'ai_crm',
+  AGENTIC_CRM = 'agentic_crm',
+  ECOMMERCE = 'ecommerce',
+  VACATION_RENTALS = 'vacation_rentals',
+  MARKETPLACE_AGENTS = 'marketplace_agents',
 }
 
 export interface SubscriptionPlan {
   id: string;
   name: string;
+  productKey?: string | null;
+  planKind?: 'base' | 'addon';
+  activationFee?: number;
+  annualPrice?: number | null;
   description: string | null;
   price: number;
   seatLimit: number;

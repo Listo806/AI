@@ -7,7 +7,7 @@ import { UserRole } from '../../users/entities/user.entity';
  * Guard that enforces listing creation limits
  * Returns 403 FORBIDDEN if listing limit is reached
  *
- * NOTE: VA and OWNER users bypass listing limits (they can create unlimited listings)
+ * All roles are subject to purchased listing allowances.
  */
 @Injectable()
 export class ListingLimitGuard implements CanActivate {
@@ -23,22 +23,20 @@ export class ListingLimitGuard implements CanActivate {
     const enforcementDisabled =
       (this.configService.get('SUBSCRIPTION_ENFORCEMENT_DISABLED') ?? 'false') === 'true';
 
-    // VA and OWNER users bypass listing limits
-    if (user && (user.role === UserRole.VA || user.role === UserRole.OWNER)) {
-      return true;
-    }
-
     if (enforcementDisabled) {
       return true;
     }
 
-    let teamIdForLimit = user.teamId;
-    if (!teamIdForLimit && request.method === 'POST' && request.body && request.body.teamId) {
-      teamIdForLimit = request.body.teamId;
+    if (!user) throw new ForbiddenException('Authentication required');
+    const teamIdForLimit = user.teamId;
+    if (!teamIdForLimit) throw new ForbiddenException('User must be part of a team');
+    if (request.body?.teamId && String(request.body.teamId) !== String(teamIdForLimit)) {
+      throw new ForbiddenException('Cannot create listings for another team');
     }
-    if (!user || !teamIdForLimit) {
-      throw new ForbiddenException('User must be part of a team');
-    }
+
+    // Vacation Rentals has a separate paid product entitlement, enforced at
+    // create/publish by PropertiesService. Do not apply legacy CRM team quota.
+    if (request.body?.listingType === 'vacation') return true;
 
     // Hard block if limit reached
     await this.enforcementService.checkListingCreation(teamIdForLimit);

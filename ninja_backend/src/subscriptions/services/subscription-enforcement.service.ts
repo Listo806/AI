@@ -45,6 +45,32 @@ export class SubscriptionEnforcementService {
       // "Free gets CRM + limited AI, premium stays locked" holds. featureAllowed
       // fails open, so a metering error can never wrongly lock a real user out.
       const listingCount = await this.getCurrentListingCount(teamId);
+      // A paid legacy CRM account can still use its established plan. But a
+      // catalog subscription must never inherit unlimited listings just because
+      // the canonical user-level billing flag says "paid".
+      const { rows: catalogRows } = await this.db.query(
+        `SELECT p.name, p.plan_category AS "category", p.listing_limit AS "listingLimit",
+                p.crm_access AS "crmAccess", p.ai_features AS "aiFeatures",
+                p.ai_automation AS "aiAutomation", p.priority_exposure AS "priorityExposure",
+                p.analytics_level AS "analyticsLevel"
+           FROM subscriptions s JOIN subscription_plans p ON p.id=s.plan_id
+          WHERE s.team_id=$1 AND s.status='active' AND p.plan_kind='base'
+          ORDER BY s.updated_at DESC LIMIT 1`, [teamId],
+      );
+      if (catalogRows.length) {
+        const plan = catalogRows[0];
+        const limit = plan.listingLimit === null ? null : Number(plan.listingLimit);
+        return {
+          hasActiveSubscription: true, listingLimit: limit,
+          currentListingCount: listingCount,
+          canCreateListing: limit === null || listingCount < limit,
+          crmAccess: !!plan.crmAccess, aiFeatures: !!plan.aiFeatures,
+          analyticsLevel: plan.analyticsLevel || 'none',
+          priorityExposure: !!plan.priorityExposure,
+          aiAutomation: !!plan.aiAutomation, planName: plan.name,
+          planCategory: plan.category,
+        };
+      }
       const { paid } = await this.usage.resolveTeamPlan(teamId);
       const [crmAccess, aiFeatures, aiAutomation, advAnalytics] = await Promise.all([
         this.usage.featureAllowed(teamId, 'crm'),

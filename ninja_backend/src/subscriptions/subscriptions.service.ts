@@ -6,6 +6,7 @@ import { Subscription, SubscriptionStatus } from './entities/subscription.entity
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionPlansService } from './subscription-plans.service';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class SubscriptionsService {
@@ -184,6 +185,20 @@ export class SubscriptionsService {
     return rows.length > 0;
   }
 
+  /** Stop billing and provisioning paid seats after a verified full refund or
+   * terminated Nuvei parent subscription. Safe to rerun; base seats remain. */
+  @Cron(CronExpression.EVERY_HOUR)
+  async reconcileTerminatedTeamSeats(): Promise<number> {
+    const result = await this.db.query(`UPDATE team_addon_history h
+      SET disabled_at=NOW()
+      WHERE h.addon_key='seat' AND h.disabled_at IS NULL
+        AND EXISTS (SELECT 1 FROM nuvei_subscriptions s WHERE s.team_id=h.team_id)
+        AND NOT EXISTS (SELECT 1 FROM nuvei_subscriptions s WHERE s.team_id=h.team_id
+          AND s.status IN ('trialing','active','past_due'))
+      RETURNING h.id`);
+    return result.rows.length;
+  }
+
   /** Count of paid extra seats (each active 'seat' add-on = +1 seat). */
   async getTeamExtraSeatCount(teamId: string): Promise<number> {
     if (!teamId) return 0;
@@ -254,19 +269,25 @@ export class SubscriptionsService {
    * are never represented here and therefore can never be removed. */
   async removeSeat(teamId: string): Promise<{ success: boolean; extraSeats: number; provider: string }> {
     if (!teamId) throw new BadRequestException('A team is required.');
-    const current = await this.getTeamExtraSeatCount(teamId);
-    if (current <= 0) return { success: true, extraSeats: 0, provider: 'nuvei' };
-
-    await this.db.query(
-      `UPDATE team_addon_history SET disabled_at = NOW()
-        WHERE id = (
-          SELECT id FROM team_addon_history
-           WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL
-           ORDER BY enabled_at DESC LIMIT 1
-        )`,
-      [teamId],
-    );
-    return { success: true, extraSeats: current - 1, provider: 'nuvei' };
+    // Never reduce paid capacity below the number of currently occupied seats.
+    // A canceled/refunded add-on must first have its extra member removed.
+    return this.db.transaction(async client => {
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`crm-seats:${teamId}`]);
+      const rows = await client.query(`SELECT h.id FROM team_addon_history h
+        WHERE h.team_id=$1 AND h.addon_key='seat' AND h.disabled_at IS NULL
+        ORDER BY h.enabled_at DESC FOR UPDATE`, [teamId]);
+      if (!rows.rows.length) return { success: true, extraSeats: 0, provider: 'nuvei' };
+      // Canonical seat limit resolves paid Solo/Business/Scale correctly even
+      // when the legacy `subscriptions` table has no active row.
+      const currentLimit = await this.teamsService.getTeamSeatLimit(teamId);
+      const included = Math.max(0, currentLimit - rows.rows.length);
+      const usage = await this.teamsService.getTeamSeatUsage(teamId);
+      if (usage > included + rows.rows.length - 1) {
+        throw new BadRequestException('Remove a team member before canceling the paid seat; occupied seats exceed the new allowance.');
+      }
+      await client.query(`UPDATE team_addon_history SET disabled_at=NOW() WHERE id=$1 AND disabled_at IS NULL`,[rows.rows[0].id]);
+      return { success: true, extraSeats: rows.rows.length - 1, provider: 'nuvei' };
+    });
   }
 
   async create(createSubscriptionDto: CreateSubscriptionDto, userId: string): Promise<{ subscription: Subscription; checkoutUrl: string; transactionId: string | null }> {
@@ -293,6 +314,7 @@ export class SubscriptionsService {
     if (!plan || !plan.isActive) {
       throw new NotFoundException('Subscription plan not found or inactive');
     }
+    if (plan.planKind === 'addon') throw new BadRequestException('Add-ons require a parent subscription');
 
     if (!plan.paddlePriceId) {
       throw new BadRequestException('Plan does not have a Paddle price ID configured');
@@ -418,6 +440,7 @@ export class SubscriptionsService {
     if (!plan || !plan.isActive) {
       throw new NotFoundException('Plan not found or inactive');
     }
+    if (plan.planKind === 'addon') throw new BadRequestException('An add-on cannot replace the parent subscription');
 
     const existing = await this.findByTeamId(teamId);
     if (existing) {

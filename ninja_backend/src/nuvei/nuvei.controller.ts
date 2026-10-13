@@ -1,3 +1,4 @@
+import { ProductBillingService } from '../platform/product-billing.service';
 import { ModuleRef } from '@nestjs/core';
 import { MarketplacePlansService } from '../platform/marketplace-plans.service';
 import {
@@ -368,6 +369,11 @@ export class NuveiController {
     @Res({ passthrough: true }) res: any,
   ) {
     const ref = String(body?.transaction?.dev_reference || body?.order?.dev_reference || '');
+    if (/^CP-[0-9a-f-]{36}$/i.test(ref)) {
+      // Never trust callback status: re-fetch the transaction from Nuvei.
+      const billing = this.moduleRef.get(ProductBillingService, {strict:false});
+      return billing.handlePaymentNotification(ref, body);
+    }
     if (/^LQ-[0-9a-f-]{36}$/i.test(ref)) {
       const plans = this.moduleRef.get(MarketplacePlansService, {strict:false});
       const out = await plans.handlePaymentCallback(body, token || authToken);

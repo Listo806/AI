@@ -89,6 +89,14 @@ export class CreatePlanDto {
   planCategory?: string;
 
   @IsOptional()
+  @IsString()
+  productKey?: string | null;
+
+  @IsOptional()
+  @IsString()
+  planKind?: string;
+
+  @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
   isActive?: boolean;

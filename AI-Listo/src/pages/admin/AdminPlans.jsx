@@ -36,8 +36,10 @@ const defaultForm = {
   analyticsLevel: 'none',
   priorityExposure: false,
   aiAutomation: false,
-  planCategory: 'marketplace',
-  isActive: true,
+  planCategory: 'agentic_crm',
+  productKey: '',
+  planKind: 'base',
+  isActive: false,
 };
 
 function PlanFormModal({ plan, onClose, onSuccess }) {
@@ -67,6 +69,7 @@ function PlanFormModal({ plan, onClose, onSuccess }) {
       plan?.contactsLimit ??
       plan?.listingLimit ??
       '',
+    listingLimit: plan?.listingLimit ?? '',
     iconColor: plan?.iconColor || '#22C55E',
   }));
 
@@ -115,19 +118,15 @@ function PlanFormModal({ plan, onClose, onSuccess }) {
             ? null
             : Number(form.leadsContactsLimit),
         seatLimit: Math.max(1, Number(form.seatLimit) || 1),
-        listingLimit:
-          form.leadsContactsLimit === '' ||
-          form.leadsContactsLimit == null
-            ? form.listingLimit === '' || form.listingLimit == null
-              ? null
-              : Number(form.listingLimit)
-            : Number(form.leadsContactsLimit),
+        listingLimit: form.listingLimit === '' || form.listingLimit == null ? null : Number(form.listingLimit),
         crmAccess: !!form.crmAccess,
         aiFeatures: !!form.aiFeatures,
         analyticsLevel: form.analyticsLevel || 'none',
         priorityExposure: !!form.priorityExposure,
         aiAutomation: !!form.aiAutomation,
-        planCategory: form.planCategory || 'marketplace',
+        planCategory: form.planCategory || 'agentic_crm',
+        productKey: form.productKey?.trim() || null,
+        planKind: form.planKind || 'base',
         isActive: form.isActive !== false,
       };
 
@@ -441,9 +440,19 @@ function PlanFormModal({ plan, onClose, onSuccess }) {
           value={form.planCategory || 'marketplace'}
           onChange={(e) => setField('planCategory', e.target.value)}
         >
-          <option value="marketplace">Marketplace</option>
-          <option value="core">Core</option>
-          <option value="premium">Premium</option>
+          {PRODUCT_CATEGORIES.map(([value,label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      </label>
+      <label className="admin-plan-modal-field"><span>{t('admin.plans.listingLimit', 'Active listing limit (blank = unlimited)')}</span>
+        <input type="number" min="0" value={form.listingLimit ?? ''} onChange={e=>setField('listingLimit',e.target.value)} />
+      </label>
+      <label className="admin-plan-modal-field"><span>{t('admin.plans.productKey', 'Internal plan ID')}</span>
+        <input value={form.productKey || ''} onChange={e=>setField('productKey',e.target.value)} placeholder="marketplace.standard_exposure" required={!plan?.id} />
+      </label>
+      <label className="admin-plan-modal-field"><span>{t('admin.plans.planKind', 'Plan type')}</span>
+        <select value={form.planKind || 'base'} onChange={e=>setField('planKind',e.target.value)}>
+          <option value="base">{t('admin.plans.basePlan', 'Subscription')}</option>
+          <option value="addon">{t('admin.plans.addonPlan', 'Add-on (requires parent subscription)')}</option>
         </select>
       </label>
     </section>
@@ -615,10 +624,17 @@ const getCoreFeatures = (plan) => {
   return features.slice(0, 2);
 };
 
+const PRODUCT_CATEGORIES = [
+  ['agentic_crm','Agentic CRM'],['ecommerce','E-Commerce'],
+  ['marketplace','Marketplace'],['vacation_rentals','Vacation Rentals'],
+  ['marketplace_agents','Marketplace Agents'],
+];
+
 export default function AdminPlans() {
   const { t } = useTranslation();
   const { showSuccess, showError } = useNotification();
   const [plans, setPlans] = useState([]);
+  const [productFilter,setProductFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -696,7 +712,11 @@ export default function AdminPlans() {
     }
   };
 
-  const total = plans.length;
+  const visiblePlans = productFilter === 'all' ? plans : plans.filter(p => {
+    const category = p.planCategory || 'marketplace';
+    return category === productFilter || (productFilter === 'agentic_crm' && category === 'ai_crm');
+  });
+  const total = visiblePlans.length;
 
   return (
     <div className="crm-page admin-plan-management-page">
@@ -712,16 +732,26 @@ export default function AdminPlans() {
           </div>
         </div>
 
-        <span className="admin-plan-live-badge">
-          <CheckCircle2 size={16} /> Live pricing
-        </span>
+        <div className="admin-plan-header-actions">
+          <span className="admin-plan-live-badge"><CheckCircle2 size={16} /> {t('admin.plans.livePricing', 'Live pricing')}</span>
+          <button type="button" className="admin-plan-add-button" onClick={() => setModal({plan:null})}>
+            <Plus size={18}/>{t('admin.plans.addPlan','Add Plan')}
+          </button>
+        </div>
       </div>
 
+      <div className="admin-plan-filter-row">
+        <label htmlFor="admin-plan-product-filter">{t('admin.plans.productCategory','Product')}</label>
+        <select id="admin-plan-product-filter" value={productFilter} onChange={e=>setProductFilter(e.target.value)}>
+          <option value="all">{t('admin.plans.allProducts','All products')}</option>
+          {PRODUCT_CATEGORIES.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+        </select>
+      </div>
       {loading ? (
         <div className="admin-plan-state">
           {t('common.loading')}
         </div>
-      ) : plans.length === 0 ? (
+      ) : visiblePlans.length === 0 ? (
         <div className="admin-plan-state">
           {t('admin.plans.noPlans')}
         </div>
@@ -763,7 +793,7 @@ export default function AdminPlans() {
               </thead>
 
               <tbody>
-                {plans.map((plan) => {
+                {visiblePlans.map((plan) => {
                   const visual = getPlanVisual(plan);
                   const PlanIcon = visual.Icon;
 
@@ -992,7 +1022,7 @@ export default function AdminPlans() {
         </div>
       )}
 
-      {modal?.plan && (
+      {modal && (
         <PlanFormModal
           plan={modal.plan}
           onClose={() => setModal(null)}

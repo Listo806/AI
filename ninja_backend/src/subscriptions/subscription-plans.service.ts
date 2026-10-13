@@ -20,7 +20,9 @@ export class SubscriptionPlansService {
         ADD COLUMN IF NOT EXISTS ai_conversation_limit INTEGER,
         ADD COLUMN IF NOT EXISTS whatsapp_connections INTEGER,
         ADD COLUMN IF NOT EXISTS leads_contacts_limit INTEGER,
-        ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ
+        ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS product_key TEXT,
+        ADD COLUMN IF NOT EXISTS plan_kind TEXT NOT NULL DEFAULT 'base' 
     `);
 
     this.schemaReady = true;
@@ -29,6 +31,8 @@ export class SubscriptionPlansService {
   private selectColumns(): string {
     return `
       id,
+      product_key as "productKey",
+      plan_kind as "planKind",
       name,
       description,
       price,
@@ -52,8 +56,29 @@ export class SubscriptionPlansService {
     `;
   }
 
+  private validateCatalog(dto: Partial<CreatePlanDto>, existing?: SubscriptionPlan): void {
+    const category = dto.planCategory ?? existing?.planCategory;
+    const key = dto.productKey === undefined ? existing?.productKey : dto.productKey;
+    const kind = dto.planKind ?? existing?.planKind ?? 'base';
+    const active = dto.isActive ?? existing?.isActive ?? false;
+    const categories = ['agentic_crm', 'ai_crm', 'ecommerce', 'marketplace', 'vacation_rentals', 'marketplace_agents'];
+    if (category && !categories.includes(category)) throw new BadRequestException('Invalid product category');
+    if (!['base', 'addon'].includes(kind)) throw new BadRequestException('Invalid plan kind');
+    if (key && (!/^[a-z0-9_]+\.[a-z0-9_]+$/.test(key) || (category && !key.startsWith(`${category}.`)))) {
+      throw new BadRequestException('Internal plan ID must be product.plan');
+    }
+    if (kind === 'addon' && active && !existing?.isActive) throw new BadRequestException('Add-ons must be purchased against a parent subscription');
+    if (active && !existing?.isActive && ['marketplace', 'vacation_rentals', 'marketplace_agents'].includes(category || '')) {
+      throw new BadRequestException('Checkout and entitlements must be verified before publishing this product');
+    }
+    if (dto.activationFee != null && dto.activationFee > 0 && !['ai_crm', 'agentic_crm'].includes(category || '')) {
+      throw new BadRequestException('Unapproved activation fee');
+    }
+  }
+
   async create(createPlanDto: CreatePlanDto): Promise<SubscriptionPlan> {
     await this.ensureSchema();
+    this.validateCatalog(createPlanDto);
 
     const { rows } = await this.db.query(
       `INSERT INTO subscription_plans (
@@ -62,14 +87,14 @@ export class SubscriptionPlansService {
          ai_conversation_limit, whatsapp_connections,
          crm_access, ai_features, analytics_level,
          priority_exposure, ai_automation, plan_category, is_active,
-         created_at, updated_at
+         product_key, plan_kind, created_at, updated_at
        ) VALUES (
          $1, $2, $3, $4, $5,
          $6, $7, $8, $9,
          $10, $11,
          $12, $13, $14,
          $15, $16, $17, $18,
-         NOW(), NOW()
+         $19, $20, NOW(), NOW()
        )
        RETURNING ${this.selectColumns()}`,
       [
@@ -91,6 +116,8 @@ export class SubscriptionPlansService {
         createPlanDto.aiAutomation ?? false,
         createPlanDto.planCategory ?? 'marketplace',
         createPlanDto.isActive !== false,
+        createPlanDto.productKey ?? null,
+        createPlanDto.planKind ?? 'base',
       ],
     );
 
@@ -140,6 +167,7 @@ export class SubscriptionPlansService {
 
     const plan = await this.findById(id);
     if (!plan) throw new NotFoundException('Subscription plan not found');
+    this.validateCatalog(updatePlanDto, plan);
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -175,6 +203,8 @@ export class SubscriptionPlansService {
     if (updatePlanDto.priorityExposure !== undefined) add('priority_exposure', updatePlanDto.priorityExposure);
     if (updatePlanDto.aiAutomation !== undefined) add('ai_automation', updatePlanDto.aiAutomation);
     if (updatePlanDto.planCategory !== undefined) add('plan_category', updatePlanDto.planCategory);
+    if (updatePlanDto.productKey !== undefined) add('product_key', updatePlanDto.productKey);
+    if (updatePlanDto.planKind !== undefined) add('plan_kind', updatePlanDto.planKind);
 
     if (!updates.length) return plan;
 

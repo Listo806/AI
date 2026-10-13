@@ -13,21 +13,29 @@ import { UserRole } from '../users/entities/user.entity';
 export class PlatformListingsService {
   constructor(private readonly db: DatabaseService, private readonly marketplacePlans: MarketplacePlansService) {}
 
-  private async checkListingCapacity(userId:string) {
-    const state=await this.marketplacePlans.requireEntitlement(userId);
-    if(state.maxListings===null) return;
-    const result=await this.db.query(`SELECT COUNT(*)::int AS total FROM properties
-      WHERE created_by=$1 AND origin='platform' AND status NOT IN ('draft','rejected','deleted','archived')`,[userId]);
-    if(Number(result.rows[0]?.total||0)>=state.maxListings)
-      throw new BadRequestException(`Your plan permits ${state.maxListings} active listings. Upgrade or archive an existing listing.`);
+  /** Serialize listing activations for each owner so concurrent requests cannot
+   * both consume the same last available listing slot. The entitlement is checked
+   * inside the same transaction as the insert/update. */
+  private async withListingSlot<T>(userId: string, work: (client: any) => Promise<T>): Promise<T> {
+    return this.db.transaction(async client => {
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`platform-listings:${userId}`]);
+      const state = await this.marketplacePlans.requireEntitlement(userId);
+      if (state.maxListings !== null) {
+        const result = await client.query(`SELECT COUNT(*)::int AS total FROM properties
+          WHERE created_by=$1 AND origin='platform' AND status NOT IN ('draft','rejected','deleted','archived')`, [userId]);
+        if (Number(result.rows[0]?.total || 0) >= state.maxListings)
+          throw new BadRequestException(`Your plan permits ${state.maxListings} active listings. Upgrade or archive an existing listing.`);
+      }
+      return work(client);
+    });
   }
 
   async create(dto: CreatePropertyDto, userId: string, teamId: string | null): Promise<any> {
-    await this.checkListingCapacity(userId);
     const status = PropertyStatus.PENDING_REVIEW;
     const origin = PropertyOrigin.PLATFORM;
 
-    const { rows } = await this.db.query(
+    return this.withListingSlot(userId, async client => {
+    const { rows } = await client.query(
       `INSERT INTO properties (
         title, description, address, city, state, zip_code, price, type, status, origin,
         bedrooms, bathrooms, square_feet, lot_size, year_built, created_by, team_id,
@@ -62,6 +70,7 @@ export class PlatformListingsService {
     );
 
     return rows[0];
+    });
   }
 
   async createDraft(dto: CreatePropertyDto, userId: string, teamId: string | null) {
@@ -103,16 +112,19 @@ export class PlatformListingsService {
   }
 
   async submitDraft(id: string,userId: string) {
-    await this.checkListingCapacity(userId);
-    const draft=await this.ownedDraft(id,userId);
+    return this.withListingSlot(userId, async client => {
+    const draftResult=await client.query(`SELECT * FROM properties WHERE id=$1 AND created_by=$2 AND origin='platform' AND status='draft' FOR UPDATE`,[id,userId]);
+    if(!draftResult.rows.length) throw new NotFoundException('Draft not found or not editable');
+    const draft=draftResult.rows[0];
     if (!draft.title || draft.title==='Untitled draft' || !draft.description || !draft.address || !draft.city || !draft.price || Number(draft.price)<=0)
       throw new BadRequestException('Complete title, description, address, city and price before submission');
-    const media=await this.db.query(`SELECT COUNT(*)::int AS count FROM property_media WHERE property_id=$1 AND type='image'`,[id]);
+    const media=await client.query(`SELECT COUNT(*)::int AS count FROM property_media WHERE property_id=$1 AND type='image'`,[id]);
     if (!media.rows[0]?.count) throw new BadRequestException('Upload at least one image before submission');
     // Do not silently grant publishing entitlements here: subscription enforcement must be wired to the checkout entitlement service.
-    const {rows}=await this.db.query(`UPDATE properties SET status='pending_review',updated_at=NOW() WHERE id=$1 AND created_by=$2 AND status='draft' RETURNING *`,[id,userId]);
+    const {rows}=await client.query(`UPDATE properties SET status='pending_review',updated_at=NOW() WHERE id=$1 AND created_by=$2 AND status='draft' RETURNING *`,[id,userId]);
     if (!rows.length) throw new NotFoundException('Draft no longer editable');
     return rows[0];
+    });
   }
 
   async findMine(userId: string, teamId: string | null, role: string): Promise<any[]> {

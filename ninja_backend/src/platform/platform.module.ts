@@ -7,11 +7,13 @@ import { MarketplacePlansService } from './marketplace-plans.service';
 import { MarketplaceBankAdminController } from './marketplace-bank-admin.controller';
 import { PlatformController } from './platform.controller';
 import { PlatformListingsService } from './platform-listings.service';
+import { ProductBillingController } from './product-billing.controller';
+import { ProductBillingService } from './product-billing.service';
 
 @Module({
   imports: [DatabaseModule, SubscriptionsModule, NuveiModule],
-  controllers: [PlatformController, MarketplacePlansController, MarketplaceBankAdminController],
-  providers: [PlatformListingsService, MarketplacePlansService],
+  controllers: [PlatformController, MarketplacePlansController, MarketplaceBankAdminController, ProductBillingController],
+  providers: [PlatformListingsService, MarketplacePlansService, ProductBillingService],
   exports: [MarketplacePlansService],
 })
 export class PlatformModule {}

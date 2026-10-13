@@ -94,4 +94,12 @@ export class UpdatePlanDto {
   @IsOptional()
   @IsString()
   planCategory?: string;
+
+  @IsOptional()
+  @IsString()
+  productKey?: string | null;
+
+  @IsOptional()
+  @IsString()
+  planKind?: string;
 }

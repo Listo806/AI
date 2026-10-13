@@ -63,6 +63,9 @@ export class MarketplacePlansService {
     await this.expireDue(userId);
     const old=(await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId])).rows[0];
     if(!old) throw new NotFoundException('Enrollment not found');
+    const approvedPlan=PLANS[old.plan_key as keyof typeof PLANS];
+    if (!approvedPlan || approvedPlan.priceCents !== Number(old.price_cents) || old.currency !== 'USD')
+      throw new BadRequestException('Enrollment does not match an approved plan');
     if(Number(old.price_cents)<=0) throw new BadRequestException('Free plans do not require renewal');
     if(old.status==='active' && old.current_period_end && new Date(old.current_period_end).getTime()>Date.now()+7*86400000)
       throw new BadRequestException('Renewal is available within seven days of expiration');
@@ -121,7 +124,11 @@ export class MarketplacePlansService {
     const active=state.data.find(x=>x.status==='active' && x.price_cents>0) || state.data.find(x=>x.status==='active');
     if (!active) throw new BadRequestException('Activate or renew a Marketplace plan before submitting a listing');
     const plan=PLANS[active.plan_key as keyof typeof PLANS];
-    return {...state,entitlement:active,maxListings:plan?.maxListings ?? null};
+    if (!plan) throw new BadRequestException('Active enrollment references an unknown plan; contact support');
+    if (Number(active.price_cents) !== plan.priceCents || String(active.currency).toUpperCase() !== 'USD') {
+      throw new BadRequestException('Enrollment amount or currency does not match its plan; contact support');
+    }
+    return {...state,entitlement:active,maxListings:plan.maxListings};
   }
 
   bankDetails() {
@@ -199,12 +206,24 @@ export class MarketplacePlansService {
     // Atomic, idempotent review: only pending_review requests can change state.
     const result=await this.db.query(`WITH claimed AS (
       UPDATE marketplace_bank_transfer_requests SET status=$2,reviewed_by=$3,reviewed_at=NOW(),review_note=$4,updated_at=NOW()
-      WHERE id=$1 AND status='pending_review' AND ($2='rejected' OR EXISTS (SELECT 1 FROM marketplace_plan_enrollments e WHERE e.id=enrollment_id AND e.status='pending_payment' AND e.payment_reference LIKE 'LQB-%')) RETURNING enrollment_id,status
+      WHERE id=$1 AND status='pending_review' AND ($2='rejected' OR EXISTS (SELECT 1 FROM marketplace_plan_enrollments e WHERE e.id=enrollment_id AND e.status='pending_payment' AND e.payment_reference LIKE 'LQB-%'
+      AND e.currency='USD' AND e.billing_interval='monthly'
+      AND ((e.plan_key='owner-standard' AND e.price_cents=6700)
+        OR (e.plan_key='owner-enhanced' AND e.price_cents=9700)
+        OR (e.plan_key='owner-maximum' AND e.price_cents=14700)
+        OR (e.plan_key='agent-essential' AND e.price_cents=9700)
+        OR (e.plan_key='agent-growth' AND e.price_cents=14700)))) RETURNING enrollment_id,status
     ), activated AS (
       UPDATE marketplace_plan_enrollments e SET status='active',
       current_period_start=NOW(),current_period_end=NOW()+INTERVAL '1 month',updated_at=NOW()
       FROM claimed c WHERE c.status='approved' AND e.id=c.enrollment_id AND e.status='pending_payment'
-      AND e.payment_reference LIKE 'LQB-%' RETURNING e.id
+      AND e.payment_reference LIKE 'LQB-%'
+      AND ((e.plan_key='owner-standard' AND e.price_cents=6700)
+        OR (e.plan_key='owner-enhanced' AND e.price_cents=9700)
+        OR (e.plan_key='owner-maximum' AND e.price_cents=14700)
+        OR (e.plan_key='agent-essential' AND e.price_cents=9700)
+        OR (e.plan_key='agent-growth' AND e.price_cents=14700))
+      AND e.currency='USD' AND e.billing_interval='monthly' RETURNING e.id
     ) SELECT (SELECT enrollment_id FROM claimed) AS enrollment_id,(SELECT status FROM claimed) AS status,
       (SELECT id FROM activated) AS activated_id`,[id,approve?'approved':'rejected',adminId,String(note).trim().slice(0,1000)]);
     const row=result.rows[0];

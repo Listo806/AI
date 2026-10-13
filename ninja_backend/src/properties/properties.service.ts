@@ -113,6 +113,32 @@ export class PropertiesService {
     }));
   }
 
+  /** Product-specific Vacation Rentals quota. Drafts do not consume slots.
+   * Never treat an unknown product or absent payment as unlimited. */
+  private async assertVacationCapacity(userId: string, excludingId?: string, db: {query:(sql:string,args?:any[])=>Promise<any>} = this.db): Promise<void> {
+    const paid = await db.query(`SELECT plan_key,period_end FROM product_billing_enrollments
+      WHERE user_id=$1 AND status='active' AND parent_id IS NULL
+        AND refund_status IS DISTINCT FROM 'confirmed' AND period_end>NOW()
+        AND plan_key IN ('vacation_rentals.starter','vacation_rentals.growth','vacation_rentals.premium')`, [userId]);
+    if (!paid.rows.length) throw new ForbiddenException('An active Vacation Rentals subscription is required');
+    const max = paid.rows.some((r:any)=>r.plan_key==='vacation_rentals.premium') ? null :
+      Math.max(...paid.rows.map((r:any)=>r.plan_key==='vacation_rentals.growth'?6:3));
+    if (max === null) return;
+    const result = await db.query(`SELECT COUNT(*)::int AS n FROM properties
+      WHERE created_by=$1 AND listing_type='vacation'
+      AND status NOT IN ('draft','rejected','deleted','archived') AND ($2::uuid IS NULL OR id<>$2::uuid)`,[userId,excludingId||null]);
+    if (Number(result.rows[0]?.n||0)>=max)
+      throw new ForbiddenException(`Vacation Rentals plan permits ${max} active listings`);
+  }
+
+  private async withVacationSlot<T>(userId:string, excludingId:string|undefined, work:(db:any)=>Promise<T>):Promise<T> {
+    return this.db.transaction(async client => {
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`vacation-listings:${userId}`]);
+      await this.assertVacationCapacity(userId,excludingId,client);
+      return work(client);
+    });
+  }
+
   async create(
     createPropertyDto: CreatePropertyDto,
     userId: string,
@@ -164,6 +190,54 @@ export class PropertiesService {
 
     const cleanAmenities = sanitizeAmenities(createPropertyDto.amenities);
 
+    const inserted = insertListingType === ListingCategory.VACATION &&
+      ![PropertyStatus.DRAFT, PropertyStatus.REJECTED].includes(status)
+      ? await this.withVacationSlot(userId,undefined,async db => {
+    const { rows } = await db.query(
+      `INSERT INTO properties (
+        title, description, address, city, state, zip_code, price, type, property_type, listing_type, status,
+        bedrooms, bathrooms, max_guests, amenities, square_feet, lot_size, year_built, created_by, team_id,
+        latitude, longitude, created_at, updated_at, published_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17, $18, $19, $20, $21, $22, NOW(), NOW(), $23)
+      RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+                listing_type as "listingType",
+                bedrooms, bathrooms, max_guests as "maxGuests", amenities,
+                square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
+                created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
+                thumbnail_url as "thumbnailUrl", latitude, longitude,
+                property_type as "propertyType",
+                created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
+      [
+        createPropertyDto.title,
+        createPropertyDto.description || null,
+        createPropertyDto.address || null,
+        createPropertyDto.city || null,
+        createPropertyDto.state || null,
+        createPropertyDto.zipCode || null,
+        createPropertyDto.price || null,
+        insertType,
+        createPropertyDto.propertyType ?? null,
+        insertListingType,
+        status,
+        createPropertyDto.bedrooms || null,
+        createPropertyDto.bathrooms || null,
+        resolvedMaxGuests,
+        JSON.stringify(cleanAmenities),
+        createPropertyDto.squareFeet || null,
+        createPropertyDto.lotSize || null,
+        createPropertyDto.yearBuilt || null,
+        userId,
+        resolvedTeamId,
+        createPropertyDto.latitude || null,
+        createPropertyDto.longitude || null,
+        status === PropertyStatus.PUBLISHED ? new Date() : null,
+      ],
+    );
+
+    return rows[0];
+      })
+      : await (async () => {
     const { rows } = await this.db.query(
       `INSERT INTO properties (
         title, description, address, city, state, zip_code, price, type, property_type, listing_type, status,
@@ -205,6 +279,10 @@ export class PropertiesService {
         status === PropertyStatus.PUBLISHED ? new Date() : null,
       ],
     );
+
+    return rows[0];
+      })();
+    const rows = [inserted];
 
     const property = await this.attachThumbnailUrl(rows[0]);
 
@@ -787,6 +865,7 @@ export class PropertiesService {
       }
     }
 
+    const resultingStatus = updatePropertyDto.status ?? property.status;
     const oldStatus = property.status;
     const wasPublished = property.status === PropertyStatus.PUBLISHED;
 
@@ -909,7 +988,12 @@ export class PropertiesService {
     updates.push(`updated_at = NOW()`);
     values.push(id);
 
-    const { rows } = await this.db.query(
+    const needsVacationSlot = nextListingType === ListingCategory.VACATION &&
+      ![PropertyStatus.DRAFT, PropertyStatus.REJECTED].includes(resultingStatus) &&
+      ([PropertyStatus.DRAFT, PropertyStatus.REJECTED].includes(property.status) || curListingType !== ListingCategory.VACATION);
+    const updateResult = needsVacationSlot
+      ? await this.withVacationSlot(userId,id,async db => {
+    return await db.query(
       `UPDATE properties SET ${updates.join(", ")} WHERE id = $${paramCount}
        RETURNING id, title, description, address, city, country, state, zip_code as "zipCode", price, type, status,
                  listing_type as "listingType",
@@ -922,6 +1006,23 @@ export class PropertiesService {
       values,
     );
 
+      })
+      : await (async () => {
+    return await this.db.query(
+      `UPDATE properties SET ${updates.join(", ")} WHERE id = $${paramCount}
+       RETURNING id, title, description, address, city, country, state, zip_code as "zipCode", price, type, status,
+                 listing_type as "listingType",
+                 bedrooms, bathrooms, max_guests as "maxGuests", amenities,
+                 square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
+                 created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
+                 thumbnail_url as "thumbnailUrl", latitude, longitude,
+                 property_type as "propertyType",
+                 created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
+      values,
+    );
+
+      })();
+    const rows = updateResult.rows;
     const updatedProperty = await this.attachThumbnailUrl(rows[0]);
 
     // Log status change if status was updated

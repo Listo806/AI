@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import ProductBillingPlans from "./pages/ProductBillingPlans";
 import Landing from "./pages/landing/Landing";
 
 import {
@@ -354,6 +355,8 @@ function AppRoutes() {
       />
       {/* Tokenized webview link from WhatsApp property card */}
       <Route path="/view" element={<View />} />
+
+      <Route path="/product-plans" element={<ProductBillingPlans />} />
 
       {/* Dedicated E-Commerce Subscription CRM — intentionally separate from the main workspace system. */}
       <Route path="/e-commerce" element={<EcommerceAuthProvider><Outlet /></EcommerceAuthProvider>}>
