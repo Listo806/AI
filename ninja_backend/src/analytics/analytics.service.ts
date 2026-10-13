@@ -77,96 +77,134 @@ export class AnalyticsService {
    * authenticated team. Null denotes a metric with no reliable source.
    */
   async getOverviewV2(teamId: string, days: number, workspaceId?: string) {
-    // This endpoint is team-scoped. Existing contacts/appointments/ai_activity
-    // migrations do not define workspace_id, so do not silently pretend to
-    // provide workspace-specific totals.
-    if (workspaceId) {
-      throw new BadRequestException('Workspace-specific analytics require a verified workspace mapping');
-    }
     const end = new Date();
     const start = new Date(end.getTime() - days * 86400000);
-    const params = [teamId, start, end];
-    const contacts = await this.db.query(
-      `SELECT count(*)::int AS total FROM contacts
-       WHERE team_id=$1 AND created_at >= $2 AND created_at <= $3`, params);
-    const appointments = await this.db.query(
-      `SELECT count(*)::int AS booked,
-       count(*) FILTER (WHERE lower(status)='completed')::int AS completed,
-       count(*) FILTER (WHERE lower(status) IN ('canceled','cancelled'))::int AS canceled,
-       count(*) FILTER (WHERE lower(status) IN ('no_show','no-show'))::int AS no_show
-       FROM appointments WHERE team_id=$1 AND created_at >= $2 AND created_at <= $3`, params);
-    const ai = await this.db.query(
-      `SELECT count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('success','completed','succeeded'))::int AS successful,
-       count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('failed','error'))::int AS failed
-       FROM ai_activity WHERE team_id=$1 AND created_at >= $2 AND created_at <= $3`,params);
-    const automation = await this.db.query(
-      `SELECT count(*) FILTER (WHERE status='applied')::int AS successful,
-       count(*) FILTER (WHERE status IN ('failed','error'))::int AS failed,
-       count(*) FILTER (WHERE status IN ('pending','awaiting_approval'))::int AS awaiting_approval
-       FROM mkt_automation_runs WHERE team_id=$1 AND created_at >= $2 AND created_at <= $3`,params);
-    const series = await this.db.query(
-      `SELECT day::date::text AS date,
-       (SELECT count(*)::int FROM appointments a WHERE a.team_id=$1
-        AND a.created_at::date=day::date) AS appointments,
-       (SELECT count(*)::int FROM ai_activity i WHERE i.team_id=$1
-        AND i.created_at::date=day::date) AS ai_actions
-       FROM generate_series($2::date,$3::date,interval '1 day') day ORDER BY day`,params);
-    const messages = await this.db.query(
-      `SELECT count(DISTINCT m.lead_id)::int AS handled,
-       count(*) FILTER (WHERE m.channel='whatsapp')::int AS whatsapp,
-       count(*) FILTER (WHERE m.channel='email')::int AS email
-       FROM lead_messages m JOIN leads l ON l.id=m.lead_id
-       WHERE l.team_id=$1 AND m.created_at >= $2 AND m.created_at <= $3`,params);
-    const followup = await this.db.query(
-      `SELECT count(*) FILTER (WHERE due_date >= $2 AND due_date <= $3)::int AS due,
-       count(*) FILTER (WHERE completed_at >= $2 AND completed_at <= $3 AND completed_at <= due_date)::int AS on_time,
-       count(*) FILTER (WHERE completed_at >= $2 AND completed_at <= $3 AND completed_at > due_date)::int AS late,
-       count(*) FILTER (WHERE due_date >= $2 AND due_date <= LEAST($3::timestamp,now())
-         AND status NOT IN ('completed','cancelled'))::int AS missed
-       FROM team_tasks WHERE team_id=$1 AND task_type IN ('follow_up','follow-up','followup')`,params);
-    const team = await this.db.query(
-      `SELECT u.id,u.email,
-       (SELECT count(*)::int FROM team_tasks t WHERE t.team_id=$1 AND t.assigned_to=u.id
-         AND t.status='completed' AND t.completed_at >= $2 AND t.completed_at <= $3) AS tasks_completed,
-       (SELECT count(*)::int FROM team_tasks t WHERE t.team_id=$1 AND t.assigned_to=u.id
-         AND t.task_type IN ('follow_up','follow-up','followup')
-         AND t.completed_at >= $2 AND t.completed_at <= $3 AND t.completed_at <= t.due_date) AS followups_on_time,
-       (SELECT count(*)::int FROM team_tasks t WHERE t.team_id=$1 AND t.assigned_to=u.id
-         AND t.task_type IN ('follow_up','follow-up','followup')
-         AND t.completed_at >= $2 AND t.completed_at <= $3) AS followups_completed
-       FROM users u WHERE u.team_id=$1 AND u.is_active=true ORDER BY u.email`,params);
-    const msgSeries = await this.db.query(
-      `SELECT m.created_at::date::text AS date,count(DISTINCT m.lead_id)::int AS conversations
-       FROM lead_messages m JOIN leads l ON l.id=m.lead_id
-       WHERE l.team_id=$1 AND m.created_at >= $2 AND m.created_at <= $3
-       GROUP BY 1`,params);
-    const conversationsByDay = new Map(msgSeries.rows.map((r:any)=>[r.date,r.conversations]));
-    const m = messages.rows[0];
-    const f = followup.rows[0];
-    const finished = f.on_time + f.late;
-    const ap = appointments.rows[0];
-    const aiResult = ai.rows[0];
-    const auto = automation.rows[0];
-    const denominator = auto.successful + auto.failed;
-    return {
-      period: {startDate:start.toISOString(),endDate:end.toISOString(),days},
-      metrics: {
-        newContacts:contacts.rows[0].total,
-        conversationsHandled:m.handled,
-        appointmentsBooked:ap.booked,
-        aiActionsCompleted:aiResult.successful,
-        averageFirstResponse:null,bookingRate:null,followupCompletion:finished ? Math.round(f.on_time*100/finished) : null,
-        automationSuccess:denominator > 0 ? Math.round(auto.successful*100/denominator) : null
-      },
-      activity:{series:series.rows.map((r:any)=>({...r,conversations:conversationsByDay.get(r.date) ?? 0}))},
-      channels:{calls:null,whatsapp:m.whatsapp,email:m.email,websiteChat:null},
-      appointments:{booked:ap.booked,completed:ap.completed,canceled:ap.canceled,noShow:ap.no_show},
-      followups:{dueInPeriod:f.due,completedOnTime:f.on_time,completedLate:f.late,missed:f.missed},
-      aiAutomation:{successful:auto.successful,failed:auto.failed,awaitingApproval:auto.awaiting_approval},
-      teamPerformance:team.rows.map((u:any)=>({id:u.id,name:u.email,tasksCompleted:u.tasks_completed,conversationsHandled:null,averageFirstResponse:null,followupCompletion:u.followups_completed ? Math.round(100*u.followups_on_time/u.followups_completed) : null})),
-      coverage:{workspace:false,conversations:true,channels:"whatsapp_email_only",firstResponse:false,
-        bookingRate:false,followups:"team_tasks_only",teamPerformance:"tasks_only",activityConversations:true}
+    const params: any[] = [teamId, start, end];
+    if (workspaceId) params.push(workspaceId);
+    const scoped = (alias: string) => workspaceId ? ` AND ${alias}.workspace_id = $4` : '';
+    const q = async (sql: string, args: any[] = params) =>
+      (await this.db.query(sql, args)).rows;
+    // Every lead-linked message is restricted by the lead's team and workspace.
+    const [contacts, leads, appointments, messages, responses, ai, automation, leadFollowups, teamFollowups, members, series] =
+      await Promise.all([
+        q(`SELECT count(*)::int AS total FROM contacts c WHERE c.team_id=$1 AND c.created_at >= $2 AND c.created_at < $3${scoped('c')}`),
+        q(`SELECT count(*)::int AS total FROM leads l WHERE l.team_id=$1 AND l.created_at >= $2 AND l.created_at < $3${scoped('l')}`),
+        q(`SELECT count(*)::int AS booked,
+             count(*) FILTER (WHERE lower(a.status)='completed')::int AS completed,
+             count(*) FILTER (WHERE lower(a.status) IN ('cancelled','canceled'))::int AS canceled,
+             count(*) FILTER (WHERE lower(a.status) IN ('no_show','no-show'))::int AS no_show,
+             count(DISTINCT a.lead_id) FILTER (WHERE a.lead_id IS NOT NULL AND EXISTS (SELECT 1 FROM leads l WHERE l.id=a.lead_id AND l.team_id=$1 AND l.created_at >= $2 AND l.created_at < $3))::int AS booked_leads
+           FROM appointments a WHERE a.team_id=$1 AND a.created_at >= $2 AND a.created_at < $3${scoped('a')}`),
+        q(`SELECT count(DISTINCT m.lead_id)::int AS handled,
+             count(*) FILTER (WHERE lower(m.channel)='whatsapp')::int AS whatsapp,
+             count(*) FILTER (WHERE lower(m.channel)='email')::int AS email
+           FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+           WHERE l.team_id=$1 AND m.created_at >= $2 AND m.created_at < $3${scoped('l')}`),
+        q(`WITH first_inbound AS (
+             SELECT DISTINCT ON (m.lead_id) m.lead_id,m.created_at AS received_at
+             FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+             WHERE l.team_id=$1 AND m.direction='inbound' AND m.created_at >= $2 AND m.created_at < $3${scoped('l')}
+             ORDER BY m.lead_id,m.created_at
+           )
+           SELECT round(avg(extract(epoch FROM (r.responded_at - i.received_at))/60)::numeric,1) AS minutes
+           FROM first_inbound i JOIN LATERAL (
+             SELECT min(m.created_at) AS responded_at FROM lead_messages m
+             WHERE m.lead_id=i.lead_id AND m.direction='outbound' AND m.created_at >= i.received_at
+           ) r ON r.responded_at IS NOT NULL`),
+        q(`SELECT count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('success','completed','succeeded'))::int AS successful,
+             count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('failed','error'))::int AS failed
+           FROM ai_activity ai WHERE ai.team_id=$1 AND ai.created_at >= $2 AND ai.created_at < $3${scoped('ai')}`),
+        // Automation runs do not have workspace_id; never attribute team totals to a workspace.
+        workspaceId ? Promise.resolve(null) :
+          q(`SELECT count(*) FILTER (WHERE status='applied')::int AS successful,
+               count(*) FILTER (WHERE status IN ('failed','error'))::int AS failed,
+               count(*) FILTER (WHERE status IN ('pending','awaiting_approval'))::int AS awaiting_approval
+             FROM mkt_automation_runs WHERE team_id=$1 AND created_at >= $2 AND created_at < $3`,params.slice(0,3)),
+        q(`SELECT count(*) FILTER (WHERE f.due_date >= $2 AND f.due_date < $3)::int AS due,
+             count(*) FILTER (WHERE f.completed_at >= $2 AND f.completed_at < $3 AND f.due_date IS NOT NULL AND f.completed_at <= f.due_date)::int AS on_time,
+             count(*) FILTER (WHERE f.completed_at >= $2 AND f.completed_at < $3 AND f.due_date IS NOT NULL AND f.completed_at > f.due_date)::int AS late,
+             count(*) FILTER (WHERE f.due_date >= $2 AND f.due_date < $3 AND f.due_date < now() AND f.status NOT IN ('completed','cancelled'))::int AS missed
+           FROM lead_tasks f JOIN leads l ON l.id=f.lead_id
+           WHERE l.team_id=$1${scoped('l')}`),
+        workspaceId ? Promise.resolve(null) :
+          q(`SELECT count(*) FILTER (WHERE t.due_date >= $2 AND t.due_date < $3 AND lower(t.task_type) IN ('follow_up','follow-up','followup'))::int AS due,
+               count(*) FILTER (WHERE t.completed_at >= $2 AND t.completed_at < $3 AND t.due_date IS NOT NULL AND t.completed_at <= t.due_date AND lower(t.task_type) IN ('follow_up','follow-up','followup'))::int AS on_time,
+               count(*) FILTER (WHERE t.completed_at >= $2 AND t.completed_at < $3 AND t.due_date IS NOT NULL AND t.completed_at > t.due_date AND lower(t.task_type) IN ('follow_up','follow-up','followup'))::int AS late,
+               count(*) FILTER (WHERE t.due_date >= $2 AND t.due_date < $3 AND t.due_date < now() AND t.status NOT IN ('completed','cancelled') AND lower(t.task_type) IN ('follow_up','follow-up','followup'))::int AS missed
+             FROM team_tasks t WHERE t.team_id=$1`,params.slice(0,3)),
+        q(`SELECT tm.user_id AS id,coalesce(u.name,u.email) AS name,
+             (SELECT count(*)::int FROM lead_tasks lt JOIN leads l ON l.id=lt.lead_id
+              WHERE l.team_id=$1 AND lt.assigned_to=tm.user_id AND lt.status='completed'
+                AND lt.completed_at >= $2 AND lt.completed_at < $3${scoped('l')}) AS tasks_completed,
+             (SELECT count(*)::int FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+              WHERE l.team_id=$1 AND l.assigned_to=tm.user_id
+                AND m.created_at >= $2 AND m.created_at < $3${scoped('l')}) AS conversations_handled,
+             (SELECT round(avg(extract(epoch FROM (reply.responded_at - inbound.received_at))/60)::numeric,1)
+              FROM (SELECT DISTINCT ON (m.lead_id) m.lead_id,m.created_at AS received_at
+                    FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+                    WHERE l.team_id=$1 AND l.assigned_to=tm.user_id AND m.direction='inbound'
+                      AND m.created_at >= $2 AND m.created_at < $3${scoped('l')}
+                    ORDER BY m.lead_id,m.created_at) inbound
+              JOIN LATERAL (SELECT min(m.created_at) AS responded_at FROM lead_messages m
+                            WHERE m.lead_id=inbound.lead_id AND m.direction='outbound'
+                              AND m.created_at >= inbound.received_at) reply
+              ON reply.responded_at IS NOT NULL) AS avg_response_minutes,
+             (SELECT round(100.0 * count(*) FILTER (WHERE lt.completed_at <= lt.due_date)
+                      / nullif(count(*),0),1)
+              FROM lead_tasks lt JOIN leads l ON l.id=lt.lead_id
+              WHERE l.team_id=$1 AND lt.assigned_to=tm.user_id AND lt.status='completed'
+                AND lt.completed_at >= $2 AND lt.completed_at < $3 AND lt.due_date IS NOT NULL${scoped('l')}) AS followup_completion
+           FROM team_members tm JOIN users u ON u.id=tm.user_id
+           WHERE tm.team_id=$1 AND tm.status='active' ORDER BY name`),
+        q(`SELECT d.day::date::text AS date,
+             (SELECT count(*)::int FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+              WHERE l.team_id=$1 AND m.created_at >= d.day AND m.created_at < d.day+interval '1 day'${scoped('l')}) AS conversations,
+             (SELECT count(*)::int FROM appointments a WHERE a.team_id=$1 AND a.created_at >= d.day
+              AND a.created_at < d.day+interval '1 day'${scoped('a')}) AS appointments,
+             (SELECT count(*)::int FROM ai_activity ai WHERE ai.team_id=$1 AND ai.created_at >= d.day
+              AND ai.created_at < d.day+interval '1 day'${scoped('ai')}) AS ai_actions
+           FROM generate_series($2::date,($3::date - interval '1 day')::date,interval '1 day') AS d(day) ORDER BY d.day`)
+      ]);
+    const follow = {
+      dueInPeriod: leadFollowups[0].due + (teamFollowups?.[0]?.due || 0),
+      completedOnTime: leadFollowups[0].on_time + (teamFollowups?.[0]?.on_time || 0),
+      completedLate: leadFollowups[0].late + (teamFollowups?.[0]?.late || 0),
+      missed: leadFollowups[0].missed + (teamFollowups?.[0]?.missed || 0)
     };
+    const auto = automation?.[0] || null;
+    const denominator = auto ? auto.successful + auto.failed : 0;
+    const leadTotal = leads[0].total;
+    return {
+      period:{startDate:start.toISOString(),endDate:end.toISOString(),days},
+      metrics:{
+        newContacts:contacts[0].total,conversationsHandled:messages[0].handled,
+        appointmentsBooked:appointments[0].booked,aiActionsCompleted:ai[0].successful,
+        averageFirstResponse:responses[0].minutes === null ? null : Number(responses[0].minutes),
+        bookingRate:leadTotal ? Math.round(appointments[0].booked_leads * 10000 / leadTotal)/100 : null,
+        followupCompletion:(follow.completedOnTime + follow.completedLate) ?
+          Math.round(follow.completedOnTime*10000/(follow.completedOnTime+follow.completedLate))/100 : null,
+        automationSuccess:denominator ? Math.round(auto.successful*10000/denominator)/100 : null
+      },
+      activity:{series},
+      channels:{calls:null,whatsapp:messages[0].whatsapp,email:messages[0].email,websiteChat:null},
+      appointments:{booked:appointments[0].booked,completed:appointments[0].completed,
+        canceled:appointments[0].canceled,noShow:appointments[0].no_show},
+      followups:follow,
+      aiAutomation:auto ? {successful:auto.successful,failed:auto.failed,awaitingApproval:auto.awaiting_approval} :
+        {successful:null,failed:null,awaitingApproval:null},
+      teamPerformance:members.map((m:any)=>({id:m.id,name:m.name,conversationsHandled:m.conversations_handled,
+        tasksCompleted:m.tasks_completed,averageFirstResponse:m.avg_response_minutes === null ? null : Number(m.avg_response_minutes),
+        followupCompletion:m.followup_completion === null ? null : Number(m.followup_completion)})),
+      coverage:{calls:false,websiteChat:false,automationWorkspace:!workspaceId,
+        followups:workspaceId?'lead_tasks_only':'lead_tasks_and_team_tasks',
+        responseTime:'first_inbound_to_first_outbound',bookingRate:'booked_leads_over_new_leads'}
+    };
+  }
+
+  async getOverviewInsights(teamId: string, days: number, workspaceId?: string) {
+    const data = await this.getOverviewV2(teamId,days,workspaceId);
+    // Deterministic, sourced insights; not presented as LLM-generated analysis.
+    return {period:data.period,metrics:data.metrics,coverage:data.coverage};
   }
 
   /**

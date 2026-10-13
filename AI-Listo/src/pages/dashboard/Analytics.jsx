@@ -1,1363 +1,150 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
-
-import {
-  BarChart3,
-  DollarSign,
-  TrendingUp,
-  Users,
-  AlertTriangle,
-  Sparkles,
-  Bot,
-  CalendarCheck,
-  Globe,
-  Clock3,
-  Download,
-  MessageCircle,
-  Megaphone,
-  FileDown,
-  RefreshCw,
-  Percent,
-  LayoutDashboard,
-  Briefcase,
-  Home,
-  Contact,
-  ShieldCheck,
-  CheckSquare,
-  Calendar,
-  Layers,
-  Settings,
-  LogOut,
-  Bell,
-  HelpCircle,
-  ChevronDown,
-  User,
-  Filter,
-  Timer,
-  Clock,
-  PieChartIcon,
-  CheckCircle,
-  ArrowRight,
-  Menu,
-  Plus,
-  MoreHorizontal,
-  ChevronRight,
-  PhoneCall,
-  CircleDollarSign,
-  XCircle,
+  BarChart3, CalendarDays, CheckCircle2, Clock3, Download, Filter, MessageCircle,
+  Phone, RefreshCw, Sparkles, Target, UserRoundPlus, Zap, Mail, MessageSquare,
+  AlertCircle, XCircle, Settings2, ArrowRight, ChevronDown, ClipboardCheck, Users,
+  ListChecks
 } from "lucide-react";
-
-import {
-  getAnalyticsDashboard,
-  getDashboardSummary,
-  getActivityMetrics,
-  getOwnerLeads,
-  getCalendarStats,
-} from "../../api/analyticsApi";
-import { fetchTeams, fetchTeamDashboard } from "../team/services/team.service";
+import apiClient from "../../api/apiClient";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { getAnalyticsDashboard, getActivityMetrics, getCalendarStats } from "../../api/analyticsApi";
 import { downloadCsv } from "../../utils/helpers";
-
 import "./analytics.css";
 
-function money(value) {
-  const amount = Number(value || 0);
-  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(2)}M`;
-  if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-  return `$${amount.toLocaleString()}`;
-}
-
-/** Colors reused for the lead-source donut/legend */
-const SOURCE_COLORS = [
-  "#0ea5e9",
-  "#d946ef",
-  "#3b82f6",
-  "#f97316",
-  "#64748b",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-];
-
-const NO_DATA = "—";
-
-function rangeToDays(range) {
-  if (range === "today") return 1;
-  if (range === "7d") return 7;
-  return 30;
-}
-
-function periodLabel(range, t) {
-  if (range === "today") return t("analytics.periodToday");
-  if (range === "7d") return t("analytics.periodLast7Days");
-  return t("analytics.periodLast30Days");
-}
-
-function dateRangeLabel(range, locale = "en-US") {
-  const days = rangeToDays(range);
-  const end = new Date();
-  const start = new Date();
-  start.setDate(start.getDate() - days);
-  const opts = { month: "short", day: "numeric" };
-  return `${start.toLocaleDateString(locale, opts)} – ${end.toLocaleDateString(
-    locale,
-    opts
-  )}, ${end.getFullYear()}`;
-}
-
-function shortDate(value) {
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return value;
-  return `${d.getMonth() + 1}/${d.getDate()}`;
-}
+const NA = "—";
+const unwrap = (v) => v?.data && !Array.isArray(v.data) ? v.data : v;
+const numeric = (v) => v === null || v === undefined || v === "" ? null : Number.isFinite(Number(v)) ? Number(v) : null;
+const display = (v) => numeric(v) === null ? NA : Number(v).toLocaleString();
+const days = (range) => range === "today" ? 1 : range === "7d" ? 7 : 30;
+const within = (value, range) => {
+  const stamp = new Date(value).getTime();
+  return Number.isFinite(stamp) && stamp >= Date.now() - days(range) * 86400000 && stamp <= Date.now();
+};
+const listOf = (v) => Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items : Array.isArray(v?.data) ? v.data : Array.isArray(v?.data?.items) ? v.data.items : null;
 
 export default function CortexaAnalyticsDashboard() {
+  const { t } = useTranslation();
+  const tr = (key) => t(`analyticsV2.${key}`);
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
   const [range, setRange] = useState("30d");
-  const [refreshTick, setRefreshTick] = useState(0);
-  const refresh = () => setRefreshTick((t) => t + 1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const [dash, setDash] = useState(null); // getAnalyticsDashboard(range)
-  const [summary, setSummary] = useState(null); // getDashboardSummary()
-  const [activity, setActivity] = useState(null); // getActivityMetrics(range)
-  const [leadsList, setLeadsList] = useState([]); // getOwnerLeads() – for lead-source aggregation
-  const [teamStats, setTeamStats] = useState(null); // team dashboard stats – real revenue/pipeline
-  const [calStats, setCalStats] = useState(null); // getCalendarStats() – Appointments KPI
-
+  const [tick, setTick] = useState(0);
+  const [compare, setCompare] = useState(false);
+  const [mode, setMode] = useState("daily");
+  const [insights, setInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [state, setState] = useState({loading:true, error:null, analytics:null, activity:null, calendar:null, contacts:null, ai:null});
+  const refresh = () => setTick(v => v+1);
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const [dashRes, summaryRes, activityRes] = await Promise.all([
-          getAnalyticsDashboard(range),
-          getDashboardSummary(),
-          getActivityMetrics(range),
-        ]);
-        if (cancelled) return;
-        setDash(dashRes || null);
-        setSummary(summaryRes || null);
-        setActivity(activityRes || null);
-
-        // Owner leads require CRM access and may be forbidden – never let it break the page.
-        try {
-          const leads = await getOwnerLeads(500);
-          if (!cancelled) setLeadsList(Array.isArray(leads) ? leads : []);
-        } catch (_e) {
-          if (!cancelled) setLeadsList([]);
-        }
-
-        // Team revenue/pipeline stats power the money KPIs. A user with no
-        // team (or a 403) must degrade those tiles to "—", never break the page.
-        try {
-          const teams = await fetchTeams();
-          const teamId = teams?.[0]?.id;
-          const teamDash = teamId ? await fetchTeamDashboard(teamId) : null;
-          if (!cancelled) setTeamStats(teamDash?.stats || null);
-        } catch (_e) {
-          if (!cancelled) setTeamStats(null);
-        }
-
-        // Calendar stats are team-scoped and 403 for users with no team –
-        // degrade the Appointments Booked KPI to "—", never break the page.
-        try {
-          const stats = await getCalendarStats();
-          if (!cancelled) setCalStats(stats || null);
-        } catch (_e) {
-          if (!cancelled) setCalStats(null);
-        }
-      } catch (e) {
-        if (!cancelled) setError(e?.message || t("analytics.loadError"));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [range, refreshTick]);
-
-  // ---- Derived data (real backend fields with safe fallbacks) ----
-  const leads = dash?.leads || null;
-  const byStatus = leads?.byStatus || null;
-  const metrics = summary?.data?.metrics || null; // { leads_total, leads_new, leads_active, leads_closed, conversations_total, conversations_unread, ai_actions_today }
-  const totalLeads = leads?.total ?? 0;
-  const label = periodLabel(range, t);
-
-  const kpisRow1 = [
-    {
-      title: t("analytics.projectedRevenue"),
-      value: teamStats ? money(teamStats.revenue) : NO_DATA, // teamStats.revenue (real won-deal value)
-      delta: null,
-      subtext: label,
-      icon: DollarSign,
-      iconBg: "bg-green-light",
-      iconColor: "text-green-strong",
-    },
-    {
-      title: t("analytics.newLeads"),
-      value: leads ? String(leads.created ?? 0) : NO_DATA, // leads.created (in period)
-      delta: null,
-      subtext: label,
-      icon: User,
-      iconBg: "bg-blue-light",
-      iconColor: "text-blue-strong",
-    },
-    {
-      title: t("analytics.conversionRate"),
-      value: leads ? `${Number(leads.conversionRate || 0).toFixed(1)}%` : NO_DATA, // leads.conversionRate
-      delta: null,
-      subtext: label,
-      icon: Filter,
-      iconBg: "bg-cyan-light",
-      iconColor: "text-cyan-strong",
-    },
-    {
-      title: t("analytics.appointmentsBooked"),
-      value: calStats ? String(calStats.total ?? 0) : NO_DATA, // calStats.total (team calendar)
-      delta: null,
-      subtext: label,
-      icon: CalendarCheck,
-      iconBg: "bg-pink-light",
-      iconColor: "text-pink-strong",
-    },
-    {
-      title: t("analytics.avgSpeedToLead"),
-      value: NO_DATA, // no backend source
-      delta: null,
-      subtext: label,
-      icon: Timer,
-      iconBg: "bg-orange-light",
-      iconColor: "text-orange-strong",
-    },
-    {
-      title: t("analytics.avgTimeToClose"),
-      value: NO_DATA, // no backend source (averageTimeToConvert not returned)
-      delta: null,
-      subtext: label,
-      icon: Clock,
-      iconBg: "bg-red-light",
-      iconColor: "text-red-strong",
-    },
-    {
-      title: t("analytics.pipelineValueKpi"),
-      value: teamStats ? money(teamStats.totalPipeline) : NO_DATA, // teamStats.totalPipeline (real pipeline value)
-      delta: null,
-      subtext: label,
-      icon: PieChartIcon,
-      iconBg: "bg-blue-light",
-      iconColor: "text-blue-strong",
-    },
-    {
-      title: t("analytics.followUpCompletion"),
-      value: leads
-        ? totalLeads > 0
-          ? `${Math.round(((byStatus?.contacted || 0) / totalLeads) * 100)}%`
-          : "0%"
-        : NO_DATA, // derived: contacted / total leads
-      delta: null,
-      subtext: label,
-      icon: CheckCircle,
-      iconBg: "bg-green-light",
-      iconColor: "text-green-strong",
-    },
+    let live = true;
+    setState(s=>({...s,loading:true,error:null}));
+    apiClient.request(`/analytics/overview-v2?days=${days(range)}`).then(response => {
+      if (!live) return;
+      setState({loading:false,error:null,overview:unwrap(response)});
+    }).catch(() => {
+      if (!live) return;
+      setState({loading:false,error:tr("loadFailed"),overview:null});
+    });
+    return () => {live=false;};
+  }, [range,tick]);
+  const overview = state.overview;
+  const a = overview?.metrics;
+  const activitySeries = overview?.activity?.series ?? [];
+  const contactValue = a?.newContacts;
+  const conversationValue = a?.conversationsHandled;
+  const appointments = a?.appointmentsBooked;
+  const stats = [
+    ["newContacts",contactValue,UserRoundPlus,"blue"],["conversationsHandled",conversationValue,MessageCircle,"purple"],
+    ["appointmentsBooked",appointments,CalendarDays,"green"],["aiActionsCompleted",a?.aiActionsCompleted,Zap,"purple"],
+    ["averageFirstResponse",a?.averageFirstResponse,Clock3,"orange"],["bookingRate",a?.bookingRate,Filter,"teal"],
+    ["followupCompletion",a?.followupCompletion,ClipboardCheck,"blue"],["automationSuccess",a?.automationSuccess,Settings2,"pink"]
   ];
-
-  // Lead Source Intelligence – aggregate real owner leads by `source`
-  const sourceAgg = {};
-  (leadsList || []).forEach((l) => {
-    const src = (l?.source && String(l.source).trim()) || "Unknown";
-    sourceAgg[src] = (sourceAgg[src] || 0) + 1;
-  });
-  const totalSourceLeads = (leadsList || []).length;
-  const leadSources = Object.entries(sourceAgg)
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, value], i) => ({
-      name,
-      value,
-      percentage: totalSourceLeads
-        ? `${((value / totalSourceLeads) * 100).toFixed(1)}%`
-        : "0%",
-      fill: SOURCE_COLORS[i % SOURCE_COLORS.length],
-    }));
-
-  // Pipeline Leakage – real lead funnel from leads.byStatus
-  const pipelineStages = leads
-    ? [
-        { name: "Leads", count: totalLeads },
-        { name: "Contacted", count: byStatus?.contacted || 0 },
-        { name: "Qualified", count: byStatus?.qualified || 0 },
-        { name: "Converted", count: byStatus?.converted || 0 },
-        { name: "Lost", count: byStatus?.lost || 0 },
-      ]
-    : [];
-  const funnelMax = Math.max(1, ...pipelineStages.map((s) => s.count));
-
-  // Activity over time – real activity.eventsByDay (feeds the area chart)
-  const activityData = (activity?.eventsByDay || []).map((d) => ({
-    day: shortDate(d.date),
-    conversations: d.count,
-  }));
-
-  // No backend source for these – kept empty (graceful empty state)
-  const lostReasons = [];
-  const teamPerformance = [];
-
-
-  const mobileKpiTones = [
-    "green",
-    "blue",
-    "cyan",
-    "purple",
-    "orange",
-    "red",
-    "blue",
-    "green",
-  ];
-
-  const mobilePipelineTones = ["blue", "cyan", "orange", "green", "red"];
-
-  const mobileSourceTone = (index) =>
-    ["blue", "green", "cyan", "blue", "purple", "neutral"][index % 6];
-
-  const mobileSourceIcon = (sourceName) => {
-    const source = String(sourceName || "").toLowerCase();
-    if (source.includes("whatsapp")) return MessageCircle;
-    if (source.includes("facebook") || source.includes("instagram")) return Megaphone;
-    if (source.includes("google")) return Globe;
-    if (source.includes("website") || source.includes("web")) return Globe;
-    return Globe;
-  };
-
-  // Build a CSV from the already-loaded analytics data (no fabricated values).
-  function exportData() {
-    const rows = [];
-
-    // Lead metrics
-    if (leads) {
-      rows.push(["Lead Metrics"]);
-      rows.push(["Metric", "Value"]);
-      rows.push(["Total Leads", totalLeads]);
-      rows.push(["New / Created", leads.created ?? 0]);
-      rows.push([
-        "Conversion Rate",
-        `${Number(leads.conversionRate || 0).toFixed(1)}%`,
-      ]);
+  const channels = [["calls",Phone,"blue"],["whatsapp",MessageCircle,"green"],["email",Mail,"blue"],["websiteChat",MessageSquare,"purple"]];
+  const outcomes = [["booked",overview?.appointments?.booked,CheckCircle2,"green"],["completed",overview?.appointments?.completed,CheckCircle2,"blue"],
+    ["canceled",overview?.appointments?.canceled,XCircle,"red"],["noShow",overview?.appointments?.noShow,Clock3,"orange"]];
+  const followups = [["dueInPeriod",overview?.followups?.dueInPeriod,Clock3,"blue"],["completedOnTime",overview?.followups?.completedOnTime,CheckCircle2,"green"],
+    ["completedLate",overview?.followups?.completedLate,Clock3,"orange"],["missed",overview?.followups?.missed,XCircle,"red"]];
+  const automation = [["successful",overview?.aiAutomation?.successful,CheckCircle2,"green"],
+    ["failed",overview?.aiAutomation?.failed,XCircle,"red"],["awaitingApproval",overview?.aiAutomation?.awaitingApproval,Clock3,"orange"]];
+  async function analyzePeriod() {
+    setInsightsLoading(true);
+    try {
+      const result = await apiClient.request(`/analytics/overview-v2/insights?days=${days(range)}`);
+      setInsights(unwrap(result));
+    } catch {
+      setInsights({error:true});
+    } finally {
+      setInsightsLoading(false);
     }
-
-    // Lead status breakdown
-    if (byStatus) {
-      rows.push([]);
-      rows.push(["Lead Status Breakdown"]);
-      rows.push(["Status", "Count"]);
-      rows.push(["New", byStatus.new ?? 0]);
-      rows.push(["Contacted", byStatus.contacted ?? 0]);
-      rows.push(["Qualified", byStatus.qualified ?? 0]);
-      rows.push(["Converted", byStatus.converted ?? 0]);
-      rows.push(["Lost", byStatus.lost ?? 0]);
-    }
-
-    // Lead sources (aggregated from owner leads by .source)
-    if (leadSources.length > 0) {
-      rows.push([]);
-      rows.push(["Lead Sources"]);
-      rows.push(["Source", "Count", "Percentage"]);
-      leadSources.forEach((s) => {
-        rows.push([s.name, s.value, s.percentage]);
-      });
-    }
-
-    // Activity by day
-    const events = activity?.eventsByDay || [];
-    if (events.length > 0) {
-      rows.push([]);
-      rows.push(["Activity By Day"]);
-      rows.push(["Date", "Events"]);
-      events.forEach((d) => {
-        rows.push([d.date, d.count ?? 0]);
-      });
-    }
-
-    downloadCsv("analytics-export.csv", rows);
   }
-
-  const infoStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    fontSize: 13,
-    color: "#64748b",
-    padding: "8px 0",
-    margin: "0 0 8px",
-  };
-  const errorStyle = { ...infoStyle, color: "#dc2626" };
-  const emptyStyle = {
-    fontSize: 12,
-    color: "#94a3b8",
-    padding: "12px 0",
-    textAlign: "center",
-  };
-
-  return (
-    <div className="analytics-page">
-
-      <section className="analytics-mobile-v2">
-        <header className="amv2-header">
-          
-          <div className="amv2-heading">
-            <h1>{t("analytics.analyticsOverview")}</h1>
-            <p>{t("analytics.subheading")}</p>
-          </div>
-
-        </header>
-
-        <div className="amv2-controls">
-          <div className="amv2-range-select">
-            <Calendar />
-            <select value={range} onChange={(e) => setRange(e.target.value)}>
-              <option value="today">{t("analytics.periodToday")}</option>
-              <option value="7d">{t("analytics.periodLast7Days")}</option>
-              <option value="30d">{t("analytics.periodLast30Days")}</option>
-            </select>
-            <ChevronDown />
-          </div>
-
-          <div className="amv2-date-range">
-            <Calendar />
-            <span>{dateRangeLabel(range, i18n.language)}</span>
-          </div>
-
-          <button type="button" className="amv2-refresh" onClick={refresh}>
-            <RefreshCw />
-            <span>{t("analytics.refresh")}</span>
-          </button>
-        </div>
-
-        {loading && (
-          <div className="amv2-system-message">
-            <RefreshCw />
-            {t("analytics.loadingAnalytics")}
-          </div>
-        )}
-
-        {error && (
-          <div className="amv2-system-message error">
-            <AlertTriangle />
-            {error}
-          </div>
-        )}
-
-        <section className="amv2-section amv2-section-kpi">
-          <div className="amv2-section-title">
-            <span>1</span>
-            <div>
-              <h2>{t("analytics.mobileKeyPerformanceIndicators")}</h2>
-            </div>
-          </div>
-
-          <div className="amv2-kpi-list">
-            {kpisRow1.map((kpi, index) => {
-              const Icon = kpi.icon;
-              return (
-                <article
-                  key={kpi.title}
-                  className={`amv2-kpi-card ${mobileKpiTones[index]}`}
-                >
-                  <div className="amv2-kpi-icon">
-                    <Icon />
-                  </div>
-                  <div className="amv2-kpi-copy">
-                    <span>{kpi.title}</span>
-                    <strong>{kpi.value}</strong>
-                  </div>
-                  <div className="amv2-kpi-period">
-                    <strong>{NO_DATA}</strong>
-                    <span>{kpi.subtext}</span>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="amv2-section amv2-section-source">
-          <div className="amv2-section-title with-action">
-            <span>2</span>
-            <div>
-              <h2>{t("analytics.leadSourceIntelligence")}</h2>
-              <p>{t("analytics.leadVolumeBySource")}</p>
-            </div>
-            <button type="button" onClick={() => navigate("/dashboard/leads")}>
-              {t("analytics.viewAllSources")} <ArrowRight />
-            </button>
-          </div>
-
-          <div className="amv2-source-total">
-            <div className="amv2-source-total-icon">
-              <Users />
-            </div>
-            <div>
-              <span>{t("analytics.totalLeads")}</span>
-              <strong>{totalSourceLeads}</strong>
-              <small>
-                {leadSources.length === 0
-                  ? t("analytics.noLeadSourceData")
-                  : t("analytics.mobileAcrossConnectedSources")}
-              </small>
-            </div>
-          </div>
-
-          <div className="amv2-source-list">
-            {leadSources.length === 0 ? (
-              <div className="amv2-empty">{t("analytics.noLeadSourceData")}</div>
-            ) : (
-              leadSources.map((source, index) => {
-                const SourceIcon = mobileSourceIcon(source.name);
-                return (
-                  <div
-                    key={source.name}
-                    className={`amv2-source-row ${mobileSourceTone(index)}`}
-                  >
-                    <span className="amv2-source-icon">
-                      <SourceIcon />
-                    </span>
-                    <strong>{source.name}</strong>
-                    <span>{source.value}</span>
-                    <span>{source.percentage}</span>
-                    <ChevronRight />
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          <div className="amv2-about-box blue">
-            <HelpCircle />
-            <div>
-              <strong>{t("analytics.mobileAboutLeadSources")}</strong>
-              <p>{t("analytics.mobileAboutLeadSourcesDesc")}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="amv2-section amv2-section-pipeline">
-          <div className="amv2-section-title with-action">
-            <span>3</span>
-            <div>
-              <h2>{t("analytics.pipelineLeakageAnalysis")}</h2>
-              <p>{t("analytics.pipelineLeakageSubtitle")}</p>
-            </div>
-            <button type="button" onClick={() => navigate("/dashboard/pipeline")}>
-              {t("analytics.viewFullPipeline")} <ArrowRight />
-            </button>
-          </div>
-
-          <div className="amv2-pipeline-list">
-            {pipelineStages.length === 0 ? (
-              <div className="amv2-empty">{t("analytics.noDataAvailable")}</div>
-            ) : (
-              pipelineStages.map((stage, index) => {
-                const width = `${Math.round((stage.count / funnelMax) * 100)}%`;
-                const conversion =
-                  totalLeads > 0
-                    ? `${Math.round((stage.count / totalLeads) * 100)}%`
-                    : "0%";
-                const previous = index > 0 ? pipelineStages[index - 1].count : null;
-                const drop =
-                  index > 0 && previous > 0
-                    ? `${Math.round(((stage.count - previous) / previous) * 100)}%`
-                    : NO_DATA;
-                const StageIcon =
-                  index === 0
-                    ? Users
-                    : index === 1
-                      ? PhoneCall
-                      : index === 2
-                        ? ShieldCheck
-                        : index === 3
-                          ? CheckCircle
-                          : XCircle;
-
-                return (
-                  <article
-                    key={stage.name}
-                    className={`amv2-pipeline-row ${mobilePipelineTones[index]}`}
-                  >
-                    <div className="amv2-pipeline-icon">
-                      <StageIcon />
-                    </div>
-                    <div className="amv2-pipeline-main">
-                      <strong>{stage.name}</strong>
-                      <div className="amv2-pipeline-progress">
-                        <i style={{ width }} />
-                      </div>
-                    </div>
-                    <div className="amv2-pipeline-stats">
-                      <strong>{stage.count}</strong>
-                      <span>{conversion}</span>
-                      <small>{t("analytics.vsPrev")}</small>
-                      <em>{drop}</em>
-                    </div>
-                    <ChevronRight />
-                  </article>
-                );
-              })
-            )}
-          </div>
-
-          <div className="amv2-about-box blue">
-            <HelpCircle />
-            <div>
-              <strong>{t("analytics.mobileAboutPipelineLeakage")}</strong>
-              <p>{t("analytics.mobileAboutPipelineLeakageDesc")}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="amv2-section amv2-section-activity">
-          <div className="amv2-section-title">
-            <span>4</span>
-            <div>
-              <h2>{t("analytics.activityOverTime")}</h2>
-              <p>{t("analytics.platformActivitySubtitle")}</p>
-            </div>
-          </div>
-
-          <div className="amv2-activity-chart">
-            {activityData.length === 0 ? (
-              <div className="amv2-empty chart-empty">
-                {t("analytics.noActivityInPeriod")}
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart
-                  data={activityData}
-                  margin={{ top: 12, right: 12, left: -20, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="mobileActivityGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor="#33d353" stopOpacity={0.32} />
-                      <stop offset="100%" stopColor="#33d353" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="5 5"
-                    vertical={false}
-                    stroke="rgba(173,181,193,.26)"
-                  />
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#adb5c1", fontSize: 11 }}
-                  />
-                  <YAxis
-                    allowDecimals={false}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#adb5c1", fontSize: 11 }}
-                  />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="conversations"
-                    stroke="#33d353"
-                    strokeWidth={3}
-                    fill="url(#mobileActivityGradient)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-
-          <div className="amv2-activity-metrics">
-            <article className="green">
-              <MessageCircle />
-              <div>
-                <span>{t("analytics.conversations")}</span>
-                <strong>{metrics ? metrics.conversations_total ?? 0 : NO_DATA}</strong>
-              </div>
-              <div>
-                <strong>{NO_DATA}</strong>
-                <span>{t("analytics.mobileVsPreviousPeriod")}</span>
-              </div>
-            </article>
-
-            <article className="cyan">
-              <MessageCircle />
-              <div>
-                <span>{t("analytics.repliesSent")}</span>
-                <strong>{NO_DATA}</strong>
-              </div>
-              <div>
-                <strong>{NO_DATA}</strong>
-                <span>{t("analytics.mobileVsPreviousPeriod")}</span>
-              </div>
-            </article>
-
-            <article className="blue">
-              <MessageCircle />
-              <div>
-                <span>{t("analytics.repliesThisPeriod")}</span>
-                <strong>{NO_DATA}</strong>
-              </div>
-              <div>
-                <strong>{NO_DATA}</strong>
-                <span>{t("analytics.mobileVsPreviousPeriod")}</span>
-              </div>
-            </article>
-
-            <article className="purple">
-              <CalendarCheck />
-              <div>
-                <span>{t("analytics.appointmentsBooked")}</span>
-                <strong>{NO_DATA}</strong>
-              </div>
-              <div>
-                <strong>{NO_DATA}</strong>
-                <span>{t("analytics.mobileVsPreviousPeriod")}</span>
-              </div>
-            </article>
-          </div>
-
-          <button
-            type="button"
-            className="amv2-workspace-link"
-            onClick={() => navigate("/dashboard/whatsapp")}
-          >
-            <MessageCircle />
-            <span>{t("analytics.openWhatsappWorkspace")}</span>
-            <ChevronRight />
-          </button>
-
-          <div className="amv2-about-box green">
-            <HelpCircle />
-            <div>
-              <strong>{t("analytics.mobileAboutActivity")}</strong>
-              <p>{t("analytics.mobileAboutActivityDesc")}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="amv2-section amv2-section-lost">
-          <div className="amv2-section-title with-action">
-            <span>5</span>
-            <div>
-              <h2>{t("analytics.lostDealReasons")}</h2>
-              <p>{t("analytics.whyDealsDidntClose")}</p>
-            </div>
-            <button type="button" onClick={() => navigate("/dashboard/pipeline")}>
-              {t("analytics.viewAllReasons")} <ArrowRight />
-            </button>
-          </div>
-
-          <div className="amv2-lost-list">
-            {lostReasons.length === 0 ? (
-              <div className="amv2-empty">{t("analytics.noDataAvailable")}</div>
-            ) : (
-              lostReasons.map((item, index) => (
-                <article key={`${item.reason}-${index}`}>
-                  <span className="amv2-lost-icon">
-                    <AlertTriangle />
-                  </span>
-                  <div>
-                    <strong>{item.reason}</strong>
-                    <div className="amv2-lost-progress">
-                      <i style={{ width: item.width }} />
-                    </div>
-                  </div>
-                  <span>{item.count}</span>
-                  <span>{item.percentage}%</span>
-                  <ChevronRight />
-                </article>
-              ))
-            )}
-          </div>
-        </section>
-
-        <section className="amv2-section amv2-section-team">
-          <div className="amv2-section-title with-action">
-            <span>5</span>
-            <div>
-              <h2>{t("analytics.teamPerformance")}</h2>
-              <p>{t("analytics.howYourTeamIsPerforming")}</p>
-            </div>
-            <button type="button" onClick={() => navigate("/dashboard/team")}>
-              {t("analytics.viewFullTeamReport")} <ArrowRight />
-            </button>
-          </div>
-
-          <div className="amv2-team-list">
-            {teamPerformance.length === 0 ? (
-              <div className="amv2-empty">{t("analytics.noDataAvailable")}</div>
-            ) : (
-              teamPerformance.map((agent, index) => (
-                <article key={`${agent.name}-${index}`}>
-                  <span className="amv2-team-avatar">
-                    {String(agent.name || "?")
-                      .split(" ")
-                      .slice(0, 2)
-                      .map((part) => part.charAt(0))
-                      .join("")
-                      .toUpperCase()}
-                  </span>
-                  <strong>{agent.name}</strong>
-                  <span>{agent.rate}</span>
-                  <span>{agent.time}</span>
-                  <span>{agent.deals}</span>
-                  <span>{agent.revenue}</span>
-                  <ChevronRight />
-                </article>
-              ))
-            )}
-          </div>
-
-          <div className="amv2-about-box blue">
-            <HelpCircle />
-            <div>
-              <strong>{t("analytics.mobileAboutTeamPerformance")}</strong>
-              <p>{t("analytics.mobileAboutTeamPerformanceDesc")}</p>
-            </div>
-          </div>
-        </section>
-
-      </section>
-
-      <div className="analytics-desktop-v2">
-      <div className="heading_page">
-        <BarChart3 className="header-icon" size={20} />
-        <h1>{t("analytics.analyticsOverview")}</h1>
-      </div>
-      <p className="sub_head">{t("analytics.subheading")}</p>
-      <header className="main-header">
-        <div className="header-controls">
-          <div className="date-picker-wrapper">
-            <span>{dateRangeLabel(range, i18n.language)}</span>
-            <Calendar size={16} className="text-gray-icon" />
-          </div>
-
-          <div className="select-wrapper">
-            <select
-              className="control-select"
-              value={range}
-              onChange={(e) => setRange(e.target.value)}
-            >
-              <option value="today">{t("analytics.periodToday")}</option>
-              <option value="7d">{t("analytics.periodLast7Days")}</option>
-              <option value="30d">{t("analytics.periodLast30Days")}</option>
-            </select>
-            <ChevronDown size={14} className="select-arrow" />
-          </div>
-
-          <button className="btn-secondary" onClick={exportData}>
-            <Download size={15} /> {t("analytics.export")}
-          </button>
-          <button className="btn-primary" onClick={refresh}>
-            <RefreshCw size={15} /> {t("analytics.refresh")}
-          </button>
-        </div>
-      </header>
-
-      {loading && (
-        <div style={infoStyle}>
-          <RefreshCw size={14} /> {t("analytics.loadingAnalytics")}
-        </div>
-      )}
-      {error && (
-        <div style={errorStyle}>
-          <AlertTriangle size={14} /> {error}
-        </div>
-      )}
-
-      {/* KPI ROW 1 */}
-      <div className="kpi-grid-row1">
-        {kpisRow1.map((kpi, i) => {
-          const Icon = kpi.icon;
-
-          const hasDelta = kpi.delta != null;
-          const isUp = kpi.type ? kpi.type.startsWith("up") : true;
-          const arrow = isUp ? "↑" : "↓";
-
-          const badgeClass = "kpi-badge pos";
-
-          return (
-            <div key={i} className="kpi-card-mini">
-              <div className="kpi-header">
-                <div
-                  className={`kpi-icon-container ${kpi.iconBg} ${kpi.iconColor}`}
-                >
-                  <Icon size={20} />
-                </div>
-                <span className="kpi-title">{kpi.title}</span>
-              </div>
-              <div className="kpi-body">
-                <span className="kpi-value">{kpi.value}</span>
-                <div className="kpi-footer-meta">
-                  <span className={badgeClass}>
-                    {hasDelta ? `${arrow} ${kpi.delta}` : NO_DATA}
-                  </span>
-                  <span className="kpi-subtext">{kpi.subtext}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ROW 3: REVENUE + LEAD SOURCE + PIPELINE LEAKAGE */}
-      <div className="charts-grid-3col">
-
-        {/* Lead Source Intelligence */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <div className="card-header-left">
-              <Globe size={18} className="text-royal-blue" />
-              <h3>{t("analytics.leadSourceIntelligence")}</h3>
-            </div>
-          </div>
-          <p className="card-subtitle">{t("analytics.leadVolumeBySource")}</p>
-
-          <div className="lead-source-layout">
-            <div className="chart-container-donut">
-              <ResponsiveContainer width="100%" height={190}>
-                <PieChart>
-                  <Pie
-                    data={leadSources}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={
-                      50
-                    }
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {leadSources.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div className="donut-center-text">
-                <span className="total-number">{totalSourceLeads}</span>
-                <span className="total-label">{t("analytics.totalLeads")}</span>
-              </div>
-            </div>
-
-            <div className="lead-source-list-v2">
-              {leadSources.length === 0 ? (
-                <span style={emptyStyle}>{t("analytics.noLeadSourceData")}</span>
-              ) : (
-                leadSources.map((src, i) => (
-                  <div key={i} className="list-item-row-v2">
-                    <div className="src-name-dot">
-                      <span
-                        className="dot-indicator"
-                        style={{ backgroundColor: src.fill }}
-                      ></span>
-                      <span className="src-name">{src.name}</span>
-                    </div>
-                    <div className="src-values">
-                      <span className="val-count">{src.value}</span>
-                      <span className="val-percent">({src.percentage})</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Footer Link */}
-          <div className="card-footer-action">
-            <button
-              className="btn-view-all"
-              onClick={() => navigate("/dashboard/leads")}
-            >
-              {t("analytics.viewAllSources")} <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-
-        {/* Pipeline Leakage Analysis */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <div className="card-header-left">
-              <AlertTriangle size={18} className="text-royal-blue" />
-              <h3>{t("analytics.pipelineLeakageAnalysis")}</h3>
-            </div>
-          </div>
-          <p className="card-subtitle">{t("analytics.pipelineLeakageSubtitle")}</p>
-
-          <div className="pipeline-funnel-wrapper">
-            <div className="funnel-table-header">
-              <span>{t("analytics.stage")}</span>
-              <span className="text-center">{t("analytics.deals")}</span>
-              <span className="text-right">{t("analytics.conversion")}</span>
-              <span className="text-right">{t("analytics.vsPrev")}</span>
-            </div>
-            <div className="funnel-bars-container">
-              {pipelineStages.map((stage, i) => {
-                const width = `${Math.round((stage.count / funnelMax) * 100)}%`;
-                const conversion =
-                  totalLeads > 0
-                    ? `${Math.round((stage.count / totalLeads) * 100)}%`
-                    : "0%";
-                const prev = i > 0 ? pipelineStages[i - 1].count : null;
-                const drop =
-                  i > 0 && prev > 0
-                    ? `${Math.round(((stage.count - prev) / prev) * 100)}%`
-                    : "-";
-                return (
-                  <div key={i} className="funnel-row">
-                    <div className="funnel-label-bar">
-                      <span className="stage-name">{stage.name}</span>
-                      <div className="funnel-bar-bg">
-                        <div
-                          className="funnel-bar-fill"
-                          style={{
-                            width: width,
-                            backgroundColor: i === 4 ? "#2563eb" : "#2563eb",
-                          }}
-                        ></div>
-                      </div>
-                      <span className="stage-count">{stage.count}</span>
-                    </div>
-                    <span className="funnel-percent">{conversion}</span>
-                    <span
-                      className={`funnel-drop ${drop !== "-" ? "text-red-strong" : "text-gray-400"}`}
-                    >
-                      {drop}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="funnel-footer">
-              <button
-                className="btn-view-all"
-                onClick={() => navigate("/dashboard/pipeline")}
-              >
-                {t("analytics.viewFullPipeline")} <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* WhatsApp Analytics */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <div className="card-header-left">
-              <MessageCircle size={18} className="text-green-strong" />
-              <h3>{t("analytics.activityOverTime")}</h3>
-            </div>
-          </div>
-          <p className="card-subtitle">{t("analytics.platformActivitySubtitle")}</p>
-          <div className="wa-analytics-layout">
-            <div className="wa-chart-container">
-              {activityData.length === 0 ? (
-                <div style={{ ...emptyStyle, height: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {t("analytics.noActivityInPeriod")}
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={180}>
-                  <AreaChart
-                    data={activityData}
-                    margin={{ top: 0, right: 0, left: -30, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="colorConversations"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="#10b981"
-                          stopOpacity={0.15}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#10b981"
-                          stopOpacity={0.01}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#f1f5f9"
-                    />
-                    <XAxis
-                      dataKey="day"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
-                    />
-                    <Tooltip />
-                    <Area
-                      type="monotone"
-                      dataKey="conversations"
-                      stroke="#10b981"
-                      strokeWidth={2.5}
-                      fillOpacity={1}
-                      fill="url(#colorConversations)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-
-            <div className="wa-metrics-grid">
-              {/* Card 1 – real summary metric: conversations_total */}
-              <div className="wa-metric-card">
-                <span className="metric-title">{t("analytics.conversations")}</span>
-                <span className="metric-value">
-                  {metrics ? metrics.conversations_total ?? 0 : NO_DATA}
-                </span>
-                <span className="metric-badge pos">{NO_DATA}</span>
-              </div>
-
-              {/* Card 2 – no backend source */}
-              <div className="wa-metric-card">
-                <span className="metric-title">{t("analytics.repliesSent")}</span>
-                <span className="metric-value">{NO_DATA}</span>
-                <span className="metric-badge pos">{NO_DATA}</span>
-              </div>
-
-              {/* Card 3 – no backend source */}
-              <div className="wa-metric-card no-badge">
-                <span className="metric-title">{t("analytics.repliesThisPeriod")}</span>
-                <span className="metric-value">{NO_DATA}</span>
-              </div>
-
-              {/* Card 4 – no backend source */}
-              <div className="wa-metric-card no-badge">
-                <span className="metric-title">{t("analytics.appointmentsBooked")}</span>
-                <span className="metric-value">{NO_DATA}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Action Link */}
-          <div className="funnel-footer">
-            <button
-              className="btn-view-all"
-              onClick={() => navigate("/dashboard/whatsapp")}
-            >
-              {t("analytics.openWhatsappWorkspace")} <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ROW 4: AI PERFORMANCE + WHATSAPP + LOST REASONS + TEAM */}
-      <div className="charts-grid-4col">
-        {/* Lost Deal Reasons */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <div className="card-header-left">
-              <AlertTriangle size={18} className="text-red-strong" />
-              <h3>{t("analytics.lostDealReasons")}</h3>
-            </div>
-          </div>
-          <p className="card-subtitle">{t("analytics.whyDealsDidntClose")}</p>
-          <div className="lost-reasons-list">
-            <div className="lost-header-row">
-              <span>{t("analytics.reason")}</span>
-              <span></span>
-              <span className="text-right">{t("analytics.lastDeals")}</span>
-              <span className="text-right">{t("analytics.percentOfTotal")}</span>
-            </div>
-            {lostReasons.length === 0 ? (
-              <span style={emptyStyle}>{t("analytics.noDataAvailable")}</span>
-            ) : (
-              lostReasons.map((item, i) => (
-                <div key={i} className="lost-item-row">
-                  <span className="reason-text">{item.reason}</span>
-                  <div className="reason-progress-bar">
-                    <div className="bar-fill" style={{ width: item.width }}></div>
-                  </div>
-                  <span className="count-text font-semibold">{item.count}</span>
-                  <span className="percent-text font-semibold">
-                    {item.percentage}%
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="funnel-footer">
-            <button
-              className="btn-view-all"
-              onClick={() => navigate("/dashboard/pipeline")}
-            >
-              {t("analytics.viewAllReasons")} <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-
-        {/* Team Performance */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <div className="card-header-left">
-              <Users size={18} className="text-royal-blue" />
-              <h3>{t("analytics.teamPerformance")}</h3>
-            </div>
-          </div>
-          <p className="card-subtitle">{t("analytics.howYourTeamIsPerforming")}</p>
-          <div className="team-performance-list">
-            <div className="team-header-row">
-              <span>{t("analytics.agent")}</span>
-              <span>{t("analytics.closeRate")}</span>
-              <span>{t("analytics.responseTime")}</span>
-              <span>{t("analytics.deals")}</span>
-              <span className="text-right">{t("analytics.revenue")}</span>
-            </div>
-            {teamPerformance.length === 0 ? (
-              <span style={emptyStyle}>{t("analytics.noDataAvailable")}</span>
-            ) : (
-              teamPerformance.map((agent, i) => (
-                <div key={i} className="team-item-row">
-                  <span className="agent-name">
-                    <img
-                      src="https://i.pravatar.cc/150"
-                      className="team-avatar"
-                    />
-                    <span>{agent.name}</span>
-                  </span>
-                  <div className="rate-progress-wrapper">
-                    <span className="rate-val font-semibold">{agent.rate}</span>
-                    <div className="mini-progress-bg">
-                      <div
-                        className={`mini-progress-fill ${agent.color}`}
-                        style={{ width: agent.width }}
-                      ></div>
-                    </div>
-                  </div>
-                  <span className="time-val text-gray-400">{agent.time}</span>
-                  <span className="deals-val font-semibold">{agent.deals}</span>
-                  <span className="rev-val font-bold text-gray-800">
-                    {agent.revenue}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="funnel-footer">
-            <button
-              className="btn-view-all"
-              onClick={() => navigate("/dashboard/team")}
-            >
-              {t("analytics.viewFullTeamReport")} <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-        <div className="dashboard-card-2">
-          {/* AI Revenue Insights */}
-          <div className="insights-card">
-            <div className="card-header">
-              <div className="card-header-left">
-                <Sparkles size={18} className="text-royal-blue" />
-                <h3>{t("analytics.aiRevenueInsights")}</h3>
-              </div>
-              <button
-                className="btn-view-all"
-                onClick={() => navigate("/dashboard/leads")}
-              >
-                {t("analytics.viewAllInsights")} <ArrowRight size={14} />
-              </button>
-            </div>
-            <p className="card-subtitle">{t("analytics.actionableInsights")}</p>
-
-            <div className="insights-list-row">
-              <div className="insight-item-box">
-                <div className="insight-icon-title">
-                  <div className="insight-left-wrap">
-                    <div className="insight-icon-wrap">
-                      <Sparkles size={16} className="text-royal-blue" />
-                    </div>
-                    <div className="insight-icon-box-wrap">
-                      <h4>{t("analytics.aiInsightsComingSoon")}</h4>
-                      <p>{t("analytics.aiInsightsComingSoonDesc")}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Predictive Revenue Forecast */}
-          <div className="forecast-dark-card">
-            <div className="forecast-content">
-              <div className="forecast-header">
-                <BarChart3 size={20} className="text-blue-400" />
-                <h3>{t("analytics.predictiveRevenueForecast")}</h3>
-              </div>
-              <p className="forecast-desc">{t("analytics.aiForecastsSubtitle")}</p>
-
-              <div className="forecast-metrics">
-                <div className="m-box">
-                  <h3>{NO_DATA}</h3>
-                </div>
-                <p className="forecast-desc">{t("analytics.estimatedRevenueNext30Days")}</p>
-                <p className="top-opp">{t("analytics.topOpportunity", { value: NO_DATA })}</p>
-              </div>
-
-              <p className="forecast-desc">{t("analytics.predictiveForecastingComingSoon")}</p>
-            </div>
-
-            <div className="forecast-chart-graphic">
-              <div className="bar white-bar" style={{ height: "20%" }}></div>
-              <div className="bar white-bar" style={{ height: "20%" }}></div>
-              <div className="bar white-bar" style={{ height: "20%" }}></div>
-              <div className="bar white-bar" style={{ height: "20%" }}></div>
-              <div className="bar white-bar" style={{ height: "20%" }}></div>
-              <div className="bar white-bar" style={{ height: "20%" }}></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ROW 5: AI INSIGHTS & FORECAST */}
-      <div className="insights-forecast-grid"><span className="dot-bottom"></span>{t("analytics.dataReflectsSyncedActivity")}</div>
-      </div>
+  function exportCsv() {
+    downloadCsv("analytics-overview.csv",[
+      [tr("metric"),tr("value")],...stats.map(([key,val])=>[tr(key),numeric(val)===null?"":val]),
+      [],[tr("section"),tr("metric"),tr("value")],
+      ...outcomes.map(([key,val])=>[tr("appointmentOutcomes"),tr(key),numeric(val)===null?"":val])
+    ]);
+  }
+  const panelHeader = (icon,title,description,action,path) => (
+    <div className="anv-panel-head"><div className="anv-heading-icon">{icon}</div>
+      <div className="anv-panel-title"><h2>{tr(title)}</h2>{description && <p>{tr(description)}</p>}</div>
+      {action && <button type="button" className="anv-link" onClick={()=>navigate(path)}>{tr(action)} <ArrowRight size={15}/></button>}
     </div>
   );
+  const rows = (data) => data.map(([key,value,Icon,tone])=>(
+    <div className="anv-metric-row" key={key}><span className={`anv-small-icon anv-${tone}`}><Icon size={17}/></span>
+      <span>{tr(key)}</span><strong>{display(value)}</strong></div>
+  ));
+  return <main className="analytics-page analytics-overview-v2">
+    <header className="anv-header">
+      <div className="anv-title"><BarChart3 size={29}/><div><h1>{tr("title")}</h1><p>{tr("subtitle")}</p></div></div>
+      <div className="anv-actions"><label className="anv-select"><CalendarDays size={17}/><select value={range} onChange={e=>setRange(e.target.value)}>
+        <option value="today">{tr("today")}</option><option value="7d">{tr("last7Days")}</option><option value="30d">{tr("last30Days")}</option></select><ChevronDown size={14}/></label>
+        <button type="button" onClick={()=>document.getElementById("anv-filter-range")?.focus()}><Filter size={17}/>{tr("filters")}</button>
+        <button type="button" onClick={exportCsv}><Download size={17}/>{tr("export")}</button>
+        <button type="button" className="anv-primary" onClick={refresh}><RefreshCw size={17}/>{tr("refresh")}</button>
+        <label className="anv-compare">{tr("comparePrevious")} <input type="checkbox" checked={compare} onChange={e=>setCompare(e.target.checked)}/></label>
+      </div>
+    </header>
+    {compare && <p className="anv-notice" role="status">{tr("comparisonUnavailable")}</p>}
+    {state.loading && <p className="anv-notice" role="status">{tr("loading")}</p>}
+    {state.error && <p className="anv-error" role="alert">{state.error} <button onClick={refresh}>{tr("retry")}</button></p>}
+    <section className="anv-kpis">{stats.map(([key,value,Icon,tone])=><article className="anv-kpi" key={key}>
+      <span className={`anv-kpi-icon anv-${tone}`}><Icon size={27}/></span>
+      <div><h2>{tr(key)}</h2><strong>{display(value)}</strong><p>{numeric(value)===null ? tr("unavailable") : tr("selectedPeriod")}</p></div>
+    </article>)}</section>
+    <section className="anv-grid-main">
+      <article className="anv-panel anv-activity">
+        {panelHeader(<BarChart3/>, "activityOverTime","activityDescription","viewActivity","/dashboard/team/activity")}
+        <div className="anv-activity-toolbar"><span><i className="anv-dot blue"/>{tr("conversations")}</span><span><i className="anv-dot green"/>{tr("appointments")}</span><span><i className="anv-dot purple"/>{tr("aiActions")}</span>
+          <select id="anv-filter-range" value={mode} onChange={e=>setMode(e.target.value)}><option value="daily">{tr("daily")}</option><option value="weekly">{tr("weekly")}</option></select></div>
+        {activitySeries.length > 0 ? <div style={{height:210,width:"100%"}}>
+          <ResponsiveContainer width="100%" height="100%"><LineChart data={activitySeries} margin={{top:12,right:16,bottom:5,left:0}}>
+            <CartesianGrid stroke="#edf2fa" strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:10}}/><YAxis allowDecimals={false} tick={{fontSize:10}}/>
+            <Tooltip/><Line type="monotone" dataKey="conversations" name={tr("conversations")} stroke="#2868f5" strokeWidth={2} dot={false}/><Line type="monotone" dataKey="appointments" name={tr("appointments")} stroke="#16b76b" strokeWidth={2} dot={false}/>
+            <Line type="monotone" dataKey="ai_actions" name={tr("aiActions")} stroke="#9049ef" strokeWidth={2} dot={false}/>
+          </LineChart></ResponsiveContainer></div> : <div className="anv-empty"><BarChart3 size={34}/><strong>{tr("noActivity")}</strong><p>{tr("activityEmptyDescription")}</p></div>}
+      </article>
+      <article className="anv-panel">{panelHeader(<Target/>,"communicationByChannel","channelDescription","viewConversations","/dashboard/conversations")}
+        {rows(channels.map(([key,Icon,tone])=>[key,overview?.channels?.[key],Icon,tone]))}<p className="anv-footnote">{tr("channelsUnavailable")}</p></article>
+    </section>
+    <section className="anv-grid-thirds">
+      <article className="anv-panel">{panelHeader(<CalendarDays/>,"appointmentOutcomes","appointmentsDescription","viewAppointments","/dashboard/calendar")}{rows(outcomes)}</article>
+      <article className="anv-panel">{panelHeader(<ClipboardCheck/>,"followupPerformance","followupDescription","viewFollowups","/dashboard/leads")}{rows(followups)}</article>
+      <article className="anv-panel">{panelHeader(<Zap/>,"aiAutomationResults","aiDescription","viewActionHistory","/dashboard/ai-cortexa")}{rows(automation)}<p className="anv-footnote">{tr("aiActionsNotAutomations")}</p></article>
+    </section>
+    <section className="anv-grid-bottom">
+      <article className="anv-panel">{panelHeader(<Users/>,"teamPerformance","teamDescription","viewTeamReport","/dashboard/team")}
+        <div className="anv-table-scroll"><table><thead><tr>{["teamMember","conversationsHandled","averageFirstResponse","tasksCompleted","followupCompletion"].map(k=><th key={k}>{tr(k)}</th>)}</tr></thead><tbody>{(overview?.teamPerformance ?? []).map(member=><tr key={member.id}><td>{member.name}</td><td>{display(member.conversationsHandled)}</td><td>{display(member.averageFirstResponse)}</td><td>{display(member.tasksCompleted)}</td><td>{numeric(member.followupCompletion)===null?NA:`${member.followupCompletion}%`}</td></tr>)}</tbody></table></div>
+        {!overview?.teamPerformance?.length && <div className="anv-team-empty"><Users size={28}/><strong>{tr("teamDataUnavailable")}</strong><p>{tr("teamDataDescription")}</p></div>}</article>
+      <article className="anv-panel anv-ai-insights">{panelHeader(<Sparkles/>,"aiPerformanceInsights","insightsDescription")}
+        <div className="anv-insights-center"><ListChecks size={29}/>
+          {insights?.metrics ? <><strong>{tr("analysisReady")}</strong><p>{tr("conversationsHandled")}: {display(insights.metrics.conversationsHandled)} · {tr("appointmentsBooked")}: {display(insights.metrics.appointmentsBooked)}</p></> :
+          <><strong>{insights?.error ? tr("loadFailed") : tr("noAnalysis")}</strong><p>{tr("analysisDescription")}</p></>}</div>
+        <button type="button" className="anv-primary anv-analyze" onClick={analyzePeriod} disabled={insightsLoading}>
+          <Sparkles size={17}/>{insightsLoading ? tr("loading") : tr("analyzePeriod")}</button>
+      </article>
+    </section>
+    <footer className="anv-footer">{tr("dataSourceNotice")}</footer>
+  </main>;
 }
