@@ -5127,3 +5127,70 @@ section#footer {
 :where(#cortexa-ai-crm-landing img[width][height]) {
   height: auto;
 }
+
+/* Workspace header dropdown and custom request */
+.cx-workspace-nav{position:relative;display:flex;align-items:center}
+.cx-workspace-nav-toggle{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;cursor:pointer;font:inherit;white-space:nowrap;color:inherit}
+.cx-workspace-nav-dropdown{position:absolute;top:calc(100% + 15px);left:50%;transform:translateX(-50%);width:390px;max-height:min(78vh,770px);overflow-y:auto;background:white;border:1px solid #c8c3ff;border-radius:14px;padding:12px;z-index:1000;box-shadow:0 16px 45px #22236624}
+.cx-workspace-nav-heading{font-size:12px;font-weight:800;letter-spacing:3px;color:#777da7;padding:12px 12px 16px}
+.cx-workspace-nav-option{width:100%;display:flex;align-items:center;gap:14px;padding:5px 9px;border:0;border-radius:12px;background:transparent;color:#091342;font-weight:600;text-align:left;cursor:pointer}
+.cx-workspace-nav-option:hover,.cx-workspace-nav-option.is-selected{background:#edf4ff}
+.cx-workspace-nav-option .cx-ws-choice-icon{width:49px;height:49px;min-width:49px;display:grid;place-items:center}
+.cx-workspace-nav-option>span:nth-child(2){flex:1}.cx-workspace-nav-option>svg{color:#58689d}
+.cx-ws-choice[role=button]{cursor:pointer}.cx-ws-choice[role=button]:focus-visible{outline:2px solid #306bff;outline-offset:4px}
+.cx-ws-custom-note,.cx-ws-custom-bottom{text-align:center;color:#111b52;font-weight:650;margin:18px auto;max-width:960px}
+.cx-ws-request{display:flex;align-items:center;justify-content:center;gap:12px;width:max-content;max-width:100%;margin:14px auto 24px;padding:13px 27px;border-radius:32px;background:linear-gradient(100deg,#126aff,#7c16e9);color:white;text-decoration:none;font-weight:700;box-shadow:0 8px 19px #405ce331}
+.cx-workspaces-showcase{scroll-margin-top:95px}
+
+/* Workspace mockup alignment – desktop header, compact dropdown, accent copy */
+#cortexa-ai-crm-landing .cx-header-inner{display:flex;align-items:center;gap:14px;flex-wrap:nowrap;min-width:0}
+#cortexa-ai-crm-landing .cx-header-inner .cx-left{flex:0 1 245px;min-width:175px}
+#cortexa-ai-crm-landing .cx-header-inner .cx-logo-img{max-width:100%;height:auto}
+#cortexa-ai-crm-landing .cx-header-inner .cx-nav{display:flex;align-items:center;justify-content:center;gap:clamp(7px,1.1vw,20px);flex:1 1 auto;min-width:0;flex-wrap:nowrap;white-space:nowrap}
+#cortexa-ai-crm-landing .cx-header-inner .cx-nav>a.nav-menu,
+#cortexa-ai-crm-landing .cx-header-inner .cx-nav>.cx-workspace-nav>.cx-workspace-nav-toggle{margin:0;font-size:clamp(11px,.94vw,14px);white-space:nowrap}
+#cortexa-ai-crm-landing .cx-header-inner .cx-actions{flex:0 0 auto;white-space:nowrap}
+#cortexa-ai-crm-landing .cx-workspace-nav{position:relative;flex:0 0 auto}
+#cortexa-ai-crm-landing .cx-workspace-nav-toggle{color:#6520e8!important;display:inline-flex;align-items:center;gap:6px;padding:8px 0}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown{box-sizing:border-box;position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);width:350px;max-width:calc(100vw - 28px);max-height:calc(100vh - 105px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:12px 10px;border-radius:13px;box-shadow:0 18px 46px rgba(45,38,133,.16);white-space:normal}
+#cortexa-ai-crm-landing .cx-workspace-nav-heading{padding:8px 12px 10px;font-size:11px;letter-spacing:2.6px}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown .cx-workspace-nav-option{box-sizing:border-box;display:flex;width:100%;min-width:0;min-height:46px;gap:12px;margin:0;padding:3px 10px;border-radius:11px;text-align:left;line-height:1.2;font-size:14px;color:#0c1641;white-space:normal}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown .cx-workspace-nav-option .cx-ws-choice-icon{flex:0 0 38px;width:38px;min-width:38px;height:38px;border-radius:50%;background:#eaf3ff;color:#126bfa}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown .cx-workspace-nav-option:nth-of-type(2n) .cx-ws-choice-icon{background:#f2ebff;color:#7727dc}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown .cx-workspace-nav-option:nth-of-type(4n) .cx-ws-choice-icon{background:#e9faf1;color:#09a46c}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown .cx-workspace-nav-option:nth-of-type(5n) .cx-ws-choice-icon{background:#fff0e9;color:#e64e22}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown .cx-workspace-nav-option>span:nth-child(2){flex:1 1 auto;min-width:0;overflow-wrap:break-word}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown .cx-workspace-nav-option>svg{flex:0 0 16px}
+#cortexa-ai-crm-landing .cx-ws-custom-note,#cortexa-ai-crm-landing .cx-ws-custom-bottom{margin-top: 10px;font-weight:700;line-height:1.5;max-width:1120px}
+#cortexa-ai-crm-landing .cx-ws-custom-note strong,#cortexa-ai-crm-landing .cx-ws-custom-bottom strong{color:#6520e8}
+#cortexa-ai-crm-landing .cx-web-bridge-custom-message{max-width:1150px;margin:4px auto 28px;color:#18234e;font-size:19px;line-height:1.55;text-align:center}
+#cortexa-ai-crm-landing .cx-web-bridge-custom-message b{font-weight:750}
+#cortexa-ai-crm-landing .cx-web-bridge-custom-message strong{color:#4387f2;font-weight:750}
+ #cortexa-ai-crm-landing .cx-ws-custom-bottom{
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+ }
+@media(max-width:1250px){#cortexa-ai-crm-landing .cx-header-inner{padding:0 16px;gap:9px}#cortexa-ai-crm-landing .cx-header-inner .cx-left{flex-basis:205px}#cortexa-ai-crm-landing .cx-header-inner .cx-nav{gap:9px}}
+@media(max-width:900px){#cortexa-ai-crm-landing .cx-header-inner .cx-left{flex-basis:175px}#cortexa-ai-crm-landing .cx-header-inner .cx-nav{gap:6px}#cortexa-ai-crm-landing .cx-header-inner .cx-nav>a.nav-menu,#cortexa-ai-crm-landing .cx-header-inner .cx-nav>.cx-workspace-nav>.cx-workspace-nav-toggle{font-size:11px}}
+
+/* Workspace dropdown: seamless hover path from trigger to menu. */
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown {
+  top: 100%;
+  margin-top: 0;
+}
+#cortexa-ai-crm-landing .cx-workspace-nav {
+  isolation: isolate;
+}
+#cortexa-ai-crm-landing .cx-workspace-nav::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: -12px;
+  right: -12px;
+  height: 12px;
+  pointer-events: none;
+}
+#cortexa-ai-crm-landing .cx-workspace-nav:has(.cx-workspace-nav-dropdown)::after {
+  pointer-events: auto;
+}

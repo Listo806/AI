@@ -3672,3 +3672,21 @@ body .cx-reporting-footer .fdes{
 :where(.mobile-landing img[width][height]) {
   height: auto;
 }
+
+/* Landing workspace menu and custom workspace copy */
+.m-workspaces-menu-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:0;padding:12px 0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.m-workspaces-submenu{display:flex;flex-direction:column;gap:2px;padding:5px 0 10px 15px;max-height:390px;overflow-y:auto}
+.m-workspaces-submenu button{border:0;background:transparent;padding:9px 10px;text-align:left;border-radius:8px;color:#152452;font:inherit;cursor:pointer}
+.m-workspaces-submenu button.selected,.m-workspaces-submenu button:hover{background:#e9f1ff;color:#245cff}
+.m-workspace-custom-note,.m-workspace-custom-bottom{font-weight:650;color:#101c53;text-align:center;line-height:1.6;margin:20px 12px}
+.m-workspace-request{display:flex;justify-content:center;align-items:center;gap:9px;margin:10px auto 22px;width:max-content;max-width:95%;padding:12px 19px;background:linear-gradient(95deg,#146cff,#771be8);border-radius:26px;color:#fff;font-weight:700;text-decoration:none}
+.m-workspace-chooser-item[role=button],.m-more-workspaces-item[role=button]{cursor:pointer}
+.m-specialized-workspaces{scroll-margin-top:80px}
+
+/* Workspace mockup accents and mobile wrapping */
+.mobile-landing .m-workspace-custom-note,.mobile-landing .m-workspace-custom-bottom,.mobile-landing .m-workspace-closing-custom-message{max-width:100%;overflow-wrap:break-word;text-align:center;line-height:1.55}
+.mobile-landing .m-workspace-custom-note strong,.mobile-landing .m-workspace-custom-bottom strong{color:#6720df}
+.mobile-landing .m-workspace-closing-custom-message{margin:16px auto 24px;padding:0 8px;color:#152044;font-size:15px}
+.mobile-landing .m-workspace-closing-custom-message b{font-weight:750}
+.mobile-landing .m-workspace-closing-custom-message strong{color:#4387f2}
+.mobile-landing .m-workspace-request{white-space:normal;text-align:center}

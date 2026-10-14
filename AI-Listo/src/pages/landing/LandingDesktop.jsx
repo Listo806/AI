@@ -271,6 +271,8 @@ export default function Landing() {
   });
   const [langOpen, setLangOpen] = useState(false);
   const [activeFAQ, setActiveFAQ] = useState(0);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(10);
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const localePrefix = localePrefixFromPath(pathname);
   const lp = (path) => withLocalePrefix(localePrefix, path);
@@ -1678,9 +1680,22 @@ export default function Landing() {
             >
               {tr.pricing}
             </a>
-            <a className="nav-menu" href={lp("/editorial/the-end-of-legacy-crm")}>
-              Cost Calculator
-            </a>
+            <div className="cx-workspace-nav" onMouseEnter={() => setWorkspaceMenuOpen(true)} onMouseLeave={() => setWorkspaceMenuOpen(false)} onKeyDown={(event) => {if (event.key === "Escape") setWorkspaceMenuOpen(false);}}>
+              <button type="button" className="nav-menu cx-workspace-nav-toggle" aria-expanded={workspaceMenuOpen} onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}>
+                {lang === "es" ? "Espacios de trabajo" : "Workspaces"} <ChevronDown size={16}/>
+              </button>
+              {workspaceMenuOpen && <div className="cx-workspace-nav-dropdown">
+                <div className="cx-workspace-nav-heading">{lang === "es" ? "ELIGE TU WORKSPACE" : lang === "pt" ? "ESCOLHA SEU WORKSPACE" : "CHOOSE YOUR WORKSPACE"}</div>
+                {[0,1,4,5,7,8,6,3,2,9,10].map((index) => {
+                  const Icon = [Building2,TrendingUp,ShieldCheck,Landmark,ShoppingCart,Headphones,Home,Users2,Magnet,HeartPulse,Stethoscope][index];
+                  return <button key={index} type="button" className={`cx-workspace-nav-option ${selectedWorkspace === index ? "is-selected" : ""}`}
+                    onClick={() => {setSelectedWorkspace(index);setWorkspaceMenuOpen(false);document.getElementById("features")?.scrollIntoView({behavior:"smooth",block:"start"});}}>
+                    <span className={`cx-ws-choice-icon cx-ws-choice-icon-${index+1}`}><Icon size={22}/></span>
+                    <span>{tr.workspaceSection.workspaces[index]}</span><ChevronRight size={17}/>
+                  </button>;
+                })}
+              </div>}
+            </div>
             <a
               className="nav-menu nav-menu-web-solutions"
               href="/web-solutions"
@@ -1880,6 +1895,7 @@ export default function Landing() {
           </h2>
           <p className="cx-ws-subtitle">{tr.workspaceSection.subtitle}</p>
 
+          <p className="cx-ws-custom-note">{lang === "es" ? <>¿No encuentras tu sector? <strong>Nuestro equipo de desarrollo</strong> puede adaptar un workspace a tu negocio.</> : lang === "pt" ? <>Não encontrou seu setor? <strong>Nossa equipe de desenvolvimento</strong> pode personalizar um workspace para seu negócio.</> : <>Don’t see your industry? <strong>Our development team</strong> can tailor a workspace to your business.</>}</p>
           <div className="cx-ws-includes-title">{tr.workspaceSection.includesTitle}</div>
           <div className="cx-ws-includes">
             {[
@@ -1920,11 +1936,13 @@ export default function Landing() {
               HeartPulse,
               Stethoscope,
             ].map((Icon, index) => {
-              const isClinic = index === 10;
+              const isClinic = selectedWorkspace === index;
               return (
                 <div
                   className={`cx-ws-choice ${isClinic ? "is-active" : ""}`}
                   key={tr.workspaceSection.workspaces[index]}
+                  role="button" tabIndex={0} onClick={() => setSelectedWorkspace(index)}
+                  onKeyDown={(e) => {if(e.key === "Enter" || e.key === " ") {e.preventDefault();setSelectedWorkspace(index);}}}
                 >
                   <span className={`cx-ws-choice-icon cx-ws-choice-icon-${index + 1}`}>
                     <Icon size={35} strokeWidth={2} />
@@ -1937,11 +1955,11 @@ export default function Landing() {
 
           <div className="cx-ws-detail">
             <div className="cx-ws-detail-brand">
-              <span className="cx-ws-detail-main-icon"><Stethoscope size={46} strokeWidth={2} /></span>
-              <b>{tr.workspaceSection.clinicTitle}</b>
+              <span className="cx-ws-detail-main-icon">{(() => {const Icon=[Building2,TrendingUp,ShieldCheck,Landmark,ShoppingCart,Headphones,Home,Users2,Magnet,HeartPulse,Stethoscope][selectedWorkspace];return <Icon size={46} strokeWidth={2}/>;})()}</span>
+              <b>{tr.workspaceSection.workspaces[selectedWorkspace]}</b>
             </div>
 
-            <p className="cx-ws-detail-copy">{tr.workspaceSection.clinicDescription}</p>
+            <p className="cx-ws-detail-copy">{selectedWorkspace === 10 ? tr.workspaceSection.clinicDescription : tr.workspaceSection.subtitle}</p>
 
             <div className="cx-ws-detail-features">
               {[User, ClipboardList, FileText, BellRing].map((Icon, index) => (
@@ -1956,6 +1974,8 @@ export default function Landing() {
             </div>
           </div>
 
+          <p className="cx-ws-custom-bottom">{lang === "es" ? <>¿Necesitas algo diferente? Cuéntale a <strong>nuestro equipo de desarrollo</strong> lo que necesitas: adaptaremos el workspace, los flujos y las integraciones a tu negocio.</> : lang === "pt" ? <>Precisa de algo diferente? Conte à <strong>nossa equipe de desenvolvimento</strong> o que você precisa — adaptaremos o workspace, os fluxos e as integrações ao seu negócio.</> : <>Need something different? Tell <strong>our development team</strong> what you need—we’ll configure the workspace, workflows, and integrations around your business.</>}</p>
+          <a className="cx-ws-request" href="/web-solutions/free-review">{lang === "es" ? "Solicita tu workspace" : lang === "pt" ? "Solicite seu workspace" : "Request Your Workspace"} <ArrowRight size={18}/></a>
           <p className="cx-ws-connected">{tr.workspaceSection.connected}</p>
           <a
             className="cx-ws-explore"
@@ -2041,6 +2061,8 @@ export default function Landing() {
             <strong>{tr.webSolutionsSection.quote}</strong>
             <span className="cx-web-bridge-quote-mark cx-web-bridge-quote-right">”</span>
           </blockquote>
+
+          <p className="cx-web-bridge-custom-message">{lang === "es" ? <><b>¿No encuentras tu sector o el workspace que necesitas?</b> <strong>Nuestro equipo de desarrollo</strong> puede configurar un workspace adaptado a tu negocio, tus flujos de trabajo y tus integraciones. Cuéntanos lo que necesitas y lo adaptaremos a tu forma de trabajar.</> : lang === "pt" ? <><b>Não encontrou seu setor ou o workspace que precisa?</b> <strong>Nossa equipe de desenvolvimento</strong> pode configurar um workspace para sua empresa, seus fluxos de trabalho e suas integrações. Conte o que você precisa e nós o adaptaremos à sua forma de trabalhar.</> : <><b>Don’t see your industry or the workspace you need?</b> <strong>Our development team</strong> can configure a workspace around your business, workflows, and integrations. Tell us what you need, and we’ll tailor it to the way you work.</>}</p>
 
           <div className="cx-web-bridge-copy">
             <p>{tr.webSolutionsSection.paragraph1}</p>

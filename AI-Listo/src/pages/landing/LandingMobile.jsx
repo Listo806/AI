@@ -110,6 +110,8 @@ export default function LandingMobile() {
     return localStorage.getItem("cortexa_lang") || "en";
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(10);
+  const [workspaceSubmenuOpen, setWorkspaceSubmenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const [langOpen, setLangOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
@@ -1136,7 +1138,18 @@ export default function LandingMobile() {
           })}
 
           <a href={lp("/pricing")} onClick={trackCta("drawer_pricing", tr.pricing)}>{tr.pricing}</a>
-          <a href={lp("/editorial/the-end-of-legacy-crm")}>Cost Calculator</a>
+          <button type="button" className="m-workspaces-menu-toggle" onClick={() => setWorkspaceSubmenuOpen(!workspaceSubmenuOpen)} aria-expanded={workspaceSubmenuOpen}>
+            {lang === "es" ? "Espacios de trabajo" : "Workspaces"} <ChevronRight size={18}/>
+          </button>
+          {workspaceSubmenuOpen && <div className="m-workspaces-submenu">
+            {[0,1,4,5,7,8,6,3,2,9,10].map((index) => {
+              const labels=[...tr.workspaceChooser.items,...tr.moreWorkspaces.items];
+              return <button type="button" key={index} className={selectedWorkspace===index ? "selected" : ""}
+                onClick={() => {setSelectedWorkspace(index);setMenuOpen(false);setWorkspaceSubmenuOpen(false);setTimeout(() => document.getElementById("features")?.scrollIntoView({behavior:"smooth",block:"start"}),50);}}>
+                {labels[index]}
+              </button>;
+            })}
+          </div>}
           <a href="/web-solutions" onClick={trackCta("drawer_web_solutions", tr.webSolutions)}>{tr.webSolutions}</a>
           {isAuthenticated() ? (
             <Link to="/dashboard/home" className="m-login-btn">
@@ -1236,6 +1249,7 @@ export default function LandingMobile() {
             {tr.workspacesSection.description}
           </p>
 
+          <p className="m-workspace-custom-note">{lang === "es" ? <>¿No encuentras tu sector? <strong>Nuestro equipo de desarrollo</strong> puede adaptar un workspace a tu negocio.</> : lang === "pt" ? <>Não encontrou seu setor? <strong>Nossa equipe de desenvolvimento</strong> pode personalizar um workspace para seu negócio.</> : <>Don’t see your industry? <strong>Our development team</strong> can tailor a workspace to your business.</>}</p>
           <h3 className="m-specialized-includes-title">
             {tr.workspacesSection.includesTitle}
           </h3>
@@ -1272,7 +1286,7 @@ export default function LandingMobile() {
               const Icon = workspaceChooserIcons[index];
 
               return (
-                <div className="m-workspace-chooser-item" key={item}>
+                <div className={`m-workspace-chooser-item ${selectedWorkspace===index ? "selected" : ""}`} key={item} role="button" tabIndex={0} onClick={() => setSelectedWorkspace(index)} onKeyDown={(e)=>{if(e.key==="Enter")setSelectedWorkspace(index);}}>
                   <div className="m-workspace-chooser-left">
                     <div
                       className={`m-workspace-chooser-icon m-workspace-chooser-icon-${workspaceChooserColors[index]}`}
@@ -1304,12 +1318,12 @@ export default function LandingMobile() {
           <div className="m-more-workspaces-list">
             {tr.moreWorkspaces.items.map((item, index) => {
               const Icon = moreWorkspaceIcons[index];
-              const isSelected = index === 4;
+              const isSelected = selectedWorkspace === index + 6;
 
               return (
                 <div
                   className={`m-more-workspaces-item ${isSelected ? "selected" : ""}`}
-                  key={item}
+                  key={item} role="button" tabIndex={0} onClick={() => setSelectedWorkspace(index+6)} onKeyDown={(e)=>{if(e.key==="Enter")setSelectedWorkspace(index+6);}}
                 >
                   <div className="m-more-workspaces-left">
                     <div
@@ -1345,7 +1359,7 @@ export default function LandingMobile() {
       <section className="m-selected-workspace-detail">
         <div className="m-selected-workspace-detail-inner">
           <div className="m-selected-workspace-hero-icon">
-            <Stethoscope size={70} strokeWidth={1.75} aria-hidden="true" />
+            {(() => {const Icon=[...workspaceChooserIcons,...moreWorkspaceIcons][selectedWorkspace];return <Icon size={70} strokeWidth={1.75} aria-hidden="true"/>;})()}
           </div>
 
           <p className="m-selected-workspace-eyebrow">
@@ -1353,11 +1367,11 @@ export default function LandingMobile() {
           </p>
 
           <h2 className="m-selected-workspace-title">
-            {tr.selectedWorkspaceDetail.title}
+            {[...tr.workspaceChooser.items,...tr.moreWorkspaces.items][selectedWorkspace]}
           </h2>
 
           <p className="m-selected-workspace-description">
-            {tr.selectedWorkspaceDetail.description}
+            {selectedWorkspace===10 ? tr.selectedWorkspaceDetail.description : tr.workspacesSection.description}
           </p>
 
           <div className="m-selected-workspace-links">
@@ -1482,6 +1496,8 @@ export default function LandingMobile() {
             <span className="m-workspace-quote-mark m-workspace-quote-close">”</span>
           </blockquote>
 
+          <p className="m-workspace-closing-custom-message">{lang === "es" ? <><b>¿No encuentras tu sector o el workspace que necesitas?</b> <strong>Nuestro equipo de desarrollo</strong> puede configurar un workspace adaptado a tu negocio, tus flujos de trabajo y tus integraciones. Cuéntanos lo que necesitas y lo adaptaremos a tu forma de trabajar.</> : lang === "pt" ? <><b>Não encontrou seu setor ou o workspace que precisa?</b> <strong>Nossa equipe de desenvolvimento</strong> pode configurar um workspace para sua empresa, seus fluxos de trabalho e suas integrações. Conte o que você precisa e nós o adaptaremos à sua forma de trabalhar.</> : <><b>Don’t see your industry or the workspace you need?</b> <strong>Our development team</strong> can configure a workspace around your business, workflows, and integrations. Tell us what you need, and we’ll tailor it to the way you work.</>}</p>
+
           <div className="m-workspace-connected-system">
             <p className="m-workspace-connected-eyebrow">
               {tr.workspaceClosing.eyebrow}
@@ -1524,6 +1540,8 @@ export default function LandingMobile() {
               {tr.workspaceClosing.note}
             </p>
           </div>
+          <p className="m-workspace-custom-bottom">{lang === "es" ? <>¿Necesitas algo diferente? Cuéntale a <strong>nuestro equipo de desarrollo</strong> lo que necesitas: adaptaremos el workspace, los flujos y las integraciones a tu negocio.</> : lang === "pt" ? <>Precisa de algo diferente? Conte à <strong>nossa equipe de desenvolvimento</strong> o que você precisa — adaptaremos o workspace, os fluxos e as integrações ao seu negócio.</> : <>Need something different? Tell <strong>our development team</strong> what you need—we’ll configure the workspace, workflows, and integrations around your business.</>}</p>
+          <a className="m-workspace-request" href="/web-solutions/free-review">{lang === "es" ? "Solicita tu workspace" : lang === "pt" ? "Solicite seu workspace" : "Request Your Workspace"} <ArrowRight size={18}/></a>
         </div>
       </section>
 
