@@ -66,6 +66,40 @@ export class PipelineService {
     return rows;
   }
 
+  // The current data model has one configured pipeline per workspace.
+  // Expose actual accessible workspace pipelines; never invent extra pipelines.
+  async listPipelines(userId: string, teamId?: string | null, workspaceId?: string) {
+    const scope = this.getScope(userId, teamId, 'all', workspaceId);
+    const { rows } = await this.db.query(`
+      SELECT DISTINCT d.workspace_id::text AS "workspaceId"
+      FROM deals d WHERE ${scope.where} AND d.workspace_id IS NOT NULL
+      ORDER BY "workspaceId"`, scope.params);
+    return rows.map((row: any) => ({
+      id: `workspace:${row.workspaceId}`, workspaceId: row.workspaceId,
+      name: 'Main Pipeline', isDefault: true,
+    }));
+  }
+
+  async assignDeal(id: string, assigneeId: string, userId: string, teamId?: string | null) {
+    const deal = await this.findDealForUser(id, userId, teamId);
+    if (!teamId || deal.teamId !== teamId) {
+      throw new ForbiddenException('Deal is not in your active team');
+    }
+    const { rows: members } = await this.db.query(`
+      SELECT id FROM users WHERE id=$1::uuid AND team_id=$2::uuid AND is_active=true LIMIT 1`,
+      [assigneeId, teamId]);
+    if (!members.length) throw new ForbiddenException('Assignee is not an active member of this team');
+    const { rows } = await this.db.query(`
+      UPDATE deals SET assigned_to=$1::uuid, updated_at=NOW()
+      WHERE id=$2::uuid AND team_id=$3::uuid
+      RETURNING id, assigned_to AS "assignedTo", team_id AS "teamId"`,
+      [assigneeId, id, teamId]);
+    if (!rows.length) throw new NotFoundException('Deal not found');
+    await this.createEvent({ eventType: 'deal.updated', entityId: id, userId,
+      metadata: { action: 'assigned', assignedTo: assigneeId } });
+    return rows[0];
+  }
+
   async getConfiguredStages(userId: string, teamId?: string | null, workspaceId?: string) {
     if (!workspaceId) return PIPELINE_STAGES;
     const { rows: allowed } = await this.db.query(`SELECT 1 FROM deals d

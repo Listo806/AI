@@ -71,6 +71,7 @@ export default function CortexaAnalyticsDashboard() {
   const contactValue = a?.newContacts;
   const conversationValue = a?.conversationsHandled;
   const appointments = a?.appointmentsBooked;
+  const emptyKpiMessage = (key) => key === "averageFirstResponse" ? tr("noResponsesRecorded") : tr("noEligibleActivity");
   const stats = [
     ["newContacts",contactValue,UserRoundPlus,"blue"],["conversationsHandled",conversationValue,MessageCircle,"purple"],
     ["appointmentsBooked",appointments,CalendarDays,"green"],["aiActionsCompleted",a?.aiActionsCompleted,Zap,"purple"],
@@ -128,7 +129,7 @@ export default function CortexaAnalyticsDashboard() {
     {state.error && <p className="anv-error" role="alert">{state.error} <button onClick={refresh}>{tr("retry")}</button></p>}
     <section className="anv-kpis">{stats.map(([key,value,Icon,tone])=><article className="anv-kpi" key={key}>
       <span className={`anv-kpi-icon anv-${tone}`}><Icon size={27}/></span>
-      <div><h2>{tr(key)}</h2><strong>{display(value)}</strong><p>{comparison(key,value) ?? (numeric(value)===null ? tr("unavailable") : tr("selectedPeriod"))}</p></div>
+      <div><h2>{tr(key)}</h2><strong>{display(value)}</strong><p>{comparison(key,value) ?? (numeric(value)===null ? (state.error ? tr("loadFailed") : state.loading ? tr("loading") : emptyKpiMessage(key)) : tr("selectedPeriod"))}</p></div>
     </article>)}</section>
     <section className="anv-grid-main">
       <article className="anv-panel anv-activity">
@@ -140,11 +141,11 @@ export default function CortexaAnalyticsDashboard() {
             <CartesianGrid stroke="#edf2fa" strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:10}}/><YAxis allowDecimals={false} tick={{fontSize:10}}/>
             <Tooltip/><Line type="monotone" dataKey="conversations" name={tr("conversations")} stroke="#2868f5" strokeWidth={2} dot={false}/><Line type="monotone" dataKey="appointments" name={tr("appointments")} stroke="#16b76b" strokeWidth={2} dot={false}/>
             <Line type="monotone" dataKey="ai_actions" name={tr("aiActions")} stroke="#9049ef" strokeWidth={2} dot={false}/>
-          </LineChart></ResponsiveContainer></div> : <div className="anv-empty"><BarChart3 size={34}/><strong>{tr("noActivity")}</strong><p>{tr("activityEmptyDescription")}</p></div>}
+          </LineChart></ResponsiveContainer></div> : <div className="anv-empty"><span className="anv-empty-icon"><BarChart3 size={32}/></span><strong>{state.error ? tr("loadFailed") : tr("noActivity")}</strong><p>{state.error ? tr("retry") : tr("activityEmptyDescription")}</p></div>}
       </article>
       <article className="anv-panel">{panelHeader(<Target/>,"communicationByChannel","channelDescription","viewConversations","/dashboard/conversations")}
-        {rows(channels.filter(([key]) => overview?.channels?.[key] != null).map(([key,Icon,tone])=>[key,overview?.channels?.[key],Icon,tone]))}
-        {channels.some(([key]) => overview?.channels?.[key] == null) && <p className="anv-footnote">{tr("someChannelsDisconnected")}</p>}</article>
+        {rows(channels.map(([key,Icon,tone])=>[key,overview?.channels?.[key],Icon,tone]))}
+        <p className="anv-footnote">{tr("connectedChannelsOnly")}</p></article>
     </section>
     <section className="anv-grid-thirds">
       <article className="anv-panel">{panelHeader(<CalendarDays/>,"appointmentOutcomes","appointmentsDescription","viewAppointments","/dashboard/calendar")}{rows(outcomes)}</article>

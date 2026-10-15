@@ -50,6 +50,17 @@ export class PipelineController {
     return this.pipelineService.getWorkspaces(req.user.id, req.user.teamId || req.user.team_id || null);
   }
 
+  @Get("pipelines")
+  listPipelines(@Req() req: any, @Query("workspaceId") workspaceId?: string) {
+    return this.pipelineService.listPipelines(req.user.id, req.user.teamId || req.user.team_id || null, workspaceId);
+  }
+
+  @Patch("deals/:id/assign")
+  assignDeal(@Param("id") id: string, @Body() body: { assignedTo: string }, @Req() req: any) {
+    return this.pipelineService.assignDeal(id, body.assignedTo, req.user.id,
+      req.user.teamId || req.user.team_id || null);
+  }
+
   @Get("stages")
   getStages(@Req() req:any, @Query("workspaceId") workspaceId?:string) {
     return this.pipelineService.getConfiguredStages(req.user.id, req.user.teamId || req.user.team_id || null, workspaceId);

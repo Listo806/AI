@@ -64,6 +64,10 @@ export default function PipelinePage() {
   const { t } = useTranslation();
   const [pipelineStats, setPipelineStats] = useState([]);
   const [workspaceOptions, setWorkspaceOptions] = useState([]);
+  const [pipelineOptions, setPipelineOptions] = useState([]);
+  const [activePipelineId, setActivePipelineId] = useState("");
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assigneeId, setAssigneeId] = useState("");
   const [workspaceId, setWorkspaceId] = useState("");
   const [stagePerformance, setStagePerformance] = useState([]);
   const [stageEditorOpen, setStageEditorOpen] = useState(false);
@@ -185,12 +189,9 @@ export default function PipelinePage() {
         Array.isArray(data.automationHealth) ? data.automationHealth : [],
       );
       const columns = Array.isArray(data.columns) ? data.columns : [];
-      const firstDeal = columns.flatMap((col) => col.deals || [])[0] || null;
-
-      if (!selectedDeal && firstDeal) {
-        setSelectedDeal(firstDeal);
-        fetchDealEvents(firstDeal.id);
-      }
+      // Do not auto-select the first deal. Command actions require explicit selection.
+      setSelectedDeal((current) => current && columns.some((col) =>
+        (col.deals || []).some((deal) => deal.id === current.id)) ? current : null);
     } catch (err) {
       console.error("Fetch pipeline dashboard error:", err);
       setPipelineLoadError(true);
@@ -205,6 +206,19 @@ export default function PipelinePage() {
       setWorkspaceOptions(Array.isArray(data) ? data : []);
     }).catch(() => setWorkspaceOptions([]));
   }, []);
+
+  useEffect(() => {
+    let alive = true;
+    apiClient.request(`/pipeline/pipelines${workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : ''}`)
+      .then(r => {
+        if (!alive) return;
+        const items = r?.data || r || [];
+        const options = Array.isArray(items) ? items : [];
+        setPipelineOptions(options);
+        setActivePipelineId(current => options.some(p => p.id === current) ? current : (options[0]?.id || ''));
+      }).catch(() => { if (alive) { setPipelineOptions([]); setActivePipelineId(''); } });
+    return () => { alive = false; };
+  }, [workspaceId]);
 
   useEffect(() => {
     fetchPipelineAgents();
@@ -815,6 +829,24 @@ export default function PipelinePage() {
     }
   };
 
+  const commandAssignDeal = async () => {
+    if (!selectedDeal?.id || !assigneeId) return;
+    try {
+      setCommandActionLoading('assign');
+      await apiClient.request(`/pipeline/deals/${selectedDeal.id}/assign`, {
+        method: 'PATCH', body: JSON.stringify({ assignedTo: assigneeId }),
+      });
+      setSelectedDeal(current => current ? { ...current, assignedTo: assigneeId } : current);
+      setAssignOpen(false);
+      setAssigneeId('');
+      await fetchPipelineDashboard();
+      await fetchDealEvents(selectedDeal.id);
+      showToast('Item assigned successfully', 'success');
+    } catch (err) {
+      showToast(err?.message || 'Unable to assign this item');
+    } finally { setCommandActionLoading(null); }
+  };
+
   const scrollToSelectedDeal = () => {
     document
       .querySelector(".selected-deal-bottom-drilldown-inspector-panel")
@@ -997,19 +1029,19 @@ export default function PipelinePage() {
 
       <div className="pipeline-design-desktop">
         <div className="pd-heading-row">
-          <div><h1><Users size={27}/>{t("pipelineDesign.heading")}</h1><p>{t("pipelineDesign.subtitle")}</p></div>
+          <div><h1><Users size={27}/>{t("pipelineDesign.heading", "Pipeline")}</h1><p>{t("pipelineDesign.subtitle", "Track progress, follow-ups and next actions in one place.")}</p></div>
           <div className="pd-toolbar">
-            <label className="pd-select"><select aria-label={t("pipelineDesign.workspace")} value={workspaceId} onChange={e=>{setWorkspaceId(e.target.value);setSelectedDeal(null)}}><option value="">{t("pipelineDesign.workspace")}</option>{workspaceOptions.map(w=><option key={w.id} value={w.id}>{w.name||w.id}</option>)}</select></label>
-            <label className="pd-select"><select aria-label={t("pipelineDesign.mainPipeline")} value="main" onChange={()=>{}}><option value="main">{t("pipelineDesign.mainPipeline")}</option></select></label>
-            <div className="pd-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t("pipelineDesign.searchPipeline")}/></div>
+            <label className="pd-select"><select aria-label={t("pipelineDesign.workspace", "Active Workspace")} value={workspaceId} onChange={e=>{setWorkspaceId(e.target.value);setSelectedDeal(null)}}><option value="">{t("pipelineDesign.workspace", "Active Workspace")}</option>{workspaceOptions.map(w=><option key={w.id} value={w.id}>{w.name||w.id}</option>)}</select></label>
+            <label className="pd-select"><select aria-label={t("pipelineDesign.mainPipeline", "Main Pipeline")} value={activePipelineId} onChange={e=>{ const id=e.target.value;setActivePipelineId(id);const item=pipelineOptions.find(p=>p.id===id);if(item?.workspaceId){setWorkspaceId(item.workspaceId);setSelectedDeal(null)} }}><option value="" disabled>{t("pipelineDesign.mainPipeline", "Main Pipeline")}</option>{pipelineOptions.map(p=><option key={p.id} value={p.id}>{p.name}{!workspaceId ? ` (${workspaceOptions.find(w=>w.id===p.workspaceId)?.name||p.workspaceId})` : ""}</option>)}</select></label>
+            <div className="pd-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t("pipelineDesign.searchPipeline", "Search pipeline…")}/></div>
             <button onClick={()=>setShowFilters(v=>!v)}><SlidersHorizontal size={17}/>{t("pipeline.filters")}</button>
             <button onClick={exportPipelineCsv}><Download size={17}/>{t("pipeline.export")}</button>
-            <button className="pd-primary" onClick={()=>setShowCreateDealModal(true)}><Plus size={17}/>{t("pipelineDesign.addItem")}</button>
+            <button className="pd-primary" onClick={()=>setShowCreateDealModal(true)}><Plus size={17}/>{t("pipelineDesign.addItem", "Add Item")}</button>
           </div>
         </div>
         {showFilters && <div className="pd-filters"><label>{t("pipeline.allStages")}<select value={pipelineFilters.stage} onChange={e=>setPipelineFilters(v=>({...v,stage:e.target.value}))}><option value="all">{t("pipeline.allStages")}</option>{pipelineColumns.map(c=><option key={c.id} value={c.id}>{c.title||c.name||c.id}</option>)}</select></label><label>{t("pipeline.allAgents")}<select value={agentFilter} onChange={e=>setAgentFilter(e.target.value)}><option value="all">{t("pipeline.allAgents")}</option>{agents.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label><button onClick={()=>{setAgentFilter("all");setPipelineFilters(v=>({...v,stage:"all"}));setSearch("")}}>{t("pipeline.resetFilters")}</button></div>}
-        <div className="pd-connected"><Info size={14}/>{t("pipelineDesign.connected")}</div>
-        {pipelineLoadError && <div className="pd-error" role="alert">{t("pipelineDesign.loadError")} <button onClick={fetchPipelineDashboard}>{t("pipelineDesign.retry")}</button></div>}
+        <div className="pd-connected"><Info size={14}/>{t("pipelineDesign.connected", "Connected to your workspace pipeline")}</div>
+        {pipelineLoadError && <div className="pd-error" role="alert">{t("pipelineDesign.loadError", "Unable to load pipeline data.")} <button onClick={fetchPipelineDashboard}>{t("pipelineDesign.retry", "Retry")}</button></div>}
         <div className="pd-kpis">
           {[
             ["activeItems",pipelineColumns.reduce((n,c)=>n+(c.deals||[]).filter(d=>!["won","lost","closed","completed"].includes(String(d.stage||c.id).toLowerCase())).length,0),Users,"blue","open"],
@@ -1020,21 +1052,25 @@ export default function PipelinePage() {
             ["avgStage",operationalMetrics?.averageTimeInStageDays ?? null,LineChartIcon,"indigo","noActivity"],
           ].map(([key,value,Icon,color,desc])=><div className="pd-kpi" key={key}><span className={`pd-icon ${color}`}><Icon size={24}/></span><div><span>{t(`pipelineDesign.${key}`)}</span><strong>{pipelineLoading?"…":value??"—"}</strong><small>{t(`pipelineDesign.${desc}`)}</small></div></div>)}
         </div>
-        <section className="pd-insights"><span className="pd-insights-icon"><Brain size={30}/></span><div className="pd-insights-copy"><h2>{t("pipelineDesign.insights")}</h2><p>{t("pipelineDesign.insightSub")}</p></div><div className="pd-insight-result"><Info size={18}/>{pipelineInsight?.headline || t("pipelineDesign.noAnalysis")}</div><div className="pd-insight-buttons"><button className="pd-primary" disabled={analyzingPipeline} onClick={analyzePipeline}><Brain size={17}/>{t("pipelineDesign.analyze")}</button><button onClick={autoPrioritizeDeals} disabled={prioritizingDeals}>{t("pipelineDesign.review")}</button></div></section>
-        <section className="pd-board pd-card"><div className="pd-card-heading"><h2><Users size={21}/>{t("pipelineDesign.board")}</h2><div className="pd-view-toggle"><button className={designView==="board"?"active":""} onClick={()=>setDesignView("board")}><KanbanSquare size={15}/>{t("pipelineDesign.boardBtn")}</button><button className={designView==="list"?"active":""} onClick={()=>setDesignView("list")}><Layers size={15}/>{t("pipelineDesign.list")}</button></div><span className="pd-stage-hint"><Info size={14}/>{t("pipelineDesign.stagesInfo")}</span><button onClick={()=>{setStageDraft(pipelineColumns.map(c=>({key:c.id,label:c.title||c.name||c.id,color:"#3b82f6"})));setStageEditorOpen(true)}}><Settings2 size={16}/>{t("pipelineDesign.manageStages")}</button></div>
-          <div className={`pd-stage-grid ${designView === "list" ? "pd-stage-grid--list" : ""}`}>{visibleColumns.map((column,i)=><div className="pd-stage" key={column.id} onDragOver={e=>e.preventDefault()} onDrop={()=>{if(draggingDeal)handleDropDeal(column.id)}}><header><span className={`pd-dot pd-dot-${i%6}`}/><strong>{column.title||column.name||column.label||column.id}</strong><span className="pd-stage-count">{(column.deals||[]).length} {t("pipelineDesign.items")}</span><button aria-label={t("pipelineDesign.addItem")} onClick={()=>{setCreateDealForm(v=>({...v,stage:column.id}));setShowCreateDealModal(true)}}><MoreVertical size={17}/></button></header>{(column.deals||[]).length ? (column.deals||[]).map(deal=><button draggable onDragStart={()=>setDraggingDeal(deal)} className="pd-deal" key={deal.id} onClick={()=>selectDeal(deal)}><strong>{deal.name}</strong><span>{deal.amount||"—"}</span><small>{deal.stage||column.id}</small></button>):<div className="pd-empty-stage"><FileText size={26}/><p>{t("pipelineDesign.noItems")}</p><button onClick={()=>{setCreateDealForm(v=>({...v,stage:column.id}));setShowCreateDealModal(true)}}><Plus size={14}/>{t("pipelineDesign.addItem")}</button></div>}</div>)}</div>
+        <section className="pd-insights"><span className="pd-insights-icon"><Brain size={30}/></span><div className="pd-insights-copy"><h2>{t("pipelineDesign.insights", "AI Pipeline Insights")}</h2><p>{t("pipelineDesign.insightSub", "Identify stalled items and recommend next actions.")}</p></div><div className="pd-insight-result"><Info size={18}/>{pipelineInsight?.headline || t("pipelineDesign.noAnalysis", "No analysis generated yet.")}</div><div className="pd-insight-buttons"><button className="pd-primary" disabled={analyzingPipeline} onClick={analyzePipeline}><Brain size={17}/>{t("pipelineDesign.analyze", "Analyze Pipeline")}</button><button onClick={autoPrioritizeDeals} disabled={prioritizingDeals}>{t("pipelineDesign.review", "Review Priorities")}</button></div></section>
+        <section className="pd-board pd-card"><div className="pd-card-heading"><h2><Users size={21}/>{t("pipelineDesign.board", "Pipeline Board")}</h2><div className="pd-view-toggle"><button className={designView==="board"?"active":""} onClick={()=>setDesignView("board")}><KanbanSquare size={15}/>{t("pipelineDesign.boardBtn", "Board")}</button><button className={designView==="list"?"active":""} onClick={()=>setDesignView("list")}><Layers size={15}/>{t("pipelineDesign.list", "List")}</button></div><span className="pd-stage-hint"><Info size={14}/>{t("pipelineDesign.stagesInfo", "Stages follow your workspace configuration.")}</span><button onClick={()=>{setStageDraft(pipelineColumns.map(c=>({key:c.id,label:c.title||c.name||c.id,color:"#3b82f6"})));setStageEditorOpen(true)}}><Settings2 size={16}/>{t("pipelineDesign.manageStages", "Manage Stages")}</button></div>
+          <div className={`pd-stage-grid ${designView === "list" ? "pd-stage-grid--list" : ""}`}>{visibleColumns.map((column,i)=><div className="pd-stage" key={column.id} onDragOver={e=>e.preventDefault()} onDrop={()=>{if(draggingDeal)handleDropDeal(column.id)}}><header><span className={`pd-dot pd-dot-${i%6}`}/><strong>{column.title||column.name||column.label||column.id}</strong><span className="pd-stage-count">{(column.deals||[]).length} {t("pipelineDesign.items", "items")}</span><button aria-label={t("pipelineDesign.addItem", "Add Item")} onClick={()=>{setCreateDealForm(v=>({...v,stage:column.id}));setShowCreateDealModal(true)}}><MoreVertical size={17}/></button></header>{(column.deals||[]).length ? (column.deals||[]).map(deal=><button draggable onDragStart={()=>setDraggingDeal(deal)} className="pd-deal" key={deal.id} onClick={()=>selectDeal(deal)}><strong>{deal.name}</strong><span>{deal.amount||"—"}</span><small>{deal.stage||column.id}</small></button>):<div className="pd-empty-stage"><FileText size={26}/><p>{t("pipelineDesign.noItems", "No items yet.")}</p><button onClick={()=>{setCreateDealForm(v=>({...v,stage:column.id}));setShowCreateDealModal(true)}}><Plus size={14}/>{t("pipelineDesign.addItem", "Add Item")}</button></div>}</div>)}</div>
         </section>
-        <div className="pd-three"><section className="pd-card"><div className="pd-card-heading"><h2><AlertTriangle size={20}/>{t("pipelineDesign.needsAttention")}</h2><button onClick={()=>setShowFilters(true)}>{t("pipelineDesign.viewAll")}</button></div>{riskQueue.length?riskQueue.slice(0,5).map((d,i)=><button className="pd-risk-row" key={d.id||i} onClick={()=>reviewRiskDeal(d.id)}>{d.name||d.dealName||"—"}<ArrowRight size={14}/></button>):<div className="pd-empty"><AlertTriangle size={29}/>{t("pipelineDesign.noAttention")}</div>}</section>
-        <section className="pd-card"><div className="pd-card-heading"><h2><LineChartIcon size={20}/>{t("pipelineDesign.stagePerformance")}</h2></div><div className="pd-table-head"><span>{t("pipelineDesign.stage")}</span><span>{t("pipelineDesign.items")}</span><span>{t("pipelineDesign.avgTime")}</span></div>{visibleColumns.map(c=><div className="pd-table-row" key={c.id}><span>{c.title||c.name||c.id}</span><span>{(c.deals||[]).length}</span><span>{stagePerformance.find(s=>s.stage===c.id)?.averageTimeInStageDays == null ? "—" : `${stagePerformance.find(s=>s.stage===c.id).averageTimeInStageDays}d`}</span></div>)}</section>
-        <section className="pd-card"><div className="pd-card-heading"><h2><Settings2 size={20}/>{t("pipelineDesign.automationStatus")}</h2></div>{automationHealth.length ? automationHealth.map((item,i)=><div className="pd-automation-row" key={i}><span>{item.title}</span><strong>{item.state||"—"}</strong></div>) : <p className="pd-note">—</p>}<p className="pd-note"><Info size={14}/>{t("pipelineDesign.verifyStatus")}</p></section></div>
-        {stageEditorOpen && <section className="pd-card" aria-label={t("pipelineDesign.manageStages")}>
-          <h2>{t("pipelineDesign.manageStages")}</h2>
+        <div className="pd-three"><section className="pd-card"><div className="pd-card-heading"><h2><AlertTriangle size={20}/>{t("pipelineDesign.needsAttention", "Needs Attention")}</h2><button onClick={()=>setShowFilters(true)}>{t("pipelineDesign.viewAll", "View All")}</button></div>{riskQueue.length?riskQueue.slice(0,5).map((d,i)=><button className="pd-risk-row" key={d.id||i} onClick={()=>reviewRiskDeal(d.id)}>{d.name||d.dealName||"—"}<ArrowRight size={14}/></button>):<div className="pd-empty"><AlertTriangle size={29}/>{t("pipelineDesign.noAttention", "No items need attention.")}</div>}</section>
+        <section className="pd-card"><div className="pd-card-heading"><h2><LineChartIcon size={20}/>{t("pipelineDesign.stagePerformance", "Stage Performance")}</h2></div><div className="pd-table-head"><span>{t("pipelineDesign.stage", "Stage")}</span><span>{t("pipelineDesign.items", "items")}</span><span>{t("pipelineDesign.avgTime", "Avg Time")}</span></div>{visibleColumns.map(c=><div className="pd-table-row" key={c.id}><span>{c.title||c.name||c.id}</span><span>{(c.deals||[]).length}</span><span>{stagePerformance.find(s=>s.stage===c.id)?.averageTimeInStageDays == null ? "—" : `${stagePerformance.find(s=>s.stage===c.id).averageTimeInStageDays}d`}</span></div>)}</section>
+        <section className="pd-card"><div className="pd-card-heading"><h2><Settings2 size={20}/>{t("pipelineDesign.automationStatus", "Automation Status")}</h2></div>{["Follow-Up Automation", "Pipeline Sync", "AI Prioritization"].map((name) => {
+          const matched = automationHealth.find((item) => String(item.title || "").toLowerCase() === name.toLowerCase());
+          return <div className="pd-automation-row" key={name}><span>{name}</span><strong>{matched?.state || "—"}</strong></div>;
+        })}<p className="pd-note"><Info size={14}/>{t("pipelineDesign.verifyStatus", "Status appears after verification.")}</p></section></div>
+        {stageEditorOpen && <section className="pd-card" aria-label={t("pipelineDesign.manageStages", "Manage Stages")}>
+          <h2>{t("pipelineDesign.manageStages", "Manage Stages")}</h2>
           {stageDraft.map((s,i)=><div className="pd-stage-edit-row" key={s.key}><input value={s.label} aria-label={s.key} onChange={e=>setStageDraft(prev=>prev.map((v,j)=>j===i?{...v,label:e.target.value}:v))}/><span>{s.key}</span></div>)}
           <button onClick={()=>setStageEditorOpen(false)}>×</button>
           <button disabled={!workspaceId} onClick={async()=>{try {await apiClient.request('/pipeline/stages',{method:'PATCH',body:JSON.stringify({workspaceId,stages:stageDraft})});setStageEditorOpen(false);await fetchPipelineDashboard()}catch(e){showToast(e.message||'Unable to save stages')}}}>Save</button>
         </section>}
-        <section className="pd-selected pd-card"><div><FileText size={27}/><div><h2>{selectedDeal?.name||t("pipelineDesign.selectItem")}</h2><p>{selectedDeal?.name ? (selectedDeal.amount||"—") : t("pipelineDesign.detailsSub")}</p></div></div><div><span>{t("pipelineDesign.assigned")}</span><strong>{selectedDeal?.assignedTo||"—"}</strong></div><div><span>{t("pipelineDesign.stage")}</span><strong>{selectedDeal?.stage||"—"}</strong></div><div><span>{t("pipelineDesign.nextAction")}</span><strong>{selectedDeal?.nextAction||"—"}</strong></div></section>
-        <section className="pd-command"><div className="pd-command-title"><span><Brain size={26}/></span><div><h2>{t("pipelineDesign.command")}</h2><p>{t("pipelineDesign.commandSub")}</p></div></div><div className="pd-command-actions"><button disabled={!selectedDeal?.id} onClick={commandScoreDeal}><Brain size={16}/>{t("pipelineDesign.reviewAi")}</button><button disabled={!selectedDeal?.id} onClick={commandGenerateFollowUp}><Calendar size={16}/>{t("pipelineDesign.scheduleFollowup")}</button><button disabled={!selectedDeal?.id} onClick={commandSendSuggestions}><Users size={16}/>{t("pipelineDesign.assign")}</button><select aria-label={t("pipelineDesign.moveStage")} disabled={!selectedDeal?.id} value={selectedDeal?.stage||""} onChange={e=>commandMoveDeal(e.target.value)}><option value="" disabled>{t("pipelineDesign.moveStage")}</option>{pipelineColumns.map(c=><option key={c.id} value={c.id}>{c.title||c.name||c.id}</option>)}</select><button disabled={!selectedDeal?.id} onClick={openActivityModal}><Clock3 size={16}/>{t("pipelineDesign.timeline")}</button></div></section>
+        <section className="pd-selected pd-card"><div><FileText size={27}/><div><h2>{selectedDeal?.name||t("pipelineDesign.selectItem", "Select an item to view details")}</h2><p>{selectedDeal?.name ? (selectedDeal.amount||"—") : t("pipelineDesign.detailsSub", "Owner, stage, follow-ups and activity will appear here.")}</p></div></div><div><span>{t("pipelineDesign.assigned", "Assigned To")}</span><strong>{selectedDeal?.assignedTo||"—"}</strong></div><div><span>{t("pipelineDesign.stage", "Stage")}</span><strong>{selectedDeal?.stage||"—"}</strong></div><div><span>{t("pipelineDesign.nextAction", "Next Action")}</span><strong>{selectedDeal?.nextAction||"—"}</strong></div></section>
+        {assignOpen && selectedDeal?.id && <div className="pd-assign-overlay" role="presentation" onClick={()=>setAssignOpen(false)}><div className="pd-assign-dialog" role="dialog" aria-modal="true" aria-label={t("pipelineDesign.assign", "Assign")} onClick={e=>e.stopPropagation()}><h3>{t("pipelineDesign.assign", "Assign")}: {selectedDeal.name}</h3><p>{t("pipelineDesign.workspace", "Active Workspace")}</p><select aria-label={t("pipelineDesign.assigned", "Assigned To")} value={assigneeId} onChange={e=>setAssigneeId(e.target.value)}><option value="">{t("pipelineDesign.assigned", "Assigned To")}</option>{agents.map(a=><option key={a.id} value={a.id}>{a.name||a.email}</option>)}</select><div className="pd-assign-dialog-actions"><button type="button" onClick={()=>setAssignOpen(false)}>Cancel</button><button type="button" disabled={!assigneeId||commandActionLoading==='assign'} onClick={commandAssignDeal}>{t("pipelineDesign.assign", "Assign")}</button></div></div></div>}
+        <section className="pd-command"><div className="pd-command-title"><span><Brain size={26}/></span><div><h2>{t("pipelineDesign.command", "Pipeline Command Center")}</h2><p>{t("pipelineDesign.commandSub", "Select an item to review priorities, schedule follow-ups or update its stage.")}</p></div></div><div className="pd-command-actions"><button disabled={!selectedDeal?.id} onClick={commandScoreDeal}><Brain size={16}/>{t("pipelineDesign.reviewAi", "Review with AI")}</button><button disabled={!selectedDeal?.id} onClick={commandGenerateFollowUp}><Calendar size={16}/>{t("pipelineDesign.scheduleFollowup", "Schedule Follow-Up")}</button><button disabled={!selectedDeal?.id} onClick={()=>{setAssigneeId(selectedDeal?.assignedTo||"");setAssignOpen(true)}}><Users size={16}/>{t("pipelineDesign.assign", "Assign")}</button><select aria-label={t("pipelineDesign.moveStage", "Move Stage")} disabled={!selectedDeal?.id} value={selectedDeal?.stage||""} onChange={e=>commandMoveDeal(e.target.value)}><option value="" disabled>{t("pipelineDesign.moveStage", "Move Stage")}</option>{pipelineColumns.map(c=><option key={c.id} value={c.id}>{c.title||c.name||c.id}</option>)}</select><button disabled={!selectedDeal?.id} onClick={openActivityModal}><Clock3 size={16}/>{t("pipelineDesign.timeline", "Timeline")}</button></div></section>
       </div>
 
       <div className="pipeline-legacy-desktop">

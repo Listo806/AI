@@ -132,3 +132,10 @@ body.crm-dark .analytics-overview-v2 .anv-error { background:#492433; color:#ffd
 .analytics-overview-v2 .anv-ai-insights .anv-analyze svg {color:#e3d0ff;}
 .analytics-overview-v2 .anv-ai-insights .anv-insights-center {position:relative;}
 @media(max-width:900px){.analytics-overview-v2 .anv-actions{flex-wrap:wrap}.analytics-overview-v2 .anv-kpi{padding:14px 12px}}
+
+/* Approved Analytics reference: circular activity empty-state icon */
+.analytics-overview-v2 .anv-empty {min-height:166px;height:166px;gap:7px;}
+.analytics-overview-v2 .anv-empty-icon {display:flex;align-items:center;justify-content:center;width:68px;height:68px;border-radius:50%;background:#f2f5fb;color:#91a4c2;}
+.analytics-overview-v2 .anv-empty strong {font-size:14px;color:#102045;}
+.analytics-overview-v2 .anv-empty p {max-width:300px;line-height:1.45;}
+.analytics-overview-v2 .anv-kpi p {line-height:1.4;}
