@@ -4629,3 +4629,30 @@
 .pd-stage-modal-save{background:#2463ed;color:#fff;border:1px solid #2463ed}
 .pd-stage-modal-save:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:520px){.pd-modal-backdrop{padding:12px}.pd-stage-modal-header,.pd-stage-modal-body,.pd-stage-modal-footer{padding-left:16px;padding-right:16px}.pd-stage-modal-columns,.pd-stage-edit-row{grid-template-columns:minmax(0,1fr) 90px;gap:8px}.pd-stage-modal-title h2{font-size:16px}}
+
+/* Pipeline reference alignment — source src13; scoped to the current design. */
+.pipeline-page .pd-heading-row{align-items:center;gap:18px}
+.pipeline-page .pd-toolbar{flex:1 1 650px;justify-content:flex-end;gap:9px}
+.pipeline-page .pd-toolbar .pd-select select{width:clamp(140px,12vw,210px);max-width:210px;font-size:13px;font-weight:550;padding-inline:12px 24px}
+.pipeline-page .pd-toolbar .pd-search{flex:0 1 195px;min-width:155px}
+.pipeline-page .pd-toolbar .pd-search input{width:100%;font-size:13px}
+.pipeline-page .pd-toolbar button{font-size:13px;font-weight:600;padding-inline:14px}
+.pipeline-page .pd-insights{display:flex!important;flex-wrap:nowrap;align-items:center;gap:16px;padding:14px 18px!important;min-width:0}
+.pipeline-page .pd-insights-icon{flex:0 0 55px}
+.pipeline-page .pd-insights-copy{flex:1 1 220px;min-width:170px}
+.pipeline-page .pd-insight-result{flex:1 1 240px;min-width:170px;overflow-wrap:anywhere}
+.pipeline-page .pd-insight-buttons{flex:0 0 auto;display:flex;flex-wrap:nowrap;justify-content:flex-end;gap:9px}
+.pipeline-page .pd-insight-buttons button{white-space:nowrap;padding-inline:13px;min-height:38px;font-size:12px;font-weight:600}
+.pipeline-page .pd-command{gap:18px;padding:17px 20px!important}
+.pipeline-page .pd-command-title{min-width:220px;flex:1 1 300px}
+.pipeline-page .pd-command-actions{flex:0 1 auto;justify-content:flex-end;gap:10px}
+.pipeline-page .pd-command-actions button,.pipeline-page .pd-command-actions select{font-size:12px;line-height:1.35;min-height:39px;padding:9px 12px;white-space:nowrap}
+.pipeline-page .pd-command-actions button svg{flex-shrink:0}
+.pipeline-page .pd-selected-icon{background:#2563eb;color:#fff!important;border-radius:9px;padding:7px;box-sizing:content-box}
+.pipeline-page .pd-stage-grid{align-items:stretch}
+.pipeline-page .pd-stage{display:flex;flex-direction:column;min-height:190px}
+.pipeline-page .pd-empty-stage{flex:1;min-height:125px}
+.pipeline-page .pd-three>.pd-card{min-width:0}
+.pipeline-page .pd-automation-row strong{font-weight:650;color:#637795}
+@media(max-width:1300px){.pipeline-page .pd-insights{flex-wrap:wrap}.pipeline-page .pd-insight-buttons{flex:1 1 100%;justify-content:flex-end}.pipeline-page .pd-command{flex-wrap:wrap}.pipeline-page .pd-command-actions{width:100%;justify-content:flex-start}}
+@media(max-width:760px){.pipeline-page .pd-toolbar{flex:1 1 100%;justify-content:flex-start}.pipeline-page .pd-insights-copy{flex:1 1 calc(100% - 80px)}.pipeline-page .pd-insight-result{flex:1 1 100%}.pipeline-page .pd-insight-buttons{flex-wrap:wrap;justify-content:flex-start}.pipeline-page .pd-command-actions{gap:7px}.pipeline-page .pd-command-actions button,.pipeline-page .pd-command-actions select{white-space:normal}}

@@ -26,7 +26,17 @@ const listOf = (v) => Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items :
 
 export default function CortexaAnalyticsDashboard() {
   const { t } = useTranslation();
-  const tr = (key) => t(`analyticsV2.${key}`);
+  const tr = (key) => {
+    const value = t(`analyticsV2.${key}`, { defaultValue: "" });
+    const fallback = {
+      noResponsesRecorded: "No responses recorded", noEligibleActivity: "No eligible activity",
+      connectedChannelsOnly: "Connected channels only.",
+      noActivity: "No activity in this period",
+      activityEmptyDescription: "Your conversations, appointments and AI actions will appear here.",
+      analysisDescription: "Analyze your data to get AI-powered insights and recommendations."
+    };
+    return value && value !== `analyticsV2.${key}` ? value : (fallback[key] || key);
+  };
   const navigate = useNavigate();
   const [range, setRange] = useState("30d");
   const [tick, setTick] = useState(0);
@@ -57,7 +67,23 @@ export default function CortexaAnalyticsDashboard() {
   }, [range,tick,compare]);
   const overview = state.overview;
   const a = overview?.metrics;
-  const activitySeries = overview?.activity?.series ?? [];
+  const rawActivity = overview?.activity?.series;
+  const activitySeries = Array.isArray(rawActivity) ? rawActivity : [];
+  const activityVerified = Array.isArray(rawActivity);
+  const groupedSeries = useMemo(() => {
+    if (mode === "daily") return activitySeries;
+    const groups = new Map();
+    for (const item of activitySeries) {
+      const date = new Date(`${item.date}T12:00:00`);
+      if (Number.isNaN(date.getTime())) continue;
+      date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+      const key = date.toISOString().slice(0, 10);
+      const current = groups.get(key) || { date: key, conversations: 0, appointments: 0, ai_actions: 0 };
+      for (const field of ["conversations", "appointments", "ai_actions"]) current[field] += Number(item[field]) || 0;
+      groups.set(key, current);
+    }
+    return [...groups.values()].sort((a,b) => a.date.localeCompare(b.date));
+  }, [activitySeries, mode]);
   const hasActivity = activitySeries.some(item => ["conversations","appointments","ai_actions"].some(k => Number(item[k]) > 0));
   const previousMetrics = previous?.metrics;
   const comparison = (key, value) => {
@@ -103,10 +129,10 @@ export default function CortexaAnalyticsDashboard() {
       ...outcomes.map(([key,val])=>[tr("appointmentOutcomes"),tr(key),numeric(val)===null?"":val])
     ]);
   }
-  const panelHeader = (icon,title,description,action,path) => (
+  const panelHeader = (icon,title,description,action,path,extra = null) => (
     <div className="anv-panel-head"><div className="anv-heading-icon">{icon}</div>
       <div className="anv-panel-title"><h2>{tr(title)}</h2>{description && <p>{tr(description)}</p>}</div>
-      {action && <button type="button" className="anv-link" onClick={()=>navigate(path)}>{tr(action)} <ArrowRight size={15}/></button>}
+      {(action || extra) && <div className="anv-panel-actions">{extra}{action && <button type="button" className="anv-link" onClick={()=>navigate(path)}>{tr(action)} <ArrowRight size={15}/></button>}</div>}
     </div>
   );
   const rows = (data) => data.map(([key,value,Icon,tone])=>(
@@ -116,9 +142,9 @@ export default function CortexaAnalyticsDashboard() {
   return <main className="analytics-page analytics-overview-v2">
     <header className="anv-header">
       <div className="anv-title"><BarChart3 size={29}/><div><h1>{tr("title")}</h1><p>{tr("subtitle")}</p></div></div>
-      <div className="anv-actions"><label className="anv-select"><CalendarDays size={17}/><select value={range} onChange={e=>setRange(e.target.value)}>
+      <div className="anv-actions"><label className="anv-select"><CalendarDays size={17}/><select id="anv-date-range" value={range} onChange={e=>setRange(e.target.value)}>
         <option value="today">{tr("today")}</option><option value="7d">{tr("last7Days")}</option><option value="30d">{tr("last30Days")}</option></select><ChevronDown size={14}/></label>
-        <button type="button" onClick={()=>document.getElementById("anv-filter-range")?.focus()}><Filter size={17}/>{tr("filters")}</button>
+        <button type="button" onClick={()=>document.getElementById("anv-date-range")?.focus()}><Filter size={17}/>{tr("filters")}</button>
         <button type="button" onClick={exportCsv}><Download size={17}/>{tr("export")}</button>
         <button type="button" className="anv-primary" onClick={refresh}><RefreshCw size={17}/>{tr("refresh")}</button>
         <label className="anv-compare">{tr("comparePrevious")} <input type="checkbox" role="switch" aria-checked={compare} checked={compare} onChange={e=>setCompare(e.target.checked)}/><span className="anv-switch" aria-hidden="true"/></label>
@@ -133,17 +159,17 @@ export default function CortexaAnalyticsDashboard() {
     </article>)}</section>
     <section className="anv-grid-main">
       <article className="anv-panel anv-activity">
-        {panelHeader(<BarChart3/>, "activityOverTime","activityDescription","viewActivity","/dashboard/team/activity")}
+        {panelHeader(<BarChart3/>, "activityOverTime","activityDescription","viewActivity","/dashboard/team/activity", <select id="anv-filter-range" className="anv-granularity" value={mode} onChange={e=>setMode(e.target.value)}><option value="daily">{tr("daily")}</option><option value="weekly">{tr("weekly")}</option></select>)}
         <div className="anv-activity-toolbar"><span><i className="anv-dot blue"/>{tr("conversations")}</span><span><i className="anv-dot green"/>{tr("appointments")}</span><span><i className="anv-dot purple"/>{tr("aiActions")}</span>
-          <select id="anv-filter-range" value={mode} onChange={e=>setMode(e.target.value)}><option value="daily">{tr("daily")}</option><option value="weekly">{tr("weekly")}</option></select></div>
+</div>
         {hasActivity ? <div style={{height:210,width:"100%"}}>
-          <ResponsiveContainer width="100%" height="100%"><LineChart data={activitySeries} margin={{top:12,right:16,bottom:5,left:0}}>
+          <ResponsiveContainer width="100%" height="100%"><LineChart data={groupedSeries} margin={{top:12,right:16,bottom:5,left:0}}>
             <CartesianGrid stroke="#edf2fa" strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:10}}/><YAxis allowDecimals={false} tick={{fontSize:10}}/>
             <Tooltip/><Line type="monotone" dataKey="conversations" name={tr("conversations")} stroke="#2868f5" strokeWidth={2} dot={false}/><Line type="monotone" dataKey="appointments" name={tr("appointments")} stroke="#16b76b" strokeWidth={2} dot={false}/>
             <Line type="monotone" dataKey="ai_actions" name={tr("aiActions")} stroke="#9049ef" strokeWidth={2} dot={false}/>
-          </LineChart></ResponsiveContainer></div> : <div className="anv-empty"><span className="anv-empty-icon"><BarChart3 size={32}/></span><strong>{state.error ? tr("loadFailed") : tr("noActivity")}</strong><p>{state.error ? tr("retry") : tr("activityEmptyDescription")}</p></div>}
+          </LineChart></ResponsiveContainer></div> : <div className="anv-empty"><span className="anv-empty-icon"><BarChart3 size={32}/></span><strong>{state.error ? tr("loadFailed") : state.loading ? tr("loading") : !activityVerified ? tr("loadFailed") : tr("noActivity")}</strong><p>{state.error ? tr("retry") : state.loading ? "" : !activityVerified ? tr("retry") : tr("activityEmptyDescription")}</p></div>}
       </article>
-      <article className="anv-panel">{panelHeader(<Target/>,"communicationByChannel","channelDescription","viewConversations","/dashboard/conversations")}
+      <article className="anv-panel">{panelHeader(<Target/>,"communicationByChannel","channelDescription","viewConversations","/dashboard/whatsapp")}
         {rows(channels.map(([key,Icon,tone])=>[key,overview?.channels?.[key],Icon,tone]))}
         <p className="anv-footnote">{tr("connectedChannelsOnly")}</p></article>
     </section>
@@ -157,7 +183,7 @@ export default function CortexaAnalyticsDashboard() {
         <div className="anv-table-scroll"><table><thead><tr>{["teamMember","conversationsHandled","averageFirstResponse","tasksCompleted","followupCompletion"].map(k=><th key={k}>{tr(k)}</th>)}</tr></thead><tbody>{(overview?.teamPerformance ?? []).map(member=><tr key={member.id}><td>{member.name}</td><td>{display(member.conversationsHandled)}</td><td>{display(member.averageFirstResponse)}</td><td>{display(member.tasksCompleted)}</td><td>{numeric(member.followupCompletion)===null?NA:`${member.followupCompletion}%`}</td></tr>)}</tbody></table></div>
         {!overview?.teamPerformance?.length && <div className="anv-team-empty"><Users size={28}/><strong>{state.error ? tr("loadFailed") : tr("noTeamActivity")}</strong><p>{state.error ? tr("retry") : tr("teamEmptyDescription")}</p></div>}</article>
       <article className="anv-panel anv-ai-insights">{panelHeader(<Sparkles/>,"aiPerformanceInsights","insightsDescription")}
-        <div className="anv-insights-center"><ListChecks size={29}/>
+        <div className="anv-insights-center"><span className="anv-insights-empty-icon"><ListChecks size={29}/></span>
           {insights?.metrics ? <><strong>{tr("analysisReady")}</strong><p>{tr("conversationsHandled")}: {display(insights.metrics.conversationsHandled)} · {tr("appointmentsBooked")}: {display(insights.metrics.appointmentsBooked)}</p></> :
           <><strong>{insights?.error ? tr("loadFailed") : tr("noAnalysis")}</strong><p>{tr("analysisDescription")}</p></>}</div>
         <button type="button" className="anv-primary anv-analyze" onClick={analyzePeriod} disabled={insightsLoading}>

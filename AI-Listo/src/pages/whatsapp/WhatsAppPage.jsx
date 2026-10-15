@@ -62,6 +62,9 @@ export default function WhatsAppPage() {
 
     dashboardStats = [],
     dashboardSegments = {},
+    dashboardError = false,
+    dashboardLoaded = false,
+    requestedLeadId,
     aiStatus,
     filteredConversations = [],
     selectedConversation,
@@ -865,6 +868,20 @@ export default function WhatsAppPage() {
           </p>
         </div>
       </div>
+
+      {requestedLeadId && dashboardLoaded && !dashboardError && !selectedConversation && (
+        <div className="wa-lead-deeplink-notice" role="status">
+          {t("whatsapp.noConversationForLead", {
+            defaultValue: "This lead has no linked WhatsApp conversation yet. You can still browse other conversations below.",
+          })}
+        </div>
+      )}
+      {dashboardError && (
+        <div className="wa-lead-deeplink-notice wa-lead-deeplink-error" role="alert">
+          <span>{t("whatsapp.loadConversationsFailed", { defaultValue: "Could not load conversations. Please try again." })}</span>
+          <button type="button" onClick={refresh}>{t("common.retry", { defaultValue: "Retry" })}</button>
+        </div>
+      )}
 
       {/* MAIN THREE-COLUMN WORKSPACE */}
       <div className="leads-layout main-workspace-layout">

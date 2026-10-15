@@ -3577,3 +3577,8 @@ body .whatsapp-page .send-message-main-submit-btn {
   background: rgba(16,185,129,.13);
   color: #6ee7b7;
 }
+
+/* Leads → Conversations: keep the inbox visible when a lead has no WhatsApp thread. */
+.whatsapp-page .wa-lead-deeplink-notice { margin: 12px 0 16px; padding: 13px 16px; border: 1px solid #bfdbfe; border-radius: 10px; background: #eff6ff; color: #1e40af; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.whatsapp-page .wa-lead-deeplink-error { border-color: #fecaca; background: #fff1f2; color: #991b1b; }
+.whatsapp-page .wa-lead-deeplink-notice button { border: 1px solid currentColor; border-radius: 7px; background: transparent; padding: 6px 12px; cursor: pointer; }

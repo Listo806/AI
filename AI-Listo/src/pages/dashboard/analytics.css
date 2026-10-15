@@ -139,3 +139,13 @@ body.crm-dark .analytics-overview-v2 .anv-error { background:#492433; color:#ffd
 .analytics-overview-v2 .anv-empty strong {font-size:14px;color:#102045;}
 .analytics-overview-v2 .anv-empty p {max-width:300px;line-height:1.45;}
 .analytics-overview-v2 .anv-kpi p {line-height:1.4;}
+
+/* Approved Analytics corrections (2026-10-15) */
+.analytics-overview-v2 .anv-panel-actions{margin-left:auto;display:flex;align-items:center;gap:14px;flex:0 0 auto}
+.analytics-overview-v2 .anv-granularity{height:35px;min-width:105px;padding:0 12px;border:1px solid #dce5f3;border-radius:8px;background:#fff;color:#102045;font-weight:600;font-size:12px}
+.analytics-overview-v2 .anv-activity-toolbar{justify-content:flex-start}
+.analytics-overview-v2 .anv-activity-toolbar>span{margin-right:6px}
+.analytics-overview-v2 .anv-ai-insights .anv-insights-empty-icon{width:39px;height:39px;border-radius:50%;border:1px solid #9aabd055;display:flex;align-items:center;justify-content:center;color:#d9e3ff}
+.analytics-overview-v2 .anv-ai-insights .anv-heading-icon{color:#a85bff}
+.analytics-overview-v2 .anv-team-empty{min-height:120px}
+@media(max-width:650px){.analytics-overview-v2 .anv-panel-actions{width:100%;justify-content:flex-end;flex-wrap:wrap}.analytics-overview-v2 .anv-panel-head{align-items:flex-start}}

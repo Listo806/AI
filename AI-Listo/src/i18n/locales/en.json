@@ -5779,8 +5779,8 @@
     "aiActions": "AI Actions",
     "daily": "Daily",
     "weekly": "Weekly",
-    "noActivity": "Activity breakdown unavailable",
-    "activityEmptyDescription": "A combined time series is not available from the current API.",
+    "noActivity": "No activity in this period",
+    "activityEmptyDescription": "Your conversations, appointments and AI actions will appear here.",
     "communicationByChannel": "Communication by Channel",
     "channelDescription": "Messages and conversations by channel.",
     "viewConversations": "View Conversations",
@@ -5820,7 +5820,7 @@
     "aiPerformanceInsights": "AI Performance Insights",
     "insightsDescription": "Review communication, follow-ups and AI results for this period.",
     "noAnalysis": "No analysis generated yet",
-    "analysisDescription": "Open AI Agent to request an analysis.",
+    "analysisDescription": "Analyze your data to get AI-powered insights and recommendations.",
     "openAiAgent": "Open AI Agent",
     "dataSourceNotice": "Unavailable data is shown as —, never as a confirmed zero.",
     "metric": "Metric",
@@ -5833,7 +5833,10 @@
     "noTeamActivity": "No team activity for this period",
     "teamEmptyDescription": "Team performance will appear when members have recorded activity.",
     "lastUpdated": "Last updated",
-    "notUpdatedYet": "Waiting for the first successful refresh"
+    "notUpdatedYet": "Waiting for the first successful refresh",
+    "noResponsesRecorded": "No responses recorded",
+    "noEligibleActivity": "No eligible activity",
+    "connectedChannelsOnly": "Connected channels only."
   },
   "leadsDesign": {
     "title": "Leads",

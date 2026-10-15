@@ -44,6 +44,8 @@ export function useWhatsAppDashboard() {
   const [qr, setQr] = useState(null);
 
   const [conversations, setConversations] = useState([]);
+  const [dashboardError, setDashboardError] = useState(false);
+  const [dashboardLoaded, setDashboardLoaded] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -88,6 +90,9 @@ export function useWhatsAppDashboard() {
     }
   }, []);
 
+  // Deep-link from Leads. Only select a conversation that belongs to this lead.
+  const requestedLeadId = new URLSearchParams(window.location.search).get("leadId");
+
   const loadDashboard = useCallback(async () => {
     try {
       const res = await whatsappService.getDashboard();
@@ -100,11 +105,18 @@ export function useWhatsAppDashboard() {
           }))
         : [];
 
+      setDashboardError(false);
+      setDashboardLoaded(true);
       setDashboardStats(Array.isArray(data.stats) ? data.stats : []);
       setDashboardSegments(data.segments || null);
       setConversations(normalized);
       setAiStatus(data.aiStatus || null);
       setSelectedConversation((prev) => {
+        if (requestedLeadId) {
+          return normalized.find((item) =>
+            String(item.lead_id ?? item.leadId ?? "") === requestedLeadId
+          ) || null;
+        }
         if (prev) {
           return (
             normalized.find((item) => item.id === prev.id) ||
@@ -116,6 +128,8 @@ export function useWhatsAppDashboard() {
       });
     } catch (err) {
       console.error("Load WhatsApp dashboard error:", err);
+      setDashboardError(true);
+      setDashboardLoaded(true);
       setDashboardStats([]);
       setDashboardSegments(null);
       setConversations([]);
@@ -461,6 +475,9 @@ export function useWhatsAppDashboard() {
 
     dashboardStats,
     dashboardSegments,
+    dashboardError,
+    dashboardLoaded,
+    requestedLeadId,
 
     filteredConversations,
     selectedConversation,

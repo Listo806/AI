@@ -188,6 +188,7 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [leadsLoading, setLeadsLoading] = useState(false);
   const [convertingLead, setConvertingLead] = useState(false);
+  const [showConvertDestinations, setShowConvertDestinations] = useState(false);
   const [leadActionMessage, setLeadActionMessage] = useState("");
   const [showScoreModal, setShowScoreModal] = useState(false);
 
@@ -658,6 +659,7 @@ export default function LeadsPage() {
   };
 
   const handleLeadContactAction = () => {
+    setShowConvertDestinations(false);
     if (!selectedLead?.id) return;
     if (selectedLead.contactId) {
       openSelectedLeadContact();
@@ -2360,19 +2362,28 @@ export default function LeadsPage() {
                     <div><span>{t("leadsDesign.nextFollowup")}</span><strong>{leadFollowUpDate(selectedLead) ? new Date(leadFollowUpDate(selectedLead)).toLocaleString() : "—"}</strong></div>
                   </div>
 
-                </> : <div className="ld-empty ld-detail-empty"><Users size={52}/><strong>{t("leadsDesign.selectLead")}</strong><p>{t("leadsDesign.selectLeadDescription")}</p></div>}
+                </> : <div className="ld-empty ld-detail-empty"><Users size={52} color="#3979e8"/><strong>{t("leadsDesign.selectLead")}</strong><p>{t("leadsDesign.selectLeadDescription")}</p></div>}
                 <div className="ld-contact-actions">
                     <button disabled={!selectedLead?.phone} onClick={callSelectedLead}><Phone size={16}/>{t("leadsDesign.call")}</button>
                     <button disabled={!selectedLead?.phone} onClick={()=>{const phone=normalizeWhatsAppPhone(selectedLead?.phone);if(phone)window.open(`https://wa.me/${phone}`,"_blank","noopener,noreferrer");}}><MessageCircle size={16}/>{t("leadsDesign.whatsapp")}</button>
                     <button disabled={!selectedLead?.email} onClick={()=>{if(selectedLead?.email)window.location.href=`mailto:${selectedLead.email}`;}}><Mail size={16}/>{t("leadsDesign.email")}</button>
                     <button disabled={!selectedLead} onClick={openBookShowing}><Calendar size={16}/>{t("leadsDesign.schedule")}</button>
-                    <button onClick={handleLeadContactAction} disabled={!selectedLead || convertingLead}><Users size={16}/>{t("leadsDesign.convertWorkspace", "Convert to Workspace")}</button>
+                    <div className="ld-convert-wrap">
+                      <button type="button" className="ld-convert-trigger" aria-expanded={showConvertDestinations} aria-haspopup="menu" onClick={()=>setShowConvertDestinations(v=>!v)} disabled={!selectedLead || convertingLead}>
+                        <Users size={16}/><span>{t("leadsDesign.convertWorkspace", "Convert to Workspace")}</span><ChevronDown size={15}/>
+                      </button>
+                      {showConvertDestinations && selectedLead && <div className="ld-convert-menu" role="menu">
+                        <button type="button" role="menuitem" onClick={handleLeadContactAction}>
+                          <Users size={16}/>{selectedLead.contactId ? t("leadsDesign.openContact", "Open linked contact") : t("leadsDesign.convertToContact", "Convert to contact")}
+                        </button>
+                      </div>}
+                    </div>
                 </div>
               </section>
               <section className="ld-panel ld-activity">
                 <nav className="ld-activity-tabs">{["activity","notes","emails","calls","whatsapp","files","tasks"].map(k=>
                   <button key={k} type="button" className={mobileConversationTab===k?"is-active":""} onClick={()=>setMobileConversationTab(k)}>{t(`leadsDesign.${k}`)}</button>)}
-                  <button type="button" className="ld-open-conversations" disabled={!selectedLead?.id} onClick={()=>navigate(`/dashboard/conversations?leadId=${encodeURIComponent(selectedLead.id)}`)}>{t("leadsDesign.openConversations", "Open in Conversations")} ↗</button></nav>
+                  <button type="button" className="ld-open-conversations" disabled={!selectedLead?.id} onClick={()=>navigate(`/dashboard/whatsapp?leadId=${encodeURIComponent(selectedLead.id)}`)}>{t("leadsDesign.openConversations", "Open in Conversations")} ↗</button></nav>
                 <div className="ld-activity-body">
                   {!selectedLead ? <div className="ld-empty"><FileText size={32}/><p>{t("leadsDesign.activityEmpty")}</p></div> :
                     mobileConversationTab==="notes" && selectedLead.notes ? <p className="ld-brief">{selectedLead.notes}</p> :
@@ -2393,7 +2404,7 @@ export default function LeadsPage() {
               <section className="ld-panel"><h2><Users size={21}/>{t("leadsDesign.qualification")}</h2>
                 {[["priority",selectedLead?.priority],["qualificationStatus",selectedLead?.qualification || selectedLead?.qualificationStatus],["assignedTo",selectedLead?.assignedTo],["nextFollowup",leadFollowUpDate(selectedLead) ? new Date(leadFollowUpDate(selectedLead)).toLocaleString() : null]].map(([k,v])=>
                   <div className="ld-qual-row" key={k}><span>{t(`leadsDesign.${k}`)}</span><strong>{v||"—"}</strong></div>)}</section>
-              <section className="ld-panel"><h2><Clock3 size={21}/>{t("leadsDesign.timeline")}</h2>
+              <section className="ld-panel"><h2><Clock3 size={21} color="#7136f3"/>{t("leadsDesign.timeline")}</h2>
                 {selectedLead && leadEvents.length ? leadEvents.slice(0,6).map((e,i)=><div className="ld-event" key={e.id||i}><Clock3 size={15}/><span>{eventTitle(e) || eventDescription(e) || "—"}<small>{eventTimestamp(e) ? formatLeadEventDate(eventTimestamp(e)) : ""}</small></span></div>) :
                   <div className="ld-empty"><FileText size={31}/><p>{t("leadsDesign.timelineEmpty")}</p></div>}</section>
             </aside>
