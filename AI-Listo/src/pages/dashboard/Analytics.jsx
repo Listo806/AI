@@ -182,7 +182,7 @@ export default function CortexaAnalyticsDashboard() {
       <article className="anv-panel">{panelHeader(<Users/>,"teamPerformance","teamDescription","viewTeamReport","/dashboard/team")}
         <div className="anv-table-scroll"><table><thead><tr>{["teamMember","conversationsHandled","averageFirstResponse","tasksCompleted","followupCompletion"].map(k=><th key={k}>{tr(k)}</th>)}</tr></thead><tbody>{(overview?.teamPerformance ?? []).map(member=><tr key={member.id}><td>{member.name}</td><td>{display(member.conversationsHandled)}</td><td>{display(member.averageFirstResponse)}</td><td>{display(member.tasksCompleted)}</td><td>{numeric(member.followupCompletion)===null?NA:`${member.followupCompletion}%`}</td></tr>)}</tbody></table></div>
         {!overview?.teamPerformance?.length && <div className="anv-team-empty"><Users size={28}/><strong>{state.error ? tr("loadFailed") : tr("noTeamActivity")}</strong><p>{state.error ? tr("retry") : tr("teamEmptyDescription")}</p></div>}</article>
-      <article className="anv-panel anv-ai-insights">{panelHeader(<Sparkles/>,"aiPerformanceInsights","insightsDescription")}
+      <article className="anv-panel anv-ai-insights">{panelHeader(<Zap/>,"aiPerformanceInsights","insightsDescription")}
         <div className="anv-insights-center"><span className="anv-insights-empty-icon"><ListChecks size={29}/></span>
           {insights?.metrics ? <><strong>{tr("analysisReady")}</strong><p>{tr("conversationsHandled")}: {display(insights.metrics.conversationsHandled)} · {tr("appointmentsBooked")}: {display(insights.metrics.appointmentsBooked)}</p></> :
           <><strong>{insights?.error ? tr("loadFailed") : tr("noAnalysis")}</strong><p>{tr("analysisDescription")}</p></>}</div>

@@ -8735,3 +8735,11 @@ body .leads-page {
 .leads-page .ld-empty.ld-detail-empty>svg {color:#3979e8;background:#edf3ff}
 .leads-page .ld-right .ld-panel:last-child .ld-empty>svg {color:#758fc2;background:#eef3fc}
 @media(min-width:769px) and (max-width:1450px) {.leads-page .ld-contact-actions {gap:5px}.leads-page .ld-contact-actions>button,.leads-page .ld-convert-trigger {font-size:11px;padding:8px 7px}.leads-page .ld-activity-tabs {gap:7px 10px}}
+
+/* Approved Leads action and history legibility. */
+.leads-page .ld-contact-actions{gap:9px;row-gap:10px;align-items:center}
+.leads-page .ld-contact-actions>button,.leads-page .ld-contact-actions .ld-convert-trigger{font-size:13px;min-height:39px;padding:9px 12px;line-height:1.3}
+.leads-page .ld-activity-tabs{gap:10px 17px;align-items:center;min-height:51px}
+.leads-page .ld-activity-tabs button{font-size:13px;line-height:1.35}
+.leads-page .ld-activity-tabs .ld-open-conversations{color:#2768dc;font-weight:600}
+@media(min-width:769px) and (max-width:1450px){.leads-page .ld-contact-actions>button,.leads-page .ld-contact-actions .ld-convert-trigger{font-size:12px;padding:9px 10px}.leads-page .ld-activity-tabs{gap:8px 12px}}

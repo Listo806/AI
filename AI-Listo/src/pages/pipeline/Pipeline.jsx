@@ -1051,7 +1051,7 @@ export default function PipelinePage() {
             ["completedPeriod",operationalMetrics?.completedThisPeriod ?? null,CheckCircle2,"purple","last30"],
             ["needsAttention",riskQueue.length,AlertTriangle,"orange","current"],
             ["overdue",operationalMetrics?.overdueFollowUps ?? null,Clock3,"pink","dueNow"],
-            ["avgStage",operationalMetrics?.averageTimeInStageDays ?? null,LineChartIcon,"indigo","noActivity"],
+            ["avgStage",operationalMetrics?.averageTimeInStageDays ?? null,TrendingUp,"indigo","noActivity"],
           ].map(([key,value,Icon,color,desc])=><div className="pd-kpi" key={key}><span className={`pd-icon ${color}`}><Icon size={24}/></span><div><span>{t(`pipelineDesign.${key}`)}</span><strong>{pipelineLoading?"…":value??"—"}</strong><small>{t(`pipelineDesign.${desc}`)}</small></div></div>)}
         </div>
         <section className="pd-insights"><span className="pd-insights-icon"><Brain size={30}/></span><div className="pd-insights-copy"><h2>{t("pipelineDesign.insights", "AI Pipeline Insights")}</h2><p>{t("pipelineDesign.insightSub", "Identify stalled items and recommend next actions.")}</p></div><div className="pd-insight-result"><Info size={18}/>{pipelineInsight?.headline || t("pipelineDesign.noAnalysis", "No analysis generated yet.")}</div><div className="pd-insight-buttons"><button className="pd-primary" disabled={analyzingPipeline} onClick={analyzePipeline}><Brain size={17}/>{t("pipelineDesign.analyze", "Analyze Pipeline")}</button><button onClick={autoPrioritizeDeals} disabled={prioritizingDeals}>{t("pipelineDesign.review", "Review Priorities")}</button></div></section>

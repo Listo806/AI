@@ -356,10 +356,10 @@ export default function CortexaDashboard() {
   const miniKpis = [
     {title: t("dashboard.newContacts", "New Contacts"), value: contactsStats?.newContacts == null ? NO_DATA : String(contactsStats.newContacts), subtext: period, icon: <Users size={19}/>, iconBg:"bg-light-blue", intime:period},
     {title: t("dashboard.aiConversations", "AI Conversations"), value: metrics?.conversations_total == null ? NO_DATA : String(metrics.conversations_total), subtext: period, icon:<MessageCircle size={19}/>, iconBg:"bg-light-purple", intime:period},
-    {title: t("dashboard.appointments", "Appointments"), value: upcoming == null ? NO_DATA : String(upcoming.length), subtext:"Upcoming", icon:<Calendar size={19}/>, iconBg:"bg-light-green", intime:period},
-    {title: t("dashboard.pendingTasks", "Pending Tasks"), value: openTaskTotal == null ? NO_DATA : String(openTaskTotal), subtext:"Currently open", icon:<CheckCircle2 size={19}/>, iconBg:"bg-light-orange", intime:period},
-    {title: t("dashboard.followUpsDue", "Follow-Ups Due"), value: followupTotal == null ? NO_DATA : String(followupTotal), subtext:"Due now", icon:<Clock3 size={19}/>, iconBg:"bg-light-blue", intime:period},
-    {title: t("dashboard.aiActionsCompleted", "AI Actions Completed"), value: aiCompleted == null ? NO_DATA : String(aiCompleted), subtext:period, icon:<Zap size={19}/>, iconBg:"bg-light-purple", intime:period},
+    {title: t("dashboard.kpiUpcoming", "Upcoming"), value: upcoming == null ? NO_DATA : String(upcoming.length), subtext:"Upcoming", icon:<Calendar size={19}/>, iconBg:"bg-light-green", intime:period},
+    {title: t("dashboard.kpiCurrentlyOpen", "Currently open"), value: openTaskTotal == null ? NO_DATA : String(openTaskTotal), subtext:"Currently open", icon:<CheckCircle2 size={19}/>, iconBg:"bg-light-orange", intime:period},
+    {title: t("dashboard.kpiDueNow", "Due now"), value: followupTotal == null ? NO_DATA : String(followupTotal), subtext:"Due now", icon:<Clock3 size={19}/>, iconBg:"bg-light-blue", intime:period},
+    {title: t("dashboard.aiActionsCompleted", "AI Actions Completed"), value: aiCompleted == null ? NO_DATA : String(aiCompleted), subtext:period, icon:<Zap size={19} color="#8838ef" strokeWidth={2.5}/>, iconBg:"bg-light-purple", intime:period},
   ];
   // Existing export code expects secondaryKpis; the redesigned Dashboard shows
   // one six-card KPI row, so no unsupported second row is rendered.
@@ -1645,11 +1645,10 @@ export default function CortexaDashboard() {
             <div className="title-left"><Calendar size={17} className="text-royal-blue"/><h3>{t("dashboard.upcomingSchedule")}</h3></div>
             <button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/calendar")}>{t("dashboard.viewCalendar")} →</button>
           </div>
-          {upcomingList.length ? (
-            <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.time")}</th><th>{t("dashboard.event")}</th><th>{t("dashboard.assignedTo")}</th><th>{t("dashboard.status")}</th></tr></thead><tbody>
+          <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.time")}</th><th>{t("dashboard.event")}</th><th>{t("dashboard.assignedTo")}</th><th>{t("dashboard.status")}</th></tr></thead><tbody>
               {upcomingList.map((item, idx) => <tr key={idx}><td>{item.when}</td><td>{item.title}</td><td>{item.assignedTo ?? NO_DATA}</td><td><span className="dashboard-schedule-status">{item.status}</span></td></tr>)}
             </tbody></table></div>
-          ) : <div className="dashboard-schedule-empty-state" role="status"><Calendar size={29}/><strong>{upcoming == null ? "Schedule temporarily unavailable" : t("dashboard.noUpcomingAppointments")}</strong><span>{upcoming == null ? "Please refresh to try again." : t("dashboard.appointmentsAppearHere")}</span></div>}
+          {!upcomingList.length && <div className="dashboard-schedule-empty-state" role="status"><Calendar size={29}/><strong>{upcoming == null ? "Schedule temporarily unavailable" : t("dashboard.noUpcomingAppointments")}</strong><span>{upcoming == null ? "Please refresh to try again." : t("dashboard.appointmentsAppearHere")}</span></div>}
         </div>
         <div className="content-card dashboard-ai-review-panel">
           <div className="card-top-header"><div className="title-left"><TrendingUp size={19}/><h3>{t("dashboard.aiDashboardReview")}</h3></div></div>

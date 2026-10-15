@@ -4642,3 +4642,8 @@ body .next-action-card svg {
 .dashboard-page .dashboard-operations-redesign .dashboard-schedule-table th {white-space:nowrap;}
 .dashboard-page .dashboard-operations-redesign .dashboard-schedule-scroll {overflow-x:auto;}
 .dashboard-page .dashboard-operations-redesign .dashboard-table-empty strong {overflow-wrap:anywhere;}
+
+/* Keep schedule column headings visible even when no appointments exist. */
+.dashboard-schedule-panel .dashboard-schedule-table{width:100%;table-layout:fixed}
+.dashboard-schedule-panel .dashboard-schedule-table th{white-space:normal;text-align:left}
+.dashboard-schedule-panel .dashboard-schedule-empty-state{min-height:120px}

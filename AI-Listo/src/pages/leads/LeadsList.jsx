@@ -2383,7 +2383,7 @@ export default function LeadsPage() {
               <section className="ld-panel ld-activity">
                 <nav className="ld-activity-tabs">{["activity","notes","emails","calls","whatsapp","files","tasks"].map(k=>
                   <button key={k} type="button" className={mobileConversationTab===k?"is-active":""} onClick={()=>setMobileConversationTab(k)}>{t(`leadsDesign.${k}`)}</button>)}
-                  <button type="button" className="ld-open-conversations" disabled={!selectedLead?.id} onClick={()=>navigate(`/dashboard/whatsapp?leadId=${encodeURIComponent(selectedLead.id)}`)}>{t("leadsDesign.openConversations", "Open in Conversations")} ↗</button></nav>
+                  <button type="button" className="ld-open-conversations" disabled={!selectedLead?.id} onClick={()=>navigate(`/dashboard/conversations?leadId=${encodeURIComponent(selectedLead.id)}`)}>{t("leadsDesign.openConversations", "Open in Conversations")} ↗</button></nav>
                 <div className="ld-activity-body">
                   {!selectedLead ? <div className="ld-empty"><FileText size={32}/><p>{t("leadsDesign.activityEmpty")}</p></div> :
                     mobileConversationTab==="notes" && selectedLead.notes ? <p className="ld-brief">{selectedLead.notes}</p> :
@@ -2404,9 +2404,9 @@ export default function LeadsPage() {
               <section className="ld-panel"><h2><Users size={21}/>{t("leadsDesign.qualification")}</h2>
                 {[["priority",selectedLead?.priority],["qualificationStatus",selectedLead?.qualification || selectedLead?.qualificationStatus],["assignedTo",selectedLead?.assignedTo],["nextFollowup",leadFollowUpDate(selectedLead) ? new Date(leadFollowUpDate(selectedLead)).toLocaleString() : null]].map(([k,v])=>
                   <div className="ld-qual-row" key={k}><span>{t(`leadsDesign.${k}`)}</span><strong>{v||"—"}</strong></div>)}</section>
-              <section className="ld-panel"><h2><Clock3 size={21} color="#7136f3"/>{t("leadsDesign.timeline")}</h2>
+              <section className="ld-panel"><h2><Clock3 size={21} color="#7136f3" strokeWidth={2.5}/>{t("leadsDesign.timeline")}</h2>
                 {selectedLead && leadEvents.length ? leadEvents.slice(0,6).map((e,i)=><div className="ld-event" key={e.id||i}><Clock3 size={15}/><span>{eventTitle(e) || eventDescription(e) || "—"}<small>{eventTimestamp(e) ? formatLeadEventDate(eventTimestamp(e)) : ""}</small></span></div>) :
-                  <div className="ld-empty"><FileText size={31}/><p>{t("leadsDesign.timelineEmpty")}</p></div>}</section>
+                  <div className="ld-empty"><Clock3 size={31} color="#758fc2"/><p>{t("leadsDesign.timelineEmpty")}</p></div>}</section>
             </aside>
           </div>
         </div>
