@@ -357,7 +357,7 @@
     "loadError": "Falha ao carregar os dados do painel.",
     "loadingDashboard": "Carregando painel…",
     "dashboardOverview": "Visão geral do painel",
-    "subheading": "Visão em tempo real do seu pipeline, desempenho e atividade de IA.",
+    "subheading": "Suas conversas, agenda, tarefas e atividades de IA em um só lugar.",
     "filters": "Filtros",
     "export": "Exportar",
     "leadsCreatedInPeriod": "Leads criados no período",
@@ -510,7 +510,17 @@
     "viewAnalytics": "Ver análises",
     "viewCalendar": "Ver calendário",
     "viewLeads": "Ver leads",
-    "websiteChat": "Chat do site"
+    "websiteChat": "Chat do site",
+    "taskTotalsUnavailable": "Totais de tarefas indisponíveis",
+    "checkTeamAccess": "Não foi possível carregar as tarefas. Verifique o acesso ao workspace ou tente novamente.",
+    "taskPageIncomplete": "A lista de tarefas está incompleta. Atualize para tentar novamente.",
+    "assignWithinWorkspace": "Atribuir dentro do workspace ativo",
+    "viewConversations": "Ver conversas",
+    "activityBreakdownUnavailable": "Detalhamento de atividades indisponível neste período",
+    "aiHistoryUnavailable": "As ações de IA foram contabilizadas, mas o histórico está indisponível",
+    "successfulRuns": "Execuções bem-sucedidas",
+    "failedRuns": "Execuções com falha",
+    "completedTasks": "Tarefas concluídas"
   },
   "leads": {
     "title": "Leads",

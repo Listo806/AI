@@ -358,7 +358,7 @@
     "loadError": "Failed to load dashboard data.",
     "loadingDashboard": "Loading dashboard…",
     "dashboardOverview": "Dashboard Overview",
-    "subheading": "Real-time overview of your pipeline, performance, and AI activity.",
+    "subheading": "Your conversations, schedule, tasks and AI activity in one place.",
     "filters": "Filters",
     "export": "Export",
     "leadsCreatedInPeriod": "Leads created in period",
@@ -510,7 +510,17 @@
     "viewAnalytics": "View Analytics",
     "viewCalendar": "View Calendar",
     "viewLeads": "View Leads",
-    "websiteChat": "Website Chat"
+    "websiteChat": "Website Chat",
+    "taskTotalsUnavailable": "Task totals unavailable",
+    "checkTeamAccess": "Unable to load tasks. Check your workspace access or retry.",
+    "taskPageIncomplete": "Task list is incomplete. Refresh to retry.",
+    "assignWithinWorkspace": "Assign within your active workspace",
+    "viewConversations": "View Conversations",
+    "activityBreakdownUnavailable": "Activity breakdown unavailable for this period",
+    "aiHistoryUnavailable": "AI actions were counted but their history is unavailable",
+    "successfulRuns": "Successful Runs",
+    "failedRuns": "Failed Runs",
+    "completedTasks": "Completed Tasks"
   },
   "leads": {
     "title": "Leads",

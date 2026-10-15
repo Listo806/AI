@@ -201,6 +201,72 @@ export class AnalyticsService {
     };
   }
 
+
+  /**
+   * Command Center metrics share one team and one period. A failed source is
+   * returned as null, never converted into a misleading zero.
+   */
+  async getCommandCenter(teamId: string, days: number) {
+    const start = new Date(Date.now() - days * 86400000);
+    const params = [teamId, start];
+    const safe = async (sql: string) => {
+      try { return (await this.db.query(sql, params)).rows; }
+      catch (error) {
+        this.logger.warn(`Dashboard source unavailable: ${error instanceof Error ? error.message : String(error)}`);
+        return null;
+      }
+    };
+    const [tasks, taskCounts, aiCounts, aiHistory, channels, automation, series] = await Promise.all([
+      safe(`SELECT t.id,t.title AS name,t.status,t.task_type AS "taskType",
+              t.due_date AS "dueDate",COALESCE(u.name,u.email) AS assignee
+            FROM team_tasks t LEFT JOIN users u ON u.id=t.assigned_to
+            WHERE t.team_id=$1 AND t.status NOT IN ('completed','cancelled')
+            ORDER BY t.due_date ASC NULLS LAST,t.created_at DESC LIMIT 10`),
+      safe(`SELECT
+              count(*) FILTER (WHERE status NOT IN ('completed','cancelled'))::int AS open,
+              count(*) FILTER (WHERE status NOT IN ('completed','cancelled') AND due_date<NOW())::int AS overdue,
+              count(*) FILTER (WHERE status NOT IN ('completed','cancelled') AND due_date<=NOW()
+                AND lower(task_type) IN ('follow_up','follow-up','followup'))::int AS followups_due
+            FROM team_tasks WHERE team_id=$1`),
+      safe(`SELECT
+              count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('success','completed','succeeded'))::int AS completed,
+              count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('failed','error'))::int AS failed
+            FROM ai_activity WHERE team_id=$1 AND created_at >= $2`),
+      safe(`SELECT id,action AS title,outcome AS status,created_at AS timestamp,
+              metadata->>'description' AS description
+            FROM ai_activity WHERE team_id=$1 AND created_at >= $2
+            ORDER BY created_at DESC LIMIT 10`),
+      safe(`SELECT
+              count(*) FILTER (WHERE lower(channel)='whatsapp')::int AS whatsapp,
+              count(*) FILTER (WHERE lower(channel)='email')::int AS email,
+              count(*) FILTER (WHERE lower(channel) IN ('website','web','chat','website_chat'))::int AS "websiteChat",
+              count(*) FILTER (WHERE lower(channel) IN ('call','phone','voice'))::int AS calls
+            FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+            WHERE l.team_id=$1 AND m.created_at >= $2`),
+      safe(`SELECT
+              count(*) FILTER (WHERE lower(status) IN ('applied','success','completed'))::int AS successful,
+              count(*) FILTER (WHERE lower(status) IN ('failed','error'))::int AS failed,
+              count(*) FILTER (WHERE lower(status) IN ('pending','awaiting_approval'))::int AS "needsAttention"
+            FROM mkt_automation_runs WHERE team_id=$1 AND created_at >= $2`),
+      safe(`SELECT d.day::date::text AS date,
+              (SELECT count(*)::int FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+               WHERE l.team_id=$1 AND m.created_at>=d.day AND m.created_at<d.day+interval '1 day') AS conversations,
+              (SELECT count(*)::int FROM appointments a WHERE a.team_id=$1
+               AND a.created_at>=d.day AND a.created_at<d.day+interval '1 day') AS appointments,
+              (SELECT count(*)::int FROM team_tasks t WHERE t.team_id=$1
+               AND t.status='completed' AND t.completed_at>=d.day AND t.completed_at<d.day+interval '1 day') AS "completedTasks"
+            FROM generate_series($2::date,CURRENT_DATE,interval '1 day') d(day) ORDER BY d.day`)
+    ]);
+    return {
+      period: {days, start: start.toISOString()},
+      tasks: taskCounts ? { ...taskCounts[0], rows: tasks } : null,
+      ai: aiCounts ? { ...aiCounts[0], history: aiHistory } : null,
+      channels: channels?.[0] ?? null,
+      automation: automation?.[0] ?? null,
+      activity: series ? {series} : null,
+    };
+  }
+
   async getOverviewInsights(teamId: string, days: number, workspaceId?: string) {
     const data = await this.getOverviewV2(teamId,days,workspaceId);
     // Deterministic, sourced insights; not presented as LLM-generated analysis.

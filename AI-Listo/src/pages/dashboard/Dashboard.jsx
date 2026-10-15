@@ -185,6 +185,7 @@ export default function CortexaDashboard() {
   const [tasksData, setTasksData] = useState(null);
   const [contactsStats, setContactsStats] = useState(null);
   const [aiFeed, setAiFeed] = useState(null);
+  const [commandMetrics, setCommandMetrics] = useState(null);
   const [taskLoadError, setTaskLoadError] = useState(false);
   const [aiLoadError, setAiLoadError] = useState(false);
 
@@ -274,6 +275,16 @@ export default function CortexaDashboard() {
         setContactsStats(contactsResult.status === "fulfilled" ? contactsResult.value : null);
         setAiLoadError(aiResult.status !== "fulfilled");
 
+        // Purpose-built endpoint: tasks, AI history, channels and automation runs
+        // are independently sourced; no guessed zeros on API failure.
+        try {
+          const days = range === "today" ? 1 : range === "7d" ? 7 : 30;
+          const data = await apiClient.request(`/analytics/command-center?days=${days}`);
+          if (!cancelled) setCommandMetrics(data || null);
+        } catch (_e) {
+          if (!cancelled) setCommandMetrics(null);
+        }
+
         // Calendar stats/appointments are team-scoped and 403 for users with no
         // team – degrade the Appointments KPI and Upcoming Closings to empty,
         // never break the page.
@@ -308,17 +319,24 @@ export default function CortexaDashboard() {
   const metrics = summary?.data?.metrics || null;
   const recentActivity = summary?.data?.recent_activity || [];
   const totalLeads = leads?.total ?? 0;
-  const taskRows = Array.isArray(tasksData?.data) ? tasksData.data : null;
-  const aiRows = Array.isArray(aiFeed?.items) ? aiFeed.items : null;
+  const taskRows = Array.isArray(commandMetrics?.tasks?.rows) ? commandMetrics.tasks.rows : Array.isArray(tasksData?.data) ? tasksData.data : null;
+  const aiRows = Array.isArray(commandMetrics?.ai?.history) ? commandMetrics.ai.history : Array.isArray(aiFeed?.items) ? aiFeed.items : null;
   const taskIsOpen = (task) => !["completed", "done", "cancelled", "canceled", "closed"].includes(String(task?.status || "").toLowerCase());
   // The backend limits task pages to 100. Never present a partial page as the complete team total.
-  const taskPageIncomplete = tasksData?.pagination?.total > (taskRows?.length ?? 0);
+  const taskPageIncomplete = !commandMetrics?.tasks && tasksData?.pagination?.total > (taskRows?.length ?? 0);
   const pendingTasks = taskRows && !taskPageIncomplete ? taskRows.filter(taskIsOpen) : null;
+  const openTaskTotal = commandMetrics?.tasks?.open ?? pendingTasks?.length ?? null;
   const overdueTasks = pendingTasks?.filter(task => task.dueDate && new Date(task.dueDate).getTime() < Date.now()) ?? null;
+  const overdueTaskTotal = commandMetrics?.tasks?.overdue ?? overdueTasks?.length ?? null;
   const followupsDue = pendingTasks?.filter(task => /follow.?up/i.test(String(task.taskType || "") + " " + String(task.name || "")) && task.dueDate && new Date(task.dueDate).getTime() <= Date.now()) ?? null;
-  const aiFailed = aiFeed?.overview?.failed ?? null;
-  const aiCompleted = aiFeed?.overview?.completed ?? null;
+  const followupTotal = commandMetrics?.tasks?.followups_due ?? followupsDue?.length ?? null;
+  const aiFailed = commandMetrics?.ai?.failed ?? aiFeed?.overview?.failed ?? null;
+  const aiCompleted = commandMetrics?.ai?.completed ?? aiFeed?.overview?.completed ?? null;
+  // A total without matching feed rows must not be presented as an empty history.
   const aiRecent = aiRows?.slice(0, 5) ?? null;
+  const attentionTotal = [metrics?.conversations_unread, overdueTaskTotal, followupTotal, aiFailed].every(v => v != null)
+    ? Number(metrics.conversations_unread) + Number(overdueTaskTotal) + Number(followupTotal) + Number(aiFailed)
+    : null;
   const period = periodLabel(range, t);
   const hasLeads = (leadsList || []).length > 0;
 
@@ -339,8 +357,8 @@ export default function CortexaDashboard() {
     {title: t("dashboard.newContacts", "New Contacts"), value: contactsStats?.newContacts == null ? NO_DATA : String(contactsStats.newContacts), subtext: period, icon: <Users size={19}/>, iconBg:"bg-light-blue", intime:period},
     {title: t("dashboard.aiConversations", "AI Conversations"), value: metrics?.conversations_total == null ? NO_DATA : String(metrics.conversations_total), subtext: period, icon:<MessageCircle size={19}/>, iconBg:"bg-light-purple", intime:period},
     {title: t("dashboard.appointments", "Appointments"), value: calStats?.total == null ? NO_DATA : String(calStats.total), subtext:t("dashboard.upcoming", "Upcoming"), icon:<Calendar size={19}/>, iconBg:"bg-light-green", intime:period},
-    {title: t("dashboard.pendingTasks", "Pending Tasks"), value: pendingTasks == null ? NO_DATA : String(pendingTasks.length), subtext:t("dashboard.currentlyOpen", "Currently open"), icon:<CheckCircle2 size={19}/>, iconBg:"bg-light-orange", intime:period},
-    {title: t("dashboard.followUpsDue", "Follow-Ups Due"), value: followupsDue == null ? NO_DATA : String(followupsDue.length), subtext:t("dashboard.dueNow", "Due now"), icon:<Clock3 size={19}/>, iconBg:"bg-light-blue", intime:period},
+    {title: t("dashboard.pendingTasks", "Pending Tasks"), value: openTaskTotal == null ? NO_DATA : String(openTaskTotal), subtext:t("dashboard.currentlyOpen", "Currently open"), icon:<CheckCircle2 size={19}/>, iconBg:"bg-light-orange", intime:period},
+    {title: t("dashboard.followUpsDue", "Follow-Ups Due"), value: followupTotal == null ? NO_DATA : String(followupTotal), subtext:t("dashboard.dueNow", "Due now"), icon:<Clock3 size={19}/>, iconBg:"bg-light-blue", intime:period},
     {title: t("dashboard.aiActionsCompleted", "AI Actions Completed"), value: aiCompleted == null ? NO_DATA : String(aiCompleted), subtext:period, icon:<Activity size={19}/>, iconBg:"bg-light-purple", intime:period},
   ];
   // Existing export code expects secondaryKpis; the redesigned Dashboard shows
@@ -349,10 +367,10 @@ export default function CortexaDashboard() {
 
   // Revenue & Lead Trend chart => real daily activity counts (labelled Leads,
   // NOT Revenue — there is no revenue source).
-  const revenueTrendData = eventsByDay.map((d) => ({
-    day: shortDate(d.date),
-    trend: d.count,
-  }));
+  // eventsByDay represents lead activity, not conversations/appointments/tasks.
+  // Do not relabel it as those metrics. Until their time series is provided,
+  // render the explicit unavailable state rather than fabricated chart points.
+  const revenueTrendData = Array.isArray(commandMetrics?.activity?.series) ? commandMetrics.activity.series : [];
 
   // Lead Source Performance => aggregate real owner leads by source.
   const sourceAgg = {};
@@ -839,7 +857,7 @@ export default function CortexaDashboard() {
         <Layers className="header-icon" size={20} />
         <h1>{t("dashboard.dashboardOverview")}</h1>
       </div>
-      <p className="sub_head">{t("dashboard.subheading")}</p>
+      <p className="sub_head">{t("dashboard.subheading", "Your conversations, schedule, tasks and AI activity in one place.")}</p>
       <header className="dashboard-header">
         <div className="header-actions">
           {isMobile ? (
@@ -1031,7 +1049,7 @@ export default function CortexaDashboard() {
               <div className="card-lbl">AI Actions</div>
               <div className="card-val-group">
                 <span className="command-mini-accent accent-green" />
-                <h3>{NO_DATA}</h3>
+                <h3>{aiCompleted == null ? NO_DATA : aiCompleted}</h3>
               </div>
             </div>
 
@@ -1039,7 +1057,7 @@ export default function CortexaDashboard() {
               <div className="card-lbl">Needs Attention</div>
               <div className="card-val-group">
                 <span className="command-mini-accent accent-orange" />
-                <h3>{NO_DATA}</h3>
+                <h3>{attentionTotal == null ? NO_DATA : attentionTotal}</h3>
               </div>
             </div>
 
@@ -1071,7 +1089,7 @@ export default function CortexaDashboard() {
               className="banner-btn btn-assign-color"
               onClick={openCommandAssign}
             >
-              <Users size={16} /> {t("dashboard.assign")}
+              <Users size={16} /> {t("dashboard.assign")} <ChevronDown size={14} />
             </button>
 
             <button
@@ -1082,6 +1100,7 @@ export default function CortexaDashboard() {
             </button>
           </div>
 
+          <span className="dashboard-assign-helper">{t("dashboard.assignWithinWorkspace", "Assign within your active workspace")}</span>
           {commandActionMessage && (
             <div className="command-action-message">{commandActionMessage}</div>
           )}
@@ -1343,11 +1362,15 @@ export default function CortexaDashboard() {
           <div className="overview-chart-legend">
             <span>
               <i className="legend-new" />
-              {t("dashboard.newLeads")}
+              {t("dashboard.conversations", "Conversations")}
             </span>
             <span>
               <i className="legend-converted" />
-              {t("dashboard.statusConverted")}
+              {t("dashboard.appointments", "Appointments")}
+            </span>
+            <span>
+              <i className="legend-completed" />
+              {t("dashboard.completedTasks", "Completed Tasks")}
             </span>
           </div>
 
@@ -1362,7 +1385,7 @@ export default function CortexaDashboard() {
                   justifyContent: "center",
                 }}
               >
-                {t("dashboard.noActivityInThisPeriod")}
+                {t("dashboard.activityBreakdownUnavailable", "Activity breakdown unavailable for this period")}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={180}>
@@ -1392,7 +1415,7 @@ export default function CortexaDashboard() {
                     stroke="#f1f5f9"
                   />
                   <XAxis
-                    dataKey="day"
+                    dataKey="date"
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: "#94a3b8", fontSize: 10 }}
@@ -1404,14 +1427,9 @@ export default function CortexaDashboard() {
                     tick={{ fill: "#94a3b8", fontSize: 10 }}
                   />
                   <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="trend"
-                    stroke="#2563eb"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#dashboardRev)"
-                  />
+                  <Area type="monotone" dataKey="conversations" name={t("dashboard.conversations", "Conversations")} stroke="#2563eb" strokeWidth={2} fillOpacity={0.1} fill="#2563eb" />
+                  <Area type="monotone" dataKey="appointments" name={t("dashboard.appointments", "Appointments")} stroke="#16a34a" strokeWidth={2} fillOpacity={0.08} fill="#16a34a" />
+                  <Area type="monotone" dataKey="completedTasks" name={t("dashboard.completedTasks", "Completed Tasks")} stroke="#a855f7" strokeWidth={2} fillOpacity={0.08} fill="#a855f7" />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -1590,14 +1608,14 @@ export default function CortexaDashboard() {
         <div className="content-card dashboard-operations-panel">
           <div className="card-top-header">
             <div className="title-left"><MessageCircle size={17} className="text-purple"/><h3>{t("dashboard.communicationOverview")}</h3></div>
-            <button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/analytics")}>{t("dashboard.viewAnalytics")} →</button>
+            <button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/conversations")}>{t("dashboard.viewConversations", "View Conversations")} →</button>
           </div>
           <div className="dashboard-communication-list">
             {[
-              {name:t("dashboard.calls"), icon:<Phone size={17}/>, tone:"blue", count:null},
-              {name:"WhatsApp", icon:<MessageCircle size={17}/>, tone:"green", count:null},
-              {name:t("dashboard.email"), icon:<Send size={17}/>, tone:"blue", count:null},
-              {name:t("dashboard.websiteChat"), icon:<MessageCircle size={17}/>, tone:"purple", count:null},
+              {name:t("dashboard.calls"), icon:<Phone size={17}/>, tone:"blue", count:commandMetrics?.channels?.calls},
+              {name:"WhatsApp", icon:<MessageCircle size={17}/>, tone:"green", count:commandMetrics?.channels?.whatsapp},
+              {name:t("dashboard.email"), icon:<Send size={17}/>, tone:"blue", count:commandMetrics?.channels?.email},
+              {name:t("dashboard.websiteChat"), icon:<MessageCircle size={17}/>, tone:"purple", count:commandMetrics?.channels?.websiteChat},
             ].map(channel => (
               <div className="dashboard-communication-row" key={channel.name}>
                 <span><i className={`dashboard-channel-icon tone-${channel.tone}`}>{channel.icon}</i>{channel.name}</span>
@@ -1605,22 +1623,22 @@ export default function CortexaDashboard() {
               </div>
             ))}
           </div>
-          <p className="dashboard-data-footnote">{t("dashboard.channelUnavailable")}</p>
+          {!commandMetrics?.channels && <p className="dashboard-data-footnote">{t("dashboard.channelUnavailable")}</p>}
         </div>
         <div className="content-card dashboard-operations-panel">
           <div className="card-top-header">
             <div className="title-left"><AlertTriangle size={17} className="text-orange"/><h3>{t("dashboard.needsAttention")}</h3></div>
-            <button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/leads")}>{t("dashboard.viewLeads")} →</button>
+            <button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/conversations")}>{t("dashboard.viewAll")} →</button>
           </div>
           <div className="dashboard-attention-list">
             {[
               {name:t("dashboard.unansweredConversations"), icon:<MessageCircle size={16}/>, tone:"green", count:metrics?.conversations_unread},
-              {name:t("dashboard.overdueTasks"), icon:<CheckCircle size={16}/>, tone:"orange", count:overdueTasks?.length},
-              {name:t("dashboard.followUpsDue"), icon:<Clock3 size={16}/>, tone:"blue", count:followupsDue?.length},
+              {name:t("dashboard.overdueTasks"), icon:<CheckCircle size={16}/>, tone:"orange", count:overdueTaskTotal},
+              {name:t("dashboard.followUpsDue"), icon:<Clock3 size={16}/>, tone:"blue", count:followupTotal},
               {name:t("dashboard.failedAiActions"), icon:<AlertTriangle size={16}/>, tone:"red", count:aiFailed},
             ].map(item => <div className="dashboard-attention-row" key={item.name}><span><i className={`dashboard-channel-icon tone-${item.tone}`}>{item.icon}</i>{item.name}</span><strong>{item.count == null ? NO_DATA : item.count}</strong></div>)}
           </div>
-          <p className="dashboard-data-footnote">{t("dashboard.unavailableMetrics")}</p>
+          {attentionTotal == null && <p className="dashboard-data-footnote">{t("dashboard.unavailableMetrics")}</p>}
         </div>
         <div className="content-card dashboard-operations-panel dashboard-schedule-panel">
           <div className="card-top-header">
@@ -1644,16 +1662,16 @@ export default function CortexaDashboard() {
         <div className="content-card dashboard-tasks-panel">
           <div className="card-top-header"><div className="title-left"><CheckCircle size={17} className="text-royal-blue"/><h3>{t("dashboard.tasksAndFollowups")}</h3></div><button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/leads")}>{t("dashboard.viewAll")} →</button></div>
           <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.task")}</th><th>{t("dashboard.assignedTo")}</th><th>{t("dashboard.due")}</th><th>{t("dashboard.status")}</th></tr></thead><tbody>{pendingTasks?.slice(0, 5).map(task => <tr key={task.id}><td>{task.name || NO_DATA}</td><td>{task.assignee || NO_DATA}</td><td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : NO_DATA}</td><td>{task.status || NO_DATA}</td></tr>)}</tbody></table></div>
-          {!pendingTasks?.length && <div className="dashboard-table-empty"><CheckCircle size={28}/><strong>{taskLoadError || taskPageIncomplete ? t("dashboard.taskTotalsUnavailable") : t("dashboard.noPendingTasks")}</strong><span>{taskLoadError ? t("dashboard.checkTeamAccess") : taskPageIncomplete ? t("dashboard.taskPageIncomplete") : t("dashboard.noOpenTasks")}</span></div>}
+          {!pendingTasks?.length && <div className="dashboard-table-empty"><CheckCircle size={28}/><strong>{(!commandMetrics?.tasks && taskLoadError) || taskPageIncomplete ? t("dashboard.taskTotalsUnavailable") : t("dashboard.noPendingTasks")}</strong><span>{(!commandMetrics?.tasks && taskLoadError) ? t("dashboard.checkTeamAccess") : taskPageIncomplete ? t("dashboard.taskPageIncomplete") : t("dashboard.noOpenTasks")}</span></div>}
         </div>
         <div className="content-card dashboard-ai-actions-panel">
           <div className="card-top-header"><div className="title-left"><Sparkles size={17} className="text-purple"/><h3>{t("dashboard.recentAiActions")}</h3></div><button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/ai-cortexa")}>{t("dashboard.viewAll")} →</button></div>
           <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.dateAndTime")}</th><th>{t("dashboard.action")}</th><th>{t("dashboard.status")}</th><th>{t("dashboard.details")}</th></tr></thead><tbody>{aiRecent?.map(action => <tr key={action.id}><td>{action.timestamp ? new Date(action.timestamp).toLocaleString() : NO_DATA}</td><td>{action.title || action.action || NO_DATA}</td><td>{action.statusLabel || action.status || NO_DATA}</td><td>{action.description || NO_DATA}</td></tr>)}</tbody></table></div>
-          {!aiRecent?.length && <div className="dashboard-table-empty"><Activity size={27}/><strong>{aiLoadError ? t("dashboard.aiActivityLoadFailed") : t("dashboard.noAiActions")}</strong><span>{aiLoadError ? t("dashboard.retryAiFeed") : t("dashboard.aiActionsAppear")}</span></div>}
+          {!aiRecent?.length && <div className="dashboard-table-empty"><Activity size={27}/><strong>{(!commandMetrics?.ai && aiLoadError) ? t("dashboard.aiActivityLoadFailed") : aiCompleted > 0 ? t("dashboard.aiHistoryUnavailable", "AI actions were counted but their history is unavailable") : t("dashboard.noAiActions")}</strong><span>{(!commandMetrics?.ai && aiLoadError) || aiCompleted > 0 ? t("dashboard.retryAiFeed", "Refresh to retry loading the activity feed") : t("dashboard.aiActionsAppear")}</span></div>}
         </div>
         <div className="content-card dashboard-health-panel">
-          <div className="card-top-header"><div className="title-left"><Activity size={17} className="text-royal-blue"/><h3>{t("dashboard.automationHealth")}</h3></div><span className="dashboard-health-period">{t("dashboard.periodLast30Days")}</span></div>
-          <div className="dashboard-attention-list">{[{name:t("dashboard.successfulAiActions"),icon:<CheckCircle size={16}/>,count:aiCompleted},{name:t("dashboard.failedAiActions"),icon:<AlertTriangle size={16}/>,count:aiFailed},{name:t("dashboard.escalatedAiActions"),icon:<AlertTriangle size={16}/>,count:aiFeed?.overview?.escalated}].map(item=><div className="dashboard-attention-row" key={item.name}><span>{item.icon}{item.name}</span><strong>{item.count == null ? NO_DATA : item.count}</strong></div>)}</div>
+          <div className="card-top-header"><div className="title-left"><Activity size={17} className="text-royal-blue"/><h3>{t("dashboard.automationHealth")}</h3></div><span className="dashboard-health-period">{period}</span></div>
+          <div className="dashboard-attention-list">{[{name:t("dashboard.successfulRuns", "Successful Runs"),icon:<CheckCircle size={16}/>,count:commandMetrics?.automation?.successful},{name:t("dashboard.failedRuns", "Failed Runs"),icon:<AlertTriangle size={16}/>,count:commandMetrics?.automation?.failed},{name:t("dashboard.needsAttention", "Needs Attention"),icon:<AlertTriangle size={16}/>,count:commandMetrics?.automation?.needsAttention}].map(item=><div className="dashboard-attention-row" key={item.name}><span>{item.icon}{item.name}</span><strong>{item.count == null ? NO_DATA : item.count}</strong></div>)}</div>
         </div>
       </div>
 

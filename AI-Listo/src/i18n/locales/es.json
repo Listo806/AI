@@ -357,7 +357,7 @@
     "loadError": "No se pudieron cargar los datos del panel.",
     "loadingDashboard": "Cargando panel…",
     "dashboardOverview": "Resumen del panel",
-    "subheading": "Resumen en tiempo real de tu pipeline, rendimiento y actividad de IA.",
+    "subheading": "Tus conversaciones, agenda, tareas y actividad de IA en un solo lugar.",
     "filters": "Filtros",
     "export": "Exportar",
     "leadsCreatedInPeriod": "Leads creados en el período",
@@ -510,7 +510,17 @@
     "viewAnalytics": "Ver análisis",
     "viewCalendar": "Ver calendario",
     "viewLeads": "Ver prospectos",
-    "websiteChat": "Chat del sitio web"
+    "websiteChat": "Chat del sitio web",
+    "taskTotalsUnavailable": "Totales de tareas no disponibles",
+    "checkTeamAccess": "No se pudieron cargar las tareas. Comprueba tu acceso al espacio de trabajo o reintenta.",
+    "taskPageIncomplete": "La lista de tareas está incompleta. Actualiza para reintentar.",
+    "assignWithinWorkspace": "Asignar dentro de tu espacio de trabajo activo",
+    "viewConversations": "Ver conversaciones",
+    "activityBreakdownUnavailable": "Desglose de actividad no disponible para este período",
+    "aiHistoryUnavailable": "Se contabilizaron acciones de IA, pero su historial no está disponible",
+    "successfulRuns": "Ejecuciones correctas",
+    "failedRuns": "Ejecuciones fallidas",
+    "completedTasks": "Tareas completadas"
   },
   "leads": {
     "title": "Leads",

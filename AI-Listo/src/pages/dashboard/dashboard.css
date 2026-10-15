@@ -4610,3 +4610,28 @@ body .next-action-card svg {
     grid-column: 1; grid-row: auto;
   }
 }
+
+/* Dashboard reference: command-center action and metric accents */
+.dashboard-assign-helper {display:block;text-align:right;color:#cbd5ff;font-size:11px;margin-top:5px;}
+.ai-command-banner .btn-assign-color {background:linear-gradient(105deg,#8b5cf6,#6d28d9);color:#fff;}
+.ai-command-banner .mini-insight-card:nth-child(1) .command-mini-accent {background:#4678ff;}
+.ai-command-banner .mini-insight-card:nth-child(2) .command-mini-accent {background:#d66aff;}
+.dashboard-overview-trend .legend-completed {display:inline-block;width:9px;height:9px;border-radius:50%;background:#a855f7;margin-right:5px;}
+
+/* Dashboard approved card proportions, October 2026 */
+.dashboard-page .dashboard-design-grid .content-card {border:1px solid #e6edf8;border-radius:11px;box-shadow:0 1px 3px rgba(20,40,88,.035);}
+.dashboard-page .dashboard-design-grid .card-top-header {min-height:34px;gap:8px;}
+.dashboard-page .dashboard-design-grid .card-top-header h3 {font-size:14px;font-weight:700;letter-spacing:-.2px;}
+.dashboard-page .dashboard-design-grid .dashboard-communication-row,
+.dashboard-page .dashboard-design-grid .dashboard-attention-row {min-height:42px;border-radius:8px;}
+.dashboard-page .dashboard-design-grid .dashboard-health-panel .dashboard-attention-row strong {min-width:39px;text-align:center;border-radius:6px;}
+.dashboard-page .dashboard-design-grid .dashboard-health-panel .dashboard-attention-row:first-child strong {color:#15803d;background:#eaf8ee;}
+.dashboard-page .dashboard-design-grid .dashboard-health-panel .dashboard-attention-row:nth-child(2) strong {color:#dc2626;background:#fff0f0;}
+.dashboard-page .dashboard-design-grid .dashboard-health-panel .dashboard-attention-row:nth-child(3) strong {color:#c2410c;background:#fff4e8;}
+.dashboard-page .dashboard-design-grid .dashboard-overview-trend {min-height:242px;}
+.dashboard-page .dashboard-design-grid .dashboard-operations-panel {min-height:242px;}
+@media(max-width:700px) {
+ .dashboard-page .dashboard-design-grid .content-card {min-width:0;}
+ .dashboard-page .dashboard-design-grid .dashboard-overview-trend,
+ .dashboard-page .dashboard-design-grid .dashboard-operations-panel {min-height:unset;}
+}

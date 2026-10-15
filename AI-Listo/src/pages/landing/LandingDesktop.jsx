@@ -1976,15 +1976,6 @@ export default function Landing() {
 
           <p className="cx-ws-custom-bottom">{lang === "es" ? <>¿Necesitas algo diferente? Cuéntale a <strong>nuestro equipo de desarrollo</strong> lo que necesitas: adaptaremos el workspace, los flujos y las integraciones a tu negocio.</> : lang === "pt" ? <>Precisa de algo diferente? Conte à <strong>nossa equipe de desenvolvimento</strong> o que você precisa — adaptaremos o workspace, os fluxos e as integrações ao seu negócio.</> : <>Need something different? Tell <strong>our development team</strong> what you need—we’ll configure the workspace, workflows, and integrations around your business.</>}</p>
           <a className="cx-ws-request" href="/web-solutions/free-review">{lang === "es" ? "Solicita tu workspace" : lang === "pt" ? "Solicite seu workspace" : "Request Your Workspace"} <ArrowRight size={18}/></a>
-          <p className="cx-ws-connected">{tr.workspaceSection.connected}</p>
-          <a
-            className="cx-ws-explore"
-            href={lp("/trial?flow=free-access&plan=free")}
-            onClick={trackCta("workspaces_get_started", tr.workspaceSection.explore)}
-          >
-            {tr.workspaceSection.explore} <ArrowRight size={18} />
-          </a>
-          <p className="cx-ws-note">{tr.workspaceSection.note}</p>
         </div>
       </section>
       {/* GUIDED CORTEXA SETUP */}
