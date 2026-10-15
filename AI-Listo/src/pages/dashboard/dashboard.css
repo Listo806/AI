@@ -4634,3 +4634,11 @@ body .next-action-card svg {
   .dashboard-page .ai-command-banner .banner-right-top .next-action-card {grid-column:1/-1;}
   .dashboard-page .ai-command-banner .banner-right-top .mini-insight-card {min-height:88px;}
 }
+
+/* Dashboard approved-reference corrections (scoped; no global layout overrides). */
+.dashboard-page .ai-command-banner .btn-assign-color svg { color:#fff !important; stroke:#fff !important; flex-shrink:0; }
+.dashboard-page .dashboard-ai-review-panel .dashboard-run-ai-button {background:linear-gradient(105deg,#1766ff,#6340f5);color:#fff;font-weight:700;min-height:36px;white-space:normal;text-align:center;}
+.dashboard-page .dashboard-ai-review-panel p {font-size:12px;line-height:1.45;}
+.dashboard-page .dashboard-operations-redesign .dashboard-schedule-table th {white-space:nowrap;}
+.dashboard-page .dashboard-operations-redesign .dashboard-schedule-scroll {overflow-x:auto;}
+.dashboard-page .dashboard-operations-redesign .dashboard-table-empty strong {overflow-wrap:anywhere;}

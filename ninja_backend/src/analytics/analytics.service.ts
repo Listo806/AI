@@ -72,6 +72,73 @@ export class AnalyticsService {
 
   constructor(private readonly db: DatabaseService) {}
 
+  /** Command Center uses the same team-scoped persisted tables as Analytics V2.
+   * Missing sources are null, not invented zeros. No workspace membership bypass.
+   */
+  async getCommandCenter(teamId: string, days: number) {
+    const end = new Date();
+    const start = new Date(end.getTime() - days * 86400000);
+    const args = [teamId, start, end];
+    const [tasks, taskTotals, aiTotals, aiHistory, messages, automation, series] = await Promise.all([
+      this.db.query(`SELECT id, title AS name, status, task_type AS "taskType",
+        due_date AS "dueDate", assigned_to AS "assigneeId", created_at AS "createdAt"
+        FROM team_tasks WHERE team_id=$1
+        AND lower(coalesce(status,'')) NOT IN ('completed','done','cancelled','canceled','closed')
+        ORDER BY due_date ASC NULLS LAST, created_at DESC LIMIT 500`, [teamId]),
+      this.db.query(`SELECT count(*)::int AS open,
+        count(*) FILTER (WHERE due_date < now())::int AS overdue,
+        count(*) FILTER (WHERE due_date <= now() AND
+          (lower(coalesce(task_type,'')) LIKE '%follow%up%' OR lower(title) LIKE '%follow%up%'))::int AS followups_due
+        FROM team_tasks WHERE team_id=$1 AND lower(coalesce(status,'')) NOT IN
+        ('completed','done','cancelled','canceled','closed')`, [teamId]),
+      this.db.query(`SELECT
+        count(*) FILTER (WHERE lower(coalesce(outcome,'completed')) IN ('completed','success','succeeded'))::int AS completed,
+        count(*) FILTER (WHERE lower(coalesce(outcome,'')) IN ('failed','error'))::int AS failed
+        FROM ai_activity WHERE team_id=$1 AND created_at >= $2 AND created_at < $3`, args),
+      this.db.query(`SELECT a.id, a.action, a.channel, a.outcome, a.created_at AS "createdAt",
+        a.lead_id AS "leadId", l.name AS "leadName"
+        FROM ai_activity a LEFT JOIN leads l ON l.id=a.lead_id AND l.team_id=a.team_id
+        WHERE a.team_id=$1 AND a.created_at >= $2 AND a.created_at < $3
+        ORDER BY a.created_at DESC LIMIT 100`, args),
+      this.db.query(`SELECT
+        count(*) FILTER (WHERE lower(trim(m.channel)) IN ('call','calls','phone','voice','voice_call','phone_call'))::int AS calls,
+        count(*) FILTER (WHERE lower(trim(m.channel))='whatsapp')::int AS whatsapp,
+        count(*) FILTER (WHERE lower(trim(m.channel))='email')::int AS email,
+        count(*) FILTER (WHERE lower(trim(m.channel)) IN ('website_chat','web_chat','webchat','website chat','live_chat','site_chat','chat_widget'))::int AS "websiteChat"
+        FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+        WHERE l.team_id=$1 AND m.created_at >= $2 AND m.created_at < $3`, args),
+      this.db.query(`SELECT
+        count(*) FILTER (WHERE lower(status) IN ('applied','completed','success'))::int AS successful,
+        count(*) FILTER (WHERE lower(status) IN ('failed','error'))::int AS failed,
+        count(*) FILTER (WHERE lower(status) IN ('pending','awaiting_approval','needs_attention'))::int AS "needsAttention"
+        FROM mkt_automation_runs WHERE team_id=$1 AND created_at >= $2 AND created_at < $3`, args),
+      this.db.query(`SELECT d.day::date::text AS date,
+        (SELECT count(*)::int FROM lead_messages m JOIN leads l ON l.id=m.lead_id
+          WHERE l.team_id=$1 AND m.created_at >= d.day AND m.created_at < d.day+interval '1 day') AS conversations,
+        (SELECT count(*)::int FROM appointments a WHERE a.team_id=$1
+          AND a.created_at >= d.day AND a.created_at < d.day+interval '1 day') AS appointments,
+        (SELECT count(*)::int FROM team_tasks t WHERE t.team_id=$1 AND lower(t.status) IN ('completed','done')
+          AND t.completed_at >= d.day AND t.completed_at < d.day+interval '1 day') AS "completedTasks"
+        FROM generate_series($2::date, ($3::date - interval '1 day')::date, interval '1 day') d(day)
+        ORDER BY d.day`, args),
+    ]);
+    const rows = tasks.rows;
+    return {
+      period: { days, start: start.toISOString(), end: end.toISOString() },
+      tasks: {
+        rows,
+        open: taskTotals.rows[0].open,
+        overdue: taskTotals.rows[0].overdue,
+        followups_due: taskTotals.rows[0].followups_due,
+        truncated: rows.length === 500,
+      },
+      ai: { completed: aiTotals.rows[0].completed, failed: aiTotals.rows[0].failed, history: aiHistory.rows },
+      channels: messages.rows[0],
+      automation: automation.rows[0],
+      activity: { series: series.rows },
+    };
+  }
+
   /**
    * Aggregate from persisted CRM records. All queries are restricted to the
    * authenticated team. Null denotes a metric with no reliable source.

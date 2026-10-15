@@ -20,6 +20,15 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
+  @Get('command-center')
+  @ApiOperation({ summary: 'Verified Dashboard command center data for the authenticated team' })
+  async getCommandCenter(@CurrentUser() user: any, @Query('days') days = '30') {
+    const period = Number(days);
+    if (![1, 7, 30].includes(period)) throw new BadRequestException('days must be 1, 7 or 30');
+    if (!user.teamId) throw new BadRequestException('Active team is required');
+    return this.analyticsService.getCommandCenter(user.teamId, period);
+  }
+
   @Get('overview-v2/insights')
   @ApiOperation({ summary: 'Verified period analytics insight metrics' })
   async getOverviewInsights(

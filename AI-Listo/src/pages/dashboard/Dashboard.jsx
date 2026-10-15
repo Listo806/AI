@@ -298,7 +298,7 @@ export default function CortexaDashboard() {
           const appts = await getUpcomingAppointments(30);
           if (!cancelled) setUpcoming(Array.isArray(appts) ? appts : []);
         } catch (_e) {
-          if (!cancelled) setUpcoming([]);
+          if (!cancelled) setUpcoming(null);
         }
       } catch (e) {
         if (!cancelled) setError(e?.message || t("dashboard.loadError"));
@@ -356,10 +356,10 @@ export default function CortexaDashboard() {
   const miniKpis = [
     {title: t("dashboard.newContacts", "New Contacts"), value: contactsStats?.newContacts == null ? NO_DATA : String(contactsStats.newContacts), subtext: period, icon: <Users size={19}/>, iconBg:"bg-light-blue", intime:period},
     {title: t("dashboard.aiConversations", "AI Conversations"), value: metrics?.conversations_total == null ? NO_DATA : String(metrics.conversations_total), subtext: period, icon:<MessageCircle size={19}/>, iconBg:"bg-light-purple", intime:period},
-    {title: t("dashboard.appointments", "Appointments"), value: calStats?.total == null ? NO_DATA : String(calStats.total), subtext:t("dashboard.upcoming", "Upcoming"), icon:<Calendar size={19}/>, iconBg:"bg-light-green", intime:period},
-    {title: t("dashboard.pendingTasks", "Pending Tasks"), value: openTaskTotal == null ? NO_DATA : String(openTaskTotal), subtext:t("dashboard.currentlyOpen", "Currently open"), icon:<CheckCircle2 size={19}/>, iconBg:"bg-light-orange", intime:period},
-    {title: t("dashboard.followUpsDue", "Follow-Ups Due"), value: followupTotal == null ? NO_DATA : String(followupTotal), subtext:t("dashboard.dueNow", "Due now"), icon:<Clock3 size={19}/>, iconBg:"bg-light-blue", intime:period},
-    {title: t("dashboard.aiActionsCompleted", "AI Actions Completed"), value: aiCompleted == null ? NO_DATA : String(aiCompleted), subtext:period, icon:<Activity size={19}/>, iconBg:"bg-light-purple", intime:period},
+    {title: t("dashboard.appointments", "Appointments"), value: upcoming == null ? NO_DATA : String(upcoming.length), subtext:"Upcoming", icon:<Calendar size={19}/>, iconBg:"bg-light-green", intime:period},
+    {title: t("dashboard.pendingTasks", "Pending Tasks"), value: openTaskTotal == null ? NO_DATA : String(openTaskTotal), subtext:"Currently open", icon:<CheckCircle2 size={19}/>, iconBg:"bg-light-orange", intime:period},
+    {title: t("dashboard.followUpsDue", "Follow-Ups Due"), value: followupTotal == null ? NO_DATA : String(followupTotal), subtext:"Due now", icon:<Clock3 size={19}/>, iconBg:"bg-light-blue", intime:period},
+    {title: t("dashboard.aiActionsCompleted", "AI Actions Completed"), value: aiCompleted == null ? NO_DATA : String(aiCompleted), subtext:period, icon:<Zap size={19}/>, iconBg:"bg-light-purple", intime:period},
   ];
   // Existing export code expects secondaryKpis; the redesigned Dashboard shows
   // one six-card KPI row, so no unsupported second row is rendered.
@@ -857,7 +857,7 @@ export default function CortexaDashboard() {
         <Layers className="header-icon" size={20} />
         <h1>{t("dashboard.dashboardOverview")}</h1>
       </div>
-      <p className="sub_head">{t("dashboard.subheading", "Your conversations, schedule, tasks and AI activity in one place.")}</p>
+      <p className="sub_head">{"Your conversations, schedule, tasks and AI activity in one place."}</p>
       <header className="dashboard-header">
         <div className="header-actions">
           {isMobile ? (
@@ -1089,7 +1089,7 @@ export default function CortexaDashboard() {
               className="banner-btn btn-assign-color"
               onClick={openCommandAssign}
             >
-              <Users size={16} /> {t("dashboard.assign")} <ChevronDown size={14} />
+              <Users size={16} color="#ffffff" strokeWidth={2.4} /> {t("dashboard.assign")} <ChevronDown size={14} />
             </button>
 
             <button
@@ -1385,7 +1385,7 @@ export default function CortexaDashboard() {
                   justifyContent: "center",
                 }}
               >
-                {t("dashboard.activityBreakdownUnavailable", "Activity breakdown unavailable for this period")}
+                {(commandMetrics?.activity ? "No activity in this period" : "Activity data is temporarily unavailable")}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={180}>
@@ -1649,20 +1649,20 @@ export default function CortexaDashboard() {
             <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.time")}</th><th>{t("dashboard.event")}</th><th>{t("dashboard.assignedTo")}</th><th>{t("dashboard.status")}</th></tr></thead><tbody>
               {upcomingList.map((item, idx) => <tr key={idx}><td>{item.when}</td><td>{item.title}</td><td>{item.assignedTo ?? NO_DATA}</td><td><span className="dashboard-schedule-status">{item.status}</span></td></tr>)}
             </tbody></table></div>
-          ) : <div className="dashboard-schedule-empty-state" role="status"><Calendar size={29}/><strong>{t("dashboard.noUpcomingAppointments")}</strong><span>{t("dashboard.appointmentsAppearHere")}</span></div>}
+          ) : <div className="dashboard-schedule-empty-state" role="status"><Calendar size={29}/><strong>{upcoming == null ? "Schedule temporarily unavailable" : t("dashboard.noUpcomingAppointments")}</strong><span>{upcoming == null ? "Please refresh to try again." : t("dashboard.appointmentsAppearHere")}</span></div>}
         </div>
         <div className="content-card dashboard-ai-review-panel">
           <div className="card-top-header"><div className="title-left"><TrendingUp size={19}/><h3>{t("dashboard.aiDashboardReview")}</h3></div></div>
-          <p>{t("dashboard.reviewActivity")}</p>
+          <p>{"Review activity and identify what needs attention."}</p>
           <div className="dashboard-ai-wave" aria-hidden="true"><svg viewBox="0 0 320 72" preserveAspectRatio="none"><path d="M0 45 C60 -2 105 75 170 34 S260 6 320 26" fill="none" stroke="#4d72ff" strokeWidth="2"/><path d="M0 59 C75 15 100 82 180 42 S265 12 320 8" fill="none" stroke="#9447ff" strokeWidth="2"/></svg></div>
-          <button type="button" className="dashboard-run-ai-button" onClick={() => navigate("/dashboard/ai-cortexa")}><Sparkles size={16}/>{t("dashboard.runAiReview")}</button>
+          <button type="button" className="dashboard-run-ai-button" onClick={() => navigate("/dashboard/ai-cortexa")}><Sparkles size={16}/>{"Run AI Dashboard Review"}</button>
         </div>
       </section>
 
         <div className="content-card dashboard-tasks-panel">
           <div className="card-top-header"><div className="title-left"><CheckCircle size={17} className="text-royal-blue"/><h3>{t("dashboard.tasksAndFollowups")}</h3></div><button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/leads")}>{t("dashboard.viewAll")} →</button></div>
           <div className="dashboard-schedule-scroll"><table className="dashboard-schedule-table"><thead><tr><th>{t("dashboard.task")}</th><th>{t("dashboard.assignedTo")}</th><th>{t("dashboard.due")}</th><th>{t("dashboard.status")}</th></tr></thead><tbody>{pendingTasks?.slice(0, 5).map(task => <tr key={task.id}><td>{task.name || NO_DATA}</td><td>{task.assignee || NO_DATA}</td><td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : NO_DATA}</td><td>{task.status || NO_DATA}</td></tr>)}</tbody></table></div>
-          {!pendingTasks?.length && <div className="dashboard-table-empty"><CheckCircle size={28}/><strong>{(!commandMetrics?.tasks && taskLoadError) || taskPageIncomplete ? t("dashboard.taskTotalsUnavailable") : t("dashboard.noPendingTasks")}</strong><span>{(!commandMetrics?.tasks && taskLoadError) ? t("dashboard.checkTeamAccess") : taskPageIncomplete ? t("dashboard.taskPageIncomplete") : t("dashboard.noOpenTasks")}</span></div>}
+          {!pendingTasks?.length && <div className="dashboard-table-empty"><CheckCircle size={28}/><strong>{(!commandMetrics?.tasks && taskLoadError) || taskPageIncomplete ? t("dashboard.taskTotalsUnavailable", "Tasks are temporarily unavailable") : t("dashboard.noPendingTasks", "No pending tasks or follow-ups")}</strong><span>{(!commandMetrics?.tasks && taskLoadError) ? t("dashboard.checkTeamAccess", "Please check your workspace access and try again.") : taskPageIncomplete ? t("dashboard.taskPageIncomplete", "Task records are updating. Please refresh.") : t("dashboard.noOpenTasks", "Your tasks and follow-ups will appear here.")}</span></div>}
         </div>
         <div className="content-card dashboard-ai-actions-panel">
           <div className="card-top-header"><div className="title-left"><Sparkles size={17} className="text-purple"/><h3>{t("dashboard.recentAiActions")}</h3></div><button type="button" className="card-text-link dashboard-link-button" onClick={() => navigate("/dashboard/ai-cortexa")}>{t("dashboard.viewAll")} →</button></div>
