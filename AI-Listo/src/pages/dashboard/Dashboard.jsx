@@ -1046,23 +1046,23 @@ export default function CortexaDashboard() {
         <div className="banner-right">
           <div className="banner-right-top">
             <div className="mini-insight-card">
-              <div className="card-lbl">AI Actions</div>
+              <div className="card-lbl"><Zap size={18} aria-hidden="true" className="command-stat-icon command-stat-icon-ai" /><span>AI Actions</span></div>
               <div className="card-val-group">
-                <span className="command-mini-accent accent-green" />
                 <h3>{aiCompleted == null ? NO_DATA : aiCompleted}</h3>
+                <span className="command-mini-accent accent-green" />
               </div>
             </div>
 
             <div className="mini-insight-card">
-              <div className="card-lbl">Needs Attention</div>
+              <div className="card-lbl"><AlertTriangle size={18} aria-hidden="true" className="command-stat-icon command-stat-icon-attention" /><span>Needs Attention</span></div>
               <div className="card-val-group">
-                <span className="command-mini-accent accent-orange" />
                 <h3>{attentionTotal == null ? NO_DATA : attentionTotal}</h3>
+                <span className="command-mini-accent accent-orange" />
               </div>
             </div>
 
             <div className="mini-insight-card next-action-card">
-              <Phone size={16} />
+              <Sparkles size={19} className="command-stat-icon command-stat-icon-next" aria-hidden="true" />
               <div>
                 <div className="card-lbl">{t("dashboard.nextBestAction")}</div>
                 <h4>{commandCenterLead ? t("dashboard.followUpWithNewLeads") : "No pending actions"}</h4>

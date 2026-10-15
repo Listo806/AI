@@ -112,3 +112,23 @@ body.crm-dark .analytics-overview-v2 .anv-error { background:#492433; color:#ffd
  .analytics-overview-v2 .anv-grid-thirds .anv-link {grid-column:2;grid-row:2;justify-self:start;margin:0;}
  .analytics-overview-v2 .anv-grid-thirds .anv-panel-title {grid-row:1;}
 }
+/* Analytics reference: compact KPI cards, comparison toggle, AI insights */
+.analytics-overview-v2 .anv-kpi {align-items:center;gap:16px;padding:19px 16px;min-height:103px;}
+.analytics-overview-v2 .anv-kpi-icon {flex:0 0 52px;width:52px;height:52px;}
+.analytics-overview-v2 .anv-kpi > div {min-width:0;}
+.analytics-overview-v2 .anv-kpi h2 {line-height:1.3;margin-bottom:6px;}
+.analytics-overview-v2 .anv-kpi strong {line-height:1.15;text-align: left;}
+.analytics-overview-v2 .anv-compare {display:inline-flex;align-items:center;gap:9px;cursor:pointer;white-space:nowrap;}
+.analytics-overview-v2 .anv-compare input {position:absolute;opacity:0;width:1px;height:1px;}
+.analytics-overview-v2 .anv-switch {position:relative;display:inline-block;width:34px;height:19px;border-radius:20px;background:#cbd5e1;transition:background .18s;}
+.analytics-overview-v2 .anv-switch:after {content:"";position:absolute;left:3px;top:3px;width:13px;height:13px;border-radius:50%;background:white;box-shadow:0 1px 3px #64748b66;transition:transform .18s;}
+.analytics-overview-v2 .anv-compare input:checked + .anv-switch {background:#3669f5;}
+.analytics-overview-v2 .anv-compare input:checked + .anv-switch:after {transform:translateX(15px);}
+.analytics-overview-v2 .anv-compare input:focus-visible + .anv-switch {outline:2px solid #2563eb;outline-offset:3px;}
+.analytics-overview-v2 .anv-ai-insights {position:relative;overflow:hidden;background:linear-gradient(128deg,#09142e 0%,#102b60 68%,#19134a 100%);}
+.analytics-overview-v2 .anv-ai-insights:before {content:"";pointer-events:none;position:absolute;width:160%;height:170px;bottom:48px;left:-22%;border-radius:50%;border-top:1px solid #7544f566;transform:rotate(-9deg);box-shadow:0 -9px 30px #5635d020;}
+.analytics-overview-v2 .anv-ai-insights .anv-heading-icon {color:#bba7ff;}
+.analytics-overview-v2 .anv-ai-insights .anv-analyze {position:relative;background:linear-gradient(95deg,#2366ff,#7b20e9);border:0;color:#fff;box-shadow:0 4px 16px #5125d530;}
+.analytics-overview-v2 .anv-ai-insights .anv-analyze svg {color:#e3d0ff;}
+.analytics-overview-v2 .anv-ai-insights .anv-insights-center {position:relative;}
+@media(max-width:900px){.analytics-overview-v2 .anv-actions{flex-wrap:wrap}.analytics-overview-v2 .anv-kpi{padding:14px 12px}}
