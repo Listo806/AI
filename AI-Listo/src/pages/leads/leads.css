@@ -8705,3 +8705,17 @@ body .leads-page {
   .leads-page .ld-stat strong{font-size:18px}
 }
 @media(max-width:768px){.leads-page .leads-design{display:none!important}}
+
+/* Approved Leads master-detail finishing touches */
+.leads-page .ld-primary {background:linear-gradient(110deg,#255ff7,#7824f5);box-shadow:0 4px 12px rgba(92,55,240,.16);font-size:13px;}
+.leads-page .ld-contact-actions {display:flex;flex-wrap:nowrap;gap:7px;margin-top:auto;padding-top:12px;}
+.leads-page .ld-contact-actions button {min-width:0;justify-content:center;font-size:12px;white-space:nowrap;}
+.leads-page .ld-contact-actions button:last-child {margin-left:auto;background:#eef2fa;}
+.leads-page .ld-activity-tabs {align-items:center;gap:13px;}
+.leads-page .ld-activity-tabs button.is-active {color:#6c29f4;border-bottom:2px solid #6c29f4;font-weight:700;}
+.leads-page .ld-activity-tabs .ld-open-conversations {margin-left:auto;color:#6d83ac;white-space:nowrap;}
+.leads-page .ld-activity-tabs .ld-open-conversations:disabled {opacity:.5;cursor:not-allowed;}
+.leads-page .ld-stat-helper {display:block;font-size:11px;color:#7585a3;margin-top:2px;}
+.leads-page .ld-empty>svg {box-sizing:content-box;border-radius:50%;padding:22px;background:#eef3fc;color:#7992bf;}
+.leads-page .ld-panel h2 {font-size:17px;}
+@media (max-width:1250px){.leads-page .ld-contact-actions{flex-wrap:wrap}.leads-page .ld-contact-actions button:last-child{margin-left:0}}

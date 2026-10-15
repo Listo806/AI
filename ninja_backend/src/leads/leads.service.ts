@@ -1522,8 +1522,11 @@ export class LeadsService {
       conversionRate: conversion,
       conversion,
 
-      avgResponse: conversations ? "2m" : "0m",
-      responseImprove: conversations ? 18 : 0,
+      // A response duration requires verified inbound/outbound timestamps.
+      // Do not fabricate a duration or an improvement percentage.
+      avgResponse: null,
+      responseImprove: null,
+      converted: leads.filter((lead) => Boolean(lead.contactId) || ["converted", "closed-won"].includes(String(lead.status || "").toLowerCase())).length,
 
       urgentLeads,
       needFollowUp,

@@ -5779,8 +5779,8 @@
     "aiActions": "AI Actions",
     "daily": "Daily",
     "weekly": "Weekly",
-    "noActivity": "No activity in this period",
-    "activityEmptyDescription": "Your conversations, appointments and AI actions will appear here.",
+    "noActivity": "Activity breakdown unavailable",
+    "activityEmptyDescription": "A combined time series is not available from the current API.",
     "communicationByChannel": "Communication by Channel",
     "channelDescription": "Messages and conversations by channel.",
     "viewConversations": "View Conversations",
@@ -5820,7 +5820,7 @@
     "aiPerformanceInsights": "AI Performance Insights",
     "insightsDescription": "Review communication, follow-ups and AI results for this period.",
     "noAnalysis": "No analysis generated yet",
-    "analysisDescription": "Analyze your data to get AI-powered insights and recommendations.",
+    "analysisDescription": "Open AI Agent to request an analysis.",
     "openAiAgent": "Open AI Agent",
     "dataSourceNotice": "Unavailable data is shown as —, never as a confirmed zero.",
     "metric": "Metric",
@@ -5830,13 +5830,10 @@
     "vsPreviousPeriod": "vs previous period",
     "someChannelsDisconnected": "Some channels are not connected or have no verified data source.",
     "automationRunDefinitions": "Successful, failed and awaiting approval reflect automation runs for the selected period.",
-    "noTeamActivity": "No team activity in this period",
-    "teamEmptyDescription": "Team performance data will appear here.",
+    "noTeamActivity": "No team activity for this period",
+    "teamEmptyDescription": "Team performance will appear when members have recorded activity.",
     "lastUpdated": "Last updated",
-    "notUpdatedYet": "Waiting for the first successful refresh",
-    "noResponsesRecorded": "No responses recorded",
-    "noEligibleActivity": "No eligible activity",
-    "connectedChannelsOnly": "Connected channels only."
+    "notUpdatedYet": "Waiting for the first successful refresh"
   },
   "leadsDesign": {
     "title": "Leads",
@@ -5885,7 +5882,10 @@
     "loading": "Loading leads…",
     "overdue": "Overdue",
     "upcoming": "Upcoming",
-    "noFollowup": "No follow-up"
+    "noFollowup": "No follow-up",
+    "noResponsesYet": "No responses yet",
+    "openConversations": "Open in Conversations",
+    "convertWorkspace": "Convert to Workspace"
   },
   "pipelineDesign": {
     "heading": "Pipeline",

@@ -218,6 +218,7 @@ export default function LeadsPage() {
   const [showBookShowingModal, setShowBookShowingModal] = useState(false);
   const [showAutomationModal, setShowAutomationModal] = useState(false);
   const [leadStats, setLeadStats] = useState(null);
+  const [convertedLeadCount, setConvertedLeadCount] = useState(null);
   const [leadDashboard, setLeadDashboard] = useState(null);
   const [queueFilter, setQueueFilter] = useState(null);
   const [leadSearch, setLeadSearch] = useState("");
@@ -301,7 +302,7 @@ export default function LeadsPage() {
   const [mobileLeadScreen, setMobileLeadScreen] = useState("insights");
   const [mobileHandlingMode, setMobileHandlingMode] = useState("ai");
   const [mobileInboxFilter, setMobileInboxFilter] = useState("all");
-  const [mobileConversationTab, setMobileConversationTab] = useState("conversation");
+  const [mobileConversationTab, setMobileConversationTab] = useState("activity");
   const stats = [
     {
       title: t("leads.statTotalLeads"),
@@ -1532,6 +1533,7 @@ export default function LeadsPage() {
 
       setLeadDashboard(data);
       setLeadStats(data?.stats || null);
+      setConvertedLeadCount(data?.stats?.converted ?? null);
       setLeadPage(data?.pagination?.page || page);
       setLeadHasMore(Boolean(data?.pagination?.hasMore));
 
@@ -2294,12 +2296,12 @@ export default function LeadsPage() {
               ["qualified",leadStats?.qualified,Bot,"green"],
               ["followups",leadStats?.needFollowUp,Clock3,"pink"],
               ["appointments",leadStats?.appointments,Calendar,"orange"],
-              ["converted",leadStats?.converted,TrendingUp,"cyan"],
-              ["response",leadStats?.avgResponse,Clock3,"pink"],
+              ["converted",convertedLeadCount,TrendingUp,"cyan"],
+              ["response",leadStats?.avgResponse === "0m" ? null : leadStats?.avgResponse,Clock3,"pink"],
             ].map(([key,value,Icon,tone])=>(
               <div className="ld-stat" key={key}>
                 <span className={`ld-stat-icon ld-${tone}`}><Icon size={25}/></span>
-                <div><strong>{value ?? "—"}</strong><span>{t(`leadsDesign.${key}`)}</span></div>
+                <div><strong>{value ?? "—"}</strong><span>{t(`leadsDesign.${key}`)}</span>{key === "response" && value == null && <small className="ld-stat-helper">{t("leadsDesign.noResponsesYet", "No responses yet")}</small>}</div>
               </div>
             ))}
           </section>
@@ -2357,18 +2359,20 @@ export default function LeadsPage() {
                     <div><span>{t("leadsDesign.source")}</span><strong>{selectedLead.source || "—"}</strong></div>
                     <div><span>{t("leadsDesign.nextFollowup")}</span><strong>{leadFollowUpDate(selectedLead) ? new Date(leadFollowUpDate(selectedLead)).toLocaleString() : "—"}</strong></div>
                   </div>
-                  <div className="ld-contact-actions">
-                    <button onClick={callSelectedLead}><Phone size={16}/>{t("leadsDesign.call")}</button>
-                    <button onClick={()=>{const phone=normalizeWhatsAppPhone(selectedLead.phone);if(phone)window.open(`https://wa.me/${phone}`,"_blank","noopener,noreferrer");}}><MessageCircle size={16}/>{t("leadsDesign.whatsapp")}</button>
-                    <button onClick={()=>{if(selectedLead.email)window.location.href=`mailto:${selectedLead.email}`;}}><Mail size={16}/>{t("leadsDesign.email")}</button>
-                    <button onClick={openBookShowing}><Calendar size={16}/>{t("leadsDesign.schedule")}</button>
-                    <button onClick={handleLeadContactAction} disabled={convertingLead}><Users size={16}/>{t("leadsDesign.convert")}</button>
-                  </div>
+
                 </> : <div className="ld-empty ld-detail-empty"><Users size={52}/><strong>{t("leadsDesign.selectLead")}</strong><p>{t("leadsDesign.selectLeadDescription")}</p></div>}
+                <div className="ld-contact-actions">
+                    <button disabled={!selectedLead?.phone} onClick={callSelectedLead}><Phone size={16}/>{t("leadsDesign.call")}</button>
+                    <button disabled={!selectedLead?.phone} onClick={()=>{const phone=normalizeWhatsAppPhone(selectedLead?.phone);if(phone)window.open(`https://wa.me/${phone}`,"_blank","noopener,noreferrer");}}><MessageCircle size={16}/>{t("leadsDesign.whatsapp")}</button>
+                    <button disabled={!selectedLead?.email} onClick={()=>{if(selectedLead?.email)window.location.href=`mailto:${selectedLead.email}`;}}><Mail size={16}/>{t("leadsDesign.email")}</button>
+                    <button disabled={!selectedLead} onClick={openBookShowing}><Calendar size={16}/>{t("leadsDesign.schedule")}</button>
+                    <button onClick={handleLeadContactAction} disabled={!selectedLead || convertingLead}><Users size={16}/>{t("leadsDesign.convertWorkspace", "Convert to Workspace")}</button>
+                </div>
               </section>
               <section className="ld-panel ld-activity">
                 <nav className="ld-activity-tabs">{["activity","notes","emails","calls","whatsapp","files","tasks"].map(k=>
-                  <button key={k} type="button" className={mobileConversationTab===k?"is-active":""} onClick={()=>setMobileConversationTab(k)}>{t(`leadsDesign.${k}`)}</button>)}</nav>
+                  <button key={k} type="button" className={mobileConversationTab===k?"is-active":""} onClick={()=>setMobileConversationTab(k)}>{t(`leadsDesign.${k}`)}</button>)}
+                  <button type="button" className="ld-open-conversations" disabled={!selectedLead?.id} onClick={()=>navigate(`/dashboard/conversations?leadId=${encodeURIComponent(selectedLead.id)}`)}>{t("leadsDesign.openConversations", "Open in Conversations")} ↗</button></nav>
                 <div className="ld-activity-body">
                   {!selectedLead ? <div className="ld-empty"><FileText size={32}/><p>{t("leadsDesign.activityEmpty")}</p></div> :
                     mobileConversationTab==="notes" && selectedLead.notes ? <p className="ld-brief">{selectedLead.notes}</p> :
