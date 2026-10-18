@@ -2,11 +2,12 @@ import { Module } from "@nestjs/common";
 
 import { PropertyFeedController } from "./property-feed.controller";
 import { PropertyFeedService } from "./property-feed.service";
+import { ListoqasaImportService } from "./listoqasa-import.service";
 
 @Module({
   controllers: [PropertyFeedController],
 
-  providers: [PropertyFeedService],
+  providers: [PropertyFeedService, ListoqasaImportService],
 
   exports: [PropertyFeedService],
 })

@@ -30,6 +30,8 @@ const PROPERTY_TYPE_VALUES = [
   "commercial",
   "villa",
   "office",
+  "retail",
+  "warehouse",
 ] as const;
 
 @Injectable()
