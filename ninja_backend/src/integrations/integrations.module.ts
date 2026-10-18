@@ -15,7 +15,6 @@ import { MetaWebhookController } from "./instagram/meta-webhook.controller";
 import { CrmImportModule } from "./crm-import/crm-import.module";
 import { CsvLeadsModule } from "./csv-leads/csv-leads.module";
 import { PropertyFeedModule } from "./property-feed/property-feed.module";
-import { PropertyFeedController } from "./property-feed/property-feed.controller";
 import { MakeModule } from "./make/make.module";
 import { MakeController } from "./make/make.controller";
 import { GoogleAdsModule } from "./google-ads/google-ads.module";
@@ -52,7 +51,7 @@ import { AppointmentController } from "./appointment/appointment.controller";
     TiktokModule,
     AppointmentModule,
   ],
-  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController, ApiAccessController, MlsController, AppointmentController],
+  controllers: [MetaWebhookController, MakeController, GoogleAdsController, ApiAccessController, MlsController, AppointmentController],
   providers: [],
   exports: [
     MapboxModule,
