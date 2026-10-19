@@ -32,6 +32,23 @@ export class ListoqasaImportService {
    // Serialize imports to prevent concurrent duplicate slugs and IDs.
    await c.query('SELECT pg_advisory_xact_lock(hashtext($1))',['listoqasa-stage2']);
    let created=0, updated=0;
+   // Resolve the canonical location hierarchy once per city batch.
+   // Cumbayá and Tumbaco are Quito parishes, not additional Quito-city records.
+   const isQuitoParish = ['Cumbayá','Tumbaco'].includes(v.city);
+   const zoneCity = isQuitoParish ? 'Quito' : v.city;
+   const zoneNeighborhood = isQuitoParish ? v.city : null;
+   const existingZones = await c.query(
+    `SELECT id FROM zones WHERE lower(trim(city))=lower(trim($1))
+       AND (($2::text IS NULL AND neighborhood IS NULL) OR lower(trim(neighborhood))=lower(trim($2)))
+     ORDER BY created_at ASC, id ASC LIMIT 2`, [zoneCity,zoneNeighborhood]);
+   if (existingZones.rows.length > 1) throw new ConflictException(`Ambiguous zone mapping: ${v.city}`);
+   let zoneId = existingZones.rows[0]?.id;
+   if (!zoneId) {
+    const newZone = await c.query(
+     `INSERT INTO zones(city,neighborhood,name) VALUES($1,$2,$3) RETURNING id`,
+     [zoneCity,zoneNeighborhood,zoneNeighborhood ? `Quito – ${zoneNeighborhood}` : zoneCity]);
+    zoneId = newZone.rows[0].id;
+   }
    for (const r of body.records) {
     const match=await c.query('SELECT property_id FROM listoqasa_sample_imports WHERE external_id=$1 FOR UPDATE',[r.external_id]);
     let propertyId=match.rows[0]?.property_id;
@@ -46,13 +63,13 @@ export class ListoqasaImportService {
     const area=['Cumbayá','Tumbaco'].includes(r.city)?r.city:null;
     const data=[r.title,r.description,r.city,r.province||null,r.price,r.listing_type,r.property_type,r.bedrooms??null,r.bathrooms??null,Math.round(r.area_m2*10.7639104167),r.lot_size_m2==null?null:r.lot_size_m2*10.7639104167];
     if (propertyId) {
-     await c.query(`UPDATE properties SET title=$1,description=$2,city=$3,state=$4,price=$5,type=$6,property_type=$7,bedrooms=$8,bathrooms=$9,square_feet=$10,lot_size=$11,updated_at=NOW() WHERE id=$12`,[...data,propertyId]);
+     await c.query(`UPDATE properties SET title=$1,description=$2,city=$3,state=$4,price=$5,type=$6,property_type=$7,bedrooms=$8,bathrooms=$9,square_feet=$10,lot_size=$11,zone_id=$12,updated_at=NOW() WHERE id=$13`,[...data,zoneId,propertyId]);
      updated++;
     } else {
-     const ins=await c.query(`INSERT INTO properties(title,description,city,state,price,type,property_type,bedrooms,bathrooms,square_feet,lot_size,status,listing_type,country,created_by,team_id,latitude,longitude) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'draft','marketplace','Ecuador',$12,$13,NULL,NULL) RETURNING id`,[...data,user.id,user.teamId]);
+     const ins=await c.query(`INSERT INTO properties(title,description,city,state,price,type,property_type,bedrooms,bathrooms,square_feet,lot_size,status,listing_type,country,created_by,team_id,latitude,longitude,zone_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'draft','marketplace','Ecuador',$12,$13,NULL,NULL,$14) RETURNING id`,[...data,user.id,user.teamId,zoneId]);
      propertyId=ins.rows[0].id; created++;
     }
-    await c.query(`INSERT INTO listoqasa_sample_imports(external_id,property_id,group_name,payload) VALUES($1,$2,$3,$4::jsonb) ON CONFLICT(external_id) DO UPDATE SET payload=EXCLUDED.payload,updated_at=NOW()`,[r.external_id,propertyId,r.city,JSON.stringify({...r,canonical_city:canonicalCity,parish:area})]);
+    await c.query(`INSERT INTO listoqasa_sample_imports(external_id,property_id,group_name,payload) VALUES($1,$2,$3,$4::jsonb) ON CONFLICT(external_id) DO UPDATE SET payload=EXCLUDED.payload,updated_at=NOW()`,[r.external_id,propertyId,r.city,JSON.stringify({...r,canonical_city:canonicalCity,parish:area,zone_id:zoneId})]);
    }
    return {city:v.city,created,updated,total:v.count,allDraft:true};
   });
