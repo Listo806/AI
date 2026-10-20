@@ -31,7 +31,7 @@ export class ListingsController {
   @ApiOperation({
     summary: 'Public marketplace search (sale & rent only, Ecuador only)',
     description:
-      'Published sale/rent listings in Ecuador only (country enforced in SQL), with latitude/longitude required. Vacation excluded. mode=buy is treated as sale. Same filters as GET /properties/public.',
+      'Published sale/rent listings in Ecuador only (country enforced in SQL), with coordinates or verified sample-import mapping. Vacation excluded. mode=buy is treated as sale. Same filters as GET /properties/public.',
   })
   @ApiQuery({ name: 'city', required: false })
   @ApiQuery({ name: 'propertyType', required: false })

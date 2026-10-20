@@ -22,7 +22,7 @@ import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import SiteLayout from '../../components/layout/SiteLayout';
 import './Listings.css';
 
-const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'];
+const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office', 'retail', 'warehouse'];
 
 function marketExploreSubtitle(property, t) {
   const desc = (property.description || '').replace(/\s+/g, ' ').trim();
@@ -788,7 +788,8 @@ export default function Listings() {
                               )}
                             </Link>
 
-                            {(property.isFeatured || property.featured) && (
+                            {property.isSample && <span className="listings-featured-badge" style={{top:8,left:8,background:"#153b64"}}>AI-generated sample · Illustrative only</span>}
+                            {!property.isSample && (property.isFeatured || property.featured) && (
                               <span className="listings-featured-badge">
                                 {t('listings.featured', { defaultValue: 'Featured' })}
                               </span>
@@ -877,7 +878,7 @@ export default function Listings() {
                               )}
                             </div>
 
-                            <div className="listings-card-actions listings-card-actions--reference">
+                            {!property.isSample && <div className="listings-card-actions listings-card-actions--reference">
                               <button
                                 type="button"
                                 className="listings-card-action listings-card-action-whatsapp"
@@ -901,7 +902,7 @@ export default function Listings() {
                                 <UserRound size={19} />
                                 {t('listings.contact')}
                               </button>
-                            </div>
+                            </div>}
                           </div>
                         </article>
                       );

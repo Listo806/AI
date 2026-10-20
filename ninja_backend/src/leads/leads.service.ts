@@ -34,6 +34,8 @@ export class LeadsService {
     let teamId: string | null = null;
 
     if (createLeadDto.propertyId) {
+      const sample = await this.db.query('SELECT 1 FROM listoqasa_sample_imports WHERE property_id=$1 LIMIT 1',[createLeadDto.propertyId]);
+      if(sample.rows.length) throw new ForbiddenException('AI-generated sample listings do not accept inquiries');
       // Get property owner
       const propertyResult = await this.db.query(
         `SELECT created_by as "createdBy", team_id as "teamId" FROM properties WHERE id = $1`,

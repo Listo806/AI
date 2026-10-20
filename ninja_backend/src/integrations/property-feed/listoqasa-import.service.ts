@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { StorageService } from '../storage/storage.service';
 import { DatabaseService } from '../../database/database.service';
 
 const GROUPS: Record<string, number> = { Quito:225, Guayaquil:225, Cuenca:150, 'Samborondón':80, 'Cumbayá':70, Manta:60, Tumbaco:30 };
@@ -6,7 +7,7 @@ const TYPES = new Set(['house','apartment','office','retail','commercial','wareh
 const required = (v:any) => typeof v === 'string' && v.trim().length > 0;
 @Injectable()
 export class ListoqasaImportService {
- constructor(private readonly db:DatabaseService) {}
+ constructor(private readonly db:DatabaseService, private readonly storage:StorageService) {}
  private validate(body:any) {
   if (!body || !Array.isArray(body.records) || !GROUPS[body.city] || body.records.length > GROUPS[body.city]) throw new BadRequestException('Invalid city group or record count');
   const ids = new Set<string>(); const slugs = new Set<string>();
@@ -102,4 +103,71 @@ export class ListoqasaImportService {
    return {created,unchanged};
   });
  }
+ private admin(user:any) {
+  if (!['admin','super_admin'].includes(String(user?.role||'')) || !user?.id || !user?.teamId) throw new BadRequestException('Administrator team required');
+ }
+ async stage3Status(user:any) {
+  this.admin(user);
+  const q=await this.db.query(`SELECT i.group_name, COUNT(*)::int AS total,
+   COUNT(si.external_id)::int AS covered,
+   COUNT(*) FILTER (WHERE p.status='published')::int AS published
+   FROM listoqasa_sample_imports i JOIN properties p ON p.id=i.property_id
+   LEFT JOIN listoqasa_sample_images si ON si.external_id=i.external_id AND si.image_index=0
+   WHERE p.team_id=$1 GROUP BY i.group_name ORDER BY i.group_name`,[user.teamId]);
+  return {groups:q.rows};
+ }
+ async uploadCovers(files:Express.Multer.File[],user:any) {
+  this.admin(user);
+  if (!files?.length || files.length>6) throw new BadRequestException('Select 1-6 cover images');
+  const ids=files.map(f=>f.originalname.replace(/\.(jpe?g|png|webp)$/i,''));
+  if(ids.some(id=>!/^LQ-S2-[A-Z]+-\d{5}$/.test(id)) || new Set(ids).size!==ids.length) throw new BadRequestException('Each file must be named external_id.jpg/png/webp, without duplicates');
+  const rows=await this.db.query(`SELECT i.external_id,i.property_id,p.status,p.team_id,
+    si.image_url FROM listoqasa_sample_imports i JOIN properties p ON p.id=i.property_id
+    LEFT JOIN listoqasa_sample_images si ON si.external_id=i.external_id AND si.image_index=0
+    WHERE i.external_id=ANY($1::text[])`,[ids]);
+  if(rows.rows.length!==ids.length) throw new BadRequestException('Unknown property external ID');
+  for(const row of rows.rows) if(row.team_id!==user.teamId || !['draft','published'].includes(row.status)) throw new ConflictException('Property belongs to another team or invalid status');
+  const byId=new Map(rows.rows.map(r=>[r.external_id,r]));
+  const results:any[]=[];
+  for(let i=0;i<files.length;i++) {
+   const file=files[i], id=ids[i], existing=byId.get(id);
+   if(existing.image_url) { results.push({external_id:id,status:'already_attached',url:existing.image_url}); continue; }
+   // Existing StorageService checks image type/size and records S3 ownership.
+   const stored=await this.storage.uploadFile({file,folder:`listoqasa/covers/${id}`,userId:user.id,teamId:user.teamId});
+   // Public browse requires permanent accessible URLs, not expiring signed URLs.
+   let accessible=false;
+   try { const response=await fetch(stored.url,{method:'GET',signal:AbortSignal.timeout(10000)}); accessible=response.ok && (response.headers.get('content-type')||'').startsWith('image/'); await response.body?.cancel(); } catch {}
+   if(!accessible) throw new BadRequestException(`S3 cover ${id} is not publicly readable. Check bucket/CDN read access before continuing. Uploaded object: ${stored.key}`);
+   // Do not overwrite existing media; keep the upload and DB association atomic.
+   await this.db.transaction(async c=>{
+    const locked=await c.query(`SELECT i.property_id,p.team_id,p.status FROM listoqasa_sample_imports i JOIN properties p ON p.id=i.property_id WHERE i.external_id=$1 FOR UPDATE`,[id]);
+    if(locked.rows[0]?.team_id!==user.teamId || !['draft','published'].includes(locked.rows[0]?.status)) throw new ConflictException('Protected property');
+    const old=await c.query('SELECT image_url FROM listoqasa_sample_images WHERE external_id=$1 AND image_index=0',[id]);
+    if(old.rows.length) throw new ConflictException(`Cover was attached concurrently: ${id}`);
+    const media=await c.query(`INSERT INTO property_media(property_id,url,type,is_primary,display_order) VALUES($1,$2,'image',true,0) RETURNING id`,[locked.rows[0].property_id,stored.url]);
+    await c.query('INSERT INTO listoqasa_sample_images(external_id,image_index,image_url,media_id) VALUES($1,0,$2,$3)',[id,stored.url,media.rows[0].id]);
+    await c.query('UPDATE properties SET thumbnail_url=$1,updated_at=NOW() WHERE id=$2',[stored.url,locked.rows[0].property_id]);
+   });
+   results.push({external_id:id,status:'attached',url:stored.url});
+  }
+  return {processed:results.length,results};
+ }
+ async publishSamples(body:any,user:any) {
+  this.admin(user);
+  if(body?.confirm!=='PUBLISH_840_AI_SAMPLES') throw new BadRequestException('Explicit publish confirmation required');
+  return this.db.transaction(async c=>{
+   await c.query('SELECT pg_advisory_xact_lock(hashtext($1))',['listoqasa-stage3-publish']);
+   const q=await c.query(`SELECT COUNT(*)::int AS total,
+     COUNT(*) FILTER(WHERE p.status NOT IN ('draft','published'))::int AS invalid,
+     COUNT(*) FILTER(WHERE si.media_id IS NULL OR p.thumbnail_url IS NULL)::int AS missing
+     FROM listoqasa_sample_imports i JOIN properties p ON p.id=i.property_id
+     LEFT JOIN listoqasa_sample_images si ON si.external_id=i.external_id AND si.image_index=0
+     WHERE p.team_id=$1`,[user.teamId]);
+   if(q.rows[0].total!==840 || q.rows[0].missing!==0 || q.rows[0].invalid!==0) throw new ConflictException('Require exactly 840 valid properties with covers before publishing');
+   const updated=await c.query(`UPDATE properties p SET status='published',published_at=COALESCE(p.published_at,NOW()),updated_at=NOW()
+     FROM listoqasa_sample_imports i WHERE i.property_id=p.id AND p.team_id=$1 AND p.status='draft' RETURNING p.id`,[user.teamId]);
+   return {total:840,publishedNow:updated.rowCount ?? 0,alreadyPublished:840-(updated.rowCount ?? 0)};
+  });
+ }
+
 }

@@ -612,6 +612,7 @@ export class PropertiesService {
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                         thumbnail_url as "thumbnailUrl", latitude, longitude,
+                        EXISTS (SELECT 1 FROM listoqasa_sample_imports si WHERE si.property_id=properties.id) as "isSample",
                         property_type as "propertyType", listing_type as "listingType",
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
@@ -632,7 +633,7 @@ export class PropertiesService {
     params.push("ecuador");
 
     // Map-ready rows: require coordinates
-    conditions.push(`latitude IS NOT NULL AND longitude IS NOT NULL`);
+    conditions.push(`(latitude IS NOT NULL AND longitude IS NOT NULL OR EXISTS (SELECT 1 FROM listoqasa_sample_imports sample WHERE sample.property_id = properties.id))`);
 
     // Structured filters (exact match, case-insensitive for city and propertyType)
     if (filters?.city?.trim()) {
@@ -792,6 +793,7 @@ export class PropertiesService {
               p.square_feet as "squareFeet", p.lot_size as "lotSize", p.year_built as "yearBuilt",
               p.created_by as "createdBy", p.edited_by as "editedBy", p.team_id as "teamId", p.zone_id as "zoneId",
               p.thumbnail_url as "thumbnailUrl", p.latitude, p.longitude,
+              EXISTS (SELECT 1 FROM listoqasa_sample_imports si WHERE si.property_id=p.id) as "isSample",
               p.property_type as "propertyType",
               p.reviewed_by as "reviewedBy", p.reviewed_at as "reviewedAt", p.rejection_reason as "rejectionReason",
               p.created_at as "createdAt", p.updated_at as "updatedAt", p.published_at as "publishedAt",

@@ -177,7 +177,7 @@ export default function ListingDetail() {
 
   const submitContact = async (event) => {
     event.preventDefault();
-    if (!leadForm.name.trim() || !leadForm.email.trim()) return;
+    if (property?.isSample || !leadForm.name.trim() || !leadForm.email.trim()) return;
 
     setLeadState('sending');
 
@@ -294,6 +294,7 @@ export default function ListingDetail() {
             </div>
           </div>
 
+          {property.isSample && <p role="note" style={{padding:12,background:"#eef5ff",borderRadius:8,color:"#153b64",fontWeight:600}}>AI-generated sample property — Illustrative only. Not a real available listing; inquiries are disabled.</p>}
           <h1 className="lq-detail-title">{property.title || 'Property Details'}</h1>
 
           <div className="lq-detail-location-line">
@@ -417,7 +418,7 @@ export default function ListingDetail() {
               )}
             </div>
 
-            <aside className="lq-detail-contact-card">
+            {!property.isSample && <aside className="lq-detail-contact-card">
               <div className="lq-detail-agent">
                 <div className="lq-detail-agent-avatar">
                   <UserRound size={26} />
@@ -492,7 +493,7 @@ export default function ListingDetail() {
                 <Lock size={14} />
                 Your information stays private.
               </div>
-            </aside>
+            </aside>}
           </div>
 
           {similar.length > 0 && (
