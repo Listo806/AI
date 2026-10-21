@@ -108,7 +108,7 @@ export class VacationRentalsService {
       zipCode: row.zipCode,
       pricePerNight: priceNum,
       listingType: 'vacation' as const,
-      availabilityStatus: hadDateAvailabilityFilter ? ('available' as const) : ('unknown' as const),
+      availabilityStatus: 'unknown' as const, // Date filtering does not verify real host availability
       latitude: lat,
       longitude: lng,
       shortDescription: this.shortDescription(row.description),
@@ -308,6 +308,25 @@ export class VacationRentalsService {
     const items = withThumbs.map((r) => this.mapVacationApiRow(r, hadDateAvailabilityFilter));
 
     return { items, total, limit, offset };
+  }
+
+  async publicDetail(id: string) {
+    const { rows } = await this.db.query(
+      `SELECT p.id, p.title, p.description, p.address, p.city, p.state,
+              p.zip_code AS "zipCode", p.price, p.type, p.status,
+              p.listing_type AS "listingType", p.bedrooms, p.bathrooms,
+              p.max_guests AS "maxGuests", COALESCE(p.amenities, '[]'::jsonb) AS amenities,
+              p.square_feet AS "squareFeet", p.lot_size AS "lotSize",
+              p.year_built AS "yearBuilt", p.thumbnail_url AS "thumbnailUrl",
+              p.latitude, p.longitude, p.property_type AS "propertyType",
+              p.created_at AS "createdAt", p.updated_at AS "updatedAt",
+              p.published_at AS "publishedAt", 0 AS "ratingAvg", 0 AS "ratingCount"
+       FROM properties p WHERE p.id = $1 AND p.listing_type = 'vacation' AND p.status = 'published'`,
+      [id],
+    );
+    if (!rows.length) throw new NotFoundException('Vacation rental not found');
+    const [property] = await this.attachThumbnailUrlList(rows as VacationSearchRow[]);
+    return this.mapVacationApiRow(property, false);
   }
 
   // ── Bookings ────────────────────────────────────────────────────

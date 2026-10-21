@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search,
   ChevronLeft,
@@ -107,12 +107,14 @@ function LegacyStayRow({ section }) {
 export default function VacationRentalsPage() {
   const { t } = useTranslation();
 
-  const [city, setCity] = useState("");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const navigate = useNavigate();
+  const [initialParams] = useSearchParams();
+  const [city, setCity] = useState(() => initialParams.get("city") || "");
+  const [checkIn, setCheckIn] = useState(() => initialParams.get("checkIn") || "");
+  const [checkOut, setCheckOut] = useState(() => initialParams.get("checkOut") || "");
 
   const [guests, setGuests] = useState({
-    adults: 0,
+    adults: Math.max(0, Number(initialParams.get("guests") || 0)),
     children: 0,
     infants: 0,
     pets: 0,
@@ -156,8 +158,7 @@ export default function VacationRentalsPage() {
       params.set("guests", String(totalGuests));
     }
 
-    window.location.href =
-      `https://listostays.com/vacation-rentals/search?${params.toString()}`;
+    navigate(`/vacation-rentals/search?${params.toString()}`);
   };
 
   return (
@@ -372,9 +373,7 @@ export default function VacationRentalsPage() {
                       {group.cities.map((cityName) => (
                         <Link
                           key={cityName}
-                          to={`/vacation-rentals?city=${encodeURIComponent(
-                            cityName
-                          )}`}
+                          to={`/vacation-rentals/search?${new URLSearchParams({city:cityName,...(checkIn?{checkIn}:{}),...(checkOut?{checkOut}:{}),...(totalGuests?{guests:String(totalGuests)}:{})}).toString()}`}
                         >
                           {cityName}
                         </Link>

@@ -1,4 +1,3 @@
-import Stage3Covers from './pages/Stage3Covers';
 import React from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");const plan=p.get("plan");const billing=p.get("billing")==="yearly"?"yearly":"monthly";if(addon==="ai-crm")return <Navigate to="/agent-plans" replace />;return <Navigate to={`/marketplace/signup?audience=agent&plan=${encodeURIComponent(plan||"essential")}&billing=${billing}`} replace />;}
@@ -17,6 +16,8 @@ import AgentsPage from "./pages/Agents/AgentsPage";
 import FindAgentPage from "./pages/FindAgent/FindAgentPage";
 import DevelopersPage from "./pages/Developers/DevelopersPage";
 import AiCrmPage from "./pages/AiCrm/AiCrmPage";
+import VacationResults from "./pages/VacationRentals/VacationResults";
+import VacationDetail from "./pages/VacationRentals/VacationDetail";
 import VacationRentalsPage from "./pages/VacationRentals/VacationRentalsPage";
 import OwnerPlansPage from "./pages/OwnerPlans/OwnerPlansPage";
 import AgentDeveloperPlansPage from "./pages/AgentDeveloperPlans/AgentDeveloperPlansPage";
@@ -28,7 +29,6 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/stage3/covers" element={<Stage3Covers />} />
         <Route path="/property/:id" element={<ListingDetail />} />
         <Route path="/property" element={<LegacyPropertyRedirect />} />
         <Route path="/buy" element={<Listings />} />
@@ -56,6 +56,8 @@ export default function App() {
         <Route path="/ai-help" element={<AiCrmPage />} />
         <Route path="/ai-help/pricing" element={<AiHelpPricingPage />} />
         <Route path="/vacation-rentals" element={<VacationRentalsPage />} />
+        <Route path="/vacation-rentals/search" element={<VacationResults />} />
+        <Route path="/vacation-rentals/property/:id" element={<VacationDetail />} />
         
         <Route path="/owner-plans" element={<OwnerPlansPage />} />
 

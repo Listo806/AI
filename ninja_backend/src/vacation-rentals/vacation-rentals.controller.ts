@@ -125,6 +125,12 @@ export class VacationRentalsController {
     });
   }
 
+  @Get('property/:id')
+  @ApiOperation({ summary: 'Public vacation property detail, isolated from marketplace' })
+  async detail(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vacationService.publicDetail(id);
+  }
+
   /** Create a booking for a vacation property (authenticated) */
   @Post('bookings')
   @UseGuards(JwtAuthGuard)
