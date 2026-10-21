@@ -62,6 +62,7 @@ export default function PropertyMap({
   const markersRef = useRef([]);
   const mapHandlersRef = useRef([]);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const validCoordinateCount = properties.filter(p => p.latitude != null && p.longitude != null && Number.isFinite(Number(p.latitude)) && Number.isFinite(Number(p.longitude)) && Math.abs(Number(p.latitude)) <= 90 && Math.abs(Number(p.longitude)) <= 180 && !(Number(p.latitude) === 0 && Number(p.longitude) === 0)).length;
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_TOKEN) {
@@ -245,6 +246,11 @@ export default function PropertyMap({
   return (
     <div className="property-map-container">
       <div ref={mapContainer} className="property-map" />
+      {mapLoaded && properties.length > 0 && validCoordinateCount === 0 && (
+        <div role="status" style={{ position: "absolute", bottom: 14, left: 12, right: 12, padding: "8px 12px", background: "rgba(255,255,255,.95)", borderRadius: 8, fontSize: 12, boxShadow: "0 2px 10px #0002", pointerEvents: "none", zIndex: 2 }}>
+          These listings have no saved exact coordinates. Property dots will appear when verified coordinates are available.
+        </div>
+      )}
     </div>
   );
 }

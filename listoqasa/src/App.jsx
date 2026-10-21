@@ -1,4 +1,5 @@
 import React from "react";
+import PropertyDetailBoundary from "./components/PropertyDetailBoundary";
 import { Navigate, useSearchParams } from "react-router-dom";
 function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");const plan=p.get("plan");const billing=p.get("billing")==="yearly"?"yearly":"monthly";if(addon==="ai-crm")return <Navigate to="/agent-plans" replace />;return <Navigate to={`/marketplace/signup?audience=agent&plan=${encodeURIComponent(plan||"essential")}&billing=${billing}`} replace />;}
 import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
@@ -30,7 +31,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/property/:id" element={<ListingDetail />} />
+        <Route path="/property/:id" element={<PropertyDetailBoundary><ListingDetail /></PropertyDetailBoundary>} />
         <Route path="/property" element={<LegacyPropertyRedirect />} />
         <Route path="/buy" element={<Listings />} />
         <Route path="/rent" element={<Listings />} />

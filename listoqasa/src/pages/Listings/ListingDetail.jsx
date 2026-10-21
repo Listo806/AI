@@ -96,7 +96,12 @@ export default function ListingDetail() {
   }, []);
 
   useEffect(() => {
+    setProperty(null);
+    setMedia([]);
+    setSimilar([]);
+    setLoading(true);
     loadProperty();
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [id]);
 
   const loadProperty = async () => {
