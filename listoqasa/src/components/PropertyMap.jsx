@@ -55,10 +55,12 @@ export default function PropertyMap({
    * 'ecuador' — marketplace: Ecuador center, maxBounds, min/max zoom.
    */
   mapRegion = 'default',
+  onCityClick = null,
 }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
+  const mapHandlersRef = useRef([]);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
@@ -118,108 +120,107 @@ export default function PropertyMap({
     };
   }, [mapRegion]);
 
-  // Update markers when properties change
+  // Only valid coordinates receive individual pins. City markers are explicitly
+  // aggregates, never invented exact property locations.
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-
-    const fitMaxZoom = mapRegion === 'ecuador' ? ECUADOR_MAP.maxZoom : 15;
-
-    // Remove existing markers
-    markersRef.current.forEach((marker) => marker.remove());
+    const m = map.current;
+    if (!m || !mapLoaded) return;
+    const removeHandlers = () => {
+      mapHandlersRef.current.forEach(([event, layer, handler]) => m.off(event, layer, handler));
+      mapHandlersRef.current = [];
+    };
+    removeHandlers();
+    markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
+    ['lq-property-clusters', 'lq-property-cluster-count', 'lq-property-pins'].forEach(id => {
+      if (m.getLayer(id)) m.removeLayer(id);
+    });
+    if (m.getSource('lq-property-points')) m.removeSource('lq-property-points');
 
-    // Add markers for each property
-    properties.forEach((property) => {
-      if (!property.latitude || !property.longitude) return;
+    const valid = properties.filter(p => Number.isFinite(Number(p.latitude)) && Number.isFinite(Number(p.longitude)) &&
+      p.latitude != null && p.longitude != null && Number(p.latitude) >= -90 && Number(p.latitude) <= 90 &&
+      Number(p.longitude) >= -180 && Number(p.longitude) <= 180 && !(Number(p.latitude) === 0 && Number(p.longitude) === 0));
+    const geo = { type: 'FeatureCollection', features: valid.map((p, i) => ({
+      type: 'Feature', id: i, properties: { index: i },
+      geometry: { type: 'Point', coordinates: [Number(p.longitude), Number(p.latitude)] },
+    })) };
+    m.addSource('lq-property-points', { type: 'geojson', data: geo, cluster: true, clusterRadius: 48, clusterMaxZoom: 13 });
+    m.addLayer({ id: 'lq-property-clusters', type: 'circle', source: 'lq-property-points', filter: ['has', 'point_count'],
+      paint: { 'circle-color': '#1259da', 'circle-radius': ['step', ['get', 'point_count'], 20, 10, 26, 50, 32],
+        'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
+    m.addLayer({ id: 'lq-property-cluster-count', type: 'symbol', source: 'lq-property-points', filter: ['has', 'point_count'],
+      layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 13 },
+      paint: { 'text-color': '#fff' } });
+    m.addLayer({ id: 'lq-property-pins', type: 'circle', source: 'lq-property-points', filter: ['!', ['has', 'point_count']],
+      paint: { 'circle-color': '#ffffff', 'circle-radius': 10, 'circle-stroke-color': '#1259da', 'circle-stroke-width': 3 } });
 
-      const el = document.createElement('div');
-      const pillText = markerStyle === 'pricePill' ? formatMarkerPrice(property, priceMarkerVariant) : null;
-      if (markerStyle === 'pricePill' && pillText) {
-        el.className = 'property-marker-price-pill';
-        el.textContent = pillText;
-      } else {
-        el.className = 'property-marker';
-        if (markerStyle === 'pricePill' && !pillText) {
-          el.title = property.title || 'Listing';
-        }
+    const listen = (event, layer, fn) => { m.on(event, layer, fn); mapHandlersRef.current.push([event, layer, fn]); };
+    listen('click', 'lq-property-clusters', (e) => {
+      const feature = e.features?.[0];
+      if (!feature) return;
+      m.getSource('lq-property-points').getClusterExpansionZoom(feature.properties.cluster_id, (err, zoom) => {
+        if (!err) m.easeTo({ center: feature.geometry.coordinates, zoom });
+      });
+    });
+    listen('click', 'lq-property-pins', (e) => {
+      const feature = e.features?.[0];
+      const property = valid[Number(feature?.properties?.index)];
+      if (!property) return;
+      const root = document.createElement('div');
+      root.className = 'map-popup';
+      const imgUrl = property.thumbnailUrl || property.imageUrl || property.image;
+      if (imgUrl && /^https?:\/\//i.test(imgUrl)) {
+        const img = document.createElement('img'); img.src = imgUrl; img.alt = property.title || 'Property';
+        img.className = 'map-popup-cover'; root.appendChild(img);
       }
-      if (selectedProperty && selectedProperty.id === property.id) {
-        el.className += ' property-marker-selected';
-      }
-
-      const popupPrice =
-        priceMarkerVariant === 'perNight' && (property.pricePerNight != null || property.price != null)
-          ? (() => {
-              const v = property.pricePerNight ?? property.price;
-              return v != null
-                ? `<p><strong>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(v))}/night</strong></p>`
-                : '';
-            })()
-          : property.price != null
-            ? (() => {
-                const p = Number(property.price);
-                const base = new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                  maximumFractionDigits: 0,
-                }).format(p);
-                const suffix = isRentListing(property) ? '/mo' : '';
-                return `<p><strong>${base}${suffix}</strong></p>`;
-              })()
-            : '';
-
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([property.longitude, property.latitude])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 }).setHTML(`
-              <div class="map-popup">
-                <h4>${property.title || 'Untitled Property'}</h4>
-                <p>${property.address || ''} ${property.city || ''} ${property.state || ''}</p>
-                ${popupPrice}
-                ${onPropertyClick ? `<button class="map-popup-btn" data-property-id="${property.id}">View Details</button>` : ''}
-              </div>
-            `),
-        )
-        .addTo(map.current);
-
-      // Handle click on marker
-      if (onPropertyClick) {
-        marker.getElement().addEventListener('click', () => {
-          onPropertyClick(property);
-        });
-
-        // Handle click on popup button
-        marker.getPopup().on('open', () => {
-          const btn = marker.getPopup()._content.querySelector('.map-popup-btn');
-          if (btn) {
-            btn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              onPropertyClick(property);
-            });
-          }
-        });
-      }
-
-      markersRef.current.push(marker);
+      const name = document.createElement('strong'); name.textContent = property.title || property.propertyType || 'Property'; root.appendChild(name);
+      const price = document.createElement('p'); price.textContent = formatMarkerPrice(property, priceMarkerVariant) || ''; root.appendChild(price);
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'map-popup-btn';
+      button.textContent = 'View details'; button.addEventListener('click', () => onPropertyClick?.(property)); root.appendChild(button);
+      new mapboxgl.Popup({ offset: 14 }).setLngLat(feature.geometry.coordinates).setDOMContent(root).addTo(m);
+    });
+    ['lq-property-clusters', 'lq-property-pins'].forEach(layer => {
+      listen('mouseenter', layer, () => { m.getCanvas().style.cursor = 'pointer'; });
+      listen('mouseleave', layer, () => { m.getCanvas().style.cursor = ''; });
     });
 
-    // Fit map to show all markers
-    if (properties.length > 0 && properties.some((p) => p.latitude && p.longitude)) {
+    const cityCoordinates = {
+      quito: [-78.4678, -0.1807], guayaquil: [-79.8891, -2.1709], cuenca: [-79.0045, -2.9001],
+      samborondon: [-79.738, -2.045], 'samborondón': [-79.738, -2.045],
+      cumbaya: [-78.431, -0.204], 'cumbayá': [-78.431, -0.204],
+      manta: [-80.7089, -0.9677], tumbaco: [-78.403, -0.213],
+    };
+    const groups = new Map();
+    properties.filter(p => !valid.includes(p)).forEach(p => {
+      const city = String(p.neighborhood || p.city || '').trim();
+      const key = city.toLocaleLowerCase();
+      // Only known city centers, never fabricated property coordinates.
+      if (!cityCoordinates[key]) return;
+      const item = groups.get(key) || { city, count: 0, coordinates: cityCoordinates[key] };
+      item.count += 1; groups.set(key, item);
+    });
+    groups.forEach(({ city, count, coordinates }) => {
+      const el = document.createElement('button'); el.type = 'button'; el.className = 'lq-city-map-marker';
+      el.textContent = `${city} · ${count}`;
+      el.title = `${count} listings without exact coordinates in ${city}`;
+      el.addEventListener('click', () => { m.flyTo({ center: coordinates, zoom: 11 }); onCityClick?.(city); });
+      markersRef.current.push(new mapboxgl.Marker({ element: el }).setLngLat(coordinates).addTo(m));
+    });
+    // Reframe only when filters/data change, not on selected card.
+    if (valid.length && !groups.size) {
       const bounds = new mapboxgl.LngLatBounds();
-      properties.forEach((property) => {
-        if (property.latitude && property.longitude) {
-          bounds.extend([property.longitude, property.latitude]);
-        }
-      });
-
-      if (bounds.isEmpty() === false) {
-        map.current.fitBounds(bounds, {
-          padding: 50,
-          maxZoom: fitMaxZoom,
-        });
-      }
+      valid.forEach(p => bounds.extend([Number(p.longitude), Number(p.latitude)]));
+      m.fitBounds(bounds, { padding: 55, maxZoom: mapRegion === 'ecuador' ? 12 : 14 });
+    } else if (groups.size === 1 && !valid.length) {
+      m.flyTo({ center: [...groups.values()][0].coordinates, zoom: 10 });
     }
-  }, [properties, mapLoaded, selectedProperty, onPropertyClick, markerStyle, priceMarkerVariant, mapRegion]);
+    return () => {
+      removeHandlers();
+      markersRef.current.forEach(marker => marker.remove()); markersRef.current = [];
+      ['lq-property-clusters', 'lq-property-cluster-count', 'lq-property-pins'].forEach(id => { if (m.getLayer(id)) m.removeLayer(id); });
+      if (m.getSource('lq-property-points')) m.removeSource('lq-property-points');
+    };
+  }, [properties, mapLoaded, mapRegion, onPropertyClick, onCityClick, priceMarkerVariant]);
 
   // Center map on selected property
   useEffect(() => {

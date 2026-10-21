@@ -24,7 +24,7 @@ export default function PropertyCard({ property, showNew = false }) {
         /> : <div className="lq-property-image lq-property-image-empty" role="img" aria-label="Property photo unavailable" style={{display:"grid",placeItems:"center",background:"#eef2f7",color:"#667085",minHeight:160}}></div>}
 
         </Link>
-        {showNew && <span className="lq-property-new">{t("home.new")}</span>}
+        <span className="lq-compact-status">{property.type === 'rent' ? t('properties.rent', { defaultValue: 'For Rent' }) : t('properties.buy', { defaultValue: 'For Sale' })}</span>
 
         <button
           type="button"
@@ -35,39 +35,15 @@ export default function PropertyCard({ property, showNew = false }) {
         </button>
       </div>
 
-      <div className="lq-property-body">
-        <h3><Link to={target}>{property.title}</Link></h3>
-
-        <div className="lq-property-location">
-          <MapPin size={13} />
-
-          <span>{property.location}</span>
+      <div className="lq-property-body lq-compact-card-body">
+        <div className="lq-compact-main-line">
+          <strong>{property.propertyType || property.raw?.propertyType || 'Property'}</strong>
+          <span>·</span><span>{property.raw?.city || property.location || 'Ecuador'}, {property.raw?.country || 'Ecuador'}</span>
+          <span>·</span><strong className="lq-compact-price">{property.price}</strong>
         </div>
-
-        <div className="lq-property-price">{property.price}</div>
-
-        <div className="lq-property-meta">
-          {property.beds && (
-            <span>
-              <BedDouble size={13} />
-              {property.beds} {t("home.beds")}
-            </span>
-          )}
-
-          {property.baths && (
-            <span>
-              <Bath size={13} />
-              {property.baths} {t("home.baths")}
-            </span>
-          )}
-
-          {property.area && (
-            <span>
-              <Maximize2 size={13} />
-
-              {property.area}
-            </span>
-          )}
+        <div className="lq-compact-specs">
+          <span><Bath size={16}/>{property.baths ?? '—'} {t('home.baths')}</span>
+          <span><Maximize2 size={16}/>{property.area ?? '—'} m²</span>
         </div>
       </div>
     </article>

@@ -2444,3 +2444,13 @@ body,
   stroke-width: 1.8;
   color: #294b86;
 }
+/* Reference compact cards — consistent with homepage */
+.listings-card--explore .lq-compact-card-body { padding: 10px 12px 12px !important; }
+.lq-compact-main-line { display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; font-size:13px; color:#24364e; }
+.lq-compact-main-line > span { overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.lq-compact-main-line > strong { flex-shrink:0; }
+.lq-compact-main-line .lq-compact-price { margin-left:auto; color:#0765ef; font-weight:800; }
+.lq-compact-specs { display:flex; align-items:center; gap:18px; margin-top:8px; color:#53647c; font-size:13px; }
+.lq-compact-specs > span { display:flex; align-items:center; gap:5px; }
+.lq-compact-status { position:absolute; top:9px; left:9px; z-index:2; background:#0866f5; color:white; padding:5px 10px; border-radius:22px; font-size:12px; font-weight:800; }
+.listings-card--explore .listings-card-media { position:relative; }

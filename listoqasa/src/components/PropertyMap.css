@@ -101,3 +101,7 @@
 .map-popup-btn:hover {
   background: #2563eb;
 }
+
+.map-popup-cover { width: 230px; height: 130px; object-fit: cover; border-radius: 8px; display:block; margin-bottom:8px; }
+.lq-city-map-marker { border: 2px solid #fff; background:#124dbe; color:#fff; border-radius: 25px; padding:8px 12px; font-size:12px; font-weight:700; white-space:nowrap; cursor:pointer; box-shadow:0 3px 12px #0003; }
+.lq-city-map-marker:hover { background:#0b3282; }

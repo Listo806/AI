@@ -43,6 +43,7 @@ export default function Listings() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]);
+  const [mapPropertiesAll, setMapPropertiesAll] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -161,6 +162,35 @@ export default function Listings() {
     loadProperties();
   }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage]);
 
+
+  // Map needs the full filtered result set, not just the current 20-card page.
+  // Pagination is bounded; requests are cancelled on search/filter change.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadMapListings() {
+      const base = new URLSearchParams();
+      if (effectiveMode) base.set('mode', effectiveMode);
+      if (urlPropertyType) base.set('propertyType', urlPropertyType);
+      if (urlCity) base.set('city', urlCity);
+      if (urlSearch) base.set('search', urlSearch);
+      const collected = [];
+      for (let offset = 0; offset < 1200; offset += 100) {
+        const params = new URLSearchParams(base); params.set('limit', '100'); params.set('offset', String(offset));
+        try {
+          const response = await apiClient.request(`/listings?${params}`);
+          if (cancelled) return;
+          const batch = Array.isArray(response) ? response : response.items ?? response.data ?? [];
+          collected.push(...batch);
+          if (collected.length >= (response.total ?? batch.length) || batch.length === 0) break;
+          // Respect backend pagination caps rather than skipping rows.
+          offset += Math.max(0, batch.length - 100);
+        } catch (err) { console.warn('Map listings request failed', err); break; }
+      }
+      if (!cancelled) setMapPropertiesAll(collected);
+    }
+    loadMapListings();
+    return () => { cancelled = true; };
+  }, [effectiveMode, urlPropertyType, urlCity, urlSearch]);
   // Sync URL when page exceeds total (e.g. bookmark ?page=99 with only 3 pages)
   useEffect(() => {
     if (pagination.total > 0 && urlPage > Math.ceil(pagination.total / PAGE_SIZE)) {
@@ -404,7 +434,11 @@ export default function Listings() {
   const resultLocation = filters.city || urlCity || '';
 
   // Properties with valid coordinates for map
-  const mapProperties = properties.filter(p => p.latitude && p.longitude);
+  const mapProperties = mapPropertiesAll.filter(p => p.status === 'published' &&
+    (!filters.minPrice || Number(p.price) >= Number(filters.minPrice)) &&
+    (!filters.maxPrice || Number(p.price) <= Number(filters.maxPrice)) &&
+    (!filters.bedrooms || Number(p.bedrooms) >= Number(filters.bedrooms)) &&
+    (!filters.bathrooms || Number(p.bathrooms) >= Number(filters.bathrooms)));
 
   return (
     <SiteLayout headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() => navigate(-1)}>
@@ -739,7 +773,7 @@ export default function Listings() {
                 </div>
               )}
               <div
-                className={`listings-split ${mapProperties.length === 0 ? 'listings-split--no-map' : ''}`}
+                className={`listings-split `}
               >
                 <div
                   className={`listings-results-panel ${mapProperties.length > 0 && mobilePanel === 'map' ? 'listings-results-panel--hidden-mobile' : ''}`}
@@ -788,7 +822,7 @@ export default function Listings() {
                               )}
                             </Link>
 
-                            {property.isSample && <span className="listings-featured-badge" style={{top:8,left:8,background:"#153b64"}}>AI-generated sample · Illustrative only</span>}
+                            <span className="lq-compact-status">{property.type === 'rent' ? t('properties.rent', { defaultValue: 'For Rent' }) : t('properties.buy', { defaultValue: 'For Sale' })}</span>
                             {!property.isSample && (property.isFeatured || property.featured) && (
                               <span className="listings-featured-badge">
                                 {t('listings.featured', { defaultValue: 'Featured' })}
@@ -811,98 +845,18 @@ export default function Listings() {
                             </button>
                           </div>
 
-                          <div className="listings-card-body">
-                            <div className="listings-card-heading-row">
-                              <div className="listings-card-price-row">
-                                {property.price != null ? (
-                                  <>
-                                    <span className="listings-card-price">
-                                      {formatPrice(property.price)}
-                                    </span>
-                                    {property.type === 'rent' && (
-                                      <span className="listings-card-price-note">
-                                        {t('listings.perMonth')}
-                                      </span>
-                                    )}
-                                  </>
-                                ) : (
-                                  <span className="listings-card-price listings-card-price--muted">
-                                    {t('listings.priceOnRequest')}
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="listings-card-location-inline">
-                                <MapPin size={15} />
-                                <span>
-                                  {[property.address || property.neighborhood, property.city]
-                                    .filter(Boolean)
-                                    .join(', ') || property.state || 'Ecuador'}
-                                </span>
-                              </div>
+                          <div className="listings-card-body lq-compact-card-body">
+                            <div className="lq-compact-main-line">
+                              <strong>{t(`properties.propertyType_${property.propertyType}`, { defaultValue: property.propertyType || 'Property' })}</strong>
+                              <span className="lq-compact-sep">·</span>
+                              <span>{property.city || 'Ecuador'}, {property.country || 'Ecuador'}</span>
+                              <span className="lq-compact-sep">·</span>
+                              <strong className="lq-compact-price">{property.price != null ? formatPrice(property.price) : t('listings.priceOnRequest')}{property.type === 'rent' ? '/mo' : ''}</strong>
                             </div>
-
-                            <h3 className="listings-card-title listings-card-title--compact">
-                              <Link
-                                to={detailPath}
-                                onClick={(event) => event.stopPropagation()}
-                              >
-                                {property.title || t('listings.untitledProperty')}
-                              </Link>
-                            </h3>
-
-                            <div className="listings-card-specs">
-                              {property.bedrooms != null && (
-                                <span>
-                                  <BedDouble size={16} />
-                                  {property.bedrooms}
-                                </span>
-                              )}
-
-                              {property.bathrooms != null && (
-                                <span>
-                                  <Bath size={16} />
-                                  {property.bathrooms}
-                                </span>
-                              )}
-
-                              {(property.squareFeet || property.square_feet || property.lotSize) && (
-                                <span>
-                                  <Maximize2 size={16} />
-                                  {Number(
-                                    property.squareFeet ||
-                                    property.square_feet ||
-                                    property.lotSize
-                                  ).toLocaleString()} m²
-                                </span>
-                              )}
+                            <div className="lq-compact-specs">
+                              <span><Bath size={16}/>{property.bathrooms ?? '—'} {t('home.baths', { defaultValue: 'bathrooms' })}</span>
+                              <span><Maximize2 size={16}/>{property.squareFeet ?? property.square_feet ?? property.lotSize ?? '—'} m²</span>
                             </div>
-
-                            {!property.isSample && <div className="listings-card-actions listings-card-actions--reference">
-                              <button
-                                type="button"
-                                className="listings-card-action listings-card-action-whatsapp"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setWhatsappProperty(property);
-                                }}
-                              >
-                                <MessageCircle size={19} />
-                                WhatsApp
-                              </button>
-
-                              <button
-                                type="button"
-                                className="listings-card-action listings-card-action-contact"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  handleContactAgent(property);
-                                }}
-                              >
-                                <UserRound size={19} />
-                                {t('listings.contact')}
-                              </button>
-                            </div>}
                           </div>
                         </article>
                       );
@@ -942,6 +896,12 @@ export default function Listings() {
                   <PropertyMap
                     mapRegion="ecuador"
                     properties={mapProperties}
+                    onCityClick={(city) => {
+                      const params = new URLSearchParams(searchParams);
+                      if (['Cumbayá', 'Cumbaya', 'Tumbaco'].includes(city)) { params.delete('city'); params.set('search', city); }
+                      else { params.set('city', city); params.delete('search'); }
+                      params.delete('page'); setSearchParams(params);
+                    }}
                     markerStyle="pricePill"
                     onPropertyClick={(property) => {
                       const path = effectiveMode

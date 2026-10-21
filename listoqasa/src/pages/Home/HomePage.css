@@ -710,3 +710,17 @@
     max-width: 100%;
   }
 }
+
+/* Six compact cards across the available homepage width */
+.lq-property-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:18px; width:100%; }
+.lq-property-card { min-width:0; overflow:hidden; }
+.lq-property-image-wrap { position:relative; }
+.lq-property-card .lq-compact-card-body { padding:10px 12px 12px; }
+.lq-property-card .lq-compact-main-line { display:flex; gap:6px; white-space:nowrap; overflow:hidden; font-size:13px; align-items:center; }
+.lq-property-card .lq-compact-main-line span { overflow:hidden; text-overflow:ellipsis; }
+.lq-property-card .lq-compact-price { margin-left:auto; color:#0866f5; }
+.lq-property-card .lq-compact-specs { display:flex; gap:16px; margin-top:8px; font-size:13px; }
+.lq-property-card .lq-compact-specs span { display:flex; align-items:center; gap:5px; }
+.lq-property-card .lq-compact-status { position:absolute; top:10px; left:10px; z-index:2; padding:5px 10px; border-radius:20px; background:#0866f5; color:white; font-size:12px; font-weight:800; }
+@media(max-width:900px){.lq-property-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:580px){.lq-property-grid{grid-template-columns:1fr;}}

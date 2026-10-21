@@ -294,7 +294,6 @@ export default function ListingDetail() {
             </div>
           </div>
 
-          {property.isSample && <p role="note" style={{padding:12,background:"#eef5ff",borderRadius:8,color:"#153b64",fontWeight:600}}>AI-generated sample property — Illustrative only. Not a real available listing; inquiries are disabled.</p>}
           <h1 className="lq-detail-title">{property.title || 'Property Details'}</h1>
 
           <div className="lq-detail-location-line">
@@ -418,7 +417,32 @@ export default function ListingDetail() {
               )}
             </div>
 
-            {!property.isSample && <aside className="lq-detail-contact-card">
+            <aside className="lq-detail-contact-card">
+              {property.isSample ? (
+                <>
+                  <div className="lq-detail-agent">
+                    <div className="lq-detail-agent-avatar"><UserRound size={26} /></div>
+                    <div>
+                      <strong>Property information</strong>
+                      <span>Illustrative listing — no verified agent</span>
+                    </div>
+                  </div>
+                  <button type="button" className="lq-detail-whatsapp" disabled aria-disabled="true" title="WhatsApp is unavailable for illustrative listings">
+                    <MessageCircle size={21} /> Contact by WhatsApp
+                  </button>
+                  <div className="lq-detail-contact-form">
+                    <input placeholder="Name" disabled aria-label="Name" />
+                    <input placeholder="Email" disabled aria-label="Email" />
+                    <input placeholder="Phone" disabled aria-label="Phone" />
+                    <textarea rows={4} placeholder="Message" disabled aria-label="Message" />
+                    <button type="button" disabled>Contact Agent</button>
+                    <p role="note" style={{fontSize:12,color:'#566579',lineHeight:1.5,marginTop:10}}>
+                      Illustrative example only. This property is not verified or available for inquiries.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
               <div className="lq-detail-agent">
                 <div className="lq-detail-agent-avatar">
                   <UserRound size={26} />
@@ -493,7 +517,9 @@ export default function ListingDetail() {
                 <Lock size={14} />
                 Your information stays private.
               </div>
-            </aside>}
+                </>
+              )}
+            </aside>
           </div>
 
           {similar.length > 0 && (
