@@ -17,3 +17,9 @@
 .vr-search-header .lq-vacation-header-brand{color:#1764df;text-shadow:none}
 .vr-search-header .lq-vacation-header-inner{width:calc(100% - 44px);max-width:1500px}
 .vr-search-header .lq-vacation-icon-button,.vr-search-header .lq-vacation-menu-button{color:#102743}
+
+/* Keep search immediately below the compact header, matching the supplied reference. */
+.vr-results{padding-top:14px}
+.vr-results .vr-searchbar{margin:0 0 24px}
+.vr-results .vr-notice{display:none}
+@media(max-width:700px){.vr-results{padding-top:12px}.vr-results .vr-searchbar{margin-bottom:16px}}
