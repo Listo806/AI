@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Globe2, Menu, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export default function VacationRentalsHeader() {
+export default function VacationRentalsHeader({ compact = false }) {
   const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -65,14 +65,14 @@ export default function VacationRentalsHeader() {
         </Link>
 
         <nav className="lq-vacation-header-actions">
-          <Link
+          {!compact && <Link
             to="/vacation-rental-plans"
             className="lq-vacation-header-list-property"
           >
             {t("vacationHeader.listProperty", {
               defaultValue: "List Property",
             })}
-          </Link>
+          </Link>}
 
           <div className="lq-vacation-language">
             <button
