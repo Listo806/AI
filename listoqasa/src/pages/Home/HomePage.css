@@ -724,3 +724,12 @@
 .lq-property-card .lq-compact-status { position:absolute; top:10px; left:10px; z-index:2; padding:5px 10px; border-radius:20px; background:#0866f5; color:white; font-size:12px; font-weight:800; }
 @media(max-width:900px){.lq-property-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:580px){.lq-property-grid{grid-template-columns:1fr;}}
+
+/* Full-width six-card rows; keep the existing six-column layout. */
+.lq-home-content { width: 100%; max-width: none; }
+.lq-home-content .lq-listing-section { width: 100%; }
+.lq-home-content .lq-property-grid { grid-template-columns: repeat(6,minmax(0,1fr)); gap: 16px; }
+.lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(125px, 11vw, 195px); }
+.lq-home-content .lq-property-grid .lq-compact-card-body { min-height: 76px; padding: 12px; }
+@media (max-width: 900px) { .lq-home-content .lq-property-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 560px) { .lq-home-content .lq-property-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }

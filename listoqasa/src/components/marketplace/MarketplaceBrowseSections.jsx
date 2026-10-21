@@ -1,3 +1,4 @@
+import { listingDisplayTitle } from "../../utils/listingDisplayTitle";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -128,7 +129,7 @@ function MarketplacePropertyCard({ property, section }) {
           {property.image && (
             <img
               src={property.image}
-              alt={property.title}
+              alt={listingDisplayTitle(property.title)}
               className="lq-vr-card-image"
               loading="lazy"
               onError={(event) => {
@@ -147,7 +148,7 @@ function MarketplacePropertyCard({ property, section }) {
         </div>
 
         <div className="lq-vr-card-body">
-          <h3>{property.title}</h3>
+          <h3>{listingDisplayTitle(property.title)}</h3>
 
           <div className="lq-vr-card-location">
             <MapPin size={12} />

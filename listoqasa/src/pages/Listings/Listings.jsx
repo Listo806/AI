@@ -788,7 +788,8 @@ export default function Listings() {
                       return (
                         <article
                           key={property.id}
-                          className="listings-card listings-card--explore listings-card--clickable"
+                          data-property-id={String(property.id)}
+                          className={`listings-card listings-card--explore listings-card--clickable ${selectedProperty?.id === property.id ? 'listings-card--map-selected' : ''}`}
                           role="link"
                           tabIndex={0}
                           onClick={() => openDetail(detailPath)}
@@ -904,10 +905,9 @@ export default function Listings() {
                     }}
                     markerStyle="pricePill"
                     onPropertyClick={(property) => {
-                      const path = effectiveMode
-                        ? `/property/${property.id}?type=${effectiveMode}`
-                        : `/property/${property.id}`;
-                      openDetail(path);
+                      setSelectedProperty(property);
+                      const card = [...document.querySelectorAll('[data-property-id]')].find(el => el.getAttribute('data-property-id') === String(property.id));
+                      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }}
                   />
                 </div>

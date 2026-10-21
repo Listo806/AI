@@ -1,3 +1,4 @@
+import { listingDisplayTitle } from '../../utils/listingDisplayTitle';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import {
@@ -294,7 +295,7 @@ export default function ListingDetail() {
             </div>
           </div>
 
-          <h1 className="lq-detail-title">{property.title || 'Property Details'}</h1>
+          <h1 className="lq-detail-title">{listingDisplayTitle(property.title) || 'Property Details'}</h1>
 
           <div className="lq-detail-location-line">
             <MapPin size={17} />
@@ -436,9 +437,7 @@ export default function ListingDetail() {
                     <input placeholder="Phone" disabled aria-label="Phone" />
                     <textarea rows={4} placeholder="Message" disabled aria-label="Message" />
                     <button type="button" disabled>Contact Agent</button>
-                    <p role="note" style={{fontSize:12,color:'#566579',lineHeight:1.5,marginTop:10}}>
-                      Illustrative example only. This property is not verified or available for inquiries.
-                    </p>
+
                   </div>
                 </>
               ) : (

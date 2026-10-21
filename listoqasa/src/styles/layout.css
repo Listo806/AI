@@ -1,5 +1,5 @@
 .lq-container {
-  width: min(1180px, calc(100% - 40px));
+  width: min(1280px, calc(100% - 48px));
   margin: 0 auto;
 }
 .lq-header {

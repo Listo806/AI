@@ -2454,3 +2454,5 @@ body,
 .lq-compact-specs > span { display:flex; align-items:center; gap:5px; }
 .lq-compact-status { position:absolute; top:9px; left:9px; z-index:2; background:#0866f5; color:white; padding:5px 10px; border-radius:22px; font-size:12px; font-weight:800; }
 .listings-card--explore .listings-card-media { position:relative; }
+
+.listings-card--map-selected { outline: 3px solid #0b65ec; outline-offset: 2px; }

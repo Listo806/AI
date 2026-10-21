@@ -42,6 +42,7 @@ class ApiClient {
       endpoint.includes('/auth/signup') ||
       endpoint.includes('/auth/login') ||
       endpoint.includes('/properties/public') ||
+      ((!options.method || options.method.toUpperCase() === 'GET') && (/^\/properties\/[^/]+$/.test(pathOnly) || /^\/properties\/[^/]+\/media$/.test(pathOnly))) ||
       pathOnly === '/listings' ||
       pathOnly.startsWith('/listings/') ||
       pathOnly === '/vacation-rentals/search' ||

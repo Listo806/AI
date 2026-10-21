@@ -144,24 +144,11 @@ export default function PropertyMap({
       type: 'Feature', id: i, properties: { index: i },
       geometry: { type: 'Point', coordinates: [Number(p.longitude), Number(p.latitude)] },
     })) };
-    m.addSource('lq-property-points', { type: 'geojson', data: geo, cluster: true, clusterRadius: 48, clusterMaxZoom: 13 });
-    m.addLayer({ id: 'lq-property-clusters', type: 'circle', source: 'lq-property-points', filter: ['has', 'point_count'],
-      paint: { 'circle-color': '#1259da', 'circle-radius': ['step', ['get', 'point_count'], 20, 10, 26, 50, 32],
-        'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
-    m.addLayer({ id: 'lq-property-cluster-count', type: 'symbol', source: 'lq-property-points', filter: ['has', 'point_count'],
-      layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 13 },
-      paint: { 'text-color': '#fff' } });
+    m.addSource('lq-property-points', { type: 'geojson', data: geo, cluster: false });
     m.addLayer({ id: 'lq-property-pins', type: 'circle', source: 'lq-property-points', filter: ['!', ['has', 'point_count']],
-      paint: { 'circle-color': '#ffffff', 'circle-radius': 10, 'circle-stroke-color': '#1259da', 'circle-stroke-width': 3 } });
+      paint: { 'circle-color': '#ffffff', 'circle-radius': 6, 'circle-stroke-color': '#1259da', 'circle-stroke-width': 3 } });
 
     const listen = (event, layer, fn) => { m.on(event, layer, fn); mapHandlersRef.current.push([event, layer, fn]); };
-    listen('click', 'lq-property-clusters', (e) => {
-      const feature = e.features?.[0];
-      if (!feature) return;
-      m.getSource('lq-property-points').getClusterExpansionZoom(feature.properties.cluster_id, (err, zoom) => {
-        if (!err) m.easeTo({ center: feature.geometry.coordinates, zoom });
-      });
-    });
     listen('click', 'lq-property-pins', (e) => {
       const feature = e.features?.[0];
       const property = valid[Number(feature?.properties?.index)];
@@ -177,42 +164,21 @@ export default function PropertyMap({
       const price = document.createElement('p'); price.textContent = formatMarkerPrice(property, priceMarkerVariant) || ''; root.appendChild(price);
       const button = document.createElement('button'); button.type = 'button'; button.className = 'map-popup-btn';
       button.textContent = 'View details'; button.addEventListener('click', () => onPropertyClick?.(property)); root.appendChild(button);
+      onPropertyClick?.(property);
       new mapboxgl.Popup({ offset: 14 }).setLngLat(feature.geometry.coordinates).setDOMContent(root).addTo(m);
     });
-    ['lq-property-clusters', 'lq-property-pins'].forEach(layer => {
+    ['lq-property-pins'].forEach(layer => {
       listen('mouseenter', layer, () => { m.getCanvas().style.cursor = 'pointer'; });
       listen('mouseleave', layer, () => { m.getCanvas().style.cursor = ''; });
     });
 
-    const cityCoordinates = {
-      quito: [-78.4678, -0.1807], guayaquil: [-79.8891, -2.1709], cuenca: [-79.0045, -2.9001],
-      samborondon: [-79.738, -2.045], 'samborondón': [-79.738, -2.045],
-      cumbaya: [-78.431, -0.204], 'cumbayá': [-78.431, -0.204],
-      manta: [-80.7089, -0.9677], tumbaco: [-78.403, -0.213],
-    };
-    const groups = new Map();
-    properties.filter(p => !valid.includes(p)).forEach(p => {
-      const city = String(p.neighborhood || p.city || '').trim();
-      const key = city.toLocaleLowerCase();
-      // Only known city centers, never fabricated property coordinates.
-      if (!cityCoordinates[key]) return;
-      const item = groups.get(key) || { city, count: 0, coordinates: cityCoordinates[key] };
-      item.count += 1; groups.set(key, item);
-    });
-    groups.forEach(({ city, count, coordinates }) => {
-      const el = document.createElement('button'); el.type = 'button'; el.className = 'lq-city-map-marker';
-      el.textContent = `${city} · ${count}`;
-      el.title = `${count} listings without exact coordinates in ${city}`;
-      el.addEventListener('click', () => { m.flyTo({ center: coordinates, zoom: 11 }); onCityClick?.(city); });
-      markersRef.current.push(new mapboxgl.Marker({ element: el }).setLngLat(coordinates).addTo(m));
-    });
-    // Reframe only when filters/data change, not on selected card.
-    if (valid.length && !groups.size) {
+    // No invented city-level property dots: listings without saved coordinates
+    // intentionally have no map marker. The results cards remain browsable.
+    if (valid.length) {
       const bounds = new mapboxgl.LngLatBounds();
       valid.forEach(p => bounds.extend([Number(p.longitude), Number(p.latitude)]));
-      m.fitBounds(bounds, { padding: 55, maxZoom: mapRegion === 'ecuador' ? 12 : 14 });
-    } else if (groups.size === 1 && !valid.length) {
-      m.flyTo({ center: [...groups.values()][0].coordinates, zoom: 10 });
+      if (valid.length > 1) m.fitBounds(bounds, { padding: 55, maxZoom: mapRegion === 'ecuador' ? 12 : 14 });
+      else m.flyTo({ center: [Number(valid[0].longitude), Number(valid[0].latitude)], zoom: 12 });
     }
     return () => {
       removeHandlers();
