@@ -108,6 +108,8 @@ export class VacationRentalsService {
       zipCode: row.zipCode,
       pricePerNight: priceNum,
       listingType: 'vacation' as const,
+      isSample: Boolean((row as any).isSample),
+      bookingEnabled: !(row as any).isSample,
       availabilityStatus: 'unknown' as const, // Date filtering does not verify real host availability
       latitude: lat,
       longitude: lng,
@@ -288,6 +290,7 @@ export class VacationRentalsService {
               p.lot_size AS "lotSize", p.year_built AS "yearBuilt",
               p.thumbnail_url AS "thumbnailUrl", p.latitude, p.longitude,
               p.property_type AS "propertyType",
+              EXISTS(SELECT 1 FROM listoqasa_vacation_samples vs WHERE vs.property_id=p.id) AS "isSample",
               p.created_at AS "createdAt", p.updated_at AS "updatedAt",
               p.published_at AS "publishedAt",
               COALESCE(rev.rating_avg, 0)::float AS "ratingAvg",
@@ -319,6 +322,7 @@ export class VacationRentalsService {
               p.square_feet AS "squareFeet", p.lot_size AS "lotSize",
               p.year_built AS "yearBuilt", p.thumbnail_url AS "thumbnailUrl",
               p.latitude, p.longitude, p.property_type AS "propertyType",
+              EXISTS(SELECT 1 FROM listoqasa_vacation_samples vs WHERE vs.property_id=p.id) AS "isSample",
               p.created_at AS "createdAt", p.updated_at AS "updatedAt",
               p.published_at AS "publishedAt", 0 AS "ratingAvg", 0 AS "ratingCount"
        FROM properties p WHERE p.id = $1 AND p.listing_type = 'vacation' AND p.status = 'published'`,
@@ -341,7 +345,7 @@ export class VacationRentalsService {
   }) {
     // Verify property exists and is a vacation listing
     const { rows: propRows } = await this.db.query(
-      `SELECT id, listing_type FROM properties WHERE id = $1`,
+      `SELECT p.id, p.listing_type, EXISTS(SELECT 1 FROM listoqasa_vacation_samples s WHERE s.property_id=p.id) AS is_sample FROM properties p WHERE p.id = $1`,
       [dto.property_id],
     );
 
@@ -351,6 +355,8 @@ export class VacationRentalsService {
     if (propRows[0].listing_type !== 'vacation') {
       throw new BadRequestException('Bookings can only be created for vacation listings');
     }
+
+    if (propRows[0].is_sample) throw new BadRequestException('Illustrative accommodation: bookings are disabled');
 
     const bookingStart = new Date(dto.booking_start);
     const bookingEnd = new Date(dto.booking_end);

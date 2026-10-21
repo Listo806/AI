@@ -16,6 +16,7 @@ import AgentsPage from "./pages/Agents/AgentsPage";
 import FindAgentPage from "./pages/FindAgent/FindAgentPage";
 import DevelopersPage from "./pages/Developers/DevelopersPage";
 import AiCrmPage from "./pages/AiCrm/AiCrmPage";
+import VacationSampleAdmin from "./pages/VacationRentals/VacationSampleAdmin";
 import VacationResults from "./pages/VacationRentals/VacationResults";
 import VacationDetail from "./pages/VacationRentals/VacationDetail";
 import VacationRentalsPage from "./pages/VacationRentals/VacationRentalsPage";
@@ -56,6 +57,7 @@ export default function App() {
         <Route path="/ai-help" element={<AiCrmPage />} />
         <Route path="/ai-help/pricing" element={<AiHelpPricingPage />} />
         <Route path="/vacation-rentals" element={<VacationRentalsPage />} />
+        <Route path="/vacation-rentals/admin/import" element={<VacationSampleAdmin />} />
         <Route path="/vacation-rentals/search" element={<VacationResults />} />
         <Route path="/vacation-rentals/property/:id" element={<VacationDetail />} />
         

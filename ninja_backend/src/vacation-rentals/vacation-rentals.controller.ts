@@ -14,6 +14,8 @@ import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiBearerAuth } from '@ne
 import { VacationRentalsService } from './vacation-rentals.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { VacationSampleImportService } from './vacation-sample-import.service';
 
 function parseOptionalNonNegativeFloat(label: string, raw?: string): number | undefined {
   if (raw === undefined || raw === null || String(raw).trim() === '') return undefined;
@@ -51,7 +53,7 @@ function parseVacationSort(raw?: string): 'recommended' | 'price_asc' | 'price_d
 @ApiTags('vacation-rentals')
 @Controller('vacation-rentals')
 export class VacationRentalsController {
-  constructor(private readonly vacationService: VacationRentalsService) {}
+  constructor(private readonly vacationService: VacationRentalsService, private readonly sampleImport: VacationSampleImportService) {}
 
   /**
    * Public search endpoint.
@@ -130,6 +132,18 @@ export class VacationRentalsController {
   async detail(@Param('id', ParseUUIDPipe) id: string) {
     return this.vacationService.publicDetail(id);
   }
+
+  @Get('samples/admin/status')
+  @UseGuards(JwtAuthGuard)
+  async sampleStatus(@CurrentUser() user: any) { return this.sampleImport.status(user); }
+
+  @Post('samples/admin/preview')
+  @UseGuards(JwtAuthGuard)
+  async samplePreview(@Body() body: any, @CurrentUser() user: any) { return this.sampleImport.preview(body,user); }
+
+  @Post('samples/admin/commit')
+  @UseGuards(JwtAuthGuard)
+  async sampleCommit(@Body() body: any, @CurrentUser() user: any) { return this.sampleImport.commit(body,user); }
 
   /** Create a booking for a vacation property (authenticated) */
   @Post('bookings')
