@@ -8,9 +8,9 @@ import { vacationRequest } from './vacationApi';
 import './VacationDetail.css';
 
 const words = {
-  en: { back:'Back to results', guests:'guests', bedrooms:'bedrooms', bathrooms:'bathrooms', amenities:'Amenities', checkin:'Check-in', checkout:'Check-out', guest:'Guests', reserve:'Reserve', night:'per night', total:'Total', choose:'Select dates to see total.', pending:'Checking booking…', unavailable:'Booking is unavailable for this illustrative listing.', select:'Choose valid dates and guest count.', login:'Please sign in to reserve this property.', success:'Booking request submitted.', failed:'Booking could not be completed.', noPhotos:'No photos available', notCharged:"You won't be charged yet.", nightCount:'nights' },
-  es: { back:'Volver a resultados', guests:'huéspedes', bedrooms:'habitaciones', bathrooms:'baños', amenities:'Servicios', checkin:'Entrada', checkout:'Salida', guest:'Huéspedes', reserve:'Reservar', night:'por noche', total:'Total', choose:'Seleccione fechas para ver el total.', pending:'Comprobando reserva…', unavailable:'Reservas no disponibles para este anuncio ilustrativo.', select:'Seleccione fechas válidas y huéspedes.', login:'Inicie sesión para reservar.', success:'Solicitud de reserva enviada.', failed:'No se pudo completar la reserva.', noPhotos:'Sin fotos', notCharged:'Aún no se realizará ningún cargo.', nightCount:'noches' },
-  pt: { back:'Voltar aos resultados', guests:'hóspedes', bedrooms:'quartos', bathrooms:'banheiros', amenities:'Comodidades', checkin:'Check-in', checkout:'Check-out', guest:'Hóspedes', reserve:'Reservar', night:'por noite', total:'Total', choose:'Selecione as datas para ver o total.', pending:'Verificando reserva…', unavailable:'Reserva indisponível para este anúncio ilustrativo.', select:'Selecione datas e hóspedes válidos.', login:'Entre na sua conta para reservar.', success:'Solicitação de reserva enviada.', failed:'Não foi possível concluir a reserva.', noPhotos:'Sem fotos', notCharged:'Você ainda não será cobrado.', nightCount:'noites' }
+  en: { back:'Back to results', guests:'guests', bedrooms:'bedrooms', bathrooms:'bathrooms', amenities:'Amenities', checkin:'Check-in', checkout:'Check-out', guest:'Guests', reserve:'Reserve', night:'per night', total:'Total', choose:'Select dates to see total.', pending:'Checking booking…', unavailable:'Booking is unavailable for this illustrative listing.', select:'Choose valid dates and guest count.', login:'Please sign in to reserve this property.', success:'Booking request submitted.', failed:'Booking could not be completed.', noPhotos:'No photos available', notCharged:"You won't be charged yet.", nightCount:'nights', more:'More vacation rentals', view:'View rental' },
+  es: { back:'Volver a resultados', guests:'huéspedes', bedrooms:'habitaciones', bathrooms:'baños', amenities:'Servicios', checkin:'Entrada', checkout:'Salida', guest:'Huéspedes', reserve:'Reservar', night:'por noche', total:'Total', choose:'Seleccione fechas para ver el total.', pending:'Comprobando reserva…', unavailable:'Reservas no disponibles para este anuncio ilustrativo.', select:'Seleccione fechas válidas y huéspedes.', login:'Inicie sesión para reservar.', success:'Solicitud de reserva enviada.', failed:'No se pudo completar la reserva.', noPhotos:'Sin fotos', notCharged:'Aún no se realizará ningún cargo.', nightCount:'noches', more:'Más alquileres vacacionales', view:'Ver alojamiento' },
+  pt: { back:'Voltar aos resultados', guests:'hóspedes', bedrooms:'quartos', bathrooms:'banheiros', amenities:'Comodidades', checkin:'Check-in', checkout:'Check-out', guest:'Hóspedes', reserve:'Reservar', night:'por noite', total:'Total', choose:'Selecione as datas para ver o total.', pending:'Verificando reserva…', unavailable:'Reserva indisponível para este anúncio ilustrativo.', select:'Selecione datas e hóspedes válidos.', login:'Entre na sua conta para reservar.', success:'Solicitação de reserva enviada.', failed:'Não foi possível concluir a reserva.', noPhotos:'Sem fotos', notCharged:'Você ainda não será cobrado.', nightCount:'noites', more:'Mais aluguéis de temporada', view:'Ver imóvel' }
 };
 const asUrl = (value) => typeof value === 'string' && /^https?:\/\//i.test(value) ? value : null;
 const imageList = (item) => {
@@ -53,6 +53,7 @@ export default function VacationDetail() {
   const [guests,setGuests] = useState(1);
   const [busy,setBusy] = useState(false);
   const [bookingMessage,setBookingMessage] = useState('');
+  const [related,setRelated] = useState([]);
   useEffect(() => {
     const controller = new AbortController();
     setItem(null); setError(''); setSlide(0); setBookingMessage('');
@@ -61,6 +62,26 @@ export default function VacationDetail() {
     });
     return () => controller.abort();
   },[id]);
+  useEffect(() => {
+    if (!item?.id) return undefined;
+    const controller = new AbortController();
+    const loadRelated = async () => {
+      try {
+        // Related cards come from the real public vacation-rentals search API.
+        const query = new URLSearchParams({ limit: '40', offset: '0' });
+        const response = await vacationRequest(`search?${query}`, controller.signal);
+        if (controller.signal.aborted) return;
+        const available = (Array.isArray(response?.items) ? response.items : [])
+          .filter(p => p?.id && String(p.id) !== String(item.id));
+        const sameArea = available.filter(p => p.city && item.city && p.city.toLowerCase() === item.city.toLowerCase());
+        const others = available.filter(p => !sameArea.some(a => a.id === p.id));
+        setRelated([...sameArea, ...others].slice(0, 6));
+      } catch (e) { if (e.name !== 'AbortError') setRelated([]); }
+    };
+    setRelated([]);
+    loadRelated();
+    return () => controller.abort();
+  }, [item?.id, item?.city]);
   const photos = useMemo(() => imageList(item),[item]);
   const amenities = useMemo(() => Array.isArray(item?.amenities) ? item.amenities : [],[item]);
   const nights = dayDiff(checkIn,checkOut);
@@ -127,6 +148,23 @@ export default function VacationDetail() {
             {bookingMessage && <p role="status" className="vr-booking-message">{bookingMessage}</p>}
           </aside>
         </div>
+        {related.length > 0 && <section className="vr-detail-related" aria-label={t.more}>
+          <h2>{t.more}</h2>
+          <div className="vr-detail-related-grid">
+            {related.map(p => {
+              const photo = imageList(p)[0];
+              const price = Number(p.pricePerNight);
+              return <Link key={p.id} className="vr-detail-related-card" to={`/vacation-rentals/property/${encodeURIComponent(p.id)}${loc.search}`} aria-label={`${t.view}: ${p.title || p.propertyType || p.city}`}>
+                <div className="vr-detail-related-photo">{photo ? <img src={photo} alt={p.title || p.city || ''} loading="lazy" /> : <span>{t.noPhotos}</span>}</div>
+                <div className="vr-detail-related-body">
+                  <strong>{p.title || p.propertyType || p.city}</strong>
+                  <span className="vr-detail-related-city"><MapPin size={13} aria-hidden="true" /> {p.city}{p.country ? `, ${p.country}` : ''}</span>
+                  <span className="vr-detail-related-price">{Number.isFinite(price) ? `$${price.toLocaleString()}` : '–'} <small>{t.night}</small></span>
+                </div>
+              </Link>;
+            })}
+          </div>
+        </section>}
       </>}
     </main>
   </SiteLayout>;
