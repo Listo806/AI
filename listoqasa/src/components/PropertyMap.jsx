@@ -173,15 +173,29 @@ export default function PropertyMap({
         heading.textContent = matches.length === 1 ? 'Property' : `${matches.length} properties in this area`;
         root.appendChild(heading);
         const list = document.createElement('div');
-        list.style.cssText = 'max-height:220px;overflow-y:auto;min-width:185px;';
+        list.style.cssText = 'max-height:260px;overflow-y:auto;min-width:220px;';
         matches.forEach(property => {
           const link = document.createElement('a');
           const vacation = mapRegion === 'vacation' || priceMarkerVariant === 'perNight';
           link.href = vacation
             ? `/vacation-rentals/property/${encodeURIComponent(property.id)}`
             : `/property/${encodeURIComponent(property.id)}?type=${encodeURIComponent(property.type || 'sale')}`;
-          link.style.cssText = 'display:block;padding:7px 0;border-bottom:1px solid #e5e7eb;color:#1557c0;text-decoration:none;';
-          link.textContent = `${property.propertyType || property.title || 'Property'} · ${formatMarkerPrice(property, priceMarkerVariant) || ''}`;
+          link.style.cssText = 'display:block;padding:9px 0;border-bottom:1px solid #e5e7eb;color:#1557c0;text-decoration:none;';
+          // Vacation search API uses primaryImage; marketplace records may use other image fields.
+          // Only render an actual supplied image URL (never invent a listing photo).
+          const imageCandidate = property.primaryImage || property.thumbnailUrl || property.imageUrl || property.image || property.coverImage || property.coverUrl;
+          const imageUrl = typeof imageCandidate === 'string' ? imageCandidate : imageCandidate?.url;
+          if (imageUrl && (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith('/'))) {
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.alt = property.title || property.propertyType || 'Property';
+            img.loading = 'lazy';
+            img.style.cssText = 'display:block;width:100%;height:115px;object-fit:cover;border-radius:7px;margin:0 0 6px;';
+            link.appendChild(img);
+          }
+          const details = document.createElement('span');
+          details.textContent = `${property.propertyType || property.title || 'Property'} · ${formatMarkerPrice(property, priceMarkerVariant) || ''}`;
+          link.appendChild(details);
           link.addEventListener('click', e => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
             if (onPropertyClickRef.current) {
