@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SiteLayout from '../../components/layout/SiteLayout';
+import VacationRentalsHeader from './VacationRentalsHeader';
+import { Wifi, BedDouble, Bath, Users, MapPin, Laptop, Utensils, CookingPot, Waves, Tv, Wind, Car, Coffee, BookOpen, Sun, Check, ShowerHead } from 'lucide-react';
 import { vacationRequest } from './vacationApi';
 import './VacationDetail.css';
 
@@ -20,7 +22,23 @@ const dayDiff = (start, end) => {
   const a = Date.parse(`${start}T12:00:00Z`), b = Date.parse(`${end}T12:00:00Z`);
   return Number.isFinite(a) && Number.isFinite(b) && b > a ? Math.round((b-a)/86400000) : 0;
 };
-const iconFor = (value) => /wifi|internet/i.test(value) ? '⌁' : /bed|linen/i.test(value) ? '▤' : /kitchen|dining/i.test(value) ? '♧' : /pool/i.test(value) ? '≈' : '✓';
+const iconFor = (value) => {
+  const name = String(value).toLowerCase();
+  if (/wi.?fi|internet/.test(name)) return Wifi;
+  if (/bed|linen|sheet/.test(name)) return BedDouble;
+  if (/towel|bathroom|shower/.test(name)) return Bath;
+  if (/workspace|desk|office/.test(name)) return Laptop;
+  if (/balcony|terrace|patio/.test(name)) return Sun;
+  if (/dining/.test(name)) return Utensils;
+  if (/kitchen|cook/.test(name)) return CookingPot;
+  if (/pool|swim/.test(name)) return Waves;
+  if (/tv|television/.test(name)) return Tv;
+  if (/air.condition|cooling/.test(name)) return Wind;
+  if (/parking|garage/.test(name)) return Car;
+  if (/coffee/.test(name)) return Coffee;
+  if (/reading|book/.test(name)) return BookOpen;
+  return Check;
+};
 
 export default function VacationDetail() {
   const { id } = useParams();
@@ -74,7 +92,8 @@ export default function VacationDetail() {
     } catch (e) { setBookingMessage(e.message || t.failed); }
     finally { setBusy(false); }
   };
-  return <SiteLayout headerVariant="dark">
+  return <SiteLayout showHeader={false}>
+    <div className="vr-detail-header"><VacationRentalsHeader compact /></div>
     <main className="vr-detail-v2">
       <Link className="vr-detail-back" to={`/vacation-rentals/search${loc.search}`}>← {t.back}</Link>
       {error && <p role="alert">{error}</p>}
@@ -92,10 +111,10 @@ export default function VacationDetail() {
         <div className="vr-detail-columns">
           <section className="vr-detail-info">
             <h1>{item.title}</h1>
-            <p className="vr-detail-location">⌖ &nbsp;{[item.city,item.state,item.country].filter(Boolean).join(', ')}</p>
-            <div className="vr-detail-stats"><span>♙ &nbsp;{maxGuests} {t.guests}</span><span>▤ &nbsp;{item.bedrooms ?? '–'} {t.bedrooms}</span><span>♧ &nbsp;{item.bathrooms ?? '–'} {t.bathrooms}</span></div>
+            <p className="vr-detail-location"><MapPin size={18} aria-hidden="true" /> {[item.city,item.state,item.country].filter(Boolean).join(', ')}</p>
+            <div className="vr-detail-stats"><span><Users size={21} aria-hidden="true" /> {maxGuests} {t.guests}</span><span><BedDouble size={21} aria-hidden="true" /> {item.bedrooms ?? '–'} {t.bedrooms}</span><span><ShowerHead size={21} aria-hidden="true" /> {item.bathrooms ?? '–'} {t.bathrooms}</span></div>
             {item.description && <p className="vr-detail-description">{item.description}</p>}
-            <div className="vr-detail-amenities"><h2>{t.amenities}</h2><div className="vr-detail-amenity-grid">{amenities.map((a,i)=><div key={i}><span aria-hidden="true">{iconFor(String(a))}</span>{String(a)}</div>)}</div></div>
+            <div className="vr-detail-amenities"><h2>{t.amenities}</h2><div className="vr-detail-amenity-grid">{amenities.map((a,i)=>{ const AmenityIcon = iconFor(a); return <div key={i}><AmenityIcon size={23} strokeWidth={1.8} aria-hidden="true" /><span>{String(a)}</span></div>; })}</div></div>
           </section>
           <aside className="vr-booking-card">
             <div className="vr-booking-price"><strong>${Number.isFinite(rate)?rate.toLocaleString():'–'}</strong> <span>{t.night}</span></div>

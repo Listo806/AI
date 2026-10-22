@@ -61,7 +61,7 @@ export default function VacationRentalsHeader({ compact = false }) {
           className="lq-vacation-header-brand"
         >
           <span className="lq-vacation-marketplace-mark" aria-hidden="true"><span>LQ</span></span>
-          <span>ListoQasa</span>
+          <span className="lq-logo-text">ListoQasa</span>
         </Link>
 
         <nav className="lq-vacation-header-actions">
@@ -77,7 +77,7 @@ export default function VacationRentalsHeader({ compact = false }) {
           <div className="lq-vacation-language">
             <button
               type="button"
-              className="lq-vacation-icon-button"
+              className="lq-vacation-icon-button lq-language-trigger"
               aria-label={t(
                 "vacationHeader.language",
                 {
