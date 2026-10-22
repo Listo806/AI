@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './PropertyMap.css';
@@ -57,11 +58,14 @@ export default function PropertyMap({
   mapRegion = 'default',
   onCityClick = null,
 }) {
+  const { i18n } = useTranslation();
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
   const mapHandlersRef = useRef([]);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [coordinateCount, setCoordinateCount] = useState(null);
+  const activeMapRef = useRef(null);
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_TOKEN) {
@@ -100,105 +104,125 @@ export default function PropertyMap({
     map.current = new mapboxgl.Map(options);
 
     const m = map.current;
+    activeMapRef.current = m;
+    let disposed = false;
     const bumpResize = () => {
       try {
         m.resize();
       } catch (_) {}
     };
 
-    m.on('load', () => {
+    const handleLoad = () => {
+      if (disposed || activeMapRef.current !== m) return;
       bumpResize();
-      requestAnimationFrame(bumpResize);
+      requestAnimationFrame(() => { if (!disposed && activeMapRef.current === m) bumpResize(); });
       setMapLoaded(true);
-    });
+    };
+    m.on('load', handleLoad);
 
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
+      disposed = true;
+      m.off('load', handleLoad);
+      // Invalidate all dependent effects before Mapbox destroys its style.
+      if (activeMapRef.current === m) activeMapRef.current = null;
+      if (map.current === m) map.current = null;
+      m.remove();
     };
   }, [mapRegion]);
 
-  // Only valid coordinates receive individual pins. City markers are explicitly
-  // aggregates, never invented exact property locations.
+  // Only persisted, valid property coordinates receive pins. No city-centre substitutes.
   useEffect(() => {
     const m = map.current;
-    if (!m || !mapLoaded || !m.style) return;
-    const removeHandlers = () => {
-      mapHandlersRef.current.forEach(([event, layer, handler]) => m.off(event, layer, handler));
-      mapHandlersRef.current = [];
-    };
-    removeHandlers();
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
-    ['lq-property-clusters', 'lq-property-cluster-count', 'lq-property-pins'].forEach(id => {
-      if (m.style && m.getLayer(id)) m.removeLayer(id);
-    });
-    if (m.style && m.getSource('lq-property-points')) m.removeSource('lq-property-points');
-
-    const valid = properties.filter(p => Number.isFinite(Number(p.latitude)) && Number.isFinite(Number(p.longitude)) &&
-      p.latitude != null && p.longitude != null && Number(p.latitude) >= -90 && Number(p.latitude) <= 90 &&
-      Number(p.longitude) >= -180 && Number(p.longitude) <= 180 && !(Number(p.latitude) === 0 && Number(p.longitude) === 0));
-    const geo = { type: 'FeatureCollection', features: valid.map((p, i) => ({
-      type: 'Feature', id: i, properties: { index: i },
+    if (!m || !mapLoaded || activeMapRef.current !== m || !m.style) return;
+    let disposed = false;
+    const live = () => !disposed && activeMapRef.current === m && Boolean(m.style);
+    const sourceId = 'lq-property-points';
+    const layerId = 'lq-property-pins';
+    const valid = properties.filter(p => p.latitude !== null && p.latitude !== undefined && p.latitude !== '' &&
+      p.longitude !== null && p.longitude !== undefined && p.longitude !== '' &&
+      Number.isFinite(Number(p.latitude)) && Number.isFinite(Number(p.longitude)) &&
+      Math.abs(Number(p.latitude)) <= 90 && Math.abs(Number(p.longitude)) <= 180 &&
+      !(Number(p.latitude) === 0 && Number(p.longitude) === 0));
+    setCoordinateCount(valid.length);
+    const geo = { type: 'FeatureCollection', features: valid.map((p, index) => ({
+      type: 'Feature', id: index, properties: { index },
       geometry: { type: 'Point', coordinates: [Number(p.longitude), Number(p.latitude)] },
     })) };
-    m.addSource('lq-property-points', { type: 'geojson', data: geo, cluster: false });
-    m.addLayer({ id: 'lq-property-pins', type: 'circle', source: 'lq-property-points', filter: ['!', ['has', 'point_count']],
-      paint: { 'circle-color': '#ffffff', 'circle-radius': 6, 'circle-stroke-color': '#1259da', 'circle-stroke-width': 3 } });
-
-    const listen = (event, layer, fn) => { m.on(event, layer, fn); mapHandlersRef.current.push([event, layer, fn]); };
-    listen('click', 'lq-property-pins', (e) => {
-      const feature = e.features?.[0];
-      const property = valid[Number(feature?.properties?.index)];
-      if (!property) return;
-      const root = document.createElement('div');
-      root.className = 'map-popup';
-      const imgUrl = property.thumbnailUrl || property.imageUrl || property.image;
-      if (imgUrl && /^https?:\/\//i.test(imgUrl)) {
-        const img = document.createElement('img'); img.src = imgUrl; img.alt = property.title || 'Property';
-        img.className = 'map-popup-cover'; root.appendChild(img);
-      }
-      const name = document.createElement('strong'); name.textContent = property.title || property.propertyType || 'Property'; root.appendChild(name);
-      const price = document.createElement('p'); price.textContent = formatMarkerPrice(property, priceMarkerVariant) || ''; root.appendChild(price);
-      const samePlace = valid.filter(p => Number(p.latitude) === Number(property.latitude) && Number(p.longitude) === Number(property.longitude));
-      if (samePlace.length > 1) {
-        const info = document.createElement('p'); info.textContent = `${samePlace.length} properties in this approximate area`; root.appendChild(info);
-      }
-      samePlace.forEach((item) => {
-        const button = document.createElement('button'); button.type = 'button'; button.className = 'map-popup-btn';
-        button.textContent = samePlace.length > 1 ? (item.title || item.propertyType || 'View property') : 'View details';
-        button.addEventListener('click', () => onPropertyClick?.(item)); root.appendChild(button);
-      });
-      new mapboxgl.Popup({ offset: 14 }).setLngLat(feature.geometry.coordinates).setDOMContent(root).addTo(m);
-    });
-    ['lq-property-pins'].forEach(layer => {
-      listen('mouseenter', layer, () => { m.getCanvas().style.cursor = 'pointer'; });
-      listen('mouseleave', layer, () => { m.getCanvas().style.cursor = ''; });
-    });
-
-    // No invented city-level property dots: listings without saved coordinates
-    // intentionally have no map marker. The results cards remain browsable.
-    if (valid.length) {
-      const bounds = new mapboxgl.LngLatBounds();
-      valid.forEach(p => bounds.extend([Number(p.longitude), Number(p.latitude)]));
-      if (valid.length > 1) m.fitBounds(bounds, { padding: 55, maxZoom: mapRegion === 'ecuador' ? 12 : 14 });
-      else m.flyTo({ center: [Number(valid[0].longitude), Number(valid[0].latitude)], zoom: 12 });
-    }
-    return () => {
-      removeHandlers();
-      markersRef.current.forEach(marker => marker.remove()); markersRef.current = [];
-      ['lq-property-clusters', 'lq-property-cluster-count', 'lq-property-pins'].forEach(id => { if (m.style && m.getLayer(id)) m.removeLayer(id); });
-      if (m.style && m.getSource('lq-property-points')) m.removeSource('lq-property-points');
+    const handlers = [];
+    const listen = (event, layer, fn) => { m.on(event, layer, fn); handlers.push([event, layer, fn]); };
+    const clearHandlers = () => {
+      handlers.forEach(([event, layer, fn]) => m.off(event, layer, fn));
+      handlers.length = 0;
     };
-  }, [properties, mapLoaded, mapRegion, onPropertyClick, onCityClick, priceMarkerVariant]);
+    const render = () => {
+      if (!live() || !m.isStyleLoaded()) return;
+      const source = m.getSource(sourceId);
+      if (source) source.setData(geo);
+      else m.addSource(sourceId, { type: 'geojson', data: geo, cluster: false });
+      if (!m.getLayer(layerId)) {
+        m.addLayer({ id: layerId, type: 'circle', source: sourceId,
+          paint: { 'circle-color': '#ffffff', 'circle-radius': 6, 'circle-stroke-color': '#1259da', 'circle-stroke-width': 3 } });
+      }
+      listen('click', layerId, (event) => {
+        if (!live()) return;
+        const feature = event.features?.[0];
+        if (!feature) return;
+        const coordinates = feature.geometry.coordinates;
+        // Area-level coordinates may be shared by many sample listings.
+        // Present a chooser instead of silently selecting an arbitrary record.
+        const matches = valid.filter(p =>
+          Number(p.longitude) === Number(coordinates[0]) &&
+          Number(p.latitude) === Number(coordinates[1]));
+        if (!matches.length) return;
+        const root = document.createElement('div');
+        root.className = 'map-popup';
+        const heading = document.createElement('strong');
+        heading.textContent = matches.length === 1 ? 'Property' : `${matches.length} properties in this area`;
+        root.appendChild(heading);
+        const list = document.createElement('div');
+        list.style.cssText = 'max-height:220px;overflow-y:auto;min-width:185px;';
+        matches.forEach(property => {
+          const link = document.createElement('a');
+          link.href = `/property/${encodeURIComponent(property.id)}?type=${encodeURIComponent(property.type || 'sale')}`;
+          link.style.cssText = 'display:block;padding:7px 0;border-bottom:1px solid #e5e7eb;color:#1557c0;text-decoration:none;';
+          link.textContent = `${property.propertyType || property.title || 'Property'} · ${formatMarkerPrice(property, priceMarkerVariant) || ''}`;
+          link.addEventListener('click', e => {
+            // Let standard browser navigation work, including open-in-new-tab.
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+            onPropertyClick?.(property);
+          });
+          list.appendChild(link);
+        });
+        root.appendChild(list);
+        new mapboxgl.Popup({ offset: 14, maxWidth: '280px' })
+          .setLngLat(coordinates).setDOMContent(root).addTo(m);
+        if (matches.length === 1) onPropertyClick?.(matches[0]);
+      });
+      listen('mouseenter', layerId, () => { if (live()) m.getCanvas().style.cursor = 'pointer'; });
+      listen('mouseleave', layerId, () => { if (live()) m.getCanvas().style.cursor = ''; });
+      if (valid.length) {
+        const bounds = new mapboxgl.LngLatBounds();
+        valid.forEach(p => bounds.extend([Number(p.longitude), Number(p.latitude)]));
+        if (valid.length > 1) m.fitBounds(bounds, { padding: 55, maxZoom: mapRegion === 'ecuador' ? 12 : 14 });
+        else m.flyTo({ center: [Number(valid[0].longitude), Number(valid[0].latitude)], zoom: 12 });
+      }
+    };
+    if (m.isStyleLoaded()) render();
+    else m.once('style.load', render);
+    return () => {
+      disposed = true;
+      m.off('style.load', render);
+      clearHandlers();
+      // IMPORTANT: Never call getLayer/getSource during unmount. Mapbox may
+      // already have destroyed its style, causing getOwnLayer exceptions.
+    };
+  }, [properties, mapLoaded, mapRegion, onPropertyClick, priceMarkerVariant]);
 
   // Center map on selected property
   useEffect(() => {
-    if (!map.current || !mapLoaded || !selectedProperty) return;
+    if (!map.current || !mapLoaded || !selectedProperty || activeMapRef.current !== map.current || !map.current.style) return;
 
-    if (selectedProperty.latitude && selectedProperty.longitude) {
+    if (Number.isFinite(Number(selectedProperty.latitude)) && Number.isFinite(Number(selectedProperty.longitude)) && selectedProperty.latitude != null && selectedProperty.longitude != null) {
       const z = mapRegion === 'ecuador' ? Math.min(14, ECUADOR_MAP.maxZoom) : 14;
       map.current.flyTo({
         center: [selectedProperty.longitude, selectedProperty.latitude],
@@ -214,7 +238,7 @@ export default function PropertyMap({
     if (!el || !map.current) return;
 
     const ro = new ResizeObserver(() => {
-      if (map.current) {
+      if (map.current && map.current.style) {
         try {
           map.current.resize();
         } catch (_) {}
@@ -223,7 +247,7 @@ export default function PropertyMap({
     ro.observe(el);
 
     const onWin = () => {
-      if (map.current) {
+      if (map.current && map.current.style) {
         try {
           map.current.resize();
         } catch (_) {}
@@ -251,6 +275,11 @@ export default function PropertyMap({
   return (
     <div className="property-map-container">
       <div ref={mapContainer} className="property-map" />
+      {mapLoaded && coordinateCount === 0 && properties.length > 0 && (
+        <div className="lq-map-coordinate-notice" role="status">
+          {({ en: 'No exact locations are saved for these listings. Map pins appear when verified coordinates are available.', es: 'Estos anuncios no tienen ubicaciones exactas guardadas. Los puntos aparecerán cuando haya coordenadas verificadas.', pt: 'Estes anúncios não têm localizações exatas salvas. Os pontos aparecerão quando houver coordenadas verificadas.' })[(i18n.language || 'en').slice(0, 2)] || 'No exact locations are saved for these listings.'}
+        </div>
+      )}
     </div>
   );
 }

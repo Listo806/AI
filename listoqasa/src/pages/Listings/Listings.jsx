@@ -435,6 +435,9 @@ export default function Listings() {
 
   // Properties with valid coordinates for map
   const mapProperties = mapPropertiesAll.filter(p => p.status === 'published' &&
+    (!effectiveMode || p.type === effectiveMode) &&
+    (!filters.city || String(p.city || '').trim().toLowerCase() === filters.city.trim().toLowerCase()) &&
+    (!filters.propertyType || String(p.propertyType || '').toLowerCase() === filters.propertyType.toLowerCase()) &&
     (!filters.minPrice || Number(p.price) >= Number(filters.minPrice)) &&
     (!filters.maxPrice || Number(p.price) <= Number(filters.maxPrice)) &&
     (!filters.bedrooms || Number(p.bedrooms) >= Number(filters.bedrooms)) &&
@@ -903,7 +906,7 @@ export default function Listings() {
                       else { params.set('city', city); params.delete('search'); }
                       params.delete('page'); setSearchParams(params);
                     }}
-                    markerStyle="pricePill"
+                    markerStyle="dot"
                     onPropertyClick={(property) => {
                       setSelectedProperty(property);
                       const card = [...document.querySelectorAll('[data-property-id]')].find(el => el.getAttribute('data-property-id') === String(property.id));
