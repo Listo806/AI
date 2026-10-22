@@ -9,15 +9,7 @@
   min-height: 520px;
   display: flex;
   align-items: center;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(4, 19, 39, .28) 0%,
-      rgba(4, 19, 39, .10) 48%,
-      rgba(4, 19, 39, .34) 100%
-    ),
-    var(--lq-home-hero-image)
-      center center / cover no-repeat;
+  
 }
 
 /*
@@ -196,7 +188,7 @@
   background:
     linear-gradient(
       90deg,
-      rgba(3, 16, 38, 0.72) 0%,
+      rgba(3, 16, 38, 0.17) 0%,
       rgba(3, 16, 38, 0.32) 47%,
       rgba(3, 16, 38, 0.08) 100%
     ),
@@ -721,7 +713,7 @@
 .lq-property-card .lq-compact-price { margin-left:auto; color:#0866f5; }
 .lq-property-card .lq-compact-specs { display:flex; gap:16px; margin-top:8px; font-size:13px; }
 .lq-property-card .lq-compact-specs span { display:flex; align-items:center; gap:5px; }
-.lq-property-card .lq-compact-status { position:absolute; top:10px; left:10px; z-index:2; padding:5px 10px; border-radius:20px; background:#0866f5; color:white; font-size:12px; font-weight:800; }
+.lq-property-card .lq-compact-status { display:none;position:absolute; top:10px; left:10px; z-index:2; padding:5px 10px; border-radius:20px; background:#0866f5; color:white; font-size:12px; font-weight:800; }
 @media(max-width:900px){.lq-property-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:580px){.lq-property-grid{grid-template-columns:1fr;}}
 

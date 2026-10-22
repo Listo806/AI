@@ -13,6 +13,7 @@ export class MarketplacePlansController {
   @Get('bank-confirmation/:id') @UseGuards(JwtAuthGuard) bankStatus(@CurrentUser() user:any,@Param('id') id:string){return this.plans.bankRequestStatus(user.id,id)}
   @Get('payment-config') config(){return this.plans.paymentConfig()}
   @Post('checkout') @UseGuards(JwtAuthGuard) checkout(@CurrentUser() user:any,@Body() body:{enrollmentId:string;token:string}){return this.plans.checkout(user.id,String(body?.enrollmentId||''),String(body?.token||''))}
+  @Get('confirmation/:id') @UseGuards(JwtAuthGuard) confirmation(@CurrentUser() user:any,@Param('id') id:string){return this.plans.purchaseConfirmation(user.id,id)}
   @Get('payment/:id') @UseGuards(JwtAuthGuard) payment(@CurrentUser() user:any,@Param('id') id:string){return this.plans.paymentStatus(user.id,id)}
   @Post('nuvei-callback') callback(@Body() body:any,@Headers('x-nuvei-token') token?:string){return this.plans.handlePaymentCallback(body,token)}
   @Post('cancel') @UseGuards(JwtAuthGuard) cancel(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.cancel(user.id,String(body?.enrollmentId||''))}

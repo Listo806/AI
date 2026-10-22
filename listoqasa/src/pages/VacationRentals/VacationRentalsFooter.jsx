@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 const groups = [
   { title: "Explore", links: [["Beachfront Stays", "/vacation-rentals?collection=beachfront"], ["City Stays", "/vacation-rentals?collection=city"], ["Luxury Stays", "/vacation-rentals?collection=luxury"], ["Weekend Getaways", "/vacation-rentals?collection=weekend"]] },
-  { title: "Hosting", links: [["List Your Property", "/owners"], ["Why Host With Us", "/owners"], ["Vacation Rental Plans", "/vacation-rental-plans"]] },
+  { title: "Hosting", links: [["List Your Property", "/vacation-rentals/host"], ["Why Host With Us", "/vacation-rentals/host"], ["Vacation Rental Plans", "/vacation-rental-plans"]] },
   { title: "Support", links: [["Help Center", "/help"], ["Contact Support", "/contact"], ["Cancellation Options", "/cancellation-policy"], ["Safety Information", "/safety"]] },
   { title: "Legal", links: [["Terms and Conditions", "/terms"], ["Privacy Policy", "/privacy"], ["Refund Policy", "/refund-policy"], ["Cookies Policy", "/cookies"]] },
 ];

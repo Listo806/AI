@@ -5,6 +5,7 @@ function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");
 import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
 import MarketplaceSubscriptionPage from "./pages/CreateListing/MarketplaceSubscriptionPage";
 import MarketplaceCheckoutPage from "./pages/CreateListing/MarketplaceCheckoutPage";
+import MarketplacePurchaseConfirmationPage from "./pages/CreateListing/MarketplacePurchaseConfirmationPage";
 import MarketplacePaymentPendingPage from "./pages/CreateListing/MarketplacePaymentPendingPage";
 import CreateListingPage from "./pages/CreateListing/CreateListingPage";
 import MarketplaceLoginPage from "./pages/CreateListing/MarketplaceLoginPage";
@@ -21,6 +22,9 @@ import VacationSampleAdmin from "./pages/VacationRentals/VacationSampleAdmin";
 import VacationResults from "./pages/VacationRentals/VacationResults";
 import VacationDetail from "./pages/VacationRentals/VacationDetail";
 import VacationRentalsPage from "./pages/VacationRentals/VacationRentalsPage";
+import HelpCenterPage from "./pages/HelpCenter/HelpCenterPage";
+import StayAccountPage from "./pages/HelpCenter/StayAccountPage";
+import VacationHostLanding from "./pages/VacationHost/VacationHostLanding";
 import OwnerPlansPage from "./pages/OwnerPlans/OwnerPlansPage";
 import AgentDeveloperPlansPage from "./pages/AgentDeveloperPlans/AgentDeveloperPlansPage";
 import VacationRentalPlansPage from "./pages/VacationRentalPlans/VacationRentalPlansPage";
@@ -40,6 +44,7 @@ export default function App() {
         <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />
         <Route path="/marketplace/subscription" element={<MarketplaceSubscriptionPage />} />
         <Route path="/marketplace/checkout" element={<MarketplaceCheckoutPage />} />
+        <Route path="/marketplace/purchase-confirmation" element={<MarketplacePurchaseConfirmationPage />} />
         <Route path="/marketplace/payment-pending" element={<MarketplacePaymentPendingPage />} />
         <Route path="/marketplace/login" element={<MarketplaceLoginPage />} />
         <Route path="/create-listing" element={<CreateListingPage />} />
@@ -57,7 +62,11 @@ export default function App() {
 
         <Route path="/ai-help" element={<AiCrmPage />} />
         <Route path="/ai-help/pricing" element={<AiHelpPricingPage />} />
+        <Route path="/help" element={<HelpCenterPage />} />
+        <Route path="/my-trips" element={<StayAccountPage mode="trips" />} />
+        <Route path="/saved-stays" element={<StayAccountPage mode="saved" />} />
         <Route path="/vacation-rentals" element={<VacationRentalsPage />} />
+        <Route path="/vacation-rentals/host" element={<VacationHostLanding />} />
         <Route path="/vacation-rentals/admin/import" element={<VacationSampleAdmin />} />
         <Route path="/vacation-rentals/search" element={<VacationResults />} />
         <Route path="/vacation-rentals/property/:id" element={<VacationDetail />} />

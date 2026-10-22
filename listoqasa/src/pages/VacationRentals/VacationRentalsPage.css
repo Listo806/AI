@@ -1,5 +1,6 @@
 .lq-old-vr-hero {
   position: relative;
+  min-height: 370px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,7 +21,7 @@
       rgba(0, 0, 0, .25)
     );
 }
-
+.lq-vacation-header .lq-logo-text{color: #fff;}
 .lq-old-vr-hero-content {
   position: relative;
   z-index: 3;
@@ -783,9 +784,6 @@
 }
 
 /* Header floats directly on top of old hero. */
-.lq-old-vr-hero {
-  padding-top: 100px;
-}
 
 @media (max-width: 700px) {
   .lq-vacation-header,
@@ -853,3 +851,11 @@
 .lq-vacation-marketplace-mark { display: inline-flex; align-items: center; justify-content: center; width: 31px; height: 38px; background: #0866f5; color: #fff; clip-path: polygon(50% 0,100% 25%,100% 100%,0 100%,0 25%); font-size: 14px; font-weight: 700; text-shadow: none; }
 .lq-vacation-marketplace-mark span{margin-top: 7px;}
 @media(max-width:600px) { .lq-vacation-header-brand { font-size: 18px; gap: 7px; } .lq-vacation-marketplace-mark { width: 31px; height: 38px; } }
+
+/* Vacation menu — owner-provided mockup */
+.lq-vacation-menu-dropdown.lq-vacation-menu-mockup{width:min(360px,calc(100vw - 28px));padding:0 20px;border:1px solid #dce3ed;border-radius:17px;box-shadow:0 18px 42px rgba(17,35,62,.18)}
+.lq-vacation-menu-mockup a{display:flex;align-items:center;gap:20px;min-height:68px;border-radius:0;padding:0 3px;font-size:21px;font-weight:500;color:#172239}
+.lq-vacation-menu-mockup a+a{border-top:1px solid #e2e8f0}
+.lq-vacation-menu-mockup a svg{flex:none;color:#175be9}
+.lq-vacation-menu-mockup a:hover{background:#f6f9ff}
+@media(max-width:600px){.lq-vacation-menu-mockup a{min-height:60px;font-size:18px}}

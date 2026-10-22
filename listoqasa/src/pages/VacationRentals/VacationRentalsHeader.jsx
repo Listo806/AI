@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Globe2, Menu, X } from "lucide-react";
+import { Globe2, Menu, X, CircleDot } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function VacationRentalsHeader({ compact = false }) {
@@ -66,7 +66,7 @@ export default function VacationRentalsHeader({ compact = false }) {
 
         <nav className="lq-vacation-header-actions">
           {!compact && <Link
-            to="/vacation-rental-plans"
+            to="/vacation-rentals/host"
             className="lq-vacation-header-list-property"
           >
             {t("vacationHeader.listProperty", {
@@ -137,49 +137,18 @@ export default function VacationRentalsHeader({ compact = false }) {
             </button>
 
             {menuOpen && (
-              <div className="lq-vacation-menu-dropdown">
-                <Link
-                  to="/"
-                  onClick={() =>
-                    setMenuOpen(false)
-                  }
-                >
-                  {t(
-                    "vacationHeader.home",
-                    {
-                      defaultValue: "Home",
-                    }
-                  )}
-                </Link>
-
-                <Link
-                  to="/find-agent"
-                  onClick={() =>
-                    setMenuOpen(false)
-                  }
-                >
-                  {t(
-                    "vacationHeader.findAgent",
-                    {
-                      defaultValue:
-                        "Find Agent",
-                    }
-                  )}
-                </Link>
-
-                <a
-                  href="https://www.cortexaaicrm.com"
-                  onClick={() =>
-                    setMenuOpen(false)
-                  }
-                >
-                  {t(
-                    "vacationHeader.aiCrm",
-                    {
-                      defaultValue: "AI CRM",
-                    }
-                  )}
-                </a>
+              <div className="lq-vacation-menu-dropdown lq-vacation-menu-mockup" role="menu">
+                {[
+                  ["/my-trips", "myTrips", "My Trips"],
+                  ["/saved-stays", "savedStays", "Saved Stays"],
+                  ["/help", "helpCenter", "Help Center"],
+                  ["/marketplace/login", "signIn", "Sign In"],
+                ].map(([to, key, fallback]) => (
+                  <Link key={key} to={to} role="menuitem" onClick={() => setMenuOpen(false)}>
+                    <CircleDot size={22} strokeWidth={1.8} aria-hidden="true" />
+                    <span>{t(`vacationMenu.${key}`, { defaultValue: fallback })}</span>
+                  </Link>
+                ))}
               </div>
             )}
           </div>

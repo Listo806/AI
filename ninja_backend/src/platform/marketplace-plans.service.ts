@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { WorkspaceEntitlementsService } from '../workspaces/workspace-entitlements.service';
 import { NuveiClientService } from '../nuvei/nuvei-client.service';
 import { ConfigService } from '../config/config.service';
 import * as crypto from 'crypto';
@@ -18,7 +19,7 @@ const PLANS = {
 @Injectable()
 export class MarketplacePlansService {
   private readonly logger = new Logger(MarketplacePlansService.name);
-  constructor(private readonly db: DatabaseService, private readonly nuvei: NuveiClientService, private readonly config: ConfigService) {}
+  constructor(private readonly db: DatabaseService, private readonly nuvei: NuveiClientService, private readonly config: ConfigService, private readonly workspaceEntitlements: WorkspaceEntitlementsService) {}
   private async schema() {
     await this.db.query(`CREATE TABLE IF NOT EXISTS marketplace_plan_enrollments (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES users(id),
@@ -42,9 +43,14 @@ export class MarketplacePlansService {
   }
   plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD'})); }
   private async expireDue(userId?:string) {
-    await this.db.query(`UPDATE marketplace_plan_enrollments SET status='canceled',updated_at=NOW()
+    const expired = await this.db.query(`UPDATE marketplace_plan_enrollments SET status='canceled',updated_at=NOW()
       WHERE status='active' AND price_cents>0 AND current_period_end IS NOT NULL
-      AND current_period_end<=NOW() AND ($1::uuid IS NULL OR user_id=$1::uuid)`,[userId||null]);
+      AND current_period_end<=NOW() AND ($1::uuid IS NULL OR user_id=$1::uuid)
+      RETURNING id,plan_key`,[userId||null]);
+    for (const e of expired.rows) {
+      if (e.plan_key==='agent-essential' || e.plan_key==='agent-growth')
+        await this.workspaceEntitlements.revoke(`listoqasa:${e.id}`,'canceled');
+    }
   }
   async cancel(userId:string,enrollmentId:string) {
     await this.schema();
@@ -229,6 +235,10 @@ export class MarketplacePlansService {
     const row=result.rows[0];
     if(!row?.enrollment_id) throw new BadRequestException('Request already reviewed or not found');
     if(approve&&!row.activated_id) throw new BadRequestException('Enrollment not activated; investigate payment state');
+    if(approve && row.activated_id) {
+      const owner=(await this.db.query(`SELECT user_id FROM marketplace_plan_enrollments WHERE id=$1`,[row.enrollment_id])).rows[0];
+      if(owner) await this.syncAgentCrm(owner.user_id,row.enrollment_id).catch(err=>this.logger.error(`CRM provisioning retry required: ${String(err)}`));
+    }
     return {id,status:row.status,enrollmentId:row.enrollment_id};
   }
   paymentConfig() {
@@ -317,6 +327,64 @@ export class MarketplacePlansService {
       await this.db.query(`UPDATE marketplace_plan_enrollments SET status='failed',updated_at=NOW() WHERE id=$1 AND status='pending_payment'`,[enrollmentId]);
     }
   }
+  // Both paid agent plans include Real Estate CRM. The source of truth is the
+  // server-verified Marketplace enrollment, never a client-supplied plan or URL.
+  private readonly crmAgentPlans = new Set(['agent-essential', 'agent-growth']);
+  private async syncAgentCrm(userId: string, enrollmentId: string) {
+    const result = await this.db.query(`SELECT e.id,e.user_id,e.plan_key,e.price_cents,e.currency,
+      e.status,e.current_period_end,u.team_id,
+      (SELECT t.id FROM teams t WHERE t.owner_id=e.user_id ORDER BY t.created_at LIMIT 1) AS owned_team_id
+      FROM marketplace_plan_enrollments e JOIN users u ON u.id=e.user_id
+      WHERE e.id=$1 AND e.user_id=$2`,[enrollmentId,userId]);
+    const e=result.rows[0];
+    if(!e) return {eligible:false,provisioned:false,reason:'not_found'};
+    const eligible=this.crmAgentPlans.has(e.plan_key) &&
+      ((e.plan_key==='agent-essential' && Number(e.price_cents)===9700) ||
+       (e.plan_key==='agent-growth' && Number(e.price_cents)===14700)) &&
+      e.currency==='USD';
+    const key=`listoqasa:${e.id}`;
+    const active=eligible && e.status==='active' && !!e.current_period_end &&
+      new Date(e.current_period_end).getTime()>Date.now();
+    if(!active) {
+      // Only touch the entitlement sourced from this specific ListoQasa purchase.
+      await this.workspaceEntitlements.revoke(key,'canceled');
+      return {eligible:false,provisioned:false,reason:'inactive'};
+    }
+    const teamId=e.owned_team_id || e.team_id;
+    if(!teamId) return {eligible:true,provisioned:false,reason:'team_setup_required'};
+    const provisioned=await this.workspaceEntitlements.grant({
+      subscriptionId:key,workspaceId:'real-estate',teamId,
+      userId:e.user_id,source:'listoqasa_agent',priceId:e.plan_key,
+    });
+    return {eligible:true,provisioned,reason:provisioned?'active':'provisioning_failed'};
+  }
+
+  // CRM eligibility is server-controlled and defaults to NO access. This endpoint
+  // never provisions a Cortexa workspace or treats a browser redirect as payment proof.
+  async purchaseConfirmation(userId:string,enrollmentId:string) {
+    await this.schema();
+    await this.expireDue(userId);
+    const result=await this.db.query(`SELECT id,plan_key,status,price_cents,currency,
+      provider_transaction_id,current_period_end FROM marketplace_plan_enrollments
+      WHERE id=$1 AND user_id=$2`,[enrollmentId,userId]);
+    const row=result.rows[0];
+    if(!row) throw new NotFoundException('Enrollment not found');
+    const plan=PLANS[row.plan_key as keyof typeof PLANS];
+    const validPlan=!!plan && plan.priceCents===Number(row.price_cents) && row.currency==='USD';
+    const active=validPlan && row.status==='active' &&
+      (Number(row.price_cents)===0 || (!!row.current_period_end && new Date(row.current_period_end).getTime()>Date.now()));
+    // Explicit allowlist must be approved by product/billing owner; free plans are excluded.
+    const approved=(process.env.LISTOQASA_CORTEXA_AGENT_PLAN_KEYS ?? 'agent-essential,agent-growth').split(',').map(x=>x.trim()).filter(Boolean);
+    const crmEligible=!!active && Number(row.price_cents)>0 && plan?.audience==='agent' && approved.includes(row.plan_key) && ['agent-essential','agent-growth'].includes(row.plan_key);
+    const crm = crmEligible ? await this.syncAgentCrm(userId,enrollmentId) : null;
+    return {enrollmentId:row.id,planKey:row.plan_key,status:active?'active':row.status,
+      paymentConfirmed:!!active,crmEligible,
+      crmProvisioned:!!crm?.provisioned,
+      crmStatus:crm?.provisioned?'active':crmEligible?'setup_required':'not_included',
+      crmUrl:crmEligible?'https://www.cortexaaicrm.com/login':null,
+      next:active?'/create-listing':null};
+  }
+
   async paymentStatus(userId:string,enrollmentId:string){
     await this.schema();
     await this.expireDue(userId);
@@ -326,8 +394,10 @@ export class MarketplacePlansService {
       const tx=(await this.db.query(`SELECT provider_transaction_id FROM marketplace_plan_enrollments WHERE id=$1`,[enrollmentId])).rows[0]?.provider_transaction_id;
       if(tx) await this.verifyEnrollmentTransaction(enrollmentId,tx).catch(err=>this.logger.warn(String(err)));
       const updated=(await this.db.query(`SELECT id,plan_key,status,created_at FROM marketplace_plan_enrollments WHERE id=$1`,[enrollmentId])).rows[0];
+      if(updated.status==='active') await this.syncAgentCrm(userId,enrollmentId).catch(err=>this.logger.warn(`CRM provisioning retry required: ${String(err)}`));
       return updated;
     }
+    if(r.rows[0].status==='active') await this.syncAgentCrm(userId,enrollmentId).catch(err=>this.logger.warn(`CRM provisioning retry required: ${String(err)}`));
     return r.rows[0];
   }
   private safeEqual(a:string,b:string){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&crypto.timingSafeEqual(x,y)}
@@ -365,6 +435,7 @@ export class MarketplacePlansService {
     if((verifiedCurrency !== '' && verifiedCurrency!==String(row.currency).toUpperCase())||!verifiedRef||verifiedRef!==reference||!Number.isFinite(amount)||Math.abs(amount-Number(row.price_cents)/100)>0.01)throw new BadRequestException('Nuvei transaction reference or amount mismatch');
     if(approved){
       await this.activateVerifiedEnrollment(row.id,id);
+      await this.syncAgentCrm(row.user_id,row.id).catch(err=>this.logger.error(`CRM provisioning retry required for enrollment ${row.id}: ${String(err)}`));
       return {handled:'activated'};
     }
     const failed=['failure','failed','2','cancelled','canceled','rejected'].includes(String(verified.status).toLowerCase());

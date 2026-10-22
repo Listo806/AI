@@ -3,7 +3,7 @@ import i18n from "./i18n";
 const resources = {
   en: {
     home: {
-      heroBuyTitle: "Find Homes That Match You",
+      heroBuyTitle: "Find Your Home",
       heroRentTitle: "Find the Perfect Rental",
       heroTabs: {
         buy: "Buy",
@@ -17,7 +17,7 @@ const resources = {
 
   es: {
     home: {
-      heroBuyTitle: "Encuentra casas que encajen contigo",
+      heroBuyTitle: "Encuentra tu hogar",
       heroRentTitle: "Encuentra el alquiler perfecto",
       heroTabs: {
         buy: "Comprar",
@@ -31,7 +31,7 @@ const resources = {
 
   pt: {
     home: {
-      heroBuyTitle: "Encontre casas que combinam com você",
+      heroBuyTitle: "Encontre seu lar",
       heroRentTitle: "Encontre o aluguel perfeito",
       heroTabs: {
         buy: "Comprar",

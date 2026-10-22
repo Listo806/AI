@@ -73,7 +73,7 @@ export default function Header({
       icon: CalendarDays,
       label: t("header.listPropertyMenu.vacationRentals"),
       description: t("header.listPropertyMenu.vacationRentalsDesc"),
-      to: "/vacation-rental-plans",
+      to: "/vacation-rentals/host",
     },
     {
       icon: UserRound,
