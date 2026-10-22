@@ -66,6 +66,9 @@ export default function PropertyMap({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [coordinateCount, setCoordinateCount] = useState(null);
   const activeMapRef = useRef(null);
+  // Keep callbacks current without re-registering Mapbox layer listeners on every React render.
+  const onPropertyClickRef = useRef(onPropertyClick);
+  onPropertyClickRef.current = onPropertyClick;
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_TOKEN) {
@@ -164,6 +167,7 @@ export default function PropertyMap({
           paint: { 'circle-color': '#ffffff', 'circle-radius': 6, 'circle-stroke-color': '#1259da', 'circle-stroke-width': 3 } });
       }
       listen('click', layerId, (event) => {
+        event.originalEvent?.stopPropagation?.();
         if (!live()) return;
         const feature = event.features?.[0];
         if (!feature) return;
@@ -189,14 +193,16 @@ export default function PropertyMap({
           link.addEventListener('click', e => {
             // Let standard browser navigation work, including open-in-new-tab.
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-            onPropertyClick?.(property);
+            e.preventDefault();
+            onPropertyClickRef.current?.(property);
           });
           list.appendChild(link);
         });
         root.appendChild(list);
-        new mapboxgl.Popup({ offset: 14, maxWidth: '280px' })
+        new mapboxgl.Popup({ offset: 14, maxWidth: '320px', closeOnClick: false })
           .setLngLat(coordinates).setDOMContent(root).addTo(m);
-        if (matches.length === 1) onPropertyClick?.(matches[0]);
+        // Do not select on marker click: selecting updates React and can close the popup.
+        // Select only when a user clicks a listing inside the popup.
       });
       listen('mouseenter', layerId, () => { if (live()) m.getCanvas().style.cursor = 'pointer'; });
       listen('mouseleave', layerId, () => { if (live()) m.getCanvas().style.cursor = ''; });
@@ -216,7 +222,7 @@ export default function PropertyMap({
       // IMPORTANT: Never call getLayer/getSource during unmount. Mapbox may
       // already have destroyed its style, causing getOwnLayer exceptions.
     };
-  }, [properties, mapLoaded, mapRegion, onPropertyClick, priceMarkerVariant]);
+  }, [properties, mapLoaded, mapRegion, priceMarkerVariant]);
 
   // Center map on selected property
   useEffect(() => {
