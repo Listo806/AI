@@ -8,8 +8,8 @@ const PLANS: Record<string, { category: string; cents: number; limit: number | n
   'vacation_rentals.starter': { category: 'vacation_rentals', cents: 7700, limit: 3 },
   'vacation_rentals.growth': { category: 'vacation_rentals', cents: 10700, limit: 6 },
   'vacation_rentals.premium': { category: 'vacation_rentals', cents: 17700, limit: null },
-  'marketplace_agents.essential': { category: 'marketplace_agents', cents: 9700, limit: 20 },
-  'marketplace_agents.growth': { category: 'marketplace_agents', cents: 14700, limit: null },
+  'marketplace_agents.essential': { category: 'marketplace_agents', cents: 14700, limit: 20 },
+  'marketplace_agents.growth': { category: 'marketplace_agents', cents: 19700, limit: null },
   'marketplace_agents.ai_crm_addon': { category: 'marketplace_agents', cents: 12700, limit: 0, addon: true },
 };
 
@@ -24,6 +24,8 @@ export class ProductBillingService {
   private approvedAnnualOrNull(key: string): number | null {
     const plan = PLANS[key];
     if (!plan || plan.addon) return null;
+    if (key === 'marketplace_agents.essential') return 1411.20;
+    if (key === 'marketplace_agents.growth') return 1891.20;
     const raw = String(this.config.get(`APPROVED_ANNUAL_${key.replace(/\W/g, '_').toUpperCase()}_CENTS`) || '');
     return /^[1-9]\d*$/.test(raw) ? Number(raw) / 100 : null;
   }
@@ -34,6 +36,8 @@ export class ProductBillingService {
     if (interval === 'monthly') return plan.cents;
     if (interval !== 'yearly' || plan.addon || !['vacation_rentals','marketplace_agents'].includes(plan.category)) throw new BadRequestException('Unsupported billing interval');
     const envKey = `APPROVED_ANNUAL_${key.replace(/\W/g, '_').toUpperCase()}_CENTS`;
+    if (key === 'marketplace_agents.essential') return 141120;
+    if (key === 'marketplace_agents.growth') return 189120;
     const configured = String(this.config.get(envKey) || '');
     if (!/^[1-9]\d*$/.test(configured)) throw new BadRequestException('Annual price not approved');
     return Number(configured);

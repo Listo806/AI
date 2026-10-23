@@ -27,7 +27,6 @@ export default function AiHelpPricingPage() {
         <div className="lq-ai-pricing-shell">
           <header className="lq-ai-pricing-header">
             <h1>{c.title}</h1>
-            <div className="lq-ai-pricing-toggle"><span className="selected">{c.monthly}</span></div>
           </header>
           <section className="lq-ai-single-card" aria-label={c.title}>
             <h2>{c.heading}</h2>

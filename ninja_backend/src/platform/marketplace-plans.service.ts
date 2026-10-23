@@ -10,8 +10,8 @@ const PLANS = {
   'owner-standard': { audience: 'owner', priceCents: 6700, maxListings: 2 },
   'owner-enhanced': { audience: 'owner', priceCents: 9700, maxListings: 3 },
   'owner-maximum': { audience: 'owner', priceCents: 14700, maxListings: 4 },
-  'agent-essential': { audience: 'agent', priceCents: 9700, maxListings: 20 },
-  'agent-growth': { audience: 'agent', priceCents: 14700, maxListings: null },
+  'agent-essential': { audience: 'agent', priceCents: 14700, maxListings: 20 },
+  'agent-growth': { audience: 'agent', priceCents: 19700, maxListings: null },
   'owner-free-launch': { audience: 'owner', priceCents: 0, maxListings: 1 },
   'agent-free-launch': { audience: 'agent', priceCents: 0, maxListings: 1 },
 } as const;
@@ -41,7 +41,22 @@ export class MarketplacePlansService {
       WHERE status='active' AND price_cents>0 AND current_period_end IS NULL`);
     await this.db.query(`CREATE INDEX IF NOT EXISTS marketplace_enrollments_user_idx ON marketplace_plan_enrollments(user_id,created_at DESC)`);
   }
-  plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD'})); }
+  // IVA applies only to new Agent/Developer enrollments; legacy amounts remain unchanged.
+  private readonly agentIvaRate = 16;
+  private basePriceFor(planKey: string, interval: string): number {
+    const plan = PLANS[planKey as keyof typeof PLANS];
+    if (!plan) throw new BadRequestException('Invalid Marketplace plan');
+    if (interval === 'monthly') return plan.priceCents;
+    if (interval === 'quarterly' && planKey.startsWith('owner-') && plan.priceCents > 0) return plan.priceCents * 2;
+    if (interval !== 'yearly' || !['agent-essential', 'agent-growth'].includes(planKey))
+      throw new BadRequestException('Yearly billing is not available for this plan');
+    return Math.round(plan.priceCents * 12 * 0.8);
+  }
+  private priceFor(planKey: string, interval: string): number {
+    const base = this.basePriceFor(planKey, interval);
+    return (['agent-essential','agent-growth'].includes(planKey) || (planKey.startsWith('owner-') && base > 0)) ? Math.round(base * 116 / 100) : base;
+  }
+  plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD',taxRate:p.priceCents>0?this.agentIvaRate:0,yearlyPriceCents:['agent-essential','agent-growth'].includes(key)?this.basePriceFor(key,'yearly'):null,monthlyTotalCents:this.priceFor(key,'monthly'),yearlyTotalCents:['agent-essential','agent-growth'].includes(key)?this.priceFor(key,'yearly'):null,quarterlyTotalCents:key.startsWith('owner-')&&p.priceCents>0?this.priceFor(key,'quarterly'):null})); }
   private async expireDue(userId?:string) {
     const expired = await this.db.query(`UPDATE marketplace_plan_enrollments SET status='canceled',updated_at=NOW()
       WHERE status='active' AND price_cents>0 AND current_period_end IS NOT NULL
@@ -70,7 +85,8 @@ export class MarketplacePlansService {
     const old=(await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId])).rows[0];
     if(!old) throw new NotFoundException('Enrollment not found');
     const approvedPlan=PLANS[old.plan_key as keyof typeof PLANS];
-    if (!approvedPlan || approvedPlan.priceCents !== Number(old.price_cents) || old.currency !== 'USD')
+    const expectedRenewalPrice = approvedPlan ? this.priceFor(old.plan_key,old.billing_interval || 'monthly') : null;
+    if (!approvedPlan || (expectedRenewalPrice !== Number(old.price_cents) && !(old.plan_key==='agent-essential' && [9700,14700,141120].includes(Number(old.price_cents))) && !(old.plan_key==='agent-growth' && [14700,19700,189120].includes(Number(old.price_cents)))) || old.currency !== 'USD')
       throw new BadRequestException('Enrollment does not match an approved plan');
     if(Number(old.price_cents)<=0) throw new BadRequestException('Free plans do not require renewal');
     if(old.status==='active' && old.current_period_end && new Date(old.current_period_end).getTime()>Date.now()+7*86400000)
@@ -78,7 +94,7 @@ export class MarketplacePlansService {
     const pending=(await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE user_id=$1 AND plan_key=$2 AND status='pending_payment' ORDER BY created_at DESC LIMIT 1`,[userId,old.plan_key])).rows[0];
     if(pending) return {enrollment:pending,next:'/marketplace/checkout',requiresPayment:true};
     const result=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents,currency,billing_interval)
-      VALUES($1,$2,'pending_payment',$3,$4,$5) RETURNING *`,[userId,old.plan_key,old.price_cents,old.currency,old.billing_interval||'monthly']);
+      VALUES($1,$2,'pending_payment',$3,$4,$5) RETURNING *`,[userId,old.plan_key,this.priceFor(old.plan_key,old.billing_interval||'monthly'),old.currency,old.billing_interval||'monthly']);
     return {enrollment:result.rows[0],next:'/marketplace/checkout',requiresPayment:true};
   }
   async resume(userId:string,enrollmentId:string) {
@@ -97,9 +113,10 @@ export class MarketplacePlansService {
       WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100`,[userId]);
     return {data:result.rows};
   }
-  async enroll(userId: string, planKey: string) {
+  async enroll(userId: string, planKey: string, interval = 'monthly') {
     const plan = PLANS[planKey as keyof typeof PLANS];
     if (!plan) throw new BadRequestException('Invalid Marketplace plan');
+    const approvedPrice = this.priceFor(planKey, interval);
     await this.schema();
     await this.expireDue(userId);
     if (plan.priceCents === 0) {
@@ -110,11 +127,11 @@ export class MarketplacePlansService {
       return { enrollment:r.rows[0], next:'/my-listings', message:'Your account is ready. Create your first listing' };
     }
     const existing=await this.db.query(`SELECT * FROM marketplace_plan_enrollments
-      WHERE user_id=$1 AND plan_key=$2 AND status='pending_payment'
-      ORDER BY created_at DESC LIMIT 1`,[userId,planKey]);
+      WHERE user_id=$1 AND plan_key=$2 AND status='pending_payment' AND billing_interval=$3
+      ORDER BY created_at DESC LIMIT 1`,[userId,planKey,interval]);
     if(existing.rows.length) return {enrollment:existing.rows[0],next:'/marketplace/checkout',requiresPayment:true};
-    const r=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents)
-      VALUES ($1,$2,'pending_payment',$3) RETURNING *`,[userId,planKey,plan.priceCents]);
+    const r=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents,billing_interval)
+      VALUES ($1,$2,'pending_payment',$3,$4) RETURNING *`,[userId,planKey,approvedPrice,interval]);
     return {enrollment:r.rows[0],next:'/marketplace/checkout',requiresPayment:true};
   }
   async mine(userId:string) {
@@ -131,7 +148,7 @@ export class MarketplacePlansService {
     if (!active) throw new BadRequestException('Activate or renew a Marketplace plan before submitting a listing');
     const plan=PLANS[active.plan_key as keyof typeof PLANS];
     if (!plan) throw new BadRequestException('Active enrollment references an unknown plan; contact support');
-    if (Number(active.price_cents) !== plan.priceCents || String(active.currency).toUpperCase() !== 'USD') {
+    if ((Number(active.price_cents) !== this.priceFor(active.plan_key,active.billing_interval || 'monthly') && !(active.plan_key==='agent-essential' && Number(active.price_cents)===9700) && !(active.plan_key==='agent-growth' && Number(active.price_cents)===14700)) || String(active.currency).toUpperCase() !== 'USD') {
       throw new BadRequestException('Enrollment amount or currency does not match its plan; contact support');
     }
     return {...state,entitlement:active,maxListings:plan.maxListings};
@@ -217,8 +234,8 @@ export class MarketplacePlansService {
       AND ((e.plan_key='owner-standard' AND e.price_cents=6700)
         OR (e.plan_key='owner-enhanced' AND e.price_cents=9700)
         OR (e.plan_key='owner-maximum' AND e.price_cents=14700)
-        OR (e.plan_key='agent-essential' AND e.price_cents=9700)
-        OR (e.plan_key='agent-growth' AND e.price_cents=14700)))) RETURNING enrollment_id,status
+        OR (e.plan_key='agent-essential' AND e.price_cents IN (9700,14700))
+        OR (e.plan_key='agent-growth' AND e.price_cents IN (14700,19700))))) RETURNING enrollment_id,status
     ), activated AS (
       UPDATE marketplace_plan_enrollments e SET status='active',
       current_period_start=NOW(),current_period_end=NOW()+INTERVAL '1 month',updated_at=NOW()
@@ -227,8 +244,8 @@ export class MarketplacePlansService {
       AND ((e.plan_key='owner-standard' AND e.price_cents=6700)
         OR (e.plan_key='owner-enhanced' AND e.price_cents=9700)
         OR (e.plan_key='owner-maximum' AND e.price_cents=14700)
-        OR (e.plan_key='agent-essential' AND e.price_cents=9700)
-        OR (e.plan_key='agent-growth' AND e.price_cents=14700))
+        OR (e.plan_key='agent-essential' AND e.price_cents IN (9700,14700))
+        OR (e.plan_key='agent-growth' AND e.price_cents IN (14700,19700)))
       AND e.currency='USD' AND e.billing_interval='monthly' RETURNING e.id
     ) SELECT (SELECT enrollment_id FROM claimed) AS enrollment_id,(SELECT status FROM claimed) AS status,
       (SELECT id FROM activated) AS activated_id`,[id,approve?'approved':'rejected',adminId,String(note).trim().slice(0,1000)]);
@@ -266,7 +283,7 @@ export class MarketplacePlansService {
     let response: any;
     try {
       response = await this.nuvei.debit({id:String(user.id),email:String(user.email)},
-        {amount:Number(row.price_cents)/100,description:`ListoQasa ${row.plan_key}`,dev_reference:reference,currency:'USD'},token);
+        {amount:Number(row.price_cents)/100,description:`ListoQasa ${row.plan_key}`,dev_reference:reference,currency:'USD',...((row.plan_key.startsWith('agent-') || row.plan_key.startsWith('owner-')) && Number(row.price_cents)===this.priceFor(row.plan_key,row.billing_interval||'monthly') ? {tax_percentage:16, taxable_amount:Math.round(Number(row.price_cents)/1.16)/100, vat:(Number(row.price_cents)-Math.round(Number(row.price_cents)/1.16))/100} : {})},token);
     } catch (err) {
       // A network exception is ambiguous: the processor might have charged the card.
       this.logger.error('Marketplace Nuvei debit uncertain',err instanceof Error?err.stack:String(err));
@@ -297,7 +314,7 @@ export class MarketplacePlansService {
       current_period_end=GREATEST(NOW(),COALESCE((SELECT MAX(p.current_period_end)
         FROM marketplace_plan_enrollments p WHERE p.user_id=e.user_id AND p.id<>e.id
         AND p.status='active' AND p.plan_key=e.plan_key AND p.current_period_end>NOW()),NOW()))
-        + CASE WHEN e.billing_interval='yearly' THEN INTERVAL '1 year' ELSE INTERVAL '1 month' END,
+        + CASE WHEN e.billing_interval='yearly' THEN INTERVAL '1 year' WHEN e.billing_interval='quarterly' THEN INTERVAL '3 months' ELSE INTERVAL '1 month' END,
       updated_at=NOW() WHERE e.id=$1 AND e.status='pending_payment'`,[enrollmentId,transactionId||null]);
   }
   private async verifyEnrollmentTransaction(enrollmentId:string, transactionId:string) {
@@ -339,8 +356,8 @@ export class MarketplacePlansService {
     const e=result.rows[0];
     if(!e) return {eligible:false,provisioned:false,reason:'not_found'};
     const eligible=this.crmAgentPlans.has(e.plan_key) &&
-      ((e.plan_key==='agent-essential' && Number(e.price_cents)===9700) ||
-       (e.plan_key==='agent-growth' && Number(e.price_cents)===14700)) &&
+      ((e.plan_key==='agent-essential' && [9700,14700,17052,163699].includes(Number(e.price_cents))) ||
+       (e.plan_key==='agent-growth' && [14700,19700,22852,219379].includes(Number(e.price_cents)))) &&
       e.currency==='USD';
     const key=`listoqasa:${e.id}`;
     const active=eligible && e.status==='active' && !!e.current_period_end &&
@@ -370,7 +387,7 @@ export class MarketplacePlansService {
     const row=result.rows[0];
     if(!row) throw new NotFoundException('Enrollment not found');
     const plan=PLANS[row.plan_key as keyof typeof PLANS];
-    const validPlan=!!plan && plan.priceCents===Number(row.price_cents) && row.currency==='USD';
+    const validPlan=!!plan && (this.priceFor(row.plan_key,row.billing_interval || 'monthly')===Number(row.price_cents) || (row.plan_key==='agent-essential' && [9700,14700,141120].includes(Number(row.price_cents))) || (row.plan_key==='agent-growth' && [14700,19700,189120].includes(Number(row.price_cents)))) && row.currency==='USD';
     const active=validPlan && row.status==='active' &&
       (Number(row.price_cents)===0 || (!!row.current_period_end && new Date(row.current_period_end).getTime()>Date.now()));
     // Explicit allowlist must be approved by product/billing owner; free plans are excluded.

@@ -18,7 +18,7 @@ export default function MarketplaceSignupPage() {
   const rawPlan = params.get('plan') || '';
   const plan = rawPlan.replace(/^(owner|agent)-/, '');
   const planKey = `${role}-${plan === 'free' ? 'free-launch' : plan}`;
-  const billing = params.get('billing') === 'yearly' ? 'yearly' : 'monthly';
+  const billing = params.get('billing') === 'quarterly' ? 'quarterly' : params.get('billing') === 'yearly' ? 'yearly' : 'monthly';
   const valid = allowed[role].includes(plan);
   const [form,setForm] = useState({name:'',email:'',password:'',confirm:''});
   const [visible,setVisible] = useState(false);
@@ -36,7 +36,7 @@ export default function MarketplaceSignupPage() {
     try {
       const result = await marketplaceRequest('/auth/signup', {method:'POST',body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password,role,fullName:form.name.trim()})});
       saveSession(result);
-      const enrollment = await marketplaceRequest('/marketplace/plans/enroll', {method:'POST',body:JSON.stringify({planKey})});
+      const enrollment = await marketplaceRequest('/marketplace/plans/enroll', {method:'POST',body:JSON.stringify({planKey,interval:billing})});
       if (enrollment?.enrollment?.id) sessionStorage.setItem('listoqasa_pending_enrollment', enrollment.enrollment.id);
       if (enrollment?.next === '/create-listing' || enrollment?.enrollment?.status === 'active') { navigate('/my-listings',{replace:true,state:{message:enrollment.message || 'Your account is ready. Create your first listing'}}); return; }
       navigate(`/marketplace/checkout?plan=${encodeURIComponent(planKey)}&billing=${billing}`,{replace:true,state:{planKey}});

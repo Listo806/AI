@@ -20,5 +20,5 @@ export class MarketplacePlansController {
   @Get('billing-history') @UseGuards(JwtAuthGuard) history(@CurrentUser() user:any){return this.plans.billingHistory(user.id)}
   @Post('renew') @UseGuards(JwtAuthGuard) renew(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.renew(user.id,String(body?.enrollmentId||''))}
   @Post('resume') @UseGuards(JwtAuthGuard) resume(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.resume(user.id,String(body?.enrollmentId||''))}
-  @Post('enroll') @UseGuards(JwtAuthGuard) enroll(@CurrentUser() user:any,@Body() body:{planKey:string}){return this.plans.enroll(user.id,String(body?.planKey||''))}
+  @Post('enroll') @UseGuards(JwtAuthGuard) enroll(@CurrentUser() user:any,@Body() body:{planKey:string;interval?:string}){return this.plans.enroll(user.id,String(body?.planKey||''),String(body?.interval||'monthly'))}
 }

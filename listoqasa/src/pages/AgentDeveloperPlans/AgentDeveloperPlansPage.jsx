@@ -40,7 +40,7 @@ export default function AgentDeveloperPlansPage() {
       {
         key: "essential",
         icon: Home,
-        monthlyPrice: 97,
+        monthlyPrice: 147,
         cta: "/marketplace/signup?audience=agent&plan=essential",
         features: [
           "listings20",
@@ -57,7 +57,7 @@ export default function AgentDeveloperPlansPage() {
       {
         key: "growth",
         icon: Rocket,
-        monthlyPrice: 147,
+        monthlyPrice: 197,
         popular: true,
         cta: "/marketplace/signup?audience=agent&plan=growth",
         features: [
@@ -91,7 +91,7 @@ export default function AgentDeveloperPlansPage() {
         yearlySaving:
           304.8,
 
-        cta: "https://www.cortexaaicrm.com/",
+        cta: "/marketplace/login?next=%2Fmarketplace%2Fsubscriptions",
 
         features: [
           "agent247",
@@ -220,11 +220,7 @@ export default function AgentDeveloperPlansPage() {
                     ? "active"
                     : ""
                 }
-                onClick={() =>
-                  setBillingCycle(
-                    "yearly"
-                  )
-                }
+                onClick={() => setBillingCycle("yearly")}
               >
                 <Check size={17} />
 
@@ -300,6 +296,7 @@ export default function AgentDeveloperPlansPage() {
                               "plans.common.perMonth"
                             )}
                           </span>
+                          <span className="lq-plan-tax">{t("plans.common.plusTax", { defaultValue: "+ IVA" })}</span>
                         </div>
 
                         <div className="lq-plan-billing-caption">
@@ -337,6 +334,7 @@ export default function AgentDeveloperPlansPage() {
                               "plans.common.perMonth"
                             )}
                           </span>
+                          <span className="lq-plan-tax">{t("plans.common.plusTax", { defaultValue: "+ IVA" })}</span>
                         </div>
 
                         <div className="lq-plan-billing-caption">
@@ -352,9 +350,7 @@ export default function AgentDeveloperPlansPage() {
                           )}
 
                           <span>
-                            {t(
-                              "plans.common.perYear"
-                            )}
+                            {t("plans.common.perYear")} {t("plans.common.plusTax", { defaultValue: "+ IVA" })}
                           </span>
                         </div>
 
