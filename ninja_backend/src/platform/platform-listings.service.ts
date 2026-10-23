@@ -96,6 +96,19 @@ export class PlatformListingsService {
     return rows[0];
   }
 
+  async updateOwnedListing(id: string, dto: CreatePropertyDto, userId: string) {
+    const existing = await this.db.query(`SELECT id, status FROM properties WHERE id=$1 AND created_by=$2 AND origin='platform' AND status NOT IN ('deleted','archived')`, [id,userId]);
+    if (!existing.rows.length) throw new NotFoundException('Listing not found or not owned by this account');
+    if (!['sale','rent'].includes(dto.type)) throw new BadRequestException('Choose Sale or Rent before saving');
+    const {rows} = await this.db.query(`UPDATE properties SET title=$3, description=$4, address=$5, city=$6, state=$7,
+      price=$8, type=$9, bedrooms=$10, bathrooms=$11, square_feet=$12, updated_at=NOW()
+      WHERE id=$1 AND created_by=$2 AND origin='platform' AND status NOT IN ('deleted','archived') RETURNING *`,
+      [id,userId,dto.title,dto.description||null,dto.address||null,dto.city||null,dto.state||null,
+       dto.price??null,dto.type,dto.bedrooms??null,dto.bathrooms??null,dto.squareFeet??null]);
+    if (!rows.length) throw new NotFoundException('Listing no longer editable');
+    return rows[0];
+  }
+
   async addDraftMedia(id: string, userId: string, fileId: string) {
     await this.ownedDraft(id,userId);
     // Only attach files uploaded by this user, in this listing's folder.
