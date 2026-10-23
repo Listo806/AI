@@ -162,12 +162,59 @@ export class PlatformListingsService {
       byProperty = Object.fromEntries(rows.rows.map(r => [r.property_id, Number(r.count)]));
       views = rows.rows.reduce((n,r) => n + Number(r.count), 0);
     } else views = 0;
+    const inquiry = await this.inquiryStats(ids);
     return { data: listings, metrics: {
       activeListings: listings.filter(x => ['published','approved'].includes(x.status)).length,
       identifiedBuyerViews: views, viewsByProperty: byProperty,
       // No verified inquiry/contact-click event source in this backend yet.
-      inquiriesReceived: null, contactClicks: null,
-    }, recentInquiries: null, publicListingsUrl: null };
+      inquiriesReceived: inquiry.total, inquiriesByProperty: inquiry.byProperty, contactClicks: null,
+    }, recentInquiries: inquiry.recent, publicListingsUrl: `/profile/${encodeURIComponent(userId)}` };
+  }
+
+  /** Genuine inquiries tied to the user's own platform properties. */
+  private async inquiryStats(ids: string[]) {
+    if (!ids.length) return { total: 0, byProperty: {}, recent: [] };
+    const counts = await this.db.query(`SELECT property_id AS "propertyId", COUNT(*)::int AS total
+      FROM leads WHERE property_id = ANY($1::uuid[]) GROUP BY property_id`, [ids]);
+    const {rows} = await this.db.query(`SELECT l.id, l.property_id AS "propertyId", l.name, l.email,
+      l.notes, l.created_at AS "createdAt" FROM leads l
+      WHERE l.property_id = ANY($1::uuid[]) ORDER BY l.created_at DESC LIMIT 5`, [ids]);
+    const byProperty = Object.fromEntries(counts.rows.map(r => [r.propertyId, Number(r.total)]));
+    return { total: counts.rows.reduce((sum,r) => sum + Number(r.total), 0), byProperty, recent: rows };
+  }
+
+  /** Public portfolio: only currently published properties, never drafts or private fields. */
+  async publicPortfolio(ownerId: string) {
+    const {rows} = await this.db.query(`SELECT p.id,p.title,p.city,p.state,p.price,p.type,p.bedrooms,p.bathrooms,
+      (SELECT pm.url FROM property_media pm WHERE pm.property_id=p.id ORDER BY pm.is_primary DESC,pm.display_order ASC LIMIT 1) AS image
+      FROM properties p WHERE p.created_by=$1 AND p.origin='platform' AND p.status IN ('published','approved')
+      ORDER BY p.published_at DESC NULLS LAST,p.created_at DESC LIMIT 200`,[ownerId]);
+    return {data:rows};
+  }
+
+  /** Bulk CSV rows are stored as drafts; publishing remains subject to existing plan guards. */
+  async bulkDrafts(items: CreatePropertyDto[], userId: string, teamId: string | null) {
+    if (!Array.isArray(items) || !items.length || items.length > 100)
+      throw new BadRequestException('Upload between 1 and 100 properties per batch');
+    const allowed = new Set(['sale','rent']);
+    for (const item of items) {
+      if (!item || typeof item.title !== 'string' || !item.title.trim() || item.title.length > 255 || !allowed.has(String(item.type)))
+        throw new BadRequestException('Each row requires a title and sale/rent listing type');
+      if (item.price != null && (!Number.isFinite(Number(item.price)) || Number(item.price) < 0))
+        throw new BadRequestException('Invalid price in CSV');
+    }
+    return this.db.transaction(async client => {
+      const created = [];
+      for (const item of items) {
+        const {rows} = await client.query(`INSERT INTO properties
+          (title,description,address,city,state,price,type,status,origin,bedrooms,bathrooms,square_feet,created_by,team_id,created_at,updated_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,'draft','platform',$8,$9,$10,$11,$12,NOW(),NOW()) RETURNING id,title,status`,
+          [item.title.trim(),item.description||null,item.address||null,item.city||null,item.state||null,item.price??null,item.type,
+           item.bedrooms??null,item.bathrooms??null,item.squareFeet??null,userId,teamId]);
+        created.push(rows[0]);
+      }
+      return created;
+    });
   }
 
   async action(id: string, userId: string, action: string) {

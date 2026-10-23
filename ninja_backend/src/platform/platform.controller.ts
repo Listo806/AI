@@ -15,6 +15,18 @@ import { CreatePropertyDto } from '../properties/dto/create-property.dto';
 export class PlatformController {
   constructor(private readonly platformListings: PlatformListingsService) {}
 
+  @Get('public-portfolio/:ownerId')
+  async publicPortfolio(@Param('ownerId') ownerId: string) {
+    return this.platformListings.publicPortfolio(ownerId);
+  }
+
+  @Post('listings/bulk-drafts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  async bulkDrafts(@Body('items') items: CreatePropertyDto[], @CurrentUser() user: any) {
+    return { data: await this.platformListings.bulkDrafts(items, user.id, user.teamId) };
+  }
+
   @Get('listings')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)

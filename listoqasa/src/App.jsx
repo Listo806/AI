@@ -9,6 +9,7 @@ import MarketplacePurchaseConfirmationPage from "./pages/CreateListing/Marketpla
 import MarketplacePaymentPendingPage from "./pages/CreateListing/MarketplacePaymentPendingPage";
 import CreateListingPage from "./pages/CreateListing/CreateListingPage";
 import MyListingsPage from "./pages/MyListings/MyListingsPage";
+import PublicPortfolioPage from "./pages/MyListings/PublicPortfolioPage";
 import MarketplaceLoginPage from "./pages/CreateListing/MarketplaceLoginPage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Home/HomePage";
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/marketplace/payment-pending" element={<MarketplacePaymentPendingPage />} />
         <Route path="/marketplace/login" element={<MarketplaceLoginPage />} />
         <Route path="/my-listings" element={<MyListingsPage />} />
+        <Route path="/profile/:ownerId" element={<PublicPortfolioPage />} />
         <Route path="/create-listing" element={<CreateListingPage />} />
         <Route path="/owners/create" element={<CreateListingPage />} />
         <Route path="/owners" element={<OwnersPage />} />

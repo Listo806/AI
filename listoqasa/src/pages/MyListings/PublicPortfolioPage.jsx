@@ -1,0 +1,7 @@
+import React,{useEffect,useState} from 'react';
+import {Link,useParams} from 'react-router-dom';
+import './MyListingsPage.css';
+const BASE=(import.meta.env.VITE_API_BASE_URL||import.meta.env.VITE_API_URL||'https://backend.cortexaaicrm.com/api').replace(/\/+$/,'');
+export default function PublicPortfolioPage(){const {ownerId}=useParams();const [data,setData]=useState([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
+useEffect(()=>{let alive=true;fetch(`${BASE}/platform/public-portfolio/${encodeURIComponent(ownerId)}`).then(async r=>{const body=await r.json();if(!r.ok)throw Error(body.message||'Unable to load listings');if(alive)setData(body.data||[])}).catch(e=>{if(alive)setError(e.message)}).finally(()=>{if(alive)setLoading(false)});return()=>{alive=false}},[ownerId]);
+return <div className="ml-page"><header className="ml-header"><Link className="ml-logo" to="/">Listo<span>Qasa</span></Link></header><main className="ml-main"><h1>Public Listings</h1><p>Available properties from this ListoQasa account.</p>{loading?<p>Loading…</p>:error?<p role="alert">{error}</p>:data.length?<div className="ml-portfolio-grid">{data.map(x=><Link to={`/property/${encodeURIComponent(x.id)}`} className="ml-portfolio-card" key={x.id}>{x.image&&<img src={x.image} alt={x.title}/>}<h2>{x.title}</h2><p>{[x.city,x.state].filter(Boolean).join(', ')}</p><strong>{x.price==null?'Contact for price':`$${Number(x.price).toLocaleString()}`}</strong></Link>)}</div>:<p>No published properties are available.</p>}</main></div>}
