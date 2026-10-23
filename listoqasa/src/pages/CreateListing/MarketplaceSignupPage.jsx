@@ -38,7 +38,7 @@ export default function MarketplaceSignupPage() {
       saveSession(result);
       const enrollment = await marketplaceRequest('/marketplace/plans/enroll', {method:'POST',body:JSON.stringify({planKey})});
       if (enrollment?.enrollment?.id) sessionStorage.setItem('listoqasa_pending_enrollment', enrollment.enrollment.id);
-      if (enrollment?.next === '/create-listing' || enrollment?.enrollment?.status === 'active') { navigate('/create-listing',{replace:true,state:{message:enrollment.message || 'Your account is ready. Create your first listing'}}); return; }
+      if (enrollment?.next === '/create-listing' || enrollment?.enrollment?.status === 'active') { navigate('/my-listings',{replace:true,state:{message:enrollment.message || 'Your account is ready. Create your first listing'}}); return; }
       navigate(`/marketplace/checkout?plan=${encodeURIComponent(planKey)}&billing=${billing}`,{replace:true,state:{planKey}});
     } catch(e) {setError(e.message || 'Unable to create account.');} finally {setBusy(false);}
   }

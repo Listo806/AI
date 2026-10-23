@@ -23,6 +23,7 @@ export enum PropertyStatus {
   RESERVED = 'reserved',
   SOLD = 'sold',
   RENTED = 'rented',
+  PAUSED = 'paused',
   ARCHIVED = 'archived',
 }
 

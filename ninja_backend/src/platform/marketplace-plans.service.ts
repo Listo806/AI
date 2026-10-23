@@ -107,7 +107,7 @@ export class MarketplacePlansService {
       const existing = await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE user_id=$1 AND plan_key=$2 AND status='active' ORDER BY created_at DESC LIMIT 1`,[userId,planKey]);
       if (existing.rows.length) return { enrollment: existing.rows[0], next: '/create-listing', message:'Your account is ready. Create your first listing' };
       const r=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents) VALUES ($1,$2,'active',0) RETURNING *`,[userId,planKey]);
-      return { enrollment:r.rows[0], next:'/create-listing', message:'Your account is ready. Create your first listing' };
+      return { enrollment:r.rows[0], next:'/my-listings', message:'Your account is ready. Create your first listing' };
     }
     const existing=await this.db.query(`SELECT * FROM marketplace_plan_enrollments
       WHERE user_id=$1 AND plan_key=$2 AND status='pending_payment'
@@ -253,7 +253,7 @@ export class MarketplacePlansService {
     if (!/^[a-zA-Z0-9_-]{6,512}$/.test(token)) throw new BadRequestException('Invalid secure card token');
     const row = (await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`, [enrollmentId,userId])).rows[0];
     if (!row) throw new NotFoundException('Marketplace enrollment not found');
-    if (row.status === 'active') return { status:'active', next:'/create-listing' };
+    if (row.status === 'active') return { status:'active', next:'/my-listings' };
     if (row.status !== 'pending_payment' || Number(row.price_cents) <= 0) throw new BadRequestException('Enrollment is not payable');
     if (!this.nuvei.isConfigured()) throw new ServiceUnavailableException('Nuvei is not configured');
     const user = (await this.db.query(`SELECT id,email FROM users WHERE id=$1`,[userId])).rows[0];
@@ -281,7 +281,7 @@ export class MarketplacePlansService {
       catch(err) { this.logger.warn('Marketplace verification deferred: '+String(err)); }
     }
     const state = (await this.db.query(`SELECT status FROM marketplace_plan_enrollments WHERE id=$1`,[row.id])).rows[0]?.status;
-    if (state === 'active') return {status:'active',next:'/create-listing'};
+    if (state === 'active') return {status:'active',next:'/my-listings'};
     if (state === 'failed') return {status:'failed',message:'Nuvei declined the payment'};
     return {status:'pending_payment',message:'Waiting for secure payment confirmation'};
   }

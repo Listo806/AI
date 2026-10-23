@@ -19,7 +19,7 @@ export default function MarketplacePurchaseConfirmationPage(){
  {state.crmEligible?<div className="lq-purchase-crm"><h2>Cortexa Real Estate CRM</h2>
  <p>Your agent plan includes Real Estate CRM eligibility. {state.crmProvisioned ? 'Your Real Estate workspace access is active. Sign in to Cortexa to continue.' : 'Your plan includes Real Estate CRM. Sign in or set up your Cortexa account to finish setup; if access is not ready, contact support.'}</p>
  <a className="lq-purchase-primary" href={state.crmUrl} target="_blank" rel="noopener noreferrer">Open / Set up Cortexa CRM</a></div>:<p>This purchase does not include Cortexa CRM access.</p>}
- <Link className="lq-purchase-secondary" to="/create-listing">Manage my listings</Link></>
+ <Link className="lq-purchase-secondary" to="/my-listings">Manage my listings</Link></>
  :<p>Payment has not been confirmed. No CRM access has been granted.</p>}</>}
  <p><Link to="/marketplace/subscription">View subscriptions</Link></p>
  </div></main>;

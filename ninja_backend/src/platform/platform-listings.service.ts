@@ -149,4 +149,47 @@ export class PlatformListingsService {
     );
     return rows;
   }
+  async dashboard(userId: string) {
+    const listings = await this.findMine(userId, null, '');
+    const ids = listings.map(x => x.id);
+    let views: number | null = null;
+    let byProperty: Record<string, number> = {};
+    // buyer_property_views measures identified buyer activity, not all anonymous page views.
+    // Report it separately rather than mislabeling it as total page views.
+    if (ids.length) {
+      const rows = await this.db.query(`SELECT property_id, SUM(view_count)::int AS count
+        FROM buyer_property_views WHERE property_id = ANY($1::uuid[]) GROUP BY property_id`, [ids]);
+      byProperty = Object.fromEntries(rows.rows.map(r => [r.property_id, Number(r.count)]));
+      views = rows.rows.reduce((n,r) => n + Number(r.count), 0);
+    } else views = 0;
+    return { data: listings, metrics: {
+      activeListings: listings.filter(x => ['published','approved'].includes(x.status)).length,
+      identifiedBuyerViews: views, viewsByProperty: byProperty,
+      // No verified inquiry/contact-click event source in this backend yet.
+      inquiriesReceived: null, contactClicks: null,
+    }, recentInquiries: null, publicListingsUrl: null };
+  }
+
+  async action(id: string, userId: string, action: string) {
+    const transitions: Record<string, {from: string[]; to: string}> = {
+      pause: {from:['published','approved'],to:'paused'},
+      reactivate: {from:['paused'],to:'pending_review'},
+      sold: {from:['published','approved'],to:'sold'},
+      rented: {from:['published','approved'],to:'rented'},
+      delete: {from:['draft','pending_review','rejected','paused','published','approved','sold','rented'],to:'archived'},
+    };
+    const transition = transitions[action];
+    if (!transition) throw new BadRequestException('Unsupported listing action');
+    if (action === 'reactivate') return this.withListingSlot(userId, async client => {
+      const result = await client.query(`UPDATE properties SET status='pending_review',updated_at=NOW() WHERE id=$1 AND created_by=$2 AND origin='platform' AND status='paused' RETURNING id,status,title,type`,[id,userId]);
+      if (!result.rows.length) throw new BadRequestException('Listing not found or not paused');
+      return result.rows[0];
+    });
+    const {rows} = await this.db.query(`UPDATE properties SET status=$3,updated_at=NOW()
+      WHERE id=$1 AND created_by=$2 AND origin='platform' AND status = ANY($4::text[])
+      RETURNING id,status,title,type`, [id,userId,transition.to,transition.from]);
+    if (!rows.length) throw new BadRequestException('Listing not found, not owned by you, or action not allowed for its current status');
+    return rows[0];
+  }
+
 }

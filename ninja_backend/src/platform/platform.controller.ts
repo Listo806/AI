@@ -30,6 +30,18 @@ export class PlatformController {
     return { data };
   }
 
+  @Get('listings/dashboard')
+  @UseGuards(JwtAuthGuard)
+  async listingDashboard(@CurrentUser() user:any) {
+    return this.platformListings.dashboard(user.id);
+  }
+
+  @Patch('listings/:id/action')
+  @UseGuards(JwtAuthGuard)
+  async listingAction(@Param('id') id:string,@Body('action') action:string,@CurrentUser() user:any) {
+    return {data:await this.platformListings.action(id,user.id,action)};
+  }
+
   @Post('listings')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)

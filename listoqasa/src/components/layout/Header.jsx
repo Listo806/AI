@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getMarketplaceUser } from "../../api/marketplaceApi";
 
 import {
   Link,
@@ -31,6 +32,8 @@ export default function Header({
 }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [marketplaceUser, setMarketplaceUser] = useState(getMarketplaceUser);
+  useEffect(() => { const refresh=()=>setMarketplaceUser(getMarketplaceUser()); window.addEventListener("storage",refresh);window.addEventListener("focus",refresh);return()=>{window.removeEventListener("storage",refresh);window.removeEventListener("focus",refresh)}; }, []);
   const currentLanguage = (
     i18n.resolvedLanguage ||
     i18n.language ||
@@ -305,14 +308,12 @@ export default function Header({
 
               <div className="lq-account-dropdown">
                 <Link
-                  to="/sign-in"
+                  to={marketplaceUser ? "/my-listings" : "/marketplace/login"}
                   className="lq-account-signin-item"
                 >
                   <span className="lq-account-signin-copy">
                     <strong>
-                      {t("header.accountMenu.signIn", {
-                        defaultValue: "Sign In",
-                      })}
+                      {marketplaceUser ? "My Listings" : t("header.accountMenu.signIn", { defaultValue: "Sign In" })}
                     </strong>
 
                     <small>
@@ -408,7 +409,7 @@ export default function Header({
         </div>
 
         <nav className="lq-mobile-nav">
-          {compact && <Link to="/sign-in" onClick={() => setMobileOpen(false)}>{t("header.accountMenu.signIn", { defaultValue: "Sign In" })}</Link>}
+          {compact && <Link to={marketplaceUser ? "/my-listings" : "/marketplace/login"} onClick={() => setMobileOpen(false)}>{t("header.accountMenu.signIn", { defaultValue: "Sign In" })}</Link>}
           <div className="lq-mobile-list-property">
             <span className="lq-mobile-list-property-title">
               {t("header.listProperty")}
