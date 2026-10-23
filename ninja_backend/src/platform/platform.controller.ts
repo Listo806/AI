@@ -15,6 +15,18 @@ import { CreatePropertyDto } from '../properties/dto/create-property.dto';
 export class PlatformController {
   constructor(private readonly platformListings: PlatformListingsService) {}
 
+  @Get('public-portfolio/:ownerId')
+  async publicPortfolio(@Param('ownerId') ownerId: string) {
+    return this.platformListings.publicPortfolio(ownerId);
+  }
+
+  @Post('listings/bulk-drafts')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER, UserRole.DEVELOPER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async bulkDrafts(@Body('items') items: CreatePropertyDto[], @CurrentUser() user: any) {
+    return { data: await this.platformListings.bulkDrafts(items, user.id, user.teamId) };
+  }
+
   @Get('listings')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER, UserRole.DEVELOPER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
@@ -28,6 +40,18 @@ export class PlatformController {
       user.role,
     );
     return { data };
+  }
+
+  @Get('listings/dashboard')
+  @UseGuards(JwtAuthGuard)
+  async listingDashboard(@CurrentUser() user:any) {
+    return this.platformListings.dashboard(user.id);
+  }
+
+  @Patch('listings/:id/action')
+  @UseGuards(JwtAuthGuard)
+  async listingAction(@Param('id') id:string,@Body('action') action:string,@CurrentUser() user:any) {
+    return {data:await this.platformListings.action(id,user.id,action)};
   }
 
   @Post('listings')
