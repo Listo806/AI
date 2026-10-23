@@ -24,6 +24,7 @@ import PropertyCard from "../../components/property/PropertyCard";
 import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
 import "./HomePage.css";
 import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
+import rentalHeroImage from "../../assets/public/images/listoqasa/rental-hero-new.png";
 import MarketplaceBrowseSections from "../../components/marketplace/MarketplaceBrowseSections";
 import { propertyCoverImage, isPublicMarketplaceProperty } from "../../api/propertyPresentation";
 
@@ -240,7 +241,7 @@ export default function HomePage() {
       <section
         className={`lq-home-hero lq-home-hero-${searchMode}`}
         style={{
-          "--lq-home-hero-image": `url(${homeHeroImage})`,
+          "--lq-home-hero-image": `url(${searchMode === "rent" ? rentalHeroImage : homeHeroImage})`,
         }}
       >
         <div className="lq-container lq-home-hero-inner">
@@ -248,7 +249,7 @@ export default function HomePage() {
             <h1>
               {searchMode === "rent"
                 ? t("home.heroRentTitle", {
-                    defaultValue: "Find the Perfect Rental",
+                    defaultValue: "Find Your Rental",
                   })
                 : t("home.heroBuyTitle", {
                     defaultValue: "Find Homes That Match You",

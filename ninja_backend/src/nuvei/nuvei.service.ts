@@ -35,7 +35,7 @@ import { getWorkspace, WorkspaceDef } from '../workspaces/workspace-registry';
  * when status === 'success' AND status_detail === 3.
  */
 
-type NuveiPlanKey = 'solo' | 'business' | 'scale' | 'ecommerce';
+type NuveiPlanKey = 'solo' | 'business' | 'scale' | 'ecommerce' | 'listoqasa';
 
 interface NuveiPlan {
   key: NuveiPlanKey;
@@ -160,6 +160,10 @@ export class NuveiService {
 
   private plan(key: string): NuveiPlan {
     const k = String(key || '').trim().toLowerCase() as NuveiPlanKey;
+    if (k === 'listoqasa') {
+      // ListoQasa single-price Agentic CRM: first month paid upfront, no trial or setup fee.
+      return { key: 'listoqasa', provisionPlan: 'solo', label: 'ListoQasa Agentic CRM', activation: 127, monthly: 127, trialDays: 0 };
+    }
     if (k === 'solo' || k === 'business' || k === 'scale') {
       const p = PLANS[k];
       return { key: k, provisionPlan: k, label: p.label, activation: p.pricing.introCents / 100, monthly: p.pricing.monthlyCents / 100, trialDays: 14 };
@@ -468,7 +472,7 @@ export class NuveiService {
     return {
       enabled: this.enabled(),
       ...this.client.publicConfig(),
-      plans: (['solo', 'business', 'scale'] as NuveiPlanKey[]).map(
+      plans: (['solo', 'business', 'scale', 'listoqasa'] as NuveiPlanKey[]).map(
         (k) => {
           const p = this.plan(k);
           return {
@@ -1034,6 +1038,9 @@ export class NuveiService {
     const plan = requestedKey === 'ecommerce' ? await this.ecommercePlan() : this.plan(requestedKey);
     const productKey = plan.key === 'ecommerce' ? 'ecommerce' : 'agentic';
     const billingCycle = productKey === 'ecommerce' ? String(input.billingCycle || 'monthly').toLowerCase() : 'monthly';
+    if (plan.key === 'listoqasa' && input.billingCycle && input.billingCycle !== 'monthly') {
+      throw new BadRequestException('ListoQasa Agentic CRM currently supports monthly billing only.');
+    }
     if (!['monthly','annual'].includes(billingCycle)) throw new BadRequestException('Invalid billing cycle.');
     const user = await this.userRow(input.userId);
 
@@ -1041,7 +1048,7 @@ export class NuveiService {
     // description + amount ("3DS Challenge" 151 / "3DS FrictionLess" >=150).
     // Honored ONLY on the staging gateway so the challenge screen can be tested.
     let activationAmount = productKey === 'ecommerce' && billingCycle === 'annual' ? 3804 : plan.activation;
-    let activationDescription = plan.key === 'ecommerce' ? `Cortexa ${plan.label} ${billingCycle} subscription` : `Cortexa ${plan.label} activation`;
+    let activationDescription = plan.key === 'listoqasa' ? 'ListoQasa Agentic CRM first monthly payment' : plan.key === 'ecommerce' ? `Cortexa ${plan.label} ${billingCycle} subscription` : `Cortexa ${plan.label} activation`;
     const scenario = String(input.testScenario || '').trim().toLowerCase();
     if (scenario && this.client.environment() === 'staging') {
       if (scenario === '3ds_challenge') {

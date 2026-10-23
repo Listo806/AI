@@ -1,24 +1,25 @@
-.lq-ai-pricing-page{min-height:100vh;padding:112px 24px 38px;background:#fff;color:#0b0b0b}
-.lq-ai-pricing-shell{width:min(1060px,100%);margin:0 auto}
-.lq-ai-pricing-header{text-align:center}
-.lq-ai-pricing-header h1{margin:0;font-size:clamp(42px,3.2vw,70px);line-height:1.04;letter-spacing:-1.8px;font-weight: 700}
-.lq-ai-pricing-toggle{margin-top:22px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:16px;font-weight:700}
-.lq-ai-pricing-toggle>strong{padding:5px 9px;border-radius:6px;background:#eaf3ff;color:#1a68d8;font-size:13px}
-.lq-ai-pricing-switch{position:relative;width:50px;height:28px;padding:0;border:0;border-radius:999px;background:#9ca3af;cursor:pointer}
-.lq-ai-pricing-switch.annual{background:#111}.lq-ai-pricing-switch i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.18s}
+.lq-ai-pricing-page{min-height:calc(100vh - 80px);padding:54px 24px 78px;background:#f7f9fd;color:#172743}
+.lq-ai-pricing-shell{width:min(920px,100%);margin:0 auto}
+.lq-ai-pricing-header{text-align:center;margin-bottom:30px}
+.lq-ai-pricing-header h1{margin:0 0 15px;font-size:clamp(30px,3vw,40px);line-height:1.2;font-weight:800}
+.lq-ai-pricing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:14px;color:#72829b}
+.lq-ai-pricing-toggle span.selected{color:#172743;font-weight:700}
+.lq-ai-pricing-toggle>strong{padding:7px 14px;border-radius:999px;background:#e4efff;color:#1263e9;font-size:12px}
+.lq-ai-pricing-switch{position:relative;width:50px;height:28px;padding:0;border:0;border-radius:999px;background:#176dff;cursor:pointer}
+.lq-ai-pricing-switch i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .18s}
 .lq-ai-pricing-switch.annual i{transform:translateX(22px)}
-.lq-ai-pricing-grid{margin-top:26px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;align-items:stretch}
-.lq-ai-price-card{padding:20px 16px 18px;border:1px solid #d6dbe4;border-radius:15px;background:#fff;color:#0b0b0b}
-.lq-ai-price-card.featured{background:#101010;color:#fff;border-color:#101010}
-.lq-ai-price-card h2{margin:0;text-align:center;font-size:25px;line-height:1.08;font-weight: 700}
-.lq-ai-price-card-desc{min-height:35px;margin:5px auto 11px;text-align:center;font-size:12px;line-height:1.35;font-weight:650}
-.lq-ai-activation-price{display:flex;align-items:baseline;justify-content:center;gap:8px}.lq-ai-activation-price strong{font-size:42px;line-height:1;font-weight: 700}.lq-ai-activation-price span{font-size:13px;font-weight:800}
-.lq-ai-included-row{margin-top:10px;display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;font-size:11px;font-weight:750}.lq-ai-included-row span{display:inline-flex;align-items:center;gap:5px}
-.lq-ai-activation-note{margin-top:12px;text-align:center;font-size:10px;opacity:.72}.lq-ai-card-divider{height:1px;margin:15px 0;background:#d9dde4}.featured .lq-ai-card-divider{background:#424242}
-.lq-ai-recurring-price{display:flex;align-items:baseline;justify-content:center;gap:8px}.lq-ai-recurring-price strong{font-size:25px;font-weight: 700}.lq-ai-recurring-price span{font-size:13px}
-.lq-ai-year-total{min-height:18px;margin-top:4px;text-align:center;font-size:10px;opacity:.72}
-.lq-ai-trial-btn{width:100%;min-height:39px;margin-top:9px;display:flex;align-items:center;justify-content:center;border:1px solid #d8dde4;border-radius:7px;background:#fff;color:#111;text-decoration:none;font-size:13px;font-weight: 700}
-.lq-ai-price-card h3{margin:0 0 10px;font-size:12px;font-weight: 700}.lq-ai-price-card ul{margin:0;padding:0;display:grid;gap:7px;list-style:none}.lq-ai-price-card li{display:flex;align-items:flex-start;gap:7px;font-size:11px;line-height:1.3}.lq-ai-price-card li svg{flex:0 0 auto;margin-top:1px}
-.lq-ai-pricing-trial-note{margin:18px 0 0;text-align:center;font-size:12px;font-weight:700}
-@media(max-width:900px){.lq-ai-pricing-page{padding-top:96px}.lq-ai-pricing-grid{grid-template-columns:1fr;width:min(520px,100%);margin-left:auto;margin-right:auto}.lq-ai-price-card-desc{min-height:0}}
-@media(max-width:520px){.lq-ai-pricing-page{padding-inline:14px}.lq-ai-pricing-header h1{font-size:34px}.lq-ai-pricing-toggle{font-size:13px;gap:9px}}
+.lq-ai-single-card{padding:32px clamp(22px,4vw,48px) 42px;border:2px solid #176dff;border-radius:20px;background:#061b37;color:#fff;box-shadow:0 18px 42px rgba(4,23,47,.13)}
+.lq-ai-single-card h2{margin:0;text-align:center;font-size:clamp(24px,2.8vw,31px);line-height:1.3;font-weight:800}
+.lq-ai-single-price{display:flex;align-items:baseline;justify-content:center;gap:9px;margin:14px 0 18px}
+.lq-ai-single-price strong{font-size:clamp(38px,4vw,48px);line-height:1.1;font-weight:800}
+.lq-ai-single-price span{font-size:15px}
+.lq-ai-single-year{text-align:center;margin:-9px 0 15px;color:#c5d7ef;font-size:13px}
+.lq-ai-single-cta{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;margin:0 0 24px;border-radius:11px;background:linear-gradient(100deg,#167cff,#6534ff 60%,#a400f3);color:#fff;text-decoration:none;font-size:16px;font-weight:750;transition:filter .15s}
+.lq-ai-single-cta:hover{filter:brightness(1.12);color:#fff}
+.lq-ai-single-divider{height:1px;background:#3a506c;margin:0 0 18px}
+.lq-ai-single-card h3{text-align:center;margin:0 0 26px;font-size:12px;font-weight:800;letter-spacing:.5px}
+.lq-ai-feature-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:40px}
+.lq-ai-feature-columns ul{list-style:none;padding:0;margin:0;display:grid;gap:16px;align-content:start}
+.lq-ai-feature-columns li{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.5}
+.lq-ai-feature-columns li svg{flex:none;stroke-width:1.8;margin-top:1px}
+@media(max-width:650px){.lq-ai-pricing-page{padding:32px 14px 54px}.lq-ai-pricing-header{margin-bottom:22px}.lq-ai-pricing-toggle{gap:9px;font-size:12px}.lq-ai-single-card{padding:26px 20px 32px;border-radius:16px}.lq-ai-feature-columns{grid-template-columns:1fr;row-gap:16px}.lq-ai-feature-columns ul{gap:15px}.lq-ai-feature-columns li{font-size:13px}}

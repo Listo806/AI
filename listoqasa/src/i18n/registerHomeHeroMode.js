@@ -4,7 +4,7 @@ const resources = {
   en: {
     home: {
       heroBuyTitle: "Find Your Home",
-      heroRentTitle: "Find the Perfect Rental",
+      heroRentTitle: "Find Your Rental",
       heroTabs: {
         buy: "Buy",
         rent: "Rent",
@@ -18,7 +18,7 @@ const resources = {
   es: {
     home: {
       heroBuyTitle: "Encuentra tu hogar",
-      heroRentTitle: "Encuentra el alquiler perfecto",
+      heroRentTitle: "Encuentra tu alquiler",
       heroTabs: {
         buy: "Comprar",
         rent: "Alquilar",
@@ -32,7 +32,7 @@ const resources = {
   pt: {
     home: {
       heroBuyTitle: "Encontre seu lar",
-      heroRentTitle: "Encontre o aluguel perfeito",
+      heroRentTitle: "Encontre seu imóvel para alugar",
       heroTabs: {
         buy: "Comprar",
         rent: "Alugar",
