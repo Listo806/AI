@@ -15,21 +15,9 @@ import { CreatePropertyDto } from '../properties/dto/create-property.dto';
 export class PlatformController {
   constructor(private readonly platformListings: PlatformListingsService) {}
 
-  @Get('public-portfolio/:ownerId')
-  async publicPortfolio(@Param('ownerId') ownerId: string) {
-    return this.platformListings.publicPortfolio(ownerId);
-  }
-
-  @Post('listings/bulk-drafts')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
-  async bulkDrafts(@Body('items') items: CreatePropertyDto[], @CurrentUser() user: any) {
-    return { data: await this.platformListings.bulkDrafts(items, user.id, user.teamId) };
-  }
-
   @Get('listings')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER, UserRole.DEVELOPER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get my platform listings (Agent/Owner/User)' })
   @ApiResponse({ status: 200, description: 'List of my listings' })
@@ -42,21 +30,9 @@ export class PlatformController {
     return { data };
   }
 
-  @Get('listings/dashboard')
-  @UseGuards(JwtAuthGuard)
-  async listingDashboard(@CurrentUser() user:any) {
-    return this.platformListings.dashboard(user.id);
-  }
-
-  @Patch('listings/:id/action')
-  @UseGuards(JwtAuthGuard)
-  async listingAction(@Param('id') id:string,@Body('action') action:string,@CurrentUser() user:any) {
-    return {data:await this.platformListings.action(id,user.id,action)};
-  }
-
   @Post('listings')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER, UserRole.DEVELOPER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create listing (defaults to PENDING_REVIEW)' })
   @ApiResponse({ status: 201, description: 'Listing created' })
@@ -71,28 +47,28 @@ export class PlatformController {
 
   @Post('listings/drafts')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER, UserRole.DEVELOPER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async createDraft(@Body() dto: CreatePropertyDto, @CurrentUser() user: any) {
     return {data:await this.platformListings.createDraft(dto,user.id,user.teamId)};
   }
 
   @Patch('listings/drafts/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER, UserRole.DEVELOPER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async updateDraft(@Param('id') id:string,@Body() dto:CreatePropertyDto,@CurrentUser() user:any) {
     return {data:await this.platformListings.updateDraft(id,dto,user.id)};
   }
 
   @Post('listings/drafts/:id/media')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER, UserRole.DEVELOPER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async attachMedia(@Param('id') id:string,@Body('fileId') fileId:string,@CurrentUser() user:any) {
     return {data:await this.platformListings.addDraftMedia(id,user.id,fileId)};
   }
 
   @Post('listings/drafts/:id/submit')
   @UseGuards(JwtAuthGuard, RolesGuard, SubscriptionRequiredGuard, ListingLimitGuard)
-  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER)
+  @Roles(UserRole.AGENT, UserRole.OWNER, UserRole.USER, UserRole.DEVELOPER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   async submitDraft(@Param('id') id:string,@CurrentUser() user:any) {
     return {data:await this.platformListings.submitDraft(id,user.id)};
   }
