@@ -22,7 +22,7 @@
     );
 }
 .lq-vacation-header .lq-logo-text{color: #fff;}
-.vr-search-header .lq-vacation-header .lq-logo-text{color: #0966ef;}
+.vr-search-header .lq-vacation-header .lq-logo-text, .vr-detail-header .lq-vacation-header .lq-logo-text{color: #0966ef;}
 .lq-old-vr-hero-content {
   position: relative;
   z-index: 3;

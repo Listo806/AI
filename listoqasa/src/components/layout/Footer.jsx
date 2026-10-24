@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const groups = [
   { title: "Explore", links: [["Buy", "/buy"], ["Rent", "/rent"], ["Vacation Rentals", "/vacation-rentals"], ["Land", "/land"], ["Commercial", "/commercial"], ["New Projects", "/new-projects"]] },
-  { title: "For Professionals", links: [["List a Property", "/create-listing"], ["Join as an Agent", "/agents"]] },
+  { title: "For Professionals", links: [["List as an Agent", "/agent-plans"], ["List as an Owner", "/owner-plans"], ["List as a Developer", "/developer-plans"], ["List a Vacation Rental", "/vacation-rentals/host"], ["Agentic CRM", "/ai-crm"]] },
   { title: "Company", links: [["About Us", "/about"]] },
   { title: "Support", links: [["Help Center", "/help"], ["Contact Us", "/contact"]] },
   { title: "Legal", links: [["Terms and Conditions", "/terms"], ["Privacy Policy", "/privacy"], ["Cancellation and Refund Policy", "/cancellation-policy"]] },

@@ -1,25 +1,33 @@
-.lq-ai-pricing-page{min-height:calc(100vh - 80px);padding:54px 24px 78px;background:#f7f9fd;color:#172743}
-.lq-ai-pricing-shell{width:min(920px,100%);margin:0 auto}
-.lq-ai-pricing-header{text-align:center;margin-bottom:30px}
-.lq-ai-pricing-header h1{margin:0 0 15px;font-size:clamp(30px,3vw,40px);line-height:1.2;font-weight:800}
-.lq-ai-pricing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:14px;color:#72829b}
-.lq-ai-pricing-toggle span.selected{color:#172743;font-weight:700}
-.lq-ai-pricing-toggle>strong{padding:7px 14px;border-radius:999px;background:#e4efff;color:#1263e9;font-size:12px}
-.lq-ai-pricing-switch{position:relative;width:50px;height:28px;padding:0;border:0;border-radius:999px;background:#176dff;cursor:pointer}
-.lq-ai-pricing-switch i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .18s}
-.lq-ai-pricing-switch.annual i{transform:translateX(22px)}
-.lq-ai-single-card{padding:32px clamp(22px,4vw,48px) 42px;border:2px solid #176dff;border-radius:20px;background:#061b37;color:#fff;box-shadow:0 18px 42px rgba(4,23,47,.13)}
-.lq-ai-single-card h2{margin:0;text-align:center;font-size:clamp(24px,2.8vw,31px);line-height:1.3;font-weight:800}
-.lq-ai-single-price{display:flex;align-items:baseline;justify-content:center;gap:9px;margin:14px 0 18px}
-.lq-ai-single-price strong{font-size:clamp(38px,4vw,48px);line-height:1.1;font-weight:800}
-.lq-ai-single-price span{font-size:15px}
-.lq-ai-single-year{text-align:center;margin:-9px 0 15px;color:#c5d7ef;font-size:13px}
-.lq-ai-single-cta{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;margin:0 0 24px;border-radius:11px;background:linear-gradient(100deg,#167cff,#6534ff 60%,#a400f3);color:#fff;text-decoration:none;font-size:16px;font-weight:750;transition:filter .15s}
-.lq-ai-single-cta:hover{filter:brightness(1.12);color:#fff}
-.lq-ai-single-divider{height:1px;background:#3a506c;margin:0 0 18px}
-.lq-ai-single-card h3{text-align:center;margin:0 0 26px;font-size:12px;font-weight:800;letter-spacing:.5px}
-.lq-ai-feature-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:40px}
-.lq-ai-feature-columns ul{list-style:none;padding:0;margin:0;display:grid;gap:16px;align-content:start}
-.lq-ai-feature-columns li{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.5}
-.lq-ai-feature-columns li svg{flex:none;stroke-width:1.8;margin-top:1px}
-@media(max-width:650px){.lq-ai-pricing-page{padding:32px 14px 54px}.lq-ai-pricing-header{margin-bottom:22px}.lq-ai-pricing-toggle{gap:9px;font-size:12px}.lq-ai-single-card{padding:26px 20px 32px;border-radius:16px}.lq-ai-feature-columns{grid-template-columns:1fr;row-gap:16px}.lq-ai-feature-columns ul{gap:15px}.lq-ai-feature-columns li{font-size:13px}}
+.lq-ai-pricing-page{min-height:100vh;padding:38px 20px 72px;background:#f8faff;color:#202b42}
+.lq-ai-pricing-shell{width:min(840px,100%);margin:0 auto}
+.lq-ai-pricing-header{text-align:center;margin-bottom:28px}
+.lq-ai-pricing-header h1{margin:0 0 5px;font-size:30px;line-height:1.2;font-weight:800;letter-spacing:.1px}
+.lq-ai-pricing-toggle{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;font-size:14px;color:#9aa5b9}
+.lq-ai-pricing-toggle span.selected{color:#1d283b;font-weight:750}
+.lq-ai-pricing-toggle>strong{margin-left:10px;padding:7px 17px;border-radius:999px;background:#e2eeff;color:#1263e9;font-size:13px}
+.lq-ai-pricing-switch{position:relative;width:53px;height:29px;padding:0;border:0;border-radius:999px;background:#1469ff;cursor:pointer}
+.lq-ai-pricing-switch i{position:absolute;top:4px;left:4px;width:21px;height:21px;border-radius:50%;background:#fff;transition:transform .18s}
+.lq-ai-pricing-switch.annual i{transform:translateX(24px)}
+.lq-ai-single-card{padding:19px 22px 49px;border:3px solid #146bff;border-radius:19px;background:#061b37;color:#fff;box-shadow:0 18px 36px rgba(4,23,47,.18)}
+.lq-ai-single-card h2{margin:0;text-align:center;font-size:27px;line-height:1.25;font-weight:800;letter-spacing:.2px}
+.lq-ai-single-price{display:flex;align-items:baseline;justify-content:center;gap:8px;margin:9px 0 8px}
+.lq-ai-single-price strong{font-size:38px;line-height:1.1;font-weight:800}
+.lq-ai-single-price span{font-size:16px}
+.lq-ai-single-year{text-align:center;margin:0 0 10px;color:#c5d7ef;font-size:13px}
+.lq-ai-single-cta{display:flex;align-items:center;justify-content:center;width:100%;min-height:43px;margin:9px 0 16px;border-radius:12px;background:linear-gradient(100deg,#167cff 0%,#6534ff 60%,#a400f3 100%);color:white;text-decoration:none;font-size:16px;font-weight:750}
+.lq-ai-single-cta:hover{filter:brightness(1.12);color:white}
+.lq-ai-single-divider{height:1px;background:#48607a;margin:0 0 8px}
+.lq-ai-single-card h3{text-align:center;margin:0 0 23px;font-size:12px;font-weight:800;letter-spacing:.2px}
+.lq-ai-feature-columns{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.lq-ai-feature-columns ul{list-style:none;padding:0 18px 0 26px;margin:0;display:grid;gap:17px}
+.lq-ai-feature-columns li{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.35}
+.lq-ai-feature-columns li svg{flex:none;stroke-width:1.8}
+@media(max-width:650px){.lq-ai-pricing-page{padding:24px 12px 48px}.lq-ai-pricing-header h1{font-size:26px}.lq-ai-pricing-toggle{gap:8px;font-size:12px}.lq-ai-pricing-toggle>strong{margin-left:0;padding:5px 9px}.lq-ai-single-card{padding:20px 14px 32px}.lq-ai-single-card h2{font-size:23px}.lq-ai-feature-columns{grid-template-columns:1fr;gap:17px}.lq-ai-feature-columns ul{padding:0 8px;gap:14px}}
+
+/* Standalone CRM pricing page: compact card, no site header or footer. */
+.lq-ai-pricing-page{min-height:100vh;padding:38px 20px 56px}
+.lq-ai-pricing-shell{width:min(760px,100%)}
+.lq-ai-single-card{padding:22px 24px 38px}
+.lq-ai-feature-columns{gap:16px}
+.lq-ai-feature-columns ul{padding:0 8px;gap:14px}
+@media(max-width:650px){.lq-ai-pricing-page{padding:28px 12px 40px}.lq-ai-single-card{padding:20px 15px 30px}.lq-ai-feature-columns ul{padding:0 5px;gap:13px}}

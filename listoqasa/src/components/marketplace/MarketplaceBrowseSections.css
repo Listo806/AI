@@ -264,11 +264,6 @@
 .lq-vr-location-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(5, 16, 31, 0.06),
-    rgba(5, 16, 31, 0.68)
-  );
 }
 .lq-vr-location-copy {
   position: absolute;

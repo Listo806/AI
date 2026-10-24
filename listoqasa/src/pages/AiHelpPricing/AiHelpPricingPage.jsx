@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import SiteLayout from "../../components/layout/SiteLayout";
 import "./AiHelpPricingPage.css";
 
 const FEATURES = [
@@ -16,21 +15,29 @@ const COPY = {
 const formatPrice = value => Number(value).toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 });
 export default function AiHelpPricingPage() {
   const { i18n } = useTranslation();
-
+  const [billing, setBilling] = useState("monthly");
   const lang = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0].toLowerCase();
   const c = COPY[lang] || COPY.en;
-  const price = 127;
-  const href = "https://www.cortexaaicrm.com/signup?plan=listoqasa&billing=monthly&source=listoqasa";
+  const annual = billing === "annual";
+  const price = annual ? 101.60 : 127;
+  const href = `https://www.cortexaaicrm.com/trial?plan=solo&billing=${annual ? "annual" : "monthly"}`;
   return (
-    <SiteLayout headerVariant="dark">
+    <>
       <main className="lq-ai-pricing-page">
         <div className="lq-ai-pricing-shell">
           <header className="lq-ai-pricing-header">
             <h1>{c.title}</h1>
+            <div className="lq-ai-pricing-toggle">
+              <span className={!annual ? "selected" : ""}>{c.monthly}</span>
+              <button type="button" className={`lq-ai-pricing-switch ${annual ? "annual" : ""}`} role="switch" aria-checked={annual} aria-label={c.annual} onClick={() => setBilling(v => v === "monthly" ? "annual" : "monthly")}><i /></button>
+              <span className={annual ? "selected" : ""}>{c.annual}</span>
+              <strong>{c.save}</strong>
+            </div>
           </header>
           <section className="lq-ai-single-card" aria-label={c.title}>
             <h2>{c.heading}</h2>
             <div className="lq-ai-single-price"><strong>${formatPrice(price)}</strong><span>{c.perMonth}</span></div>
+            {annual && <p className="lq-ai-single-year">${formatPrice(1219.20)} {c.year}</p>}
             <a className="lq-ai-single-cta" href={href}>{c.cta}</a>
             <div className="lq-ai-single-divider" />
             <h3>{c.features}</h3>
@@ -42,6 +49,6 @@ export default function AiHelpPricingPage() {
           </section>
         </div>
       </main>
-    </SiteLayout>
+    </>
   );
 }
