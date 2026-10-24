@@ -101,3 +101,9 @@
 .lq-owner-pricing .lq-plan-cta{margin:16px 0 24px}
 @media(max-width:1000px){.lq-owner-pricing .lq-pricing-grid{grid-template-columns:1fr;max-width:560px;margin-left:auto;margin-right:auto}.lq-owner-pricing .lq-plan-desc{min-height:0}}
 @media(max-width:400px){.lq-owner-duration-option{font-size:14px}.lq-owner-duration-option strong{font-size:22px}}
+
+/* Visible, accessible duration selectors on the featured dark card */
+.lq-owner-pricing .lq-plan-card.dark .lq-owner-duration-option{color:#fff}
+.lq-owner-pricing .lq-plan-card.dark .lq-owner-duration-option input{appearance:none;-webkit-appearance:none;border:2px solid #fff;background:transparent;opacity:1;position:relative}
+.lq-owner-pricing .lq-plan-card.dark .lq-owner-duration-option input:checked::before{content:"";display:block;background:#fff;width:14px;height:14px;border-radius:50%}
+.lq-owner-pricing .lq-plan-card.dark .lq-owner-duration-option input:focus-visible{outline:3px solid #83b8ff;outline-offset:3px}
