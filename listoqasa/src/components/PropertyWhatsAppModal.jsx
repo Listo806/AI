@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../api/apiClient';
+import { recordListingActivity } from '../api/listingActivityApi';
 import { normalizePhoneToE164 } from '../utils/whatsapp';
 import '../styles/ContactModal.css';
 
@@ -45,6 +46,7 @@ export default function PropertyWhatsAppModal({ property, source, onClose }) {
       const url = result?.data?.whatsappUrl;
       if (url) {
         window.open(url, '_blank', 'noopener,noreferrer');
+        recordListingActivity(property.id, 'contact_click', 'whatsapp').catch(() => {});
         onClose();
       } else {
         setError(t('properties.whatsappModal.couldNotOpen', 'Could not open WhatsApp. Please try again.'));

@@ -20,6 +20,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import apiClient from '../../api/apiClient';
+import { recordListingActivity } from '../../api/listingActivityApi';
 import { getPropertyMedia } from '../../api/propertiesApi';
 import PropertyMap from '../../components/PropertyMap';
 import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
@@ -127,6 +128,7 @@ export default function ListingDetail() {
       }
 
       setProperty(data);
+      recordListingActivity(data.id, 'view').catch(() => {});
       setLeadForm((current) => ({
         ...current,
         message:

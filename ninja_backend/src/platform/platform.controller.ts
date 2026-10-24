@@ -15,6 +15,11 @@ import { CreatePropertyDto } from '../properties/dto/create-property.dto';
 export class PlatformController {
   constructor(private readonly platformListings: PlatformListingsService) {}
 
+  @Post('public-listings/:id/activity')
+  async recordActivity(@Param('id') id: string, @Body() body: {type: string; sessionKey?: string; channel?: string}) {
+    return this.platformListings.recordPublicActivity(id,body?.type,body?.sessionKey,body?.channel);
+  }
+
   @Get('public-portfolio/:ownerId')
   async publicPortfolio(@Param('ownerId') ownerId: string) {
     return this.platformListings.publicPortfolio(ownerId);

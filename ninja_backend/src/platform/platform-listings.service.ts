@@ -165,23 +165,44 @@ export class PlatformListingsService {
   async dashboard(userId: string) {
     const listings = await this.findMine(userId, null, '');
     const ids = listings.map(x => x.id);
-    let views: number | null = null;
-    let byProperty: Record<string, number> = {};
-    // buyer_property_views measures identified buyer activity, not all anonymous page views.
-    // Report it separately rather than mislabeling it as total page views.
-    if (ids.length) {
-      const rows = await this.db.query(`SELECT property_id, SUM(view_count)::int AS count
-        FROM buyer_property_views WHERE property_id = ANY($1::uuid[]) GROUP BY property_id`, [ids]);
-      byProperty = Object.fromEntries(rows.rows.map(r => [r.property_id, Number(r.count)]));
-      views = rows.rows.reduce((n,r) => n + Number(r.count), 0);
-    } else views = 0;
+    const counts = ids.length ? await this.db.query(`SELECT listing_id, event_type, COUNT(*)::int AS count
+      FROM listing_activity_events WHERE owner_account_id=$1 AND listing_id=ANY($2::uuid[])
+      AND event_type IN ('view','contact_click') GROUP BY listing_id,event_type`, [userId, ids]) : {rows: []};
+    const viewsByProperty: Record<string, number> = {};
+    const contactClicksByProperty: Record<string, number> = {};
+    for (const row of counts.rows) {
+      if (row.event_type === 'view') viewsByProperty[row.listing_id] = Number(row.count);
+      if (row.event_type === 'contact_click') contactClicksByProperty[row.listing_id] = Number(row.count);
+    }
+    const views = Object.values(viewsByProperty).reduce((a,b)=>a+b,0);
+    const contactClicks = Object.values(contactClicksByProperty).reduce((a,b)=>a+b,0);
     const inquiry = await this.inquiryStats(ids);
     return { data: listings, metrics: {
       activeListings: listings.filter(x => ['published','approved'].includes(x.status)).length,
-      identifiedBuyerViews: views, viewsByProperty: byProperty,
-      // No verified inquiry/contact-click event source in this backend yet.
-      inquiriesReceived: inquiry.total, inquiriesByProperty: inquiry.byProperty, contactClicks: null,
+      identifiedBuyerViews: views, propertyViews: views, viewsByProperty, contactClicksByProperty,
+      inquiriesReceived: inquiry.total, inquiriesByProperty: inquiry.byProperty, contactClicks,
     }, recentInquiries: inquiry.recent, publicListingsUrl: `/profile/${encodeURIComponent(userId)}` };
+  }
+
+  /** Public events: ownership is resolved from the database, never supplied by the caller. */
+  async recordPublicActivity(listingId: string, type: string, sessionKey?: string, channel?: string) {
+    if (!['view','contact_click'].includes(type)) throw new BadRequestException('Invalid event type');
+    if (type === 'contact_click' && !['phone','whatsapp','email'].includes(channel || ''))
+      throw new BadRequestException('Valid contact channel required');
+    if (type === 'view' && (!sessionKey || !/^[a-f0-9-]{36}$/.test(sessionKey)))
+      throw new BadRequestException('Valid session key required');
+    const {rows} = await this.db.query(`INSERT INTO listing_activity_events
+      (listing_id,owner_account_id,event_type,session_key,contact_channel)
+      SELECT p.id,p.created_by,$2,$3,$4 FROM properties p
+      WHERE p.id=$1 AND p.origin='platform' AND p.status IN ('published','approved')
+      ON CONFLICT DO NOTHING RETURNING id`, [listingId,type,type==='view'?sessionKey:null,type==='contact_click'?channel:null]);
+    // An unpublished/unknown property must not become a tracking endpoint.
+    if (!rows.length) {
+      const check=await this.db.query(`SELECT 1 FROM properties WHERE id=$1 AND origin='platform'
+        AND status IN ('published','approved')`,[listingId]);
+      if (!check.rows.length) throw new NotFoundException('Published listing not found');
+    }
+    return {recorded: rows.length > 0};
   }
 
   /** Genuine inquiries tied to the user's own platform properties. */
