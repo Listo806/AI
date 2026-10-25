@@ -1,0 +1,21 @@
+.marketplace-login-main{max-width:480px;margin:70px auto;padding:0 20px}
+.marketplace-login-panel{padding:32px 28px;box-shadow:0 14px 42px rgba(20,47,91,.06)}
+.marketplace-login-panel h1{font-size:28px;line-height:1.2;margin:0 0 12px;font-weight:750;letter-spacing:-.6px}
+.marketplace-login-subtitle{color:#5d6c85;line-height:1.5;margin:0 0 24px}
+.marketplace-login-panel .cl-field{margin-bottom:18px}
+.marketplace-login-panel .cl-field>span:first-child{margin-bottom:7px}
+.marketplace-login-panel .cl-field input{min-height:46px;border-radius:9px;font-size:15px}
+.marketplace-login-password{position:relative;display:block}
+.marketplace-login-password input{padding-right:52px!important}
+.marketplace-login-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:40px;height:38px;border:0;background:transparent;border-radius:7px;display:grid;place-items:center;color:#526783;cursor:pointer}
+.marketplace-login-eye:hover{background:#eff5ff;color:#075bea}
+.marketplace-login-eye:focus-visible,.marketplace-login-submit:focus-visible{outline:3px solid #9fc2ff;outline-offset:2px}
+.marketplace-login-submit{width:100%;min-height:48px;border-radius:9px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;background:#0865ff;border:1px solid #0865ff;box-shadow:0 5px 14px rgba(8,101,255,.18);transition:background .15s,transform .15s}
+.marketplace-login-submit:not(:disabled):hover{background:#004fd5;transform:translateY(-1px)}
+.marketplace-login-submit:disabled{opacity:.6;cursor:wait}
+.marketplace-login-crm{margin:20px 0 0;text-align:center;font-size:13px;color:#64748b;line-height:1.6}
+.marketplace-login-crm a{color:#075bea;font-weight:600}
+.marketplace-login-error,.marketplace-login-notice{padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.5}
+.marketplace-login-error{color:#a31d2a;background:#fff1f2;border:1px solid #fecdd3}
+.marketplace-login-notice{color:#805600;background:#fffae9;border:1px solid #f6dfa0}
+@media(max-width:600px){.marketplace-login-main{margin:35px auto;padding:0 16px}.marketplace-login-panel{padding:25px 20px}.marketplace-login-panel h1{font-size:25px}}
