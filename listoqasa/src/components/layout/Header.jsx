@@ -313,14 +313,10 @@ export default function Header({
                 >
                   <span className="lq-account-signin-copy">
                     <strong>
-                      {marketplaceUser ? "My Listings" : t("header.accountMenu.signIn", { defaultValue: "Sign In" })}
+                      {marketplaceUser ? t("header.accountMenu.myListings", { defaultValue: "My Listings" }) : t("header.accountMenu.signInMyListings", { defaultValue: "Sign In My Listings" })}
                     </strong>
 
-                    <small>
-                      {t("header.accountMenu.marketplace", {
-                        defaultValue: "Marketplace",
-                      })}
-                    </small>
+
                   </span>
 
                   <ChevronRight
@@ -335,16 +331,10 @@ export default function Header({
                 >
                   <span className="lq-account-signin-copy">
                     <strong>
-                      {t("header.accountMenu.signIn", {
-                        defaultValue: "Sign In",
-                      })}
+                      {t("header.accountMenu.signInCortexCrm", { defaultValue: "Sign In Cortex CRM" })}
                     </strong>
 
-                    <small>
-                      {t("header.accountMenu.cortexaCrm", {
-                        defaultValue: "Cortexa CRM",
-                      })}
-                    </small>
+
                   </span>
 
                   <ChevronRight

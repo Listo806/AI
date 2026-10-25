@@ -8,6 +8,7 @@ const resources = {
          HEADER
       ===================================================== */
       header: {
+        accountMenu: { signInMyListings: "Sign In My Listings", signInCortexCrm: "Sign In Cortex CRM", myListings: "My Listings" },
         buy: "Buy",
         rent: "Rent",
         vacationRentals: "Vacation Rentals",
@@ -418,6 +419,7 @@ const resources = {
   es: {
     translation: {
       header: {
+        accountMenu: { signInMyListings: "Iniciar sesión en Mis anuncios", signInCortexCrm: "Iniciar sesión en Cortex CRM", myListings: "Mis anuncios" },
         buy: "Comprar",
         rent: "Alquilar",
         vacationRentals:
@@ -892,6 +894,7 @@ const resources = {
   pt: {
     translation: {
       header: {
+        accountMenu: { signInMyListings: "Entrar em Meus anúncios", signInCortexCrm: "Entrar no Cortex CRM", myListings: "Meus anúncios" },
         buy: "Comprar",
         rent: "Alugar",
         vacationRentals:
