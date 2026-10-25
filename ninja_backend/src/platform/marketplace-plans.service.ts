@@ -134,15 +134,27 @@ export class MarketplacePlansService {
       VALUES ($1,$2,'pending_payment',$3,$4) RETURNING *`,[userId,planKey,approvedPrice,interval]);
     return {enrollment:r.rows[0],next:'/marketplace/checkout',requiresPayment:true};
   }
+  /** Administrative access is verified against the server-side internal access grant,
+   * never against a role supplied by the browser or a stale JWT claim. */
+  async isMarketplaceAdmin(userId: string): Promise<boolean> {
+    const result = await this.db.query(`SELECT 1 FROM users u
+      JOIN internal_user_access ia ON ia.user_id = u.id
+      WHERE u.id=$1 AND ia.status='active'
+        AND (u.role IN ('admin','super_admin') OR ia.internal_role IN ('admin','super_admin'))
+      LIMIT 1`, [userId]);
+    return result.rows.length > 0;
+  }
+
   async mine(userId:string) {
     await this.schema();
     await this.expireDue(userId);
     const r=await this.db.query(`SELECT id,plan_key,status,price_cents,currency,payment_reference,
       current_period_start,current_period_end,cancel_at_period_end,billing_interval,created_at
       FROM marketplace_plan_enrollments WHERE user_id=$1 ORDER BY created_at DESC`,[userId]);
-    return { data:r.rows, active:r.rows.some(x=>x.status==='active') };
+    return { data:r.rows, active:r.rows.some(x=>x.status==='active'), isAdmin:await this.isMarketplaceAdmin(userId) };
   }
   async requireEntitlement(userId:string) {
+    if (await this.isMarketplaceAdmin(userId)) return {data:[],active:true,isAdmin:true,entitlement:null,maxListings:null};
     const state=await this.mine(userId);
     const active=state.data.find(x=>x.status==='active' && x.price_cents>0) || state.data.find(x=>x.status==='active');
     if (!active) throw new BadRequestException('Activate or renew a Marketplace plan before submitting a listing');
