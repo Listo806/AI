@@ -3,7 +3,7 @@ import {CalendarDays, ChevronDown, UserRound, Info} from 'lucide-react';
 import React, {useCallback,useEffect,useMemo,useState,useRef} from 'react';
 import {Link,useNavigate} from 'react-router-dom';
 import {Home,Eye,MessageCircle,MousePointer2,Plus,MoreHorizontal,Copy,PauseCircle,Trash2,CheckCircle,RotateCcw,Search,Upload,ChevronLeft,ChevronRight} from 'lucide-react';
-import {getMarketplaceUser,marketplaceRequest,logoutMarketplace} from '../../api/marketplaceApi';
+import {getMarketplaceUser,marketplaceRequest,logoutMarketplace,isMarketplaceAuthError} from '../../api/marketplaceApi';
 import './MyListingsPage.css';
 
 const messages={
@@ -51,7 +51,7 @@ export default function MyListingsPage(){
    setBulkResult(`${response.data.length} ${tr("csvSuccess")}`);await load();
   }catch(e){setError(e.message)}finally{setBulkBusy(false)}};
 
- const load=useCallback(async()=>{setError('');try{const r=await marketplaceRequest('/platform/listings/dashboard');setList(r.data||[]);setMetrics(r.metrics||null);setInquiries(r.recentInquiries||[]);setPublicLink(r.publicListingsUrl||null);try{const p=await marketplaceRequest('/marketplace/plans/mine');setPlan(p)}catch(planError){console.warn('Plan status unavailable:',planError.message);setPlan(null)}}catch(e){setError(e.message);setMetrics(null);setInquiries(null);setList([])}finally{setLoading(false)}},[]);
+ const load=useCallback(async()=>{setError('');try{const r=await marketplaceRequest('/platform/listings/dashboard');setList(r.data||[]);setMetrics(r.metrics||null);setInquiries(r.recentInquiries||[]);setPublicLink(r.publicListingsUrl||null);try{const p=await marketplaceRequest('/marketplace/plans/mine');setPlan(p)}catch(planError){if(isMarketplaceAuthError(planError))throw planError;console.warn('Plan status unavailable:',planError.message);setPlan(null)}}catch(e){if(isMarketplaceAuthError(e)){logoutMarketplace();navigate('/marketplace/login?next=/my-listings&reason=expired',{replace:true});return;}setError(e.message);setMetrics(null);setInquiries(null);setList([])}finally{setLoading(false)}},[navigate]);
  useEffect(()=>{if(!user){navigate('/marketplace/login?next=/my-listings',{replace:true});return;}load()},[navigate,load]);
  const filtered=useMemo(()=>list.filter(x=>{const q=query.toLowerCase();return (!q||`${x.title} ${x.id}`.toLowerCase().includes(q))&&(status==='all'||x.status===status)&&(type==='all'||propertyCategory(x)===type)&&(kind==='all'||(kind==='sale'?x.type==='sale':x.type==='rent'))&&(scope==='all'||(scope==='active'?active(x.status):x.status==='draft'))&&(period==='all'||!x.createdAt||new Date(x.createdAt).getTime()>=Date.now()-Number(period)*86400000)}),[list,query,status,type,kind,scope,period]);
  const propertyCategories=useMemo(()=>[...new Set(list.map(propertyCategory).filter(Boolean))].sort((a,b)=>a.localeCompare(b)),[list]);
