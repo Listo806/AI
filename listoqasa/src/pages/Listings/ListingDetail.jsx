@@ -123,7 +123,7 @@ export default function ListingDetail() {
 
       const listingType = (data.listingType || data.listing_type || '').toLowerCase();
       if (listingType === 'vacation') {
-        navigate(`/vacation-rentals/search/${id}`, { replace: true });
+        navigate(`/vacation-rentals/property/${encodeURIComponent(id)}`, { replace: true });
         return;
       }
 
