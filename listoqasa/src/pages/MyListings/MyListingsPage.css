@@ -7,7 +7,7 @@
 .ml-header{height:70px;padding:0 max(3.8%,calc((100vw - 1460px)/2));background:#fff;position:relative;z-index:20}
 .ml-logo{display:inline-flex;align-items:center;gap:11px;letter-spacing:-.8px;font-size:27px;white-space:nowrap}
 .ml-brand-mark{margin:0;width:34px;height:34px;font-size:14px;letter-spacing:0;background:#1764f5;color:#fff!important}
-.ml-brand-name{color:#0a1535!important}.ml-brand-name>span{color:#1764f5!important}
+.ml-brand-name>span{color:#1764f5!important}
 .ml-header-right{display:flex;align-items:center;gap:20px}.ml-language{height:38px;min-width:62px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #dce5f3;border-radius:9px;background:white;padding:0 9px}
 .ml-language select{appearance:none;border:0;background:transparent;outline:0;color:#10234c;font-size:13px;font-weight:650;cursor:pointer}
 .ml-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -24,3 +24,16 @@
 
 /* Approved dashboard proportions */
 .ml-main{max-width:1440px}.ml-title h1{font-size:clamp(28px,2.5vw,36px);letter-spacing:-.8px}.ml-title p{font-size:14px}.ml-stat{min-height:94px;padding:15px;gap:13px}.ml-stat-icon{width:46px;height:46px}.ml-stat strong{font-size:clamp(21px,2vw,26px);line-height:1.2}.ml-panel h2{font-size:18px}.ml-error{font-size:13px;padding:10px 14px}.ml-bottom .ml-panel{min-height:150px}
+
+/* Match the Vacation Rentals header brand and language selector. */
+.ml-header .ml-brand-mark{display:inline-flex;align-items:center;justify-content:center;width:31px;height:38px;flex:0 0 31px;background:#0866f5;clip-path:polygon(50% 0,100% 25%,100% 100%,0 100%,0 25%);color:#fff!important;font-size:14px;letter-spacing:0;border-radius:0}
+.ml-header .ml-brand-mark span{color:#fff!important;margin-top:7px}
+.ml-header .ml-logo{gap:10px;font-size:22px;font-weight:750;letter-spacing:-.6px}
+.ml-language-wrap{position:relative;display:flex;align-items:center}
+.ml-language-trigger{display:grid;place-items:center;width:40px;height:40px;border:0;background:transparent;color:#112a4b;cursor:pointer;border-radius:50%}
+.ml-language-trigger:hover,.ml-language-trigger:focus-visible{background:#eef4ff}
+.ml-language-menu{position:absolute;top:calc(100% + 12px);right:0;width:185px;padding:8px;background:white;border-radius:14px;box-shadow:0 14px 38px #10244425;z-index:100;border:1px solid #edf0f6}
+.ml-language-menu button{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 10px;border:0;border-radius:7px;background:white;color:#24344e;font-size:13px;cursor:pointer;text-align:left}
+.ml-language-menu button strong{font-size:12px;color:#68778d}
+.ml-language-menu button:hover,.ml-language-menu button.active{background:#f2f6fc}
+@media(max-width:650px){.ml-header .ml-logo{font-size:19px;gap:7px}.ml-header .ml-brand-mark{width:29px;height:36px;flex-basis:29px}.ml-language-menu{right:-20px}.ml-language-trigger{width:36px;height:36px}}
