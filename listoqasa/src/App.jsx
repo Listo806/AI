@@ -1,4 +1,7 @@
+import LegalPage from "./pages/Legal/LegalPages";
 import React from "react";
+import {AboutPage, ContactPage} from "./pages/Company/CompanyPages";
+import "./i18n/registerCompanyPages";
 import PropertyDetailBoundary from "./components/PropertyDetailBoundary";
 import { Navigate, useSearchParams } from "react-router-dom";
 function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");const plan=p.get("plan");const billing=p.get("billing")==="yearly"?"yearly":"monthly";if(addon==="ai-crm")return <Navigate to="/agent-plans" replace />;return <Navigate to={`/marketplace/signup?audience=agent&plan=${encodeURIComponent(plan||"essential")}&billing=${billing}`} replace />;}
@@ -70,6 +73,16 @@ export default function App() {
         <Route path="/ai-help" element={<AiCrmPage />} />
         <Route path="/ai-help/pricing" element={<AiHelpPricingPage />} />
         <Route path="/help" element={<HelpCenterPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/about-us" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/contact-us" element={<ContactPage />} />
+        <Route path="/terms" element={<LegalPage type="terms" />} />
+        <Route path="/terms-and-conditions" element={<LegalPage type="terms" />} />
+        <Route path="/privacy" element={<LegalPage type="privacy" />} />
+        <Route path="/privacy-policy" element={<LegalPage type="privacy" />} />
+        <Route path="/cancellation-policy" element={<LegalPage type="refund" />} />
+        <Route path="/refund-policy" element={<LegalPage type="refund" />} />
         <Route path="/my-trips" element={<StayAccountPage mode="trips" />} />
         <Route path="/saved-stays" element={<StayAccountPage mode="saved" />} />
         <Route path="/vacation-rentals" element={<VacationRentalsPage />} />
