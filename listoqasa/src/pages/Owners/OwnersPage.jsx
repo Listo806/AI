@@ -285,6 +285,16 @@ export default function OwnersPage() {
             ))}
           </div>
 
+          <section className="lq-savings" aria-labelledby="lq-savings-title">
+            <h2 id="lq-savings-title">{t("listingNav.savingsTitle")}</h2>
+            <p className="lq-savings-intro">{t("listingNav.savingsIntro")}</p>
+            <div className="lq-savings-grid">
+              <article><House aria-hidden="true"/><div><h3>{t("listingNav.sellTitle")}</h3><p>{t("listingNav.sellDesc")}</p></div></article>
+              <article><Crosshair aria-hidden="true"/><div><h3>{t("listingNav.rentTitle")}</h3><p>{t("listingNav.rentDesc")}</p></div></article>
+            </div>
+            <p className="lq-savings-note">{t("listingNav.savingsNote")}</p>
+          </section>
+
           {/* STATS */}
           <section className="lq-owner-stats">
             {stats.map((stat) => {

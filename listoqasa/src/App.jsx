@@ -15,6 +15,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/Home/HomePage";
 import ListingDetail from "./pages/Listings/ListingDetail";
 import Listings from "./pages/Listings/Listings";
+import CommercialOwnersPage from "./pages/CommercialOwners/CommercialOwnersPage";
+import "./i18n/registerListingPropertyPages";
 import OwnersPage from "./pages/Owners/OwnersPage";
 import AgentsPage from "./pages/Agents/AgentsPage";
 import FindAgentPage from "./pages/FindAgent/FindAgentPage";
@@ -54,6 +56,7 @@ export default function App() {
         <Route path="/create-listing" element={<CreateListingPage />} />
         <Route path="/owners/create" element={<CreateListingPage />} />
         <Route path="/owners" element={<OwnersPage />} />
+        <Route path="/commercial-owners" element={<CommercialOwnersPage />} />
 
         <Route path="/sell" element={<OwnersPage />} />
 

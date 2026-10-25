@@ -66,36 +66,11 @@ export default function Header({
   ];
 
   const listPropertyItems = [
-    {
-      icon: Home,
-      label: t("header.listPropertyMenu.rentals"),
-      description: t("header.listPropertyMenu.rentalsDesc"),
-      to: "/owner-plans",
-    },
-    {
-      icon: CalendarDays,
-      label: t("header.listPropertyMenu.vacationRentals"),
-      description: t("header.listPropertyMenu.vacationRentalsDesc"),
-      to: "/vacation-rentals/host",
-    },
-    {
-      icon: UserRound,
-      label: t("header.listPropertyMenu.owners"),
-      description: t("header.listPropertyMenu.ownersDesc"),
-      to: "/owners",
-    },
-    {
-      icon: BriefcaseBusiness,
-      label: t("header.listPropertyMenu.agents"),
-      description: t("header.listPropertyMenu.agentsDesc"),
-      to: "/agents",
-    },
-    {
-      icon: Building2,
-      label: t("header.listPropertyMenu.developers"),
-      description: t("header.listPropertyMenu.developersDesc"),
-      to: "/developers",
-    },
+    { icon: Home, label: t("listingNav.residential"), description: t("listingNav.residentialDesc"), to: "/owners" },
+    { icon: UserRound, label: t("listingNav.agents"), description: t("listingNav.agentsDesc"), to: "/agents" },
+    { icon: CalendarDays, label: t("listingNav.vacation"), description: t("listingNav.vacationDesc"), to: "/vacation-rentals/host" },
+    { icon: Building2, label: t("listingNav.commercial"), description: t("listingNav.commercialDesc"), to: "/commercial-owners" },
+    { icon: BriefcaseBusiness, label: t("listingNav.developers"), description: t("listingNav.developersDesc"), to: "/developers" },
   ];
 
   const languages = [

@@ -155,3 +155,17 @@
 .lq-header-compact .lq-compact-back { display: none; align-items: center; gap: 7px; margin-left: 24px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .lq-header-compact .lq-account-dropdown { display: none !important; }
 @media(max-width: 600px) { .lq-header-compact .lq-compact-back { margin-left: 10px; } .lq-header-compact .lq-compact-back span { display: none; } .lq-header-compact .lq-header-actions { gap: 8px; } }
+
+/* Approved large List Property mega-dropdown */
+@media (min-width: 1121px) {
+  .lq-list-property-dropdown { width: 438px; padding: 14px 22px; left: -10px; top: calc(100% + 16px); border-radius: 15px; }
+}
+.lq-list-property-item { grid-template-columns: 62px minmax(0,1fr); align-items: center; gap: 16px; padding: 12px 3px; border-radius: 0; }
+.lq-list-property-item + .lq-list-property-item { border-top: 1px solid #d8dfeb; }
+.lq-list-property-icon { width: 58px; height: 58px; border-radius: 13px; background: #eef5ff; color: #0867f9; }
+.lq-list-property-icon svg { width: 33px; height: 33px; stroke-width: 1.9; }
+.lq-list-property-copy strong { color: #071b45; font-size: 19px; line-height: 1.3; font-weight: 750; }
+.lq-list-property-copy small { color: #66799d; font-size: 15px; line-height: 1.4; margin-top: 3px; }
+.lq-list-property-item:hover { background: #f7faff; }
+@media (max-width:1120px) and (min-width:851px) { .lq-list-property-dropdown { width: 390px; } }
+@media (max-width:850px) { .lq-mobile-list-property-item { grid-template-columns: 38px 1fr; } .lq-mobile-list-property-item svg { color: #0968fa; } }
