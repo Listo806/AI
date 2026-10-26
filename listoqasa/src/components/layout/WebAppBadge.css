@@ -8,3 +8,14 @@
 .lq-webapp-badge-copy small { font-size:9px; font-weight:600; color:#526483; }
 .lq-webapp-badge-copy strong { font-size:15px; font-weight:800; color:#12254c; }
 @media (max-width:650px) { .lq-webapp-shortcut { margin:20px auto 24px; } .lq-webapp-shortcut-label { display:none; } }
+
+/* Compact footer shortcut on desktop; preserve tablet/mobile layout. */
+@media (min-width: 1025px) {
+  .lq-webapp-shortcut { margin-top: -95px; margin-bottom: 34px; gap: 4px; }
+  .lq-vacation-footer-reference .lq-webapp-shortcut { margin-top: 0;}
+  .lq-webapp-shortcut-label { font-size: 11px; }
+  .lq-webapp-badge { width: 124px; min-height: 43px; padding: 5px 8px; gap: 7px; }
+  .lq-webapp-house { flex-basis: 27px; width: 27px; height: 31px; font-size: 10px; }
+  .lq-webapp-badge-copy small { font-size: 8px; }
+  .lq-webapp-badge-copy strong { font-size: 13px; }
+}

@@ -369,3 +369,21 @@
     grid-auto-columns: 84%;
   }
 }
+
+/* Show one complete property card per swipe on mobile; no partial next card. */
+@media (max-width: 760px) {
+  .lq-vr-row { grid-auto-columns: 100%; gap: 12px; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; }
+  .lq-vr-row > .lq-vr-card { width: 100%; min-width: 0; scroll-snap-align: start; }
+}
+@media (max-width: 480px) {
+  .lq-vr-row { grid-auto-columns: 100%; }
+}
+
+/* Mobile-only section copy from approved marketplace mockup. */
+.lq-vr-locations-intro, .lq-vr-locations-subtitle { display: none; }
+@media (max-width: 900px) {
+  .lq-vr-locations-intro, .lq-vr-locations-subtitle { display: block; }
+  .lq-vr-locations-section .lq-mobile-section-eyebrow { display: block; color: #8192b3; font-size: 11px; font-weight: 750; letter-spacing: .18em; margin-bottom: 6px; }
+  .lq-vr-locations-section h2 { margin: 0 0 3px; color: #091b4a; font-size: clamp(21px, 4.8vw, 29px); line-height: 1.2; }
+  .lq-vr-locations-subtitle { margin: 0 0 17px; color: #5c6c8c; font-size: 13px; line-height: 1.45; }
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -24,6 +24,7 @@ import PropertyCard from "../../components/property/PropertyCard";
 import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
 import "./HomePage.css";
 import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
+import mobileHeroImage from "../../assets/public/images/listoqasa/home-hero-mobile.jpg";
 import rentalHeroImage from "../../assets/public/images/listoqasa/rental-hero-new.png";
 import LocationDirectory from "../../components/marketplace/LocationDirectory";
 import MarketplaceBrowseSections from "../../components/marketplace/MarketplaceBrowseSections";
@@ -58,6 +59,15 @@ function normalizeListing(listing) {
 
 function ListingSection({ title, properties, loading, error, newBadge = false, viewAllTo = "/buy" }) {
   const { t, i18n } = useTranslation();
+  const trackRef = useRef(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const moveSlide = (direction) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const next = Math.max(0, Math.min(properties.length - 1, activeSlide + direction));
+    track.children[next]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+    setActiveSlide(next);
+  };
   if (!loading && !error && properties.length === 0) return null;
 
   return (
@@ -72,10 +82,22 @@ function ListingSection({ title, properties, loading, error, newBadge = false, v
       ) : error ? (
         <div className="lq-listings-status lq-listings-status-error">{t("common.loadError", { defaultValue: "Unable to load properties right now." })}</div>
       ) : (
-        <div className="lq-property-grid">
+        <div className="lq-property-grid" ref={trackRef} onScroll={(event) => {
+          const track = event.currentTarget;
+          if (track.clientWidth) setActiveSlide(Math.round(track.scrollLeft / track.clientWidth));
+        }}>
           {properties.map((property) => (
             <PropertyCard key={property.id} property={property} showNew={newBadge} to={`/property/${property.id}?type=${property.type || "sale"}`} />
           ))}
+        </div>
+      )}
+      {!loading && !error && properties.length > 1 && (
+        <div className="lq-home-carousel-controls">
+          <button type="button" onClick={() => moveSlide(-1)} disabled={activeSlide === 0} aria-label="Previous property">‹</button>
+          <span className="lq-home-carousel-dots" aria-label="Property carousel position">{properties.map((property, index) => (
+            <button key={property.id} type="button" className={index === activeSlide ? "active" : ""} onClick={() => { trackRef.current?.children[index]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" }); setActiveSlide(index); }} aria-label={`Show property ${index + 1}`} />
+          ))}</span>
+          <button type="button" onClick={() => moveSlide(1)} disabled={activeSlide === properties.length - 1} aria-label="Next property">›</button>
         </div>
       )}
     </section>
@@ -243,6 +265,7 @@ export default function HomePage() {
         className={`lq-home-hero lq-home-hero-${searchMode}`}
         style={{
           "--lq-home-hero-image": `url(${searchMode === "rent" ? rentalHeroImage : homeHeroImage})`,
+          "--lq-home-mobile-hero-image": `url(${mobileHeroImage})`,
         }}
       >
         <div className="lq-container lq-home-hero-inner">
@@ -294,8 +317,10 @@ export default function HomePage() {
                   defaultValue: "Search by city, neighborhood, or property",
                 })}
               />
+              <MapPin className="lq-home-search-location" size={22} aria-hidden="true" />
               <button type="submit" className="lq-home-search-icon-button" aria-label={t("home.searchButton", { defaultValue: "Search" })}>
                 <Search size={32} strokeWidth={2} aria-hidden="true" />
+                <span className="lq-home-search-button-label">{t("home.searchButton", { defaultValue: "Search" })}</span>
               </button>
             </form>
 
@@ -329,6 +354,10 @@ export default function HomePage() {
           </Link>
           <MarketplaceBrowseSections />
 
+          <div className="lq-marketplace-benefits-heading">
+            <span className="lq-mobile-section-eyebrow">{t("home.benefitsEyebrow", { defaultValue: "WHY LISTOQASA" })}</span>
+            <h2>{t("home.benefitsHeading", { defaultValue: "A better way to find property" })}</h2>
+          </div>
           <section className="lq-marketplace-benefits">
             {marketplaceBenefits.map((item) => {
               const Icon = item.icon;

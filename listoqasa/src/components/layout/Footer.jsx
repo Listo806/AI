@@ -1,4 +1,5 @@
 import WebAppBadge from "./WebAppBadge";
+import { House, ClipboardList, UsersRound, Headset, ShieldCheck } from "lucide-react";
 import React, { useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -39,8 +40,17 @@ export default function Footer() {
           </div>
           {[groups[0], professional, ...groups.slice(1)].map(({ title, links }) => (
             <div className="lq-footer-column" key={title}>
-              <h4>{title}</h4>
-              {links.map(([label, path]) => <Link key={label} to={path} onClick={navigateFromFooter}>{label}</Link>)}
+              <details className="lq-footer-accordion">
+                <summary>
+                  <span className="lq-footer-summary-label">
+                    {(() => { const Icon = title === "Explore" ? House : title === "Company" ? UsersRound : title === "Support" ? Headset : title === "Legal" ? ShieldCheck : ClipboardList; return <Icon className="lq-footer-summary-icon" size={23} strokeWidth={2} aria-hidden="true" />; })()}
+                    <h4>{title}</h4>
+                  </span>
+                  <span className="lq-footer-chevron" aria-hidden="true" />
+                </summary>
+                <div className="lq-footer-accordion-links">{links.map(([label, path]) => <Link key={label} to={path} onClick={navigateFromFooter}>{label}</Link>)}</div>
+              </details>
+              <nav className="lq-footer-desktop-links" aria-label={`${title} links`}>{links.map(([label, path]) => <Link key={label} to={path} onClick={navigateFromFooter}>{label}</Link>)}</nav>
             </div>
           ))}
         </div>

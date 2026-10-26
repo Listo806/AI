@@ -860,3 +860,94 @@
 .lq-vacation-menu-mockup a svg{flex:none;color:#175be9}
 .lq-vacation-menu-mockup a:hover{background:#f6f9ff}
 @media(max-width:600px){.lq-vacation-menu-mockup a{min-height:60px;font-size:18px}}
+
+/* Responsive vacation footer accordion, desktop layout remains unchanged. */
+@media (max-width: 900px) {
+ .lq-vacation-footer-reference { background: #f4f9ff; color: #0a1c4c; }
+ .lq-vacation-footer-reference .lq-vacation-footer-inner { width: min(100% - 36px, 680px); padding-top: 30px; }
+ .lq-vacation-footer-reference .lq-vacation-footer-grid { display: flex; flex-direction: column; gap: 12px; }
+ .lq-vacation-footer-reference .lq-vacation-footer-brand { max-width: none; text-align: center; padding-bottom: 15px; }
+ .lq-vacation-footer-reference .lq-vacation-footer-logo { justify-content: center; color: #0a1c4c; font-size: clamp(26px, 6vw, 36px); }
+ .lq-vacation-footer-reference .lq-vacation-footer-brand p { margin: 10px 0 0; color: #596b92; font-size: 15px; }
+ .lq-vacation-footer-reference .lq-vacation-footer-column { width: 100%; }
+ .lq-vacation-footer-reference .lq-footer-accordion > summary h3 { margin: 0; color: #0a1c4c; font-size: 18px; }
+ .lq-vacation-footer-reference .lq-footer-accordion-links a { display: block; color: #132653; font-size: 15px; padding: 11px 0; border-top: 1px solid #e5edf8; }
+ .lq-vacation-footer-reference .lq-vacation-footer-bottom { color: #53668e; border-top: 1px solid #d4e3f6; margin-top: 18px; font-size: 13px; }
+}
+
+
+/* Vacation rentals landing — tablet/mobile only. Desktop styles remain unchanged. */
+@media (max-width: 900px) {
+  .lq-old-vr-page { overflow-x: clip; }
+  .lq-vacation-header { position: relative; height: 76px; background: #fff; color: #091c4d; }
+  .lq-vacation-header .lq-logo-text { color: #0b245c; }
+  .lq-vacation-header-inner { height: 76px; }
+  .lq-vacation-header .lq-vacation-header-list-property { display: none; }
+  .lq-vacation-header .lq-vacation-icon-button { color: #0662ee; }
+  .lq-old-vr-hero {
+    min-height: 450px;
+    padding: 34px 24px 32px;
+    align-items: flex-start;
+    background-image: url("../../assets/public/images/listoqasa/home-hero-mobile.jpg");
+    background-position: center center;
+    background-size: cover;
+  }
+  .lq-old-vr-overlay { display: none; }
+  .lq-old-vr-hero-content { width: min(100%, 850px); color: #071d50; text-align: left; }
+  .lq-old-vr-hero-content h1 { font-size: clamp(30px, 5.3vw, 52px); line-height: 1.12; font-weight: 800; }
+  .lq-old-vr-hero-content > p { max-width: 580px; margin: 8px 0 34px; color: #657798; opacity: 1; font-size: clamp(16px, 2.7vw, 26px); line-height: 1.3; }
+  .lq-old-vr-search {
+    width: 100%; grid-template-columns: minmax(0, 1.35fr) repeat(2,minmax(0,1fr)) minmax(0,.9fr);
+    gap: 0; padding: 14px 14px 12px; border-radius: 22px;
+    background: #fff; box-shadow: 0 10px 35px rgba(11, 31, 68, .13);
+  }
+  .lq-old-vr-search-field { padding: 8px 12px; border-bottom: 0; border-right: 1px solid #d8e0ee; }
+  .lq-old-vr-search-field > span { font-size: clamp(11px,1.5vw,17px); color: #071d50; }
+  .lq-old-vr-search-field > div { gap: 7px; color: #091d4c; }
+  .lq-old-vr-search-field input, .lq-old-vr-guests-trigger strong { font-size: clamp(10px,1.55vw,17px); }
+  .lq-old-vr-search-field input[type=date] { max-width: 100%; }
+  .lq-old-vr-guests-trigger { border-right: 0; }
+  .lq-old-vr-search-submit {
+    grid-column: 1/-1; width: 100%; min-height: 58px; margin: 12px 0 0;
+    border-radius: 12px; background: #0755f5; font-size: 22px;
+  }
+  .lq-old-vr-container { width: min(100% - 48px, 850px); }
+  .lq-old-vr-section { padding: 28px 0 8px; }
+  .lq-old-vr-section-head h2 { font-size: clamp(22px,3.6vw,34px); color: #091d4b; }
+  .lq-old-vr-view-all { font-size: clamp(14px,2.2vw,22px); color: #0064f5; }
+  .lq-old-vr-row { grid-auto-columns: 100%; gap: 14px; scroll-snap-type: x mandatory; }
+  .lq-old-vr-card { scroll-snap-align: start; position: relative; overflow: hidden; border-radius: 16px; }
+  .lq-old-vr-card img { height: clamp(170px, 30vw, 290px); border-radius: 16px; }
+  .lq-old-vr-card-copy { position: absolute; bottom: 0; left: 0; right: 0; padding: 32px 20px 17px; color: white; background: linear-gradient(transparent,rgba(0,0,0,.68)); }
+  .lq-old-vr-card-copy h3 { font-size: clamp(20px,3vw,31px); }
+  .lq-old-vr-card-copy p { color: white; font-size: clamp(13px,2.2vw,22px); }
+  .lq-old-vr-arrow { display: none; }
+}
+@media (max-width: 600px) {
+  .lq-vacation-header, .lq-vacation-header-inner { height: 64px; }
+  .lq-old-vr-hero { min-height: 390px; padding: 22px 14px 28px; background-position: center; }
+  .lq-old-vr-hero-content h1 { font-size: clamp(26px, 7vw, 36px); }
+  .lq-old-vr-hero-content > p { font-size: 16px; max-width: 330px; margin: 7px 0 28px; }
+  .lq-old-vr-search { padding: 10px 8px; border-radius: 16px; }
+  .lq-old-vr-search-field { min-height: 56px; padding: 6px 5px; }
+  .lq-old-vr-search-field > span { font-size: 10px; margin-bottom: 5px; }
+  .lq-old-vr-search-field > div { gap: 3px; }
+  .lq-old-vr-search-field > div svg { width: 15px; height: 15px; flex: 0 0 15px; }
+  .lq-old-vr-search-field input, .lq-old-vr-guests-trigger strong { font-size: 10px; }
+  .lq-old-vr-search-submit { min-height: 47px; margin-top: 9px; font-size: 18px; }
+  .lq-old-vr-container { width: calc(100% - 28px); }
+  .lq-old-vr-section-head { gap: 8px; }
+  .lq-old-vr-section-head h2 { font-size: clamp(20px,5.4vw,26px); }
+  .lq-old-vr-view-all { flex-shrink: 0; font-size: 14px; }
+  .lq-old-vr-card img { height: clamp(165px, 43vw, 235px); }
+}
+
+
+/* Desktop links must not depend on the open state of mobile <details>. */
+.lq-vacation-footer-desktop-links { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.lq-vacation-footer-desktop-links h3 { margin-bottom: 15px; }
+.lq-vacation-footer-mobile-links { display: none !important; }
+@media (max-width: 767px) {
+  .lq-vacation-footer-desktop-links { display: none !important; }
+  .lq-vacation-footer-mobile-links { display: block !important; }
+}

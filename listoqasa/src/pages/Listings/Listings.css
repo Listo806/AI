@@ -2456,3 +2456,58 @@ body,
 .listings-card--explore .listings-card-media { position:relative; }
 
 .listings-card--map-selected { outline: 3px solid #0b65ec; outline-offset: 2px; }
+
+/* Buy / Rent results: responsive cards. Keep desktop layout unchanged. */
+@media (max-width: 1024px) {
+  .listings-page .listings-split {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .listings-page .listings-results-panel {
+    min-width: 0;
+    width: 100%;
+    padding: 16px !important;
+  }
+  .listings-page .listings-grid.listings-grid--split {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+  }
+  .listings-page .listings-card.listings-card--explore {
+    width: 100%;
+    min-width: 0;
+  }
+  .listings-page .lq-compact-main-line {
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow: visible;
+    row-gap: 4px;
+  }
+  .listings-page .lq-compact-main-line > span {
+    overflow-wrap: anywhere;
+  }
+  .listings-page .lq-compact-main-line .lq-compact-price {
+    white-space: nowrap;
+  }
+  .listings-page .lq-compact-specs {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .listings-page .listings-results-panel {
+    padding: 12px !important;
+  }
+  .listings-page .listings-grid.listings-grid--split {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+  .listings-page .listings-card--explore .listings-card-image {
+    aspect-ratio: 16 / 9 !important;
+  }
+  .listings-page .lq-compact-main-line {
+    font-size: 13px;
+  }
+  .listings-page .lq-compact-main-line .lq-compact-price {
+    margin-left: 0;
+  }
+}

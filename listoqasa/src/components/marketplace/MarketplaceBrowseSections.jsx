@@ -422,12 +422,16 @@ export default function MarketplaceBrowseSections() {
         />
 
         <section className="lq-vr-locations-section">
+          <div className="lq-vr-locations-intro">
+            <span className="lq-mobile-section-eyebrow">{t("vacationBrowse.exploreLabel", { defaultValue: "EXPLORE" })}</span>
+          </div>
           <h2>
             {t("vacationBrowse.exploreEcuador", {
               defaultValue: "Explore Ecuador by Location",
             })}
           </h2>
 
+          <p className="lq-vr-locations-subtitle">{t("vacationBrowse.exploreDescription", { defaultValue: "Discover popular cities and find your next property." })}</p>
           <div className="lq-vr-locations">
             {locations.map((location) => (
               <Link

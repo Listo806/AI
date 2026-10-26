@@ -2,7 +2,10 @@ import i18n from "./i18n";
 
 const resources = {
   en: {
+    home: { benefitsEyebrow: 'WHY LISTOQASA', benefitsHeading: 'A better way to find property' },
     vacationBrowse: {
+      exploreLabel: 'EXPLORE',
+      exploreDescription: 'Discover popular cities and find your next property.',
       homesForRent:
         "Homes for Rent",
 
@@ -62,7 +65,10 @@ const resources = {
   },
 
   es: {
+    home: { benefitsEyebrow: 'POR QUÉ LISTOQASA', benefitsHeading: 'Una mejor manera de encontrar propiedades' },
     vacationBrowse: {
+      exploreLabel: 'EXPLORAR',
+      exploreDescription: 'Descubre ciudades populares y encuentra tu próxima propiedad.',
       homesForRent:
         "Casas en Alquiler",
 
@@ -122,7 +128,10 @@ const resources = {
   },
 
   pt: {
+    home: { benefitsEyebrow: 'POR QUE LISTOQASA', benefitsHeading: 'Uma maneira melhor de encontrar imóveis' },
     vacationBrowse: {
+      exploreLabel: 'EXPLORAR',
+      exploreDescription: 'Descubra cidades populares e encontre seu próximo imóvel.',
       homesForRent:
         "Casas para Alugar",
 

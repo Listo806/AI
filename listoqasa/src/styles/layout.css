@@ -594,3 +594,64 @@
 .lq-account-signin-item + .lq-account-signin-item { border-top: 1px solid #dbe3f0; }
 .lq-account-signin-copy small { order: -1; margin: 0 0 6px; color: #1551e8; font-size: 13px; line-height: 1.2; font-weight: 400; }
 .lq-account-signin-item > svg { width: 17px; height: 17px; color: #71809b; }
+
+/* Footer accordions: retain the original desktop columns and links. */
+@media (min-width: 901px) {
+ .lq-footer-accordion, .lq-footer-accordion-links { display: contents; }
+ .lq-footer-accordion > summary { display: contents; list-style: none; pointer-events: none; }
+ .lq-footer-accordion > summary::-webkit-details-marker { display: none; }
+ .lq-footer-chevron { display: none; }
+}
+@media (max-width: 900px) {
+ .lq-footer-reference { background: #f2f8ff; color: #091b4a; }
+ .lq-footer-reference .lq-footer-inner { width: min(100% - 36px, 680px); }
+ .lq-footer-reference .lq-footer-top { display: flex; flex-direction: column; gap: 14px; padding: 34px 0 20px; }
+ .lq-footer-reference .lq-footer-brand-column { text-align: center; padding-bottom: 14px; }
+ .lq-footer-reference-logo { color: #091b4a; justify-content: center; font-size: clamp(27px, 6vw, 38px); }
+ .lq-footer-reference .lq-footer-description { color: #53668e; margin: 12px auto 0; font-size: 15px; }
+ .lq-footer-reference .lq-footer-column { width: 100%; }
+ .lq-footer-accordion { background: white; border: 1px solid #d8e5f7; border-radius: 14px; overflow: hidden; }
+ .lq-footer-accordion > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; padding: 17px 20px; list-style: none; }
+ .lq-footer-accordion > summary::-webkit-details-marker { display: none; }
+ .lq-footer-reference .lq-footer-column h4 { margin: 0; font-size: 18px; color: #091b4a; }
+ .lq-footer-chevron { display: block; width: 11px; height: 11px; border-right: 2px solid #0866f5; border-bottom: 2px solid #0866f5; transform: rotate(45deg); transition: transform .2s; margin-right: 5px; }
+ .lq-footer-accordion[open] .lq-footer-chevron { transform: rotate(225deg); }
+ .lq-footer-accordion-links { display: flex; flex-direction: column; padding: 0 20px 14px; }
+ .lq-footer-reference .lq-footer-column .lq-footer-accordion-links > a { text-decoration: none;display: block; color: #132653; padding: 12px 0; font-size: 15px; border-top: 1px solid #e5edf8; }
+ .lq-footer-reference .lq-footer-bottom { color: #53668e; border-top-color: #d4e3f6; padding: 22px 0; font-size: 14px; }
+}
+
+/* Marketplace mobile navigation only; desktop header and navigation unchanged. */
+@media (max-width: 768px) {
+ .lq-mobile-menu { width: 100vw; max-width: none; box-sizing: border-box; padding: 22px 24px 28px; overflow-y: auto; overscroll-behavior: contain; }
+ .lq-mobile-menu-header { padding-bottom: 18px; margin-bottom: 14px; }
+ .lq-mobile-menu-header .lq-logo-text { font-size: clamp(24px, 7vw, 34px); }
+ .lq-mobile-close { background: transparent; color: #65718a; }
+ .lq-mobile-list-property-title { display: block; color: #66738c; font-size: 15px; font-weight: 700; margin: 10px 0 12px; }
+ .lq-mobile-list-property-item { display: grid !important; grid-template-columns: 32px minmax(0,1fr) 18px; gap: 12px; align-items: center; padding: 13px 0 !important; }
+ .lq-mobile-list-property-item > svg { color: #075bea; width: 24px; height: 24px; }
+ .lq-mobile-list-property-item strong { display: block; font-size: 17px; color: #0b1944; }
+ .lq-mobile-list-property-item small { display: block; font-size: 12px; line-height: 1.45; color: #66738c; font-weight: 400; margin-top: 3px; }
+ .lq-mobile-nav > a { display: flex; align-items: center; gap: 16px; min-height: 58px; padding: 10px 0; color: #0b1944; font-size: 18px; font-weight: 700; }
+ .lq-mobile-nav > a > svg:first-child { color: #075bea; flex-shrink: 0; }
+ .lq-mobile-nav-chevron { margin-left: auto; color: #8792a8; }
+}
+
+/* Marketplace footer accordion icons only on tablet/mobile. */
+.lq-footer-summary-icon { display: none; }
+@media (max-width: 900px) {
+  .lq-footer-summary-label { display: inline-flex; align-items: center; gap: 15px; min-width: 0; }
+  .lq-footer-summary-icon { display: block; flex: 0 0 auto; color: #0866f5; }
+}
+
+
+/* Desktop footer links remain visible even when mobile <details> are closed. */
+@media (min-width: 651px) {
+  .lq-footer-reference .lq-footer-accordion-links { display: none; }
+  .lq-footer-reference .lq-footer-desktop-links { display: flex; flex-direction: column; gap: 12px; }
+  .lq-footer-reference .lq-footer-desktop-links a { color: #c9d4e7; font-size: 13px; line-height: 1.4; text-decoration: none; }
+  .lq-footer-reference .lq-footer-desktop-links a:hover { color: #fff; }
+}
+@media (max-width: 650px) {
+  .lq-footer-reference .lq-footer-desktop-links { display: none; }
+}

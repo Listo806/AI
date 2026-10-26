@@ -721,3 +721,106 @@
 .lq-home-content .lq-property-grid .lq-compact-card-body { min-height: 76px; padding: 12px; }
 @media (max-width: 900px) { .lq-home-content .lq-property-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
 @media (max-width: 560px) { .lq-home-content .lq-property-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+/* Tablet/mobile homepage only. Desktop rules above remain intact. */
+@media (max-width: 900px) {
+ .lq-home-content .lq-property-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+ .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(160px,24vw,250px); }
+ .lq-home-hero-inner { padding-left: 20px; padding-right: 20px; }
+ .lq-home-hero-content { padding: 0; }
+ .lq-home-hero-content h1 { font-size: clamp(40px,7vw,64px); }
+ .lq-marketplace-benefits { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 768px) {
+ .lq-home-hero { min-height: 520px; background-position: center center; }
+ .lq-home-hero-inner { min-height: 520px; padding: 55px 14px 24px; align-items: center; }
+ .lq-home-hero-content { width: 100%; }
+ .lq-home-hero-content h1 { font-size: clamp(36px,9vw,54px); text-align: center; line-height: 1.05; letter-spacing: -1.4px; }
+ .lq-home-hero-tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; margin-top: 28px; padding: 7px; background: #fff; border-radius: 20px 20px 0 0; }
+ .lq-home-hero-tabs button { min-width: 0; padding: 13px 3px; font-size: clamp(12px,3.5vw,17px); border-radius: 12px; }
+ .lq-home-hero .lq-home-search { border-radius: 0 0 20px 20px; height: auto; min-height: 104px; padding: 10px 14px 15px; display: grid; grid-template-columns: minmax(0,1fr) 54px; box-shadow: 0 12px 30px #0c255025; }
+ .lq-home-hero .lq-home-search input { min-width: 0; font-size: 14px; }
+ .lq-home-search-icon-button { width: 50px; height: 50px; }
+ .lq-category-bar { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px 8px; padding: 16px 0; }
+ .lq-category-item { min-width: 0; text-align: center; font-size: 13px; }
+ .lq-category-item span { overflow-wrap: anywhere; }
+ .lq-home-content .lq-property-grid { grid-template-columns: 1fr; }
+ .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(210px,55vw,330px); }
+ .lq-section-heading-row h2 { font-size: clamp(20px,5.5vw,30px); }
+ .lq-view-all { white-space: nowrap; font-size: 13px; }
+ .lq-marketplace-benefits { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px 10px; }
+ .lq-marketplace-benefit { padding: 10px 4px; min-height: 0; }
+ .lq-marketplace-benefit:nth-child(n)::after { display: none; }
+ .lq-marketplace-benefit-icon { margin: 0 auto 10px; }
+ .lq-marketplace-benefit h3 { font-size: 15px; }
+ .lq-marketplace-benefit p { font-size: 12px; }
+ .lq-owner-home-banner { gap: 12px; padding: 20px 16px; }
+ .lq-owner-home-icon { display: none; }
+ .lq-owner-home-copy h3 { font-size: 19px; }
+ .lq-owner-home-copy p { font-size: 13px; }
+}
+
+/* Mobile-only refinements matching the approved marketplace mockup. Desktop remains untouched. */
+.lq-home-carousel-controls { display: none; }
+@media (max-width: 900px) {
+  .lq-home-content .lq-property-grid {
+    display: flex; overflow-x: auto; overflow-y: hidden; gap: 0;
+    scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .lq-home-content .lq-property-grid::-webkit-scrollbar { display: none; }
+  .lq-home-content .lq-property-grid > * {
+    flex: 0 0 100%; width: 100%; min-width: 0; max-width: 100%; scroll-snap-align: start;
+    box-sizing: border-box;
+  }
+  .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(190px, 48vw, 310px); }
+  .lq-home-carousel-controls { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 0 4px; }
+  .lq-home-carousel-controls > button { border: 1px solid #dce5f2; background: #fff; border-radius: 50%; width: 34px; height: 34px; font-size: 25px; color: #075bea; cursor: pointer; }
+  .lq-home-carousel-controls > button:disabled { opacity: .35; cursor: default; }
+  .lq-home-carousel-dots { display: flex; align-items: center; gap: 7px; }
+  .lq-home-carousel-dots button { width: 8px; height: 8px; border: 0; border-radius: 50%; padding: 0; background: #cbd5e1; cursor: pointer; }
+  .lq-home-carousel-dots button.active { background: #075bea; }
+}
+/* Consolidated tablet/mobile homepage rules (replaces conflicting hero overrides). */
+.lq-home-search-location, .lq-home-search-button-label { display: none; }
+@media (max-width: 900px) {
+  body:has(.lq-home-hero) .lq-header { position: relative; top: auto; left: auto; right: auto; background: #fff; }
+  body:has(.lq-home-hero) .lq-header .lq-logo-text { color: #07163b; }
+  .lq-home-hero:not(.lq-home-hero-rent) { background-image: var(--lq-home-mobile-hero-image); background-size: cover; background-position: center; }
+  .lq-home-hero-content h1 { color: #071538; text-shadow: none; }
+  .lq-category-item { border-right: 0; gap: 7px; }
+  .lq-category-item svg { box-sizing: content-box; padding: 12px; border-radius: 15px; background: #eaf2ff; color: #0849df; }
+}
+@media (max-width: 768px) {
+  .lq-home-hero, .lq-home-hero-inner { min-height: 390px; }
+  .lq-home-hero { overflow: visible; align-items: flex-start; background-repeat: no-repeat; }
+  .lq-home-hero:not(.lq-home-hero-rent) { background-size: cover; background-position: center center; }
+  .lq-home-hero-inner { width: 100%; box-sizing: border-box; padding: 45px 16px 0; align-items: flex-start; }
+  .lq-home-hero-content { width: 100%; }
+  .lq-home-hero-content h1 { margin: 0 0 100px; font-size: clamp(30px, 8.4vw, 42px); line-height: 1.12; text-align: center; color: #07163b; }
+  .lq-home-hero-tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; width: 100%; margin: 0; padding: 12px 12px 5px; border-radius: 22px 22px 0 0; background: #fff; box-shadow: 0 8px 22px rgba(9,27,65,.12); }
+  .lq-home-hero-tabs button { min-width: 0; min-height: 48px; padding: 8px 3px; font-size: clamp(11px,3.5vw,15px); line-height: 1.15; color: #07163b; background: #edf1f7; border-radius: 12px; text-shadow: none; }
+  .lq-home-hero-tabs button.active { background: #0750f0; color: #fff; }
+  .lq-home-hero-tabs button.active::after { display: none; }
+  .lq-home-hero .lq-home-search { box-sizing: border-box; display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: 56px 56px; row-gap: 10px; width: 100%; height: auto; min-height: 0; margin: 0; padding: 8px 12px 14px; border-radius: 0 0 22px 22px; background: #fff; box-shadow: 0 12px 25px rgba(9,27,65,.12); }
+  .lq-home-hero .lq-home-search input { box-sizing: border-box; grid-column: 1; grid-row: 1; width: 100%; height: 56px; min-width: 0; border: 1.5px solid #d8e1f0; border-radius: 13px; padding: 0 12px 0 43px; background: #fff; font-size: 14px; box-shadow: none; outline-offset: 2px; }
+  .lq-home-hero .lq-home-search input::placeholder { color: #73829d; opacity: 1; }
+  .lq-home-hero .lq-home-search-location { display: block; grid-column: 1; grid-row: 1; justify-self: start; align-self: center; margin-left: 13px; z-index: 2; color: #687994; pointer-events: none; }
+  .lq-home-hero .lq-home-search-icon-button { grid-column: 1; grid-row: 2; display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; height: 56px; border: 0; border-radius: 12px; background: #0750f0; color: #fff; font-size: 18px; font-weight: 750; }
+  .lq-home-hero .lq-home-search-button-label { display: inline; }
+  .lq-home-hero .lq-home-search-icon-button svg { width: 24px; height: 24px; }
+  .lq-home-hero-tagline { display: none; }
+  .lq-category-bar { gap: 20px 7px; padding: 24px 0; }
+  .lq-category-item svg { width: 30px; height: 30px; }
+  .lq-category-item span { font-size: 12px; line-height: 1.25; }
+  .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(185px,55vw,270px); }
+}
+
+/* Approved mobile/tablet benefits heading; desktop layout remains untouched. */
+.lq-marketplace-benefits-heading { display: none; }
+@media (max-width: 900px) {
+  .lq-marketplace-benefits-heading { display: block; margin: 20px 0 0; }
+  .lq-marketplace-benefits-heading .lq-mobile-section-eyebrow { display: block; color: #8192b3; font-size: 11px; font-weight: 750; letter-spacing: .18em; margin-bottom: 5px; }
+  .lq-marketplace-benefits-heading h2 { margin: 0; color: #091b4a; font-size: clamp(21px, 4.8vw, 29px); line-height: 1.22; }
+  .lq-marketplace-benefits { margin-top: 12px; }
+}

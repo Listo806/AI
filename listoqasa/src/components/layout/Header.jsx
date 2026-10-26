@@ -20,6 +20,10 @@ import {
   ChevronDown,
   ChevronRight,
   ArrowLeft,
+  Search,
+  Tag,
+  UsersRound,
+  ChartNoAxesColumnIncreasing,
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
@@ -72,6 +76,8 @@ export default function Header({
     { icon: Building2, label: t("listingNav.commercial"), description: t("listingNav.commercialDesc"), to: "/commercial-owners" },
     { icon: BriefcaseBusiness, label: t("listingNav.developers"), description: t("listingNav.developersDesc"), to: "/developers" },
   ];
+
+  const mobileNavIcons = [Search, Home, Tag, UsersRound, ChartNoAxesColumnIncreasing];
 
   const languages = [
     {
@@ -398,7 +404,7 @@ export default function Header({
             })}
           </div>
 
-          {navItems.map((item) => (
+          {navItems.map((item, index) => (
             <Link
               key={item.to}
               to={item.to}
@@ -406,7 +412,9 @@ export default function Header({
                 setMobileOpen(false)
               }
             >
-              {item.label}
+              {React.createElement(mobileNavIcons[index], { size: 21, strokeWidth: 1.8 })}
+              <span>{item.label}</span>
+              <ChevronRight className="lq-mobile-nav-chevron" size={18} />
             </Link>
           ))}
 
@@ -416,7 +424,9 @@ export default function Header({
               setMobileOpen(false)
             }
           >
-            {t("header.findAgent")}
+            <UsersRound size={21} strokeWidth={1.8} />
+            <span>{t("header.findAgent")}</span>
+            <ChevronRight className="lq-mobile-nav-chevron" size={18} />
           </Link>
 
           <Link
@@ -425,7 +435,9 @@ export default function Header({
               setMobileOpen(false)
             }
           >
-            Agentic CRM
+            <ChartNoAxesColumnIncreasing size={21} strokeWidth={1.8} />
+            <span>Agentic CRM</span>
+            <ChevronRight className="lq-mobile-nav-chevron" size={18} />
           </Link>
         </nav>
 

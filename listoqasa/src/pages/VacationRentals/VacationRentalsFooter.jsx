@@ -39,8 +39,11 @@ export default function VacationRentalsFooter() {
           </div>
           {groups.map(({ title, links }) => (
             <div className="lq-vacation-footer-column" key={title}>
-              <h3>{footerLabel(title)}</h3>
-              {links.map(([label, path]) => <Link key={label} to={path} onClick={() => window.scrollTo(0, 0)}>{footerLabel(label)}</Link>)}
+              <nav className="lq-vacation-footer-desktop-links" aria-label={footerLabel(title)}><h3>{footerLabel(title)}</h3>{links.map(([label, path]) => <Link key={label} to={path} onClick={() => window.scrollTo(0, 0)}>{footerLabel(label)}</Link>)}</nav>
+              <details className="lq-footer-accordion lq-vacation-footer-mobile-links">
+                <summary><h3>{footerLabel(title)}</h3><span className="lq-footer-chevron" aria-hidden="true" /></summary>
+                <div className="lq-footer-accordion-links">{links.map(([label, path]) => <Link key={label} to={path} onClick={() => window.scrollTo(0, 0)}>{footerLabel(label)}</Link>)}</div>
+              </details>
             </div>
           ))}
         </div>
