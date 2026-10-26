@@ -127,7 +127,7 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, .32);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .lq-home-hero,
   .lq-home-hero-inner {
     min-height: 600px;
@@ -466,7 +466,7 @@
     border-right: 0;
   }
 }
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .lq-home-hero {
     min-height: 620px;
     background-position: 60% center;
@@ -731,7 +731,7 @@
  .lq-home-hero-content h1 { font-size: clamp(40px,7vw,64px); }
  .lq-marketplace-benefits { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
-@media (max-width: 768px) {
+@media (max-width: 900px) {
  .lq-home-hero { min-height: 520px; background-position: center center; }
  .lq-home-hero-inner { min-height: 520px; padding: 55px 14px 24px; align-items: center; }
  .lq-home-hero-content { width: 100%; }
@@ -791,7 +791,7 @@
   .lq-category-item { border-right: 0; gap: 7px; }
   .lq-category-item svg { box-sizing: content-box; padding: 12px; border-radius: 15px; background: #eaf2ff; color: #0849df; }
 }
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .lq-home-hero, .lq-home-hero-inner { min-height: 390px; }
   .lq-home-hero { overflow: visible; align-items: flex-start; background-repeat: no-repeat; }
   .lq-home-hero:not(.lq-home-hero-rent) { background-size: cover; background-position: center center; }
