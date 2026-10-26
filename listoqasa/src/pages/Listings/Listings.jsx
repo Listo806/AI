@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
-import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Search,
@@ -19,6 +19,7 @@ import apiClient from '../../api/apiClient';
 import PropertyMap from '../../components/PropertyMap';
 import ContactModal from '../../components/ContactModal';
 import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
+import { DIRECTORY_LOCATIONS, nearbyLocations } from '../../components/marketplace/LocationDirectory';
 import SiteLayout from '../../components/layout/SiteLayout';
 import './Listings.css';
 
@@ -40,6 +41,8 @@ export default function Listings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { slug: directorySlug } = useParams();
+  const directoryLocation = DIRECTORY_LOCATIONS.find(item => item.slug === directorySlug);
   const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]);
@@ -54,7 +57,7 @@ export default function Listings() {
   const effectiveMode = urlTypeFromQuery || pathDefaultType;
   const urlPropertyType = searchParams.get('propertyType') || '';
   const urlSearch = searchParams.get('search') || '';
-  const urlCity = searchParams.get('city') || '';
+  const urlCity = directoryLocation ? '' : searchParams.get('city') || '';
   const urlPage = parseInt(searchParams.get('page') || '1', 10) || 1;
 
   // Restore the previous results viewport when returning from a detail page.
@@ -148,7 +151,7 @@ export default function Listings() {
     const mode = qpType || pathDef;
     const urlPropertyType = searchParams.get('propertyType') || '';
     const urlSearch = searchParams.get('search') || '';
-    const urlCity = searchParams.get('city') || '';
+    const urlCity = directoryLocation ? '' : searchParams.get('city') || '';
     setFilters((prev) => ({
       ...prev,
       type: mode,
@@ -156,11 +159,11 @@ export default function Listings() {
       city: urlCity,
       search: urlSearch,
     }));
-  }, [searchParams, location.pathname]);
+  }, [searchParams, location.pathname, directorySlug]);
 
   useEffect(() => {
     loadProperties();
-  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage]);
+  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage, directorySlug]);
 
 
   // Map needs the full filtered result set, not just the current 20-card page.
@@ -172,6 +175,7 @@ export default function Listings() {
       if (effectiveMode) base.set('mode', effectiveMode);
       if (urlPropertyType) base.set('propertyType', urlPropertyType);
       if (urlCity) base.set('city', urlCity);
+      if (directoryLocation) base.set('locationSlug', directoryLocation.slug);
       if (urlSearch) base.set('search', urlSearch);
       const collected = [];
       for (let offset = 0; offset < 1200; offset += 100) {
@@ -190,7 +194,7 @@ export default function Listings() {
     }
     loadMapListings();
     return () => { cancelled = true; };
-  }, [effectiveMode, urlPropertyType, urlCity, urlSearch]);
+  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, directorySlug]);
   // Sync URL when page exceeds total (e.g. bookmark ?page=99 with only 3 pages)
   useEffect(() => {
     if (pagination.total > 0 && urlPage > Math.ceil(pagination.total / PAGE_SIZE)) {
@@ -233,6 +237,7 @@ export default function Listings() {
       if (effectiveMode) queryParams.append('mode', effectiveMode);
       if (urlPropertyType) queryParams.append('propertyType', urlPropertyType);
       if (urlCity) queryParams.append('city', urlCity);
+      if (directoryLocation) queryParams.append('locationSlug', directoryLocation.slug);
       if (urlSearch) queryParams.append('search', urlSearch);
       queryParams.append('limit', String(PAGE_SIZE));
       queryParams.append('offset', String((effectivePage - 1) * PAGE_SIZE));
@@ -286,7 +291,7 @@ export default function Listings() {
       filtered = filtered.filter(p => p.propertyType === filters.propertyType);
     }
 
-    if (filters.city) {
+    if (filters.city && !directoryLocation) {
       filtered = filtered.filter(p => p.city && p.city.toLowerCase() === filters.city.toLowerCase());
     }
 
@@ -395,7 +400,7 @@ export default function Listings() {
     if (filters.search?.trim()) params.set('search', filters.search.trim());
     else params.delete('search');
 
-    if (filters.city?.trim()) params.set('city', filters.city.trim());
+    if (filters.city?.trim() && !directoryLocation) params.set('city', filters.city.trim());
     else params.delete('city');
 
     if (filters.propertyType) params.set('propertyType', filters.propertyType);
@@ -432,11 +437,30 @@ export default function Listings() {
   ].filter(Boolean).length;
 
   const resultLocation = filters.city || urlCity || '';
+  useEffect(() => {
+    if (!directoryLocation) return;
+    const canonical = `${window.location.origin}/properties-in/${directoryLocation.slug}`;
+    let element = document.querySelector('link[rel=canonical]');
+    const created = !element;
+    if (!element) { element = document.createElement('link'); element.rel = 'canonical'; document.head.appendChild(element); }
+    const previous = element.href;
+    element.href = canonical;
+    return () => { if (created) element.remove(); else element.href = previous; };
+  }, [directoryLocation?.slug]);
+  useEffect(() => {
+    if (!directoryLocation) return;
+    let robots = document.querySelector('meta[name=robots]');
+    const created = !robots;
+    if (!robots) { robots = document.createElement('meta'); robots.name = 'robots'; document.head.appendChild(robots); }
+    const previous = robots.content;
+    robots.content = (!loading && pagination.total > 0 && !location.search) ? 'index,follow' : 'noindex,follow';
+    return () => { if (created) robots.remove(); else robots.content = previous; };
+  }, [directoryLocation?.slug, loading, pagination.total, location.search]);
 
   // Properties with valid coordinates for map
   const mapProperties = mapPropertiesAll.filter(p => p.status === 'published' &&
     (!effectiveMode || p.type === effectiveMode) &&
-    (!filters.city || String(p.city || '').trim().toLowerCase() === filters.city.trim().toLowerCase()) &&
+    (directoryLocation || !filters.city || String(p.city || '').trim().toLowerCase() === filters.city.trim().toLowerCase()) &&
     (!filters.propertyType || String(p.propertyType || '').toLowerCase() === filters.propertyType.toLowerCase()) &&
     (!filters.minPrice || Number(p.price) >= Number(filters.minPrice)) &&
     (!filters.maxPrice || Number(p.price) <= Number(filters.maxPrice)) &&
@@ -734,6 +758,9 @@ export default function Listings() {
             </div>
           </section>
 
+          {directoryLocation && <div className="lq-directory-selection" style={{padding:'14px 20px',margin:'12px 0',border:'1px solid #d8dfeb',borderRadius:8}}>
+            <strong>Location: {directoryLocation.name}</strong> · <Link to="/buy">Clear location</Link> · <Link to="/" onClick={() => sessionStorage.setItem('lq:directory-focus','1')}>Change location</Link>
+          </div>}
           {/* Properties + map split */}
           {loading ? (
             <div className="listings-loading">
@@ -745,6 +772,8 @@ export default function Listings() {
             <div className="listings-empty-state">
               <div className="listings-empty-icon">🏠</div>
               <h3 className="listings-empty-title">{t('listings.noPropertiesFound')}</h3>
+              {directoryLocation && <p>No published listings currently match {directoryLocation.name}. <Link to="/buy">Explore all locations</Link>.</p>}
+              {directoryLocation && <p>Nearby locations: {nearbyLocations(directoryLocation).map((item, i) => <span key={item.slug}>{i > 0 ? ' · ' : ''}<Link to={`/properties-in/${item.slug}`}>{item.name}</Link></span>)}</p>}
               <p className="listings-empty-text">
                 {filters.search || filters.type || filters.propertyType || filters.city || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms
                   ? t('listings.tryAdjustingFilters')

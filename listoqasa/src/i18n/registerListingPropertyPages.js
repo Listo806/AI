@@ -9,7 +9,7 @@ const resources = {
       "agentsDesc": "Upload listings and receive leads",
       "vacation": "Vacation Rental Hosts",
       "vacationDesc": "Furnished · Daily stays",
-      "commercial": "Commercial Property Owners",
+      "commercial": "Commercial Property",
       "commercialDesc": "Offices · Retail · Warehouses · Industrial spaces",
       "developers": "Developers",
       "developersDesc": "Projects · Multi-unit listings",

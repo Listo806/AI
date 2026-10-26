@@ -25,6 +25,7 @@ import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
 import "./HomePage.css";
 import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
 import rentalHeroImage from "../../assets/public/images/listoqasa/rental-hero-new.png";
+import LocationDirectory from "../../components/marketplace/LocationDirectory";
 import MarketplaceBrowseSections from "../../components/marketplace/MarketplaceBrowseSections";
 import { propertyCoverImage, isPublicMarketplaceProperty } from "../../api/propertyPresentation";
 
@@ -350,6 +351,7 @@ export default function HomePage() {
           </section>
         </div>
       </div>
+      <LocationDirectory />
     </SiteLayout>
   );
 }

@@ -1,3 +1,4 @@
+import type { DirectoryLocation } from '../listings/location-directory';
 import {
   Injectable,
   NotFoundException,
@@ -581,6 +582,7 @@ export class PropertiesService {
 
   async findPublic(
     filters?: {
+      location?: DirectoryLocation;
       city?: string;
       propertyType?: string;
       mode?: string;
@@ -635,6 +637,28 @@ export class PropertiesService {
     // Map-ready rows: require coordinates
     conditions.push(`(latitude IS NOT NULL AND longitude IS NOT NULL OR EXISTS (SELECT 1 FROM listoqasa_sample_imports sample WHERE sample.property_id = properties.id))`);
 
+    // Directory filter: exact city match OR scoped neighborhood in address.
+    // Never search description/title: those can mention a place without being located there.
+    // Parent scoping prevents similarly named neighborhoods in other cities matching.
+    if (filters?.location) {
+      const loc = filters.location;
+      const normalized = (field: string) => `LOWER(TRANSLATE(TRIM(${field}), 'ÁÉÍÓÚÜÑáéíóúüñ', 'AEIOUUNaeiouun'))`;
+      const cityField = normalized('city');
+      const addressField = normalized('address');
+      const stateField = normalized('state');
+      const normalizedName = loc.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      // Word boundaries avoid matching "Quito" inside an unrelated longer name.
+      const namePattern = `(^|[^[:alnum:]])${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^[:alnum:]]|$)`;
+      if (loc.parentCity) {
+        conditions.push(`(${cityField} = LOWER($${paramCount}) OR (${cityField} = LOWER($${paramCount + 1}) AND ${addressField} ~* $${paramCount + 2}))`);
+        params.push(normalizedName, loc.parentCity, namePattern);
+        paramCount += 3;
+      } else {
+        conditions.push(`(${cityField} = LOWER($${paramCount}) OR (${addressField} ~* $${paramCount + 1} AND (${cityField} = LOWER($${paramCount}) OR ${stateField} = LOWER($${paramCount}))))`);
+        params.push(normalizedName, namePattern);
+        paramCount += 2;
+      }
+    }
     // Structured filters (exact match, case-insensitive for city and propertyType)
     if (filters?.city?.trim()) {
       conditions.push(`LOWER(TRIM(city)) = LOWER(TRIM($${paramCount++}))`);

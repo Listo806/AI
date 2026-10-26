@@ -1,9 +1,11 @@
+import { DIRECTORY_LOCATIONS } from "./components/marketplace/LocationDirectory";
 import LegalPage from "./pages/Legal/LegalPages";
 import React from "react";
 import {AboutPage, ContactPage} from "./pages/Company/CompanyPages";
 import "./i18n/registerCompanyPages";
 import PropertyDetailBoundary from "./components/PropertyDetailBoundary";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams, useParams } from "react-router-dom";
+function LocationResults(){const {slug}=useParams();if(!DIRECTORY_LOCATIONS.some(x=>x.slug===slug))return <Navigate to="/buy" replace/>;return <Listings/>;}
 function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");const plan=p.get("plan");const billing=p.get("billing")==="yearly"?"yearly":"monthly";if(addon==="ai-crm")return <Navigate to="/agent-plans" replace />;return <Navigate to={`/marketplace/signup?audience=agent&plan=${encodeURIComponent(plan||"essential")}&billing=${billing}`} replace />;}
 import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
 import MarketplaceSubscriptionPage from "./pages/CreateListing/MarketplaceSubscriptionPage";
@@ -45,6 +47,7 @@ export default function App() {
         <Route path="/property/:id" element={<PropertyDetailBoundary><ListingDetail /></PropertyDetailBoundary>} />
         <Route path="/property" element={<LegacyPropertyRedirect />} />
         <Route path="/buy" element={<Listings />} />
+        <Route path="/properties-in/:slug" element={<LocationResults />} />
         <Route path="/rent" element={<Listings />} />
 
         <Route path="/trial" element={<TrialRedirect />} />

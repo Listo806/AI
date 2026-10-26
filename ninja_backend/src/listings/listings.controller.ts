@@ -1,3 +1,5 @@
+import { findDirectoryLocation } from './location-directory';
+import { BadRequestException } from '@nestjs/common';
 import {
   Controller,
   Get,
@@ -33,6 +35,7 @@ export class ListingsController {
     description:
       'Published sale/rent listings in Ecuador only (country enforced in SQL), with coordinates or verified sample-import mapping. Vacation excluded. mode=buy is treated as sale. Same filters as GET /properties/public.',
   })
+  @ApiQuery({ name: 'locationSlug', required: false })
   @ApiQuery({ name: 'city', required: false })
   @ApiQuery({ name: 'propertyType', required: false })
   @ApiQuery({ name: 'mode', required: false, description: 'sale, rent, or buy (buy = sale)' })
@@ -47,6 +50,7 @@ export class ListingsController {
   @ApiResponse({ status: 200, description: 'Published sale/rent listings' })
   async searchPublishedSaleRent(
     @Query('city') city?: string,
+    @Query('locationSlug') locationSlug?: string,
     @Query('propertyType') propertyType?: string,
     @Query('mode') mode?: string,
     @Query('country') country?: string,
@@ -58,8 +62,10 @@ export class ListingsController {
       limit: limit != null ? parseInt(limit, 10) : undefined,
       offset: offset != null ? parseInt(offset, 10) : undefined,
     };
+    const directoryLocation = locationSlug ? findDirectoryLocation(locationSlug) : undefined;
+    if (locationSlug && !directoryLocation) throw new BadRequestException('Unknown location slug');
     return this.propertiesService.findPublic(
-      { city, propertyType, mode, country, search },
+      { city: directoryLocation ? undefined : city, location: directoryLocation, propertyType, mode, country, search },
       pagination,
     );
   }

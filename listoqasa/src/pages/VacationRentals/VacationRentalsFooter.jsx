@@ -3,14 +3,20 @@ import { useTranslation } from "react-i18next";
 
 const groups = [
   { title: "Explore", links: [["Beachfront Stays", "/vacation-rentals?collection=beachfront"], ["City Stays", "/vacation-rentals?collection=city"], ["Luxury Stays", "/vacation-rentals?collection=luxury"], ["Weekend Getaways", "/vacation-rentals?collection=weekend"]] },
-  { title: "Hosting", links: [["List Your Property", "/vacation-rentals/host"], ["Why Host With Us", "/vacation-rentals/host"], ["Vacation Rental Plans", "/vacation-rental-plans"]] },
-  { title: "Support", links: [["Help Center", "/help"], ["Contact Support", "/contact"], ["Cancellation Options", "/cancellation-policy"], ["Safety Information", "/safety"]] },
-  { title: "Legal", links: [["Terms and Conditions", "/terms"], ["Privacy Policy", "/privacy"], ["Refund Policy", "/refund-policy"], ["Cookies Policy", "/cookies"]] },
+  { title: "Hosting", links: [["List Your Property", "/vacation-rental-plans"], ["Why Host With Us", "/vacation-rentals/host"]] },
+  { title: "Support", links: [["Help Center", "/help"], ["Contact Us", "/contact"]] },
+  { title: "Legal", links: [["Terms and Conditions", "/terms"], ["Privacy Policy", "/privacy"], ["Cancellation and Refund Policy", "/cancellation-policy"]] },
 ];
+
+const footerTranslations = {
+  es: { "Hosting": "Anfitriones", "Support": "Soporte", "Legal": "Legal", "List Your Property": "Publica tu propiedad", "Why Host With Us": "Por qué alojar con nosotros", "Help Center": "Centro de ayuda", "Contact Us": "Contáctanos", "Terms and Conditions": "Términos y condiciones", "Privacy Policy": "Política de privacidad", "Cancellation and Refund Policy": "Política de cancelación y reembolso" },
+  pt: { "Hosting": "Anfitriões", "Support": "Suporte", "Legal": "Legal", "List Your Property": "Anuncie seu imóvel", "Why Host With Us": "Por que hospedar conosco", "Help Center": "Central de ajuda", "Contact Us": "Fale conosco", "Terms and Conditions": "Termos e condições", "Privacy Policy": "Política de privacidade", "Cancellation and Refund Policy": "Política de cancelamento e reembolso" },
+};
 
 export default function VacationRentalsFooter() {
   const { i18n } = useTranslation();
   const currentLanguage = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0].toLowerCase();
+  const footerLabel = (label) => footerTranslations[currentLanguage]?.[label] || label;
   const changeLanguage = async (language) => {
     await i18n.changeLanguage(language);
     localStorage.setItem("listoqasa_language", language);
@@ -32,8 +38,8 @@ export default function VacationRentalsFooter() {
           </div>
           {groups.map(({ title, links }) => (
             <div className="lq-vacation-footer-column" key={title}>
-              <h3>{title}</h3>
-              {links.map(([label, path]) => <Link key={label} to={path}>{label}</Link>)}
+              <h3>{footerLabel(title)}</h3>
+              {links.map(([label, path]) => <Link key={label} to={path} onClick={() => window.scrollTo(0, 0)}>{footerLabel(label)}</Link>)}
             </div>
           ))}
         </div>

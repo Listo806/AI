@@ -1,8 +1,7 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import legalContent from "./legalContent.json";
-import Footer from "../../components/layout/Footer";
 import "./LegalPages.css";
 
 const pages = [
@@ -44,10 +43,8 @@ export default function LegalPage({type="terms"}){
  const selected=pages.find(p=>p.key===type)||pages[0];
  React.useEffect(()=>{document.title=`${selected.title} | ListoQasa`;window.scrollTo(0,0)},[selected.key,location.pathname]);
  return <div className="lq-legal-page">
-  <header className="lq-legal-header"><Link to="/" className="lq-legal-logo"><span>LQ</span> Listo<span className="lq-legal-blue">Qasa</span></Link><Link to="/">{lang==="es"?"Inicio":lang==="pt"?"Início":"Home"}</Link></header>
-  <main className="lq-legal-main"><div className="lq-legal-eyebrow">LISTO QASA S.A.S.</div><h1>{localized[pages.indexOf(selected)]}</h1>
+  <main className="lq-legal-main"><h1>{localized[pages.indexOf(selected)]}</h1>
   {lang!=="en"&&<p className="lq-legal-language-note">{lang==="es"?"El texto legal oficial proporcionado está disponible en inglés.":"O texto jurídico oficial fornecido está disponível em inglês."}</p>}
-  <nav className="lq-legal-tabs" aria-label="Legal documents">{pages.map((p,i)=><Link key={p.key} to={p.path} aria-current={p.key===type?"page":undefined}>{localized[i]}</Link>)}</nav>
-  <article className="lq-legal-content">{renderContent(legalContent[selected.key])}</article></main><Footer/>
+  <article className="lq-legal-content">{renderContent(legalContent[selected.key])}</article></main>
  </div>;
 }

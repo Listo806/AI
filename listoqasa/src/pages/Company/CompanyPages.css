@@ -23,3 +23,29 @@
 .lq-about-demo-more{text-align:center;font-size:18px}
 .lq-contact{padding-top:10px}
 @media(max-width:760px){.lq-about-hero{min-height:300px}.lq-about-listings{grid-template-columns:1fr}.lq-about-copy-heading{gap:13px}.lq-about-copy-heading>svg{width:48px;height:48px;min-width:48px;padding:10px}.lq-about-copy-heading h2{font-size:24px}.lq-about-copy>p{font-size:16px}.lq-about-panel,.lq-about-split{gap:12px}.lq-about-listings .lq-about-copy{order:1}}
+
+/* Contact: fit the desktop page inside the viewport instead of merely hiding its scrollbar. */
+html.lq-contact-no-scrollbar,html.lq-contact-no-scrollbar body{height:100%;overflow:hidden!important}
+html.lq-contact-no-scrollbar #root{height:100%;min-height:0;overflow:hidden}
+.lq-contact{box-sizing:border-box;width:100%;max-width:1200px;min-width:0;height:100dvh;overflow:hidden;padding:8px 24px 12px;display:flex;flex-direction:column;gap:8px}
+.lq-contact-top{padding:4px 0;flex-shrink:0}
+.lq-contact header{margin:4px 0;flex-shrink:0}
+.lq-contact h1{font-size:clamp(24px,2.3vw,30px)}
+.lq-contact-grid{min-height:0;flex:1;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px}
+.lq-contact-form,.lq-contact-aside{min-width:0;min-height:0;padding:clamp(10px,1.5vh,18px)}
+.lq-contact-fields{gap:4px 16px}
+.lq-contact label{margin-bottom:7px}
+.lq-contact input,.lq-contact select,.lq-contact textarea{margin-top:4px;padding:clamp(6px,1vh,10px)}
+.lq-contact textarea{height:clamp(60px,11vh,105px);resize:none}
+.lq-contact-aside>div{padding:clamp(5px,1vh,12px) 0}
+.lq-contact-features{flex-shrink:0;margin-top:0;padding:12px;gap:10px}
+.lq-contact-grid,.lq-contact-form,.lq-contact-aside{min-width:0}
+/* Narrow/short viewports need scrolling to keep every form field accessible. */
+@media(max-width:760px),(max-height:620px){
+ html.lq-contact-no-scrollbar,html.lq-contact-no-scrollbar body{height:auto;overflow:auto!important}
+ html.lq-contact-no-scrollbar #root{height:auto;overflow:visible}
+ .lq-contact{height:auto;min-height:100dvh;overflow:visible;padding:10px 16px 24px}
+ .lq-contact-grid{grid-template-columns:1fr}
+ .lq-contact-fields{grid-template-columns:1fr}
+ .lq-contact-features{grid-template-columns:1fr 1fr}
+}
