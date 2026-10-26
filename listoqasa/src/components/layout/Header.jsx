@@ -287,9 +287,8 @@ export default function Header({
                   className="lq-account-signin-item"
                 >
                   <span className="lq-account-signin-copy">
-                    <strong>
-                      {marketplaceUser ? t("header.accountMenu.myListings", { defaultValue: "My Listings" }) : t("header.accountMenu.signInMyListings", { defaultValue: "Sign In My Listings" })}
-                    </strong>
+                    {!marketplaceUser && <small>{t("header.accountMenu.signIn", { defaultValue: "Sign In" })}</small>}
+                    <strong>{t("header.accountMenu.myListings", { defaultValue: "My Listings" })}</strong>
 
 
                   </span>
@@ -305,9 +304,8 @@ export default function Header({
                   className="lq-account-signin-item"
                 >
                   <span className="lq-account-signin-copy">
-                    <strong>
-                      {t("header.accountMenu.signInCortexCrm", { defaultValue: "Sign In Cortex CRM" })}
-                    </strong>
+                    <small>{t("header.accountMenu.signIn", { defaultValue: "Sign In" })}</small>
+                    <strong>Agentic CRM</strong>
 
 
                   </span>

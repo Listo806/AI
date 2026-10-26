@@ -507,14 +507,14 @@
 
 .lq-account-signin-item {
   width: 100%;
-  min-height: 72px;
+  min-height: 52px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
 
-  padding: 13px 20px;
+  padding: 13px 0px;
 
   color: #0a1a43;
   text-decoration: none;
@@ -588,3 +588,9 @@
 .lq-footer-reference .lq-footer-bottom { padding: 30px 0 42px; font-size: clamp(15px, 1.18vw, 21px); color: #c9d4e7; border-top: 1px solid rgba(190,210,236,.23); }
 @media (max-width: 1150px) { .lq-footer-reference .lq-footer-top { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 65px 0 45px; } }
 @media (max-width: 650px) { .lq-footer-reference .lq-footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 20px; padding: 45px 0 30px; } .lq-footer-reference .lq-footer-brand-column { grid-column: 1 / -1; } .lq-footer-reference-logo { font-size: 30px; gap: 14px; } .lq-footer-reference-mark { width: 50px; height: 58px; font-size: 21px; } .lq-footer-reference .lq-footer-bottom { padding: 28px 0; } }
+
+/* Compact account dropdown only; header geometry stays unchanged. */
+.lq-account-dropdown { padding: 7px 18px; border: 1px solid #dbe3f0; border-radius: 16px; box-shadow: 4px 6px 0 #e4e9f2; }
+.lq-account-signin-item + .lq-account-signin-item { border-top: 1px solid #dbe3f0; }
+.lq-account-signin-copy small { order: -1; margin: 0 0 6px; color: #1551e8; font-size: 13px; line-height: 1.2; font-weight: 400; }
+.lq-account-signin-item > svg { width: 17px; height: 17px; color: #71809b; }
