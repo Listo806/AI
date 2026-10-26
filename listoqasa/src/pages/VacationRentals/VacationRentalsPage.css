@@ -72,7 +72,7 @@
   margin-bottom: 4px;
   color: #111827;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .lq-old-vr-search-field > div {
@@ -442,7 +442,7 @@
   text-decoration: none;
   font-size: 19px;
   line-height: 1.2;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .lq-vacation-footer-brand p {
@@ -463,7 +463,7 @@
   color: #fff;
   font-size: 14px;
   line-height: 1.2;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .lq-vacation-footer-column a {
@@ -591,7 +591,7 @@
 
   font-size: 21px;
   line-height: 1;
-  font-weight: 800;
+  font-weight: 700;
 
   text-shadow:
     0 2px 8px rgba(0, 0, 0, .28);
@@ -888,13 +888,13 @@
     min-height: 450px;
     padding: 34px 24px 32px;
     align-items: flex-start;
-    background-image: url("../../assets/public/images/listoqasa/home-hero-mobile.jpg");
+    background-image: url("../../assets/public/images/listoqasa/vacation-rentals.png");
     background-position: center center;
     background-size: cover;
   }
   .lq-old-vr-overlay { display: none; }
   .lq-old-vr-hero-content { width: min(100%, 850px); color: #071d50; text-align: left; }
-  .lq-old-vr-hero-content h1 { font-size: clamp(30px, 5.3vw, 52px); line-height: 1.12; font-weight: 800; }
+  .lq-old-vr-hero-content h1 { font-size: clamp(30px, 5.3vw, 52px); line-height: 1.12; font-weight: 700; }
   .lq-old-vr-hero-content > p { max-width: 580px; margin: 8px 0 34px; color: #657798; opacity: 1; font-size: clamp(16px, 2.7vw, 26px); line-height: 1.3; }
   .lq-old-vr-search {
     width: 100%; grid-template-columns: minmax(0, 1.35fr) repeat(2,minmax(0,1fr)) minmax(0,.9fr);
@@ -950,4 +950,26 @@
 @media (max-width: 767px) {
   .lq-vacation-footer-desktop-links { display: none !important; }
   .lq-vacation-footer-mobile-links { display: block !important; }
+}
+
+/* Vacation landing: scoped tablet/mobile hero correction, desktop unaffected. */
+@media (max-width: 900px) {
+  .lq-old-vr-page { background: #fff; }
+  .lq-old-vr-hero {
+    background-image: url("../../assets/public/images/listoqasa/vacation-rentals.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    min-height: 470px;
+    padding-top: 44px;
+    padding-bottom: 28px;
+  }
+  .lq-old-vr-hero-content { width: min(100%, 850px); margin-inline: auto; }
+  .lq-old-vr-hero-content > p { margin-bottom: clamp(48px, 8vw, 90px); }
+  .lq-old-vr-search { margin-inline: auto; }
+}
+@media (max-width: 600px) {
+  .lq-old-vr-hero { min-height: 325px; padding: 28px 14px 24px; background-position: unset; background-size: contain;}
+  .lq-old-vr-hero-content > p { margin-bottom: 55px; }
+  .lq-old-vr-search { width: 100%; margin-inline: auto; }
 }

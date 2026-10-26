@@ -467,6 +467,7 @@ export default function MarketplaceBrowseSections() {
         </section>
 
         <section className="lq-vr-agent-cta">
+          <img className="lq-vr-agent-photo" src={new URL("../../assets/public/images/listoqasa/agent-cta-mobile.png", import.meta.url).href} alt="" aria-hidden="true" />
           <div className="lq-vr-agent-icon">
             <Bot size={35} />
           </div>
@@ -482,7 +483,7 @@ export default function MarketplaceBrowseSections() {
             <p>
               {t("vacationBrowse.agentText", {
                 defaultValue:
-                  "Join ListoQasa and list your properties to reach more buyers and renters across Ecuador.",
+                  "List your properties, connect with serious buyers and renters, and grow your business with ListoQasa.",
               })}
             </p>
           </div>

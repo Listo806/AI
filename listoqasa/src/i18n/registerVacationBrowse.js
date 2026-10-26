@@ -57,7 +57,7 @@ const resources = {
         "Are you a real estate professional?",
 
       agentText:
-        "Join ListoQasa and list your properties to reach more buyers and renters across Ecuador.",
+        "List your properties, connect with serious buyers and renters, and grow your business with ListoQasa.",
 
       joinAgent:
         "Join as an Agent",
@@ -120,7 +120,7 @@ const resources = {
         "¿Eres un profesional inmobiliario?",
 
       agentText:
-        "Únete a ListoQasa y publica tus propiedades para llegar a más compradores e inquilinos en Ecuador.",
+        "Publica tus propiedades, conecta con compradores e inquilinos interesados y haz crecer tu negocio con ListoQasa.",
 
       joinAgent:
         "Unirme como Agente",
@@ -183,7 +183,7 @@ const resources = {
         "Você é um profissional imobiliário?",
 
       agentText:
-        "Junte-se ao ListoQasa e anuncie seus imóveis para alcançar mais compradores e locatários em todo o Equador.",
+        "Anuncie seus imóveis, conecte-se com compradores e locatários interessados e expanda seu negócio com a ListoQasa.",
 
       joinAgent:
         "Entrar como Agente",

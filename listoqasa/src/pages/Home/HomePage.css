@@ -792,6 +792,7 @@
   .lq-category-item svg { box-sizing: content-box; padding: 12px; border-radius: 15px; background: #eaf2ff; color: #0849df; }
 }
 @media (max-width: 900px) {
+  body .lq-header-light .lq-language-trigger{color: #07162f;}
   .lq-home-hero, .lq-home-hero-inner { min-height: 390px; }
   .lq-home-hero { overflow: visible; align-items: flex-start; background-repeat: no-repeat; }
   .lq-home-hero:not(.lq-home-hero-rent) { background-size: cover; background-position: center center; }

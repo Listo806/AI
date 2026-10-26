@@ -387,3 +387,36 @@
   .lq-vr-locations-section h2 { margin: 0 0 3px; color: #091b4a; font-size: clamp(21px, 4.8vw, 29px); line-height: 1.2; }
   .lq-vr-locations-subtitle { margin: 0 0 17px; color: #5c6c8c; font-size: 13px; line-height: 1.45; }
 }
+
+/* Agent CTA: isolated responsive design; desktop styles above remain unchanged. */
+.lq-vr-agent-photo { display: none; }
+@media (max-width: 900px) {
+  .lq-vr-agent-cta {
+    position: relative; isolation: isolate; display: flex; align-items: center;
+    min-height: 160px; margin-top: 22px; padding: 20px 42% 20px 20px;
+    overflow: hidden; border-radius: 15px; background: #eaf4ff;
+  }
+  .lq-vr-agent-icon { display: none; }
+  .lq-vr-agent-copy { position: relative; z-index: 2; min-width: 0; }
+  .lq-vr-agent-copy h3 { margin: 0 0 9px; font-size: clamp(15px, 2.5vw, 23px); line-height: 1.2; color: #071b4d; }
+  .lq-vr-agent-copy p { margin: 0; font-size: clamp(11px, 1.65vw, 16px); line-height: 1.35; color: #596c8b; }
+  .lq-vr-agent-photo {
+    display: block; position: absolute; z-index: 1; bottom: 0; right: 21%;
+    height: 98%; width: auto; max-width: none; object-fit: contain;
+  }
+  .lq-vr-agent-link {
+    position: absolute; z-index: 3; right: 14px; top: 50%; bottom: auto;
+    transform: translateY(-50%); display: inline-flex; align-items: center;
+    gap: 6px; padding: 11px 12px; border-radius: 9px;
+    background: #0757f6; color: #fff; white-space: nowrap;
+    font-size: 12px; font-weight: 700; text-decoration: none;
+  }
+}
+@media (max-width: 520px) {
+  .lq-vr-agent-cta { min-height: 148px; padding: 16px 43% 16px 14px; }
+  .lq-vr-agent-copy h3 { font-size: clamp(13px, 3.6vw, 16px); margin-bottom: 7px; }
+  .lq-vr-agent-copy p { font-size: clamp(10px, 2.65vw, 12px); line-height: 1.35; }
+  .lq-vr-agent-photo { right: 12%; height: 87%; }
+  .lq-vr-agent-link { right: 7px; top: auto; bottom: 12px; transform: none; padding: 9px 7px; font-size: 10px; gap: 3px; }
+  .lq-vr-agent-link svg { width: 13px; height: 13px; }
+}

@@ -427,6 +427,7 @@
   border-top:
     1px solid #e6eaf0;
 }
+.lq-mobile-menu.is-open .lq-mobile-language{display: none;}
 .lq-mobile-language button {
   width: 100%;
   display: flex;
@@ -585,7 +586,7 @@
 .lq-footer-reference .lq-footer-column h4 { margin: 0 0 28px; font-size: clamp(17px, 1.3vw, 24px); font-weight: 600; }
 .lq-footer-reference .lq-footer-column > a { color: #c9d4e7; font-size: 13px; line-height: 1.4; }
 .lq-footer-reference .lq-footer-column > a:hover { color: #fff; }
-.lq-footer-reference .lq-footer-bottom { padding: 30px 0 42px; font-size: clamp(15px, 1.18vw, 21px); color: #c9d4e7; border-top: 1px solid rgba(190,210,236,.23); }
+.lq-footer-reference .lq-footer-bottom { padding: 0; font-size: clamp(15px, 1.18vw, 21px); color: transparent; border-top: 0; }
 @media (max-width: 1150px) { .lq-footer-reference .lq-footer-top { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 65px 0 45px; } }
 @media (max-width: 650px) { .lq-footer-reference .lq-footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 20px; padding: 45px 0 30px; } .lq-footer-reference .lq-footer-brand-column { grid-column: 1 / -1; } .lq-footer-reference-logo { font-size: 30px; gap: 14px; } .lq-footer-reference-mark { width: 50px; height: 58px; font-size: 21px; } .lq-footer-reference .lq-footer-bottom { padding: 28px 0; } }
 
