@@ -13,10 +13,14 @@ import {
   MapPin,
   Maximize2,
   MessageCircle,
+  Mail,
+  Images,
+  ChevronDown,
   Share2,
   ShieldCheck,
   Sparkles,
   Tag,
+  Leaf, CookingPot, Shirt, PawPrint, Fence, Building2,
   UserRound,
 } from 'lucide-react';
 import apiClient from '../../api/apiClient';
@@ -66,6 +70,8 @@ export default function ListingDetail() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [saved, setSaved] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showPhotoGallery, setShowPhotoGallery] = useState(false);
+  const [showMobileContact, setShowMobileContact] = useState(false);
   const [leadState, setLeadState] = useState('idle');
   const [leadForm, setLeadForm] = useState({
     name: '',
@@ -166,6 +172,17 @@ export default function ListingDetail() {
     if (cover && !urls.includes(cover)) urls.unshift(cover);
     return urls;
   }, [media, property]);
+
+  const amenityIcon = (item) => {
+    const name = String(item).toLowerCase();
+    if (/garden|jard[ií]n|jardim/.test(name)) return <Leaf size={20} />;
+    if (/terrace|terraza|terraço/.test(name)) return <Fence size={20} />;
+    if (/kitchen|cocina|cozinha/.test(name)) return <CookingPot size={20} />;
+    if (/closet|armario|armário/.test(name)) return <Shirt size={20} />;
+    if (/secur|segur|vigil/.test(name)) return <ShieldCheck size={20} />;
+    if (/pet|mascota|animal/.test(name)) return <PawPrint size={20} />;
+    return <CheckCircle2 size={20} />;
+  };
 
   const amenities = useMemo(() => {
     const raw = property?.amenities;
@@ -302,6 +319,9 @@ export default function ListingDetail() {
             </div>
           </div>
 
+          <div className="lq-detail-mobile-summary">
+            <div className="lq-detail-mobile-chips"><span>{property.type === 'rent' ? 'For Rent' : 'For Sale'}</span><span>{property.propertyType || 'Property'}</span></div>
+          </div>
           <h1 className="lq-detail-title">{listingDisplayTitle(property.title) || 'Property Details'}</h1>
 
           <div className="lq-detail-location-line">
@@ -310,6 +330,7 @@ export default function ListingDetail() {
           </div>
 
           <section className="lq-detail-gallery">
+            <div className="lq-detail-mobile-gallery-actions"><span>1 / {Math.max(gallery.length, 1)}</span><button type="button" onClick={() => setShowPhotoGallery(true)}><Images size={17} /> View all photos</button></div>
             <div className="lq-detail-gallery-main">
               {gallery[0] ? (
                 <img src={gallery[0]} alt={property.title || ''} />
@@ -388,7 +409,7 @@ export default function ListingDetail() {
                     className="lq-detail-read-more"
                     onClick={() => setExpanded((value) => !value)}
                   >
-                    {expanded ? 'Show less' : 'Read full description'}
+                    {expanded ? 'Show less' : 'Read full description'} <ChevronDown size={16} />
                   </button>
                 )}
               </section>
@@ -406,7 +427,7 @@ export default function ListingDetail() {
                 <h2>Features & amenities</h2>
                 <div className="lq-detail-amenities">
                   {amenities.map((item) => (
-                    <span key={item}><CheckCircle2 size={16} /> {item}</span>
+                    <span key={item}>{amenityIcon(item)} <span>{item}</span></span>
                   ))}
                 </div>
               </section>
@@ -425,7 +446,8 @@ export default function ListingDetail() {
               )}
             </div>
 
-            <aside className="lq-detail-contact-card">
+            <aside className={`lq-detail-contact-card ${showMobileContact ? 'lq-mobile-contact-open' : ''}`}>
+              <button type="button" className="lq-detail-mobile-close" onClick={() => setShowMobileContact(false)}>×</button>
               {property.isSample ? (
                 <>
                   <div className="lq-detail-agent">
@@ -615,6 +637,12 @@ export default function ListingDetail() {
           )}
         </div>
 
+        <div className="lq-detail-mobile-bottom-actions">
+          <button type="button" className="lq-detail-mobile-whatsapp" disabled={Boolean(property.isSample)} title={property.isSample ? "Illustrative listing: no verified agent is available" : undefined} onClick={() => setShowWhatsAppModal(true)}><MessageCircle size={20}/> WhatsApp</button>
+          <button type="button" className="lq-detail-mobile-contact" disabled={Boolean(property.isSample)} title={property.isSample ? "Illustrative listing: no verified agent is available" : undefined} onClick={() => setShowMobileContact(true)}><Mail size={20}/> Contact</button>
+        </div>
+        
+        {showPhotoGallery && <div className="lq-detail-photo-overlay" role="dialog" aria-modal="true" aria-label="Property photos"><button type="button" onClick={() => setShowPhotoGallery(false)}>× Close</button><div>{gallery.map((url,index) => <img key={`${url}-${index}`} src={url} alt={`Property photo ${index+1}`}/>)}</div></div>}
         {showWhatsAppModal && (
           <PropertyWhatsAppModal
             property={property}

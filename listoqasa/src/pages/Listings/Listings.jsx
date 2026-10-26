@@ -14,6 +14,7 @@ import {
   MessageCircle,
   UserRound,
   Bookmark,
+  ArrowUpDown, Map as MapIcon, List as ListIcon, Phone,
 } from 'lucide-react';
 import apiClient from '../../api/apiClient';
 import PropertyMap from '../../components/PropertyMap';
@@ -478,6 +479,14 @@ export default function Listings() {
             </div>
           )}
 
+          <div className="lq-mobile-buy-controls">
+            <div className="lq-mobile-buy-search"><Search size={23} aria-hidden="true"/><input type="search" value={filters.search} placeholder={t('listings.searchPlaceholder')} onChange={(e) => setFilters(prev => ({...prev, search:e.target.value}))} onKeyDown={(e) => {if(e.key === 'Enter') applySearchParams();}} /></div>
+            <div className="lq-mobile-buy-actions">
+              <button type="button" onClick={() => {setShowMoreFilters(v=>!v); document.querySelector('.listings-marketplace-controls')?.scrollIntoView({behavior:'smooth',block:'start'});}}><SlidersHorizontal size={21}/>{t('listings.filter', {defaultValue:'Filter'})}</button>
+              <label><ArrowUpDown size={21}/><span>{t('listings.sortLabel',{defaultValue:'Sort'})}</span><select aria-label={t('listings.sortLabel',{defaultValue:'Sort'})} value={sortBy} onChange={e=>setSortBy(e.target.value)}><option value="newest">{t('listings.sortNewest')}</option><option value="price-low">{t('listings.sortPriceLow')}</option><option value="price-high">{t('listings.sortPriceHigh')}</option><option value="distance">{t('listings.sortDistance')}</option></select></label>
+              <button type="button" onClick={() => setMobilePanel('map')}><MapIcon size={21}/>{t('listings.mapView',{defaultValue:'Map'})}</button>
+            </div>
+          </div>
           {/* Compact marketplace filter bar */}
           <section className="listings-marketplace-controls">
             <div className="listings-marketplace-toolbar">
@@ -791,7 +800,7 @@ export default function Listings() {
                     className={mobilePanel === 'list' ? 'listings-mobile-toggle-active' : ''}
                     onClick={() => setMobilePanel('list')}
                   >
-                    {t('listings.listView')}
+                    <ListIcon size={20} aria-hidden="true" />{t('listings.listView')}
                   </button>
                   <button
                     type="button"
@@ -800,7 +809,7 @@ export default function Listings() {
                     className={mobilePanel === 'map' ? 'listings-mobile-toggle-active' : ''}
                     onClick={() => setMobilePanel('map')}
                   >
-                    {t('listings.mapView')}
+                    <MapIcon size={20} aria-hidden="true" />{t('listings.mapView')}
                   </button>
                 </div>
               )}
@@ -878,6 +887,16 @@ export default function Listings() {
                             </button>
                           </div>
 
+                          <div className="lq-mobile-property-details">
+                            <strong className="lq-mobile-property-price">{property.price != null ? formatPrice(property.price) : t('listings.priceOnRequest')}{property.type === 'rent' ? '/mo' : ''}</strong>
+                            <div className="lq-mobile-property-location"><MapPin size={18}/>{[property.address, property.city, property.state].filter(Boolean).join(', ') || property.country || 'Ecuador'}</div>
+                            <div className="lq-mobile-property-area"><Maximize2 size={18}/>{property.squareFeet ?? property.square_feet ?? property.lotSize ?? '—'} m²</div>
+                            {property.description && <p>{property.description}</p>}
+                            <div className="lq-mobile-property-contacts">
+                              <button type="button" className="lq-mobile-whatsapp" onClick={e=>{e.stopPropagation();setWhatsappProperty(property);}}><MessageCircle size={21}/>{t('listings.whatsapp',{defaultValue:'WhatsApp'})}</button>
+                              <button type="button" className="lq-mobile-contact" onClick={e=>{e.stopPropagation();setSelectedProperty(property);setShowContactModal(true);}}><Phone size={20}/>{t('listings.contact',{defaultValue:'Contact'})}</button>
+                            </div>
+                          </div>
                           <div className="listings-card-body lq-compact-card-body">
                             <div className="lq-compact-main-line">
                               <strong>{t(`properties.propertyType_${property.propertyType}`, { defaultValue: property.propertyType || 'Property' })}</strong>
