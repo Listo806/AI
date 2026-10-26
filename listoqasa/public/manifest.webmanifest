@@ -1,0 +1,12 @@
+{
+  "id": "/app",
+  "name": "ListoQasa",
+  "short_name": "ListoQasa",
+  "description": "Search properties and vacation stays with ListoQasa.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0968f8",
+  "icons": [{"src":"/icons/listoqasa-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

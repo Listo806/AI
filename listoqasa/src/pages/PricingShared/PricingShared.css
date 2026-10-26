@@ -107,3 +107,8 @@
 .lq-owner-pricing .lq-plan-card.dark .lq-owner-duration-option input{appearance:none;-webkit-appearance:none;border:2px solid #fff;background:transparent;opacity:1;position:relative}
 .lq-owner-pricing .lq-plan-card.dark .lq-owner-duration-option input:checked::before{content:"";display:block;background:#fff;width:14px;height:14px;border-radius:50%}
 .lq-owner-pricing .lq-plan-card.dark .lq-owner-duration-option input:focus-visible{outline:3px solid #83b8ff;outline-offset:3px}
+
+/* Owner three-month value line: visible only when quarterly duration is selected */
+.lq-owner-pricing .lq-owner-savings{margin:0 0 0 35px;font-size:12px;line-height:1.35;color:#777;white-space:nowrap}
+.lq-owner-pricing .lq-plan-card.dark .lq-owner-savings{color:#d0d0d0}
+@media(max-width:400px){.lq-owner-pricing .lq-owner-savings{font-size:11px;margin-left:31px}}

@@ -1,3 +1,4 @@
+import WebAppBadge from "../../components/layout/WebAppBadge";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -43,6 +44,7 @@ export default function VacationRentalsFooter() {
             </div>
           ))}
         </div>
+        <WebAppBadge vacation />
         <div className="lq-vacation-footer-bottom">
           <span>© 2026 ListoQasa. All rights reserved.</span>
           <div className="lq-vacation-footer-languages" aria-label="Languages">

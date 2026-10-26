@@ -685,3 +685,9 @@
         border-right: 0;
     }
 }
+
+/* Find Agent only: white action links and language icon over the hero. */
+.lq-site:has(.lq-find-hero) .lq-header-dark .lq-header-action-link,
+.lq-site:has(.lq-find-hero) .lq-header-dark .lq-language-trigger {
+  color: #fff;
+}

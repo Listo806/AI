@@ -47,10 +47,26 @@ export class MarketplacePlansService {
     const plan = PLANS[planKey as keyof typeof PLANS];
     if (!plan) throw new BadRequestException('Invalid Marketplace plan');
     if (interval === 'monthly') return plan.priceCents;
-    if (interval === 'quarterly' && planKey.startsWith('owner-') && plan.priceCents > 0) return plan.priceCents * 2;
+    if (interval === 'quarterly' && planKey.startsWith('owner-') && plan.priceCents > 0) {
+      // Three-month prices are authoritative on the server; never trust client amounts.
+      const quarterlyOwnerPrices: Record<string, number> = {
+        'owner-standard': 16700,
+        'owner-enhanced': 23700,
+        'owner-maximum': 36700,
+      };
+      const amount = quarterlyOwnerPrices[planKey];
+      if (amount === undefined) throw new BadRequestException('Quarterly billing is not available for this plan');
+      return amount;
+    }
     if (interval !== 'yearly' || !['agent-essential', 'agent-growth'].includes(planKey))
       throw new BadRequestException('Yearly billing is not available for this plan');
     return Math.round(plan.priceCents * 12 * 0.8);
+  }
+  private isLegacyQuarterlyOwnerPrice(planKey: string, interval: string, priceCents: number): boolean {
+    const legacyPrices: Record<string, number> = {
+      'owner-standard': 15544, 'owner-enhanced': 22504, 'owner-maximum': 34104,
+    };
+    return interval === 'quarterly' && legacyPrices[planKey] === priceCents;
   }
   private priceFor(planKey: string, interval: string): number {
     const base = this.basePriceFor(planKey, interval);
@@ -86,7 +102,7 @@ export class MarketplacePlansService {
     if(!old) throw new NotFoundException('Enrollment not found');
     const approvedPlan=PLANS[old.plan_key as keyof typeof PLANS];
     const expectedRenewalPrice = approvedPlan ? this.priceFor(old.plan_key,old.billing_interval || 'monthly') : null;
-    if (!approvedPlan || (expectedRenewalPrice !== Number(old.price_cents) && !(old.plan_key==='agent-essential' && [9700,14700,141120].includes(Number(old.price_cents))) && !(old.plan_key==='agent-growth' && [14700,19700,189120].includes(Number(old.price_cents)))) || old.currency !== 'USD')
+    if (!approvedPlan || (expectedRenewalPrice !== Number(old.price_cents) && !this.isLegacyQuarterlyOwnerPrice(old.plan_key, old.billing_interval || 'monthly', Number(old.price_cents)) && !(old.plan_key==='agent-essential' && [9700,14700,141120].includes(Number(old.price_cents))) && !(old.plan_key==='agent-growth' && [14700,19700,189120].includes(Number(old.price_cents)))) || old.currency !== 'USD')
       throw new BadRequestException('Enrollment does not match an approved plan');
     if(Number(old.price_cents)<=0) throw new BadRequestException('Free plans do not require renewal');
     if(old.status==='active' && old.current_period_end && new Date(old.current_period_end).getTime()>Date.now()+7*86400000)
@@ -160,7 +176,7 @@ export class MarketplacePlansService {
     if (!active) throw new BadRequestException('Activate or renew a Marketplace plan before submitting a listing');
     const plan=PLANS[active.plan_key as keyof typeof PLANS];
     if (!plan) throw new BadRequestException('Active enrollment references an unknown plan; contact support');
-    if ((Number(active.price_cents) !== this.priceFor(active.plan_key,active.billing_interval || 'monthly') && !(active.plan_key==='agent-essential' && Number(active.price_cents)===9700) && !(active.plan_key==='agent-growth' && Number(active.price_cents)===14700)) || String(active.currency).toUpperCase() !== 'USD') {
+    if ((Number(active.price_cents) !== this.priceFor(active.plan_key,active.billing_interval || 'monthly') && !this.isLegacyQuarterlyOwnerPrice(active.plan_key,active.billing_interval || 'monthly',Number(active.price_cents)) && !(active.plan_key==='agent-essential' && Number(active.price_cents)===9700) && !(active.plan_key==='agent-growth' && Number(active.price_cents)===14700)) || String(active.currency).toUpperCase() !== 'USD') {
       throw new BadRequestException('Enrollment amount or currency does not match its plan; contact support');
     }
     return {...state,entitlement:active,maxListings:plan.maxListings};
@@ -399,7 +415,7 @@ export class MarketplacePlansService {
     const row=result.rows[0];
     if(!row) throw new NotFoundException('Enrollment not found');
     const plan=PLANS[row.plan_key as keyof typeof PLANS];
-    const validPlan=!!plan && (this.priceFor(row.plan_key,row.billing_interval || 'monthly')===Number(row.price_cents) || (row.plan_key==='agent-essential' && [9700,14700,141120].includes(Number(row.price_cents))) || (row.plan_key==='agent-growth' && [14700,19700,189120].includes(Number(row.price_cents)))) && row.currency==='USD';
+    const validPlan=!!plan && (this.priceFor(row.plan_key,row.billing_interval || 'monthly')===Number(row.price_cents) || this.isLegacyQuarterlyOwnerPrice(row.plan_key,row.billing_interval || 'monthly',Number(row.price_cents)) || (row.plan_key==='agent-essential' && [9700,14700,141120].includes(Number(row.price_cents))) || (row.plan_key==='agent-growth' && [14700,19700,189120].includes(Number(row.price_cents)))) && row.currency==='USD';
     const active=validPlan && row.status==='active' &&
       (Number(row.price_cents)===0 || (!!row.current_period_end && new Date(row.current_period_end).getTime()>Date.now()));
     // Explicit allowlist must be approved by product/billing owner; free plans are excluded.

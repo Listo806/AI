@@ -1,3 +1,4 @@
+import WebAppBadge from "./WebAppBadge";
 import React, { useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -43,6 +44,7 @@ export default function Footer() {
             </div>
           ))}
         </div>
+        <WebAppBadge />
         <div className="lq-footer-bottom">© 2026 ListoQasa. All rights reserved.</div>
       </div>
     </footer>

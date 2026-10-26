@@ -1,0 +1,10 @@
+.lq-webapp-shortcut { display:flex; flex-direction:column; align-items:center; width:max-content; max-width:100%; margin: 8px 0 22px auto; gap:6px; }
+.lq-webapp-shortcut-label { color:#fff; font-size:13px; font-weight:700; line-height:1.2; }
+.lq-webapp-badge { box-sizing:border-box; display:flex; align-items:center; gap:9px; width:143px; min-height:51px; padding:7px 10px; background:#fff; border:1px solid #e0e7f1; border-radius:6px; color:#12254c; text-decoration:none; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+.lq-webapp-badge:hover { background:#f4f8ff; }
+.lq-webapp-badge:focus-visible { outline:3px solid #73acff; outline-offset:3px; }
+.lq-webapp-house { position:relative; display:grid; place-items:center; flex:0 0 32px; width:32px; height:36px; background:#0968f8; color:#fff; clip-path:polygon(50% 0,100% 26%,100% 100%,0 100%,0 26%); font-size:12px; font-weight:800; }
+.lq-webapp-badge-copy { display:flex; flex-direction:column; white-space:nowrap; line-height:1.05; }
+.lq-webapp-badge-copy small { font-size:9px; font-weight:600; color:#526483; }
+.lq-webapp-badge-copy strong { font-size:15px; font-weight:800; color:#12254c; }
+@media (max-width:650px) { .lq-webapp-shortcut { margin:20px auto 24px; } .lq-webapp-shortcut-label { display:none; } }
