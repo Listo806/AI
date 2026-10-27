@@ -48,9 +48,11 @@ export default function VacationDetail() {
   const [item,setItem] = useState(null);
   const [error,setError] = useState('');
   const [slide,setSlide] = useState(0);
-  const [checkIn,setCheckIn] = useState('');
-  const [checkOut,setCheckOut] = useState('');
-  const [guests,setGuests] = useState(1);
+  const searchParams = new URLSearchParams(loc.search);
+  const [checkIn,setCheckIn] = useState(searchParams.get('checkIn')||'');
+  const [checkOut,setCheckOut] = useState(searchParams.get('checkOut')||'');
+  const [guests,setGuests] = useState(Math.max(1,Number(searchParams.get('guests'))||1));
+  const [editing,setEditing]=useState(false);
   const [busy,setBusy] = useState(false);
   const [bookingMessage,setBookingMessage] = useState('');
   const [related,setRelated] = useState([]);
@@ -87,9 +89,10 @@ export default function VacationDetail() {
   const nights = dayDiff(checkIn,checkOut);
   const rate = Number(item?.pricePerNight ?? 0);
   const maxGuests = Math.max(1, Number(item?.maxGuests) || 1);
-  const total = nights > 0 && Number.isFinite(rate) ? nights * rate : null;
-  const today = new Date().toLocaleDateString('en-CA');
-  const bookingAllowed = Boolean(item && !item.isSample && nights > 0 && guests >= 1 && guests <= maxGuests && checkIn >= today);
+  const minNights=Math.max(1,Number(item?.minimumNights ?? item?.minNights ?? 1));
+  const total = nights >= minNights && Number.isFinite(rate) ? nights * rate : null;
+  const today = new Date().toISOString().slice(0,10);
+  const bookingAllowed = Boolean(item && !item.isSample && nights >= minNights && guests >= 1 && guests <= maxGuests && checkIn >= today);
   const reserve = async () => {
     setBookingMessage('');
     if (item?.isSample) { setBookingMessage(t.unavailable); return; }
@@ -137,7 +140,7 @@ export default function VacationDetail() {
             {item.description && <p className="vr-detail-description">{item.description}</p>}
             <div className="vr-detail-amenities"><h2>{t.amenities}</h2><div className="vr-detail-amenity-grid">{amenities.map((a,i)=>{ const AmenityIcon = iconFor(a); return <div key={i}><AmenityIcon size={23} strokeWidth={1.8} aria-hidden="true" /><span>{String(a)}</span></div>; })}</div></div>
           </section>
-          <aside className="vr-booking-card">
+          <aside className={`vr-booking-card ${editing?"vr-booking-editing":""}`}><h2 className="vr-stay-heading">Stay details</h2><button type="button" className="vr-stay-edit" onClick={()=>setEditing(v=>!v)}>{editing?"Close":"Edit"}</button>
             <div className="vr-booking-price"><strong>${Number.isFinite(rate)?rate.toLocaleString():'–'}</strong> <span>{t.night}</span></div>
             <label>{t.checkin}<input type="date" min={today} value={checkIn} onChange={e=>{setCheckIn(e.target.value);if(checkOut && checkOut<=e.target.value)setCheckOut('')}} /></label>
             <label>{t.checkout}<input type="date" min={checkIn || today} value={checkOut} onChange={e=>setCheckOut(e.target.value)} /></label>
@@ -148,6 +151,7 @@ export default function VacationDetail() {
             {bookingMessage && <p role="status" className="vr-booking-message">{bookingMessage}</p>}
           </aside>
         </div>
+        <div className="vr-mobile-booking"><div><strong>{total!=null?`$${total.toLocaleString()} total`:t.choose}</strong><small>{nights>0?`${nights} ${t.nightCount} · `:""}{checkIn&&checkOut?`${checkIn} – ${checkOut} · `:""}{guests} {t.guests}</small></div><button type="button" disabled={busy||item.isSample} onClick={reserve}>{busy?t.pending:t.reserve}</button></div>
         {related.length > 0 && <section className="vr-detail-related" aria-label={t.more}>
           <h2>{t.more}</h2>
           <div className="vr-detail-related-grid">

@@ -46,3 +46,56 @@
 @media(max-width:1000px){.vr-detail-related-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.vr-detail-v2{padding:8px 16px 30px}.vr-detail-gallery{height:300px}.vr-detail-columns{grid-template-columns:1fr;gap:22px}.vr-booking-card{max-width:none}.vr-detail-related-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.vr-detail-related-photo{height:140px}}
 @media(max-width:420px){.vr-detail-amenity-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.vr-detail-related-photo{height:110px}}
+/* Mobile guest detail: sticky total only on property detail */
+.vr-mobile-booking{display:none}.vr-stay-heading,.vr-stay-edit{display:none}
+@media(max-width:760px){
+.vr-detail-v2{padding:15px 16px 130px!important;background:#fff;color:#091d49}
+.vr-detail-v2 .vr-detail-back,.vr-detail-v2 .vr-detail-gallery,.vr-detail-v2 .vr-detail-columns{margin-left:0!important;margin-right:0!important}
+.vr-detail-back{display:block;font-size:14px;margin:5px 0 16px}
+.vr-detail-gallery{height:auto!important;aspect-ratio:1.22;min-height:0;border-radius:16px}
+.vr-detail-columns{display:flex;flex-direction:column;gap:22px;margin-top:20px}
+.vr-detail-info h1{font-size:26px;line-height:1.2;margin:0 0 12px}
+.vr-detail-location{font-size:15px;margin:0 0 20px}
+.vr-detail-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0 22px;padding-bottom:20px;border-bottom:1px solid #dce4ef}
+.vr-detail-stats>span{font-size:12px;gap:6px;min-width:0}.vr-detail-stats svg{width:21px}
+.vr-detail-description{font-size:15px;line-height:1.7;margin:20px 0 26px}
+.vr-detail-amenities{border-top:1px solid #dce4ef;padding-top:22px}.vr-detail-amenities h2{font-size:25px}
+.vr-detail-amenity-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 12px}
+.vr-detail-amenity-grid svg{color:#0563f3}.vr-detail-amenity-grid>div span{font-size:14px}
+.vr-booking-card{position:relative;border:1px solid #dce4ef;border-radius:15px;box-shadow:none;padding:18px;width:100%}
+.vr-stay-heading{display:block;font-size:23px;margin:0 0 12px}.vr-stay-edit{display:block;position:absolute;right:18px;top:20px;border:0;background:transparent;color:#075ef3;text-decoration:underline;font-size:14px}
+.vr-booking-card .vr-booking-price,.vr-booking-card .vr-reserve-btn,.vr-booking-card .vr-booking-small{display:none}
+.vr-booking-card label{display:none}.vr-booking-card.vr-booking-editing label{display:block}
+.vr-booking-total{display:flex!important}.vr-booking-total strong{font-size:13px}
+.vr-mobile-booking{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:510;align-items:center;justify-content:space-between;gap:12px;background:#fff;border-top:1px solid #dce4ef;padding:12px 16px max(12px,env(safe-area-inset-bottom));box-shadow:0 -3px 18px #102c4b12}
+.vr-mobile-booking>div{min-width:0;display:flex;flex-direction:column;gap:5px}.vr-mobile-booking strong{font-size:20px;color:#091d49}.vr-mobile-booking small{font-size:11px;color:#536681;overflow-wrap:anywhere}
+.vr-mobile-booking button{min-width:125px;border:0;border-radius:11px;background:#075bf2;color:white;font-size:17px;font-weight:700;padding:14px 18px}.vr-mobile-booking button:disabled{opacity:.5}
+.vr-detail-related{margin-top:30px}.vr-detail-related h2{font-size:21px}
+}
+
+/* Related rentals: one full-width card per row on phones and tablets. */
+@media (max-width: 1024px) {
+  .vr-detail-related-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; width: 100%; }
+  .vr-detail-related-card { display: block; width: 100%; min-width: 0; border-radius: 15px; overflow: hidden; }
+  .vr-detail-related-photo { width: 100%; height: auto; aspect-ratio: 16 / 9; overflow: hidden; }
+  .vr-detail-related-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .vr-detail-related-body { padding: 14px 16px 16px; gap: 8px; }
+  .vr-detail-related-body > strong { display: block; min-height: 0; font-size: 18px; line-height: 1.35; overflow-wrap: anywhere; }
+  .vr-detail-related-city { font-size: 14px; white-space: normal; }
+  .vr-detail-related-price { font-size: 19px; }
+  .vr-detail-related-price small { font-size: 13px; }
+}
+
+/* Mobile/tablet: location on the left, nightly price on the right. */
+@media (max-width: 1024px) {
+  .vr-detail-related-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: center;
+  }
+  .vr-detail-related-body > strong { grid-column: 1 / -1; }
+  .vr-detail-related-city { grid-column: 1; min-width: 0; }
+  .vr-detail-related-price { grid-column: 2; text-align: right; white-space: nowrap; }
+}
