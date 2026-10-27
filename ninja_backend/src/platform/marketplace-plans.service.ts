@@ -192,7 +192,7 @@ export class MarketplacePlansService {
     const ruc=get('MARKETPLACE_BANK_RUC');
     const configured=!!(bankName&&accountHolder&&accountNumber&&accountType);
     return {configured,bankName:configured?bankName:null,accountHolder:configured?accountHolder:null,
-      accountNumber:configured?accountNumber:null,accountType:configured?accountType:null,ruc:configured?ruc:null,currency:'USD'};
+      accountNumber:configured?accountNumber:null,accountType:configured?accountType:null,ruc:configured?ruc:null,currency:'USD',supportEmail:get('LISTOQASA_SUPPORT_EMAIL')||get('MARKETPLACE_SUPPORT_EMAIL')||null};
   }
   async bankTransfer(userId:string,enrollmentId:string) {
     await this.schema();
@@ -219,19 +219,27 @@ export class MarketplacePlansService {
       reviewed_by uuid REFERENCES users(id), reviewed_at timestamptz, review_note text,
       created_at timestamptz NOT NULL DEFAULT NOW(), updated_at timestamptz NOT NULL DEFAULT NOW()
     )`);
+    await this.db.query(`ALTER TABLE marketplace_bank_transfer_requests ADD COLUMN IF NOT EXISTS receipt_data bytea, ADD COLUMN IF NOT EXISTS receipt_mime text, ADD COLUMN IF NOT EXISTS receipt_name text`);
   }
-  async submitBankConfirmation(userId:string,enrollmentId:string,bankTransactionReference:string,note?:string) {
+  async submitBankConfirmation(userId:string,enrollmentId:string,bankTransactionReference:string,note?:string,receipt?:Express.Multer.File) {
     await this.transferSchema();
+    if(receipt) {
+      const bytes=receipt.buffer;
+      const png=bytes?.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
+      const jpeg=bytes?.subarray(0,3).equals(Buffer.from([255,216,255]));
+      const pdf=bytes?.subarray(0,5).toString('ascii')==='%PDF-';
+      if(receipt.size>5*1024*1024 || !((receipt.mimetype==='image/png'&&png)||(receipt.mimetype==='image/jpeg'&&jpeg)||(receipt.mimetype==='application/pdf'&&pdf))) throw new BadRequestException('Invalid receipt file');
+    }
     const ref=String(bankTransactionReference||'').trim();
     if(ref.length<4||ref.length>120) throw new BadRequestException('Provide your bank transaction reference (4–120 characters)');
     const row=(await this.db.query(`SELECT id,status,price_cents,payment_reference FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId])).rows[0];
     if(!row) throw new NotFoundException('Enrollment not found');
     if(row.status!=='pending_payment'||!String(row.payment_reference||'').startsWith('LQB-')) throw new BadRequestException('Generate a bank transfer reference before submitting confirmation');
-    const result=await this.db.query(`INSERT INTO marketplace_bank_transfer_requests(enrollment_id,user_id,reference,bank_transaction_reference,note)
-      VALUES($1,$2,$3,$4,$5) ON CONFLICT(enrollment_id) DO UPDATE SET
-      bank_transaction_reference=EXCLUDED.bank_transaction_reference,note=EXCLUDED.note,updated_at=NOW()
+    const result=await this.db.query(`INSERT INTO marketplace_bank_transfer_requests(enrollment_id,user_id,reference,bank_transaction_reference,note,receipt_data,receipt_mime,receipt_name)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(enrollment_id) DO UPDATE SET
+      bank_transaction_reference=EXCLUDED.bank_transaction_reference,note=EXCLUDED.note,receipt_data=COALESCE(EXCLUDED.receipt_data,marketplace_bank_transfer_requests.receipt_data),receipt_mime=COALESCE(EXCLUDED.receipt_mime,marketplace_bank_transfer_requests.receipt_mime),receipt_name=COALESCE(EXCLUDED.receipt_name,marketplace_bank_transfer_requests.receipt_name),updated_at=NOW()
       WHERE marketplace_bank_transfer_requests.status='rejected'
-      RETURNING id,status,reference,created_at`,[enrollmentId,userId,row.payment_reference,ref,String(note||'').slice(0,1000)]);
+      RETURNING id,status,reference,created_at`,[enrollmentId,userId,row.payment_reference,ref,String(note||'').slice(0,1000),receipt?.buffer||null,receipt?.mimetype||null,receipt?.originalname?.slice(0,200)||null]);
     if(!result.rows.length) throw new BadRequestException('This transfer is already awaiting review or approved');
     return {request:result.rows[0],next:'/marketplace/payment-pending'};
   }
@@ -243,10 +251,11 @@ export class MarketplacePlansService {
     if(!result.rows.length) throw new NotFoundException('Bank transfer request not found');
     return {request:result.rows[0]};
   }
+  async adminBankReceipt(id:string) { await this.transferSchema(); const r=(await this.db.query('SELECT receipt_data,receipt_mime,receipt_name FROM marketplace_bank_transfer_requests WHERE id=$1',[id])).rows[0];if(!r?.receipt_data) throw new NotFoundException('Receipt not found');return r; }
   async adminBankRequests(status?:string) {
     await this.transferSchema();
     if(status && !['pending_review','approved','rejected'].includes(status)) throw new BadRequestException('Invalid status');
-    const result=await this.db.query(`SELECT r.*,e.plan_key,e.price_cents,e.currency,e.status AS enrollment_status,u.email AS customer_email
+    const result=await this.db.query(`SELECT r.id,r.enrollment_id,r.user_id,r.reference,r.bank_transaction_reference,r.note,r.status,r.reviewed_by,r.reviewed_at,r.review_note,r.created_at,r.updated_at,(r.receipt_data IS NOT NULL) AS has_receipt,r.receipt_name,e.plan_key,e.price_cents,e.currency,e.status AS enrollment_status,u.email AS customer_email
       FROM marketplace_bank_transfer_requests r JOIN marketplace_plan_enrollments e ON e.id=r.enrollment_id
       JOIN users u ON u.id=r.user_id WHERE ($1::text IS NULL OR r.status=$1) ORDER BY r.created_at DESC LIMIT 200`,[status||null]);
     return {data:result.rows};

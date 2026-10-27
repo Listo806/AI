@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Post, Param, Headers, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param, Headers, UseGuards, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { MarketplacePlansService } from './marketplace-plans.service';
@@ -9,7 +11,7 @@ export class MarketplacePlansController {
   @Get('mine') @UseGuards(JwtAuthGuard) mine(@CurrentUser() user:any){return this.plans.mine(user.id)}
   @Get('bank-details') bankDetails(){return this.plans.bankDetails()}
   @Post('bank-transfer') @UseGuards(JwtAuthGuard) bankTransfer(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.bankTransfer(user.id,String(body?.enrollmentId||''))}
-  @Post('bank-confirmation') @UseGuards(JwtAuthGuard) bankConfirmation(@CurrentUser() user:any,@Body() body:any){return this.plans.submitBankConfirmation(user.id,String(body?.enrollmentId||''),String(body?.bankTransactionReference||''),body?.note)}
+  @Post('bank-confirmation') @UseGuards(JwtAuthGuard) @UseInterceptors(FileInterceptor('receipt',{limits:{fileSize:5*1024*1024}})) bankConfirmation(@CurrentUser() user:any,@Body() body:any,@UploadedFile() receipt?:Express.Multer.File){return this.plans.submitBankConfirmation(user.id,String(body?.enrollmentId||''),String(body?.bankTransactionReference||''),body?.note,receipt)}
   @Get('bank-confirmation/:id') @UseGuards(JwtAuthGuard) bankStatus(@CurrentUser() user:any,@Param('id') id:string){return this.plans.bankRequestStatus(user.id,id)}
   @Get('payment-config') config(){return this.plans.paymentConfig()}
   @Post('checkout') @UseGuards(JwtAuthGuard) checkout(@CurrentUser() user:any,@Body() body:{enrollmentId:string;token:string}){return this.plans.checkout(user.id,String(body?.enrollmentId||''),String(body?.token||''))}

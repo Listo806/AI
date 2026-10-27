@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -11,6 +12,7 @@ import { MarketplacePlansService } from './marketplace-plans.service';
 export class MarketplaceBankAdminController {
  constructor(private readonly plans:MarketplacePlansService){}
  @Get() list(@Query('status') status?:string){return this.plans.adminBankRequests(status)}
+ @Get(':id/receipt') async receipt(@Param('id') id:string,@Res() res:Response){const r=await this.plans.adminBankReceipt(id);res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Content-Type',r.receipt_mime);res.setHeader('Content-Disposition','attachment; filename=receipt');return res.send(r.receipt_data)}
  @Post(':id/review') review(@Param('id') id:string,@CurrentUser() user:any,@Body() body:{approve:boolean;note:string}){
    return this.plans.adminReviewBankRequest(id,user.id,body?.approve===true,String(body?.note||''));
  }
