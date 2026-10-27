@@ -8,9 +8,9 @@ import { vacationRequest } from './vacationApi';
 import './VacationDetail.css';
 
 const words = {
-  en: { back:'Back to results', guests:'guests', bedrooms:'bedrooms', bathrooms:'bathrooms', amenities:'Amenities', checkin:'Check-in', checkout:'Check-out', guest:'Guests', reserve:'Reserve', night:'per night', total:'Total', choose:'Select dates to see total.', pending:'Checking booking…', unavailable:'Booking is unavailable for this illustrative listing.', select:'Choose valid dates and guest count.', login:'Please sign in to reserve this property.', success:'Booking request submitted.', failed:'Booking could not be completed.', noPhotos:'No photos available', notCharged:"You won't be charged yet.", nightCount:'nights', more:'More vacation rentals', view:'View rental' },
-  es: { back:'Volver a resultados', guests:'huéspedes', bedrooms:'habitaciones', bathrooms:'baños', amenities:'Servicios', checkin:'Entrada', checkout:'Salida', guest:'Huéspedes', reserve:'Reservar', night:'por noche', total:'Total', choose:'Seleccione fechas para ver el total.', pending:'Comprobando reserva…', unavailable:'Reservas no disponibles para este anuncio ilustrativo.', select:'Seleccione fechas válidas y huéspedes.', login:'Inicie sesión para reservar.', success:'Solicitud de reserva enviada.', failed:'No se pudo completar la reserva.', noPhotos:'Sin fotos', notCharged:'Aún no se realizará ningún cargo.', nightCount:'noches', more:'Más alquileres vacacionales', view:'Ver alojamiento' },
-  pt: { back:'Voltar aos resultados', guests:'hóspedes', bedrooms:'quartos', bathrooms:'banheiros', amenities:'Comodidades', checkin:'Check-in', checkout:'Check-out', guest:'Hóspedes', reserve:'Reservar', night:'por noite', total:'Total', choose:'Selecione as datas para ver o total.', pending:'Verificando reserva…', unavailable:'Reserva indisponível para este anúncio ilustrativo.', select:'Selecione datas e hóspedes válidos.', login:'Entre na sua conta para reservar.', success:'Solicitação de reserva enviada.', failed:'Não foi possível concluir a reserva.', noPhotos:'Sem fotos', notCharged:'Você ainda não será cobrado.', nightCount:'noites', more:'Mais aluguéis de temporada', view:'Ver imóvel' }
+  en: { back:'Back to results', guests:'guests', bedrooms:'bedrooms', bathrooms:'bathrooms', amenities:'Amenities', checkin:'Check-in', checkout:'Check-out', guest:'Guests', reserve:'Reserve', night:'per night', total:'Total', choose:'Select dates to see total.', pending:'Checking booking…', unavailable:'Booking is unavailable for this illustrative listing.', select:'Choose valid dates and guest count.', login:'Please sign in to reserve this property.', success:'Booking request submitted.', failed:'Booking could not be completed.', noPhotos:'No photos available', notCharged:"You won't be charged yet.", nightCount:'nights', more:'More vacation rentals', view:'View rental', location:'Location', mapUnavailable:'Location information is unavailable.' },
+  es: { back:'Volver a resultados', guests:'huéspedes', bedrooms:'habitaciones', bathrooms:'baños', amenities:'Servicios', checkin:'Entrada', checkout:'Salida', guest:'Huéspedes', reserve:'Reservar', night:'por noche', total:'Total', choose:'Seleccione fechas para ver el total.', pending:'Comprobando reserva…', unavailable:'Reservas no disponibles para este anuncio ilustrativo.', select:'Seleccione fechas válidas y huéspedes.', login:'Inicie sesión para reservar.', success:'Solicitud de reserva enviada.', failed:'No se pudo completar la reserva.', noPhotos:'Sin fotos', notCharged:'Aún no se realizará ningún cargo.', nightCount:'noches', more:'Más alquileres vacacionales', view:'Ver alojamiento', location:'Ubicación', mapUnavailable:'Información de ubicación no disponible.' },
+  pt: { back:'Voltar aos resultados', guests:'hóspedes', bedrooms:'quartos', bathrooms:'banheiros', amenities:'Comodidades', checkin:'Check-in', checkout:'Check-out', guest:'Hóspedes', reserve:'Reservar', night:'por noite', total:'Total', choose:'Selecione as datas para ver o total.', pending:'Verificando reserva…', unavailable:'Reserva indisponível para este anúncio ilustrativo.', select:'Selecione datas e hóspedes válidos.', login:'Entre na sua conta para reservar.', success:'Solicitação de reserva enviada.', failed:'Não foi possível concluir a reserva.', noPhotos:'Sem fotos', notCharged:'Você ainda não será cobrado.', nightCount:'noites', more:'Mais aluguéis de temporada', view:'Ver imóvel', location:'Localização', mapUnavailable:'Informações de localização indisponíveis.' }
 };
 const asUrl = (value) => typeof value === 'string' && /^https?:\/\//i.test(value) ? value : null;
 const imageList = (item) => {
@@ -84,6 +84,16 @@ export default function VacationDetail() {
     loadRelated();
     return () => controller.abort();
   }, [item?.id, item?.city]);
+  const mapLocation = useMemo(() => {
+    if (!item) return null;
+    const lat = Number(item.latitude ?? item.lat ?? item.location?.latitude ?? item.location?.lat);
+    const lng = Number(item.longitude ?? item.lng ?? item.lon ?? item.location?.longitude ?? item.location?.lng);
+    const hasCoordinates = Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && (lat !== 0 || lng !== 0);
+    const place = [item.city, item.state, item.country].filter(Boolean).join(', ');
+    if (!hasCoordinates && !place) return null;
+    const query = hasCoordinates ? `${lat},${lng}` : place;
+    return { place: place || query, url: `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=13&output=embed` };
+  }, [item]);
   const photos = useMemo(() => imageList(item),[item]);
   const amenities = useMemo(() => Array.isArray(item?.amenities) ? item.amenities : [],[item]);
   const nights = dayDiff(checkIn,checkOut);
@@ -151,6 +161,10 @@ export default function VacationDetail() {
             {bookingMessage && <p role="status" className="vr-booking-message">{bookingMessage}</p>}
           </aside>
         </div>
+        <section className="vr-detail-map-section" aria-label={t.location}>
+          <h2>{t.location}</h2>
+          {mapLocation ? <div className="vr-detail-map-frame"><iframe title={`${t.location}: ${mapLocation.place}`} src={mapLocation.url} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen /></div> : <p>{t.mapUnavailable}</p>}
+        </section>
         <div className="vr-mobile-booking"><div><strong>{total!=null?`$${total.toLocaleString()} total`:t.choose}</strong><small>{nights>0?`${nights} ${t.nightCount} · `:""}{checkIn&&checkOut?`${checkIn} – ${checkOut} · `:""}{guests} {t.guests}</small></div><button type="button" disabled={busy||item.isSample} onClick={reserve}>{busy?t.pending:t.reserve}</button></div>
         {related.length > 0 && <section className="vr-detail-related" aria-label={t.more}>
           <h2>{t.more}</h2>
