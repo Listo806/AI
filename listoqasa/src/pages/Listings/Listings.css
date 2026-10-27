@@ -2527,7 +2527,7 @@ body,
  .listings-page .lq-mobile-property-contacts button{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;min-height:49px;color:white;font-size:16px;font-weight:700;cursor:pointer}
  .listings-page .lq-mobile-whatsapp{background:#20be78}.listings-page .lq-mobile-contact{background:#0967ef}
  .listings-page .listings-card--explore .lq-compact-status{display:none}
- .listings-page .listings-card--explore .listings-card-heart{background:#fff;color:#07194b;border-radius:50%}
+ .listings-page .listings-card--explore .listings-card-heart{color:#07194b;border-radius:50%}
  .listings-page .listings-results-panel{padding:12px 0px!important}
  .listings-page .listings-card--explore{border-radius:0!important;overflow:hidden;box-shadow:0 4px 20px rgba(16,35,75,.09)}
  .listings-page .listings-mobile-toggle{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:60;width:min(90vw,440px);background:#edf1f8;padding:4px;border-radius:14px;box-shadow:0 3px 14px #001a4330}
