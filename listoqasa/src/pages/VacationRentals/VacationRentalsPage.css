@@ -973,3 +973,55 @@
   .lq-old-vr-hero-content > p { margin-bottom: 55px; }
   .lq-old-vr-search { width: 100%; margin-inline: auto; }
 }
+
+/* Compact vacation hero search on mobile/tablet only. Preserve desktop form. */
+@media (max-width: 900px) {
+  .lq-old-vr-hero .lq-old-vr-search {
+    box-sizing: border-box; width: 100%; max-width: 720px;
+    display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) 60px;
+    grid-template-rows: 60px 53px; gap: 0;
+    align-items: stretch; padding: 7px 12px;
+    border-radius: 28px; background: #fff;
+    box-shadow: 0 12px 32px rgba(12,31,65,.15);
+  }
+  .lq-old-vr-hero .lq-old-vr-search-where {
+    grid-column: 1 / -1; grid-row: 1;
+    border: 0; border-bottom: 1px solid #dce4f0;
+    padding: 7px 10px; min-height: 0;
+  }
+  .lq-old-vr-hero .lq-old-vr-search-field { min-width: 0; padding: 9px 6px; border-right: 0; min-height: 0; }
+  .lq-old-vr-hero .lq-old-vr-search-field > span { font-size: 12px; }
+  .lq-old-vr-hero .lq-old-vr-search-where > span { font-size: 14px; }
+  .lq-old-vr-hero .lq-old-vr-search-field input,
+  .lq-old-vr-hero .lq-old-vr-guests-trigger strong { font-size: 13px; }
+  .lq-old-vr-hero .lq-old-vr-search-where input { font-size: 15px; }
+  .lq-old-vr-hero .lq-old-vr-search-field:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .lq-old-vr-hero .lq-old-vr-search-field:nth-child(3) { display: none; }
+  .lq-old-vr-hero .lq-old-vr-guests-wrap { grid-column: 2; grid-row: 2; min-width: 0; border-left: 1px solid #dce4f0; }
+  .lq-old-vr-hero .lq-old-vr-guests-trigger { width: 100%; }
+  .lq-old-vr-hero .lq-old-vr-search-submit {
+    grid-column: 3; grid-row: 2; justify-self: center; align-self: center;
+    width: 54px; height: 54px; min-height: 54px; margin: 0;
+    border-radius: 50%; padding: 0; font-size: 0;
+    color: #0750f0; background: #e3f0ff;
+  }
+  .lq-old-vr-hero .lq-old-vr-search-submit svg { width: 23px; height: 29px; margin-left: 5px;}
+}
+
+/* Mobile reference: centered round search action, legible dates and guests. */
+@media (max-width: 900px) {
+  .lq-old-vr-hero .lq-old-vr-search { grid-template-columns: minmax(0,1fr) minmax(0,1fr) 58px; padding: 8px 14px; }
+  .lq-old-vr-hero .lq-old-vr-search-field:nth-child(2) > span,
+  .lq-old-vr-hero .lq-old-vr-guests-trigger > span { display: none; }
+  .lq-old-vr-hero .lq-old-vr-search-field:nth-child(2),
+  .lq-old-vr-hero .lq-old-vr-guests-wrap { display: flex; align-items: center; }
+  .lq-old-vr-hero .lq-old-vr-search-field:nth-child(2) > div,
+  .lq-old-vr-hero .lq-old-vr-guests-trigger > div { width: 100%; }
+  .lq-old-vr-hero .lq-old-vr-search-submit { width: 54px; min-width: 54px; max-width: 54px; aspect-ratio: 1; border-radius: 999px; flex: none; }
+}
+@media (max-width: 600px) {
+  .lq-old-vr-hero .lq-old-vr-search { grid-template-columns: minmax(0,1fr) minmax(0,1fr) 54px; }
+  .lq-old-vr-hero .lq-old-vr-search-submit { width: 48px; height: 48px; min-height: 48px; min-width: 48px; max-width: 48px; }
+  .lq-old-vr-hero .lq-old-vr-search-field input,
+  .lq-old-vr-hero .lq-old-vr-guests-trigger strong { font-size: 12px; }
+}
