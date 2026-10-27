@@ -890,3 +890,12 @@
 @media (max-width:1024px) {
   body{margin: 0;}
 }
+/* Mobile hero: lift the search controls while retaining the existing layout. */
+@media (max-width: 900px) {
+  .lq-home-hero:not(.lq-home-hero-rent) { background-size: 100% 286px; }
+  .lq-home-hero-content h1 { margin-bottom: 221px; }
+}
+@media (max-width: 600px) {
+  .lq-home-hero:not(.lq-home-hero-rent) { background-size: 100% 278px; }
+  .lq-home-hero-content h1 { margin-bottom: 216px; }
+}

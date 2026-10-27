@@ -270,11 +270,14 @@ export default function ListingDetail() {
     .filter(Boolean)
     .join(', ');
 
-  const squareArea =
-    property.squareFeet ||
-    property.square_feet ||
-    property.lotSize ||
-    property.lot_size;
+  // The API exposes squareFeet in ft²; all detail-page area labels use m².
+  const areaInSquareMetres = property.lotSize ?? property.lot_size ?? property.area_m2 ?? property.areaM2;
+  const areaInSquareFeet = property.squareFeet ?? property.square_feet;
+  const squareArea = areaInSquareMetres != null && Number(areaInSquareMetres) > 0
+    ? Number(areaInSquareMetres)
+    : areaInSquareFeet != null && Number(areaInSquareFeet) > 0
+      ? Math.round(Number(areaInSquareFeet) * 0.09290304)
+      : null;
 
   const parking =
     property.parkingSpaces ||

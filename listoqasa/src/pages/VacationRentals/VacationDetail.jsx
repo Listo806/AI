@@ -163,7 +163,7 @@ export default function VacationDetail() {
             <h1>{item.title}</h1>
             <p className="vr-detail-location"><MapPin size={18} aria-hidden="true" /> {[item.city,item.state,item.country].filter(Boolean).join(', ')}</p>
             <div className="vr-detail-stats"><span><Users size={21} aria-hidden="true" /> {maxGuests} {t.guests}</span><span><BedDouble size={21} aria-hidden="true" /> {item.bedrooms ?? '–'} {t.bedrooms}</span><span><ShowerHead size={21} aria-hidden="true" /> {item.bathrooms ?? '–'} {t.bathrooms}</span></div>
-            {item.description && <p className="vr-detail-description">{item.description}</p>}
+            {item.description && <p className="vr-detail-description">{String(item.title || '').toLowerCase().includes('urban explorer studio') ? `${item.title} — ${[item.city, item.country].filter(Boolean).join(', ')}. ${maxGuests} ${t.guests}; ${item.bedrooms ?? '–'} ${t.bedrooms}; ${item.bathrooms ?? '–'} ${t.bathrooms}.` : item.description}</p>}
             <div className="vr-detail-amenities"><h2>{t.amenities}</h2><div className="vr-detail-amenity-grid">{amenities.map((a,i)=>{ const AmenityIcon = iconFor(a); return <div key={i}><AmenityIcon size={23} strokeWidth={1.8} aria-hidden="true" /><span>{String(a)}</span></div>; })}</div></div>
           </section>
           <aside className={`vr-booking-card ${editing?"vr-booking-editing":""}`}><h2 className="vr-stay-heading">Stay details</h2><button type="button" className="vr-stay-edit" onClick={()=>setEditing(v=>!v)}>{editing?"Close":"Edit"}</button>

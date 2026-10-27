@@ -1,3 +1,4 @@
+import guayaquilRiversideImage from '../../assets/public/images/listoqasa/guayaquil-riverside.png';
 export const legacyVacationSections = [
   {
     "key": "popular",
@@ -7,7 +8,7 @@ export const legacyVacationSections = [
       {
         "title": "Apartment in Guayaquil",
         "subtitle": "$120 / 2 nights",
-        "image": "https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=800"
+        "image": guayaquilRiversideImage
       },
       {
         "title": "Condo in Cuenca",
