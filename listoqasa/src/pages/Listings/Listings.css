@@ -2529,7 +2529,7 @@ body,
  .listings-page .listings-card--explore .lq-compact-status{display:none}
  .listings-page .listings-card--explore .listings-card-heart{background:#fff;color:#07194b;border-radius:50%}
  .listings-page .listings-results-panel{padding:12px 0px!important}
- .listings-page .listings-card--explore{border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(16,35,75,.09)}
+ .listings-page .listings-card--explore{border-radius:0!important;overflow:hidden;box-shadow:0 4px 20px rgba(16,35,75,.09)}
  .listings-page .listings-mobile-toggle{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:60;width:min(90vw,440px);background:#edf1f8;padding:4px;border-radius:14px;box-shadow:0 3px 14px #001a4330}
  .listings-page .listings-mobile-toggle button{flex:1;border-radius:11px;min-height:47px}
  .listings-page .listings-mobile-toggle .listings-mobile-toggle-active{background:#083a9a;color:#fff}
