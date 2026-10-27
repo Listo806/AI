@@ -227,7 +227,7 @@ export default function ListingDetail() {
 
   if (loading) {
     return (
-      <SiteLayout headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
+      <SiteLayout hideHeaderOnMobile headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
         <main className="lq-detail-page">
           <div className="lq-detail-shell">
             <div className="listings-skeleton" />
@@ -240,7 +240,7 @@ export default function ListingDetail() {
 
   if (error || !property) {
     return (
-      <SiteLayout headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
+      <SiteLayout hideHeaderOnMobile headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
         <main className="lq-detail-page">
           <div className="lq-detail-shell">
             <div className="listings-error">{error || 'Property not found'}</div>
@@ -287,7 +287,7 @@ export default function ListingDetail() {
       : null;
 
   return (
-    <SiteLayout headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
+    <SiteLayout hideHeaderOnMobile headerVariant="dark" compactHeader onHeaderBack={goBackToResults}>
       <main className="lq-detail-page">
         <div className="lq-detail-shell">
           <div className="lq-detail-topbar">

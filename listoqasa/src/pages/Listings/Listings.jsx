@@ -469,7 +469,7 @@ export default function Listings() {
     (!filters.bathrooms || Number(p.bathrooms) >= Number(filters.bathrooms)));
 
   return (
-    <SiteLayout headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() => navigate(-1)}>
+    <SiteLayout hideHeaderOnMobile headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() => navigate(-1)}>
       <div className="listings-page">
         <main className="listings-main">
         <div className="listings-container listings-container--wide">

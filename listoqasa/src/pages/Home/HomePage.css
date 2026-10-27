@@ -882,7 +882,7 @@
   .lq-home-hero .lq-home-search { border-color: #bdcbe0; }
 }
 @media (max-width: 600px) {
-  .lq-home-hero:not(.lq-home-hero-rent) { background-size: 100% 300px; }
+  .lq-home-hero:not(.lq-home-hero-rent), .lq-home-hero-rent { background-size: 100% 300px; background-position: center top;}
   .lq-home-hero-inner { padding: 42px 0px 26px; }
   .lq-home-hero-content h1 { margin-bottom: 238px; }
   .lq-home-content{padding-top: 0;}

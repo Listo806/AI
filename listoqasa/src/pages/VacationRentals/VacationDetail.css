@@ -106,3 +106,8 @@
 .vr-detail-map-frame{width:100%;height:300px;border-radius:16px;overflow:hidden;background:#eef3f9;border:1px solid #dce5f0}
 .vr-detail-map-frame iframe{display:block;width:100%;height:100%;border:0}
 @media(max-width:760px){.vr-detail-map-section{margin:26px 0 30px}.vr-detail-map-section h2{font-size:23px}.vr-detail-map-frame{height:190px;border-radius:14px}}
+
+/* The guest property detail has no top header on tablet and mobile. */
+@media (max-width: 1024px) {
+  .vr-detail-header { display: none !important; }
+}

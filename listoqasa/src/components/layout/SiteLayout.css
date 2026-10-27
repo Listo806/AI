@@ -1,0 +1,13 @@
+/* Hide the shared header only on pages that explicitly opt in. */
+@media (max-width: 1024px) {
+  .lq-site--hide-mobile-header > header,
+  .lq-site--hide-mobile-header > .lq-header,
+  .lq-site--hide-mobile-header > .site-header,
+  .lq-site--hide-mobile-header > .header-wrapper {
+    display: none !important;
+  }
+  .lq-site--hide-mobile-header > main { margin-top: 0; padding-top: 0; }
+  .lq-site--hide-mobile-header .lq-detail-page, .lq-site--hide-mobile-header .listings-main{
+    padding-top: 0!important;
+  }
+}
