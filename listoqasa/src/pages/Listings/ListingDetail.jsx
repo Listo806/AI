@@ -69,6 +69,14 @@ export default function ListingDetail() {
   const [error, setError] = useState('');
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [saved, setSaved] = useState(false);
+  const shareListing = async () => {
+    const url = window.location.href;
+    const data = { title: property?.title || 'ListoQasa', url };
+    if (navigator.share) {
+      try { await navigator.share(data); return; } catch (error) { if (error?.name === 'AbortError') return; }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${data.title} ${url}`)}`, '_blank', 'noopener,noreferrer');
+  };
   const [expanded, setExpanded] = useState(false);
   const [showPhotoGallery, setShowPhotoGallery] = useState(false);
   const [showMobileContact, setShowMobileContact] = useState(false);
@@ -246,7 +254,7 @@ export default function ListingDetail() {
             <div className="listings-error">{error || 'Property not found'}</div>
             <Link to={searchReturn} className="lq-detail-back">
               <ArrowLeft size={16} />
-              Back to search
+              <span className="lq-detail-action-label">Back to search</span>
             </Link>
           </div>
         </main>
@@ -296,25 +304,28 @@ export default function ListingDetail() {
               className="lq-detail-back"
             >
               <ArrowLeft size={16} />
-              Back to search
+              
             </Link>
 
             <div className="lq-detail-top-actions">
               <button
                 type="button"
-                onClick={() => navigator.clipboard?.writeText(window.location.href)}
+                onClick={shareListing}
+                aria-label="Share property"
               >
                 <Share2 size={17} />
-                Share
+                <span className="lq-detail-action-label">Share</span>
               </button>
 
               <button
                 type="button"
                 className={saved ? 'active' : ''}
+                aria-label={saved ? 'Remove from favorites' : 'Save property'}
+                aria-pressed={saved}
                 onClick={() => setSaved((value) => !value)}
               >
                 <Heart size={17} fill={saved ? 'currentColor' : 'none'} />
-                Save
+                <span className="lq-detail-action-label">Save</span>
               </button>
             </div>
           </div>

@@ -3,7 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SiteLayout from '../../components/layout/SiteLayout';
 import VacationRentalsHeader from './VacationRentalsHeader';
-import { Wifi, BedDouble, Bath, Users, MapPin, Laptop, Utensils, CookingPot, Waves, Tv, Wind, Car, Coffee, BookOpen, Sun, Check, ShowerHead } from 'lucide-react';
+import { Wifi, BedDouble, Bath, Users, MapPin, ArrowLeft, Share2, Heart, Laptop, Utensils, CookingPot, Waves, Tv, Wind, Car, Coffee, BookOpen, Sun, Check, ShowerHead } from 'lucide-react';
 import { vacationRequest } from './vacationApi';
 import './VacationDetail.css';
 
@@ -56,6 +56,15 @@ export default function VacationDetail() {
   const [busy,setBusy] = useState(false);
   const [bookingMessage,setBookingMessage] = useState('');
   const [related,setRelated] = useState([]);
+  const [saved, setSaved] = useState(false);
+  const shareListing = async () => {
+    const url = window.location.href;
+    const data = { title: item?.title || 'ListoQasa', url };
+    if (navigator.share) {
+      try { await navigator.share(data); return; } catch (error) { if (error?.name === 'AbortError') return; }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${data.title} ${url}`)}`, '_blank', 'noopener,noreferrer');
+  };
   useEffect(() => {
     const controller = new AbortController();
     setItem(null); setError(''); setSlide(0); setBookingMessage('');
@@ -129,6 +138,13 @@ export default function VacationDetail() {
   return <SiteLayout showHeader={false}>
     <div className="vr-detail-header"><VacationRentalsHeader compact /></div>
     <main className="vr-detail-v2">
+      <div className="vr-detail-mobile-actions">
+        <Link className="vr-detail-icon-action" to={`/vacation-rentals/search${loc.search}`} aria-label={t.back}><ArrowLeft size={23}/></Link>
+        <div className="vr-detail-mobile-actions-right">
+          <button type="button" className="vr-detail-icon-action" onClick={shareListing} aria-label={i18n.language?.startsWith('es') ? 'Compartir' : i18n.language?.startsWith('pt') ? 'Compartilhar' : 'Share listing'}><Share2 size={22}/></button>
+          <button type="button" className={`vr-detail-icon-action ${saved ? 'is-saved' : ''}`} onClick={() => setSaved(v => !v)} aria-pressed={saved} aria-label={saved ? 'Remove from favorites' : 'Save to favorites'}><Heart size={23} fill={saved ? 'currentColor' : 'none'}/></button>
+        </div>
+      </div>
       <Link className="vr-detail-back" to={`/vacation-rentals/search${loc.search}`}>← {t.back}</Link>
       {error && <p role="alert">{error}</p>}
       {!item && !error && <p>…</p>}
