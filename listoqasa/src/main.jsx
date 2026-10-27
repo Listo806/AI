@@ -16,6 +16,13 @@ import App from "./App";
 import "./styles/globals.css";
 import "./styles/layout.css";
 
+// Tell mobile browsers that the site supports the light color scheme only.
+// Also covers source-only deployments where index.html is outside this package.
+const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]') || document.createElement("meta");
+colorSchemeMeta.setAttribute("name", "color-scheme");
+colorSchemeMeta.setAttribute("content", "light");
+if (!colorSchemeMeta.isConnected) document.head.appendChild(colorSchemeMeta);
+
 registerListoQasaPwa();
 
 createRoot(
