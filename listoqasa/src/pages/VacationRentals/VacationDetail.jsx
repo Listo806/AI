@@ -151,10 +151,10 @@ export default function VacationDetail() {
       {item && <>
         <div className="vr-detail-gallery">
           {photos.length ? <img src={photos[slide]} alt={`${item.title} ${slide+1}`} /> : <div className="vr-detail-no-photo">{t.noPhotos}</div>}
+          {photos.length > 0 && <div className="vr-detail-count">{slide+1} / {photos.length}</div>}
           {photos.length > 1 && <>
             <button type="button" className="vr-detail-arrow prev" aria-label="Previous photo" onClick={() => setSlide(v => (v - 1 + photos.length) % photos.length)}>‹</button>
             <button type="button" className="vr-detail-arrow next" aria-label="Next photo" onClick={() => setSlide(v => (v + 1) % photos.length)}>›</button>
-            <div className="vr-detail-count">{slide+1} / {photos.length}</div>
             <div className="vr-detail-dots">{photos.slice(0,7).map((_,i)=><button type="button" key={i} aria-label={`Photo ${i+1}`} className={slide===i?'active':''} onClick={()=>setSlide(i)}/>)}</div>
           </>}
         </div>

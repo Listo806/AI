@@ -887,3 +887,6 @@
   .lq-home-hero-content h1 { margin-bottom: 238px; }
   .lq-home-content{padding-top: 0;}
 }
+@media (max-width:1024px) {
+  body{margin: 0;}
+}

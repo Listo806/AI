@@ -50,7 +50,6 @@
 .vr-mobile-booking{display:none}.vr-stay-heading,.vr-stay-edit{display:none}
 @media(max-width:760px){
 .vr-detail-v2{padding:15px 16px 130px!important;background:#fff;color:#091d49}
-.vr-detail-v2 .vr-detail-back,.vr-detail-v2 .vr-detail-gallery,.vr-detail-v2 .vr-detail-columns{margin-left:0!important;margin-right:0!important}
 .vr-detail-back{display:block;font-size:14px;margin:5px 0 16px}
 .vr-detail-gallery{height:auto!important;aspect-ratio:1.22;min-height:0;border-radius:16px}
 .vr-detail-columns{display:flex;flex-direction:column;gap:22px;margin-top:20px}
@@ -122,3 +121,33 @@
  .vr-detail-icon-action.is-saved{color:#ff6c85}
 }
 @media(max-width:760px){.vr-detail-mobile-actions{top:24px;left:28px;right:28px}}
+
+/* Full-bleed guest photo and transparent overlay actions, matching mobile reference. */
+@media(max-width:1024px){
+ .vr-detail-gallery{width:100%!important;height:auto!important;aspect-ratio:1.12!important;border-radius:0!important;margin:0!important}
+ .vr-detail-gallery>img{width:100%;height:100%;object-fit:cover}
+ .vr-detail-mobile-actions{top:22px!important;left:24px!important;right:24px!important}
+ .vr-detail-icon-action{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:#fff!important;width:40px;height:40px;min-width:40px}
+ .vr-detail-icon-action svg{width:27px;height:27px;filter:drop-shadow(0 1px 3px #0007)}
+ .vr-detail-columns,.vr-detail-map-section,.vr-detail-related{margin-left:12px!important;margin-right:12px!important}
+ .vr-detail-count{left:24px!important;right:auto!important;bottom:18px!important;background:transparent!important;padding:0!important;border-radius:0!important;color:#fff;font-size:15px;filter:drop-shadow(0 1px 3px #0008)}
+ .vr-detail-dots{display:none!important}
+ .vr-detail-arrow{display:none!important}
+}
+
+/* Edge-to-edge mobile/tablet layout even when SiteLayout adds a padded wrapper. */
+@media (max-width:1024px) {
+  main.vr-detail-v2 {
+    position:relative!important;
+    left:50%!important;
+    transform:translateX(-50%)!important;
+    width:100vw!important;
+    max-width:100vw!important;
+    margin:0!important;
+    padding:0 0 130px!important;
+    box-sizing:border-box!important;
+    overflow-x:clip;
+  }
+  main.vr-detail-v2 .vr-detail-gallery {width:100%!important;margin:0!important;border-radius:0!important;}
+  body{margin-top: 0;}
+}
