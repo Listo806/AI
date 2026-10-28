@@ -86,7 +86,7 @@ export function getHomesForRent({
     {
       country: "ecuador",
       mode: "rent",
-      limit,
+      limit: Math.max(limit, 80),
       offset,
     },
     signal
@@ -101,8 +101,7 @@ export function getLandOpportunities({
   return getPublicProperties(
     {
       country: "ecuador",
-      propertyType: "land",
-      limit,
+      limit: Math.max(limit, 80),
       offset,
     },
     signal
@@ -194,7 +193,7 @@ export async function getVacationRentalsLayoutData({
     }),
     getNewestListings({
       limit,
-      poolSize: 30,
+      poolSize: 100,
       signal,
     }),
   ]);

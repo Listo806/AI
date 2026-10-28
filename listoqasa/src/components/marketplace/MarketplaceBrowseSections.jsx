@@ -20,7 +20,7 @@ import {
 } from "../../api/vacationRentalsApi";
 
 import "./MarketplaceBrowseSections.css";
-import { propertyCoverImage, isPublicMarketplaceProperty } from "../../api/propertyPresentation";
+import { propertyCoverImage, isPublicMarketplaceProperty, isResidentialProperty, isDevelopmentProject } from "../../api/propertyPresentation";
 
 const PROPERTY_PLACEHOLDER = "";
 
@@ -213,6 +213,7 @@ function MarketplacePropertyRow({
   section,
   loading,
   viewAllTo,
+  subtitle,
 }) {
   const { t } = useTranslation();
   const rowRef = useRef(null);
@@ -233,7 +234,7 @@ function MarketplacePropertyRow({
   return (
     <section className="lq-vr-section">
       <div className="lq-vr-section-header">
-        <h2>{title}</h2>
+        <div><h2>{title}</h2>{subtitle && <p className="lq-vr-section-subline">{subtitle}</p>}</div>
 
         <Link to={viewAllTo} className="lq-vr-view-all">
           {t("vacationBrowse.viewAll", {
@@ -319,13 +320,13 @@ export default function MarketplaceBrowseSections() {
 
         setData({
           homesForRent:
-            result.homesForRent.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
+            result.homesForRent.items.filter(item => isPublicMarketplaceProperty(item) && isResidentialProperty(item) && item.type === "rent").slice(0, 6).map(normalizeProperty),
           land:
-            result.land.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
+            result.land.items.filter(item => isPublicMarketplaceProperty(item) && (String(item.propertyType || "").toLowerCase() === "land" || isDevelopmentProject(item))).slice(0, 6).map(normalizeProperty),
           commercial:
             result.commercial.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
           newProjects:
-            result.newProjects.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
+            result.newProjects.items.filter(item => isPublicMarketplaceProperty(item) && isDevelopmentProject(item)).map(normalizeProperty),
         });
       } catch (error) {
         if (error?.name !== "AbortError") {
@@ -385,6 +386,7 @@ export default function MarketplaceBrowseSections() {
             defaultValue: "Homes for Rent",
           })}
           items={data.homesForRent}
+          subtitle={t("vacationBrowse.homesForRentSubline", { defaultValue: "Residential houses and apartments available to rent." })}
           section="rent"
           loading={loading}
           viewAllTo="/rent"
@@ -396,6 +398,7 @@ export default function MarketplaceBrowseSections() {
               "Land & Development Opportunities",
           })}
           items={data.land}
+          subtitle={t("vacationBrowse.landDevelopmentSubline", { defaultValue: "Explore land, building sites and development projects." })}
           section="land"
           loading={loading}
           viewAllTo="/land"
@@ -406,6 +409,7 @@ export default function MarketplaceBrowseSections() {
             defaultValue: "Commercial Properties",
           })}
           items={data.commercial}
+          subtitle={t("vacationBrowse.commercialSubline", { defaultValue: "Offices, retail spaces and commercial properties." })}
           section="commercial"
           loading={loading}
           viewAllTo="/commercial"
@@ -416,6 +420,7 @@ export default function MarketplaceBrowseSections() {
             defaultValue: "New Projects",
           })}
           items={data.newProjects}
+          subtitle={t("vacationBrowse.newProjectsSubline", { defaultValue: "Discover new construction and development projects." })}
           section="new"
           loading={loading}
           viewAllTo="/new-projects"

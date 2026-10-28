@@ -4,6 +4,10 @@ const resources = {
   en: {
     home: { benefitsEyebrow: 'WHY LISTOQASA', benefitsHeading: 'A better way to find property' },
     vacationBrowse: {
+      homesForRentSubline: "Residential houses and apartments available to rent.",
+      landDevelopmentSubline: "Explore land, building sites and development projects.",
+      commercialSubline: "Offices, retail spaces and commercial properties.",
+      newProjectsSubline: "Discover new construction and development projects.",
       exploreLabel: 'EXPLORE',
       exploreDescription: 'Discover popular cities and find your next property.',
       homesForRent:
@@ -67,6 +71,10 @@ const resources = {
   es: {
     home: { benefitsEyebrow: 'POR QUÉ LISTOQASA', benefitsHeading: 'Una mejor manera de encontrar propiedades' },
     vacationBrowse: {
+      homesForRentSubline: "Casas y apartamentos residenciales disponibles para alquilar.",
+      landDevelopmentSubline: "Explora terrenos, solares y proyectos de desarrollo.",
+      commercialSubline: "Oficinas, locales y propiedades comerciales.",
+      newProjectsSubline: "Descubre nuevos proyectos de construcción y desarrollo.",
       exploreLabel: 'EXPLORAR',
       exploreDescription: 'Descubre ciudades populares y encuentra tu próxima propiedad.',
       homesForRent:
@@ -130,6 +138,10 @@ const resources = {
   pt: {
     home: { benefitsEyebrow: 'POR QUE LISTOQASA', benefitsHeading: 'Uma maneira melhor de encontrar imóveis' },
     vacationBrowse: {
+      homesForRentSubline: "Casas e apartamentos residenciais disponíveis para alugar.",
+      landDevelopmentSubline: "Explore terrenos, lotes e projetos de desenvolvimento.",
+      commercialSubline: "Escritórios, lojas e imóveis comerciais.",
+      newProjectsSubline: "Descubra novos projetos de construção e desenvolvimento.",
       exploreLabel: 'EXPLORAR',
       exploreDescription: 'Descubra cidades populares e encontre seu próximo imóvel.',
       homesForRent:

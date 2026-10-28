@@ -420,3 +420,5 @@
   .lq-vr-agent-link { right: 7px; top: auto; bottom: 12px; transform: none; padding: 9px 7px; font-size: 10px; gap: 3px; }
   .lq-vr-agent-link svg { width: 13px; height: 13px; }
 }
+
+.lq-vr-section-subline{margin:5px 0 0;color:#657998;font-size:14px;line-height:1.45}

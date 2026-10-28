@@ -23,6 +23,7 @@ import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import { DIRECTORY_LOCATIONS, nearbyLocations } from '../../components/marketplace/LocationDirectory';
 import SiteLayout from '../../components/layout/SiteLayout';
 import './Listings.css';
+import { isDevelopmentProject, isLuxuryResidentialProperty } from '../../api/propertyPresentation';
 
 const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office', 'retail', 'warehouse'];
 
@@ -56,7 +57,7 @@ export default function Listings() {
     location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
   const urlTypeFromQuery = searchParams.get('type') || '';
   const effectiveMode = urlTypeFromQuery || pathDefaultType;
-  const urlPropertyType = searchParams.get('propertyType') || '';
+  const urlPropertyType = ({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '';
   const urlSearch = searchParams.get('search') || '';
   const urlCity = directoryLocation ? '' : searchParams.get('city') || '';
   const urlPage = parseInt(searchParams.get('page') || '1', 10) || 1;
@@ -150,7 +151,7 @@ export default function Listings() {
     const pathDef =
       location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
     const mode = qpType || pathDef;
-    const urlPropertyType = searchParams.get('propertyType') || '';
+    const urlPropertyType = ({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '';
     const urlSearch = searchParams.get('search') || '';
     const urlCity = directoryLocation ? '' : searchParams.get('city') || '';
     setFilters((prev) => ({
@@ -240,7 +241,7 @@ export default function Listings() {
       if (urlCity) queryParams.append('city', urlCity);
       if (directoryLocation) queryParams.append('locationSlug', directoryLocation.slug);
       if (urlSearch) queryParams.append('search', urlSearch);
-      queryParams.append('limit', String(PAGE_SIZE));
+      queryParams.append('limit', String(location.pathname === '/new-projects' || searchParams.get('collection') === 'luxury' ? 100 : PAGE_SIZE));
       queryParams.append('offset', String((effectivePage - 1) * PAGE_SIZE));
 
       const url = `/listings?${queryParams.toString()}`;
@@ -282,6 +283,8 @@ export default function Listings() {
 
     // Only show published properties
     filtered = filtered.filter(p => p.status === 'published');
+    if (location.pathname === '/new-projects') filtered = filtered.filter(isDevelopmentProject);
+    if (searchParams.get('collection') === 'luxury') filtered = filtered.filter(isLuxuryResidentialProperty);
 
     // Apply filters
     if (filters.type) {
@@ -365,7 +368,7 @@ export default function Listings() {
     });
 
     setProperties(filtered);
-  }, [allProperties, filters, sortBy, userLocation]);
+  }, [allProperties, filters, sortBy, userLocation, location.pathname, searchParams]);
 
   const handleContactAgent = (property) => {
     setSelectedProperty(property);

@@ -31,12 +31,23 @@ async function requestPublicListings(params = {}, signal) {
   };
 }
 
+// Homepage collections are selected from actual public listings, never by arbitrary offsets.
+import { isResidentialProperty, isLuxuryResidentialProperty } from "./propertyPresentation";
+
+async function getResidentialCollection({ limit = 6, signal, luxury = false } = {}) {
+  const result = await requestPublicListings({ country: "ecuador", mode: "sale", limit: 100, offset: 0 }, signal);
+  const matches = result.items.filter(luxury ? isLuxuryResidentialProperty : isResidentialProperty);
+  // The API's default ordering is newest first; sort when dates are present.
+  matches.sort((a,b) => Date.parse(b.publishedAt || b.createdAt || b.created_at || 0) - Date.parse(a.publishedAt || a.createdAt || a.created_at || 0));
+  return { ...result, items: matches.slice(0, limit) };
+}
+
 export function getNewListings({ limit = 6, signal } = {}) {
-  return requestPublicListings({ limit, offset: 0 }, signal);
+  return getResidentialCollection({ limit, signal });
 }
 
 export function getLuxuryListings({ limit = 6, signal } = {}) {
-  return requestPublicListings({ limit, offset: 30 }, signal);
+  return getResidentialCollection({ limit, signal, luxury: true });
 }
 
 export function searchListings({ search, city, propertyType, mode, country = "ecuador", limit = 20, offset = 0 } = {}, signal) {

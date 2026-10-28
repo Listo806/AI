@@ -95,6 +95,11 @@ export default function App() {
         <Route path="/app" element={<Listings />} />
         <Route path="/buy" element={<Listings />} />
         <Route path="/rent" element={<Listings />} />
+        <Route path="/apartments" element={<Listings />} />
+        <Route path="/houses" element={<Listings />} />
+        <Route path="/land" element={<Listings />} />
+        <Route path="/commercial" element={<Listings />} />
+        <Route path="/new-projects" element={<Listings />} />
 
         <Route path="/trial" element={<TrialRedirect />} />
         <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />

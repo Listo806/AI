@@ -34,3 +34,27 @@ export function matchesMarketplaceSection(item, section) {
   if (section === 'new') return item.isNewProject === true || item.is_new_project === true || item.projectId != null || item.project_id != null || /new.project|development|project|proyecto/.test(kind);
   return true;
 }
+
+
+// Strict type-based collections: never label an office, warehouse or land as a home.
+export function isResidentialProperty(item) {
+  const kind = String(item?.propertyType || item?.property_type || '').trim().toLowerCase();
+  return ['house', 'apartment', 'villa'].includes(kind);
+}
+
+export function isLuxuryResidentialProperty(item) {
+  if (!isResidentialProperty(item)) return false;
+  const tags = [item.title, item.description, item.category, item.tags?.join?.(' ')]
+    .filter(Boolean).join(' ').toLowerCase();
+  return item.isLuxury === true || item.is_luxury === true ||
+    /\b(luxury|lujo|luxo|premium|exclusive|exclusiv[ao]|penthouse|mansion|mansión)\b/.test(tags);
+}
+
+export function isDevelopmentProject(item) {
+  const kind = String(item?.propertyType || item?.property_type || '').toLowerCase();
+  const label = [item?.title, item?.description].filter(Boolean).join(' ').toLowerCase();
+  return item?.isNewProject === true || item?.is_new_project === true ||
+    item?.projectId != null || item?.project_id != null ||
+    /\b(development|construction|project|proyecto|projeto|construcci[oó]n|desarrollo inmobiliario)\b/.test(label) ||
+    /project|development/.test(kind);
+}

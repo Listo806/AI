@@ -151,8 +151,8 @@ export default function HomePage() {
   const categories = useMemo(() => [
     { label: t("home.categories.forSale"), icon: Home, href: "/buy" },
     { label: t("home.categories.forRent"), icon: KeyRound, href: "/rent" },
-    { label: t("home.categories.apartments"), icon: Building2, href: "/buy?propertyType=apartment" },
-    { label: t("home.categories.houses"), icon: Home, href: "/buy?propertyType=house" },
+    { label: t("home.categories.apartments"), icon: Building2, href: "/apartments" },
+    { label: t("home.categories.houses"), icon: Home, href: "/houses" },
     { label: t("home.categories.land"), icon: LandPlot, href: "/land" },
     { label: t("home.categories.commercial"), icon: Store, href: "/commercial" },
     { label: t("home.categories.vacationRentals"), icon: Umbrella, href: "/vacation-rentals" },
