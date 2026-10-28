@@ -1399,17 +1399,21 @@ const resources = {
 
 const SUPPORTED_LANGUAGES = ["en", "es", "pt"];
 
+const getUrlLanguage = () => {
+  if (typeof window === "undefined") return null;
+  const pathLanguage = window.location.pathname.match(/^\/(en|es|pt)\/?$/i)?.[1]?.toLowerCase();
+  if (pathLanguage) return pathLanguage;
+  const queryLanguage = new URLSearchParams(window.location.search).get("lang")?.toLowerCase();
+  return SUPPORTED_LANGUAGES.includes(queryLanguage) ? queryLanguage : null;
+};
+
 const getInitialLanguage = () => {
-  const saved =
-    localStorage.getItem("listoqasa_language");
-
-  if (
-    saved &&
-    SUPPORTED_LANGUAGES.includes(saved)
-  ) {
-    return saved;
-  }
-
+  const fromUrl = getUrlLanguage();
+  if (fromUrl) return fromUrl;
+  try {
+    const saved = localStorage.getItem("listoqasa_language");
+    if (SUPPORTED_LANGUAGES.includes(saved)) return saved;
+  } catch (_) { /* Storage can be unavailable in private browsing. */ }
   return "en";
 };
 

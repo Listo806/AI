@@ -1,9 +1,10 @@
 import LegalPage from "./pages/Legal/LegalPages";
-import React from "react";
+import React, { useEffect } from "react";
+import i18n from "./i18n/i18n";
 import {AboutPage, ContactPage} from "./pages/Company/CompanyPages";
 import "./i18n/registerCompanyPages";
 import PropertyDetailBoundary from "./components/PropertyDetailBoundary";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useLocation, useSearchParams } from "react-router-dom";
 function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");const plan=p.get("plan");const billing=p.get("billing")==="yearly"?"yearly":"monthly";if(addon==="ai-crm")return <Navigate to="/agent-plans" replace />;return <Navigate to={`/marketplace/signup?audience=agent&plan=${encodeURIComponent(plan||"essential")}&billing=${billing}`} replace />;}
 import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
 import MarketplaceSubscriptionPage from "./pages/CreateListing/MarketplaceSubscriptionPage";
@@ -37,11 +38,26 @@ import AgentDeveloperPlansPage from "./pages/AgentDeveloperPlans/AgentDeveloperP
 import VacationRentalPlansPage from "./pages/VacationRentalPlans/VacationRentalPlansPage";
 import AiHelpPricingPage from "./pages/AiHelpPricing/AiHelpPricingPage";
 function LegacyPropertyRedirect(){const [params]=useSearchParams();const id=params.get("id");return <Navigate replace to={id?`/property/${encodeURIComponent(id)}`:"/"}/>;}
+function UrlLanguageSync() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    const pathLanguage = pathname.match(/^\/(en|es|pt)\/?$/i)?.[1]?.toLowerCase();
+    const queryLanguage = new URLSearchParams(search).get("lang")?.toLowerCase();
+    const language = pathLanguage || (["en", "es", "pt"].includes(queryLanguage) ? queryLanguage : null);
+    if (language && i18n.resolvedLanguage !== language) i18n.changeLanguage(language);
+  }, [pathname, search]);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <UrlLanguageSync />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/en" element={<HomePage />} />
+        <Route path="/es" element={<HomePage />} />
+        <Route path="/pt" element={<HomePage />} />
         <Route path="/property/:id" element={<PropertyDetailBoundary><ListingDetail /></PropertyDetailBoundary>} />
         <Route path="/property" element={<LegacyPropertyRedirect />} />
         <Route path="/app" element={<Listings />} />
