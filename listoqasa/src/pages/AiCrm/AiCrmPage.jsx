@@ -57,10 +57,6 @@ export default function AiCrmPage() {
         <section className="lq-ai-hero">
           <div className="lq-container lq-ai-hero-inner">
             <div className="lq-ai-hero-copy">
-              <span className="lq-ai-eyebrow">
-                {t("aiCrm.heroEyebrow")}
-              </span>
-
               <h1>
                 {t("aiCrm.heroTitle1")}
                 <br />
@@ -74,13 +70,6 @@ export default function AiCrmPage() {
                 <ArrowRight size={17} />
               </Link>
 
-              <div className="lq-ai-hero-features">
-                <HeroFeature icon={Bot} title={t("aiCrm.aiAgent")} text="24/7" />
-                <HeroFeature icon={MessageCircle} title={t("aiCrm.whatsapp")} text={t("aiCrm.connected")} />
-                <HeroFeature icon={PanelsTopLeft} title={t("aiCrm.allInOne")} text={t("aiCrm.workspace")} />
-                <HeroFeature icon={Home} title={t("aiCrm.realEstate")} text={t("aiCrm.focused")} />
-                <HeroFeature icon={MapPin} title={t("aiCrm.secure")} text={t("aiCrm.reliable")} />
-              </div>
             </div>
 
             <div className="lq-ai-hero-visual">
