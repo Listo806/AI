@@ -26,9 +26,6 @@ export default function VacationRentalsHeader({ compact = false }) {
 
     document.documentElement.lang = language;
 
-    const url = new URL(window.location.href);
-    url.searchParams.set("lang", language);
-    window.history.replaceState({}, "", url);
   };
 
   useEffect(() => {

@@ -22,9 +22,6 @@ export default function VacationRentalsFooter() {
     await i18n.changeLanguage(language);
     localStorage.setItem("listoqasa_language", language);
     document.documentElement.lang = language;
-    const url = new URL(window.location.href);
-    url.searchParams.set("lang", language);
-    window.history.replaceState({}, "", url);
   };
   return (
     <footer className="lq-vacation-footer lq-vacation-footer-reference">

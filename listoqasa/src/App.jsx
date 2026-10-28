@@ -4,7 +4,7 @@ import i18n from "./i18n/i18n";
 import {AboutPage, ContactPage} from "./pages/Company/CompanyPages";
 import "./i18n/registerCompanyPages";
 import PropertyDetailBoundary from "./components/PropertyDetailBoundary";
-import { Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");const plan=p.get("plan");const billing=p.get("billing")==="yearly"?"yearly":"monthly";if(addon==="ai-crm")return <Navigate to="/agent-plans" replace />;return <Navigate to={`/marketplace/signup?audience=agent&plan=${encodeURIComponent(plan||"essential")}&billing=${billing}`} replace />;}
 import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
 import MarketplaceSubscriptionPage from "./pages/CreateListing/MarketplaceSubscriptionPage";
@@ -39,13 +39,45 @@ import VacationRentalPlansPage from "./pages/VacationRentalPlans/VacationRentalP
 import AiHelpPricingPage from "./pages/AiHelpPricing/AiHelpPricingPage";
 function LegacyPropertyRedirect(){const [params]=useSearchParams();const id=params.get("id");return <Navigate replace to={id?`/property/${encodeURIComponent(id)}`:"/"}/>;}
 function UrlLanguageSync() {
-  const { pathname, search } = useLocation();
+  const { pathname, search, hash } = useLocation();
+  const navigate = useNavigate();
+
+  // A URL with an explicit language always wins over browser-stored preferences.
   useEffect(() => {
     const pathLanguage = pathname.match(/^\/(en|es|pt)\/?$/i)?.[1]?.toLowerCase();
     const queryLanguage = new URLSearchParams(search).get("lang")?.toLowerCase();
-    const language = pathLanguage || (["en", "es", "pt"].includes(queryLanguage) ? queryLanguage : null);
-    if (language && i18n.resolvedLanguage !== language) i18n.changeLanguage(language);
+    const explicitLanguage = pathLanguage || (["en", "es", "pt"].includes(queryLanguage) ? queryLanguage : null);
+    if (explicitLanguage && (i18n.resolvedLanguage || i18n.language) !== explicitLanguage) {
+      i18n.changeLanguage(explicitLanguage);
+    }
   }, [pathname, search]);
+
+  // Language changes from any selector update the address bar without reloading.
+  useEffect(() => {
+    const onLanguageChanged = (rawLanguage) => {
+      const language = rawLanguage?.split("-")[0]?.toLowerCase();
+      if (!["en", "es", "pt"].includes(language)) return;
+      const path = window.location.pathname;
+      const params = new URLSearchParams(window.location.search);
+      const home = /^\/(?:en|es|pt)?\/?$/i.test(path);
+      // Keep transactional and account URLs untouched; their query strings can
+      // contain provider tokens and must not be rewritten by the language menu.
+      const publicPage = /^\/(?:buy|rent|sell|owners|agents|developers|commercial-owners|find-agent|property(?:\/|$)|vacation-rentals(?:\/|$)|owner-plans|agent-plans|developer-plans|vacation-rental-plans|about(?:-us)?|contact(?:-us)?|terms(?:-and-conditions)?|privacy(?:-policy)?|cancellation-policy|refund-policy|help)(?:\/|$)/i.test(path);
+      if (!home && !publicPage) return;
+      if (home) {
+        params.delete("lang");
+      } else {
+        params.set("lang", language);
+      }
+      const nextPath = home ? `/${language}` : path;
+      const query = params.toString();
+      const next = `${nextPath}${query ? `?${query}` : ""}${window.location.hash}`;
+      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (next !== current) navigate(next, { replace: true });
+    };
+    i18n.on("languageChanged", onLanguageChanged);
+    return () => i18n.off("languageChanged", onLanguageChanged);
+  }, [navigate]);
   return null;
 }
 
