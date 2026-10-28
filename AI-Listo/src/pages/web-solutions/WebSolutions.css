@@ -458,3 +458,12 @@
 .ws-page .fwr-embedded .fwr-form input,.ws-page .fwr-embedded .fwr-form textarea,.ws-page .fwr-embedded .fwr-form select {font-weight:400;}
 @media(max-width:900px){.ws-page .fwr-embedded .fwr-panel{grid-template-columns:1fr;}.ws-page .fwr-embedded .fwr-next{border-left:0;border-top:1px solid #d8e5f1;}}
 @media(max-width:580px){.ws-page .fwr-embedded .fwr-container{width:calc(100% - 28px)}.ws-page .fwr-embedded .fwr-form{padding:22px 16px;}}
+
+/* Web Solutions header only: new logo and five section navigation links. */
+.ws-page .ws-header-inner{grid-template-columns:260px minmax(0,1fr) auto;gap:22px}
+.ws-page .ws-header .ws-brand img{width:260px;height:auto;max-width:100%;object-fit:contain}
+.ws-page .ws-header .ws-nav{gap:clamp(12px,1.8vw,32px);justify-content:center}
+.ws-page .ws-header .ws-nav a{font-size:clamp(11px,.92vw,15px);white-space:nowrap;font-weight:500}
+.ws-page section[id^="ws-"]{scroll-margin-top:90px}
+@media(max-width:1250px) and (min-width:901px){.ws-page .ws-header-inner{grid-template-columns:195px minmax(0,1fr) auto;gap:12px}.ws-page .ws-header .ws-brand img{width:195px}.ws-page .ws-header .ws-nav{gap:12px}.ws-page .ws-header .ws-nav a{font-size:11px}}
+@media(max-width:900px){.ws-page .ws-header-inner{display:flex;justify-content:space-between}.ws-page .ws-header .ws-brand img{width:min(220px,60vw)}}
