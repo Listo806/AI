@@ -57,9 +57,9 @@ footer:["© 2026 Cortexa. Todos os direitos reservados.","Privacidade","Termos",
 };
 function Language({lang,setLang,footer=false}){const[open,setOpen]=useState(false);return <div className={`fwr-language ${footer?"fwr-language-footer":""}`}><button type="button" className="fwr-language-button" onClick={()=>setOpen(v=>!v)}><Globe2 size={18}/></button>{open&&<div className="fwr-language-menu">{[["en","English"],["es","Español"],["pt","Português"]].map(([v,l])=><button key={v} className={lang===v?"active":""} onClick={()=>{setLang(v);setOpen(false)}}>{l}</button>)}</div>}</div>}
 function HeaderFooter({tr,lang,setLang,footer=false}){const{isAuthenticated}=useAuth();if(!footer)return <header className="fwr-header"><div className="fwr-header-inner"><Link to="/" className="fwr-brand"><img src={headlogoImg} alt="Cortexa Agentic CRM"/></Link><nav>{tr.nav.map((l,i)=><a key={i} href={HREFS[i]} className={i===7?"active":""}>{l}</a>)}</nav><div className="fwr-actions"><Language lang={lang} setLang={setLang}/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div></div></header>;return <footer className="fwr-footer"><div className="fwr-container fwr-footer-main"><Link to="/" className="fwr-brand"><img src={headlogoImg} alt="Cortexa Agentic CRM"/></Link><nav>{tr.nav.map((l,i)=><a key={i} href={HREFS[i]}>{l}</a>)}</nav><div className="fwr-actions"><Language lang={lang} setLang={setLang} footer/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div></div><div className="fwr-container fwr-footer-bottom"><span>{tr.footer[0]}</span><div><a href="/privacy-policy">{tr.footer[1]}</a><a href="/terms">{tr.footer[2]}</a><a href="mailto:support@cortexaaicrm.com">{tr.footer[3]}</a></div></div></footer>}
-export default function FreeWebsiteReview(){
+export default function FreeWebsiteReview({embedded=false, embeddedLang}){
  const initial=(()=>{const v=localStorage.getItem("cortexa_lang")||localStorage.getItem("cortexa_locale")||"en";return ["en","es","pt"].includes(v)?v:"en"})();
- const[lang,setLangState]=useState(initial);const tr=COPY[lang];
+ const[lang,setLangState]=useState(initial);const activeLang=embedded&&embeddedLang?embeddedLang:lang;const tr=COPY[activeLang]||COPY.en;
  const[form,setForm]=useState({fullName:"",businessName:"",email:"",phone:"",websiteUrl:"",platform:"",improvements:[],limitations:"",goal:"",systems:"",contactMethod:"email",authorized:false,needsNewWebsite:false});
  const[loading,setLoading]=useState(false),[error,setError]=useState(""),[success,setSuccess]=useState(false);
  const setLang=(v)=>{setLangState(v);localStorage.setItem("cortexa_lang",v);localStorage.setItem("cortexa_locale",v);document.documentElement.lang=v==="pt"?"pt-BR":v};
@@ -75,11 +75,11 @@ export default function FreeWebsiteReview(){
      const r=await fetch(`${API_BASE}/api/web-solutions/free-review`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
      const d=await r.json().catch(()=>({}));
      if(!r.ok||!d?.success)throw new Error(d?.message||tr.errors[1]);
-     trackEvent("free_professional_review_request",{page_path:window.location.pathname,language:lang,has_website:Boolean(form.websiteUrl.trim())});
-     setSuccess(true);window.scrollTo({top:0,behavior:"smooth"});
+     trackEvent("free_professional_review_request",{page_path:window.location.pathname,language:activeLang,has_website:Boolean(form.websiteUrl.trim())});
+     setSuccess(true);if(embedded){document.getElementById("ws-free-evaluation")?.scrollIntoView({behavior:"smooth",block:"start"});}else{window.scrollTo({top:0,behavior:"smooth"});}
    }catch(e){setError(e?.message||tr.errors[1])}finally{setLoading(false)}
  };
- return <div className="fwr-page"><HeaderFooter tr={tr} lang={lang} setLang={setLang}/><main>
+ return <div id={embedded?"ws-free-evaluation":undefined} className={`fwr-page ${embedded?"fwr-embedded":""}`}>{!embedded&&<HeaderFooter tr={tr} lang={lang} setLang={setLang}/>}<main>
  <section className="fwr-hero"><div className="fwr-eyebrow">{tr.hero[0]}</div><h1>{tr.hero[1]}</h1><p>{tr.hero[2]}</p></section>
  <div className="fwr-container">
  {success?<section className="fwr-success"><span><Check size={30}/></span><h2>{tr.success[0]}</h2><p>{tr.success[1]}</p><Link to="/web-solutions">{tr.success[2]}</Link></section>:
@@ -105,5 +105,5 @@ export default function FreeWebsiteReview(){
  </form>
  <aside className="fwr-next"><h2>{tr.next[0]}</h2>{tr.next.slice(1).map(([t,p],i)=><article key={t}><span>{i+1}</span><div><h3>{t}</h3><p>{p}</p></div></article>)}</aside>
  </section>}
- </div></main><HeaderFooter tr={tr} lang={lang} setLang={setLang} footer/></div>
+ </div></main>{!embedded&&<HeaderFooter tr={tr} lang={lang} setLang={setLang} footer/>}</div>
 }
