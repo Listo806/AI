@@ -656,3 +656,4 @@
 @media (max-width: 650px) {
   .lq-footer-reference .lq-footer-desktop-links { display: none; }
 }
+body{margin: 0;}
