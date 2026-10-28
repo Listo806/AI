@@ -725,7 +725,6 @@
 /* Tablet/mobile homepage only. Desktop rules above remain intact. */
 @media (max-width: 900px) {
  .lq-home-content .lq-property-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
- .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(160px,24vw,250px); }
  .lq-home-hero-inner { padding-left: 20px; padding-right: 20px; }
  .lq-home-hero-content { padding: 0; }
  .lq-home-hero-content h1 { font-size: clamp(40px,7vw,64px); }
@@ -745,7 +744,6 @@
  .lq-category-item { min-width: 0; text-align: center; font-size: 13px; }
  .lq-category-item span { overflow-wrap: anywhere; }
  .lq-home-content .lq-property-grid { grid-template-columns: 1fr; }
- .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(210px,55vw,330px); }
  .lq-section-heading-row h2 { font-size: clamp(20px,5.5vw,30px); }
  .lq-view-all { white-space: nowrap; font-size: 13px; }
  .lq-marketplace-benefits { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px 10px; }
@@ -772,8 +770,9 @@
   .lq-home-content .lq-property-grid > * {
     flex: 0 0 100%; width: 100%; min-width: 0; max-width: 100%; scroll-snap-align: start;
     box-sizing: border-box;
+    border-radius: 0;
   }
-  .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(190px, 48vw, 310px); }
+  
   .lq-home-carousel-controls { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 12px 0 4px; }
   .lq-home-carousel-controls > button { border: 1px solid #dce5f2; background: #fff; border-radius: 50%; width: 34px; height: 34px; font-size: 25px; color: #075bea; cursor: pointer; }
   .lq-home-carousel-controls > button:disabled { opacity: .35; cursor: default; }
@@ -814,7 +813,7 @@
   .lq-category-bar { gap: 20px 7px; padding: 24px 0; }
   .lq-category-item svg { width: 30px; height: 30px; }
   .lq-category-item span { font-size: 12px; line-height: 1.25; }
-  .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(185px,55vw,270px); }
+  .lq-home-content .lq-property-grid .lq-property-image-wrap { height: clamp(185px,62vw,270px); }
 }
 
 /* Approved mobile/tablet benefits heading; desktop layout remains untouched. */
@@ -889,6 +888,12 @@
 }
 @media (max-width:1024px) {
   body{margin: 0;}
+  .lq-home-content .lq-container{width: 100%;}
+  .lq-section-heading-row, .lq-vr-section-header{padding: 0 12px;}
+  .lq-vr-row-shell .lq-vr-card{border-radius: 0;}
+  .lq-vr-card-image-wrap{height: 62vw;}
+  body .lq-vr-locations-section, body .lq-marketplace-benefits-heading,
+  body .lq-marketplace-benefits{padding-left: 12px;padding-right: 12px;}
 }
 /* Mobile hero: lift the search controls while retaining the existing layout. */
 @media (max-width: 900px) {

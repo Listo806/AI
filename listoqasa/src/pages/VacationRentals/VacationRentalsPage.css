@@ -395,10 +395,6 @@
     width: min(360px, calc(100vw - 46px));
   }
 
-  .lq-old-vr-container {
-    width: calc(100% - 28px);
-  }
-
   .lq-old-vr-row {
     grid-auto-columns: 78%;
   }
@@ -911,13 +907,11 @@
     grid-column: 1/-1; width: 100%; min-height: 58px; margin: 12px 0 0;
     border-radius: 12px; background: #0755f5; font-size: 22px;
   }
-  .lq-old-vr-container { width: min(100% - 48px, 850px); }
   .lq-old-vr-section { padding: 28px 0 8px; }
   .lq-old-vr-section-head h2 { font-size: clamp(22px,3.6vw,34px); color: #091d4b; }
   .lq-old-vr-view-all { font-size: clamp(14px,2.2vw,22px); color: #0064f5; }
   .lq-old-vr-row { grid-auto-columns: 100%; gap: 14px; scroll-snap-type: x mandatory; }
   .lq-old-vr-card { scroll-snap-align: start; position: relative; overflow: hidden; border-radius: 16px; }
-  .lq-old-vr-card img { height: clamp(170px, 30vw, 290px); border-radius: 16px; }
   .lq-old-vr-card-copy { position: absolute; bottom: 0; left: 0; right: 0; padding: 32px 20px 17px; color: white; background: linear-gradient(transparent,rgba(0,0,0,.68)); }
   .lq-old-vr-card-copy h3 { font-size: clamp(20px,3vw,31px); }
   .lq-old-vr-card-copy p { color: white; font-size: clamp(13px,2.2vw,22px); }
@@ -935,11 +929,9 @@
   .lq-old-vr-search-field > div svg { width: 15px; height: 15px; flex: 0 0 15px; }
   .lq-old-vr-search-field input, .lq-old-vr-guests-trigger strong { font-size: 10px; }
   .lq-old-vr-search-submit { min-height: 47px; margin-top: 9px; font-size: 18px; }
-  .lq-old-vr-container { width: calc(100% - 28px); }
   .lq-old-vr-section-head { gap: 8px; }
   .lq-old-vr-section-head h2 { font-size: clamp(20px,5.4vw,26px); }
   .lq-old-vr-view-all { flex-shrink: 0; font-size: 14px; }
-  .lq-old-vr-card img { height: clamp(165px, 43vw, 235px); }
 }
 
 
@@ -1024,4 +1016,12 @@
   .lq-old-vr-hero .lq-old-vr-search-submit { width: 48px; height: 48px; min-height: 48px; min-width: 48px; max-width: 48px; }
   .lq-old-vr-hero .lq-old-vr-search-field input,
   .lq-old-vr-hero .lq-old-vr-guests-trigger strong { font-size: 12px; }
+}
+@media (max-width: 1024px) {
+  .lq-old-vr-container{width: 100%;}
+  body .lq-old-vr-section-head, body .lq-old-vr-seo{padding-left: 12px;padding-right: 12px;}
+  body .lq-old-vr-card, body .lq-old-vr-card img{border-radius: 0;}
+  .lq-old-vr-card img {
+    height: 62vw;
+  }
 }

@@ -1019,3 +1019,11 @@
 .ec-checkout-page .ec-secure-payment{white-space:nowrap;}
 @media(max-width:850px){.ec-auth-page.ec-checkout-page{padding:20px 14px;align-items:flex-start;}.ec-checkout-page .ec-checkout{grid-template-columns:1fr;max-width:650px;gap:16px;}.ec-checkout-page .ec-checkout>section,.ec-checkout-page .ec-checkout>aside{padding:24px!important;}.ec-checkout-page .ec-checkout aside .ec-btn{margin-top:28px;}}
 @media(max-width:520px){.ec-auth-page.ec-checkout-page{padding:12px;}.ec-checkout-page .ec-checkout>section,.ec-checkout-page .ec-checkout>aside{padding:20px 16px!important;}.ec-checkout-page .ec-checkout section>p{font-size:14px;}.ec-checkout-page .ec-checkout aside>div{font-size:15px;}.ec-checkout-page .ec-checkout-trust{justify-content:center;}}
+
+/* Public language selector – same globe/dropdown pattern as Cortexa web-solutions */
+.ec-public-language{position:relative;flex-shrink:0}
+.ec-public-language-trigger{display:flex;align-items:center;justify-content:center;width:30px;height:32px;border:0;background:transparent;color:#071b46;cursor:pointer;padding:0}
+.ec-public-language-menu{position:absolute;top:calc(100% + 10px);right:-12px;width:142px;padding:6px;background:#fff;border:1px solid #d9e3f3;border-radius:8px;box-shadow:0 12px 28px rgba(9,32,80,.12);z-index:1100;display:flex;flex-direction:column;gap:2px}
+.ec-public-language-menu button{display:block;width:100%;border:0;background:transparent;text-align:left;padding:10px 11px;border-radius:5px;color:#0b1b44;font-size:13px;cursor:pointer}
+.ec-public-language-menu button:hover,.ec-public-language-menu button.active{background:#edf4ff;color:#075cf2}
+@media(max-width:520px){.ec-header-actions{gap:8px!important}.ec-public-language-menu{right:-44px}}

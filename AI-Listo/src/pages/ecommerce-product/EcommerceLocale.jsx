@@ -3,6 +3,7 @@ import {useEffect,useState} from "react";
 export const EC_LANG_KEY="cortexa_ecommerce_language";
 export const EC_LANGS={en:"EN",es:"ES",pt:"PT"};
 export const EC_LANG_EVENT="cortexa:ecommerce-language-change";
+export function setEcommerceLanguage(lang){if(!EC_LANGS[lang])return;localStorage.setItem(EC_LANG_KEY,lang);window.dispatchEvent(new CustomEvent(EC_LANG_EVENT,{detail:{language:lang}}));}
 export function getEcommerceLanguage(){const x=(localStorage.getItem(EC_LANG_KEY)||localStorage.getItem("i18nextLng")||"en").slice(0,2);return EC_LANGS[x]?x:"en"}
 export function ecT(text,lang=getEcommerceLanguage()){if(lang==="en")return text;const dict=lang==="es"?ES:PT;return dict[text]||text}
 

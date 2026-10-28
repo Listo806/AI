@@ -24,6 +24,9 @@ export class ProductBillingService {
   private approvedAnnualOrNull(key: string): number | null {
     const plan = PLANS[key];
     if (!plan || plan.addon) return null;
+    if (key === 'vacation_rentals.starter') return 739.20;
+    if (key === 'vacation_rentals.growth') return 1027.20;
+    if (key === 'vacation_rentals.premium') return 1699.20;
     if (key === 'marketplace_agents.essential') return 1411.20;
     if (key === 'marketplace_agents.growth') return 1891.20;
     const raw = String(this.config.get(`APPROVED_ANNUAL_${key.replace(/\W/g, '_').toUpperCase()}_CENTS`) || '');
@@ -36,6 +39,9 @@ export class ProductBillingService {
     if (interval === 'monthly') return plan.cents;
     if (interval !== 'yearly' || plan.addon || !['vacation_rentals','marketplace_agents'].includes(plan.category)) throw new BadRequestException('Unsupported billing interval');
     const envKey = `APPROVED_ANNUAL_${key.replace(/\W/g, '_').toUpperCase()}_CENTS`;
+    if (key === 'vacation_rentals.starter') return 73920;
+    if (key === 'vacation_rentals.growth') return 102720;
+    if (key === 'vacation_rentals.premium') return 169920;
     if (key === 'marketplace_agents.essential') return 141120;
     if (key === 'marketplace_agents.growth') return 189120;
     const configured = String(this.config.get(envKey) || '');
