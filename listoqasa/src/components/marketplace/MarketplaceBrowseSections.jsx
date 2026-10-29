@@ -1,4 +1,5 @@
 import { listingDisplayTitle } from "../../utils/listingDisplayTitle";
+import { getHomepageCollections } from "../../api/listingsApi";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -20,7 +21,7 @@ import {
 } from "../../api/vacationRentalsApi";
 
 import "./MarketplaceBrowseSections.css";
-import { propertyCoverImage, isPublicMarketplaceProperty, isResidentialProperty, isDevelopmentProject } from "../../api/propertyPresentation";
+import { propertyCoverImage, isPublicMarketplaceProperty, isResidentialProperty, isDevelopmentProject, diverseListings, hasListingPhoto, listingKind, listingMode, selectBalancedListings } from "../../api/propertyPresentation";
 
 const PROPERTY_PLACEHOLDER = "";
 
@@ -76,11 +77,11 @@ function formatPrice(value, type) {
 function normalizeProperty(item) {
   return {
     id: item.id,
-    type: item.type || item.mode || item.listingType || "sale",
+    type: listingMode(item),
     title: item.title || item.name || "Untitled Property",
     city: item.city || "",
     state: item.state || "",
-    price: formatPrice(item.price, item.type),
+    price: formatPrice(item.price, listingMode(item)),
     beds: item.bedrooms ?? item.beds ?? null,
     baths: item.bathrooms ?? item.baths ?? null,
     area:
@@ -117,7 +118,10 @@ function getBadge(section, t) {
 
 function MarketplacePropertyCard({ property, section }) {
   const { t } = useTranslation();
-  const badge = getBadge(section, t);
+  const badge = section === 'rent' || section === 'land' ? getBadge(section, t) : null;
+  const modeBadge = property.type === 'rent'
+    ? t('vacationBrowse.badges.forRent', {defaultValue:'FOR RENT'})
+    : t('vacationBrowse.badges.forSale', {defaultValue:'FOR SALE'});
 
   return (
     <article className="lq-vr-card">
@@ -138,6 +142,7 @@ function MarketplacePropertyCard({ property, section }) {
             />
           )}
 
+          <span className="lq-vr-badge lq-vr-badge-mode">{modeBadge}</span>
           {badge && (
             <span
               className={`lq-vr-badge lq-vr-badge-${badge.className}`}
@@ -217,7 +222,7 @@ function MarketplacePropertyRow({
 }) {
   const { t } = useTranslation();
   const rowRef = useRef(null);
-  if (!loading && items.length === 0) return null;
+  
 
   const scrollRow = (direction) => {
     const element = rowRef.current;
@@ -257,7 +262,7 @@ function MarketplacePropertyRow({
                   <div className="lq-vr-skeleton-line small" />
                 </div>
               ))
-            : items.map((property) => (
+            : items.length === 0 ? <div className="lq-listings-status">{t("home.noMatchingListings", { defaultValue: "No matching listings are currently available." })}</div> : items.map((property) => (
                 <MarketplacePropertyCard
                   key={property.id}
                   property={property}
@@ -311,22 +316,13 @@ export default function MarketplaceBrowseSections() {
 
     async function load() {
       try {
-        const result = await getVacationRentalsLayoutData({
-          limit: 6,
-          signal: controller.signal,
-        });
-
+        const result = await getHomepageCollections();
         if (controller.signal.aborted) return;
-
         setData({
-          homesForRent:
-            result.homesForRent.items.filter(item => isPublicMarketplaceProperty(item) && isResidentialProperty(item) && item.type === "rent").slice(0, 6).map(normalizeProperty),
-          land:
-            result.land.items.filter(item => isPublicMarketplaceProperty(item) && (String(item.propertyType || "").toLowerCase() === "land" || isDevelopmentProject(item))).slice(0, 6).map(normalizeProperty),
-          commercial:
-            result.commercial.items.filter(isPublicMarketplaceProperty).map(normalizeProperty),
-          newProjects:
-            result.newProjects.items.filter(item => isPublicMarketplaceProperty(item) && isDevelopmentProject(item)).map(normalizeProperty),
+          homesForRent: (result.homesForRent?.items || []).map(normalizeProperty),
+          land: (result.landDevelopment?.items || []).map(normalizeProperty),
+          commercial: (result.commercialProperties?.items || []).map(normalizeProperty),
+          newProjects: (result.newProjects?.items || []).map(normalizeProperty),
         });
       } catch (error) {
         if (error?.name !== "AbortError") {
@@ -401,7 +397,7 @@ export default function MarketplaceBrowseSections() {
           subtitle={t("vacationBrowse.landDevelopmentSubline", { defaultValue: "Explore land, building sites and development projects." })}
           section="land"
           loading={loading}
-          viewAllTo="/land"
+          viewAllTo="/land?collection=development"
         />
 
         <MarketplacePropertyRow

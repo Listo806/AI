@@ -5,6 +5,8 @@ function resolveItems(payload) {
   if (Array.isArray(payload?.items)) return payload.items;
   if (Array.isArray(payload?.data?.items)) return payload.data.items;
   if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.properties)) return payload.properties;
+  if (Array.isArray(payload?.data?.properties)) return payload.data.properties;
   if (Array.isArray(payload?.results)) return payload.results;
   return [];
 }
@@ -31,23 +33,39 @@ async function requestPublicListings(params = {}, signal) {
   };
 }
 
-// Homepage collections are selected from actual public listings, never by arbitrary offsets.
-import { isResidentialProperty, isLuxuryResidentialProperty } from "./propertyPresentation";
-
-async function getResidentialCollection({ limit = 6, signal, luxury = false } = {}) {
-  const result = await requestPublicListings({ country: "ecuador", mode: "sale", limit: 100, offset: 0 }, signal);
-  const matches = result.items.filter(luxury ? isLuxuryResidentialProperty : isResidentialProperty);
-  // The API's default ordering is newest first; sort when dates are present.
-  matches.sort((a,b) => Date.parse(b.publishedAt || b.createdAt || b.created_at || 0) - Date.parse(a.publishedAt || a.createdAt || a.created_at || 0));
-  return { ...result, items: matches.slice(0, limit) };
+// Fetch both sale and rental listings; API defaults may otherwise exclude rentals.
+import { isLuxuryResidentialProperty, isPublicMarketplaceProperty, listingTimestamp, diverseListings, hasListingPhoto, listingKind, listingMode, selectBalancedListings } from './propertyPresentation';
+async function homepagePool() {
+  const responses = await Promise.allSettled([
+    requestPublicListings({country:'ecuador',mode:'sale',limit:100,offset:0}),
+    requestPublicListings({country:'ecuador',mode:'rent',limit:100,offset:0}),
+  ]);
+  if (responses.every(r=>r.status==='rejected')) throw responses[0].reason;
+  const seen = new Set();
+  return responses.flatMap(r=>r.status==='fulfilled'?r.value.items:[])
+    .filter(item=>{if(!isPublicMarketplaceProperty(item)||seen.has(item.id))return false;seen.add(item.id);return true;})
+    .sort((a,b)=>listingTimestamp(b)-listingTimestamp(a));
 }
-
-export function getNewListings({ limit = 6, signal } = {}) {
-  return getResidentialCollection({ limit, signal });
+let poolPromise = null;
+function getHomepagePool() {
+  // Do not bind a shared in-flight request to a component AbortSignal.
+  // React StrictMode unmounts/remounts effects in development; aborting the
+  // first mount must not cancel the request reused by the second mount.
+  if (!poolPromise) {
+    poolPromise = homepagePool().finally(()=>{poolPromise=null;});
+  }
+  return poolPromise;
 }
-
-export function getLuxuryListings({ limit = 6, signal } = {}) {
-  return getResidentialCollection({ limit, signal, luxury: true });
+export async function getNewListings({limit=8,signal}={}) {
+  const items = await getHomepagePool();
+  const available = items.filter(hasListingPhoto);
+  const selected = selectBalancedListings(available,limit,item=>`${listingKind(item)}:${listingMode(item)}`);
+  return {items:selected,total:items.length};
+}
+export async function getLuxuryListings({limit=8,signal}={}) {
+  const items = await getHomepagePool();
+  const luxury = items.filter(item=>isLuxuryResidentialProperty(item)&&hasListingPhoto(item));
+  return {items:selectBalancedListings(luxury,limit,item=>listingKind(item)),total:luxury.length};
 }
 
 export function searchListings({ search, city, propertyType, mode, country = "ecuador", limit = 20, offset = 0 } = {}, signal) {
@@ -55,3 +73,18 @@ export function searchListings({ search, city, propertyType, mode, country = "ec
 }
 
 export { requestPublicListings };
+
+// Homepage-specific endpoint: classification happens across the complete published
+// inventory on the backend, rather than a truncated first search page.
+let homepageCollectionsPromise;
+export function getHomepageCollections() {
+  if (!homepageCollectionsPromise) {
+    homepageCollectionsPromise = fetch(`${API_BASE_URL}/properties/homepage-collections?limit=6`, {
+      headers: { Accept: "application/json" },
+    }).then(async response => {
+      if (!response.ok) throw new Error(`Homepage collections failed: ${response.status}`);
+      return response.json();
+    }).finally(() => { homepageCollectionsPromise = null; });
+  }
+  return homepageCollectionsPromise;
+}

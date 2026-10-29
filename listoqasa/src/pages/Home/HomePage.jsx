@@ -21,14 +21,14 @@ import {
 import { useTranslation } from "react-i18next";
 import SiteLayout from "../../components/layout/SiteLayout";
 import PropertyCard from "../../components/property/PropertyCard";
-import { getNewListings, getLuxuryListings } from "../../api/listingsApi";
+import { getHomepageCollections } from "../../api/listingsApi";
 import "./HomePage.css";
 import homeHeroImage from "../../assets/public/images/listoqasa/home-hero.jpg";
 import mobileHeroImage from "../../assets/public/images/listoqasa/home-hero-mobile.jpg";
 import rentalHeroImage from "../../assets/public/images/listoqasa/rental-hero-new.png";
 import LocationDirectory from "../../components/marketplace/LocationDirectory";
 import MarketplaceBrowseSections from "../../components/marketplace/MarketplaceBrowseSections";
-import { propertyCoverImage, isPublicMarketplaceProperty } from "../../api/propertyPresentation";
+import { propertyCoverImage, isPublicMarketplaceProperty, listingMode } from "../../api/propertyPresentation";
 
 const FALLBACK_PROPERTY_IMAGE = "/images/listoqasa/properties/property-placeholder.jpg";
 
@@ -45,12 +45,12 @@ function normalizeListing(listing) {
     id: listing.id,
     title: listing.title || listing.name || "Untitled Property",
     location: [listing.city, listing.state].filter(Boolean).join(", ") || listing.address || "",
-    price: formatPrice(listing.price, listing.type),
+    price: formatPrice(listing.price, listingMode(listing)),
     beds: listing.bedrooms ?? listing.beds ?? null,
     baths: listing.bathrooms ?? listing.baths ?? null,
     area: listing.squareFeet ?? listing.square_feet ?? listing.area ?? listing.lotSize ?? null,
     image: propertyCoverImage(listing) || FALLBACK_PROPERTY_IMAGE,
-    type: listing.type ?? null,
+    type: listingMode(listing),
     listingType: listing.listingType ?? listing.listing_type ?? null,
     propertyType: listing.propertyType ?? null,
     raw: listing,
@@ -68,7 +68,7 @@ function ListingSection({ title, properties, loading, error, newBadge = false, v
     track.children[next]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
     setActiveSlide(next);
   };
-  if (!loading && !error && properties.length === 0) return null;
+  
 
   return (
     <section className="lq-listing-section">
@@ -81,6 +81,8 @@ function ListingSection({ title, properties, loading, error, newBadge = false, v
         <div className="lq-listings-status">{t("common.loading", { defaultValue: "Loading properties..." })}</div>
       ) : error ? (
         <div className="lq-listings-status lq-listings-status-error">{t("common.loadError", { defaultValue: "Unable to load properties right now." })}</div>
+      ) : properties.length === 0 ? (
+        <div className="lq-listings-status">{t("home.noMatchingListings", { defaultValue: "No matching listings are currently available." })}</div>
       ) : (
         <div className="lq-property-grid" ref={trackRef} onScroll={(event) => {
           const track = event.currentTarget;
@@ -120,26 +122,22 @@ export default function HomePage() {
     const controller = new AbortController();
 
     async function loadHomeListings() {
-      const [newResult, luxuryResult] = await Promise.allSettled([
-        getNewListings({ limit: 6, signal: controller.signal }),
-        getLuxuryListings({ limit: 6, signal: controller.signal }),
-      ]);
-      if (controller.signal.aborted) return;
-
-      if (newResult.status === "fulfilled") {
-        setNewListings(newResult.value.items.filter(isPublicMarketplaceProperty).map(normalizeListing));
-      } else {
-        console.error("Failed to load new listings:", newResult.reason);
+      // Shared data request is intentionally independent of the component signal.
+      // The signal only prevents stale state updates after unmount.
+      try {
+        const collections = await getHomepageCollections();
+        if (controller.signal.aborted) return;
+        setNewListings((collections.newListings?.items || []).filter(isPublicMarketplaceProperty).map(normalizeListing));
+        setLuxuryListings((collections.luxuryHomes?.items || []).filter(isPublicMarketplaceProperty).map(normalizeListing));
+        setNewError("");
+        setLuxuryError("");
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error("Failed to load homepage collections:", error);
         setNewError("failed");
-      }
-
-      if (luxuryResult.status === "fulfilled") {
-        setLuxuryListings(luxuryResult.value.items.filter(isPublicMarketplaceProperty).map(normalizeListing));
-      } else {
-        console.error("Failed to load luxury listings:", luxuryResult.reason);
         setLuxuryError("failed");
       }
-
+      if (controller.signal.aborted) return;
       setNewLoading(false);
       setLuxuryLoading(false);
     }
@@ -342,7 +340,7 @@ export default function HomePage() {
             })}
           </section>
 
-          <ListingSection title={t("home.newListings")} properties={newListings} loading={newLoading} error={newError} newBadge viewAllTo="/buy" />
+          <ListingSection title={t("home.newListings")} properties={newListings} loading={newLoading} error={newError} newBadge viewAllTo="/listings?sort=newest" />
           <ListingSection title={t("home.luxuryHomes")} properties={luxuryListings} loading={luxuryLoading} error={luxuryError} viewAllTo="/buy?collection=luxury" />
 
           

@@ -23,7 +23,7 @@ import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import { DIRECTORY_LOCATIONS, nearbyLocations } from '../../components/marketplace/LocationDirectory';
 import SiteLayout from '../../components/layout/SiteLayout';
 import './Listings.css';
-import { isDevelopmentProject, isLuxuryResidentialProperty } from '../../api/propertyPresentation';
+import { isDevelopmentProject, isLuxuryResidentialProperty, listingMode, listingKind } from '../../api/propertyPresentation';
 
 const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office', 'retail', 'warehouse'];
 
@@ -241,7 +241,7 @@ export default function Listings() {
       if (urlCity) queryParams.append('city', urlCity);
       if (directoryLocation) queryParams.append('locationSlug', directoryLocation.slug);
       if (urlSearch) queryParams.append('search', urlSearch);
-      queryParams.append('limit', String(location.pathname === '/new-projects' || searchParams.get('collection') === 'luxury' ? 100 : PAGE_SIZE));
+      queryParams.append('limit', String(location.pathname === '/new-projects' || ['luxury','development'].includes(searchParams.get('collection')) ? 100 : PAGE_SIZE));
       queryParams.append('offset', String((effectivePage - 1) * PAGE_SIZE));
 
       const url = `/listings?${queryParams.toString()}`;
@@ -284,15 +284,16 @@ export default function Listings() {
     // Only show published properties
     filtered = filtered.filter(p => p.status === 'published');
     if (location.pathname === '/new-projects') filtered = filtered.filter(isDevelopmentProject);
+    if (searchParams.get('collection') === 'development') filtered = filtered.filter(p => /land|lot|plot|terreno|terrain/.test(listingKind(p)) || isDevelopmentProject(p));
     if (searchParams.get('collection') === 'luxury') filtered = filtered.filter(isLuxuryResidentialProperty);
 
     // Apply filters
     if (filters.type) {
-      filtered = filtered.filter(p => p.type === filters.type);
+      filtered = filtered.filter(p => listingMode(p) === filters.type);
     }
 
     if (filters.propertyType) {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
+      filtered = filtered.filter(p => listingKind(p) === filters.propertyType);
     }
 
     if (filters.city && !directoryLocation) {

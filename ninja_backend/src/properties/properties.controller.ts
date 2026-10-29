@@ -34,6 +34,12 @@ import { SubscriptionRequiredGuard } from "../subscriptions/guards/subscription-
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
+  @Get("homepage-collections")
+  @ApiOperation({ summary: "Homepage collections from the complete public Ecuador marketplace inventory" })
+  async homepageCollections(@Query("limit") limit?: string) {
+    return this.propertiesService.findHomepageCollections(limit ? Number(limit) : 6);
+  }
+
   @Get("public")
   @ApiOperation({
     summary:

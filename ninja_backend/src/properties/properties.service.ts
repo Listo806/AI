@@ -580,6 +580,88 @@ export class PropertiesService {
     return { items, total, limit, offset };
   }
 
+
+  /**
+   * Homepage collections are selected from the full eligible public inventory,
+   * not from the first 100 results of a generic search.
+   * No sample/placeholder cards or inferred luxury flags are created.
+   */
+  async findHomepageCollections(limit = 6) {
+    const take = Math.min(Math.max(Number(limit) || 6, 1), 12);
+    const { rows } = await this.db.query(`
+      SELECT id, title, description, address, city, country, state,
+             price, type, status, property_type as "propertyType",
+             listing_type as "listingType", bedrooms, bathrooms,
+             square_feet as "squareFeet", lot_size as "lotSize",
+             thumbnail_url as "thumbnailUrl",
+             created_at as "createdAt", published_at as "publishedAt"
+      FROM properties p
+      WHERE status = 'published'
+        AND listing_type = 'marketplace'
+        AND type IN ('sale','rent')
+        AND LOWER(TRIM(country)) = 'ecuador'
+        AND (latitude IS NOT NULL AND longitude IS NOT NULL
+          OR EXISTS (SELECT 1 FROM listoqasa_sample_imports si WHERE si.property_id = p.id))
+      ORDER BY published_at DESC NULLS LAST, created_at DESC
+    `);
+    const kind = (p: any) => String(p.propertyType || '').trim().toLowerCase();
+    const text = (p: any) => [p.title, p.description].filter(Boolean).join(' ').toLowerCase();
+    const residential = (p: any) => /^(house|home|casa|villa|townhouse|duplex|apartment|apartamento|departamento|condo|condominium|penthouse|flat|suite)$/.test(kind(p));
+    const land = (p: any) => /land|lot|terreno|terrain|plot|lote/.test(kind(p));
+    const commercial = (p: any) => /commercial|office|retail|industrial|warehouse|local|oficina|bodega/.test(kind(p));
+    const project = (p: any) => /project|development|construction|proyecto|desarrollo/.test(kind(p)) ||
+      /\b(new development|new construction|under construction|en construcci[oó]n|proyecto inmobiliario)\b/.test(text(p));
+    const luxury = (p: any) => residential(p) &&
+      (kind(p) === 'penthouse' || /\b(luxury|lujo|luxo|premium|exclusive|exclusiva|exclusivo|mansión|mansion|penthouse)\b/.test(text(p)));
+    const collections: Record<string, any[]> = {
+      newListings: rows,
+      luxuryHomes: rows.filter(luxury),
+      homesForRent: rows.filter((p: any) => p.type === 'rent' && residential(p)),
+      landDevelopment: rows.filter((p: any) => land(p) || project(p)),
+      commercialProperties: rows.filter(commercial),
+      newProjects: rows.filter(project),
+    };
+    const group = (p: any, section: string) => {
+      if (section === 'newListings') return `${kind(p)}:${p.type}`;
+      if (section === 'landDevelopment') return project(p) ? 'project' : 'land';
+      return kind(p);
+    };
+    const selected: Record<string, any[]> = {};
+    const totals: Record<string, number> = {};
+    for (const [section, candidates] of Object.entries(collections)) {
+      totals[section] = candidates.length;
+      const buckets = new Map<string, any[]>();
+      for (const p of candidates) {
+        const key = group(p, section);
+        if (!buckets.has(key)) buckets.set(key, []);
+        buckets.get(key)!.push(p);
+      }
+      const chosen: any[] = [];
+      while (chosen.length < take && [...buckets.values()].some(b => b.length)) {
+        for (const bucket of buckets.values()) {
+          if (chosen.length >= take) break;
+          const p = bucket.shift();
+          if (p) chosen.push(p);
+        }
+      }
+      selected[section] = chosen;
+    }
+    const unique = [...new Map(Object.values(selected).flat().map((p: any) => [String(p.id), p])).values()];
+    const enriched = await this.attachThumbnailUrlList(unique);
+    const byId = new Map(enriched.map((p: any) => [String(p.id), p]));
+    const result: Record<string, {items: any[]; total: number}> = {};
+    for (const [section, candidates] of Object.entries(selected)) {
+      result[section] = {
+        items: candidates.map((p: any) => {
+          const item: any = byId.get(String(p.id)) || p;
+          return {...item, price: item.price != null ? Number(item.price) : null};
+        }),
+        total: totals[section],
+      };
+    }
+    return result;
+  }
+
   async findPublic(
     filters?: {
       location?: DirectoryLocation;
