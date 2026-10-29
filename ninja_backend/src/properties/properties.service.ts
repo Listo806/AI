@@ -33,6 +33,9 @@ const PROPERTY_TYPE_VALUES = [
   "office",
   "retail",
   "warehouse",
+  "apartment_development",
+  "house_development",
+  "mixed_use_development",
 ] as const;
 
 @Injectable()
@@ -749,8 +752,12 @@ export class PropertiesService {
     if (filters?.propertyType?.trim()) {
       const pt = filters.propertyType.trim().toLowerCase();
       if (PROPERTY_TYPE_VALUES.includes(pt as any)) {
-        conditions.push(`LOWER(TRIM(property_type)) = $${paramCount++}`);
-        params.push(pt);
+        if (pt === "commercial") {
+          conditions.push(`LOWER(TRIM(property_type)) IN ('commercial','office','retail','warehouse','industrial')`);
+        } else {
+          conditions.push(`LOWER(TRIM(property_type)) = $${paramCount++}`);
+          params.push(pt);
+        }
       }
     }
     const modeRaw = filters?.mode?.trim()?.toLowerCase();

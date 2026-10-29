@@ -293,7 +293,7 @@ export default function Listings() {
     }
 
     if (filters.propertyType) {
-      filtered = filtered.filter(p => listingKind(p) === filters.propertyType);
+      filtered = filtered.filter(p => filters.propertyType === 'commercial' ? /^(commercial|office|retail|warehouse|industrial)$/.test(listingKind(p)) : listingKind(p) === filters.propertyType);
     }
 
     if (filters.city && !directoryLocation) {
