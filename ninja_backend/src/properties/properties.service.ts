@@ -614,10 +614,17 @@ export class PropertiesService {
     const commercial = (p: any) => /commercial|office|retail|industrial|warehouse|local|oficina|bodega/.test(kind(p));
     const project = (p: any) => /project|development|construction|proyecto|desarrollo/.test(kind(p)) ||
       /\b(new development|new construction|under construction|en construcci[oó]n|proyecto inmobiliario)\b/.test(text(p));
-    const luxury = (p: any) => residential(p) &&
-      (kind(p) === 'penthouse' || /\b(luxury|lujo|luxo|premium|exclusive|exclusiva|exclusivo|mansión|mansion|penthouse)\b/.test(text(p)));
+    // Explicit luxury wording or a high asking price on a luxury-compatible
+    // residential type. Price is a fallback for older imported records that
+    // do not have a separate luxury flag; never include commercial properties.
+    const luxury = (p: any) => residential(p) && p.type === 'sale' &&
+      (kind(p) === 'penthouse' ||
+       /\b(luxury|lujo|luxo|premium|exclusive|exclusiva|exclusivo|mansión|mansion|penthouse)\b/.test(text(p)) ||
+       (['house','home','casa','villa','condo','condominium','apartment','apartamento','departamento'].includes(kind(p)) && Number(p.price) >= 300000));
+    const newestResidential = rows.filter(residential);
+    const newestCommercial = rows.filter(commercial);
     const collections: Record<string, any[]> = {
-      newListings: rows,
+      newListings: newestResidential,
       luxuryHomes: rows.filter(luxury),
       homesForRent: rows.filter((p: any) => p.type === 'rent' && residential(p)),
       landDevelopment: rows.filter((p: any) => land(p) || project(p)),
@@ -631,6 +638,14 @@ export class PropertiesService {
     };
     const selected: Record<string, any[]> = {};
     const totals: Record<string, number> = {};
+    // Reserve at least five of the six first cards for homes. If there is
+    // enough residential inventory, add at most one commercial listing.
+    const newListingCandidates = [...newestResidential];
+    const recentCommercial = newestCommercial[0];
+    if (recentCommercial && newListingCandidates.length >= 5 && take >= 6) {
+      // The commercial card is intentionally last, never dominating the row.
+      collections.newListings = newListingCandidates;
+    }
     for (const [section, candidates] of Object.entries(collections)) {
       totals[section] = candidates.length;
       const buckets = new Map<string, any[]>();
@@ -648,6 +663,10 @@ export class PropertiesService {
         }
       }
       selected[section] = chosen;
+    }
+    if (take >= 6 && recentCommercial && selected.newListings.length >= 5) {
+      selected.newListings = [...selected.newListings.slice(0, take - 1), recentCommercial];
+      totals.newListings = newestResidential.length + newestCommercial.length;
     }
     const unique = [...new Map(Object.values(selected).flat().map((p: any) => [String(p.id), p])).values()];
     const enriched = await this.attachThumbnailUrlList(unique);
