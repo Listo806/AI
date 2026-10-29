@@ -72,6 +72,8 @@ const en = {
     propertyType_commercial: "Commercial",
     propertyType_villa: "Villa",
     propertyType_office: "Office",
+    propertyType_retail: "Retail",
+    propertyType_warehouse: "Warehouse",
   },
 };
 
@@ -114,6 +116,8 @@ const es = {
     propertyType_commercial: "Comercial",
     propertyType_villa: "Villa",
     propertyType_office: "Oficina",
+    propertyType_retail: "Local comercial",
+    propertyType_warehouse: "Bodega",
   },
 };
 
@@ -156,6 +160,8 @@ const pt = {
     propertyType_commercial: "Comercial",
     propertyType_villa: "Villa",
     propertyType_office: "Escritório",
+    propertyType_retail: "Loja comercial",
+    propertyType_warehouse: "Armazém",
   },
 };
 
