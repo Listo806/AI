@@ -14,7 +14,6 @@ import telehealthImg from "./web-solutions-telehealth.png";
 import "./WebSolutions.css";
 import FreeWebsiteReview from "./FreeWebsiteReview";
 
-const REVIEW_PATH = "/web-solutions/free-review";
 const HREFS = ["/#features","/#ai-assistant","/#automation","/#pipeline","/#analytics","/pricing","/editorial/the-end-of-legacy-crm","/web-solutions","/trial?flow=free-access&plan=free"];
 
 const COPY = {
@@ -115,6 +114,29 @@ const WS_HEADER_NAV = {
   es: ["Desarrollo Web", "Software y CRM", "IA y Automatización", "Integración de Sistemas", "Gestión de Marca"],
   pt: ["Desenvolvimento Web", "Software e CRM", "IA e Automação", "Integração de Sistemas", "Gestão de Marca"],
 };
+// Scroll in-page without changing the URL hash or triggering anchor navigation.
+function scrollToWsSection(event, id) {
+  event.preventDefault();
+  const target = document.getElementById(id);
+  if (!target) return;
+  const header = document.querySelector('.ws-header');
+  const offset = header ? header.getBoundingClientRect().height : 0;
+  const destination = Math.max(0, window.scrollY + target.getBoundingClientRect().top - offset);
+  // Animate explicitly so global CSS/router scroll restoration cannot make hash links jump.
+  const start = window.scrollY;
+  const distance = destination - start;
+  if (Math.abs(distance) < 2) return;
+  const duration = Math.min(1100, Math.max(450, Math.abs(distance) * 0.35));
+  const started = performance.now();
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const frame = now => {
+    const progress = Math.min(1, (now - started) / duration);
+    window.scrollTo(0, start + distance * ease(progress));
+    if (progress < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
 const WS_HEADER_LINKS = ["#ws-design", "#ws-products", "#ws-needs", "#ws-lifecycle", "#ws-management"];
 
 function Header({tr,lang,setLang}){
@@ -123,11 +145,11 @@ function Header({tr,lang,setLang}){
   return <header className="ws-header">
     <div className="ws-header-inner">
       <Link to="/web-solutions" className="ws-brand"><img src={webSolutionsLogo} alt="Cortexa Software Development"/></Link>
-      <nav className="ws-nav">{(WS_HEADER_NAV[lang]||WS_HEADER_NAV.en).map((label,i)=><a key={i} href={WS_HEADER_LINKS[i]}>{label}</a>)}</nav>
+      <nav className="ws-nav">{(WS_HEADER_NAV[lang]||WS_HEADER_NAV.en).map((label,i)=><a key={i} href={WS_HEADER_LINKS[i]} onClick={event=>scrollToWsSection(event, WS_HEADER_LINKS[i].slice(1))}>{label}</a>)}</nav>
       <div className="ws-header-actions"><Language lang={lang} setLang={setLang}/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div>
       <button className="ws-menu-btn" type="button" onClick={()=>setMobileOpen(v=>!v)} aria-label="Menu">{mobileOpen?<X/>:<Menu/>}</button>
     </div>
-    {mobileOpen&&<div className="ws-mobile-menu">{(WS_HEADER_NAV[lang]||WS_HEADER_NAV.en).map((label,i)=><a key={i} href={WS_HEADER_LINKS[i]} onClick={()=>setMobileOpen(false)}>{label}</a>)}<div className="ws-mobile-menu-bottom"><Language lang={lang} setLang={setLang}/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div></div>}
+    {mobileOpen&&<div className="ws-mobile-menu">{(WS_HEADER_NAV[lang]||WS_HEADER_NAV.en).map((label,i)=><a key={i} href={WS_HEADER_LINKS[i]} onClick={event=>{setMobileOpen(false);scrollToWsSection(event, WS_HEADER_LINKS[i].slice(1));}}>{label}</a>)}<div className="ws-mobile-menu-bottom"><Language lang={lang} setLang={setLang}/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div></div>}
   </header>;
 }
 
@@ -140,7 +162,7 @@ function Footer({tr,lang,setLang}){
   </div><div className="ws-container ws-footer-bottom"><span>{tr.footer[0]}</span><div><a href="/privacy-policy">{tr.footer[1]}</a><a href="/terms">{tr.footer[2]}</a><a href="/contact">{tr.footer[3]}</a></div></div></footer>;
 }
 
-function ReviewButton({children,ctaId,lang}){return <Link className="ws-review-btn" to={REVIEW_PATH} onClick={()=>trackEvent("primary_cta_click",{cta_id:ctaId,cta_text:String(children),page_path:window.location.pathname,language:lang})}><span>{children}</span><ArrowRight size={18}/></Link>}
+function ReviewButton({children,ctaId,lang}){const scrollToForm=(event)=>{event.preventDefault();trackEvent("primary_cta_click",{cta_id:ctaId,cta_text:String(children),page_path:window.location.pathname,language:lang});scrollToWsSection(event,"ws-free-evaluation");};return <a className="ws-review-btn" href="#ws-free-evaluation" onClick={scrollToForm}><span>{children}</span><ArrowRight size={18}/></a>}
 function CheckList({items}){return <ul>{items.map(x=><li key={x}><Check size={16}/><span>{x}</span></li>)}</ul>}
 
 export default function WebSolutions(){
@@ -170,7 +192,7 @@ export default function WebSolutions(){
     <section className="ws-section ws-work"><div className="ws-container"><h2>{ex.work.title}</h2><p className="ws-section-lead">{ex.work.lead}</p><div className="ws-work-grid">{ex.work.items.map(([t,p,list],i)=>{const I=[FileSearch,RefreshCw,UsersRound][i];return <article key={t}><div className="ws-work-head"><span className="ws-work-icon"><I aria-hidden="true"/></span><div><h3>{t}</h3><p>{p}</p></div></div><CheckList items={list}/></article>})}</div><p className="ws-build-note">{ex.work.note}</p></div></section>
     <section className="ws-section ws-process"><div className="ws-container"><div className="ws-eyebrow">{ex.process.eyebrow}</div><h2>{ex.process.title}</h2><div className="ws-process-grid">{ex.process.items.map(([n,t,p],i)=>{const I=[FileSearch,SlidersHorizontal,Settings,ClipboardCheck,Wrench][i];return <article key={n}><div className="ws-process-card-head"><span className="ws-process-icon"><I aria-hidden="true"/></span><div><b>{n}</b><h3>{t}</h3></div></div><p>{p}</p>{i<4&&<span className="ws-process-arrow" aria-hidden="true"><ChevronRight/></span>}</article>})}</div></div></section>
     <section className="ws-section ws-faq"><div className="ws-container"><h2>{ex.faq.title}</h2><div className="ws-faq-grid">{ex.faq.items.map(([q,a],i)=><article key={q} className={openFaq===i?"open":""}><button onClick={()=>setOpenFaq(openFaq===i?null:i)}><span>{q}</span><ChevronRight size={17}/></button>{openFaq===i&&<p>{a}</p>}</article>)}</div></div></section>
-    <section className="ws-dark-review"><div className="ws-container ws-final-review"><div className="ws-final-review-copy"><h2>{ex.reviewTitle}</h2><p>{ex.reviewLead}</p></div><div className="ws-review-items">{tr.review.items.map(([t,p],i)=>{const I=REVIEW_ICONS[i];return <article key={t}><span className="ws-feature-icon"><I aria-hidden="true"/></span><h3>{t}</h3><p>{p}</p></article>})}</div><div className="ws-final-review-action"><a className="ws-review-btn" href="#ws-free-evaluation" onClick={()=>trackEvent("primary_cta_click",{cta_id:"web_solutions_free_review",cta_text:tr.review.button,page_path:window.location.pathname,language:lang})}><span>{tr.review.button}</span><ArrowDown size={18}/></a></div></div><span className="ws-review-bottom-arrow" aria-hidden="true"><ArrowDown size={24}/></span></section>
+    <section className="ws-dark-review"><div className="ws-container ws-final-review"><div className="ws-final-review-copy"><h2>{ex.reviewTitle}</h2><p>{ex.reviewLead}</p></div><div className="ws-review-items">{tr.review.items.map(([t,p],i)=>{const I=REVIEW_ICONS[i];return <article key={t}><span className="ws-feature-icon"><I aria-hidden="true"/></span><h3>{t}</h3><p>{p}</p></article>})}</div><div className="ws-final-review-action"><a className="ws-review-btn" href="#ws-free-evaluation" onClick={event=>{trackEvent("primary_cta_click",{cta_id:"web_solutions_free_review",cta_text:tr.review.button,page_path:window.location.pathname,language:lang});scrollToWsSection(event,"ws-free-evaluation");}}><span>{tr.review.button}</span><ArrowDown size={18}/></a></div></div><span className="ws-review-bottom-arrow" aria-hidden="true"><ArrowDown size={24}/></span></section>
     <FreeWebsiteReview embedded embeddedLang={lang}/>
   </main><Footer tr={tr} lang={lang} setLang={setLang}/></div>;
 }

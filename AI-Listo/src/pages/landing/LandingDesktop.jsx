@@ -532,7 +532,7 @@ export default function Landing() {
       topHighlight: "Agentic CRM",
       topLine3:
         "for businesses tired of complicated, overpriced CRM software.",
-      webSolutions: "Web & Software Development Systems Integration",
+      webSolutions: "Web, Software & Integration",
 
       finalTitle: "Connect Your Entire Workflow",
       finalDesc: "Leads. Opportunities. Deals. All in your",
@@ -955,7 +955,7 @@ export default function Landing() {
       topHighlight: "CRM agéntico",
       topLine3:
         "para negocios cansados de software CRM complicado y costoso.",
-      webSolutions: "Desarrollo Web y de Software e Integración de Sistemas",
+      webSolutions: "Web, Software e Integración",
 
       finalTitle: "Conecta Todo Tu Flujo de Trabajo",
       finalDesc: "Leads. Oportunidades. Negocios. Todo en tu ",
@@ -1375,7 +1375,7 @@ export default function Landing() {
       topHighlight: "CRM agêntico",
       topLine3:
         "para empresas cansadas de software de CRM complicado e caro.",
-      webSolutions: "Desenvolvimento Web e de Software e Integração de Sistemas",
+      webSolutions: "Web, Software e Integração",
 
       finalTitle: "Conecte Todo o Seu Fluxo de Trabalho",
       finalDesc: "Leads. Oportunidades. Negócios. Tudo no seu ",
@@ -1700,10 +1700,9 @@ export default function Landing() {
               className="nav-menu nav-menu-web-solutions"
               href="/web-solutions"
               aria-label={tr.webSolutions}
-              onClick={trackCta("nav_web_solutions", "Web & Software Development")}
+              onClick={trackCta("nav_web_solutions", tr.webSolutions)}
             >
-              <span>Web &amp; Software Development</span>
-              <span>Systems Integration</span>
+              <span>{tr.webSolutions}</span>
             </a>
           </nav>
 
