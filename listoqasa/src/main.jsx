@@ -1,3 +1,4 @@
+import { initializeGoogleAds } from "./api/googleAdsTracking";
 import { registerListoQasaPwa } from "./pwa";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -23,6 +24,7 @@ colorSchemeMeta.setAttribute("name", "color-scheme");
 colorSchemeMeta.setAttribute("content", "light");
 if (!colorSchemeMeta.isConnected) document.head.appendChild(colorSchemeMeta);
 
+initializeGoogleAds();
 registerListoQasaPwa();
 
 createRoot(

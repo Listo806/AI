@@ -1,3 +1,4 @@
+import { trackGoogleAdsSuccess } from '../../api/googleAdsTracking';
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
@@ -36,6 +37,7 @@ export default function MarketplaceSignupPage() {
     try {
       const result = await marketplaceRequest('/auth/signup', {method:'POST',body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password,role,fullName:form.name.trim()})});
       saveSession(result);
+      trackGoogleAdsSuccess('registration', result.user.id);
       const enrollment = await marketplaceRequest('/marketplace/plans/enroll', {method:'POST',body:JSON.stringify({planKey,interval:billing})});
       if (enrollment?.enrollment?.id) sessionStorage.setItem('listoqasa_pending_enrollment', enrollment.enrollment.id);
       if (enrollment?.next === '/create-listing' || enrollment?.enrollment?.status === 'active') { navigate('/my-listings',{replace:true,state:{message:enrollment.message || 'Your account is ready. Create your first listing'}}); return; }

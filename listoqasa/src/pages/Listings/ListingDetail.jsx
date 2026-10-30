@@ -1,3 +1,4 @@
+import { trackGoogleAdsSuccess } from "../../api/googleAdsTracking";
 import { listingDisplayTitle } from '../../utils/listingDisplayTitle';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
@@ -227,6 +228,7 @@ export default function ListingDetail() {
         }),
       });
 
+      trackGoogleAdsSuccess('propertyLead', crypto.randomUUID());
       setLeadState('success');
     } catch {
       setLeadState('error');
