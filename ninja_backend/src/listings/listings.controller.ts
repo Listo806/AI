@@ -57,6 +57,7 @@ export class ListingsController {
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
+    @Query('collection') collection?: string,
   ) {
     const pagination = {
       limit: limit != null ? parseInt(limit, 10) : undefined,
@@ -65,7 +66,7 @@ export class ListingsController {
     const directoryLocation = locationSlug ? findDirectoryLocation(locationSlug) : undefined;
     if (locationSlug && !directoryLocation) throw new BadRequestException('Unknown location slug');
     return this.propertiesService.findPublic(
-      { city: directoryLocation ? undefined : city, location: directoryLocation, propertyType, mode, country, search },
+      { city: directoryLocation ? undefined : city, location: directoryLocation, propertyType, mode, country, search, collection },
       pagination,
     );
   }

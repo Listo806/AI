@@ -1,0 +1,11 @@
+import React, {useEffect,useState} from 'react';
+import {marketplaceRequest} from '../../api/marketplaceApi';
+const words={en:{title:'Luxury review queue',empty:'No pending requests',approve:'Approve Luxury',reject:'Reject',note:'Review note (optional)',refresh:'Refresh',error:'Review failed: '},es:{title:'Solicitudes de lujo',empty:'No hay solicitudes pendientes',approve:'Aprobar lujo',reject:'Rechazar',note:'Nota de revisión (opcional)',refresh:'Actualizar',error:'Error al revisar: '},pt:{title:'Pedidos de luxo',empty:'Nenhum pedido pendente',approve:'Aprovar luxo',reject:'Rejeitar',note:'Nota da análise (opcional)',refresh:'Atualizar',error:'Falha na análise: '}};
+export default function LuxuryReviewAdmin(){
+ const t=words[(localStorage.getItem('i18nextLng')||'en').slice(0,2)]||words.en;
+ const [items,setItems]=useState([]),[notes,setNotes]=useState({}),[error,setError]=useState(''),[busy,setBusy]=useState('');
+ const load=async()=>{try{const r=await marketplaceRequest('/admin/luxury/review-queue');setItems(r.data||[]);setError('')}catch(e){setError(e.message)}};
+ useEffect(()=>{load()},[]);
+ const review=async(id,approved)=>{setBusy(id);try{await marketplaceRequest(`/admin/luxury/${id}/review`,{method:'PUT',body:JSON.stringify({approved,note:notes[id]||''})});await load()}catch(e){setError(t.error+e.message)}finally{setBusy('')}};
+ return <main style={{maxWidth:1080,margin:'40px auto',padding:24}}><h1>{t.title}</h1><button onClick={load}>{t.refresh}</button>{error&&<p role="alert">{error}</p>}{!items.length&&!error&&<p>{t.empty}</p>}{items.map(p=><article key={p.id} style={{border:'1px solid #d7dfea',borderRadius:12,padding:20,marginTop:16}}><h2>{p.title}</h2><p>{p.city} · {p.propertyType} · ${p.price}</p><p>{p.description}</p><div style={{display:'flex',flexWrap:'wrap',gap:8}}>{(p.photos||[]).map((url,i)=><img key={i} src={url} alt={`${p.title} ${i+1}`} style={{width:180,height:120,objectFit:'cover'}}/>)}</div><input style={{marginTop:12,padding:8,width:'100%',maxWidth:480}} placeholder={t.note} value={notes[p.id]||''} onChange={e=>setNotes(v=>({...v,[p.id]:e.target.value}))}/><div style={{display:'flex',gap:12,marginTop:12}}><button disabled={busy===p.id} onClick={()=>review(p.id,true)}>{t.approve}</button><button disabled={busy===p.id} onClick={()=>review(p.id,false)}>{t.reject}</button></div></article>)}</main>;
+}

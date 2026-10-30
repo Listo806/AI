@@ -43,16 +43,10 @@ export function isResidentialProperty(item) {
 }
 
 export function isLuxuryResidentialProperty(item) {
-  if (!isResidentialProperty(item)) return false;
-  if (listingKind(item) === 'penthouse') return true;
-  const price = Number(item.price);
   const kind = listingKind(item);
-  if (listingMode(item) === 'sale' && Number.isFinite(price) && price >= 300000 &&
-      /^(house|home|casa|villa|condo|condominium|apartment|apartamento|departamento)$/.test(kind)) return true;
-  const tags = [item.title, item.description, item.category, item.tags?.join?.(' ')]
-    .filter(Boolean).join(' ').toLowerCase();
-  return item.isLuxury === true || item.is_luxury === true || item.luxury === true || String(item.luxuryDesignation || item.luxury_designation || '').toLowerCase() === 'luxury' ||
-    /\b(luxury|lujo|luxo|premium|exclusive|exclusiv[ao]|penthouse|mansion|mansión)\b/.test(tags);
+  return String(item?.status).toLowerCase() === 'published' &&
+    String(item?.luxuryStatus || item?.luxury_status).toLowerCase() === 'approved' &&
+    /^(house|villa|condo|condominium|penthouse)$/.test(kind);
 }
 
 export function isDevelopmentProject(item) {

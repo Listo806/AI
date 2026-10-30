@@ -211,7 +211,7 @@ export class PropertiesService {
                 bedrooms, bathrooms, max_guests as "maxGuests", amenities,
                 square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                 created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
-                thumbnail_url as "thumbnailUrl", latitude, longitude,
+                thumbnail_url as "thumbnailUrl", latitude, longitude, luxury_status as "luxuryStatus",
                 property_type as "propertyType",
                 created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
       [
@@ -584,6 +584,20 @@ export class PropertiesService {
   }
 
 
+  async requestLuxury(id: string, userId: string, role: string) {
+    const { rows } = await this.db.query(`
+      UPDATE properties SET luxury_status='pending', luxury_requested_at=NOW(),
+        luxury_reviewed_at=NULL, luxury_reviewed_by=NULL, luxury_review_note=NULL, updated_at=NOW()
+      WHERE id=$1 AND (created_by=$2 OR EXISTS
+        (SELECT 1 FROM teams t WHERE t.id=properties.team_id AND t.owner_id=$2))
+        AND listing_type='marketplace'
+        AND LOWER(TRIM(property_type)) IN ('house','villa','condo','condominium','penthouse')
+        AND luxury_status IN ('none','rejected')
+      RETURNING id, luxury_status AS "luxuryStatus"`, [id, userId]);
+    if (!rows.length) throw new BadRequestException('Not eligible, not owned, or already under Luxury review');
+    return rows[0];
+  }
+
   /**
    * Homepage collections are selected from the full eligible public inventory,
    * not from the first 100 results of a generic search.
@@ -596,7 +610,7 @@ export class PropertiesService {
              price, type, status, property_type as "propertyType",
              listing_type as "listingType", bedrooms, bathrooms,
              square_feet as "squareFeet", lot_size as "lotSize",
-             thumbnail_url as "thumbnailUrl",
+             thumbnail_url as "thumbnailUrl", luxury_status as "luxuryStatus",
              created_at as "createdAt", published_at as "publishedAt"
       FROM properties p
       WHERE status = 'published'
@@ -614,13 +628,9 @@ export class PropertiesService {
     const commercial = (p: any) => /commercial|office|retail|industrial|warehouse|local|oficina|bodega/.test(kind(p));
     const project = (p: any) => /project|development|construction|proyecto|desarrollo/.test(kind(p)) ||
       /\b(new development|new construction|under construction|en construcci[oó]n|proyecto inmobiliario)\b/.test(text(p));
-    // Explicit luxury wording or a high asking price on a luxury-compatible
-    // residential type. Price is a fallback for older imported records that
-    // do not have a separate luxury flag; never include commercial properties.
-    const luxury = (p: any) => residential(p) && p.type === 'sale' &&
-      (kind(p) === 'penthouse' ||
-       /\b(luxury|lujo|luxo|premium|exclusive|exclusiva|exclusivo|mansión|mansion|penthouse)\b/.test(text(p)) ||
-       (['house','home','casa','villa','condo','condominium','apartment','apartamento','departamento'].includes(kind(p)) && Number(p.price) >= 300000));
+    // Luxury is an explicit admin-approved designation, never inferred from price or text.
+    const luxury = (p: any) => p.luxuryStatus === 'approved' &&
+      /^(house|villa|condo|condominium|penthouse)$/.test(kind(p));
     const newestResidential = rows.filter(residential);
     const newestCommercial = rows.filter(commercial);
     const collections: Record<string, any[]> = {
@@ -697,6 +707,7 @@ export class PropertiesService {
       priceMin?: number;
       /** Inclusive; listing price must be <= priceMax when set */
       priceMax?: number;
+      collection?: string;
     },
     pagination?: { limit?: number; offset?: number },
   ): Promise<{
@@ -793,6 +804,11 @@ export class PropertiesService {
     if (filters?.priceMax != null && Number.isFinite(filters.priceMax)) {
       conditions.push(`price IS NOT NULL AND price <= $${paramCount++}`);
       params.push(filters.priceMax);
+    }
+
+    if (filters?.collection === 'luxury') {
+      conditions.push(`luxury_status = 'approved'`);
+      conditions.push(`LOWER(TRIM(property_type)) IN ('house','villa','condo','condominium','penthouse')`);
     }
 
     // Optional text search (backward compatible)

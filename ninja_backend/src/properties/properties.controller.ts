@@ -96,15 +96,23 @@ export class PropertiesController {
     @Query("search") search?: string,
     @Query("limit") limit?: string,
     @Query("offset") offset?: string,
+    @Query("collection") collection?: string,
   ) {
     const pagination = {
       limit: limit != null ? parseInt(limit, 10) : undefined,
       offset: offset != null ? parseInt(offset, 10) : undefined,
     };
     return this.propertiesService.findPublic(
-      { city, propertyType, mode, country, search },
+      { city, propertyType, mode, country, search, collection },
       pagination,
     );
+  }
+
+  @Post(':id/luxury-request')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  async requestLuxury(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.propertiesService.requestLuxury(id, user.id, user.role);
   }
 
   @Post()

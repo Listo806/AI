@@ -6,6 +6,30 @@ import { PropertyStatus } from '../properties/entities/property.entity';
 export class AdminListingsService {
   constructor(private readonly db: DatabaseService) {}
 
+  async luxuryQueue() {
+    const { rows } = await this.db.query(`
+      SELECT p.id, p.title, p.city, p.price, p.status, p.property_type AS "propertyType",
+        p.luxury_status AS "luxuryStatus", p.luxury_requested_at AS "luxuryRequestedAt",
+        p.thumbnail_url AS "thumbnailUrl", p.description,
+        (SELECT json_agg(pm.url ORDER BY pm.display_order) FROM property_media pm
+          WHERE pm.property_id=p.id AND pm.type='image') AS photos
+      FROM properties p WHERE p.luxury_status='pending'
+      ORDER BY p.luxury_requested_at ASC LIMIT 200`);
+    return rows;
+  }
+
+  async reviewLuxury(id: string, approved: boolean, adminId: string, note?: string) {
+    const { rows } = await this.db.query(`
+      UPDATE properties SET luxury_status=$2, luxury_reviewed_at=NOW(),
+        luxury_reviewed_by=$3, luxury_review_note=$4, updated_at=NOW()
+      WHERE id=$1 AND luxury_status='pending' AND listing_type='marketplace'
+        AND LOWER(TRIM(property_type)) IN ('house','villa','condo','condominium','penthouse')
+      RETURNING id, luxury_status AS "luxuryStatus"`,
+      [id, approved ? 'approved' : 'rejected', adminId, note?.trim() || null]);
+    if (!rows.length) throw new NotFoundException('Pending eligible Luxury request not found');
+    return rows[0];
+  }
+
   async findAll(filters?: {
     status?: string;
     origin?: string;

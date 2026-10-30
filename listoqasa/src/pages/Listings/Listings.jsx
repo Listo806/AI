@@ -165,7 +165,7 @@ export default function Listings() {
 
   useEffect(() => {
     loadProperties();
-  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage, directorySlug]);
+  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage, directorySlug, searchParams]);
 
 
   // Map needs the full filtered result set, not just the current 20-card page.
@@ -179,6 +179,7 @@ export default function Listings() {
       if (urlCity) base.set('city', urlCity);
       if (directoryLocation) base.set('locationSlug', directoryLocation.slug);
       if (urlSearch) base.set('search', urlSearch);
+      if (searchParams.get('collection') === 'luxury') base.set('collection', 'luxury');
       const collected = [];
       for (let offset = 0; offset < 1200; offset += 100) {
         const params = new URLSearchParams(base); params.set('limit', '100'); params.set('offset', String(offset));
@@ -241,6 +242,7 @@ export default function Listings() {
       if (urlCity) queryParams.append('city', urlCity);
       if (directoryLocation) queryParams.append('locationSlug', directoryLocation.slug);
       if (urlSearch) queryParams.append('search', urlSearch);
+      if (searchParams.get('collection') === 'luxury') queryParams.append('collection', 'luxury');
       queryParams.append('limit', String(location.pathname === '/new-projects' || ['luxury','development'].includes(searchParams.get('collection')) ? 100 : PAGE_SIZE));
       queryParams.append('offset', String((effectivePage - 1) * PAGE_SIZE));
 

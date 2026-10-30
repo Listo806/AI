@@ -35,6 +35,15 @@ export class AdminListingsController {
     return { data };
   }
 
+  @Get('luxury/review-queue')
+  async luxuryQueue() { return { data: await this.adminListings.luxuryQueue() }; }
+
+  @Put('luxury/:id/review')
+  async reviewLuxury(@Param('id') id: string, @Body() body: { approved: boolean; note?: string }, @CurrentUser() user: any) {
+    if (typeof body?.approved !== 'boolean') throw new BadRequestException('approved must be boolean');
+    return { data: await this.adminListings.reviewLuxury(id, body.approved, user.id, body.note) };
+  }
+
   @Get('listings/:id')
   @ApiOperation({ summary: 'Get listing by ID (admin)' })
   @ApiParam({ name: 'id' })

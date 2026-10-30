@@ -1,3 +1,4 @@
+import LuxuryReviewAdmin from "./pages/CreateListing/LuxuryReviewAdmin";
 import LegalPage from "./pages/Legal/LegalPages";
 import React, { useEffect } from "react";
 import i18n from "./i18n/i18n";
@@ -108,6 +109,7 @@ export default function App() {
         <Route path="/marketplace/purchase-confirmation" element={<MarketplacePurchaseConfirmationPage />} />
         <Route path="/marketplace/payment-pending" element={<MarketplacePaymentPendingPage />} />
         <Route path="/marketplace/login" element={<MarketplaceLoginPage />} />
+        <Route path="/admin/luxury-review" element={<LuxuryReviewAdmin />} />
         <Route path="/my-listings" element={<MyListingsPage />} />
         <Route path="/profile/:ownerId" element={<PublicPortfolioPage />} />
         <Route path="/create-listing" element={<CreateListingPage />} />
