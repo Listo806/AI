@@ -153,7 +153,7 @@ export class PlatformListingsService {
     const { rows } = await this.db.query(
       `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status, origin,
               bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-              created_by as "createdBy", team_id as "teamId", reviewed_by as "reviewedBy", reviewed_at as "reviewedAt",
+              created_by as "createdBy", team_id as "teamId", property_type as "propertyType", luxury_status as "luxuryStatus", reviewed_by as "reviewedBy", reviewed_at as "reviewedAt",
               rejection_reason as "rejectionReason", created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
        FROM properties
        WHERE ${conditions}
