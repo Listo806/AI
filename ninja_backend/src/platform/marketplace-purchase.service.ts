@@ -53,10 +53,27 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
     const customerId = (process.env.GOOGLE_ADS_CUSTOMER_ID || '').replace(/-/g,'');
     const actionId = process.env.GOOGLE_ADS_OFFLINE_PURCHASE_ACTION_ID;
     const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
-    const clientId = process.env.GOOGLE_ADS_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
-    const refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
-    if (![customerId,actionId,developerToken,clientId,clientSecret,refreshToken].every(Boolean)) return;
+    const clientId = process.env.GOOGLE_ADS_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+    if (![customerId,actionId,developerToken,clientId,clientSecret].every(Boolean)) {
+      this.logger.warn('Google Ads Purchase upload disabled: customer ID, offline action ID, developer token or OAuth client configuration missing');
+      return;
+    }
+    // An existing CRM OAuth connection can supply a refresh token, but only when
+    // its connected Ads customer matches the configured conversion customer.
+    // Never use an arbitrary team's OAuth credentials for marketplace purchases.
+    let refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
+    if (!refreshToken) {
+      const connected = await this.db.query(`SELECT refresh_token FROM google_ads_integrations
+        WHERE REPLACE(google_ads_account_id, '-', '') = $1
+          AND is_active = true AND refresh_token IS NOT NULL
+        ORDER BY updated_at DESC LIMIT 1`, [customerId]);
+      refreshToken = connected.rows[0]?.refresh_token;
+    }
+    if (!refreshToken) {
+      this.logger.warn('Google Ads Purchase upload paused: no matching authorized Google Ads OAuth refresh token');
+      return;
+    }
     await this.db.query(`UPDATE marketplace_purchase_outbox SET status='failed',next_attempt_at=now(),last_error='Interrupted upload; retry with same order ID' WHERE status='sending' AND updated_at<now()-interval '15 minutes'`);
     const claim = await this.db.query(`UPDATE marketplace_purchase_outbox SET status='sending',attempts=attempts+1,updated_at=now()
       WHERE enrollment_id IN (SELECT enrollment_id FROM marketplace_purchase_outbox

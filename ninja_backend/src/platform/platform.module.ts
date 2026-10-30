@@ -1,3 +1,5 @@
+import { EcuadorBankCheckoutService } from './ecuador-bank-checkout.service';
+import { EcuadorBankCheckoutController } from './ecuador-bank-checkout.controller';
 import { MarketplacePurchaseService } from './marketplace-purchase.service';
 import { Module } from '@nestjs/common';
 import { NuveiModule } from '../nuvei/nuvei.module';
@@ -14,8 +16,8 @@ import { ProductBillingService } from './product-billing.service';
 
 @Module({
   imports: [DatabaseModule, SubscriptionsModule, NuveiModule, WorkspacesModule],
-  controllers: [PlatformController, MarketplacePlansController, MarketplaceBankAdminController, ProductBillingController],
-  providers: [PlatformListingsService, MarketplacePlansService, MarketplacePurchaseService, ProductBillingService],
+  controllers: [EcuadorBankCheckoutController, PlatformController, MarketplacePlansController, MarketplaceBankAdminController, ProductBillingController],
+  providers: [EcuadorBankCheckoutService, PlatformListingsService, MarketplacePlansService, MarketplacePurchaseService, ProductBillingService],
   exports: [MarketplacePlansService],
 })
 export class PlatformModule {}

@@ -540,17 +540,42 @@ export default function CheckoutPage() {
 
   const go = (path) => navigate(isEcuadorFlow ? `/es-ec${path}` : buildLocalizedPath(path, lang));
 
-  const paymentReference = `CX-${String(customer.userId || "28471").replace(/[^a-zA-Z0-9]/g, "").slice(-5).toUpperCase() || "28471"}`;
-  const ecBankHolder = import.meta.env.VITE_ECUADOR_BANK_HOLDER || "CORTEXA S-E-S S.A.S.";
-  const ecBankAccount = String(import.meta.env.VITE_ECUADOR_BANK_ACCOUNT || "");
-  const ecRuc = String(import.meta.env.VITE_ECUADOR_RUC || "");
-  const maskEnd = (value, fallback) => value ? `••••••${value.slice(-4)}` : fallback;
+  // Read the merchant's configured bank details from the same backend used by ListoQasa.
+  // A user-derived CX code is NOT a payment reference and must never be shown as one.
+  const [ecBank, setEcBank] = useState(null);
+  useEffect(() => {
+    if (!isEcuadorFlow) return;
+    const controller = new AbortController();
+    const base = (import.meta.env.VITE_API_BASE_URL || 'https://backend.cortexaaicrm.com/api').replace(/\/$/, '');
+    fetch(`${base}/marketplace/plans/bank-details`, {signal: controller.signal})
+      .then(r => { if (!r.ok) throw new Error('Bank configuration unavailable'); return r.json(); })
+      .then(data => setEcBank(data?.configured ? data : null))
+      .catch(() => setEcBank(null));
+    return () => controller.abort();
+  }, [isEcuadorFlow]);
+  const [ecOrder,setEcOrder] = useState(null);
+  const [ecTxn,setEcTxn] = useState('');
+  const [ecSubmitting,setEcSubmitting] = useState(false);
+  const [ecMessage,setEcMessage] = useState('');
+  const paymentReference = ecOrder?.reference || '';
+  const ecBankHolder = ecBank?.accountHolder || "";
+  const ecBankAccount = ecBank?.accountNumber || "";
+  const ecRuc = ecBank?.ruc || "";
+  const maskEnd = (value) => value ? `••••••${value.slice(-4)}` : "—";
   const copyValue = async (value) => { try { await navigator.clipboard.writeText(String(value)); } catch (_) {} };
-  const whatsappNumber = String(import.meta.env.VITE_ECUADOR_WHATSAPP || "").replace(/\D/g, "");
-  const sendTransferConfirmation = () => {
-    const message = `Hola, realicé mi transferencia de $${money(monthly)} USD. Referencia: ${paymentReference}. Plan: ${tr.planNames[selectedPlan]}.`;
-    if (whatsappNumber) window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
-    else copyValue(message);
+  const createBankOrder = async () => {
+    if(!ecBank?.configured || !consent) {setEcMessage('Acepta los términos y verifica los datos bancarios.');return;}
+    setEcSubmitting(true);setEcMessage('');
+    try {const result=await apiClient.request('/ecuador/bank-checkout/create',{method:'POST',body:JSON.stringify({planKey:nuveiPlanKey})});setEcOrder(result);}
+    catch(e){setEcMessage(e?.message||'No se pudo generar la referencia.');}
+    finally{setEcSubmitting(false);}
+  };
+  const sendTransferConfirmation = async () => {
+    if(!ecOrder?.id || ecTxn.trim().length<4) {setEcMessage('Introduce la referencia de tu transacción bancaria (mínimo 4 caracteres).');return;}
+    setEcSubmitting(true);setEcMessage('');
+    try {const result=await apiClient.request(`/ecuador/bank-checkout/${ecOrder.id}/confirm`,{method:'POST',body:JSON.stringify({bankTransactionReference:ecTxn.trim()})});setEcOrder(result);setEcMessage('Confirmación recibida. Pago pendiente de verificación administrativa; tu cuenta todavía no está activada.');}
+    catch(e){setEcMessage(e?.message||'No se pudo enviar la confirmación.');}
+    finally{setEcSubmitting(false);}
   };
 
   return (
@@ -617,19 +642,26 @@ export default function CheckoutPage() {
                   <div className="ec-pay-head"><div className="cxo-icon ec-bank-icon"><Landmark size={27}/></div><div><h2>{ec.bankTitle} <span>{ec.recommended}</span></h2><p>{ec.bankSub}</p></div></div>
                   <div className="ec-bank-top">
                     <div><small>{ec.transferAmount}</small><strong>${money(monthly)}</strong><button onClick={()=>copyValue(money(monthly))}><Copy size={16}/></button></div>
-                    <div><small>{ec.paymentReference}</small><strong>{paymentReference}</strong><button onClick={()=>copyValue(paymentReference)}><Copy size={16}/></button></div>
+                    <div><small>{ec.paymentReference}</small><strong>{paymentReference || "Pendiente de generación"}</strong><button disabled={!paymentReference} onClick={()=>copyValue(paymentReference)}><Copy size={16}/></button></div>
                   </div>
                   <div className="ec-bank-details">
                     {[
-                      [ec.bank,"Banco Pichincha","Banco Pichincha"],
+                      [ec.bank,ecBank?.bankName || "—",ecBank?.bankName],
                       [ec.accountHolder,ecBankHolder,ecBankHolder],
                       [ec.accountType,ec.checking,ec.checking],
-                      [ec.accountNumber,maskEnd(ecBankAccount,"••••••4821"),ecBankAccount],
-                      [ec.taxId,ecRuc ? `${ecRuc.slice(0,3)}•••••••${ecRuc.slice(-3)}` : "179•••••••001",ecRuc],
+                      [ec.accountNumber,maskEnd(ecBankAccount),ecBankAccount],
+                      [ec.taxId,ecRuc ? `${ecRuc.slice(0,3)}•••••••${ecRuc.slice(-3)}` : "—",ecRuc],
                     ].map(([label,value,copy])=><div key={label}><span>{label}:</span><b>{value}</b>{copy && <button onClick={()=>copyValue(copy)}><Copy size={15}/></button>}</div>)}
                   </div>
-                  <button className="ec-whatsapp" onClick={sendTransferConfirmation}><MessageCircle size={21}/>{ec.sendConfirmation}</button>
-                  <p className="ec-verify"><Info size={16}/>{ec.verification}</p>
+                  <label className="cxo-consent"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/><span>{tr.agreePrefix} <a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a>.</span></label>
+                  {!paymentReference ? <button className="ec-whatsapp" disabled={!ecBank?.configured || !consent || ecSubmitting} onClick={createBankOrder}>Generar referencia de pago</button> : <>
+                    <label style={{display:'block',margin:'12px 0'}}>Referencia de la transacción bancaria (obligatoria)
+                      <input style={{display:'block',width:'100%',padding:'12px',marginTop:6}} value={ecTxn} maxLength={120} onChange={e=>setEcTxn(e.target.value)} placeholder="Número de comprobante del banco" disabled={ecOrder?.status==='pending_review'||ecOrder?.status==='verified'}/>
+                    </label>
+                    <button className="ec-whatsapp" disabled={ecSubmitting || ecTxn.trim().length<4 || ecOrder?.status==='pending_review'||ecOrder?.status==='verified'} onClick={sendTransferConfirmation}><MessageCircle size={21}/>{ec.sendConfirmation}</button>
+                  </>}
+                  {ecMessage && <p role="status">{ecMessage}</p>}
+                  <p className="ec-verify"><Info size={16}/>{!ecBank?.configured ? 'Datos bancarios no configurados. No realices una transferencia.' : 'Tu cuenta solo se activa después de la verificación del pago y la habilitación por administración.'}</p>
                 </section>
                 <div className="ec-or"><span/>{ec.or}<span/></div>
                 <section className="cxo-card cxo-payment-card ec-card-payment">
