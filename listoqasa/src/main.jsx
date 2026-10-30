@@ -1,3 +1,4 @@
+import { captureMarketplaceAdClick } from "./api/marketplaceAdAttribution";
 import { initializeGoogleAds } from "./api/googleAdsTracking";
 import { registerListoQasaPwa } from "./pwa";
 import { StrictMode } from "react";
@@ -25,6 +26,7 @@ colorSchemeMeta.setAttribute("name", "color-scheme");
 colorSchemeMeta.setAttribute("content", "light");
 if (!colorSchemeMeta.isConnected) document.head.appendChild(colorSchemeMeta);
 
+captureMarketplaceAdClick();
 initializeGoogleAds();
 registerListoQasaPwa();
 

@@ -4,6 +4,7 @@ import { WorkspaceEntitlementsService } from '../workspaces/workspace-entitlemen
 import { NuveiClientService } from '../nuvei/nuvei-client.service';
 import { ConfigService } from '../config/config.service';
 import * as crypto from 'crypto';
+import { MarketplacePurchaseService } from './marketplace-purchase.service';
 
 // Marketplace-only entitlements. No modification to CRM or E-Commerce Nuvei products.
 const PLANS = {
@@ -19,7 +20,7 @@ const PLANS = {
 @Injectable()
 export class MarketplacePlansService {
   private readonly logger = new Logger(MarketplacePlansService.name);
-  constructor(private readonly db: DatabaseService, private readonly nuvei: NuveiClientService, private readonly config: ConfigService, private readonly workspaceEntitlements: WorkspaceEntitlementsService) {}
+  constructor(private readonly db: DatabaseService, private readonly nuvei: NuveiClientService, private readonly config: ConfigService, private readonly workspaceEntitlements: WorkspaceEntitlementsService, private readonly purchases: MarketplacePurchaseService) {}
   private async schema() {
     await this.db.query(`CREATE TABLE IF NOT EXISTS marketplace_plan_enrollments (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES users(id),
@@ -263,35 +264,31 @@ export class MarketplacePlansService {
   async adminReviewBankRequest(id:string,adminId:string,approve:boolean,note:string) {
     await this.transferSchema();
     if(!String(note||'').trim()) throw new BadRequestException('Review note is required');
-    // Atomic, idempotent review: only pending_review requests can change state.
-    const result=await this.db.query(`WITH claimed AS (
-      UPDATE marketplace_bank_transfer_requests SET status=$2,reviewed_by=$3,reviewed_at=NOW(),review_note=$4,updated_at=NOW()
-      WHERE id=$1 AND status='pending_review' AND ($2='rejected' OR EXISTS (SELECT 1 FROM marketplace_plan_enrollments e WHERE e.id=enrollment_id AND e.status='pending_payment' AND e.payment_reference LIKE 'LQB-%'
-      AND e.currency='USD' AND e.billing_interval='monthly'
-      AND ((e.plan_key='owner-standard' AND e.price_cents=6700)
-        OR (e.plan_key='owner-enhanced' AND e.price_cents=9700)
-        OR (e.plan_key='owner-maximum' AND e.price_cents=14700)
-        OR (e.plan_key='agent-essential' AND e.price_cents IN (9700,14700))
-        OR (e.plan_key='agent-growth' AND e.price_cents IN (14700,19700))))) RETURNING enrollment_id,status
-    ), activated AS (
-      UPDATE marketplace_plan_enrollments e SET status='active',
-      current_period_start=NOW(),current_period_end=NOW()+INTERVAL '1 month',updated_at=NOW()
-      FROM claimed c WHERE c.status='approved' AND e.id=c.enrollment_id AND e.status='pending_payment'
-      AND e.payment_reference LIKE 'LQB-%'
-      AND ((e.plan_key='owner-standard' AND e.price_cents=6700)
-        OR (e.plan_key='owner-enhanced' AND e.price_cents=9700)
-        OR (e.plan_key='owner-maximum' AND e.price_cents=14700)
-        OR (e.plan_key='agent-essential' AND e.price_cents IN (9700,14700))
-        OR (e.plan_key='agent-growth' AND e.price_cents IN (14700,19700)))
-      AND e.currency='USD' AND e.billing_interval='monthly' RETURNING e.id
-    ) SELECT (SELECT enrollment_id FROM claimed) AS enrollment_id,(SELECT status FROM claimed) AS status,
-      (SELECT id FROM activated) AS activated_id`,[id,approve?'approved':'rejected',adminId,String(note).trim().slice(0,1000)]);
-    const row=result.rows[0];
-    if(!row?.enrollment_id) throw new BadRequestException('Request already reviewed or not found');
-    if(approve&&!row.activated_id) throw new BadRequestException('Enrollment not activated; investigate payment state');
-    if(approve && row.activated_id) {
-      const owner=(await this.db.query(`SELECT user_id FROM marketplace_plan_enrollments WHERE id=$1`,[row.enrollment_id])).rows[0];
-      if(owner) await this.syncAgentCrm(owner.user_id,row.enrollment_id).catch(err=>this.logger.error(`CRM provisioning retry required: ${String(err)}`));
+    await this.purchases.schema();
+    const row = await this.db.transaction(async client => {
+      const request=(await client.query(`SELECT r.*,e.plan_key,e.price_cents,e.currency,e.billing_interval,e.status AS enrollment_status,e.payment_reference
+        FROM marketplace_bank_transfer_requests r JOIN marketplace_plan_enrollments e ON e.id=r.enrollment_id
+        WHERE r.id=$1 FOR UPDATE OF r,e`,[id])).rows[0];
+      if(!request || request.status!=='pending_review') throw new BadRequestException('Request already reviewed or not found');
+      if(approve) {
+        const valid = request.enrollment_status==='pending_payment' && request.currency==='USD'
+          && String(request.payment_reference||'').startsWith('LQB-')
+          && !!PLANS[request.plan_key as keyof typeof PLANS]
+          && Number(request.price_cents)>0
+          && (Number(request.price_cents)===this.priceFor(request.plan_key,request.billing_interval||'monthly')
+            || this.isLegacyQuarterlyOwnerPrice(request.plan_key,request.billing_interval,Number(request.price_cents)));
+        if(!valid) throw new BadRequestException('Enrollment amount, plan, or state failed verification');
+        const interval = request.billing_interval==='quarterly'?'3 months':request.billing_interval==='yearly'?'1 year':'1 month';
+        await client.query(`UPDATE marketplace_plan_enrollments SET status='active',current_period_start=now(),
+          current_period_end=now()+$2::interval,updated_at=now() WHERE id=$1`,[request.enrollment_id,interval]);
+      }
+      await client.query(`UPDATE marketplace_bank_transfer_requests SET status=$2,reviewed_by=$3,reviewed_at=now(),review_note=$4,updated_at=now() WHERE id=$1`,[id,approve?'approved':'rejected',adminId,String(note).trim().slice(0,1000)]);
+      if(approve) await this.purchases.enqueue(client,request.enrollment_id);
+      return {enrollment_id:request.enrollment_id,status:approve?'approved':'rejected',user_id:request.user_id};
+    });
+    if(approve) {
+      await this.syncAgentCrm(row.user_id,row.enrollment_id).catch(err=>this.logger.error(`CRM provisioning retry required: ${String(err)}`));
+      void this.purchases.flush().catch(err=>this.logger.error(`Purchase upload retry required: ${String(err)}`));
     }
     return {id,status:row.status,enrollmentId:row.enrollment_id};
   }

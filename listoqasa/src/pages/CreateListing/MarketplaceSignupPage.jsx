@@ -1,3 +1,4 @@
+import { attachMarketplaceAdClick } from '../../api/marketplaceAdAttribution';
 import { trackGoogleAdsSuccess } from '../../api/googleAdsTracking';
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -39,7 +40,11 @@ export default function MarketplaceSignupPage() {
       saveSession(result);
       trackGoogleAdsSuccess('registration', result.user.id);
       const enrollment = await marketplaceRequest('/marketplace/plans/enroll', {method:'POST',body:JSON.stringify({planKey,interval:billing})});
-      if (enrollment?.enrollment?.id) sessionStorage.setItem('listoqasa_pending_enrollment', enrollment.enrollment.id);
+      if (enrollment?.enrollment?.id) {
+        sessionStorage.setItem('listoqasa_pending_enrollment', enrollment.enrollment.id);
+        // Attribution must be stored before payment approval; a failed capture must not block signup.
+        await attachMarketplaceAdClick(enrollment.enrollment.id).catch(() => false);
+      }
       if (enrollment?.next === '/create-listing' || enrollment?.enrollment?.status === 'active') { navigate('/my-listings',{replace:true,state:{message:enrollment.message || 'Your account is ready. Create your first listing'}}); return; }
       navigate(`/marketplace/checkout?plan=${encodeURIComponent(planKey)}&billing=${billing}`,{replace:true,state:{planKey}});
     } catch(e) {setError(e.message || 'Unable to create account.');} finally {setBusy(false);}

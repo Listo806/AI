@@ -3,10 +3,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { MarketplacePurchaseService } from './marketplace-purchase.service';
 import { MarketplacePlansService } from './marketplace-plans.service';
 @Controller('marketplace/plans')
 export class MarketplacePlansController {
-  constructor(private readonly plans:MarketplacePlansService){}
+  constructor(private readonly plans:MarketplacePlansService, private readonly purchases:MarketplacePurchaseService){}
   @Get() list(){return this.plans.plans()}
   @Get('mine') @UseGuards(JwtAuthGuard) mine(@CurrentUser() user:any){return this.plans.mine(user.id)}
   @Get('bank-details') bankDetails(){return this.plans.bankDetails()}
@@ -22,5 +23,6 @@ export class MarketplacePlansController {
   @Get('billing-history') @UseGuards(JwtAuthGuard) history(@CurrentUser() user:any){return this.plans.billingHistory(user.id)}
   @Post('renew') @UseGuards(JwtAuthGuard) renew(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.renew(user.id,String(body?.enrollmentId||''))}
   @Post('resume') @UseGuards(JwtAuthGuard) resume(@CurrentUser() user:any,@Body() body:{enrollmentId:string}){return this.plans.resume(user.id,String(body?.enrollmentId||''))}
+  @Post('attribution') @UseGuards(JwtAuthGuard) attribution(@CurrentUser() user:any,@Body() body:any){return this.purchases.capture(user.id,String(body?.enrollmentId||''),body)}
   @Post('enroll') @UseGuards(JwtAuthGuard) enroll(@CurrentUser() user:any,@Body() body:{planKey:string;interval?:string}){return this.plans.enroll(user.id,String(body?.planKey||''),String(body?.interval||'monthly'))}
 }
