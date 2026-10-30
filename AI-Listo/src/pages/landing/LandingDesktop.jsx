@@ -113,8 +113,7 @@ import sect2PT from "../../assets/cortexa/sect2pt.png";
 
 // Locale-aware links. /es, /pt and /es-ec visitors keep their language when they
 // follow a link to one of the public pages that exist under every locale prefix.
-// Anything else (web-solutions, e-commerce, dashboard, country/city pages) exists
-// only unprefixed and is returned unchanged. Query strings and hashes are kept.
+// Other routes (e-commerce, dashboard, country/city pages) are not localized. Query strings and hashes are kept.
 const LOCALE_PREFIXES = ["es-ec", "es", "pt"];
 const LOCALIZED_ROUTES = new Set([
   "/", "/sign-in", "/sign-up", "/forgot-password", "/privacy-policy",
