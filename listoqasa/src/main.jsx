@@ -13,6 +13,7 @@ import "./i18n/registerHomeHeroMode";
 import "./i18n/registerVacationLegacy";
 import "./i18n/registerMarketplaceListings";
 import App from "./App";
+import CookieConsentBanner from "./components/CookieConsentBanner";
 
 import "./styles/globals.css";
 import "./styles/layout.css";
@@ -32,5 +33,6 @@ createRoot(
 ).render(
   <StrictMode>
     <App />
+    <CookieConsentBanner />
   </StrictMode>
 );
