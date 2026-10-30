@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { localeCodeFromPath, stripLocaleFromPath, buildLocalizedPath } from "../../i18n/locales";
 import {
   ArrowRight, ArrowDown, BarChart3, Bot, Box, Check, Code2, FileSearch, Gift, ChevronRight,
   Globe2, Menu, Monitor, Network, Pencil, RefreshCw, Rocket, Settings,
@@ -26,7 +27,7 @@ const COPY = {
     outcomes:{eyebrow:"BUILT FOR BUSINESS OUTCOMES",title:"Technology Should Do More Than Look Impressive.",lead:"Every solution should improve how customers experience your business and how your team operates behind the scenes. We connect strategy, design, software, and automation around measurable business needs.",items:[["Create Better Customer Experiences","Build clear, intuitive journeys that help people understand your value, find what they need, and take the next step."],["Improve Operational Efficiency","Connect systems, reduce repetitive work, and give your team better visibility across customers, tasks, communications, and results."],["Prepare for Sustainable Growth","Develop flexible digital foundations that can support new services, integrations, users, locations, and customer demand."]],note:"Built around the way your business works—not around a generic template."},
     lifecycle:{eyebrow:"FROM DIRECTION TO DELIVERY",title:"A Development Partner for the Complete Lifecycle.",lead:"We help define what should be built, choose the right approach, execute the work, connect the required systems, and support the solution as your business evolves.",items:[["Strategy + Discovery","Understand the business, audience, existing technology, operational challenges, and strongest opportunities before development begins."],["Experience + Product Design","Translate requirements into clear customer journeys, thoughtful interfaces, practical functionality, and a cohesive digital experience."],["Engineering + Integration","Develop the frontend, backend, APIs, automation, and system connections required to make the solution work as one."],["Launch + Continued Improvement","Test, deploy, monitor, maintain, and expand the solution as new needs, integrations, and opportunities emerge."]],strip:[["Designed around your operation","Solutions that fit how your business works."],["Clear deliverables and project scope","You’ll know what’s included before we build."],["Built to connect, evolve, and scale","A stronger foundation for long-term growth."]]},
     review:{title:"Start with a free professional review.",lead:"Send us your website URL or tell us what you want to build. Our team will review your current experience, technology, missing functionality, integrations, and conversion opportunities.",free:"Your professional review is free.",price:"If you choose to proceed, professional development services start at",button:"Request Your Free Review",items:[["Website + Technology Assessment","A review of your current website and technology setup."],["Problems and Opportunities","Key issues, gaps, and areas for improvement."],["Recommended Improvements","Practical suggestions tailored to your business goals."],["Proposed Scope and Quotation","A clear plan with deliverables and a fixed cost."]]},
-    footer:["© 2026 Cortexa. All rights reserved.","Privacy","Terms","Contact","Dashboard","Log in"]
+    footer:["© 2026 Cortexa. All rights reserved.","Privacy","Terms","Contact",lang==="es"?"Panel":"Dashboard","Log in"]
   },
   es: null,
   pt: null,
@@ -139,12 +140,12 @@ function scrollToWsSection(event, id) {
 
 const WS_HEADER_LINKS = ["#ws-design", "#ws-products", "#ws-needs", "#ws-lifecycle", "#ws-management"];
 
-function Header({tr,lang,setLang}){
+function Header({tr,lang,setLang,lp}){
   const {isAuthenticated}=useAuth();
   const [mobileOpen,setMobileOpen]=useState(false);
   return <header className="ws-header">
     <div className="ws-header-inner">
-      <Link to="/web-solutions" className="ws-brand"><img src={webSolutionsLogo} alt="Cortexa Software Development"/></Link>
+      <Link to={lp("/web-solutions")} className="ws-brand"><img src={webSolutionsLogo} alt="Cortexa Software Development"/></Link>
       <nav className="ws-nav">{(WS_HEADER_NAV[lang]||WS_HEADER_NAV.en).map((label,i)=><a key={i} href={WS_HEADER_LINKS[i]} onClick={event=>scrollToWsSection(event, WS_HEADER_LINKS[i].slice(1))}>{label}</a>)}</nav>
       <div className="ws-header-actions"><Language lang={lang} setLang={setLang}/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div>
       <button className="ws-menu-btn" type="button" onClick={()=>setMobileOpen(v=>!v)} aria-label="Menu">{mobileOpen?<X/>:<Menu/>}</button>
@@ -153,26 +154,29 @@ function Header({tr,lang,setLang}){
   </header>;
 }
 
-function Footer({tr,lang,setLang}){
+function Footer({tr,lang,setLang,lp}){
   const {isAuthenticated}=useAuth();
   return <footer className="ws-footer"><div className="ws-container ws-footer-inner">
-    <Link to="/" className="ws-footer-brand"><picture><source media="(max-width: 900px)" srcSet={footdarklogoImg}/><img src={headlogoImg} alt="Cortexa Agentic CRM"/></picture></Link>
-    <nav>{tr.nav.map((l,i)=><a key={i} href={HREFS[i]}>{String(l).replace("|"," ")}</a>)}</nav>
+    <Link to={lp("/")} className="ws-footer-brand"><picture><source media="(max-width: 900px)" srcSet={footdarklogoImg}/><img src={headlogoImg} alt="Cortexa Agentic CRM"/></picture></Link>
+    <nav>{tr.nav.map((l,i)=><a key={i} href={lp(HREFS[i])}>{String(l).replace("|"," ")}</a>)}</nav>
     <div className="ws-footer-actions"><Language lang={lang} setLang={setLang} footer/><a href={isAuthenticated?"/dashboard/home":"/sign-in"}>{isAuthenticated?tr.footer[4]:tr.footer[5]}</a></div>
-  </div><div className="ws-container ws-footer-bottom"><span>{tr.footer[0]}</span><div><a href="/privacy-policy">{tr.footer[1]}</a><a href="/terms">{tr.footer[2]}</a><a href="/contact">{tr.footer[3]}</a></div></div></footer>;
+  </div><div className="ws-container ws-footer-bottom"><span>{tr.footer[0]}</span><div><a href={lp("/privacy-policy")}>{tr.footer[1]}</a><a href={lp("/terms")}>{tr.footer[2]}</a><a href={lp("/contact")}>{tr.footer[3]}</a></div></div></footer>;
 }
 
 function ReviewButton({children,ctaId,lang}){const scrollToForm=(event)=>{event.preventDefault();trackEvent("primary_cta_click",{cta_id:ctaId,cta_text:String(children),page_path:window.location.pathname,language:lang});scrollToWsSection(event,"ws-free-evaluation");};return <a className="ws-review-btn" href="#ws-free-evaluation" onClick={scrollToForm}><span>{children}</span><ArrowRight size={18}/></a>}
 function CheckList({items}){return <ul>{items.map(x=><li key={x}><Check size={16}/><span>{x}</span></li>)}</ul>}
 
 export default function WebSolutions(){
-  const [lang,setLangState]=useState(()=>localStorage.getItem("cortexa_lang")||"en");
+  const location=useLocation();
+  const navigate=useNavigate();
+  const lang=location.pathname.startsWith("/es-ec/")?"es":localeCodeFromPath(location.pathname);
+  const lp=(path)=>{const match=String(path).match(/^([^?#]*)(.*)$/);const base=match[1]||"/";const prefix=location.pathname.startsWith("/es-ec/")?"/es-ec":lang==="en"?"":`/${lang}`;return `${prefix}${base==="/"?"":base}${match[2]}`||"/";};
   const [openFaq,setOpenFaq]=useState(null);
-  const setLang=(v)=>{setLangState(v);localStorage.setItem("cortexa_lang",v);localStorage.setItem("cortexa_locale",v);document.documentElement.lang=v==="pt"?"pt-BR":v};
+  const setLang=(v)=>{localStorage.setItem("cortexa_lang",v);localStorage.setItem("cortexa_locale",v);localStorage.setItem("cortexa_lang_choice",v);navigate(buildLocalizedPath(stripLocaleFromPath(location.pathname),v)+location.search+location.hash);};
   useEffect(()=>{document.documentElement.lang=lang==="pt"?"pt-BR":lang},[lang]);
   const tr=COPY[lang]||COPY.en, ex=EXT_COPY[lang]||EXT_COPY.en;
   const needIcons=[UsersRound,CreditCard,BarChart3,CalendarDays,Headphones,LayoutDashboard,CreditCard,ChartNoAxesColumnIncreasing];
-  return <div className="ws-page"><Header tr={tr} lang={lang} setLang={setLang}/><main>
+  return <div className="ws-page"><Header tr={tr} lang={lang} setLang={setLang} lp={lp}/><main>
     <section className="ws-hero"><div className="ws-container"><div className="ws-eyebrow">{tr.hero.eyebrow}</div><h1>{tr.hero.title1}<br/>{tr.hero.title2}</h1><h2>{tr.hero.gradient}</h2><p>{tr.hero.desc}</p><ReviewButton ctaId="web_solutions_hero_free_evaluation" lang={lang}>{tr.hero.button}</ReviewButton></div></section>
     <section className="ws-trust-strip"><div className="ws-container ws-trust-grid">{tr.trust.map(([t,p],i)=>{const I=[FileSearch,Settings,Shield][i];return <article key={t}><I/><div><b>{t}</b><p>{p}</p></div></article>})}</div></section>
     <section id="ws-design" className="ws-section ws-design"><div className="ws-container"><h2>{tr.design.title}</h2><p className="ws-section-lead">{tr.design.lead}</p><div className="ws-design-grid">{tr.design.items.map(([t,p],i)=>{const I=DESIGN_ICONS[i];return <article key={t}><span className="ws-design-icon"><I aria-hidden="true"/></span><div><h3>{t}</h3><p>{p}</p></div></article>})}</div></div></section>
@@ -182,9 +186,9 @@ export default function WebSolutions(){
     <section id="ws-management" className="ws-section ws-management"><div className="ws-container"><h2>{ex.ongoing.heading}</h2><p className="ws-section-lead">{ex.ongoing.sub}</p><div className="ws-management-grid">{ex.ongoing.items.map(([t,p],i)=>{const I=[FileSearch,Pencil,Settings,BarChart3][i];return <article key={t}><span className="ws-management-icon"><I aria-hidden="true"/></span><div className="ws-management-copy"><h3>{t}</h3><p>{p}</p></div></article>})}</div></div></section>
     <section id="ws-products" className="ws-section ws-products"><div className="ws-container"><div className="ws-eyebrow">{ex.products.eyebrow}</div><h2>{ex.products.title}</h2><p className="ws-products-lead">{ex.products.lead}</p><div className="ws-product-grid">{ex.products.cards.map(([t,p],i)=>{
       const navItems = i
-        ? [[LayoutDashboard,"Dashboard"],[UsersRound,"Customers"],[CreditCard,"Subscriptions"],[Wallet,"Payments"],[FileText,"Invoices"],[Package,"Products"],[BarChart3,"Reports"]]
-        : [[LayoutDashboard,"Dashboard"],[UserRound,"Leads"],[Contact,"Contacts"],[Building2,"Companies"],[Target,"Opportunities"],[ClipboardCheck,"Tasks"],[BarChart3,"Reports"]];
-      return <article key={t}><div className="ws-product-mock"><aside className="ws-product-side"><strong><span className="ws-product-brand-mark">◇</span> CORTEXA</strong>{navItems.map(([Icon,label],index)=><span key={label} className={index===1?"is-active":""}><Icon aria-hidden="true"/><span>{label}</span></span>)}</aside><div className="ws-product-main"><div className="ws-product-top"><b>{i?"Subscriptions":"Sales Pipeline"}</b><MoreHorizontal aria-hidden="true"/></div>{i?<div className="ws-subscription-list">{["JD","AC","MN","SO"].map(n=><div className="ws-sub-row" key={n}><em>{n}</em><i/><small>Active</small><b>−</b></div>)}</div>:<><div className="ws-pipeline-stats">{[["New Leads","12"],["In Progress","8"],["Proposal","6"],["Closed","14"]].map(([a,b])=><div key={a}><small>{a}</small><b>{b}</b></div>)}</div><div className="ws-pipeline-board">{[0,1,2,3].map(col=><div key={col}>{[0,1,2].slice(0,col===3?2:3).map(row=><i key={row}><span/></i>)}</div>)}</div></>}</div></div><h3>{t}</h3><p>{p}</p></article>;
+        ? [[LayoutDashboard,lang==="es"?"Panel":"Dashboard"],[UsersRound,lang==="es"?"Clientes":"Customers"],[CreditCard,lang==="es"?"Suscripciones":"Subscriptions"],[Wallet,lang==="es"?"Pagos":"Payments"],[FileText,lang==="es"?"Facturas":"Invoices"],[Package,lang==="es"?"Productos":"Products"],[BarChart3,lang==="es"?"Informes":"Reports"]]
+        : [[LayoutDashboard,lang==="es"?"Panel":"Dashboard"],[UserRound,lang==="es"?"Prospectos":"Leads"],[Contact,lang==="es"?"Contactos":"Contacts"],[Building2,lang==="es"?"Empresas":"Companies"],[Target,lang==="es"?"Oportunidades":"Opportunities"],[ClipboardCheck,lang==="es"?"Tareas":"Tasks"],[BarChart3,lang==="es"?"Informes":"Reports"]];
+      return <article key={t}><div className="ws-product-mock"><aside className="ws-product-side"><strong><span className="ws-product-brand-mark">◇</span> CORTEXA</strong>{navItems.map(([Icon,label],index)=><span key={label} className={index===1?"is-active":""}><Icon aria-hidden="true"/><span>{label}</span></span>)}</aside><div className="ws-product-main"><div className="ws-product-top"><b>{i?lang==="es"?"Suscripciones":"Subscriptions":lang==="es"?"Embudo de ventas":"Sales Pipeline"}</b><MoreHorizontal aria-hidden="true"/></div>{i?<div className="ws-subscription-list">{["JD","AC","MN","SO"].map(n=><div className="ws-sub-row" key={n}><em>{n}</em><i/><small>Active</small><b>−</b></div>)}</div>:<><div className="ws-pipeline-stats">{[[lang==="es"?"Nuevos prospectos":"New Leads","12"],[lang==="es"?"En proceso":"In Progress","8"],[lang==="es"?"Propuesta":"Proposal","6"],[lang==="es"?"Cerrado":"Closed","14"]].map(([a,b])=><div key={a}><small>{a}</small><b>{b}</b></div>)}</div><div className="ws-pipeline-board">{[0,1,2,3].map(col=><div key={col}>{[0,1,2].slice(0,col===3?2:3).map(row=><i key={row}><span/></i>)}</div>)}</div></>}</div></div><h3>{t}</h3><p>{p}</p></article>;
     })}</div></div></section>
     <section id="ws-needs" className="ws-section ws-needs"><div className="ws-container"><div className="ws-eyebrow">{ex.needs.eyebrow}</div><h2>{ex.needs.title}</h2><p className="ws-section-lead">{ex.needs.lead}</p><div className="ws-needs-grid">{ex.needs.items.map((t,i)=>{const I=needIcons[i];return <article key={t}><span className="ws-needs-icon"><I aria-hidden="true"/></span><b>{t}</b></article>})}</div></div></section>
     <section className="ws-telehealth"><div className="ws-container ws-telehealth-con"><img src={telehealthImg} alt="Cortexa Telehealth software and integrations"/></div></section>
@@ -194,5 +198,5 @@ export default function WebSolutions(){
     <section className="ws-section ws-faq"><div className="ws-container"><h2>{ex.faq.title}</h2><div className="ws-faq-grid">{ex.faq.items.map(([q,a],i)=><article key={q} className={openFaq===i?"open":""}><button onClick={()=>setOpenFaq(openFaq===i?null:i)}><span>{q}</span><ChevronRight size={17}/></button>{openFaq===i&&<p>{a}</p>}</article>)}</div></div></section>
     <section className="ws-dark-review"><div className="ws-container ws-final-review"><div className="ws-final-review-copy"><h2>{ex.reviewTitle}</h2><p>{ex.reviewLead}</p></div><div className="ws-review-items">{tr.review.items.map(([t,p],i)=>{const I=REVIEW_ICONS[i];return <article key={t}><span className="ws-feature-icon"><I aria-hidden="true"/></span><h3>{t}</h3><p>{p}</p></article>})}</div><div className="ws-final-review-action"><a className="ws-review-btn" href="#ws-free-evaluation" onClick={event=>{trackEvent("primary_cta_click",{cta_id:"web_solutions_free_review",cta_text:tr.review.button,page_path:window.location.pathname,language:lang});scrollToWsSection(event,"ws-free-evaluation");}}><span>{tr.review.button}</span><ArrowDown size={18}/></a></div></div><span className="ws-review-bottom-arrow" aria-hidden="true"><ArrowDown size={24}/></span></section>
     <FreeWebsiteReview embedded embeddedLang={lang}/>
-  </main><Footer tr={tr} lang={lang} setLang={setLang}/></div>;
+  </main><Footer tr={tr} lang={lang} setLang={setLang} lp={lp}/></div>;
 }

@@ -288,6 +288,7 @@ export const SEO = {
 
   // English only until the client approves Spanish and Portuguese text.
   "/web-solutions": {
+    es: { title: "Desarrollo Web, Software e Integraciones | Cortexa", description: "Diseñamos, desarrollamos, modernizamos e integramos sitios web, software, CRM, IA, pagos, automatizaciones y sistemas empresariales." },
     en: {
       title: "Web & Software Development | Systems Integration | Cortexa",
       description:

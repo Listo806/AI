@@ -88,7 +88,7 @@ const LOCALIZED_ROUTES = new Set([
   "/", "/sign-in", "/sign-up", "/forgot-password", "/privacy-policy",
   "/refund-policy", "/terms", "/cancellation", "/contact", "/help", "/about",
   "/support", "/features", "/integrations", "/setup-guide", "/pricing",
-  "/editorial/the-end-of-legacy-crm", "/editorial/business", "/trial", "/checkout",
+  "/editorial/the-end-of-legacy-crm", "/editorial/business", "/trial", "/checkout", "/web-solutions", "/web-solutions/free-review",
 ]);
 function localePrefixFromPath(pathname) {
   const first = String(pathname || "/").split("/").filter(Boolean)[0];
@@ -430,7 +430,7 @@ export default function LandingMobile() {
               "Testimonios"
           ],
           "pricing": "Precios",
-          "webSolutions": "Web, Software e Integración",
+          "webSolutions": "Web, Software e Integraciones",
           "ctaButtonText": "¡Comenzar!",
           "heroNoCard": "Prueba de 14 días",
           "heroFreeForever": "Desde $11",
@@ -591,7 +591,7 @@ export default function LandingMobile() {
                   "paragraph1": "Una vez seleccionado, la configuración guiada te ayuda a definir tus servicios, horarios, responsabilidades del equipo, puntos de entrada de clientes, reglas de calificación, objetivos de conversión, citas, seguimiento y transferencia humana.",
                   "paragraph2": "Tu sitio web, teléfono comercial, formularios, tráfico publicitario y WhatsApp pueden conectarse al mismo proceso gestionado para que el agente de IA, CRM, pipeline, checkout, citas y equipo trabajen juntos desde la primera conversación hasta la siguiente acción adecuada.",
                   "paragraph3a": "Puedes completar la configuración por tu cuenta. Si tu sitio web necesita actualizarse, crearse o conectarse a tu espacio de trabajo, nuestro equipo de",
-                  "webSolutions": "Web, Software e Integración",
+                  "webSolutions": "Web, Software e Integraciones",
                   "paragraph3b": "puede revisar lo que tienes y proporcionar una cotización de implementación por separado.",
                   "cta": "Explorar Soluciones Web",
                   "note": "Los servicios opcionales de configuración e implementación web se cotizan por separado."
@@ -1150,7 +1150,7 @@ export default function LandingMobile() {
               </button>;
             })}
           </div>}
-          <a href="/web-solutions" onClick={trackCta("drawer_web_solutions", tr.webSolutions)}>{tr.webSolutions}</a>
+          <a href={lp("/web-solutions")} onClick={trackCta("drawer_web_solutions", tr.webSolutions)}>{tr.webSolutions}</a>
           {isAuthenticated() ? (
             <Link to="/dashboard/home" className="m-login-btn">
               <LogIn /> Dashboard
@@ -1518,7 +1518,7 @@ export default function LandingMobile() {
             <p className="m-workspace-connected-paragraph">
               {tr.workspaceClosing.paragraph3a}{" "}
               <a
-                href="/web-solutions"
+                href={lp("/web-solutions")}
                 className="m-workspace-web-link"
                 onClick={trackCta("workspace_closing_web_solutions_link", tr.workspaceClosing.webSolutions)}
               >
@@ -1528,7 +1528,7 @@ export default function LandingMobile() {
             </p>
 
             <a
-              href="/web-solutions"
+              href={lp("/web-solutions")}
               className="m-workspace-web-cta"
               onClick={trackCta("workspace_closing_web_solutions", tr.workspaceClosing.cta)}
             >
@@ -1541,7 +1541,7 @@ export default function LandingMobile() {
             </p>
           </div>
           <p className="m-workspace-custom-bottom">{lang === "es" ? <>¿Necesitas algo diferente? Cuéntale a <strong>nuestro equipo de desarrollo</strong> lo que necesitas: adaptaremos el workspace, los flujos y las integraciones a tu negocio.</> : lang === "pt" ? <>Precisa de algo diferente? Conte à <strong>nossa equipe de desenvolvimento</strong> o que você precisa — adaptaremos o workspace, os fluxos e as integrações ao seu negócio.</> : <>Need something different? Tell <strong>our development team</strong> what you need—we’ll configure the workspace, workflows, and integrations around your business.</>}</p>
-          <a className="m-workspace-request" href="/web-solutions/free-review">{lang === "es" ? "Solicita tu workspace" : lang === "pt" ? "Solicite seu workspace" : "Request Your Workspace"} <ArrowRight size={18}/></a>
+          <a className="m-workspace-request" href={lp("/web-solutions/free-review")}>{lang === "es" ? "Solicita tu workspace" : lang === "pt" ? "Solicite seu workspace" : "Request Your Workspace"} <ArrowRight size={18}/></a>
         </div>
       </section>
 
@@ -1675,7 +1675,7 @@ export default function LandingMobile() {
           </div>
 
           <a
-            href="/web-solutions"
+            href={lp("/web-solutions")}
             className="m-web-connected-cta"
             onClick={trackCta("web_connected_web_solutions", tr.webSolutionsConnected.cta)}
           >
@@ -2621,7 +2621,7 @@ export default function LandingMobile() {
             </HashLink>
             <a href={lp("/pricing")} onClick={trackCta("footer_pricing", tr.fPricing)}>{tr.fPricing}</a>
             <a href={lp("/editorial/the-end-of-legacy-crm")}>Cost Calculator</a>
-            <a href="/web-solutions" onClick={trackCta("footer_web_solutions", tr.webSolutions)}>{tr.webSolutions}</a>
+            <a href={lp("/web-solutions")} onClick={trackCta("footer_web_solutions", tr.webSolutions)}>{tr.webSolutions}</a>
           </div>
 
           <div className="m-footer-column">

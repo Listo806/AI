@@ -44,7 +44,7 @@ export const INDEXABLE_PAGES = [
   { path: "/editorial/business", file: "src/pages/editorial/EditorialBusinessAI.jsx", languages: ["en", "es", "pt"], priority: "0.7", changefreq: "yearly", type: "article" },
   // Spanish and Portuguese versions of the two development pages wait for the
   // client's approved text; until then only English is published.
-  { path: "/web-solutions", file: "src/pages/web-solutions/WebSolutions.jsx", languages: ["en"], priority: "0.9", changefreq: "monthly", type: "service" },
+  { path: "/web-solutions", file: "src/pages/web-solutions/WebSolutions.jsx", languages: ["en", "es"], priority: "0.9", changefreq: "monthly", type: "service" },
   { path: "/web-solutions/free-review", file: "src/pages/web-solutions/FreeWebsiteReview.jsx", languages: ["en"], priority: "0.6", changefreq: "monthly" },
 ];
 

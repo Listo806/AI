@@ -269,7 +269,7 @@ function publicRoutes(prefix) {
           )
         }
       />
-      <Route path="/web-solutions" element={<WebSolutions />} />
+      <Route path={`${p}/web-solutions`} element={<WebSolutions />} />
 
       <Route
         path="/web-solutions/checkout"

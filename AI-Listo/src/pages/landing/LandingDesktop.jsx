@@ -120,7 +120,7 @@ const LOCALIZED_ROUTES = new Set([
   "/", "/sign-in", "/sign-up", "/forgot-password", "/privacy-policy",
   "/refund-policy", "/terms", "/cancellation", "/contact", "/help", "/about",
   "/support", "/features", "/integrations", "/setup-guide", "/pricing",
-  "/editorial/the-end-of-legacy-crm", "/editorial/business", "/trial", "/checkout",
+  "/editorial/the-end-of-legacy-crm", "/editorial/business", "/trial", "/checkout", "/web-solutions", "/web-solutions/free-review",
 ]);
 function localePrefixFromPath(pathname) {
   const first = String(pathname || "/").split("/").filter(Boolean)[0];
@@ -955,7 +955,7 @@ export default function Landing() {
       topHighlight: "CRM agéntico",
       topLine3:
         "para negocios cansados de software CRM complicado y costoso.",
-      webSolutions: "Web, Software e Integración",
+      webSolutions: "Web, Software e Integraciones",
 
       finalTitle: "Conecta Todo Tu Flujo de Trabajo",
       finalDesc: "Leads. Oportunidades. Negocios. Todo en tu ",
@@ -1698,7 +1698,7 @@ export default function Landing() {
             </div>
             <a
               className="nav-menu nav-menu-web-solutions"
-              href="/web-solutions"
+              href={lp("/web-solutions")}
               aria-label={tr.webSolutions}
               onClick={trackCta("nav_web_solutions", tr.webSolutions)}
             >
@@ -1974,7 +1974,7 @@ export default function Landing() {
           </div>
 
           <p className="cx-ws-custom-bottom">{lang === "es" ? <>¿Necesitas algo diferente? Cuéntale a <strong>nuestro equipo de desarrollo</strong> lo que necesitas: adaptaremos el workspace, los flujos y las integraciones a tu negocio.</> : lang === "pt" ? <>Precisa de algo diferente? Conte à <strong>nossa equipe de desenvolvimento</strong> o que você precisa — adaptaremos o workspace, os fluxos e as integrações ao seu negócio.</> : <>Need something different? Tell <strong>our development team</strong> what you need—we’ll configure the workspace, workflows, and integrations around your business.</>}</p>
-          <a className="cx-ws-request" href="/web-solutions/free-review">{lang === "es" ? "Solicita tu workspace" : lang === "pt" ? "Solicite seu workspace" : "Request Your Workspace"} <ArrowRight size={18}/></a>
+          <a className="cx-ws-request" href={lp("/web-solutions/free-review")}>{lang === "es" ? "Solicita tu workspace" : lang === "pt" ? "Solicite seu workspace" : "Request Your Workspace"} <ArrowRight size={18}/></a>
         </div>
       </section>
       {/* GUIDED CORTEXA SETUP */}
@@ -2021,7 +2021,7 @@ export default function Landing() {
               </div>
               <div className="cx-setup-assistance">
                 <span><Headphones size={30}/></span><div><b>{tr.guidedSetup.assistanceTitle}</b><p>{tr.guidedSetup.assistanceDesc}</p></div>
-                <a href="/web-solutions" onClick={trackCta("setup_assistance_web_solutions", tr.guidedSetup.assistanceAction)}>{tr.guidedSetup.assistanceAction}<ArrowRight size={16}/></a>
+                <a href={lp("/web-solutions")} onClick={trackCta("setup_assistance_web_solutions", tr.guidedSetup.assistanceAction)}>{tr.guidedSetup.assistanceAction}<ArrowRight size={16}/></a>
               </div>
             </div>
           </div>
@@ -2029,7 +2029,7 @@ export default function Landing() {
           <div className="cx-setup-help">
             <span className="cx-setup-help-icon"><LifeBuoy size={43}/></span>
             <div><h3>{tr.guidedSetup.helpTitle}</h3><p>{tr.guidedSetup.helpDesc}</p><small>{tr.guidedSetup.helpNote}</small></div>
-            <div className="cx-setup-help-actions"><a href="/web-solutions" onClick={trackCta("setup_request_web_solutions", tr.guidedSetup.requestSetup)}>{tr.guidedSetup.requestSetup}<ArrowRight size={18}/></a><a href="/dashboard/ai-cortexa-setup">{tr.guidedSetup.viewGuide}</a></div>
+            <div className="cx-setup-help-actions"><a href={lp("/web-solutions")} onClick={trackCta("setup_request_web_solutions", tr.guidedSetup.requestSetup)}>{tr.guidedSetup.requestSetup}<ArrowRight size={18}/></a><a href="/dashboard/ai-cortexa-setup">{tr.guidedSetup.viewGuide}</a></div>
           </div>
         </div>
       </section>
@@ -2062,7 +2062,7 @@ export default function Landing() {
 
           <a
             className="cx-web-bridge-cta"
-            href="/web-solutions"
+            href={lp("/web-solutions")}
             onClick={trackCta("web_bridge_web_solutions", tr.webSolutionsSection.cta)}
           >
             {tr.webSolutionsSection.cta}
@@ -2178,7 +2178,7 @@ export default function Landing() {
             <div className="cx-web-v3-phone"><div className="cx-web-v3-phone-notch"/><div className="cx-web-v3-phone-brand"><span className="cx-web-v3-mini-mark">A</span><b>Northstar</b><i>☰</i></div><small>{tr.webShowcaseV3.smarter}</small><h4>{tr.webShowcaseV3.heroTitle}</h4><p>{tr.webShowcaseV3.heroDesc}</p><button>{tr.webShowcaseV3.startAgent} →</button><div className="cx-web-v3-phone-art">People.<br/>Process.<br/>Progress.</div></div>
             <div className="cx-web-v3-agent"><div className="cx-web-v3-agent-head"><Sparkles size={22}/><b>{tr.webShowcaseV3.agent}</b><span>•••　−</span></div><div className="cx-web-v3-agent-msg"><span><Sparkles size={18}/></span><p>{tr.webShowcaseV3.welcome}</p></div><div className="cx-web-v3-agent-actions"><div><FileText/><span>{tr.webShowcaseV3.exploreServices}</span><ChevronRight/></div><div><CalendarDays/><span>{tr.webShowcaseV3.appointment}</span><ChevronRight/></div><div><Link2/><span>{tr.webShowcaseV3.quote}</span><ChevronRight/></div><div><Headphones/><span>{tr.webShowcaseV3.support}</span><ChevronRight/></div></div><div className="cx-web-v3-captured"><CheckCircle2/>{tr.webShowcaseV3.captured}</div><div className="cx-web-v3-chat-input"><span>{tr.webShowcaseV3.message}</span><b><Send size={15}/></b></div></div>
           </div>
-          <div className="cx-web-v3-bottom"><h3>{tr.webShowcaseV3.bottomLead} <strong>{tr.webShowcaseV3.bottomAccent}</strong></h3><a href="/web-solutions" onClick={trackCta("web_showcase_web_solutions", tr.webShowcaseV3.explore)}>{tr.webShowcaseV3.explore} <ArrowRight size={19}/></a><p>{tr.webShowcaseV3.note}</p></div>
+          <div className="cx-web-v3-bottom"><h3>{tr.webShowcaseV3.bottomLead} <strong>{tr.webShowcaseV3.bottomAccent}</strong></h3><a href={lp("/web-solutions")} onClick={trackCta("web_showcase_web_solutions", tr.webShowcaseV3.explore)}>{tr.webShowcaseV3.explore} <ArrowRight size={19}/></a><p>{tr.webShowcaseV3.note}</p></div>
         </div>
       </section>
       <section className="powerful">
