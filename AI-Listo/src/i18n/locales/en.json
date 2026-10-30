@@ -1821,7 +1821,15 @@
       "setupStep3": "Configure OAuth consent screen",
       "setupStep4": "Add redirect URI",
       "setupStep5": "Generate OAuth credentials",
-      "setupStep6": "Request Google Ads Developer Token"
+      "setupStep6": "Request Google Ads Developer Token",
+      "reconnect": "Reconnect Google Ads",
+      "connecting": "Redirecting to Google…",
+      "reconnectHelp": "Reconnect securely to refresh Google Ads authorization. Your existing settings will not be deleted.",
+      "loadFailed": "Could not check Google Ads connection. Try refreshing this page.",
+      "campaignLoadFailed": "Could not load Google Ads campaigns.",
+      "connectFailed": "Could not start Google Ads authorization.",
+      "missingAuthorizationUrl": "The server did not return a valid Google authorization link.",
+      "saveFailed": "Could not save Google Ads settings."
     },
     "propertyFeed": {
       "title": "Property Feed Sync",

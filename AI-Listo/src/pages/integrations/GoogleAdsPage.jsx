@@ -27,6 +27,11 @@ export default function GoogleAdsPage() {
 
   const [saving, setSaving] =
     useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState("");
+  const [campaignError, setCampaignError] = useState("");
+
+  const connected = Boolean(config?.google_ads_account_id && config?.has_refresh_token !== false && config?.connected !== false);
 
   useEffect(() => {
     load();
@@ -35,15 +40,19 @@ export default function GoogleAdsPage() {
   const load = async () => {
     try {
       setLoading(true);
+      setError("");
+      setCampaignError("");
+      setCampaigns([]);
 
       const configRes =
         await apiClient.request(
           "/integrations/google-ads",
         );
 
-      setConfig(configRes);
+      const account = configRes?.google_ads_account_id && configRes?.has_refresh_token !== false && configRes?.connected !== false;
+      setConfig(account ? configRes : null);
 
-      if (configRes?.google_ads_account_id) {
+      if (account) {
         setSelectedCampaignIds(
           typeof configRes.selected_campaign_ids === "string"
             ? JSON.parse(
@@ -56,32 +65,36 @@ export default function GoogleAdsPage() {
           configRes.conversion_tracking_enabled,
         );
 
-        const campaignsRes =
-          await apiClient.request(
-            "/integrations/google-ads/campaigns",
-          );
-
-        setCampaigns(
-          campaignsRes || [],
-        );
+        try {
+          const campaignsRes = await apiClient.request("/integrations/google-ads/campaigns");
+          setCampaigns(Array.isArray(campaignsRes) ? campaignsRes : []);
+        } catch (campaignErr) {
+          setCampaignError(campaignErr?.message || t("integrations.googleAds.campaignLoadFailed"));
+        }
       }
     } catch (err) {
       console.error(err);
+      setConfig(null);
+      setError(err?.message || t("integrations.googleAds.loadFailed"));
     } finally {
       setLoading(false);
     }
   };
 
-  const connectGoogleAds =
-    async () => {
-      const res =
-        await apiClient.request(
-          "/integrations/google-ads/connect",
-        );
-
-      window.location.href =
-        res.url;
-    };
+  const connectGoogleAds = async () => {
+    try {
+      setConnecting(true);
+      setError("");
+      const res = await apiClient.request("/integrations/google-ads/connect");
+      if (!res?.url || !/^https:\/\//i.test(res.url)) {
+        throw new Error(t("integrations.googleAds.missingAuthorizationUrl"));
+      }
+      window.location.assign(res.url);
+    } catch (err) {
+      setError(err?.message || t("integrations.googleAds.connectFailed"));
+      setConnecting(false);
+    }
+  };
 
   const toggleCampaign = (
     campaignId,
@@ -123,11 +136,10 @@ export default function GoogleAdsPage() {
         },
       );
 
-      alert(
-        t("integrations.googleAds.settingsSaved"),
-      );
+      alert(t("integrations.googleAds.settingsSaved"));
     } catch (err) {
       console.error(err);
+      setError(err?.message || t("integrations.googleAds.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -160,14 +172,15 @@ export default function GoogleAdsPage() {
             {t("integrations.googleAds.description")}
           </p>
 
-          {!config ? (
+          {error && <div role="alert" style={errorBox}>{error}</div>}
+
+          {!connected ? (
             <button
               style={button}
-              onClick={
-                connectGoogleAds
-              }
+              onClick={connectGoogleAds}
+              disabled={connecting}
             >
-              {t("integrations.googleAds.connect")}
+              {connecting ? t("integrations.googleAds.connecting") : t("integrations.googleAds.connect")}
             </button>
           ) : (
             <>
@@ -178,11 +191,14 @@ export default function GoogleAdsPage() {
                   <strong>
                     {t("integrations.googleAds.connectedAccountLabel")}
                   </strong>{" "}
-                  {
-                    config.google_ads_account_id
-                  }
+                  {config.google_ads_account_name ? `${config.google_ads_account_name} · ` : ""}{config.google_ads_account_id}
                 </div>
               </div>
+              <button type="button" style={{...button, marginTop: 14, background: "#334155"}} onClick={connectGoogleAds} disabled={connecting}>
+                {connecting ? t("integrations.googleAds.connecting") : t("integrations.googleAds.reconnect")}
+              </button>
+              <p style={{fontSize: 13, color: "#64748b"}}>{t("integrations.googleAds.reconnectHelp")}</p>
+              {campaignError && <div role="alert" style={errorBox}>{campaignError}</div>}
 
               <div
                 style={{
@@ -428,3 +444,4 @@ const infoBox = {
   background: "#eff6ff",
   border: "1px solid #bfdbfe",
 };
+const errorBox = { marginTop: 18, padding: 14, borderRadius: 10, color: "#991b1b", background: "#fef2f2", border: "1px solid #fecaca" };

@@ -1821,7 +1821,15 @@
       "setupStep3": "Configure a tela de consentimento do OAuth",
       "setupStep4": "Adicione a URI de redirecionamento",
       "setupStep5": "Gere as credenciais do OAuth",
-      "setupStep6": "Solicite o token de desenvolvedor do Google Ads"
+      "setupStep6": "Solicite o token de desenvolvedor do Google Ads",
+      "reconnect": "Reconectar Google Ads",
+      "connecting": "Redirecionando para o Google…",
+      "reconnectHelp": "Reconecte com segurança para renovar a autorização do Google Ads. Suas configurações atuais não serão excluídas.",
+      "loadFailed": "Não foi possível verificar a conexão com o Google Ads. Atualize a página.",
+      "campaignLoadFailed": "Não foi possível carregar as campanhas do Google Ads.",
+      "connectFailed": "Não foi possível iniciar a autorização do Google Ads.",
+      "missingAuthorizationUrl": "O servidor não retornou um link válido de autorização do Google.",
+      "saveFailed": "Não foi possível salvar as configurações do Google Ads."
     },
     "propertyFeed": {
       "title": "Sincronização de feeds de imóveis",
