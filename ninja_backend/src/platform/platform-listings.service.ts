@@ -13,18 +13,6 @@ import { UserRole } from '../users/entities/user.entity';
 export class PlatformListingsService {
   constructor(private readonly db: DatabaseService, private readonly marketplacePlans: MarketplacePlansService) {}
 
-  /** The properties.square_feet column is INTEGER. The UI converts m² to ft²,
-   * which can produce fractional values (e.g. 1399.307). Normalize only the
-   * persisted square-foot count; do not round prices or other measurements. */
-  private squareFeetForDb(value: number | null | undefined): number | null {
-    if (value === null || value === undefined) return null;
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric) || numeric < 0 || numeric > 2147483647)
-      throw new BadRequestException('Invalid property area');
-    return Math.round(numeric);
-  }
-
-
   /** Serialize listing activations for each owner so concurrent requests cannot
    * both consume the same last available listing slot. The entitlement is checked
    * inside the same transaction as the insert/update. */
@@ -71,7 +59,7 @@ export class PlatformListingsService {
         origin,
         dto.bedrooms || null,
         dto.bathrooms || null,
-        this.squareFeetForDb(dto.squareFeet),
+        dto.squareFeet || null,
         dto.lotSize || null,
         dto.yearBuilt || null,
         userId,
@@ -87,9 +75,9 @@ export class PlatformListingsService {
 
   async createDraft(dto: CreatePropertyDto, userId: string, teamId: string | null) {
     const { rows } = await this.db.query(`INSERT INTO properties
-      (title, description, address, city, state, price, type, status, origin, bedrooms, bathrooms, square_feet, created_by, team_id, created_at, updated_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,'draft','platform',$8,$9,$10,$11,$12,NOW(),NOW()) RETURNING *`,
-      [dto.title || 'Untitled draft',dto.description || null,dto.address || null,dto.city || null,dto.state || null,dto.price ?? null,dto.type || 'sale',dto.bedrooms ?? null,dto.bathrooms ?? null,this.squareFeetForDb(dto.squareFeet),userId,teamId]);
+      (title, description, address, city, state, price, type, status, origin, bedrooms, bathrooms, square_feet, created_by, team_id, property_type, created_at, updated_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,'draft','platform',$8,$9,$10,$11,$12,$13,NOW(),NOW()) RETURNING *`,
+      [dto.title || 'Untitled draft',dto.description || null,dto.address || null,dto.city || null,dto.state || null,dto.price ?? null,dto.type || 'sale',dto.bedrooms ?? null,dto.bathrooms ?? null,dto.squareFeet == null ? null : Math.round(Number(dto.squareFeet)),userId,teamId,dto.propertyType || null]);
     return rows[0];
   }
 
@@ -101,9 +89,9 @@ export class PlatformListingsService {
 
   async updateDraft(id: string, dto: CreatePropertyDto, userId: string) {
     await this.ownedDraft(id,userId);
-    const {rows}=await this.db.query(`UPDATE properties SET title=$3,description=$4,address=$5,city=$6,state=$7,price=$8,type=$9,bedrooms=$10,bathrooms=$11,square_feet=$12,updated_at=NOW()
+    const {rows}=await this.db.query(`UPDATE properties SET title=$3,description=$4,address=$5,city=$6,state=$7,price=$8,type=$9,bedrooms=$10,bathrooms=$11,square_feet=$12,property_type=$13,updated_at=NOW()
       WHERE id=$1 AND created_by=$2 AND status='draft' RETURNING *`,
-      [id,userId,dto.title || 'Untitled draft',dto.description || null,dto.address || null,dto.city || null,dto.state || null,dto.price ?? null,dto.type || 'sale',dto.bedrooms ?? null,dto.bathrooms ?? null,this.squareFeetForDb(dto.squareFeet)]);
+      [id,userId,dto.title || 'Untitled draft',dto.description || null,dto.address || null,dto.city || null,dto.state || null,dto.price ?? null,dto.type || 'sale',dto.bedrooms ?? null,dto.bathrooms ?? null,dto.squareFeet == null ? null : Math.round(Number(dto.squareFeet)),dto.propertyType || null]);
     if (!rows.length) throw new NotFoundException('Draft no longer editable');
     return rows[0];
   }
@@ -113,10 +101,10 @@ export class PlatformListingsService {
     if (!existing.rows.length) throw new NotFoundException('Listing not found or not owned by this account');
     if (!['sale','rent'].includes(dto.type)) throw new BadRequestException('Choose Sale or Rent before saving');
     const {rows} = await this.db.query(`UPDATE properties SET title=$3, description=$4, address=$5, city=$6, state=$7,
-      price=$8, type=$9, bedrooms=$10, bathrooms=$11, square_feet=$12, updated_at=NOW()
+      price=$8, type=$9, bedrooms=$10, bathrooms=$11, square_feet=$12, property_type=$13, updated_at=NOW()
       WHERE id=$1 AND created_by=$2 AND origin='platform' AND status NOT IN ('deleted','archived') RETURNING *`,
       [id,userId,dto.title,dto.description||null,dto.address||null,dto.city||null,dto.state||null,
-       dto.price??null,dto.type,dto.bedrooms??null,dto.bathrooms??null,this.squareFeetForDb(dto.squareFeet)]);
+       dto.price??null,dto.type,dto.bedrooms??null,dto.bathrooms??null,dto.squareFeet == null ? null : Math.round(Number(dto.squareFeet)),dto.propertyType || null]);
     if (!rows.length) throw new NotFoundException('Listing no longer editable');
     return rows[0];
   }
@@ -256,7 +244,7 @@ export class PlatformListingsService {
           (title,description,address,city,state,price,type,status,origin,bedrooms,bathrooms,square_feet,created_by,team_id,created_at,updated_at)
           VALUES ($1,$2,$3,$4,$5,$6,$7,'draft','platform',$8,$9,$10,$11,$12,NOW(),NOW()) RETURNING id,title,status`,
           [item.title.trim(),item.description||null,item.address||null,item.city||null,item.state||null,item.price??null,item.type,
-           item.bedrooms??null,item.bathrooms??null,this.squareFeetForDb(item.squareFeet),userId,teamId]);
+           item.bedrooms??null,item.bathrooms??null,item.squareFeet??null,userId,teamId]);
         created.push(rows[0]);
       }
       return created;

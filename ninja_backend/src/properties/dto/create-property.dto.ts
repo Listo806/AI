@@ -45,7 +45,7 @@ export class CreatePropertyDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['house', 'apartment', 'land', 'commercial', 'villa', 'office'])
+  @IsIn(['house', 'apartment', 'land', 'commercial', 'villa', 'office', 'retail', 'warehouse', 'condo', 'condominium', 'penthouse', 'apartment_development', 'house_development', 'mixed_use_development'])
   propertyType?: string | null;
 
   @IsOptional()
