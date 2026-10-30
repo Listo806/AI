@@ -37,7 +37,7 @@ export class GoogleAdsController {
 
   @Get()
   async getConfig(@CurrentUser() user: any) {
-    return this.googleAdsService.getIntegration(this.requireTeam(user));
+    return this.googleAdsService.getPublicIntegration(this.requireTeam(user));
   }
 
   /*

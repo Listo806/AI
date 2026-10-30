@@ -66,7 +66,7 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
     if (!refreshToken) {
       const connected = await this.db.query(`SELECT refresh_token FROM google_ads_integrations
         WHERE REPLACE(google_ads_account_id, '-', '') = $1
-          AND is_active = true AND refresh_token IS NOT NULL
+          AND NULLIF(TRIM(refresh_token), '') IS NOT NULL
         ORDER BY updated_at DESC LIMIT 1`, [customerId]);
       refreshToken = connected.rows[0]?.refresh_token;
     }
