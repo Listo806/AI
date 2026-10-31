@@ -192,12 +192,12 @@ export default function CheckoutPage() {
 
   const nuveiPlan = (config?.plans || []).find((p) => p.key === nuveiPlanKey) || null;
   const setupFee = nuveiPlan ? nuveiPlan.activation : plan.startPrice;
-  const monthly = nuveiPlan ? nuveiPlan.monthly : plan.price;
+  const monthly = isEcuadorFlow ? plan.price : (nuveiPlan ? nuveiPlan.monthly : plan.price);
   const trialDays = nuveiPlan ? nuveiPlan.trialDays : 14;
   const firstDate = new Date(Date.now() + trialDays * 86400000)
     .toLocaleDateString(lang === "es" ? "es-ES" : lang === "pt" ? "pt-BR" : "en-US", { year: "numeric", month: "short", day: "numeric" });
 
-  useEffect(() => { if (!planIsValid) navigate(buildLocalizedPath("/pricing", lang), { replace: true }); }, [planIsValid, navigate, lang]);
+  useEffect(() => { if (!planIsValid) navigate(isEcuadorFlow ? "/es-ec/pricing" : buildLocalizedPath("/pricing", lang), { replace: true }); }, [planIsValid, navigate, lang]);
 
   useEffect(() => { let c = false; fetchNuveiConfig().then((cf) => { if (!c) setConfig(cf); }); return () => { c = true; }; }, []);
 
@@ -252,7 +252,7 @@ export default function CheckoutPage() {
   const payStartedRef = useRef(0); // when this page's own Pay click happened
   const trackedRef = useRef(false);
   useEffect(() => {
-    if (authLoading || !user || !planIsValid) return;
+    if (isEcuadorFlow || authLoading || !user || !planIsValid) return;
     if (searchParams.get("threeds") !== "return") return;
     setAwaiting(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -366,7 +366,7 @@ export default function CheckoutPage() {
   // payment form: a paid (trialing / active) account goes straight into the
   // app; a past-due one is told so (the backend also refuses the charge).
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (isEcuadorFlow || authLoading || !user) return;
     if (searchParams.get("threeds") === "return") return; // the poll handles it
     let c = false;
     fetchNuveiSubscription().then((sub) => {
@@ -380,7 +380,7 @@ export default function CheckoutPage() {
 
   // Mount Nuvei's secure card form as soon as the page is ready.
   useEffect(() => {
-    if (!config?.enabled || mountedRef.current || blocked) return;
+    if (isEcuadorFlow || !config?.enabled || mountedRef.current || blocked) return;
     const userId = customer.userId || user?.id;
     if (!userId) return;
     mountedRef.current = true;
@@ -558,6 +558,14 @@ export default function CheckoutPage() {
   const [ecSubmitting,setEcSubmitting] = useState(false);
   const [ecMessage,setEcMessage] = useState('');
   const paymentReference = ecOrder?.reference || '';
+  useEffect(() => {
+    if (!isEcuadorFlow || !user?.id || !ecBank?.configured || !planIsValid) return;
+    let canceled = false;
+    apiClient.request('/ecuador/bank-checkout/create', {method:'POST', body:JSON.stringify({planKey:nuveiPlanKey})})
+      .then(order => { if (!canceled) setEcOrder(order); })
+      .catch(err => { if (!canceled) setEcMessage(err?.message || 'No se pudo generar la referencia de pago.'); });
+    return () => { canceled = true; };
+  }, [isEcuadorFlow, user?.id, ecBank?.configured, planIsValid, nuveiPlanKey]);
   const ecBankHolder = ecBank?.accountHolder || "";
   const ecBankAccount = ecBank?.accountNumber || "";
   const ecRuc = ecBank?.ruc || "";
@@ -580,14 +588,6 @@ export default function CheckoutPage() {
 
   return (
     <main className={`cxo-page ${isEcuadorFlow ? "ec-checkout-page" : ""}`}>
-      {isEcuadorFlow && <>
-        <header className="ec-top"><div><b>Cortexa</b><span>Agentic CRM</span></div><strong><ShieldCheck size={20}/> Pago seguro</strong></header>
-        <div className="ec-steps">
-          <div><i>✓</i><span><b>1. Cuenta</b><small>Completado</small></span></div><em/>
-          <div><i>✓</i><span><b>2. Plan</b><small>Completado</small></span></div><em/>
-          <div><i>3</i><span><b>3. Pago seguro</b><small>Datos de tu pago</small></span></div>
-        </div>
-      </>}
       <div className="cxo-wrap">
         <div className="cxo-grid">
           {/* LEFT */}
@@ -617,9 +617,8 @@ export default function CheckoutPage() {
               <div className="cxo-divider" />
               {isEcuadorFlow ? (
                 <>
-                  <div className="ec-plan-option ec-bank-option"><Landmark size={22}/><b>{ec.bankToday}</b><span><strong>${money(monthly)} hoy</strong><small>{ec.activationWaived}</small></span></div>
-                  <div className="ec-plan-option"><CreditCard size={22}/><b>{ec.cardToday}</b><span><strong>${money(setupFee)} hoy — prueba de 14 días</strong><small>Luego ${money(monthly)}/mes</small></span></div>
-                  <div className="ec-plan-help"><Info size={17}/>{ec.chooseMethod}</div>
+                  <div className="ec-plan-option ec-bank-option"><Landmark size={22}/><b>Transferencia bancaria</b><span><strong>${money(plan.price)} hoy</strong><small>Primer mes · Cuota de activación eliminada</small></span></div>
+                  <div className="ec-renewal">Renovación mensual: <strong>${money(plan.price)} USD</strong></div>
                 </>
               ) : (
                 <>
@@ -637,49 +636,25 @@ export default function CheckoutPage() {
           {/* RIGHT */}
           <div className="cxo-col cxo-right-col">
             {isEcuadorFlow ? (
-              <div className="ec-payment-stack">
-                <section className="cxo-card ec-bank-card">
-                  <div className="ec-pay-head"><div className="cxo-icon ec-bank-icon"><Landmark size={27}/></div><div><h2>{ec.bankTitle} <span>{ec.recommended}</span></h2><p>{ec.bankSub}</p></div></div>
-                  <div className="ec-bank-top">
-                    <div><small>{ec.transferAmount}</small><strong>${money(monthly)}</strong><button onClick={()=>copyValue(money(monthly))}><Copy size={16}/></button></div>
-                    <div><small>{ec.paymentReference}</small><strong>{paymentReference || "Pendiente de generación"}</strong><button disabled={!paymentReference} onClick={()=>copyValue(paymentReference)}><Copy size={16}/></button></div>
-                  </div>
-                  <div className="ec-bank-details">
-                    {[
-                      [ec.bank,ecBank?.bankName || "—",ecBank?.bankName],
-                      [ec.accountHolder,ecBankHolder,ecBankHolder],
-                      [ec.accountType,ec.checking,ec.checking],
-                      [ec.accountNumber,maskEnd(ecBankAccount),ecBankAccount],
-                      [ec.taxId,ecRuc ? `${ecRuc.slice(0,3)}•••••••${ecRuc.slice(-3)}` : "—",ecRuc],
-                    ].map(([label,value,copy])=><div key={label}><span>{label}:</span><b>{value}</b>{copy && <button onClick={()=>copyValue(copy)}><Copy size={15}/></button>}</div>)}
-                  </div>
-                  <label className="cxo-consent"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/><span>{tr.agreePrefix} <a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a>.</span></label>
-                  {!paymentReference ? <button className="ec-whatsapp" disabled={!ecBank?.configured || !consent || ecSubmitting} onClick={createBankOrder}>Generar referencia de pago</button> : <>
-                    <label style={{display:'block',margin:'12px 0'}}>Referencia de la transacción bancaria (obligatoria)
-                      <input style={{display:'block',width:'100%',padding:'12px',marginTop:6}} value={ecTxn} maxLength={120} onChange={e=>setEcTxn(e.target.value)} placeholder="Número de comprobante del banco" disabled={ecOrder?.status==='pending_review'||ecOrder?.status==='verified'}/>
-                    </label>
-                    <button className="ec-whatsapp" disabled={ecSubmitting || ecTxn.trim().length<4 || ecOrder?.status==='pending_review'||ecOrder?.status==='verified'} onClick={sendTransferConfirmation}><MessageCircle size={21}/>{ec.sendConfirmation}</button>
-                  </>}
-                  {ecMessage && <p role="status">{ecMessage}</p>}
-                  <p className="ec-verify"><Info size={16}/>{!ecBank?.configured ? 'Datos bancarios no configurados. No realices una transferencia.' : 'Tu cuenta solo se activa después de la verificación del pago y la habilitación por administración.'}</p>
-                </section>
-                <div className="ec-or"><span/>{ec.or}<span/></div>
-                <section className="cxo-card cxo-payment-card ec-card-payment">
-                  <div className="cxo-chead">
-                    <div className="cxo-icon"><CreditCard size={20} /></div>
-                    <div className="cxo-chead-copy"><h2>{ec.cardTitle}</h2><p>{ec.cardSub.replace("{a}", money(setupFee))}</p></div>
-                    <CardBrands />
-                  </div>
-                  {config && !config.enabled ? <p className="cxo-err">{tr.unavailable}</p> : <>
-                    <div id="nuvei-card-form" className="cxo-nuvei-host" />
-                    <label className="cxo-consent"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/><span>{tr.agreePrefix} <a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a>.</span></label>
-                    {errorMsg && <div className="cxo-err">{errorMsg}</div>}
-                    <button className="cxo-pay" onClick={payNow} disabled={!formReady || paying || processing || !consent}><Lock size={17}/>{processing ? tr.processing : tr.paySecurely.replace("{a}", money(setupFee))}</button>
-                    <div className="cxo-badges"><div className="cxo-badge"><ShieldCheck size={18}/>{tr.tokenization}</div><div className="cxo-badge"><Lock size={18}/>{tr.threeds}</div></div>
-                    <div className="cxo-processedby">{tr.processedBy}</div>
-                  </>}
-                </section>
-              </div>
+              <section className="cxo-card ec-bank-card ec-approved-payment">
+                <div className="ec-pay-head"><div className="cxo-icon ec-bank-icon"><Landmark size={27}/></div><div><h2>Transferencia bancaria <span>Recomendado en Ecuador</span></h2><p>Paga tu primer mes sin cuota de activación.</p></div></div>
+                <div className="ec-bank-top">
+                  <div><small>Monto a transferir (USD)</small><strong>${money(ecOrder?.amount ?? plan.price)}</strong><button type="button" aria-label="Copiar monto" onClick={()=>copyValue((ecOrder?.amount ?? plan.price).toFixed(2))}><Copy size={18}/></button></div>
+                  <div><small>Referencia de pago</small><strong>{paymentReference || (ecSubmitting ? 'Generando…' : 'Pendiente')}</strong><button type="button" aria-label="Copiar referencia" disabled={!paymentReference} onClick={()=>copyValue(paymentReference)}><Copy size={18}/></button></div>
+                </div>
+                <div className="ec-bank-details">
+                  {[["Banco",ecBank?.bankName],["Titular de la cuenta",ecBankHolder],["Tipo de cuenta",ecBank?.accountType || '—'],["Número de cuenta",ecBankAccount],["RUC",ecRuc]].map(([label,value])=><div key={label}><span>{label}:</span><b>{value || '—'}</b><button type="button" aria-label={`Copiar ${label}`} disabled={!value} onClick={()=>copyValue(value)}><Copy size={16}/></button></div>)}
+                </div>
+                <div className="ec-instruction"><Info size={19}/> Usa la referencia de pago al realizar tu transferencia.</div>
+                <label className="cxo-consent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>{tr.agreePrefix} <a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a>.</span></label>
+                <label className="ec-transaction-label">Referencia de la transacción bancaria
+                  <input value={ecTxn} maxLength={120} onChange={e=>setEcTxn(e.target.value)} placeholder="Número de comprobante de tu banco" disabled={ecOrder?.status==='pending_review'||ecOrder?.status==='verified'}/>
+                </label>
+                <button className="ec-whatsapp" disabled={!ecBank?.configured || !consent || ecSubmitting || !paymentReference || ecTxn.trim().length<4 || ecOrder?.status==='pending_review'||ecOrder?.status==='verified'} onClick={sendTransferConfirmation}><MessageCircle size={20}/> {ecSubmitting ? 'Procesando…' : 'Enviar confirmación de transferencia'}</button>
+                {ecMessage && <p className="ec-feedback" role="status">{ecMessage}</p>}
+                {!ecBank?.configured && <p className="cxo-err">Los datos bancarios no están disponibles. No realices ninguna transferencia.</p>}
+                <p className="ec-verify"><Info size={16}/> {ecOrder?.status==='pending_review' ? 'Confirmación recibida. Pago pendiente de verificación.' : 'Tu cuenta se activa después de verificar el pago.'}</p>
+              </section>
             ) : (
             <section className="cxo-card cxo-payment-card">
               <div className="cxo-chead">
