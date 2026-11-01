@@ -151,3 +151,12 @@
 .lq-checkout .lq-footnote{display:flex;align-items:center;gap:8px;justify-content:center}
 .lq-checkout .lq-summary{display:flex;align-items:center;gap:12px}
 @media(max-width:850px){.lq-checkout .lq-columns{grid-template-columns:1fr}.lq-checkout .lq-panel{padding:16px}}
+
+/* Ecuador compact shopping-cart checkout */
+.lq-checkout .lq-progress{display:none!important}
+.lq-checkout .lq-bank-qr{display:none!important}
+.lq-checkout .lq-reference-instruction{margin:12px 0;padding:12px;background:#eff8f3;border:1px solid #c8e7d4;border-radius:8px;color:#17643d;font-size:13px}
+.lq-checkout .lq-consent{display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:12px;margin:12px 0}
+.lq-checkout .lq-consent input{width:auto;height:auto;margin-right:6px}
+.lq-checkout .lq-transfer:not(:disabled){background:#1368e8;color:white}
+@media(min-width:1000px){.lq-checkout .lq-columns{align-items:stretch}.lq-checkout .lq-right>.lq-panel{flex:1}}

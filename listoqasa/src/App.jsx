@@ -45,7 +45,7 @@ function UrlLanguageSync() {
 
   // A URL with an explicit language always wins over browser-stored preferences.
   useEffect(() => {
-    const pathLanguage = pathname.startsWith("/es-ec/") ? "es" : pathname.match(/^\/(en|es|pt)\/?$/i)?.[1]?.toLowerCase();
+    const pathLanguage = /^\/es-ec(?:\/|$)/i.test(pathname) ? "es" : pathname.match(/^\/(en|es|pt)(?:\/|$)/i)?.[1]?.toLowerCase();
     const queryLanguage = new URLSearchParams(search).get("lang")?.toLowerCase();
     const explicitLanguage = pathLanguage || (["en", "es", "pt"].includes(queryLanguage) ? queryLanguage : null);
     if (explicitLanguage && (i18n.resolvedLanguage || i18n.language) !== explicitLanguage) {
@@ -104,8 +104,11 @@ export default function App() {
 
         <Route path="/trial" element={<TrialRedirect />} />
         <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />
+        <Route path="/es/marketplace/signup" element={<MarketplaceSignupPage />} />
+        <Route path="/es-ec/marketplace/signup" element={<MarketplaceSignupPage />} />
         <Route path="/marketplace/subscription" element={<MarketplaceSubscriptionPage />} />
         <Route path="/marketplace/checkout" element={<MarketplaceCheckoutPage />} />
+        <Route path="/es-ec/marketplace/checkout" element={<MarketplaceCheckoutPage />} />
         <Route path="/marketplace/purchase-confirmation" element={<MarketplacePurchaseConfirmationPage />} />
         <Route path="/marketplace/payment-pending" element={<MarketplacePaymentPendingPage />} />
         <Route path="/marketplace/login" element={<MarketplaceLoginPage />} />
@@ -143,6 +146,8 @@ export default function App() {
         <Route path="/my-trips" element={<StayAccountPage mode="trips" />} />
         <Route path="/saved-stays" element={<StayAccountPage mode="saved" />} />
         <Route path="/vacation-rentals" element={<VacationRentalsPage />} />
+        <Route path="/es-ec" element={<HomePage />} />
+        <Route path="/es-ec/vacation-rentals" element={<VacationRentalsPage />} />
         <Route path="/vacation-rentals/host" element={<VacationHostLanding />} />
         <Route path="/vacation-rentals/admin/import" element={<VacationSampleAdmin />} />
         <Route path="/vacation-rentals/search" element={<VacationResults />} />
@@ -150,10 +155,13 @@ export default function App() {
         <Route path="/vacation-rentals/property/:id" element={<VacationDetail />} />
         
         <Route path="/owner-plans" element={<OwnerPlansPage />} />
+        <Route path="/es/owner-plans" element={<OwnerPlansPage />} />
 
         <Route path="/agent-plans" element={<AgentDeveloperPlansPage />} />
         <Route path="/developer-plans" element={<AgentDeveloperPlansPage />} />
+        <Route path="/es/developer-plans" element={<AgentDeveloperPlansPage />} />
         <Route path="/vacation-rental-plans" element={<VacationRentalPlansPage />} />
+        <Route path="/es/vacation-rental-plans" element={<VacationRentalPlansPage />} />
       </Routes>
     </BrowserRouter>
   );

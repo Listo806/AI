@@ -15,6 +15,9 @@ const PLANS = {
   'agent-growth': { audience: 'agent', priceCents: 19700, maxListings: null },
   'owner-free-launch': { audience: 'owner', priceCents: 0, maxListings: 1 },
   'agent-free-launch': { audience: 'agent', priceCents: 0, maxListings: 1 },
+  'vacation-starter': { audience: 'vacation-host', priceCents: 7700, maxListings: 3 },
+  'vacation-growth': { audience: 'vacation-host', priceCents: 10700, maxListings: 6 },
+  'vacation-premium': { audience: 'vacation-host', priceCents: 17700, maxListings: null },
 } as const;
 
 @Injectable()
@@ -59,7 +62,7 @@ export class MarketplacePlansService {
       if (amount === undefined) throw new BadRequestException('Quarterly billing is not available for this plan');
       return amount;
     }
-    if (interval !== 'yearly' || !['agent-essential', 'agent-growth'].includes(planKey))
+    if (interval !== 'yearly' || !(['agent-essential', 'agent-growth'].includes(planKey) || planKey.startsWith('vacation-')))
       throw new BadRequestException('Yearly billing is not available for this plan');
     return Math.round(plan.priceCents * 12 * 0.8);
   }
@@ -73,7 +76,7 @@ export class MarketplacePlansService {
     const base = this.basePriceFor(planKey, interval);
     return (['agent-essential','agent-growth'].includes(planKey) || (planKey.startsWith('owner-') && base > 0)) ? Math.round(base * 116 / 100) : base;
   }
-  plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD',taxRate:p.priceCents>0?this.agentIvaRate:0,yearlyPriceCents:['agent-essential','agent-growth'].includes(key)?this.basePriceFor(key,'yearly'):null,monthlyTotalCents:this.priceFor(key,'monthly'),yearlyTotalCents:['agent-essential','agent-growth'].includes(key)?this.priceFor(key,'yearly'):null,quarterlyTotalCents:key.startsWith('owner-')&&p.priceCents>0?this.priceFor(key,'quarterly'):null})); }
+  plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD',taxRate:p.priceCents>0?this.agentIvaRate:0,yearlyPriceCents:(['agent-essential','agent-growth'].includes(key)||key.startsWith('vacation-'))?this.basePriceFor(key,'yearly'):null,monthlyTotalCents:this.priceFor(key,'monthly'),yearlyTotalCents:(['agent-essential','agent-growth'].includes(key)||key.startsWith('vacation-'))?this.priceFor(key,'yearly'):null,quarterlyTotalCents:key.startsWith('owner-')&&p.priceCents>0?this.priceFor(key,'quarterly'):null})); }
   private async expireDue(userId?:string) {
     const expired = await this.db.query(`UPDATE marketplace_plan_enrollments SET status='canceled',updated_at=NOW()
       WHERE status='active' AND price_cents>0 AND current_period_end IS NOT NULL

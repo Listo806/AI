@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Check,
   CalendarDays,
@@ -15,6 +15,8 @@ import "../PricingShared/PricingShared.css";
 
 export default function VacationRentalPlansPage() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const ecuador = location.pathname.startsWith("/es-ec/") || new URLSearchParams(location.search).get("country") === "EC" || sessionStorage.getItem("listoqasa_ecuador_context") === "1";
 
   const [billingCycle, setBillingCycle] =
     useState("monthly");
@@ -90,10 +92,8 @@ export default function VacationRentalPlansPage() {
 
 
   const buildCheckoutUrl = (plan) => {
-    const separator =
-      plan.cta.includes("?") ? "&" : "?";
-
-    return `${plan.cta}${separator}billing=${billingCycle}`;
+    const base = ecuador ? "/es-ec/marketplace/signup" : "/marketplace/signup";
+    return `${base}?audience=vacation-host&plan=vacation-${plan.key}&billing=${billingCycle}`;
   };
 
   return (

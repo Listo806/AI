@@ -74,6 +74,7 @@ export class PlatformListingsService {
   }
 
   async createDraft(dto: CreatePropertyDto, userId: string, teamId: string | null) {
+    await this.marketplacePlans.requireEntitlement(userId);
     const { rows } = await this.db.query(`INSERT INTO properties
       (title, description, address, city, state, price, type, status, origin, bedrooms, bathrooms, square_feet, created_by, team_id, property_type, created_at, updated_at)
       VALUES ($1,$2,$3,$4,$5,$6,$7,'draft','platform',$8,$9,$10,$11,$12,$13,NOW(),NOW()) RETURNING *`,
@@ -88,6 +89,7 @@ export class PlatformListingsService {
   }
 
   async updateDraft(id: string, dto: CreatePropertyDto, userId: string) {
+    await this.marketplacePlans.requireEntitlement(userId);
     await this.ownedDraft(id,userId);
     const {rows}=await this.db.query(`UPDATE properties SET title=$3,description=$4,address=$5,city=$6,state=$7,price=$8,type=$9,bedrooms=$10,bathrooms=$11,square_feet=$12,property_type=$13,updated_at=NOW()
       WHERE id=$1 AND created_by=$2 AND status='draft' RETURNING *`,
@@ -110,6 +112,7 @@ export class PlatformListingsService {
   }
 
   async addDraftMedia(id: string, userId: string, fileId: string) {
+    await this.marketplacePlans.requireEntitlement(userId);
     await this.ownedDraft(id,userId);
     // Only attach files uploaded by this user, in this listing's folder.
     const stored = await this.db.query(`SELECT url, mime_type FROM stored_files WHERE id=$1 AND user_id=$2 AND folder=$3`,[fileId,userId,`marketplace/listings/${id}`]);
