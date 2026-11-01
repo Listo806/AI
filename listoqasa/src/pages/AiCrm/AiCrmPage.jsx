@@ -26,7 +26,8 @@ import aiCrmCtaImage from "../../assets/public/images/listoqasa/ai-crm/ai-crm-ct
 import "./AiCrmPage.css";
 
 export default function AiCrmPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const pricingUrl = (i18n.resolvedLanguage || i18n.language || "").toLowerCase().startsWith("es") ? "/es-ec/ai-help/pricing" : "/ai-help/pricing";
 
   const connectedSystem = [
     { icon: MessageCircle, title: t("aiCrm.whatsapp"), desc: t("aiCrm.whatsappDesc") },
@@ -65,7 +66,7 @@ export default function AiCrmPage() {
 
               <p>{t("aiCrm.heroDescription")}</p>
 
-              <Link to="/ai-help/pricing" className="lq-ai-primary-btn">
+              <Link to={pricingUrl} className="lq-ai-primary-btn">
                 {t("aiCrm.exploreCrm")}
                 <ArrowRight size={17} />
               </Link>
@@ -212,7 +213,7 @@ export default function AiCrmPage() {
               <h2>{t("aiCrm.ctaTitle")}</h2>
               <p>{t("aiCrm.ctaDescription")}</p>
 
-              <Link to="/ai-help/pricing" className="lq-ai-white-btn">
+              <Link to={pricingUrl} className="lq-ai-white-btn">
                 {t("aiCrm.exploreCortexa")}
                 <ArrowRight size={17} />
               </Link>

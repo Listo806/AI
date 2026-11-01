@@ -7,6 +7,14 @@ const FEATURES = [
   ["Full CRM & Contact Management", "Lead & Pipeline Management", "Advanced Dashboard, Reports & Analytics", "Team Workspace with Advanced Permissions & Roles", "Custom Dashboards, Objects & Fields", "Premium AI Chat", "Unlimited AI Usage & Conversations", "Advanced Workflow Builder", "Advanced Automations (Unlimited)", "Calendar & Scheduling", "Documents, File Storage & eSignatures", "Forms & Surveys", "Web Forms", "Integrations (Core, Zapier, Make & Custom)"],
   ["Advanced API Access", "Mobile App Access", "Lead Scoring & Qualification (Advanced)", "Smart Segmentation", "Multi-Pipeline Management (Advanced)", "Advanced Search & Filters", "Predictive Analytics", "White Label (Your Brand)", "Custom Domain", "SLA & Uptime Guarantee", "Priority Support (Email, Chat, Phone & 24/7)", "Dedicated Account Manager", "Onboarding & Implementation"]
 ];
+const FEATURES_ES = [
+  ["Gestión completa de CRM y contactos", "Gestión de prospectos y embudos de ventas", "Panel avanzado, informes y análisis", "Espacio de trabajo en equipo con permisos y roles avanzados", "Paneles, objetos y campos personalizados", "Chat de IA prémium", "Uso de IA y conversaciones ilimitados", "Creador avanzado de flujos de trabajo", "Automatizaciones avanzadas (ilimitadas)", "Calendario y programación de citas", "Documentos, almacenamiento de archivos y firmas electrónicas", "Formularios y encuestas", "Formularios web", "Integraciones (principales, Zapier, Make y personalizadas)"],
+  ["Acceso avanzado a la API", "Acceso a la aplicación móvil", "Puntuación y calificación avanzada de prospectos", "Segmentación inteligente", "Gestión avanzada de múltiples embudos de ventas", "Búsqueda y filtros avanzados", "Análisis predictivo", "Marca blanca (tu marca)", "Dominio personalizado", "Garantía de nivel de servicio y disponibilidad", "Soporte prioritario (correo, chat, teléfono y 24/7)", "Gerente de cuenta dedicado", "Incorporación e implementación"]
+];
+const FEATURES_PT = [
+  ["Gestão completa de CRM e contatos", "Gestão de leads e funil de vendas", "Painel avançado, relatórios e análises", "Espaço de equipe com permissões e funções avançadas", "Painéis, objetos e campos personalizados", "Chat de IA premium", "Uso de IA e conversas ilimitados", "Criador avançado de fluxos de trabalho", "Automações avançadas (ilimitadas)", "Calendário e agendamento", "Documentos, armazenamento e assinaturas eletrônicas", "Formulários e pesquisas", "Formulários web", "Integrações (principais, Zapier, Make e personalizadas)"],
+  ["Acesso avançado à API", "Acesso ao aplicativo móvel", "Pontuação e qualificação avançada de leads", "Segmentação inteligente", "Gestão avançada de múltiplos funis", "Pesquisa e filtros avançados", "Análises preditivas", "Marca branca (sua marca)", "Domínio personalizado", "Garantia de SLA e disponibilidade", "Suporte prioritário (e-mail, chat, telefone e 24/7)", "Gerente de conta dedicado", "Integração e implementação"]
+];
 const COPY = {
   en: { title: "Agentic CRM", monthly: "Billed monthly", annual: "Billed annually", save: "Save 20%", heading: "All the Tools You Need", perMonth: "/month", year: "billed annually", cta: "Get Started", features: "FEATURES INCLUDED:" },
   es: { title: "CRM Agéntico", monthly: "Facturación mensual", annual: "Facturación anual", save: "Ahorra 20%", heading: "Todas las herramientas que necesitas", perMonth: "/mes", year: "facturado anualmente", cta: "Comenzar", features: "FUNCIONES INCLUIDAS:" },
@@ -15,12 +23,14 @@ const COPY = {
 const formatPrice = value => Number(value).toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 });
 export default function AiHelpPricingPage() {
   const { i18n } = useTranslation();
+  const isEcuador = window.location.pathname.startsWith("/es-ec/");
   const [billing, setBilling] = useState("monthly");
-  const lang = (i18n.resolvedLanguage || i18n.language || "en").split("-")[0].toLowerCase();
+  const lang = isEcuador ? "es" : (i18n.resolvedLanguage || i18n.language || "en").split("-")[0].toLowerCase();
+  const translatedFeatures = lang === "es" ? FEATURES_ES : lang === "pt" ? FEATURES_PT : FEATURES;
   const c = COPY[lang] || COPY.en;
   const annual = billing === "annual";
   const price = annual ? 101.60 : 127;
-  const href = `https://www.cortexaaicrm.com/trial?plan=solo&billing=${annual ? "annual" : "monthly"}`;
+  const href = `https://www.cortexaaicrm.com/${isEcuador ? "es-ec/checkout" : "trial"}?plan=solo&billing=${annual ? "annual" : "monthly"}`;
   return (
     <>
       <main className="lq-ai-pricing-page">
@@ -42,7 +52,7 @@ export default function AiHelpPricingPage() {
             <div className="lq-ai-single-divider" />
             <h3>{c.features}</h3>
             <div className="lq-ai-feature-columns">
-              {FEATURES.map((column, index) => (
+              {translatedFeatures.map((column, index) => (
                 <ul key={index}>{column.map(feature => <li key={feature}><Check size={19} aria-hidden="true" /><span>{feature}</span></li>)}</ul>
               ))}
             </div>

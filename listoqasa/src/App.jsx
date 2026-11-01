@@ -45,7 +45,7 @@ function UrlLanguageSync() {
 
   // A URL with an explicit language always wins over browser-stored preferences.
   useEffect(() => {
-    const pathLanguage = pathname.match(/^\/(en|es|pt)\/?$/i)?.[1]?.toLowerCase();
+    const pathLanguage = pathname.startsWith("/es-ec/") ? "es" : pathname.match(/^\/(en|es|pt)\/?$/i)?.[1]?.toLowerCase();
     const queryLanguage = new URLSearchParams(search).get("lang")?.toLowerCase();
     const explicitLanguage = pathLanguage || (["en", "es", "pt"].includes(queryLanguage) ? queryLanguage : null);
     if (explicitLanguage && (i18n.resolvedLanguage || i18n.language) !== explicitLanguage) {
@@ -128,6 +128,7 @@ export default function App() {
 
         <Route path="/ai-help" element={<AiCrmPage />} />
         <Route path="/ai-help/pricing" element={<AiHelpPricingPage />} />
+        <Route path="/es-ec/ai-help/pricing" element={<AiHelpPricingPage />} />
         <Route path="/help" element={<HelpCenterPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/about-us" element={<AboutPage />} />
