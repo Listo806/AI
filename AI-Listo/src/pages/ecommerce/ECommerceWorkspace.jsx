@@ -459,6 +459,9 @@ function ECommerceSubscriptionsUI() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selected, setSelected] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+  const [bulkFailures, setBulkFailures] = useState([]);
   const [detail, setDetail] = useState({ id: null, tab: "overview" });
   const [showAdd, setShowAdd] = useState(false);
   const [changePlanFor, setChangePlanFor] = useState(null);
@@ -466,6 +469,7 @@ function ECommerceSubscriptionsUI() {
   const [showPlans, setShowPlans] = useState(false);
   const [importing, setImporting] = useState(false);
   const [bulkMenu, setBulkMenu] = useState(false);
+  const [selectingAll, setSelectingAll] = useState(false);
   const [moreMenu, setMoreMenu] = useState(false);
   const [rowMenu, setRowMenu] = useState(null);
 
@@ -497,6 +501,26 @@ function ECommerceSubscriptionsUI() {
   const allChecked = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const toggleAll = () => setSelected((p) => { const n = new Set(p); allChecked ? rows.forEach((r) => n.delete(r.id)) : rows.forEach((r) => n.add(r.id)); return n; });
   const selectedRows = rows.filter((r) => selected.has(r.id));
+
+  const selectAllMatching = async () => {
+    if (selectingAll || bulkDeleting) return;
+    setSelectingAll(true);
+    try {
+      const ids = [];
+      const batchSize = 500;
+      for (let offset = 0; ; offset += batchSize) {
+        const result = await getCustomersHub({ ...filters, tab, limit: batchSize, offset });
+        const batch = result?.data || [];
+        ids.push(...batch.map((customer) => customer.id));
+        if (batch.length < batchSize || ids.length >= (result?.total ?? Infinity)) break;
+      }
+      setSelected(new Set(ids));
+    } catch (error) {
+      window.alert(error?.message || "Could not select all matching customers.");
+    } finally {
+      setSelectingAll(false);
+    }
+  };
 
   const onExport = () => exportCustomersHubCsv({ ...filters, tab }).catch(() => alert("Export failed."));
 
@@ -553,6 +577,33 @@ function ECommerceSubscriptionsUI() {
     if (!window.confirm(`${label} ${selectedRows.length} selected customer(s)?`)) return;
     for (const r of selectedRows) { try { await fn(r.id); } catch { /* continue */ } }
     setSelected(new Set()); setBulkMenu(false); load();
+  };
+
+  const deleteSelectedCustomers = async () => {
+    if (bulkDeleting || !selected.size) return;
+    const ids = Array.from(selected);
+    if (!window.confirm(`Delete these ${ids.length} customer records?`)) return;
+    setBulkDeleting(true);
+    setBulkFailures([]);
+    setBulkProgress({ done: 0, total: ids.length });
+    const failures = [];
+    let deleted = 0;
+    // Bounded batches avoid flooding the API and preserve per-customer permissions.
+    for (let start = 0; start < ids.length; start += 5) {
+      const batch = ids.slice(start, start + 5);
+      const results = await Promise.allSettled(batch.map((id) => deleteCustomerHub(id)));
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") deleted += 1;
+        else failures.push({ id: batch[index], reason: result.reason?.message || "Request failed" });
+      });
+      setBulkProgress({ done: Math.min(start + batch.length, ids.length), total: ids.length });
+    }
+    setSelected(new Set(failures.map((failure) => failure.id)));
+    setBulkFailures(failures);
+    setBulkMenu(false);
+    setBulkDeleting(false);
+    load();
+    window.alert(`Deleted ${deleted} of ${ids.length} customers.${failures.length ? `\nFailed: ${failures.length}\n${failures.slice(0, 10).map((f) => `${f.id}: ${f.reason}`).join("\n")}` : ""}`);
   };
 
   const oneSelected = () => {
@@ -900,6 +951,20 @@ function ECommerceSubscriptionsUI() {
 
       {/* Table (full width) */}
       <div className="cxc-panel">
+        {selected.size > 0 && (
+          <div className="cxc-selbar" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: 12 }}>
+            <strong>{selected.size} selected</strong>
+            {allChecked && selected.size < total && (
+              <button className="cxc-btn cxc-btn-sm" disabled={bulkDeleting || selectingAll} onClick={selectAllMatching}>
+                {selectingAll ? "Selecting…" : `Select all ${total} matching this filter`}
+              </button>
+            )}
+            <button className="cxc-btn cxc-btn-sm" disabled={bulkDeleting} onClick={() => setSelected(new Set())}>Clear selection</button>
+            <button className="cxc-btn cxc-btn-danger cxc-btn-sm" style={{ marginLeft: "auto" }} disabled={bulkDeleting || selectingAll} onClick={deleteSelectedCustomers}>
+              {bulkDeleting ? `Deleting ${bulkProgress.done}/${bulkProgress.total}…` : `Delete selected (${selected.size})`}
+            </button>
+          </div>
+        )}
         <div className="cxc-table-wrap">
           <table className="cxc-table">
             <thead>

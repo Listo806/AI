@@ -3,7 +3,7 @@ import {
  Search,Download,Upload,Plus,UsersRound,UserRoundCheck,DollarSign,TrendingUp,
  Percent,Gift,ChevronRight,Zap,Rocket,Layers3,CalendarDays,Bookmark,Send,
  Languages,Globe2,SlidersHorizontal,ChevronDown,MoreHorizontal,RefreshCw,
- CircleAlert,CheckCircle2,UserPlus,Hourglass,ShieldCheck,TriangleAlert,XCircle
+ Trash2,CircleAlert,CheckCircle2,UserPlus,Hourglass,ShieldCheck,TriangleAlert,XCircle
 } from "lucide-react";
 import "./ecommerce-subscriptions.css";
 import EcommerceAccountMenu from "./EcommerceAccountMenu";
@@ -34,8 +34,17 @@ function useSubscriptions(){
     throw new Error(Array.isArray(body?.message)?body.message.join(", "):body?.message||`Subscriptions request failed (${failed.status}).`);
    }
    const [list,summary]=await Promise.all([listRes.json(),summaryRes.json()]);
+   const allCustomers=[...(list?.data||[])];
+   const total=Number(list?.total??list?.count??allCustomers.length);
+   for(let offset=allCustomers.length;offset<total;offset+=1000){
+    const page=await fetch(`${apiBase}/ecommerce/customers-hub?limit=1000&offset=${offset}`,{headers});
+    if(!page.ok)throw new Error(`Could not load customer page at offset ${offset}`);
+    const batch=(await page.json())?.data||[];
+    if(!batch.length)throw new Error('Customer list is incomplete; bulk selection disabled.');
+    allCustomers.push(...batch);
+   }
    const k=summary?.kpis||{};
-   setData({...EMPTY,summary:{registered:k.totalRegistered??0,active:k.activeCustomers??0,mrr:k.mrr??0,arr:k.arr??0,conversion:k.conversionRate??0,free:k.freeAccounts??0},customers:list?.data||[],analytics:summary,loading:false,error:""});
+   setData({...EMPTY,summary:{registered:k.totalRegistered??0,active:k.activeCustomers??0,mrr:k.mrr??0,arr:k.arr??0,conversion:k.conversionRate??0,free:k.freeAccounts??0},customers:allCustomers,analytics:summary,loading:false,error:""});
   }catch(e){setData({...EMPTY,loading:false,error:e.message||"Unable to load subscriptions."})}
  };
  useEffect(()=>{load()},[]);
@@ -47,7 +56,7 @@ function Stat({title,value,sub,Icon,tone}){
 function DonutCard({title,subtitle,Icon,children,total=0}){
  return <article className="ecs-insight"><header><i><Icon size={19}/></i><div><h3>{title}</h3><p>{subtitle}</p></div><ChevronRight size={18}/></header><div className="ecs-insight-body"><div className="ecs-donut"><div><b>{total}</b><small>Total</small></div></div><div className="ecs-insight-list">{children}</div></div></article>
 }
-function Filters({query,setQuery,plan,setPlan,status,setStatus}){
+function Filters({query,setQuery,plan,setPlan,status,setStatus,selectedCount}){
  return <div className="ecs-filter-area">
   <div className="ecs-search-filters">
    <label className="ecs-search"><Search size={15}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by name, email or company"/></label>
@@ -59,7 +68,7 @@ function Filters({query,setQuery,plan,setPlan,status,setStatus}){
    <label><Globe2 size={15}/><select><option>All Countries</option></select></label>
   </div>
   <div className="ecs-secondary-filter"><button><UsersRound size={15}/>Users & Seats<ChevronDown size={14}/></button></div>
-  <div className="ecs-actions"><button><SlidersHorizontal size={15}/>More Filters</button><button className="link">Clear Filters</button><button>Bulk Actions (0 selected)<ChevronDown size={14}/></button><button>Change Plan</button><button>Update Payment</button><button>Add Seat / User</button><button disabled>Send Email</button><button>Export</button><button>More<ChevronDown size={14}/></button></div>
+  <div className="ecs-actions"><button><SlidersHorizontal size={15}/>More Filters</button><button className="link">Clear Filters</button><button>Bulk Actions ({selectedCount} selected)<ChevronDown size={14}/></button><button>Change Plan</button><button>Update Payment</button><button>Add Seat / User</button><button disabled>Send Email</button><button>Export</button><button>More<ChevronDown size={14}/></button></div>
  </div>
 }
 export default function EcommerceSubscriptions(){
@@ -69,6 +78,13 @@ export default function EcommerceSubscriptions(){
  const [query,setQuery]=useState("");
  const [plan,setPlan]=useState("All Plans");
  const [status,setStatus]=useState("All Statuses");
+ const [selected,setSelected]=useState(()=>new Set());
+ const [page,setPage]=useState(1);
+ const [pageSize,setPageSize]=useState(100);
+ const [confirmDelete,setConfirmDelete]=useState(false);
+ const [deleting,setDeleting]=useState(false);
+ const [progress,setProgress]=useState({done:0,total:0});
+ const [result,setResult]=useState(null);
  const s=data.summary;
  const breakdowns=data.analytics?.breakdowns||{};
  const breakdownCount=(group,label)=>Number((breakdowns[group]||[]).find(x=>String(x.key).toLowerCase()===String(label).toLowerCase())?.count||0);
@@ -81,6 +97,33 @@ export default function EcommerceSubscriptions(){
   const okT=tab==="All Subscriptions"||String(c.status||"").toLowerCase()===tab.toLowerCase().replace(" (sign-ups)","");
   return okQ&&okP&&okS&&okT;
  }),[data.customers,query,plan,status,tab]);
+ const pageCount=Math.max(1,Math.ceil(rows.length/pageSize));
+ const visibleRows=rows.slice((Math.min(page,pageCount)-1)*pageSize,Math.min(page,pageCount)*pageSize);
+ const matchingIds=rows.map(c=>String(c.id)).filter(Boolean);
+ const selectedCount=selected.size;
+ const toggleId=id=>setSelected(prev=>{const next=new Set(prev);next.has(id)?next.delete(id):next.add(id);return next;});
+ const deleteSelected=async()=>{
+  if(deleting)return;
+  setDeleting(true);setConfirmDelete(false);setResult(null);
+  const ids=[...selected];let done=0;const failed=[];
+  setProgress({done:0,total:ids.length});
+  const token=localStorage.getItem("cortexa_ecommerce_access_token")||localStorage.getItem("listo_access_token")||localStorage.getItem("access_token")||localStorage.getItem("token");
+  const apiBase=(import.meta.env.VITE_API_BASE_URL||"https://backend.cortexaaicrm.com/api").replace(/\/$/,"");
+  for(const id of ids){
+   try{
+    const response=await fetch(`${apiBase}/ecommerce/customers-hub/${encodeURIComponent(id)}`,{method:"DELETE",headers:token?{Authorization:`Bearer ${token}`}:{}});
+    const body=await response.json().catch(()=>({}));
+    if(!response.ok||body.deleted===false)throw new Error(body.message||`HTTP ${response.status}`);
+    done++;
+   }catch(e){failed.push({id,error:String(e.message||e)})}
+   setProgress({done:done+failed.length,total:ids.length});
+  }
+  setSelected(new Set(failed.map(x=>x.id)));
+  setResult({deleted:done,failed});
+  await reload();
+  window.dispatchEvent(new Event("cortexa:ecommerce-customers-changed"));
+  setDeleting(false);
+ };
  const tabs=["All Subscriptions","Registered (Sign-ups)","Free","Trialing","Active Paid","Past Due","Canceled"];
  const tabIcons={
   "All Subscriptions":UsersRound,
@@ -113,13 +156,22 @@ export default function EcommerceSubscriptions(){
 
   <section className="ecs-table-card">
    <div className="ecs-tabs">{tabs.map(t=>{const TabIcon=tabIcons[t];return <button className={tab===t?"active":""} onClick={()=>setTab(t)} key={t}><span className="ecs-tab-icon"><TabIcon size={18}/></span><span className="ecs-tab-label">{t}</span><i>{tabCount(t)}</i><ChevronRight className="ecs-tab-arrow" size={18}/></button>})}</div>
-   <Filters query={query} setQuery={setQuery} plan={plan} setPlan={setPlan} status={status} setStatus={setStatus}/>
+   <Filters query={query} setQuery={setQuery} plan={plan} setPlan={setPlan} status={status} setStatus={setStatus} selectedCount={selectedCount}/>
    {data.error&&<div className="ecs-api-note"><CircleAlert size={15}/>{data.error} UI remains empty instead of using demo customer data.<button onClick={reload}><RefreshCw size={14}/>Retry</button></div>}
-   <div className="ecs-table">
-    <div className="ecs-tr ecs-th"><span>□ &nbsp; Customer</span><span>Plan & Pricing<small>Billing Cycle</small></span><span>Seats / Users</span><span>Next Billing</span><span>Payment Status</span><span>Source</span><span>Country</span><span>Registered<small>Date & Time</small></span><span>Last Active</span><span>LTV<small>Total Revenue</small></span><span>Actions</span></div>
-    {rows.length?rows.map((c,i)=><div className="ecs-tr" key={c.id||i}><span><b>{c.name||c.email||"Customer"}</b><small>{c.email||""}</small></span><span><b>{c.plan||"—"}</b><small>{c.billingCycle||""}</small></span><span>{c.seats??"—"}</span><span>{c.nextBilling||"—"}</span><span>{c.paymentStatus||c.status||"—"}</span><span>{c.source||"—"}</span><span>{c.country||"—"}</span><span>{c.registeredAt||"—"}</span><span>{c.lastActive||"—"}</span><span>{money(c.ltv)}</span><span><button><MoreHorizontal size={16}/></button></span></div>):<div className="ecs-no-rows">No customers match these filters.</div>}
+   <div className="ecs-selection-bar">
+    <span><strong>{selectedCount} selected</strong> · {matchingIds.length} matching current filters</span>
+    <button disabled={deleting||!matchingIds.length} onClick={()=>setSelected(prev=>{const next=new Set(prev);const all=matchingIds.every(id=>next.has(id));matchingIds.forEach(id=>all?next.delete(id):next.add(id));return next;})}>Select all {matchingIds.length} matching this filter</button>
+    <button disabled={deleting||!selectedCount} onClick={()=>setSelected(new Set())}>Clear selection</button>
+    <button className="ecs-delete-selected" disabled={!selectedCount||deleting} onClick={()=>setConfirmDelete(true)}><Trash2 size={15}/>Delete selected ({selectedCount})</button>
    </div>
-   <footer className="ecs-pagination"><span>{rows.length?"":"No subscriptions"}</span><div><button>«</button><button className="active">1</button><button>»</button></div><label>Rows per page:<select><option>10</option><option>25</option><option>50</option></select></label></footer>
+   {deleting&&<div className="ecs-bulk-status" role="status">Deleting {progress.done} of {progress.total} customer records… <progress value={progress.done} max={progress.total||1}/></div>}
+   {result&&<div className="ecs-bulk-status" role="status">Deleted {result.deleted} customers. {result.failed.length} failed.{result.failed.length>0&&<details><summary>View failures</summary>{result.failed.map(f=><p key={f.id}>{f.id}: {f.error}</p>)}</details>}</div>}
+   {confirmDelete&&<div className="ecs-confirm-backdrop"><div className="ecs-confirm-dialog" role="dialog" aria-modal="true" aria-label="Confirm customer deletion"><h3>Delete these {selectedCount} customer records?</h3><p>This uses the same deletion behavior as deleting a customer individually.</p><div><button onClick={()=>setConfirmDelete(false)}>Cancel</button><button className="ecs-delete-selected" onClick={deleteSelected}>Delete</button></div></div></div>}
+   <div className="ecs-table">
+    <div className="ecs-tr ecs-th"><span><input type="checkbox" aria-label="Select current page" checked={visibleRows.length>0&&visibleRows.every(c=>selected.has(String(c.id)))} onChange={e=>setSelected(prev=>{const next=new Set(prev);visibleRows.forEach(c=>e.target.checked?next.add(String(c.id)):next.delete(String(c.id)));return next;})}/> Customer</span><span>Plan & Pricing<small>Billing Cycle</small></span><span>Seats / Users</span><span>Next Billing</span><span>Payment Status</span><span>Source</span><span>Country</span><span>Registered<small>Date & Time</small></span><span>Last Active</span><span>LTV<small>Total Revenue</small></span><span>Actions</span></div>
+    {rows.length?visibleRows.map((c,i)=><div className="ecs-tr" key={c.id||i}><span><input type="checkbox" aria-label={`Select ${c.name||c.email||c.id}`} checked={selected.has(String(c.id))} onChange={()=>toggleId(String(c.id))}/><b>{c.name||c.email||"Customer"}</b><small>{c.email||""}</small></span><span><b>{c.plan||"—"}</b><small>{c.billingCycle||""}</small></span><span>{c.seats??"—"}</span><span>{c.nextBilling||"—"}</span><span>{c.paymentStatus||c.status||"—"}</span><span>{c.source||"—"}</span><span>{c.country||"—"}</span><span>{c.registeredAt||"—"}</span><span>{c.lastActive||"—"}</span><span>{money(c.ltv)}</span><span><button><MoreHorizontal size={16}/></button></span></div>):<div className="ecs-no-rows">No customers match these filters.</div>}
+   </div>
+   <footer className="ecs-pagination"><span>{rows.length} matching · Page {Math.min(page,pageCount)} of {pageCount}</span><div><button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>«</button><button className="active">{Math.min(page,pageCount)}</button><button disabled={page>=pageCount} onClick={()=>setPage(p=>Math.min(pageCount,p+1))}>»</button></div><label>Rows per page:<select value={pageSize} onChange={e=>{setPageSize(Number(e.target.value));setPage(1)}}><option>25</option><option>50</option><option>100</option><option>200</option></select></label></footer>
   </section>
  </div>
 }

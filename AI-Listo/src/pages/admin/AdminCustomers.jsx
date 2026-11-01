@@ -788,6 +788,9 @@ export default function AdminCustomers() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selected, setSelected] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+  const [bulkFailures, setBulkFailures] = useState([]);
   const [detail, setDetail] = useState({ id: null, tab: "overview" });
   const [showAdd, setShowAdd] = useState(false);
   const [changePlanFor, setChangePlanFor] = useState(null);
@@ -1024,6 +1027,33 @@ export default function AdminCustomers() {
     setSelected(new Set());
     setBulkMenu(false);
     load();
+  };
+
+  const deleteSelectedCustomers = async () => {
+    if (bulkDeleting || !selected.size) return;
+    const ids = Array.from(selected);
+    if (!window.confirm(`Delete these ${ids.length} customer records?`)) return;
+    setBulkDeleting(true);
+    setBulkFailures([]);
+    setBulkProgress({ done: 0, total: ids.length });
+    const failures = [];
+    let deleted = 0;
+    // Bounded batches avoid flooding the API and preserve per-customer permissions.
+    for (let start = 0; start < ids.length; start += 5) {
+      const batch = ids.slice(start, start + 5);
+      const results = await Promise.allSettled(batch.map((id) => deleteCustomerHub(id)));
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") deleted += 1;
+        else failures.push({ id: batch[index], reason: result.reason?.message || "Request failed" });
+      });
+      setBulkProgress({ done: Math.min(start + batch.length, ids.length), total: ids.length });
+    }
+    setSelected(new Set(failures.map((failure) => failure.id)));
+    setBulkFailures(failures);
+    setBulkMenu(false);
+    setBulkDeleting(false);
+    load();
+    window.alert(`Deleted ${deleted} of ${ids.length} customers.${failures.length ? `\nFailed: ${failures.length}\n${failures.slice(0, 10).map((f) => `${f.id}: ${f.reason}`).join("\n")}` : ""}`);
   };
 
   const oneSelected = () => {
@@ -1825,6 +1855,9 @@ export default function AdminCustomers() {
                 onClick={openBulkEmail}
               >
                 Send Email to {selected.size}
+              </button>
+              <button className="cxc-btn cxc-btn-danger cxc-btn-sm" style={{ marginLeft: "auto" }} onClick={deleteSelectedCustomers} disabled={bulkDeleting || selectingAll}>
+                {bulkDeleting ? `Deleting ${bulkProgress.done}/${bulkProgress.total}…` : `Delete selected (${selected.size})`}
               </button>
               <button
                 className="cxc-btn cxc-btn-ghost cxc-btn-sm"
