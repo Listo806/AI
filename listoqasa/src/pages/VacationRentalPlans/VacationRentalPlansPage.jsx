@@ -92,7 +92,7 @@ export default function VacationRentalPlansPage() {
 
 
   const buildCheckoutUrl = (plan) => {
-    const base = ecuador ? "/es-ec/marketplace/signup" : "/marketplace/signup";
+    const base = ecuador ? "/es-ec/marketplace/signup" : location.pathname.startsWith("/es/") ? "/es/marketplace/signup" : "/marketplace/signup";
     return `${base}?audience=vacation-host&plan=vacation-${plan.key}&billing=${billingCycle}`;
   };
 

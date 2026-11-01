@@ -60,17 +60,21 @@ function UrlLanguageSync() {
       if (!["en", "es", "pt"].includes(language)) return;
       const path = window.location.pathname;
       const params = new URLSearchParams(window.location.search);
-      const home = /^\/(?:en|es|pt)?\/?$/i.test(path);
-      // Keep transactional and account URLs untouched; their query strings can
-      // contain provider tokens and must not be rewritten by the language menu.
-      const publicPage = /^\/(?:buy|rent|sell|owners|agents|developers|commercial-owners|find-agent|property(?:\/|$)|vacation-rentals(?:\/|$)|owner-plans|agent-plans|developer-plans|vacation-rental-plans|about(?:-us)?|contact(?:-us)?|terms(?:-and-conditions)?|privacy(?:-policy)?|cancellation-policy|refund-policy|help)(?:\/|$)/i.test(path);
-      if (!home && !publicPage) return;
-      if (home) {
-        params.delete("lang");
-      } else {
-        params.set("lang", language);
+      const prefixMatch = path.match(/^\/(es-ec|en|es|pt)(?=\/|$)/i);
+      const prefix = prefixMatch?.[1]?.toLowerCase() || "";
+      const barePath = prefix ? path.slice(prefix.length + 1) || "/" : path;
+      const home = barePath === "/";
+      // Keep language and Ecuador locale in the URL instead of relying on
+      // a query parameter that is lost on navigation or refresh.
+      const localizable = /^\/(?:buy|rent|sell|owners|agents|developers|commercial-owners|find-agent|property|vacation-rentals|owner-plans|agent-plans|developer-plans|vacation-rental-plans|about|about-us|contact|contact-us|terms|privacy|cancellation-policy|refund-policy|help)(?:\/|$)/i.test(barePath);
+      if (!home && !localizable) return;
+      const nextPrefix = language === "es" && prefix === "es-ec" ? "es-ec" : language;
+      // Ecuador must not silently become a generic Spanish page.
+      if (prefix === "es-ec" && language !== "es") {
+        params.set("country", "EC");
       }
-      const nextPath = home ? `/${language}` : path;
+      params.delete("lang");
+      const nextPath = `/${nextPrefix}${home ? "" : barePath}`;
       const query = params.toString();
       const next = `${nextPath}${query ? `?${query}` : ""}${window.location.hash}`;
       const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;

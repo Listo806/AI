@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Check,
   CalendarDays,
@@ -31,6 +31,10 @@ const formatMoney = (value) =>
 
 export default function AgentDeveloperPlansPage() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const ecuador = location.pathname.startsWith("/es-ec/") || query.get("country") === "EC" || sessionStorage.getItem("listoqasa_ecuador_context") === "1";
+  const spanish = ecuador || location.pathname.startsWith("/es/");
 
   const [billingCycle, setBillingCycle] =
     useState("monthly");
@@ -155,7 +159,12 @@ export default function AgentDeveloperPlansPage() {
     const separator =
       plan.cta.includes("?") ? "&" : "?";
 
-    return `${plan.cta}${separator}billing=${billingCycle}`;
+    // Keep the selected plan and billing period while moving Ecuador users
+    // through the Spanish signup and bank-transfer checkout.
+    const target = plan.cta.startsWith("/marketplace/signup")
+      ? plan.cta.replace("/marketplace/signup", ecuador ? "/es-ec/marketplace/signup" : spanish ? "/es/marketplace/signup" : "/marketplace/signup")
+      : plan.cta;
+    return `${target}${separator}billing=${billingCycle}`;
   };
 
   return (
