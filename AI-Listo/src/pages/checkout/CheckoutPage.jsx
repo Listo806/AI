@@ -640,7 +640,7 @@ export default function CheckoutPage() {
                 <div className="ec-pay-head"><div className="cxo-icon ec-bank-icon"><Landmark size={27}/></div><div><h2>Transferencia bancaria <span>Recomendado en Ecuador</span></h2><p>Paga tu primer mes sin cuota de activación.</p></div></div>
                 <div className="ec-bank-top">
                   <div><small>Monto a transferir (USD)</small><strong>${money(ecOrder?.amount ?? plan.price)}</strong><button type="button" aria-label="Copiar monto" onClick={()=>copyValue((ecOrder?.amount ?? plan.price).toFixed(2))}><Copy size={18}/></button></div>
-                  <div><small>Referencia de pago</small><strong>{paymentReference || (ecSubmitting ? 'Generando…' : 'Pendiente')}</strong><button type="button" aria-label="Copiar referencia" disabled={!paymentReference} onClick={()=>copyValue(paymentReference)}><Copy size={18}/></button></div>
+                  <div><small>Referencia de pago</small><strong>{paymentReference || (ecSubmitting ? 'Generando…' : 'Generando…')}</strong><button type="button" aria-label="Copiar referencia" disabled={!paymentReference} onClick={()=>copyValue(paymentReference)}><Copy size={18}/></button></div>
                 </div>
                 <div className="ec-bank-details">
                   {[["Banco",ecBank?.bankName],["Titular de la cuenta",ecBankHolder],["Tipo de cuenta",ecBank?.accountType || '—'],["Número de cuenta",ecBankAccount],["RUC",ecRuc]].map(([label,value])=><div key={label}><span>{label}:</span><b>{value || '—'}</b><button type="button" aria-label={`Copiar ${label}`} disabled={!value} onClick={()=>copyValue(value)}><Copy size={16}/></button></div>)}

@@ -209,3 +209,19 @@ body{overflow-x:hidden}
 .ec-checkout-page .ec-renewal strong{color:#17234a}
 @media(max-width:850px){.ec-checkout-page .cxo-grid{grid-template-columns:1fr}.ec-checkout-page .cxo-left-col{display:flex;flex-direction:column}.ec-checkout-page .ec-approved-payment{height:auto}}
 @media(max-width:560px){.ec-checkout-page .cxo-wrap{padding:14px 12px}.ec-checkout-page .ec-approved-payment{padding:16px}.ec-checkout-page .ec-bank-top{grid-template-columns:1fr}.ec-checkout-page .ec-bank-details>div{grid-template-columns:1fr;gap:3px;padding:8px 28px 8px 0}.ec-checkout-page .ec-pay-head h2{font-size:18px}}
+/* Ecuador-only approved cart geometry. International checkout remains unchanged. */
+.ec-checkout-page{background:#f8faff;min-height:100vh}
+.ec-checkout-page .cxo-wrap{max-width:1390px;margin:auto;padding:28px 22px}
+.ec-checkout-page .cxo-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:16px;align-items:stretch}
+.ec-checkout-page .cxo-left-col,.ec-checkout-page .cxo-right-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.ec-checkout-page .cxo-left-col>.cxo-card:last-child{flex:1}
+.ec-checkout-page .ec-approved-payment{flex:1;height:100%;border:1px solid #29bc78}
+.ec-checkout-page .ec-bank-top{gap:12px;margin-top:16px}
+.ec-checkout-page .ec-bank-top>div{min-height:84px;padding:13px 40px 13px 15px}
+.ec-checkout-page .ec-bank-details{margin-top:12px;padding:12px 16px}
+.ec-checkout-page .ec-bank-details>div{min-height:31px}
+.ec-checkout-page .ec-instruction{margin-top:12px;padding:11px 14px}
+.ec-checkout-page .ec-approved-payment .cxo-consent{margin-top:12px}
+.ec-checkout-page .ec-whatsapp{margin-top:12px}
+@media(max-width:850px){.ec-checkout-page .cxo-grid{grid-template-columns:1fr}.ec-checkout-page .ec-approved-payment{height:auto}}
+@media(max-width:560px){.ec-checkout-page .cxo-wrap{padding:12px}.ec-checkout-page .ec-bank-top{grid-template-columns:1fr}.ec-checkout-page .ec-bank-details>div{grid-template-columns:1fr;gap:3px}}

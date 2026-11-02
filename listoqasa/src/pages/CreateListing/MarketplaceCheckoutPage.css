@@ -152,11 +152,22 @@
 .lq-checkout .lq-summary{display:flex;align-items:center;gap:12px}
 @media(max-width:850px){.lq-checkout .lq-columns{grid-template-columns:1fr}.lq-checkout .lq-panel{padding:16px}}
 
-/* Ecuador compact shopping-cart checkout */
-.lq-checkout .lq-progress{display:none!important}
-.lq-checkout .lq-bank-qr{display:none!important}
-.lq-checkout .lq-reference-instruction{margin:12px 0;padding:12px;background:#eff8f3;border:1px solid #c8e7d4;border-radius:8px;color:#17643d;font-size:13px}
-.lq-checkout .lq-consent{display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:12px;margin:12px 0}
-.lq-checkout .lq-consent input{width:auto;height:auto;margin-right:6px}
-.lq-checkout .lq-transfer:not(:disabled){background:#1368e8;color:white}
-@media(min-width:1000px){.lq-checkout .lq-columns{align-items:stretch}.lq-checkout .lq-right>.lq-panel{flex:1}}
+/* Ecuador approved shopping cart */
+.lq-approved{background:#f8faff;min-height:100vh;padding:30px clamp(16px,3vw,44px);max-width:none}
+.lq-approved .lq-columns{max-width:1360px;grid-template-columns:minmax(0,1fr) minmax(0,1.07fr);gap:16px;align-items:stretch}
+.lq-approved .lq-left,.lq-approved .lq-right{height:100%;gap:16px}
+.lq-approved .lq-bank{height:100%;display:flex;flex-direction:column;border:1px solid #2bbd78}
+.lq-approved .lq-panel{padding:22px 24px;border-radius:12px;background:#fff}
+.lq-approved .lq-heading h2{font-size:21px;color:#101b3d}.lq-approved .lq-heading p{font-size:13px}
+.lq-approved .lq-edit{margin-left:auto;background:none;border:0;color:#1263e9;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer}
+.lq-approved .lq-field{display:flex;align-items:center;border:1px solid #d6deea;border-radius:7px;padding-left:12px;margin-top:5px;color:#65748d}
+.lq-approved .lq-field input{margin:0!important;border:0!important;flex:1;min-width:0;height:40px!important}
+.lq-approved .lq-summary{background:#eafaf1!important;border-color:#cdeedc!important;margin-top:18px;gap:12px}.lq-approved .lq-summary>span{display:flex;flex-direction:column;align-items:flex-end}.lq-approved .lq-summary small{font-size:11px;color:#21865b}
+.lq-approved .lq-bank-grid{margin-top:12px}.lq-approved .lq-bank-grid>div{padding:15px;min-height:84px}.lq-approved .lq-bank-grid b{font-size:22px}
+.lq-approved .lq-bank-data{margin-top:12px;padding:16px;background:#f6f9fe}.lq-approved .lq-bank-data>div{grid-template-columns:minmax(110px,36%) minmax(0,1fr) 28px;font-size:13px;min-height:32px;align-items:center}
+.lq-approved .lq-instruction{display:flex;align-items:center;gap:10px;background:#eaf4ff;color:#506990;padding:12px;margin-top:16px;border-radius:7px;font-size:13px}
+.lq-approved .lq-consent{display:flex!important;align-items:center;gap:9px;margin:15px 0 6px!important;font-weight:400!important}.lq-approved .lq-consent input{width:auto!important;height:auto!important;margin:0!important}
+.lq-approved .lq-pay{background:#1264ef;color:#fff;border:0;border-radius:7px;padding:14px;font-size:14px;font-weight:700;cursor:pointer}.lq-approved .lq-pay:disabled{opacity:.5;cursor:not-allowed}
+.lq-approved .lq-footnote{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:10px}.lq-approved .lq-status{max-width:1360px;margin:16px auto;background:#eaf5ff;padding:14px;border-radius:8px;display:flex;gap:10px;align-items:center;font-size:13px;color:#356088}.lq-approved .lq-status button{margin-left:auto;border:0;background:none;color:#1365e9;cursor:pointer}.lq-approved .lq-hint{font-size:11px;color:#687890}
+@media(max-width:850px){.lq-approved .lq-columns{grid-template-columns:1fr}.lq-approved .lq-bank{height:auto}.lq-approved .lq-panel{padding:16px}.lq-approved .lq-status{flex-wrap:wrap}}
+@media(max-width:500px){.lq-approved .lq-bank-grid{grid-template-columns:1fr}.lq-approved .lq-bank-data>div{grid-template-columns:105px minmax(0,1fr) 28px}.lq-approved .lq-available{font-size:9px;padding:5px}.lq-approved .lq-heading h2{font-size:17px}}
