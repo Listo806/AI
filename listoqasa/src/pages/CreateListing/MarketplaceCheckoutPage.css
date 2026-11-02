@@ -216,3 +216,45 @@
  .lq-approved .lq-left,.lq-approved .lq-right{height:auto}
  .lq-approved .lq-plan{flex:auto}
 }
+
+/* Ecuador checkout: reference layout with always-visible final information panel. */
+.lq-approved{width:100%;max-width:none;min-height:0;height:auto;overflow:visible;padding:10px clamp(12px,2.4vw,32px) 10px;background:#f8faff}
+.lq-approved .lq-process-banner,.lq-approved .lq-columns,.lq-approved .lq-bottom-banner{width:100%;max-width:1210px;margin-left:auto;margin-right:auto}
+.lq-approved .lq-process-banner{padding:9px 13px;margin-bottom:10px;gap:12px;background:#eef7ff;border-color:#dce8f7;color:#15254b}
+.lq-approved .lq-process-banner strong{font-size:17px;color:#0b1839}
+.lq-approved .lq-process-banner p{font-size:12px;line-height:1.35}
+.lq-approved .lq-columns{grid-template-columns:minmax(0,1fr) minmax(0,1.015fr);gap:12px;align-items:stretch}
+.lq-approved .lq-left{display:flex;flex-direction:column;gap:10px;min-width:0}
+.lq-approved .lq-right{display:flex;min-width:0}
+.lq-approved .lq-panel{padding:11px 16px;border-radius:9px;min-width:0;overflow:visible}
+.lq-approved .lq-customer{flex:0 0 auto}
+.lq-approved .lq-plan{flex:1 1 auto;min-height:0}
+.lq-approved .lq-bank{height:100%;width:100%;min-height:0;display:flex;flex-direction:column}
+.lq-approved .lq-heading{margin-bottom:6px;gap:9px}
+.lq-approved .lq-heading .lq-symbol{width:35px;height:35px;flex-basis:35px}
+.lq-approved .lq-heading h2{font-size:18px;line-height:1.15}
+.lq-approved .lq-heading p{font-size:11px;margin:2px 0 0}
+.lq-approved .lq-panel label:not(.lq-consent){margin-bottom:5px;font-size:12px}
+.lq-approved .lq-field,.lq-approved .lq-field input{height:31px!important;min-height:31px}
+.lq-approved .lq-plan h3{font-size:16px;margin:5px 0 2px}
+.lq-approved .lq-plan>p{font-size:12px;line-height:1.2;margin:3px 0}
+.lq-approved .lq-tax-breakdown{font-size:11px;margin-top:5px;padding-top:5px;gap:2px 8px}
+.lq-approved .lq-summary{margin-top:7px;padding:7px 9px;min-height:42px}
+.lq-approved .lq-bank-grid{margin-top:6px;gap:9px}
+.lq-approved .lq-bank-grid>div{padding:7px 10px;min-height:57px}
+.lq-approved .lq-bank-grid b{font-size:18px}
+.lq-approved .lq-bank-data{padding:8px 11px;margin-top:8px}
+.lq-approved .lq-bank-data>div{min-height:24px;padding:2px 0;font-size:12px}
+.lq-approved .lq-instruction{margin-top:8px;padding:7px 9px;font-size:12px}
+.lq-approved .lq-consent{margin:8px 0 6px!important;font-size:12px}
+.lq-approved .lq-pay{padding:10px;font-size:13px;min-height:39px}
+.lq-approved .lq-footnote{font-size:11px;margin-top:7px}
+.lq-approved .lq-bottom-banner{display:flex;align-items:center;gap:13px;margin-top:10px;padding:9px 15px;background:#eaf5ff;border:1px solid #d7e7f7;border-radius:9px;color:#132d5b}
+.lq-approved .lq-bottom-icon{display:grid;place-items:center;flex:0 0 39px;height:39px;border-radius:50%;background:#d9ebff;color:#1263dd}
+.lq-approved .lq-bottom-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lq-approved .lq-bottom-copy small{font-size:10px;letter-spacing:.04em;color:#5d7191}
+.lq-approved .lq-bottom-copy b{font-size:14px;color:#0b2762}
+.lq-approved .lq-bottom-copy>span{font-size:11px;line-height:1.3}
+.lq-approved .lq-bottom-banner.is-submitted{border-color:#bce5cf;background:#eafaf1}
+@media(max-width:850px){.lq-approved .lq-columns{grid-template-columns:minmax(0,1fr)}.lq-approved .lq-plan{flex:initial}.lq-approved .lq-bank{height:auto}.lq-approved .lq-bottom-banner{align-items:flex-start}}
+@media(max-width:480px){.lq-approved{padding:10px 9px 18px}.lq-approved .lq-process-banner{padding:10px}.lq-approved .lq-panel{padding:12px}.lq-approved .lq-bank-grid{grid-template-columns:1fr}.lq-approved .lq-bottom-banner{padding:10px}}
