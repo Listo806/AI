@@ -183,3 +183,36 @@
 .lq-modal-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(8,24,54,.6);display:grid;place-items:center;padding:16px;overflow-y:auto}.lq-modal{width:min(100%,480px);background:white;border-radius:14px;padding:22px;box-shadow:0 18px 60px #0c1d3850;color:#152442;max-height:calc(100dvh - 32px);overflow-y:auto}.lq-modal-title{display:flex;align-items:start;justify-content:space-between;gap:12px}.lq-modal-title h2{font-size:19px;margin:0}.lq-modal-title p{font-size:13px;color:#60718c;margin:5px 0 14px}.lq-modal-title button{background:none;border:0;cursor:pointer}.lq-modal-info{background:#edf5ff;padding:10px;border-radius:7px;margin-bottom:14px;font-size:13px}.lq-modal label{display:block;font-size:13px;font-weight:650;margin:12px 0}.lq-modal label input:not([type=file]){display:block;width:100%;height:42px;margin-top:6px;padding:9px;border:1px solid #cbd6e7;border-radius:7px}.lq-upload{padding:13px;border:1px dashed #a5bcdb;border-radius:8px}.lq-upload svg{vertical-align:middle;margin-right:7px}.lq-upload input{display:block;width:100%;margin-top:10px;font-size:12px}.lq-modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.lq-modal-actions button{border:1px solid #cbd6e7;background:white;padding:10px 14px;border-radius:7px;cursor:pointer}.lq-modal-actions button:last-child{background:#0965f5;color:white;border-color:#0965f5}.lq-modal-actions button:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:850px){.lq-approved .lq-columns{grid-template-columns:minmax(0,1fr)}.lq-approved .lq-bank{height:auto}.lq-approved .lq-panel{padding:15px}.lq-approved .lq-process-banner{font-size:12px}}
 @media(max-width:480px){.lq-approved{padding:12px 10px 24px}.lq-approved .lq-bank-grid{grid-template-columns:1fr}.lq-approved .lq-heading h2{font-size:16px}.lq-approved .lq-heading{flex-wrap:wrap}.lq-approved .lq-bank-data>div{grid-template-columns:minmax(80px,34%) minmax(0,1fr) 26px;font-size:12px}.lq-approved .lq-summary{flex-wrap:wrap}.lq-approved .lq-summary>span{margin-left:auto}.lq-modal{padding:16px}}
+
+/* Approved Ecuador checkout — viewport-conscious desktop layout.
+   Never clip content: short viewports may still require natural page scrolling. */
+.lq-approved,.lq-approved *{box-sizing:border-box}
+.lq-approved{overflow-x:hidden}
+.lq-approved .lq-columns,.lq-approved .lq-left,.lq-approved .lq-right,.lq-approved .lq-panel{min-width:0;max-width:100%}
+.lq-approved .lq-left{display:flex;flex-direction:column}
+.lq-approved .lq-plan{flex:1 1 auto}
+.lq-approved .lq-bank{overflow:visible}
+@media (min-width: 900px){
+ .lq-approved{padding:clamp(8px,1.3vh,16px) clamp(12px,2vw,28px) 12px}
+ .lq-approved .lq-process-banner{padding:clamp(7px,1vh,11px) 12px;margin-bottom:clamp(7px,1vh,12px)}
+ .lq-approved .lq-columns{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:12px}
+ .lq-approved .lq-left{gap:10px}
+ .lq-approved .lq-panel{padding:clamp(10px,1.5vh,16px) 16px}
+ .lq-approved .lq-heading{margin-bottom:6px}
+ .lq-approved .lq-heading .lq-symbol{width:36px;height:36px;flex-basis:36px}
+ .lq-approved .lq-heading h2{font-size:clamp(16px,1.25vw,19px)}
+ .lq-approved .lq-field,.lq-approved .lq-field input{min-height:34px;height:34px!important}
+ .lq-approved .lq-panel label:not(.lq-consent){margin-bottom:5px}
+ .lq-approved .lq-bank-grid>div{min-height:60px;padding:8px 10px}
+ .lq-approved .lq-bank-data{padding:8px 10px;margin-top:8px}
+ .lq-approved .lq-bank-data>div{min-height:25px;padding:2px 0}
+ .lq-approved .lq-instruction{margin-top:8px;padding:8px}
+ .lq-approved .lq-consent{margin:8px 0!important}
+ .lq-approved .lq-pay{padding:10px 12px}
+ .lq-approved .lq-status{margin:8px auto;padding:9px 12px}
+}
+@media (max-width: 899px){
+ .lq-approved .lq-columns{grid-template-columns:minmax(0,1fr)}
+ .lq-approved .lq-left,.lq-approved .lq-right{height:auto}
+ .lq-approved .lq-plan{flex:auto}
+}
