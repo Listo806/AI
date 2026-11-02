@@ -15,10 +15,15 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
       transaction_id text NOT NULL UNIQUE, amount_cents integer NOT NULL CHECK(amount_cents > 0),
       currency text NOT NULL DEFAULT 'USD', approved_at timestamptz NOT NULL,
       gclid text, gbraid text, wbraid text,
-      status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','unattributed','failed')),
+      status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','unattributed','failed','needs_review')),
       attempts integer NOT NULL DEFAULT 0, next_attempt_at timestamptz NOT NULL DEFAULT now(),
       last_error text, sent_at timestamptz, response jsonb, updated_at timestamptz NOT NULL DEFAULT now()
     )`);
+    // Existing installations may have the original CHECK constraint without needs_review.
+    // Unknown outcomes must not be automatically replayed: Google may already have
+    // accepted the conversion even when our HTTP response was lost.
+    await this.db.query(`ALTER TABLE marketplace_purchase_outbox DROP CONSTRAINT IF EXISTS marketplace_purchase_outbox_status_check`);
+    await this.db.query(`ALTER TABLE marketplace_purchase_outbox ADD CONSTRAINT marketplace_purchase_outbox_status_check CHECK (status IN ('pending','sending','sent','unattributed','failed','needs_review'))`);
     await this.db.query(`CREATE TABLE IF NOT EXISTS marketplace_ad_attribution (
       enrollment_id uuid PRIMARY KEY REFERENCES marketplace_plan_enrollments(id),
       user_id uuid NOT NULL REFERENCES users(id), gclid text, gbraid text, wbraid text,
@@ -80,7 +85,7 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
       this.logger.warn(`ListoQasa Purchase upload paused: action ${actionId} not an enabled UPLOAD_CLICKS PURCHASE action`);
       return;
     }
-    await this.db.query(`UPDATE marketplace_purchase_outbox SET status='failed',next_attempt_at=now(),last_error='Interrupted upload; retry with same order ID' WHERE status='sending' AND updated_at<now()-interval '15 minutes'`);
+    await this.db.query(`UPDATE marketplace_purchase_outbox SET status='needs_review',last_error='Upload interrupted; confirm Google Ads outcome before any manual replay',updated_at=now() WHERE status='sending' AND updated_at<now()-interval '15 minutes'`);
     const claim = await this.db.query(`UPDATE marketplace_purchase_outbox SET status='sending',attempts=attempts+1,updated_at=now()
       WHERE enrollment_id IN (SELECT enrollment_id FROM marketplace_purchase_outbox
         WHERE status IN ('pending','failed') AND next_attempt_at<=now()
@@ -88,6 +93,7 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
         ORDER BY approved_at LIMIT 10 FOR UPDATE SKIP LOCKED)
       RETURNING *`);
     for (const row of claim.rows) {
+      let uploadStarted = false;
       try {
         const oauth = await fetch('https://oauth2.googleapis.com/token', {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:clientId!,client_secret:clientSecret!,refresh_token:refreshToken!,grant_type:'refresh_token'})});
         const token = await oauth.json();
@@ -103,6 +109,7 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
         const url=`https://googleads.googleapis.com/${process.env.LISTOQASA_GOOGLE_ADS_API_VERSION || 'v24'}/customers/${customerId}:uploadClickConversions`;
         const headers:any={'Authorization':`Bearer ${token.access_token}`,'developer-token':developerToken!,'Content-Type':'application/json'};
         if (process.env.LISTOQASA_GOOGLE_ADS_LOGIN_CUSTOMER_ID) headers['login-customer-id']=process.env.LISTOQASA_GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g,'');
+        uploadStarted = true;
         const res=await fetch(url,{method:'POST',headers,body:JSON.stringify({conversions:[conversion],partialFailure:true})});
         const body=await res.json();
         if (!res.ok || body.partialFailureError || !body.results?.length) {
@@ -111,8 +118,12 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
         }
         await this.db.query(`UPDATE marketplace_purchase_outbox SET status='sent',sent_at=now(),response=$2::jsonb,last_error=NULL,updated_at=now() WHERE enrollment_id=$1`,[row.enrollment_id,JSON.stringify(body)]);
       } catch(e) {
-        await this.db.query(`UPDATE marketplace_purchase_outbox SET status='failed',last_error=$2,next_attempt_at=now()+make_interval(mins => LEAST(1440,POWER(2,LEAST(attempts,10))::int)),updated_at=now() WHERE enrollment_id=$1`,[row.enrollment_id,String(e).slice(0,1500)]);
-        this.logger.warn(`Purchase upload pending retry for enrollment ${row.enrollment_id}`);
+        // A transport failure or a missing response after starting the upload has
+        // an UNKNOWN outcome. Do not risk a second conversion automatically.
+        // Explicit API rejections are also held for review in this conservative mode.
+        const state = uploadStarted ? 'needs_review' : 'failed';
+        await this.db.query(`UPDATE marketplace_purchase_outbox SET status=$2,last_error=$3,next_attempt_at=CASE WHEN $2='failed' THEN now()+make_interval(mins => LEAST(1440,POWER(2,LEAST(attempts,10))::int)) ELSE next_attempt_at END,updated_at=now() WHERE enrollment_id=$1 AND status='sending'`,[row.enrollment_id,state,String(e).slice(0,1500)]);
+        this.logger.warn(`Purchase upload ${state} for enrollment ${row.enrollment_id}; check diagnostics before manual replay`);
       }
     }
   }
