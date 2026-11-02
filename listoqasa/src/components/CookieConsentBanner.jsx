@@ -35,6 +35,9 @@ export default function CookieConsentBanner() {
     try { localStorage.setItem(KEY, JSON.stringify(value)); } catch { /* private browsing */ }
     apply(value); setPrefs(value); setAds(value.ads); setAnalytics(value.analytics); setVisible(false); setCustom(false);
   };
+  // Hide the consent UI on checkout only; retain saved preferences and consent initialization.
+  const isCheckout = /^\/(?:es-ec\/)?marketplace\/checkout(?:\/|$)/.test(window.location.pathname);
+  if (isCheckout) return null;
   return <>
     {!visible && <button type="button" className="lq-cookie-settings" onClick={() => { setAds(prefs?.ads ?? false); setAnalytics(prefs?.analytics ?? false); setCustom(true); setVisible(true); }}>{t.settings}</button>}
     {visible && <section className="lq-cookie-banner" role="dialog" aria-modal="false" aria-label={t.title}>

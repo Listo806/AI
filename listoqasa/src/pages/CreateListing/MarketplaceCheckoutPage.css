@@ -296,3 +296,23 @@
   .lq-approved .lq-bank { height: auto; }
   .lq-approved .lq-plan { flex: none; }
 }
+
+/* Final compact desktop fit: no clipped panels, natural mobile scrolling. */
+@media (min-width: 851px) {
+ .lq-approved {padding-top:8px;padding-bottom:8px;}
+ .lq-approved .lq-process-banner {padding:6px 10px;margin-bottom:6px;}
+ .lq-approved .lq-columns {gap:9px;}
+ .lq-approved .lq-left {gap:7px;}
+ .lq-approved .lq-panel {padding:8px 12px;}
+ .lq-approved .lq-heading {margin-bottom:3px;}
+ .lq-approved .lq-heading .lq-symbol {width:29px;height:29px;flex-basis:29px;}
+ .lq-approved .lq-field,.lq-approved .lq-field input {height:28px!important;min-height:28px;}
+ .lq-approved .lq-bank-grid>div {min-height:49px;padding:5px 9px;}
+ .lq-approved .lq-bank-data {padding:5px 9px;margin-top:5px;}
+ .lq-approved .lq-bank-data>div {min-height:21px;padding:1px 0;}
+ .lq-approved .lq-instruction {margin-top:5px;padding:5px 7px;}
+ .lq-approved .lq-consent {margin:5px 0 4px!important;}
+ .lq-approved .lq-pay {min-height:35px;padding:7px;}
+ .lq-approved .lq-footnote {margin-top:4px;}
+ .lq-approved .lq-bottom-banner {margin-top:6px;padding:6px 10px;}
+}
