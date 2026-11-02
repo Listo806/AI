@@ -1,13 +1,14 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PoolClient } from 'pg';
+import { ListoqasaGoogleAdsService } from '../integrations/google-ads/listoqasa-google-ads.service';
 
 /** Durable approval outbox. An offline Google Ads conversion action is required for API uploads. */
 @Injectable()
 export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(MarketplacePurchaseService.name);
   private timer?: NodeJS.Timeout;
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DatabaseService, private readonly listoqasaAds: ListoqasaGoogleAdsService) {}
   async schema() {
     await this.db.query(`CREATE TABLE IF NOT EXISTS marketplace_purchase_outbox (
       enrollment_id uuid PRIMARY KEY REFERENCES marketplace_plan_enrollments(id),
@@ -49,29 +50,34 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
   onModuleDestroy() { if (this.timer) clearInterval(this.timer); }
   async flush() {
     await this.schema();
+    // Explicitly opt into the offline path only after disabling website Purchase for
+    // these bank-transfer transactions; otherwise the same payment could be counted twice.
+    if (process.env.LISTOQASA_OFFLINE_PURCHASE_ENABLED !== 'true' ||
+        process.env.LISTOQASA_BANK_PURCHASE_WEBSITE_DISABLED !== 'true') return;
     // Upload only to a dedicated offline CLICK conversion action; a website tag action is not uploadable.
-    const customerId = (process.env.GOOGLE_ADS_CUSTOMER_ID || '').replace(/-/g,'');
-    const actionId = process.env.GOOGLE_ADS_OFFLINE_PURCHASE_ACTION_ID;
-    const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
-    const clientId = process.env.GOOGLE_ADS_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+    const customerId = (process.env.LISTOQASA_GOOGLE_ADS_CUSTOMER_ID || '').replace(/-/g,'');
+    const actionId = process.env.LISTOQASA_GOOGLE_ADS_OFFLINE_PURCHASE_ACTION_ID;
+    const developerToken = process.env.LISTOQASA_GOOGLE_ADS_DEVELOPER_TOKEN;
+    const clientId = process.env.LISTOQASA_GOOGLE_ADS_CLIENT_ID;
+    const clientSecret = process.env.LISTOQASA_GOOGLE_ADS_CLIENT_SECRET;
     if (![customerId,actionId,developerToken,clientId,clientSecret].every(Boolean)) {
       this.logger.warn('Google Ads Purchase upload disabled: customer ID, offline action ID, developer token or OAuth client configuration missing');
       return;
     }
-    // An existing CRM OAuth connection can supply a refresh token, but only when
-    // its connected Ads customer matches the configured conversion customer.
-    // Never use an arbitrary team's OAuth credentials for marketplace purchases.
-    let refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
+    // Do not reuse CRM refresh tokens or any shared Cortexa Google Ads settings.
+    await this.listoqasaAds.schema();
+    const row = (await this.db.query('SELECT refresh_token FROM listoqasa_google_ads_connection WHERE id=1 AND customer_id=$1', [customerId])).rows[0];
+    const refreshToken: string | undefined = row?.refresh_token;
     if (!refreshToken) {
-      const connected = await this.db.query(`SELECT refresh_token FROM google_ads_integrations
-        WHERE REPLACE(google_ads_account_id, '-', '') = $1
-          AND NULLIF(TRIM(refresh_token), '') IS NOT NULL
-        ORDER BY updated_at DESC LIMIT 1`, [customerId]);
-      refreshToken = connected.rows[0]?.refresh_token;
+      this.logger.warn('ListoQasa Purchase upload paused: dedicated OAuth connection missing');
+      return;
     }
-    if (!refreshToken) {
-      this.logger.warn('Google Ads Purchase upload paused: no matching authorized Google Ads OAuth refresh token');
+    // Fail closed: website (WEBPAGE) actions must never be used for offline click uploads.
+    let verified: any;
+    try { verified = await this.listoqasaAds.verifyConversionAction(); }
+    catch (e) { this.logger.warn('ListoQasa Purchase upload paused: action verification failed; check API diagnostic logs'); return; }
+    if (!verified.uploadEligible) {
+      this.logger.warn(`ListoQasa Purchase upload paused: action ${actionId} not an enabled UPLOAD_CLICKS PURCHASE action`);
       return;
     }
     await this.db.query(`UPDATE marketplace_purchase_outbox SET status='failed',next_attempt_at=now(),last_error='Interrupted upload; retry with same order ID' WHERE status='sending' AND updated_at<now()-interval '15 minutes'`);
@@ -85,7 +91,7 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
       try {
         const oauth = await fetch('https://oauth2.googleapis.com/token', {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:clientId!,client_secret:clientSecret!,refresh_token:refreshToken!,grant_type:'refresh_token'})});
         const token = await oauth.json();
-        if (!oauth.ok || !token.access_token) throw new Error(`OAuth HTTP ${oauth.status}`);
+        if (!oauth.ok || !token.access_token) throw new Error(`ListoQasa OAuth refresh HTTP ${oauth.status}`);
         const conversion: any = {
           conversionAction:`customers/${customerId}/conversionActions/${actionId}`,
           conversionDateTime:new Date(row.approved_at).toISOString().replace('T',' ').replace('Z','+00:00'),
@@ -94,12 +100,15 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
         if (row.gclid) conversion.gclid=row.gclid;
         else if (row.gbraid) conversion.gbraid=row.gbraid;
         else conversion.wbraid=row.wbraid;
-        const url=`https://googleads.googleapis.com/${process.env.GOOGLE_ADS_API_VERSION || 'v22'}/customers/${customerId}:uploadClickConversions`;
+        const url=`https://googleads.googleapis.com/${process.env.LISTOQASA_GOOGLE_ADS_API_VERSION || 'v22'}/customers/${customerId}:uploadClickConversions`;
         const headers:any={'Authorization':`Bearer ${token.access_token}`,'developer-token':developerToken!,'Content-Type':'application/json'};
-        if (process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID) headers['login-customer-id']=process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g,'');
+        if (process.env.LISTOQASA_GOOGLE_ADS_LOGIN_CUSTOMER_ID) headers['login-customer-id']=process.env.LISTOQASA_GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g,'');
         const res=await fetch(url,{method:'POST',headers,body:JSON.stringify({conversions:[conversion],partialFailure:true})});
         const body=await res.json();
-        if (!res.ok || body.partialFailureError || !body.results?.length) throw new Error(JSON.stringify(body).slice(0,1500));
+        if (!res.ok || body.partialFailureError || !body.results?.length) {
+          this.listoqasaAds.logApiError('listoqasa.purchase.upload', { response: { status: res.status, data: body, headers: { 'request-id': res.headers.get('request-id') } } });
+          throw new Error(`Google Ads upload rejected (HTTP ${res.status}); see sanitized backend diagnostics`);
+        }
         await this.db.query(`UPDATE marketplace_purchase_outbox SET status='sent',sent_at=now(),response=$2::jsonb,last_error=NULL,updated_at=now() WHERE enrollment_id=$1`,[row.enrollment_id,JSON.stringify(body)]);
       } catch(e) {
         await this.db.query(`UPDATE marketplace_purchase_outbox SET status='failed',last_error=$2,next_attempt_at=now()+make_interval(mins => LEAST(1440,POWER(2,LEAST(attempts,10))::int)),updated_at=now() WHERE enrollment_id=$1`,[row.enrollment_id,String(e).slice(0,1500)]);
