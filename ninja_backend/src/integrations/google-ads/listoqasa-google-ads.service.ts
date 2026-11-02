@@ -75,7 +75,7 @@ export class ListoqasaGoogleAdsService {
     if (!tokens.refresh_token || !tokens.access_token) throw new BadRequestException('Google did not provide offline authorization');
     const customer = this.customer();
     try {
-      await axios.post(`https://googleads.googleapis.com/${process.env.LISTOQASA_GOOGLE_ADS_API_VERSION || 'v22'}/customers/${customer}/googleAds:search`,
+      await axios.post(`https://googleads.googleapis.com/${process.env.LISTOQASA_GOOGLE_ADS_API_VERSION || 'v24'}/customers/${customer}/googleAds:search`,
         { query: 'SELECT customer.id FROM customer LIMIT 1' }, { headers: this.headers(tokens.access_token), timeout: 15000 });
     } catch (error: any) {
       this.logApiError('listoqasa.connect.validation', error);
@@ -103,7 +103,7 @@ export class ListoqasaGoogleAdsService {
     const access = (await oauth.getAccessToken()).token;
     if (!access) throw new ServiceUnavailableException('ListoQasa OAuth refresh failed');
     try {
-      const response = await axios.post(`https://googleads.googleapis.com/${process.env.LISTOQASA_GOOGLE_ADS_API_VERSION || 'v22'}/customers/${customer}/googleAds:search`,
+      const response = await axios.post(`https://googleads.googleapis.com/${process.env.LISTOQASA_GOOGLE_ADS_API_VERSION || 'v24'}/customers/${customer}/googleAds:search`,
         { query: `SELECT conversion_action.id,conversion_action.name,conversion_action.type,conversion_action.category,conversion_action.status FROM conversion_action WHERE conversion_action.id = ${action} LIMIT 1` },
         { headers: this.headers(access), timeout: 15000 });
       const record = response.data?.results?.[0]?.conversionAction;

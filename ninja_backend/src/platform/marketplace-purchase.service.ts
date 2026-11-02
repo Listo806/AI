@@ -100,7 +100,7 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
         if (row.gclid) conversion.gclid=row.gclid;
         else if (row.gbraid) conversion.gbraid=row.gbraid;
         else conversion.wbraid=row.wbraid;
-        const url=`https://googleads.googleapis.com/${process.env.LISTOQASA_GOOGLE_ADS_API_VERSION || 'v22'}/customers/${customerId}:uploadClickConversions`;
+        const url=`https://googleads.googleapis.com/${process.env.LISTOQASA_GOOGLE_ADS_API_VERSION || 'v24'}/customers/${customerId}:uploadClickConversions`;
         const headers:any={'Authorization':`Bearer ${token.access_token}`,'developer-token':developerToken!,'Content-Type':'application/json'};
         if (process.env.LISTOQASA_GOOGLE_ADS_LOGIN_CUSTOMER_ID) headers['login-customer-id']=process.env.LISTOQASA_GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace(/-/g,'');
         const res=await fetch(url,{method:'POST',headers,body:JSON.stringify({conversions:[conversion],partialFailure:true})});
