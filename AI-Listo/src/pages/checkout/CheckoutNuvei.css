@@ -225,3 +225,52 @@ body{overflow-x:hidden}
 .ec-checkout-page .ec-whatsapp{margin-top:12px}
 @media(max-width:850px){.ec-checkout-page .cxo-grid{grid-template-columns:1fr}.ec-checkout-page .ec-approved-payment{height:auto}}
 @media(max-width:560px){.ec-checkout-page .cxo-wrap{padding:12px}.ec-checkout-page .ec-bank-top{grid-template-columns:1fr}.ec-checkout-page .ec-bank-details>div{grid-template-columns:1fr;gap:3px}}
+
+/* Ecuador-only compact checkout, matching the approved ListoQasa proportions. */
+@media screen {
+.ec-checkout-page {background:#f7f9fd;min-height:100vh;overflow-x:clip}
+.ec-checkout-page .cxo-wrap {box-sizing:border-box;width:min(100% - 36px,1080px);max-width:1080px;padding:9px 0;margin:0 auto}
+.ec-checkout-page .ec-process-banner,.ec-checkout-page .ec-bottom-banner{display:flex;align-items:center;gap:12px;background:#edf7ff;border:1px solid #dbe9f8;border-radius:8px;padding:5px 12px;color:#0b1b48}
+.ec-checkout-page .ec-process-banner{margin-bottom:9px}.ec-checkout-page .ec-bottom-banner{margin-top:9px; padding-top: 0px;}
+.ec-checkout-page .ec-process-banner>svg,.ec-checkout-page .ec-bottom-banner>svg{flex-shrink:0;color:#18aa76}
+.ec-checkout-page .ec-process-banner strong,.ec-checkout-page .ec-bottom-banner strong{display:block;font-size:15px;line-height:1.25}
+.ec-checkout-page .ec-process-banner p,.ec-checkout-page .ec-bottom-banner p{font-size:12px;line-height:1.35;margin:3px 0 0}
+.ec-checkout-page .ec-bottom-banner small{font-size:10px;color:#66748e}
+.ec-checkout-page .cxo-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.03fr);gap:10px}
+.ec-checkout-page .cxo-left-col{display:flex;flex-direction:column;gap:9px}
+.ec-checkout-page .cxo-left-col>.cxo-card:last-child{flex:1}
+.ec-checkout-page .cxo-card{box-sizing:border-box;padding:10px 14px!important;min-width:0}
+.ec-checkout-page .cxo-chead{margin-bottom:5px}
+.ec-checkout-page .cxo-icon{width:33px;height:33px;flex-shrink:0}
+.ec-checkout-page .cxo-chead h2,.ec-checkout-page .ec-pay-head h2{font-size:17px;line-height:1.2}
+.ec-checkout-page .cxo-chead p,.ec-checkout-page .ec-pay-head p{font-size:11px}
+.ec-checkout-page .cxo-fields{gap:5px;margin-top:5px}
+.ec-checkout-page .cxo-label{font-size:11px;margin-bottom:2px}
+.ec-checkout-page .cxo-input{height:30px;min-height:30px}
+.ec-checkout-page .cxo-input input{font-size:12px}
+.ec-checkout-page .cxo-plan-name{margin-top:4px;font-size:16px}
+.ec-checkout-page .cxo-plan-sub,.ec-checkout-page .ec-renewal{font-size:12px;margin-top:2px}
+.ec-checkout-page .cxo-divider{margin:6px 0}
+.ec-checkout-page .ec-price-breakdown{font-size:12px;margin:6px 0}
+.ec-checkout-page .ec-price-breakdown>div{display:flex;justify-content:space-between;gap:8px;margin:2px 0}
+.ec-checkout-page .ec-plan-option{margin:6px 0 0;padding:5px 9px;grid-template-columns:24px 1fr auto;gap:6px;font-size:12px}
+.ec-checkout-page .ec-plan-option>span{text-align:right}
+.ec-checkout-page .ec-approved-payment{height:100%;padding:10px 14px!important}
+.ec-checkout-page .ec-pay-head{gap:8px}.ec-checkout-page .ec-pay-head h2 span{font-size:10px;padding:3px 8px}
+.ec-checkout-page .ec-bank-top{gap:9px;margin-top:8px}
+.ec-checkout-page .ec-bank-top>div{min-height:54px;padding:7px 34px 7px 10px}
+.ec-checkout-page .ec-bank-top small{font-size:11px}.ec-checkout-page .ec-bank-top strong{font-size:16px;line-height:1.15}
+.ec-checkout-page .ec-bank-details{margin-top:7px;padding:7px 10px}
+.ec-checkout-page .ec-bank-details>div{min-height:24px;font-size:12px;grid-template-columns:42% minmax(0,1fr)}
+.ec-checkout-page .ec-instruction{margin-top:7px;padding:7px 9px;font-size:12px;gap:7px}
+.ec-checkout-page .ec-approved-payment .cxo-consent{margin:7px 0 0;font-size:12px}
+.ec-checkout-page .ec-whatsapp{min-height:38px;height:38px;margin-top:7px;font-size:13px;background:#1262f3;color:#fff}
+.ec-checkout-page .ec-verify{margin-top:6px;font-size:11px}
+.ec-checkout-page .ec-bank-top button,.ec-checkout-page .ec-bank-details button{color:#2461bd}
+.ec-checkout-page .ec-feedback{font-size:12px;margin:5px 0}
+}
+@media(max-width:850px){.ec-checkout-page .cxo-wrap{width:min(100% - 24px,620px)}.ec-checkout-page .cxo-grid{grid-template-columns:minmax(0,1fr)}.ec-checkout-page .ec-approved-payment{height:auto}}
+@media(max-width:500px){.ec-checkout-page .ec-bank-top{grid-template-columns:minmax(0,1fr)}.ec-checkout-page .ec-bank-details>div{grid-template-columns:1fr;gap:1px;padding:4px 28px 4px 0}.ec-checkout-page .ec-plan-option{grid-template-columns:22px 1fr}.ec-checkout-page .ec-plan-option>span{grid-column:2;text-align:left}}
+.ec-modal-backdrop{position:fixed;inset:0;background:rgba(11,22,52,.5);z-index:10000;display:grid;place-items:center;padding:16px}
+.ec-modal{position:relative;width:min(100%,460px);border-radius:12px;background:white;padding:22px;color:#111b4d;box-shadow:0 16px 45px #0002}
+.ec-modal h2{font-size:20px;margin:0 30px 8px 0}.ec-modal p{font-size:13px;line-height:1.45;color:#52617e}.ec-modal label{display:block;font-weight:600;font-size:13px;margin-top:14px}.ec-modal input{display:block;width:100%;box-sizing:border-box;margin-top:6px;height:42px;padding:8px;border:1px solid #cbd8eb;border-radius:6px}.ec-modal-close{position:absolute;right:15px;top:15px;border:0;background:none;cursor:pointer}.ec-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.ec-modal-actions button{border:1px solid #cbd8eb;border-radius:6px;padding:10px 14px;cursor:pointer}.ec-modal-actions button:last-child{background:#1462f3;color:white;border-color:#1462f3}.ec-modal-actions button:disabled{opacity:.55;cursor:not-allowed}

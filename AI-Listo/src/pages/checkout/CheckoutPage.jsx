@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
   User, Mail, Phone, Layers, CreditCard, Calendar, Lock, ShieldCheck,
-  Edit2, ExternalLink, HelpCircle, Zap, Landmark, Copy, MessageCircle, Info,
+  Edit2, ExternalLink, HelpCircle, Zap, Landmark, Copy, MessageCircle, Info, CheckCircle2, Upload, X,
 } from "lucide-react";
 import { trackEvent, trackEventOnce, trackPurchase, setUserData, getGaClientId } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
@@ -555,17 +555,24 @@ export default function CheckoutPage() {
   }, [isEcuadorFlow]);
   const [ecOrder,setEcOrder] = useState(null);
   const [ecTxn,setEcTxn] = useState('');
+  const [ecDialog,setEcDialog] = useState(false);
+  const [ecReceipt,setEcReceipt] = useState(null);
   const [ecSubmitting,setEcSubmitting] = useState(false);
   const [ecMessage,setEcMessage] = useState('');
   const paymentReference = ecOrder?.reference || '';
+  const ecBilling = searchParams.get('billing') || 'monthly';
+  const ecSource = searchParams.get('source') || '';
+  const ecConfirmed = ['pending_review','verified'].includes(ecOrder?.status);
+  const ecTotal = Number(ecOrder?.amount ?? plan.price);
+  const ecTax = Math.max(0, ecTotal - plan.price);
   useEffect(() => {
     if (!isEcuadorFlow || !user?.id || !ecBank?.configured || !planIsValid) return;
     let canceled = false;
-    apiClient.request('/ecuador/bank-checkout/create', {method:'POST', body:JSON.stringify({planKey:nuveiPlanKey})})
+    apiClient.request('/ecuador/bank-checkout/create', {method:'POST', body:JSON.stringify({planKey:nuveiPlanKey,billing:ecBilling,source:ecSource})})
       .then(order => { if (!canceled) setEcOrder(order); })
       .catch(err => { if (!canceled) setEcMessage(err?.message || 'No se pudo generar la referencia de pago.'); });
     return () => { canceled = true; };
-  }, [isEcuadorFlow, user?.id, ecBank?.configured, planIsValid, nuveiPlanKey]);
+  }, [isEcuadorFlow, user?.id, ecBank?.configured, planIsValid, nuveiPlanKey, ecBilling, ecSource]);
   const ecBankHolder = ecBank?.accountHolder || "";
   const ecBankAccount = ecBank?.accountNumber || "";
   const ecRuc = ecBank?.ruc || "";
@@ -574,21 +581,29 @@ export default function CheckoutPage() {
   const createBankOrder = async () => {
     if(!ecBank?.configured || !consent) {setEcMessage('Acepta los términos y verifica los datos bancarios.');return;}
     setEcSubmitting(true);setEcMessage('');
-    try {const result=await apiClient.request('/ecuador/bank-checkout/create',{method:'POST',body:JSON.stringify({planKey:nuveiPlanKey})});setEcOrder(result);}
+    try {const result=await apiClient.request('/ecuador/bank-checkout/create',{method:'POST',body:JSON.stringify({planKey:nuveiPlanKey,billing:ecBilling,source:ecSource})});setEcOrder(result);}
     catch(e){setEcMessage(e?.message||'No se pudo generar la referencia.');}
     finally{setEcSubmitting(false);}
   };
   const sendTransferConfirmation = async () => {
-    if(!ecOrder?.id || ecTxn.trim().length<4) {setEcMessage('Introduce la referencia de tu transacción bancaria (mínimo 4 caracteres).');return;}
-    setEcSubmitting(true);setEcMessage('');
-    try {const result=await apiClient.request(`/ecuador/bank-checkout/${ecOrder.id}/confirm`,{method:'POST',body:JSON.stringify({bankTransactionReference:ecTxn.trim()})});setEcOrder(result);setEcMessage('Confirmación recibida. Pago pendiente de verificación administrativa; tu cuenta todavía no está activada.');}
-    catch(e){setEcMessage(e?.message||'No se pudo enviar la confirmación.');}
-    finally{setEcSubmitting(false);}
+    if (!ecOrder?.id || ecTxn.trim().length < 4) { setEcMessage('Introduce la referencia bancaria (mínimo 4 caracteres).'); return; }
+    setEcSubmitting(true); setEcMessage('');
+    try {
+      // Existing Cortexa confirmation endpoint accepts bankTransactionReference.
+      // Never silently claim a receipt was uploaded when the API has no upload contract.
+      const result = await apiClient.request(`/ecuador/bank-checkout/${ecOrder.id}/confirm`, {
+        method: 'POST', body: JSON.stringify({bankTransactionReference:ecTxn.trim()})
+      });
+      setEcOrder(result); setEcDialog(false);
+      setEcMessage('Confirmación recibida. Verificación de pago pendiente. Te avisaremos por correo electrónico cuando tu plan esté activo.');
+    } catch(e) { setEcMessage(e?.message || 'No se pudo enviar la confirmación.'); }
+    finally { setEcSubmitting(false); }
   };
 
   return (
     <main className={`cxo-page ${isEcuadorFlow ? "ec-checkout-page" : ""}`}>
       <div className="cxo-wrap">
+        {isEcuadorFlow && <div className="ec-process-banner"><CheckCircle2 size={24}/><div><strong>Tu cuenta está casi lista. Activa tu plan.</strong><p>Transfiere el importe indicado y envíanos tu confirmación. Cuando verifiquemos el pago, recibirás un correo electrónico. Después, vuelve a iniciar sesión para acceder a tu CRM.</p></div></div>}
         <div className="cxo-grid">
           {/* LEFT */}
           <div className="cxo-col cxo-left-col">
@@ -596,7 +611,7 @@ export default function CheckoutPage() {
               <div className="cxo-chead">
                 <div className="cxo-icon"><User size={20} /></div>
                 <div className="cxo-chead-copy"><h2>{tr.infoTitle}</h2><p>{tr.infoSub}</p></div>
-                <button className="cxo-editlink" onClick={() => navigate("/account/profile")}>{tr.edit} <Edit2 size={14} /></button>
+                <button className="cxo-editlink" onClick={() => navigate(isEcuadorFlow ? "/es-ec/account/profile" : "/account/profile")}>{tr.edit} <Edit2 size={14} /></button>
               </div>
               <div className="cxo-fields">
                 <div><label className="cxo-label">{tr.fullName}</label><div className="cxo-input"><User size={17} /><input value={customer.name} readOnly /></div></div>
@@ -617,8 +632,8 @@ export default function CheckoutPage() {
               <div className="cxo-divider" />
               {isEcuadorFlow ? (
                 <>
-                  <div className="ec-plan-option ec-bank-option"><Landmark size={22}/><b>Transferencia bancaria</b><span><strong>${money(plan.price)} hoy</strong><small>Primer mes · Cuota de activación eliminada</small></span></div>
-                  <div className="ec-renewal">Renovación mensual: <strong>${money(plan.price)} USD</strong></div>
+                  <div className="ec-price-breakdown"><div><span>Subtotal del plan</span><b>${money(plan.price)}</b></div><div><span>Impuestos aplicables</span><b>${money(ecTax)}</b></div><div><strong>Total a transferir</strong><strong>${money(ecTotal)}</strong></div></div>
+                  <div className="ec-plan-option ec-bank-option"><Landmark size={19}/><b>Transferencia bancaria</b><span><strong>${money(ecTotal)} hoy</strong><small>Renovación {ecBilling === 'annual' || ecBilling === 'yearly' ? 'anual' : 'mensual'} según tu plan</small></span></div>
                 </>
               ) : (
                 <>
@@ -639,7 +654,7 @@ export default function CheckoutPage() {
               <section className="cxo-card ec-bank-card ec-approved-payment">
                 <div className="ec-pay-head"><div className="cxo-icon ec-bank-icon"><Landmark size={27}/></div><div><h2>Transferencia bancaria <span>Recomendado en Ecuador</span></h2><p>Paga tu primer mes sin cuota de activación.</p></div></div>
                 <div className="ec-bank-top">
-                  <div><small>Monto a transferir (USD)</small><strong>${money(ecOrder?.amount ?? plan.price)}</strong><button type="button" aria-label="Copiar monto" onClick={()=>copyValue((ecOrder?.amount ?? plan.price).toFixed(2))}><Copy size={18}/></button></div>
+                  <div><small>Monto a transferir (USD)</small><strong>${money(ecTotal)}</strong><button type="button" aria-label="Copiar monto" onClick={()=>copyValue(ecTotal.toFixed(2))}><Copy size={18}/></button></div>
                   <div><small>Referencia de pago</small><strong>{paymentReference || (ecSubmitting ? 'Generando…' : 'Generando…')}</strong><button type="button" aria-label="Copiar referencia" disabled={!paymentReference} onClick={()=>copyValue(paymentReference)}><Copy size={18}/></button></div>
                 </div>
                 <div className="ec-bank-details">
@@ -647,10 +662,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="ec-instruction"><Info size={19}/> Usa la referencia de pago al realizar tu transferencia.</div>
                 <label className="cxo-consent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>{tr.agreePrefix} <a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a>.</span></label>
-                <label className="ec-transaction-label">Referencia de la transacción bancaria
-                  <input value={ecTxn} maxLength={120} onChange={e=>setEcTxn(e.target.value)} placeholder="Número de comprobante de tu banco" disabled={ecOrder?.status==='pending_review'||ecOrder?.status==='verified'}/>
-                </label>
-                <button className="ec-whatsapp" disabled={!ecBank?.configured || !consent || ecSubmitting || !paymentReference || ecTxn.trim().length<4 || ecOrder?.status==='pending_review'||ecOrder?.status==='verified'} onClick={sendTransferConfirmation}><MessageCircle size={20}/> {ecSubmitting ? 'Procesando…' : 'Enviar confirmación de transferencia'}</button>
+                <button type="button" className="ec-whatsapp" disabled={!ecBank?.configured || !consent || ecSubmitting || !paymentReference || ecConfirmed} onClick={()=>setEcDialog(true)}><MessageCircle size={19}/> Enviar confirmación de transferencia</button>
                 {ecMessage && <p className="ec-feedback" role="status">{ecMessage}</p>}
                 {!ecBank?.configured && <p className="cxo-err">Los datos bancarios no están disponibles. No realices ninguna transferencia.</p>}
                 <p className="ec-verify"><Info size={16}/> {ecOrder?.status==='pending_review' ? 'Confirmación recibida. Pago pendiente de verificación.' : 'Tu cuenta se activa después de verificar el pago.'}</p>
@@ -698,7 +710,9 @@ export default function CheckoutPage() {
           <div className="cxo-next-item"><div className="cxo-next-badge">1</div><div><b>{tr.next1}</b><small>{tr.next1s}</small></div></div>
           <div className="cxo-next-item"><div className="cxo-next-badge">2</div><div><b>{tr.next2}</b><small>{tr.next2s}</small></div></div>
         </div>}
+        {isEcuadorFlow && <div className="ec-bottom-banner"><ShieldCheck size={21}/><div><small>SIGUIENTE PASO</small><strong>{ecConfirmed ? 'Confirmación recibida. Verificación de pago pendiente.' : 'Verificación del pago y activación de tu plan'}</strong><p>{ecConfirmed ? 'Te avisaremos por correo cuando tu plan esté activo. Después podrás iniciar sesión en tu CRM.' : 'Envía la confirmación de tu transferencia. Cuando verifiquemos los fondos, te avisaremos por correo electrónico.'}</p></div></div>}
       </div>
+      {isEcuadorFlow && ecDialog && <div className="ec-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget&&!ecSubmitting)setEcDialog(false)}}><div className="ec-modal" role="dialog" aria-modal="true" aria-labelledby="ec-modal-title"><button type="button" className="ec-modal-close" aria-label="Cerrar" disabled={ecSubmitting} onClick={()=>setEcDialog(false)}><X size={19}/></button><h2 id="ec-modal-title">Confirmar transferencia bancaria</h2><p>Introduce la referencia de tu operación bancaria para solicitar la verificación.</p><label>Referencia de la transacción bancaria<input value={ecTxn} maxLength={120} onChange={e=>setEcTxn(e.target.value)} placeholder="Número de comprobante del banco" /></label><p className="ec-modal-note">La confirmación no activa el plan automáticamente. Nuestro equipo verificará el pago.</p><div className="ec-modal-actions"><button type="button" onClick={()=>setEcDialog(false)} disabled={ecSubmitting}>Cancelar</button><button type="button" disabled={ecSubmitting||ecTxn.trim().length<4} onClick={sendTransferConfirmation}>{ecSubmitting?'Enviando…':'Enviar confirmación'}</button></div></div></div>}
     </main>
   );
 }
