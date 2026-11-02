@@ -41,8 +41,9 @@ export class MarketplacePurchaseService implements OnModuleInit, OnModuleDestroy
     return {saved:r.rowCount === 1}; // first touch is immutable; never replace with admin attribution
   }
   async enqueue(client: PoolClient, enrollmentId: string) {
-    await client.query(`INSERT INTO marketplace_purchase_outbox(enrollment_id,transaction_id,amount_cents,currency,approved_at,gclid,gbraid,wbraid)
-      SELECT e.id,e.payment_reference,e.price_cents,e.currency,now(),a.gclid,a.gbraid,a.wbraid
+    await client.query(`INSERT INTO marketplace_purchase_outbox(enrollment_id,transaction_id,amount_cents,currency,approved_at,gclid,gbraid,wbraid,status)
+      SELECT e.id,e.payment_reference,e.price_cents,e.currency,now(),a.gclid,a.gbraid,a.wbraid,
+        CASE WHEN a.gclid IS NULL AND a.gbraid IS NULL AND a.wbraid IS NULL THEN 'unattributed' ELSE 'pending' END
       FROM marketplace_plan_enrollments e LEFT JOIN marketplace_ad_attribution a ON a.enrollment_id=e.id
       WHERE e.id=$1 AND e.status='active' AND e.price_cents>0 AND e.currency='USD' AND e.payment_reference LIKE 'LQB-%'
       ON CONFLICT(enrollment_id) DO NOTHING`, [enrollmentId]);
