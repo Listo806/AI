@@ -15,9 +15,6 @@ const PLANS = {
   'agent-growth': { audience: 'agent', priceCents: 19700, maxListings: null },
   'owner-free-launch': { audience: 'owner', priceCents: 0, maxListings: 1 },
   'agent-free-launch': { audience: 'agent', priceCents: 0, maxListings: 1 },
-  'vacation-starter': { audience: 'vacation-host', priceCents: 7700, maxListings: 3 },
-  'vacation-growth': { audience: 'vacation-host', priceCents: 10700, maxListings: 6 },
-  'vacation-premium': { audience: 'vacation-host', priceCents: 17700, maxListings: null },
 } as const;
 
 @Injectable()
@@ -62,7 +59,7 @@ export class MarketplacePlansService {
       if (amount === undefined) throw new BadRequestException('Quarterly billing is not available for this plan');
       return amount;
     }
-    if (interval !== 'yearly' || !(['agent-essential', 'agent-growth'].includes(planKey) || planKey.startsWith('vacation-')))
+    if (interval !== 'yearly' || !['agent-essential', 'agent-growth'].includes(planKey))
       throw new BadRequestException('Yearly billing is not available for this plan');
     return Math.round(plan.priceCents * 12 * 0.8);
   }
@@ -76,7 +73,7 @@ export class MarketplacePlansService {
     const base = this.basePriceFor(planKey, interval);
     return (['agent-essential','agent-growth'].includes(planKey) || (planKey.startsWith('owner-') && base > 0)) ? Math.round(base * 116 / 100) : base;
   }
-  plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD',taxRate:p.priceCents>0?this.agentIvaRate:0,yearlyPriceCents:(['agent-essential','agent-growth'].includes(key)||key.startsWith('vacation-'))?this.basePriceFor(key,'yearly'):null,monthlyTotalCents:this.priceFor(key,'monthly'),yearlyTotalCents:(['agent-essential','agent-growth'].includes(key)||key.startsWith('vacation-'))?this.priceFor(key,'yearly'):null,quarterlyTotalCents:key.startsWith('owner-')&&p.priceCents>0?this.priceFor(key,'quarterly'):null})); }
+  plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD',taxRate:p.priceCents>0?this.agentIvaRate:0,yearlyPriceCents:['agent-essential','agent-growth'].includes(key)?this.basePriceFor(key,'yearly'):null,monthlyTotalCents:this.priceFor(key,'monthly'),yearlyTotalCents:['agent-essential','agent-growth'].includes(key)?this.priceFor(key,'yearly'):null,quarterlyTotalCents:key.startsWith('owner-')&&p.priceCents>0?this.priceFor(key,'quarterly'):null})); }
   private async expireDue(userId?:string) {
     const expired = await this.db.query(`UPDATE marketplace_plan_enrollments SET status='canceled',updated_at=NOW()
       WHERE status='active' AND price_cents>0 AND current_period_end IS NOT NULL
@@ -205,9 +202,27 @@ export class MarketplacePlansService {
     if(!row) throw new NotFoundException('Marketplace enrollment not found');
     if(row.status!=='pending_payment'||Number(row.price_cents)<=0) throw new BadRequestException('Enrollment is not payable');
     if(row.payment_reference && !String(row.payment_reference).startsWith('LQB-')) throw new BadRequestException('A card payment is already in progress');
-    const reference=`LQB-${row.id}`;
-    await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=$3,updated_at=NOW()
-      WHERE id=$1 AND user_id=$2 AND payment_reference IS NULL`,[enrollmentId,userId,reference]);
+    // Short public reference, while the enrollment UUID remains the canonical internal ID.
+    // Existing references remain unchanged so previously issued bank instructions still work.
+    let reference: string = row.payment_reference || '';
+    if (!reference) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const candidate = `LQB-${crypto.randomBytes(5).toString('hex').toUpperCase()}`;
+        try {
+          const updated = await this.db.query(`UPDATE marketplace_plan_enrollments SET payment_reference=$3,updated_at=NOW()
+            WHERE id=$1 AND user_id=$2 AND payment_reference IS NULL RETURNING payment_reference`,[enrollmentId,userId,candidate]);
+          reference = updated.rows[0]?.payment_reference || '';
+          if (!reference) {
+            const existing = await this.db.query(`SELECT payment_reference FROM marketplace_plan_enrollments WHERE id=$1 AND user_id=$2`,[enrollmentId,userId]);
+            reference = existing.rows[0]?.payment_reference || '';
+          }
+          break;
+        } catch (error: any) {
+          if (error?.code !== '23505' || attempt === 4) throw error;
+        }
+      }
+    }
+    if (!reference.startsWith('LQB-')) throw new BadRequestException('A card payment is already in progress');
     // Bank transfers are never activated automatically from a browser claim.
     // Operations must reconcile actual bank settlement before activating.
     return {reference,status:'pending_payment',amount:Number(row.price_cents)/100,currency:'USD',requiresManualVerification:true};
