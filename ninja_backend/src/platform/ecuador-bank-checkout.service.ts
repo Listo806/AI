@@ -2,9 +2,10 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException, 
 import { DatabaseService } from '../database/database.service';
 import { MarketplacePlansService } from './marketplace-plans.service';
 
-const BASE_AMOUNTS: Record<string, number> = { solo: 12700, business: 29700, scale: 49700 };
-const IVA_RATE = 15;
-const AMOUNTS: Record<string, number> = Object.fromEntries(Object.entries(BASE_AMOUNTS).map(([key, cents]) => [key, Math.round(cents * (100 + IVA_RATE) / 100)]));
+const AMOUNTS: Record<string, number> = { solo: 12700, business: 29700, scale: 49700 };
+const TRIAL_FEE_CENTS = 1100;
+const ECUADOR_IVA_PERCENT = 15;
+const withIva = (cents:number) => Math.round(cents * (100 + ECUADOR_IVA_PERCENT) / 100);
 @Injectable()
 export class EcuadorBankCheckoutService {
   constructor(private readonly db: DatabaseService, private readonly marketplace: MarketplacePlansService) {}
@@ -17,26 +18,37 @@ export class EcuadorBankCheckoutService {
       reviewed_by uuid REFERENCES users(id), reviewed_at timestamptz, review_note text,
       created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
     )`);
+    await this.db.query(`ALTER TABLE cortexa_ec_bank_transfers ADD COLUMN IF NOT EXISTS offer_type text NOT NULL DEFAULT 'regular'`);
+    await this.db.query(`ALTER TABLE cortexa_ec_bank_transfers ADD COLUMN IF NOT EXISTS billing_period text NOT NULL DEFAULT 'monthly'`);
+    await this.db.query(`DROP INDEX IF EXISTS cortexa_ec_bank_pending_unique`);
     await this.db.query(`CREATE UNIQUE INDEX IF NOT EXISTS cortexa_ec_bank_pending_unique
-      ON cortexa_ec_bank_transfers(user_id,plan_key) WHERE status IN ('awaiting_transfer','pending_review')`);
+      ON cortexa_ec_bank_transfers(user_id,plan_key,offer_type) WHERE status IN ('awaiting_transfer','pending_review')`);
   }
   bankDetails() { return this.marketplace.bankDetails(); }
-  async create(userId:string, planKey:string) {
+  async create(userId:string, planKey:string, billing='monthly', source='') {
     const plan = String(planKey||'').toLowerCase();
     if (!Object.prototype.hasOwnProperty.call(AMOUNTS,plan)) throw new BadRequestException('Invalid plan');
+    const offer = source === 'trial' && plan === 'solo' ? 'trial' : 'regular';
+    await this.schema();
+    if (offer === 'trial') {
+      const used = await this.db.query(`SELECT 1 FROM cortexa_ec_bank_transfers WHERE user_id=$1 AND offer_type='trial' AND status='verified' LIMIT 1`, [userId]);
+      if (used.rows.length) throw new ConflictException('Trial already used; choose the regular monthly plan');
+    }
+    const period = billing === 'annual' || billing === 'yearly' ? 'annual' : 'monthly';
+    if (period !== 'monthly') throw new BadRequestException('Annual Ecuador bank billing is not configured');
     if (!this.bankDetails().configured) throw new ServiceUnavailableException('Bank details not configured');
     await this.schema();
-    const existing = await this.db.query(`SELECT id,reference,status,amount_cents FROM cortexa_ec_bank_transfers
-      WHERE user_id=$1 AND plan_key=$2 AND status IN ('awaiting_transfer','pending_review') ORDER BY created_at DESC LIMIT 1`,[userId,plan]);
+    const existing = await this.db.query(`SELECT id,reference,status,amount_cents,plan_key,offer_type,billing_period FROM cortexa_ec_bank_transfers
+      WHERE user_id=$1 AND plan_key=$2 AND offer_type=$3 AND status IN ('awaiting_transfer','pending_review') ORDER BY created_at DESC LIMIT 1`,[userId,plan,offer]);
     if (existing.rows.length) return this.format(existing.rows[0]);
-    const row = await this.db.query(`INSERT INTO cortexa_ec_bank_transfers(user_id,plan_key,amount_cents,reference)
-      VALUES($1,$2,$3,'CX-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,12)))
-      ON CONFLICT DO NOTHING RETURNING id,reference,status,amount_cents`,[userId,plan,AMOUNTS[plan]]);
+    const row = await this.db.query(`INSERT INTO cortexa_ec_bank_transfers(user_id,plan_key,amount_cents,reference,offer_type,billing_period)
+      VALUES($1,$2,$3,'CX-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,12))),$4,$5)
+      ON CONFLICT DO NOTHING RETURNING id,reference,status,amount_cents,plan_key,offer_type,billing_period`,[userId,plan,withIva(offer==='trial'?TRIAL_FEE_CENTS:AMOUNTS[plan]),offer,period]);
     if(row.rows.length) return this.format(row.rows[0]);
-    const retry=await this.db.query(`SELECT id,reference,status,amount_cents FROM cortexa_ec_bank_transfers WHERE user_id=$1 AND plan_key=$2 AND status IN ('awaiting_transfer','pending_review') LIMIT 1`,[userId,plan]);
+    const retry=await this.db.query(`SELECT id,reference,status,amount_cents,plan_key,offer_type,billing_period FROM cortexa_ec_bank_transfers WHERE user_id=$1 AND plan_key=$2 AND offer_type=$3 AND status IN ('awaiting_transfer','pending_review') LIMIT 1`,[userId,plan,offer]);
     return this.format(retry.rows[0]);
   }
-  private format(r:any) {return {id:r.id,reference:r.reference,status:r.status,amount:Number(r.amount_cents)/100,currency:'USD',requiresManualVerification:true};}
+  private format(r:any) {return {id:r.id,reference:r.reference,status:r.status,amount:Number(r.amount_cents)/100,currency:'USD',offerType:r.offer_type||'regular',billing:r.billing_period||'monthly',planKey:r.plan_key,ivaPercent:ECUADOR_IVA_PERCENT,trialDays:r.offer_type==='trial'?14:0,renewalAmount:withIva(AMOUNTS[r.plan_key]||0)/100,trialFeeCredited:false,requiresManualVerification:true};}
   async confirm(userId:string,id:string,transactionReference:string) {
     const ref=String(transactionReference||'').trim();
     if(ref.length<4||ref.length>120) throw new BadRequestException('Bank transaction reference must be 4–120 characters');
@@ -46,7 +58,7 @@ export class EcuadorBankCheckoutService {
     if(!r.rows.length) throw new BadRequestException('Transfer not found or already submitted');
     return this.format(r.rows[0]);
   }
-  async mine(userId:string,id:string) {await this.schema();const r=await this.db.query(`SELECT id,reference,status,amount_cents FROM cortexa_ec_bank_transfers WHERE id=$1 AND user_id=$2`,[id,userId]);if(!r.rows.length)throw new NotFoundException();return this.format(r.rows[0]);}
+  async mine(userId:string,id:string) {await this.schema();const r=await this.db.query(`SELECT id,reference,status,amount_cents,plan_key,offer_type,billing_period FROM cortexa_ec_bank_transfers WHERE id=$1 AND user_id=$2`,[id,userId]);if(!r.rows.length)throw new NotFoundException();return this.format(r.rows[0]);}
   async list() {await this.schema();return (await this.db.query(`SELECT t.id,t.user_id,u.email,t.plan_key,t.amount_cents,t.reference,t.bank_transaction_reference,t.status,t.created_at,t.reviewed_at
     FROM cortexa_ec_bank_transfers t JOIN users u ON u.id=t.user_id ORDER BY t.created_at DESC LIMIT 200`)).rows;}
   async review(id:string,adminId:string,approve:boolean,note:string) {
@@ -65,7 +77,8 @@ export class EcuadorBankCheckoutService {
           WHERE id=$1 RETURNING id,status,reference`,[id,adminId,String(note||'').slice(0,1000)]);
         return {...rejected.rows[0],accessActivated:false};
       }
-      const expected = AMOUNTS[transfer.plan_key];
+      const isTrial = transfer.offer_type === 'trial';
+      const expected = withIva(isTrial ? TRIAL_FEE_CENTS : AMOUNTS[transfer.plan_key]);
       if (!expected || expected !== Number(transfer.amount_cents) || transfer.currency !== 'USD'
           || !transfer.bank_transaction_reference) throw new BadRequestException('Payment data failed validation');
       const u = await client.query(`SELECT id,team_id FROM users WHERE id=$1 FOR UPDATE`,[transfer.user_id]);
@@ -83,18 +96,22 @@ export class EcuadorBankCheckoutService {
       const seats:Record<string,number>={solo:1,business:3,scale:5};
       const seatLimit=seats[transfer.plan_key];
       // Bank transfers grant one paid month only; there is no automatic renewal.
-      const period = await client.query(`SELECT NOW() AS started, NOW()+INTERVAL '1 month' AS ends`);
+      const period = await client.query(isTrial ? `SELECT NOW() AS started, NOW()+INTERVAL '14 days' AS ends` : `SELECT NOW() AS started, NOW()+INTERVAL '1 month' AS ends`);
       const start=period.rows[0].started,end=period.rows[0].ends;
       let subId:string;
       const bankSub=existing.rows.find((r:any)=>r.provider==='ecuador_bank');
+      if (isTrial) {
+        const prior = await client.query(`SELECT 1 FROM cortexa_ec_bank_transfers WHERE user_id=$1 AND offer_type='trial' AND status='verified' LIMIT 1`,[transfer.user_id]);
+        if (prior.rows.length) throw new ConflictException('Trial already activated');
+      }
       if(bankSub){
         subId=bankSub.id;
-        await client.query(`UPDATE subscriptions SET status='active',seat_limit=$2,
-          current_period_start=$3,current_period_end=$4,updated_at=NOW() WHERE id=$1`,[subId,seatLimit,start,end]);
+        await client.query(`UPDATE subscriptions SET status=$5,seat_limit=$2,
+          current_period_start=$3,current_period_end=$4,updated_at=NOW() WHERE id=$1`,[subId,seatLimit,start,end,'active']);
       } else {
         const inserted=await client.query(`INSERT INTO subscriptions
           (team_id,provider,status,seat_limit,current_period_start,current_period_end,created_at,updated_at)
-          VALUES($1,'ecuador_bank','active',$2,$3,$4,NOW(),NOW()) RETURNING id`,[teamId,seatLimit,start,end]);
+          VALUES($1,'ecuador_bank',$5,$2,$3,$4,NOW(),NOW()) RETURNING id`,[teamId,seatLimit,start,end,'active']);
         subId=inserted.rows[0].id;
       }
       await client.query(`UPDATE teams SET subscription_id=$2,seat_limit=$3,token_version=token_version+1,updated_at=NOW() WHERE id=$1`,[teamId,subId,seatLimit]);
@@ -103,7 +120,7 @@ export class EcuadorBankCheckoutService {
       const reviewed=await client.query(`UPDATE cortexa_ec_bank_transfers
         SET status='verified',reviewed_by=$2,reviewed_at=NOW(),review_note=$3,updated_at=NOW()
         WHERE id=$1 RETURNING id,status,reference`,[id,adminId,String(note||'').slice(0,1000)]);
-      return {...reviewed.rows[0],accessActivated:true,subscriptionId:subId,paidThrough:end,autoRenew:false};
+      return {...reviewed.rows[0],accessActivated:true,subscriptionId:subId,paidThrough:end,trial:isTrial,autoRenew:false};
     });
   }
 }
