@@ -3,7 +3,7 @@ import { DatabaseService } from '../database/database.service';
 import { MarketplacePlansService } from './marketplace-plans.service';
 
 const AMOUNTS: Record<string, number> = { solo: 12700, business: 29700, scale: 49700 };
-const TRIAL_FEE_CENTS = 1100;
+const TRIAL_FEES: Record<string, number> = { solo: 1100, business: 2200, scale: 3300 };
 const ECUADOR_IVA_PERCENT = 15;
 const withIva = (cents:number) => Math.round(cents * (100 + ECUADOR_IVA_PERCENT) / 100);
 @Injectable()
@@ -26,9 +26,10 @@ export class EcuadorBankCheckoutService {
   }
   bankDetails() { return this.marketplace.bankDetails(); }
   async create(userId:string, planKey:string, billing='monthly', source='') {
-    const plan = String(planKey||'').toLowerCase();
+    const requestedPlan = String(planKey||'').toLowerCase();
+    const plan = ({team:'business',growth:'scale'} as Record<string,string>)[requestedPlan] || requestedPlan;
     if (!Object.prototype.hasOwnProperty.call(AMOUNTS,plan)) throw new BadRequestException('Invalid plan');
-    const offer = source === 'trial' && plan === 'solo' ? 'trial' : 'regular';
+    const offer = source === 'trial' ? 'trial' : 'regular';
     await this.schema();
     if (offer === 'trial') {
       const used = await this.db.query(`SELECT 1 FROM cortexa_ec_bank_transfers WHERE user_id=$1 AND offer_type='trial' AND status='verified' LIMIT 1`, [userId]);
@@ -43,7 +44,7 @@ export class EcuadorBankCheckoutService {
     if (existing.rows.length) return this.format(existing.rows[0]);
     const row = await this.db.query(`INSERT INTO cortexa_ec_bank_transfers(user_id,plan_key,amount_cents,reference,offer_type,billing_period)
       VALUES($1,$2,$3,'CX-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,12))),$4,$5)
-      ON CONFLICT DO NOTHING RETURNING id,reference,status,amount_cents,plan_key,offer_type,billing_period`,[userId,plan,withIva(offer==='trial'?TRIAL_FEE_CENTS:AMOUNTS[plan]),offer,period]);
+      ON CONFLICT DO NOTHING RETURNING id,reference,status,amount_cents,plan_key,offer_type,billing_period`,[userId,plan,withIva(offer==='trial'?TRIAL_FEES[plan]:AMOUNTS[plan]),offer,period]);
     if(row.rows.length) return this.format(row.rows[0]);
     const retry=await this.db.query(`SELECT id,reference,status,amount_cents,plan_key,offer_type,billing_period FROM cortexa_ec_bank_transfers WHERE user_id=$1 AND plan_key=$2 AND offer_type=$3 AND status IN ('awaiting_transfer','pending_review') LIMIT 1`,[userId,plan,offer]);
     return this.format(retry.rows[0]);
@@ -78,7 +79,7 @@ export class EcuadorBankCheckoutService {
         return {...rejected.rows[0],accessActivated:false};
       }
       const isTrial = transfer.offer_type === 'trial';
-      const expected = withIva(isTrial ? TRIAL_FEE_CENTS : AMOUNTS[transfer.plan_key]);
+      const expected = withIva(isTrial ? TRIAL_FEES[transfer.plan_key] : AMOUNTS[transfer.plan_key]);
       if (!expected || expected !== Number(transfer.amount_cents) || transfer.currency !== 'USD'
           || !transfer.bank_transaction_reference) throw new BadRequestException('Payment data failed validation');
       const u = await client.query(`SELECT id,team_id FROM users WHERE id=$1 FOR UPDATE`,[transfer.user_id]);

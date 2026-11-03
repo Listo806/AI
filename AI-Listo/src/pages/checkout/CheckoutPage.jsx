@@ -563,8 +563,12 @@ export default function CheckoutPage() {
   const ecBilling = searchParams.get('billing') || 'monthly';
   const ecSource = searchParams.get('source') || '';
   const ecConfirmed = ['pending_review','verified'].includes(ecOrder?.status);
-  const ecTotal = Number(ecOrder?.amount ?? plan.price);
-  const ecTax = Math.max(0, ecTotal - plan.price);
+  const ecIsTrial = ecSource === 'trial';
+  const ecTrialFee = plan.startPrice;
+  const ecSubtotal = ecIsTrial ? ecTrialFee : plan.price;
+  const ecTotal = Number(ecOrder?.amount ?? Math.round(ecSubtotal * 115) / 100);
+  const ecTax = Math.max(0, Math.round((ecTotal - ecSubtotal) * 100) / 100);
+  const ecRenewalTotal = Math.round(plan.price * 115) / 100;
   useEffect(() => {
     if (!isEcuadorFlow || !user?.id || !ecBank?.configured || !planIsValid) return;
     let canceled = false;
@@ -632,8 +636,8 @@ export default function CheckoutPage() {
               <div className="cxo-divider" />
               {isEcuadorFlow ? (
                 <>
-                  <div className="ec-price-breakdown"><div><span>Subtotal del plan</span><b>${money(plan.price)}</b></div><div><span>Impuestos aplicables</span><b>${money(ecTax)}</b></div><div><strong>Total a transferir</strong><strong>${money(ecTotal)}</strong></div></div>
-                  <div className="ec-plan-option ec-bank-option"><Landmark size={19}/><b>Transferencia bancaria</b><span><strong>${money(ecTotal)} hoy</strong><small>Renovación {ecBilling === 'annual' || ecBilling === 'yearly' ? 'anual' : 'mensual'} según tu plan</small></span></div>
+                  <div className="ec-price-breakdown"><div><span>Subtotal del plan</span><b>${money(ecSubtotal)}</b></div><div><span>IVA (15%)</span><b>${money(ecTax)}</b></div><div><strong>Total a transferir</strong><strong>${money(ecTotal)}</strong></div></div>
+                  <div className="ec-plan-option ec-bank-option"><Landmark size={19}/><b>Transferencia bancaria</b><span><strong>${money(ecTotal)} hoy</strong><small>{ecIsTrial ? `Prueba de 14 días · Después: $${money(ecRenewalTotal)}/mes (IVA incluido)` : `Renovación mensual: $${money(ecRenewalTotal)} (IVA incluido)`}</small></span></div>
                 </>
               ) : (
                 <>
@@ -652,7 +656,7 @@ export default function CheckoutPage() {
           <div className="cxo-col cxo-right-col">
             {isEcuadorFlow ? (
               <section className="cxo-card ec-bank-card ec-approved-payment">
-                <div className="ec-pay-head"><div className="cxo-icon ec-bank-icon"><Landmark size={27}/></div><div><h2>Transferencia bancaria <span>Recomendado en Ecuador</span></h2><p>Paga tu primer mes sin cuota de activación.</p></div></div>
+                <div className="ec-pay-head"><div className="cxo-icon ec-bank-icon"><Landmark size={27}/></div><div><h2>Transferencia bancaria <span>Recomendado en Ecuador</span></h2><p>{ecIsTrial ? 'Paga la activación de tu prueba de 14 días. No se descuenta de la mensualidad posterior.' : 'Paga tu suscripción mensual mediante transferencia.'}</p></div></div>
                 <div className="ec-bank-top">
                   <div><small>Monto a transferir (USD)</small><strong>${money(ecTotal)}</strong><button type="button" aria-label="Copiar monto" onClick={()=>copyValue(ecTotal.toFixed(2))}><Copy size={18}/></button></div>
                   <div><small>Referencia de pago</small><strong>{paymentReference || (ecSubmitting ? 'Generando…' : 'Generando…')}</strong><button type="button" aria-label="Copiar referencia" disabled={!paymentReference} onClick={()=>copyValue(paymentReference)}><Copy size={18}/></button></div>
@@ -661,7 +665,7 @@ export default function CheckoutPage() {
                   {[["Banco",ecBank?.bankName],["Titular de la cuenta",ecBankHolder],["Tipo de cuenta",ecBank?.accountType || '—'],["Número de cuenta",ecBankAccount],["RUC",ecRuc]].map(([label,value])=><div key={label}><span>{label}:</span><b>{value || '—'}</b><button type="button" aria-label={`Copiar ${label}`} disabled={!value} onClick={()=>copyValue(value)}><Copy size={16}/></button></div>)}
                 </div>
                 <div className="ec-instruction"><Info size={19}/> Usa la referencia de pago al realizar tu transferencia.</div>
-                <div className="cxo-consent"><a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a><span> · </span><a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a></div>
+                <div className="cxo-consent"><a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a> · <a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a></div>
                 <button type="button" className="ec-whatsapp" disabled={!ecBank?.configured || ecSubmitting || !paymentReference || ecConfirmed} onClick={()=>setEcDialog(true)}><MessageCircle size={19}/> Enviar confirmación de transferencia</button>
                 {ecMessage && <p className="ec-feedback" role="status">{ecMessage}</p>}
                 {!ecBank?.configured && <p className="cxo-err">Los datos bancarios no están disponibles. No realices ninguna transferencia.</p>}
