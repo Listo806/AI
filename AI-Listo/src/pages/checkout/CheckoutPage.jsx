@@ -579,7 +579,7 @@ export default function CheckoutPage() {
   const maskEnd = (value) => value ? `••••••${value.slice(-4)}` : "—";
   const copyValue = async (value) => { try { await navigator.clipboard.writeText(String(value)); } catch (_) {} };
   const createBankOrder = async () => {
-    if(!ecBank?.configured || !consent) {setEcMessage('Acepta los términos y verifica los datos bancarios.');return;}
+    if(!ecBank?.configured) {setEcMessage('Verifica los datos bancarios.');return;}
     setEcSubmitting(true);setEcMessage('');
     try {const result=await apiClient.request('/ecuador/bank-checkout/create',{method:'POST',body:JSON.stringify({planKey:nuveiPlanKey,billing:ecBilling,source:ecSource})});setEcOrder(result);}
     catch(e){setEcMessage(e?.message||'No se pudo generar la referencia.');}
@@ -661,8 +661,8 @@ export default function CheckoutPage() {
                   {[["Banco",ecBank?.bankName],["Titular de la cuenta",ecBankHolder],["Tipo de cuenta",ecBank?.accountType || '—'],["Número de cuenta",ecBankAccount],["RUC",ecRuc]].map(([label,value])=><div key={label}><span>{label}:</span><b>{value || '—'}</b><button type="button" aria-label={`Copiar ${label}`} disabled={!value} onClick={()=>copyValue(value)}><Copy size={16}/></button></div>)}
                 </div>
                 <div className="ec-instruction"><Info size={19}/> Usa la referencia de pago al realizar tu transferencia.</div>
-                <label className="cxo-consent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>{tr.agreePrefix} <a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a> {tr.and} <a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a>.</span></label>
-                <button type="button" className="ec-whatsapp" disabled={!ecBank?.configured || !consent || ecSubmitting || !paymentReference || ecConfirmed} onClick={()=>setEcDialog(true)}><MessageCircle size={19}/> Enviar confirmación de transferencia</button>
+                <div className="cxo-consent"><a href="/es-ec/terms" target="_blank" rel="noreferrer">{tr.terms}</a><span> · </span><a href="/es-ec/privacy-policy" target="_blank" rel="noreferrer">{tr.privacy}</a></div>
+                <button type="button" className="ec-whatsapp" disabled={!ecBank?.configured || ecSubmitting || !paymentReference || ecConfirmed} onClick={()=>setEcDialog(true)}><MessageCircle size={19}/> Enviar confirmación de transferencia</button>
                 {ecMessage && <p className="ec-feedback" role="status">{ecMessage}</p>}
                 {!ecBank?.configured && <p className="cxo-err">Los datos bancarios no están disponibles. No realices ninguna transferencia.</p>}
                 <p className="ec-verify"><Info size={16}/> {ecOrder?.status==='pending_review' ? 'Confirmación recibida. Pago pendiente de verificación.' : 'Tu cuenta se activa después de verificar el pago.'}</p>

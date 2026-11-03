@@ -2,7 +2,9 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException, 
 import { DatabaseService } from '../database/database.service';
 import { MarketplacePlansService } from './marketplace-plans.service';
 
-const AMOUNTS: Record<string, number> = { solo: 12700, business: 29700, scale: 49700 };
+const BASE_AMOUNTS: Record<string, number> = { solo: 12700, business: 29700, scale: 49700 };
+const IVA_RATE = 15;
+const AMOUNTS: Record<string, number> = Object.fromEntries(Object.entries(BASE_AMOUNTS).map(([key, cents]) => [key, Math.round(cents * (100 + IVA_RATE) / 100)]));
 @Injectable()
 export class EcuadorBankCheckoutService {
   constructor(private readonly db: DatabaseService, private readonly marketplace: MarketplacePlansService) {}

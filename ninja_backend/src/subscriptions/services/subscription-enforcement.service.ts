@@ -135,6 +135,12 @@ export class SubscriptionEnforcementService {
    * Check if team has CRM access
    */
   async checkCrmAccess(teamId: string): Promise<void> {
+    // Ecuador bank plans never auto-renew: an expired period cannot retain paid CRM access.
+    const bank = await this.db.query(`SELECT status,current_period_end FROM subscriptions
+      WHERE team_id=$1 AND provider='ecuador_bank' ORDER BY created_at DESC LIMIT 1`,[teamId]);
+    if (bank.rows.length && (bank.rows[0].status !== 'active' || !bank.rows[0].current_period_end || new Date(bank.rows[0].current_period_end).getTime() <= Date.now())) {
+      throw new ForbiddenException('Tu plan Ecuador ha vencido. Confirma el siguiente pago para recuperar el acceso.');
+    }
     const features = await this.getTeamFeatures(teamId);
 
     if (!features.crmAccess) {

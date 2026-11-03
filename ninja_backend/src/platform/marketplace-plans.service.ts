@@ -43,7 +43,7 @@ export class MarketplacePlansService {
     await this.db.query(`CREATE INDEX IF NOT EXISTS marketplace_enrollments_user_idx ON marketplace_plan_enrollments(user_id,created_at DESC)`);
   }
   // IVA applies only to new Agent/Developer enrollments; legacy amounts remain unchanged.
-  private readonly agentIvaRate = 16;
+  private readonly agentIvaRate = 15;
   private basePriceFor(planKey: string, interval: string): number {
     const plan = PLANS[planKey as keyof typeof PLANS];
     if (!plan) throw new BadRequestException('Invalid Marketplace plan');
@@ -71,7 +71,7 @@ export class MarketplacePlansService {
   }
   private priceFor(planKey: string, interval: string): number {
     const base = this.basePriceFor(planKey, interval);
-    return (['agent-essential','agent-growth'].includes(planKey) || (planKey.startsWith('owner-') && base > 0)) ? Math.round(base * 116 / 100) : base;
+    return (['agent-essential','agent-growth'].includes(planKey) || (planKey.startsWith('owner-') && base > 0)) ? Math.round(base * 115 / 100) : base;
   }
   plans() { return Object.entries(PLANS).map(([key,p])=>({key,...p,currency:'USD',taxRate:p.priceCents>0?this.agentIvaRate:0,yearlyPriceCents:['agent-essential','agent-growth'].includes(key)?this.basePriceFor(key,'yearly'):null,monthlyTotalCents:this.priceFor(key,'monthly'),yearlyTotalCents:['agent-essential','agent-growth'].includes(key)?this.priceFor(key,'yearly'):null,quarterlyTotalCents:key.startsWith('owner-')&&p.priceCents>0?this.priceFor(key,'quarterly'):null})); }
   private async expireDue(userId?:string) {
@@ -335,7 +335,7 @@ export class MarketplacePlansService {
     let response: any;
     try {
       response = await this.nuvei.debit({id:String(user.id),email:String(user.email)},
-        {amount:Number(row.price_cents)/100,description:`ListoQasa ${row.plan_key}`,dev_reference:reference,currency:'USD',...((row.plan_key.startsWith('agent-') || row.plan_key.startsWith('owner-')) && Number(row.price_cents)===this.priceFor(row.plan_key,row.billing_interval||'monthly') ? {tax_percentage:16, taxable_amount:Math.round(Number(row.price_cents)/1.16)/100, vat:(Number(row.price_cents)-Math.round(Number(row.price_cents)/1.16))/100} : {})},token);
+        {amount:Number(row.price_cents)/100,description:`ListoQasa ${row.plan_key}`,dev_reference:reference,currency:'USD',...((row.plan_key.startsWith('agent-') || row.plan_key.startsWith('owner-')) && Number(row.price_cents)===this.priceFor(row.plan_key,row.billing_interval||'monthly') ? {tax_percentage:15, taxable_amount:Math.round(Number(row.price_cents)/1.15)/100, vat:(Number(row.price_cents)-Math.round(Number(row.price_cents)/1.15))/100} : {})},token);
     } catch (err) {
       // A network exception is ambiguous: the processor might have charged the card.
       this.logger.error('Marketplace Nuvei debit uncertain',err instanceof Error?err.stack:String(err));

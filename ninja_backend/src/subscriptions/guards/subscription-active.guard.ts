@@ -44,6 +44,10 @@ export class SubscriptionActiveGuard implements CanActivate {
       throw new ForbiddenException('No active subscription found');
     }
 
+    const ec = await this.db.query(`SELECT status,current_period_end FROM subscriptions WHERE team_id=$1 AND provider='ecuador_bank' ORDER BY created_at DESC LIMIT 1`,[teamId]);
+    if (ec.rows.length && (ec.rows[0].status !== 'active' || !ec.rows[0].current_period_end || new Date(ec.rows[0].current_period_end).getTime() <= Date.now())) {
+      throw new ForbiddenException('Ecuador bank subscription expired; payment verification required');
+    }
     const subscription = await this.subscriptionsService.findActiveByTeamId(teamId);
 
     if (!subscription || subscription.status !== SubscriptionStatus.ACTIVE) {
