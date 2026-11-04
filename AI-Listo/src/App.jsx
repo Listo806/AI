@@ -68,6 +68,7 @@ import CityPage from "./pages/common/CityPage";
 import CountryPage from "./pages/common/CountryPage";
 
 import Pricing from "./pages/common/Pricing";
+import EmpezarEcuador from "./pages/common/EmpezarEcuador";
 import Trial from "./pages/common/Trial";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
 import NuveiLinkToPay from "./pages/admin/NuveiLinkToPay";
@@ -253,6 +254,7 @@ function publicRoutes(prefix) {
       <Route path={`${p}/integrations`} element={<IntegrationsPage />} />
       <Route path={`${p}/setup-guide`} element={<SetupGuidePage />} />
       <Route path={`${p}/pricing`} element={<Pricing />} />
+      {prefix === "es-ec" && <Route path={`${p}/empezar`} element={<EmpezarEcuador />} />}
       {/* The editorial exists in all three languages, and the language comes
           from the address like every other public page: /editorial/..., then
           /es/editorial/... and /pt/editorial/.... The older addresses that
