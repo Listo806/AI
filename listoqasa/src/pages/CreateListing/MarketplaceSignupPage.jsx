@@ -25,7 +25,7 @@ export default function MarketplaceSignupPage() {
   const planKey = `${role}-${plan === 'free' ? 'free-launch' : plan}`;
   const billing = params.get('billing') === 'quarterly' ? 'quarterly' : params.get('billing') === 'yearly' ? 'yearly' : 'monthly';
   const valid = allowed[role].includes(plan);
-  const [form,setForm] = useState({name:'',email:'',password:'',confirm:''});
+  const [form,setForm] = useState(()=>{let lead={};try{lead=JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}')}catch{}return {name:isEcuador?lead.name||'':'',email:isEcuador?lead.email||'':'',password:'',confirm:''};});
   const [visible,setVisible] = useState(false);
   const [confirmVisible,setConfirmVisible] = useState(false);
   const [busy,setBusy] = useState(false);
@@ -39,8 +39,11 @@ export default function MarketplaceSignupPage() {
     if (form.password !== form.confirm) return setError('Passwords do not match.');
     setBusy(true);
     try {
-      const result = await marketplaceRequest('/auth/signup', {method:'POST',body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password,role,fullName:form.name.trim()})});
+      const result = await marketplaceRequest('/auth/signup', {method:'POST',body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password,role,fullName:form.name.trim(),...(isEcuador?{phone:(JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}').phone||'')}:{}),language:isEcuador?'es':undefined})});
       saveSession(result);
+      // Retain the pre-registration phone for the Ecuador checkout display.
+      // The signup API now persists the Ecuador phone on the canonical user record.
+      if (isEcuador) { try { const lead=JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}'); sessionStorage.setItem('listoqasa_ecuador_lead',JSON.stringify({...lead,name:form.name.trim(),email:form.email.trim().toLowerCase()})); } catch {} }
       trackGoogleAdsSuccess('registration', result.user.id);
       const enrollment = await marketplaceRequest('/marketplace/plans/enroll', {method:'POST',body:JSON.stringify({planKey,interval:billing})});
       if (enrollment?.enrollment?.id) {

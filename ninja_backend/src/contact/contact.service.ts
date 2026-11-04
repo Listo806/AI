@@ -37,6 +37,38 @@ export class ContactService {
     private readonly mailer: PlatformMailerService,
   ) {}
 
+  // Pre-signup interest is stored separately from support contact messages.
+  async saveEcuadorInterest(body: any, ip: string) {
+    const name = this.oneLine(body?.name);
+    const email = this.oneLine(body?.email).toLowerCase();
+    const phone = this.oneLine(body?.phone);
+    const role = this.oneLine(body?.role);
+    if (name.length < 2 || name.length > 120 ||
+        email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ||
+        phone.length > 40 || phone.replace(/\D/g, '').length < 7 ||
+        !['owner', 'agent'].includes(role)) {
+      throw new BadRequestException('Invalid listing interest details');
+    }
+    if (this.rateLimited(ip)) {
+      throw new HttpException('Too many requests. Please try again later.', HttpStatus.TOO_MANY_REQUESTS);
+    }
+    await this.db.query(`CREATE TABLE IF NOT EXISTS ecuador_listing_interests (
+      id BIGSERIAL PRIMARY KEY, name VARCHAR(120) NOT NULL,
+      email VARCHAR(254) NOT NULL, phone VARCHAR(40) NOT NULL,
+      role VARCHAR(12) NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    await this.db.query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_ec_listing_interest_email_role
+      ON ecuador_listing_interests (email, role)`);
+    const result = await this.db.query(
+      `INSERT INTO ecuador_listing_interests (name, email, phone, role)
+       VALUES ($1,$2,$3,$4)
+       ON CONFLICT (email, role) DO UPDATE SET name = EXCLUDED.name,
+         phone = EXCLUDED.phone, updated_at = NOW()
+       RETURNING id`, [name, email, phone, role]);
+    return { success: true, id: result.rows[0].id };
+  }
+
   // ---- storage (runtime ensure; migration 174 creates the same table) ----
   private ensureTable(): Promise<void> {
     if (!this.tableReady) {

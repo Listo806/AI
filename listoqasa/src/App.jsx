@@ -1,3 +1,4 @@
+import PublicarPropiedadPage from "./pages/PublicarPropiedadPage";
 import LuxuryReviewAdmin from "./pages/CreateListing/LuxuryReviewAdmin";
 import LegalPage from "./pages/Legal/LegalPages";
 import React, { useEffect } from "react";
@@ -121,6 +122,11 @@ export default function App() {
         <Route path="/profile/:ownerId" element={<PublicPortfolioPage />} />
         <Route path="/create-listing" element={<CreateListingPage />} />
         <Route path="/owners/create" element={<CreateListingPage />} />
+        <Route path="/es-ec/publicar-propiedad" element={<PublicarPropiedadPage />} />
+        <Route path="/es-ec/propietarios" element={<OwnersPage />} />
+        <Route path="/es-ec/agentes" element={<AgentsPage />} />
+        <Route path="/es-ec/owner-plans" element={<OwnerPlansPage />} />
+        <Route path="/es-ec/agent-plans" element={<AgentDeveloperPlansPage />} />
         <Route path="/owners" element={<OwnersPage />} />
         <Route path="/commercial-owners" element={<CommercialOwnersPage />} />
 

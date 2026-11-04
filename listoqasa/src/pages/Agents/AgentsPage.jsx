@@ -46,7 +46,7 @@ export default function AgentsPage() {
 
             <p>{t("agent.heroDescription")}</p>
 
-            <Link to="/agent-plans" className="lq-agent-primary-btn">
+            <Link to="/es-ec/agent-plans" className="lq-agent-primary-btn">
               {t("agent.viewPlans")}
 
               <ArrowRight size={18} />
@@ -233,7 +233,7 @@ export default function AgentsPage() {
                 {t("agent.growDescription2")}
               </p>
 
-              <Link to="/agent-plans" className="lq-agent-primary-btn">
+              <Link to="/es-ec/agent-plans" className="lq-agent-primary-btn">
                 {t("agent.viewPlans")}
 
                 <ArrowRight size={18} />

@@ -139,6 +139,16 @@ export class AuthService {
       user.name = fullName;
     }
 
+    // Preserve phone entered at the Ecuador pre-signup step in the user profile.
+    const phone = String(signupDto.phone || '').trim();
+    if (phone) {
+      if (phone.length > 40 || phone.replace(/\D/g, '').length < 7) {
+        throw new BadRequestException('Invalid phone number');
+      }
+      await this.db.query('UPDATE users SET phone = $2, updated_at = NOW() WHERE id = $1', [user.id, phone]);
+      user.phone = phone;
+    }
+
     // Generate tokens
     const tokens = await this.generateTokens(user);
 

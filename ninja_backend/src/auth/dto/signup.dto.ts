@@ -16,6 +16,11 @@ export class SignupDto {
   @IsString()
   fullName?: string;
 
+  @ApiPropertyOptional({ description: 'Customer phone / WhatsApp' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   @ApiProperty({ example: 'user@example.com', description: 'User email address' })
   @IsEmail()
   @IsNotEmpty()

@@ -22,7 +22,7 @@ export default function MarketplaceCheckoutPage(){
  const basePrice=isTaxed && Number.isFinite(price)?Math.round(price/1.15*100)/100:null;
  const ivaAmount=basePrice!=null?Math.round((price-basePrice)*100)/100:null;
  useEffect(()=>{if(!user){navigate('/marketplace/login?next='+encodeURIComponent('/es-ec/marketplace/checkout?plan='+encodeURIComponent(planKey||'')+'&billing='+requestedInterval),{replace:true});return;}
- setProfile({name:user.fullName||user.full_name||user.name||[user.firstName,user.lastName].filter(Boolean).join(' ')||'',email:user.email||'',phone:user.phone||user.phone_number||''});},[user?.id,navigate,planKey]);
+ let lead={};try{lead=JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}')}catch{};const email=user.email||'';setProfile({name:user.fullName||user.full_name||user.name||[user.firstName,user.lastName].filter(Boolean).join(' ')||((lead.email||'').toLowerCase()===email.toLowerCase()?lead.name:'')||'',email,phone:user.phone||user.phone_number||((lead.email||'').toLowerCase()===email.toLowerCase()?lead.phone:'')||''});},[user?.id,navigate,planKey]);
  useEffect(()=>{active.current=true;Promise.all([marketplaceRequest('/marketplace/plans/mine'),marketplaceRequest('/marketplace/plans'),marketplaceRequest('/marketplace/plans/bank-details').catch(()=>null)]).then(([r,p,b])=>{
  if(!active.current)return;setPlans(Array.isArray(p)?p:p.data||[]);setBank(b?.configured?b:null);
  const list=Array.isArray(r.data)?r.data:Array.isArray(r.enrollments)?r.enrollments:[];

@@ -10,6 +10,13 @@ import { ContactService } from './contact.service';
 export class ContactController {
   constructor(private readonly contact: ContactService) {}
 
+  @Post('ecuador-listing-interest')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Save Ecuador listing interest before account creation' })
+  saveEcuadorInterest(@Body() body: any, @Req() req: Request) {
+    return this.contact.saveEcuadorInterest(body, req.ip || req.socket?.remoteAddress || '');
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Public website contact form: stores the message and emails the support inbox' })
