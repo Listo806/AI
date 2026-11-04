@@ -507,8 +507,13 @@ export default function Listings() {
     (!filters.bathrooms || Number(p.bathrooms) >= Number(filters.bathrooms)));
 
   return (
-    <SiteLayout hideHeaderOnMobile headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() =>
-      {category && <section className="lq-container" style={{paddingTop:24,paddingBottom:12}}><h1>{category.title}</h1><p>{category.description}</p></section>} navigate(-1)}>
+    <SiteLayout hideHeaderOnMobile headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() => navigate(-1)}>
+      {category && (
+        <section className="lq-container" style={{ paddingTop: 24, paddingBottom: 12 }}>
+          <h1>{category.title}</h1>
+          <p>{category.description}</p>
+        </section>
+      )}
       <div className="listings-page">
         <main className="listings-main">
         <div className="listings-container listings-container--wide">
