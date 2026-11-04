@@ -39,7 +39,7 @@ export const SEO = {
     en: {
       title: "Cortexa Agentic CRM | AI Agents, Workflows & Automation",
       description:
-        "Manage leads, WhatsApp conversations, pipelines, appointments, analytics, AI agents, and specialized workspaces in one connected Agentic CRM.",
+        "Cortexa Agentic CRM combines AI agents, lead management, and automated follow-ups to streamline customer conversations and sales workflows.",
       ogTitle: "Cortexa Agentic CRM",
       ogDescription:
         "Connect leads, WhatsApp conversations, AI agents, workflows, pipelines, appointments, analytics, and specialized business workspaces in one intelligent CRM.",
@@ -50,7 +50,7 @@ export const SEO = {
     es: {
       title: "Cortexa Agentic CRM | Agentes de IA, flujos de trabajo y automatización",
       description:
-        "Gestiona leads, conversaciones de WhatsApp, pipelines, citas, analíticas, agentes de IA y espacios de trabajo especializados en un solo Agentic CRM conectado.",
+        "Cortexa Agentic CRM combina agentes de IA, gestión de clientes potenciales y seguimientos automáticos para agilizar conversaciones y ventas.",
       ogTitle: "Cortexa Agentic CRM",
       ogDescription:
         "Conecta leads, conversaciones de WhatsApp, agentes de IA, flujos de trabajo, pipelines, citas, analíticas y espacios de trabajo especializados para tu negocio en un solo CRM inteligente.",
