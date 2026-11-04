@@ -64,6 +64,26 @@ export default function ListingDetail() {
   const goBackToResults = () => navigate(searchReturn);
 
   const [property, setProperty] = useState(null);
+  // Each public listing describes the property actually returned by the API.
+  useEffect(() => {
+    if (!property || property.status && property.status !== 'published') return;
+    const title = [listingDisplayTitle(property.title), property.city, 'ListoQasa'].filter(Boolean).join(' | ');
+    const summary = [listingDisplayTitle(property.title), property.propertyType, property.city, property.state, property.type === 'rent' ? 'en alquiler' : 'en venta'].filter(Boolean).join(' · ').slice(0, 160);
+    const oldTitle = document.title;
+    document.title = title;
+    const description = document.head.querySelector('meta[name="description"]');
+    const oldDescription = description?.getAttribute('content');
+    if (description) description.setAttribute('content', summary);
+    const canonical = document.head.querySelector('link[rel="canonical"]');
+    const oldCanonical = canonical?.getAttribute('href');
+    if (canonical) canonical.setAttribute('href', `${window.location.origin}${location.pathname}`);
+    return () => {
+      document.title = oldTitle;
+      if (description) { if (oldDescription === null) description.removeAttribute('content'); else description.setAttribute('content', oldDescription); }
+      if (canonical) { if (oldCanonical === null) canonical.removeAttribute('href'); else canonical.setAttribute('href', oldCanonical); }
+    };
+  }, [property, location.pathname]);
+
   const [media, setMedia] = useState([]);
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);

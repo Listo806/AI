@@ -1,4 +1,3 @@
-import PublicarPropiedadPage from "./pages/PublicarPropiedadPage";
 import LuxuryReviewAdmin from "./pages/CreateListing/LuxuryReviewAdmin";
 import LegalPage from "./pages/Legal/LegalPages";
 import React, { useEffect } from "react";
@@ -106,6 +105,16 @@ export default function App() {
         <Route path="/land" element={<Listings />} />
         <Route path="/commercial" element={<Listings />} />
         <Route path="/new-projects" element={<Listings />} />
+        <Route path="/es-ec/propiedades-en-venta" element={<Listings />} />
+        <Route path="/es-ec/propiedades-en-alquiler" element={<Listings />} />
+        <Route path="/es-ec/casas-en-venta" element={<Listings />} />
+        <Route path="/es-ec/casas-en-alquiler" element={<Listings />} />
+        <Route path="/es-ec/departamentos-en-venta" element={<Listings />} />
+        <Route path="/es-ec/departamentos-en-alquiler" element={<Listings />} />
+        <Route path="/es-ec/terrenos-en-venta" element={<Listings />} />
+        <Route path="/es-ec/propiedades-comerciales" element={<Listings />} />
+        <Route path="/es-ec/oficinas-en-venta" element={<Listings />} />
+        <Route path="/es-ec/oficinas-en-alquiler" element={<Listings />} />
 
         <Route path="/trial" element={<TrialRedirect />} />
         <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />
@@ -122,11 +131,6 @@ export default function App() {
         <Route path="/profile/:ownerId" element={<PublicPortfolioPage />} />
         <Route path="/create-listing" element={<CreateListingPage />} />
         <Route path="/owners/create" element={<CreateListingPage />} />
-        <Route path="/es-ec/publicar-propiedad" element={<PublicarPropiedadPage />} />
-        <Route path="/es-ec/propietarios" element={<OwnersPage />} />
-        <Route path="/es-ec/agentes" element={<AgentsPage />} />
-        <Route path="/es-ec/owner-plans" element={<OwnerPlansPage />} />
-        <Route path="/es-ec/agent-plans" element={<AgentDeveloperPlansPage />} />
         <Route path="/owners" element={<OwnersPage />} />
         <Route path="/commercial-owners" element={<CommercialOwnersPage />} />
 
@@ -158,6 +162,7 @@ export default function App() {
         <Route path="/vacation-rentals" element={<VacationRentalsPage />} />
         <Route path="/es-ec" element={<HomePage />} />
         <Route path="/es-ec/vacation-rentals" element={<VacationRentalsPage />} />
+        <Route path="/es-ec/alquileres-vacacionales" element={<VacationRentalsPage />} />
         <Route path="/vacation-rentals/host" element={<VacationHostLanding />} />
         <Route path="/vacation-rentals/admin/import" element={<VacationSampleAdmin />} />
         <Route path="/vacation-rentals/search" element={<VacationResults />} />

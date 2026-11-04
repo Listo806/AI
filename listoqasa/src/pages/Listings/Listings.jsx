@@ -25,6 +25,20 @@ import SiteLayout from '../../components/layout/SiteLayout';
 import './Listings.css';
 import { isDevelopmentProject, isLuxuryResidentialProperty, listingMode, listingKind } from '../../api/propertyPresentation';
 
+// Fixed, crawlable Ecuador category URLs. No arbitrary query combinations are indexed.
+const ECUADOR_CATEGORIES = {
+  'propiedades-en-venta': { type: 'sale', propertyType: '', title: 'Propiedades en Venta en Ecuador', description: 'Explora propiedades en venta en Ecuador y consulta los anuncios disponibles en ListoQasa.' },
+  'propiedades-en-alquiler': { type: 'rent', propertyType: '', title: 'Propiedades en Alquiler en Ecuador', description: 'Encuentra propiedades en alquiler en Ecuador y consulta los anuncios disponibles.' },
+  'casas-en-venta': { type: 'sale', propertyType: 'house', title: 'Casas en Venta en Ecuador', description: 'Busca casas en venta en Ecuador y descubre sus características y ubicación.' },
+  'casas-en-alquiler': { type: 'rent', propertyType: 'house', title: 'Casas en Alquiler en Ecuador', description: 'Explora casas en alquiler en Ecuador con información de cada propiedad.' },
+  'departamentos-en-venta': { type: 'sale', propertyType: 'apartment', title: 'Departamentos en Venta en Ecuador', description: 'Descubre departamentos en venta en Ecuador y revisa los anuncios disponibles.' },
+  'departamentos-en-alquiler': { type: 'rent', propertyType: 'apartment', title: 'Departamentos en Alquiler en Ecuador', description: 'Busca departamentos en alquiler en Ecuador y compara los anuncios disponibles.' },
+  'terrenos-en-venta': { type: 'sale', propertyType: 'land', title: 'Terrenos en Venta en Ecuador', description: 'Explora terrenos en venta en Ecuador con información de ubicación y precio.' },
+  'propiedades-comerciales': { type: '', propertyType: 'commercial', title: 'Propiedades Comerciales en Ecuador', description: 'Encuentra propiedades comerciales disponibles en Ecuador en ListoQasa.' },
+  'oficinas-en-venta': { type: 'sale', propertyType: 'office', title: 'Oficinas en Venta en Ecuador', description: 'Explora oficinas en venta en Ecuador y consulta sus características.' },
+  'oficinas-en-alquiler': { type: 'rent', propertyType: 'office', title: 'Oficinas en Alquiler en Ecuador', description: 'Encuentra oficinas en alquiler en Ecuador y consulta los anuncios disponibles.' },
+};
+
 const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office', 'retail', 'warehouse'];
 
 function marketExploreSubtitle(property, t) {
@@ -45,7 +59,25 @@ export default function Listings() {
   const location = useLocation();
   const { slug: directorySlug } = useParams();
   const directoryLocation = DIRECTORY_LOCATIONS.find(item => item.slug === directorySlug);
+  const categorySlug = location.pathname.match(/^\/es-ec\/([^/]+)\/?$/)?.[1];
+  const category = categorySlug ? ECUADOR_CATEGORIES[categorySlug] : null;
   const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (!category) return;
+    document.title = `${category.title} | ListoQasa`;
+    const ensureMeta = (name) => {
+      let el = document.head.querySelector(`meta[name="${name}"]`);
+      if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el); }
+      return el;
+    };
+    ensureMeta('description').setAttribute('content', category.description);
+    ensureMeta('robots').setAttribute('content', searchParams.has('page') || searchParams.has('search') || searchParams.has('city') ? 'noindex,follow' : 'index,follow');
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+    canonical.href = `https://listoqasa.com/es-ec/${categorySlug}`;
+    return () => { /* The next public route owns its own SEO metadata. */ };
+  }, [categorySlug, location.search]);
+
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]);
   const [mapPropertiesAll, setMapPropertiesAll] = useState([]);
@@ -54,10 +86,10 @@ export default function Listings() {
 
   /** BUY (/buy) → sale; RENT (/rent) → rent; /listings → browse both unless ?type= */
   const pathDefaultType =
-    location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
+    category ? category.type : location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
   const urlTypeFromQuery = searchParams.get('type') || '';
   const effectiveMode = urlTypeFromQuery || pathDefaultType;
-  const urlPropertyType = ({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '';
+  const urlPropertyType = category ? category.propertyType : (({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '');
   const urlSearch = searchParams.get('search') || '';
   const urlCity = directoryLocation ? '' : searchParams.get('city') || '';
   const urlPage = parseInt(searchParams.get('page') || '1', 10) || 1;
@@ -149,9 +181,9 @@ export default function Listings() {
   useEffect(() => {
     const qpType = searchParams.get('type') || '';
     const pathDef =
-      location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
+      category ? category.type : location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
     const mode = qpType || pathDef;
-    const urlPropertyType = ({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '';
+    const urlPropertyType = category ? category.propertyType : (({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '');
     const urlSearch = searchParams.get('search') || '';
     const urlCity = directoryLocation ? '' : searchParams.get('city') || '';
     setFilters((prev) => ({
@@ -475,7 +507,8 @@ export default function Listings() {
     (!filters.bathrooms || Number(p.bathrooms) >= Number(filters.bathrooms)));
 
   return (
-    <SiteLayout hideHeaderOnMobile headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() => navigate(-1)}>
+    <SiteLayout hideHeaderOnMobile headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() =>
+      {category && <section className="lq-container" style={{paddingTop:24,paddingBottom:12}}><h1>{category.title}</h1><p>{category.description}</p></section>} navigate(-1)}>
       <div className="listings-page">
         <main className="listings-main">
         <div className="listings-container listings-container--wide">

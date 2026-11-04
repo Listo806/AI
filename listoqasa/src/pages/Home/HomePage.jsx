@@ -259,6 +259,19 @@ export default function HomePage() {
 
   return (
     <SiteLayout headerVariant="light">
+      {window.location.pathname === "/es-ec" && (
+        <nav className="lq-seo-categories" aria-label="Explorar propiedades por categoría" style={{maxWidth:1200,margin:"16px auto",padding:"8px 20px",display:"flex",flexWrap:"wrap",gap:14}}>
+          {[
+            ["Propiedades en Venta","propiedades-en-venta"],["Propiedades en Alquiler","propiedades-en-alquiler"],
+            ["Casas en Venta","casas-en-venta"],["Casas en Alquiler","casas-en-alquiler"],
+            ["Departamentos en Venta","departamentos-en-venta"],["Departamentos en Alquiler","departamentos-en-alquiler"],
+            ["Terrenos en Venta","terrenos-en-venta"],["Propiedades Comerciales","propiedades-comerciales"],
+            ["Oficinas en Venta","oficinas-en-venta"],["Oficinas en Alquiler","oficinas-en-alquiler"],
+            ["Alquileres Vacacionales","alquileres-vacacionales"],
+          ].map(([label,slug]) => <Link key={slug} to={`/es-ec/${slug}`}>{label}</Link>)}
+        </nav>
+      )}
+
       <section
         className={`lq-home-hero lq-home-hero-${searchMode}`}
         style={{
