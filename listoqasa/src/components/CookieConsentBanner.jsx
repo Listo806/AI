@@ -39,7 +39,7 @@ export default function CookieConsentBanner() {
   const isCheckout = /^\/(?:es-ec\/)?marketplace\/checkout(?:\/|$)/.test(window.location.pathname);
   if (isCheckout) return null;
   return <>
-    {!visible && <button type="button" className="lq-cookie-settings" onClick={() => { setAds(prefs?.ads ?? false); setAnalytics(prefs?.analytics ?? false); setCustom(true); setVisible(true); }}>{t.settings}</button>}
+    {!visible && !/^\/es-ec\/publicar-propiedad\/?$/.test(window.location.pathname) && <button type="button" className="lq-cookie-settings" onClick={() => { setAds(prefs?.ads ?? false); setAnalytics(prefs?.analytics ?? false); setCustom(true); setVisible(true); }}>{t.settings}</button>}
     {visible && <section className="lq-cookie-banner" role="dialog" aria-modal="false" aria-label={t.title}>
       <div className="lq-cookie-heading"><strong>{t.title}</strong>{prefs && <button type="button" onClick={() => setVisible(false)} aria-label={t.close}>×</button>}</div>
       <p>{t.body}</p>
