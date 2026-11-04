@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /my-listings
+Disallow: /my-trips
+Disallow: /saved-stays
+Disallow: /marketplace/checkout
+Disallow: /marketplace/login
+Disallow: /marketplace/payment-pending
+Disallow: /marketplace/purchase-confirmation
+Disallow: /es-ec/marketplace/checkout
+Disallow: /create-listing
+Sitemap: https://listoqasa.com/sitemap.xml
