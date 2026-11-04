@@ -8,6 +8,7 @@ import PropertyDetailBoundary from "./components/PropertyDetailBoundary";
 import { Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 function TrialRedirect(){const [p]=useSearchParams();const addon=p.get("addon");const plan=p.get("plan");const billing=p.get("billing")==="yearly"?"yearly":"monthly";if(addon==="ai-crm")return <Navigate to="/agent-plans" replace />;return <Navigate to={`/marketplace/signup?audience=agent&plan=${encodeURIComponent(plan||"essential")}&billing=${billing}`} replace />;}
 import MarketplaceSignupPage from "./pages/CreateListing/MarketplaceSignupPage";
+import PublicarPropiedadPage from "./pages/PublicarPropiedadPage";
 import MarketplaceSubscriptionPage from "./pages/CreateListing/MarketplaceSubscriptionPage";
 import MarketplaceCheckoutPage from "./pages/CreateListing/MarketplaceCheckoutPage";
 import MarketplacePurchaseConfirmationPage from "./pages/CreateListing/MarketplacePurchaseConfirmationPage";
@@ -120,6 +121,9 @@ export default function App() {
         <Route path="/marketplace/signup" element={<MarketplaceSignupPage />} />
         <Route path="/es/marketplace/signup" element={<MarketplaceSignupPage />} />
         <Route path="/es-ec/marketplace/signup" element={<MarketplaceSignupPage />} />
+        <Route path="/es-ec/publicar-propiedad" element={<PublicarPropiedadPage />} />
+        <Route path="/es-ec/propietarios" element={<OwnersPage />} />
+        <Route path="/es-ec/agentes" element={<AgentsPage />} />
         <Route path="/marketplace/subscription" element={<MarketplaceSubscriptionPage />} />
         <Route path="/marketplace/checkout" element={<MarketplaceCheckoutPage />} />
         <Route path="/es-ec/marketplace/checkout" element={<MarketplaceCheckoutPage />} />
