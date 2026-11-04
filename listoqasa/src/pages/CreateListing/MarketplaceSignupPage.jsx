@@ -1,6 +1,6 @@
 import { attachMarketplaceAdClick } from '../../api/marketplaceAdAttribution';
 import { trackGoogleAdsSuccess } from '../../api/googleAdsTracking';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { marketplaceRequest } from '../../api/marketplaceApi';
@@ -25,6 +25,10 @@ export default function MarketplaceSignupPage() {
   const planKey = `${role}-${plan === 'free' ? 'free-launch' : plan}`;
   const billing = params.get('billing') === 'quarterly' ? 'quarterly' : params.get('billing') === 'yearly' ? 'yearly' : 'monthly';
   const valid = allowed[role].includes(plan);
+  const prePlan = isEcuador && params.get('from') === 'publicar-propiedad' && !rawPlan;
+  const landing = role === 'agent' ? '/es-ec/agentes' : '/es-ec/propietarios';
+  const alreadySignedIn = Boolean(localStorage.getItem('listo_access_token'));
+  useEffect(() => { if (isEcuador && valid && alreadySignedIn) navigate(`${'/es-ec'}/marketplace/checkout?plan=${encodeURIComponent(planKey)}&billing=${billing}`, {replace:true}); }, [isEcuador,valid,alreadySignedIn,planKey,billing,navigate]);
   const [form,setForm] = useState(()=>{let lead={};try{lead=JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}')}catch{}return {name:isEcuador?lead.name||'':'',email:isEcuador?lead.email||'':'',password:'',confirm:''};});
   const [visible,setVisible] = useState(false);
   const [confirmVisible,setConfirmVisible] = useState(false);
@@ -34,7 +38,7 @@ export default function MarketplaceSignupPage() {
   const update = (key,value) => setForm(f=>({...f,[key]:value}));
   async function submit(e) {
     e.preventDefault(); setError('');
-    if (!valid) return setError('Select a valid listing plan first.');
+    if (!valid && !prePlan) return setError('Selecciona un plan válido.');
     if (form.password.length < 8) return setError('Password must contain at least 8 characters.');
     if (form.password !== form.confirm) return setError('Passwords do not match.');
     setBusy(true);
@@ -45,6 +49,7 @@ export default function MarketplaceSignupPage() {
       // The signup API now persists the Ecuador phone on the canonical user record.
       if (isEcuador) { try { const lead=JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}'); sessionStorage.setItem('listoqasa_ecuador_lead',JSON.stringify({...lead,name:form.name.trim(),email:form.email.trim().toLowerCase()})); } catch {} }
       trackGoogleAdsSuccess('registration', result.user.id);
+      if (prePlan) { navigate(landing,{replace:true}); return; }
       const enrollment = await marketplaceRequest('/marketplace/plans/enroll', {method:'POST',body:JSON.stringify({planKey,interval:billing})});
       if (enrollment?.enrollment?.id) {
         sessionStorage.setItem('listoqasa_pending_enrollment', enrollment.enrollment.id);
@@ -55,5 +60,5 @@ export default function MarketplaceSignupPage() {
       navigate(destination,{replace:true,state:{planKey}});
     } catch(e) {setError(e.message || 'Unable to create account.');} finally {setBusy(false);}
   }
-  return <div className="ms-page"><main className="ms-main"><div className="ms-steps"><strong>● Account</strong><span>──── ● Checkout</span><span>──── ● Create Listing</span></div><section className="ms-card"><h1>Create Your Account</h1><p>Create an account to list and manage your properties.</p>{!valid&&<p className="ms-error">Please select a plan before creating your account. <Link to={role==='agent'?'/agent-plans':`${prefix === '/es-ec' ? '/es' : prefix}/owner-plans`}>View plans</Link></p>}<form onSubmit={submit}><label>Full Name<input required autoComplete="name" value={form.name} onChange={e=>update('name',e.target.value)}/></label><label>Email Address<input required type="email" autoComplete="email" value={form.email} onChange={e=>update('email',e.target.value)}/></label><label>Create Your Password<div className="ms-password"><input required type={visible?'text':'password'} autoComplete="new-password" value={form.password} onChange={e=>update('password',e.target.value)}/><button type="button" onClick={()=>setVisible(!visible)} aria-label={visible?'Hide password':'Show password'}>{visible?<Eye size={20}/>:<EyeOff size={20}/>}</button></div></label><label>Confirm Your Password<div className="ms-password"><input required type={confirmVisible?'text':'password'} autoComplete="new-password" value={form.confirm} onChange={e=>update('confirm',e.target.value)}/><button type="button" onClick={()=>setConfirmVisible(!confirmVisible)} aria-label={confirmVisible?'Hide confirmation password':'Show confirmation password'}>{confirmVisible?<Eye size={20}/>:<EyeOff size={20}/>}</button></div></label>{error&&<p role="alert" className="ms-error">{error}</p>}<button className="ms-submit" disabled={busy||!valid}>{busy?'Creating account...':'Create Account & Continue'} <ArrowRight size={19}/></button></form><p className="ms-signin">Already have an account? <Link to={`/marketplace/login?next=${encodeURIComponent(destination)}`}>Sign in</Link></p></section></main></div>;
+  return <div className="ms-page"><main className="ms-main"><div className="ms-steps"><strong>● Account</strong><span>──── ● Checkout</span><span>──── ● Create Listing</span></div><section className="ms-card"><h1>{prePlan?'Crea tu cuenta':'Create Your Account'}</h1><p>{prePlan?'Crea tu cuenta para continuar a los planes de publicación.':'Create an account to list and manage your properties.'}</p>{!valid&&!prePlan&&<p className="ms-error">Please select a plan before creating your account. <Link to={role==='agent'?'/agent-plans':`${prefix === '/es-ec' ? '/es' : prefix}/owner-plans`}>View plans</Link></p>}<form onSubmit={submit}><label>Full Name<input required autoComplete="name" value={form.name} onChange={e=>update('name',e.target.value)}/></label><label>Email Address<input required type="email" autoComplete="email" value={form.email} onChange={e=>update('email',e.target.value)}/></label><label>Create Your Password<div className="ms-password"><input required type={visible?'text':'password'} autoComplete="new-password" value={form.password} onChange={e=>update('password',e.target.value)}/><button type="button" onClick={()=>setVisible(!visible)} aria-label={visible?'Hide password':'Show password'}>{visible?<Eye size={20}/>:<EyeOff size={20}/>}</button></div></label><label>Confirm Your Password<div className="ms-password"><input required type={confirmVisible?'text':'password'} autoComplete="new-password" value={form.confirm} onChange={e=>update('confirm',e.target.value)}/><button type="button" onClick={()=>setConfirmVisible(!confirmVisible)} aria-label={confirmVisible?'Hide confirmation password':'Show confirmation password'}>{confirmVisible?<Eye size={20}/>:<EyeOff size={20}/>}</button></div></label>{error&&<p role="alert" className="ms-error">{error}</p>}<button className="ms-submit" disabled={busy||(!valid&&!prePlan)}>{busy?'Creando cuenta...':prePlan?'Crear cuenta y continuar':'Create Account & Continue'} <ArrowRight size={19}/></button></form><p className="ms-signin">Already have an account? <Link to={`/marketplace/login?next=${encodeURIComponent(destination)}`}>Sign in</Link></p></section></main></div>;
 }
