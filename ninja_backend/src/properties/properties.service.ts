@@ -708,6 +708,7 @@ export class PropertiesService {
       /** Inclusive; listing price must be <= priceMax when set */
       priceMax?: number;
       collection?: string;
+      sort?: string;
     },
     pagination?: { limit?: number; offset?: number },
   ): Promise<{
@@ -765,9 +766,15 @@ export class PropertiesService {
       // Word boundaries avoid matching "Quito" inside an unrelated longer name.
       const namePattern = `(^|[^[:alnum:]])${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^[:alnum:]]|$)`;
       if (loc.parentCity) {
-        conditions.push(`(${cityField} = LOWER($${paramCount}) OR (${cityField} = LOWER($${paramCount + 1}) AND ${addressField} ~* $${paramCount + 2}))`);
-        params.push(normalizedName, loc.parentCity, namePattern);
-        paramCount += 3;
+        // A neighborhood stored as `city` must still be scoped to its parent city.
+        // Otherwise an identically named neighborhood in another city can leak in.
+        // For neighborhood-as-city rows, require the parent in state or address;
+        // for parent-city rows, require the exact neighborhood in address.
+        const normalizedParent = loc.parentCity.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const parentPattern = `(^|[^[:alnum:]])${normalizedParent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^[:alnum:]]|$)`;
+        conditions.push(`((${cityField} = LOWER($${paramCount}) AND (${stateField} = LOWER($${paramCount + 1}) OR ${addressField} ~* $${paramCount + 2})) OR (${cityField} = LOWER($${paramCount + 1}) AND ${addressField} ~* $${paramCount + 3}))`);
+        params.push(normalizedName, normalizedParent, parentPattern, namePattern);
+        paramCount += 4;
       } else {
         conditions.push(`(${cityField} = LOWER($${paramCount}) OR (${addressField} ~* $${paramCount + 1} AND (${cityField} = LOWER($${paramCount}) OR ${stateField} = LOWER($${paramCount}))))`);
         params.push(normalizedName, namePattern);
@@ -842,7 +849,13 @@ export class PropertiesService {
     );
     const total = countRows[0]?.c ?? 0;
 
-    query += ` ORDER BY published_at DESC, created_at DESC LIMIT $${paramCount++} OFFSET $${paramCount++}`;
+    // Sort in SQL before pagination so every page uses one consistent order.
+    const orderBy = filters?.sort === 'price-low'
+      ? 'price ASC NULLS LAST, published_at DESC, id DESC'
+      : filters?.sort === 'price-high'
+        ? 'price DESC NULLS LAST, published_at DESC, id DESC'
+        : 'published_at DESC NULLS LAST, created_at DESC, id DESC';
+    query += ` ORDER BY ${orderBy} LIMIT $${paramCount++} OFFSET $${paramCount++}`;
     params.push(limit, offset);
 
     const { rows } = await this.db.query(query, params);

@@ -59,6 +59,8 @@ export default function Listings() {
   const location = useLocation();
   const { slug: directorySlug } = useParams();
   const directoryLocation = DIRECTORY_LOCATIONS.find(item => item.slug === directorySlug);
+  const directoryPrefix = location.pathname.startsWith('/es-ec/') ? '/es-ec' : location.pathname.startsWith('/es/') ? '/es' : location.pathname.startsWith('/pt/') ? '/pt' : location.pathname.startsWith('/en/') ? '/en' : '';
+  const directoryUrl = (slug) => `${directoryPrefix}/properties-in/${slug}`;
   const categorySlug = location.pathname.match(/^\/es-ec\/([^/]+)\/?$/)?.[1];
   const category = categorySlug ? ECUADOR_CATEGORIES[categorySlug] : null;
   const [searchParams, setSearchParams] = useSearchParams();
@@ -197,7 +199,7 @@ export default function Listings() {
 
   useEffect(() => {
     loadProperties();
-  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage, directorySlug, searchParams]);
+  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage, directorySlug, searchParams, sortBy]);
 
 
   // Map needs the full filtered result set, not just the current 20-card page.
@@ -210,6 +212,7 @@ export default function Listings() {
       if (urlPropertyType) base.set('propertyType', urlPropertyType);
       if (urlCity) base.set('city', urlCity);
       if (directoryLocation) base.set('locationSlug', directoryLocation.slug);
+      if (sortBy !== 'distance') base.set('sort', sortBy);
       if (urlSearch) base.set('search', urlSearch);
       if (searchParams.get('collection') === 'luxury') base.set('collection', 'luxury');
       const collected = [];
@@ -229,7 +232,7 @@ export default function Listings() {
     }
     loadMapListings();
     return () => { cancelled = true; };
-  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, directorySlug]);
+  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, directorySlug, sortBy]);
   // Sync URL when page exceeds total (e.g. bookmark ?page=99 with only 3 pages)
   useEffect(() => {
     if (pagination.total > 0 && urlPage > Math.ceil(pagination.total / PAGE_SIZE)) {
@@ -273,6 +276,7 @@ export default function Listings() {
       if (urlPropertyType) queryParams.append('propertyType', urlPropertyType);
       if (urlCity) queryParams.append('city', urlCity);
       if (directoryLocation) queryParams.append('locationSlug', directoryLocation.slug);
+      if (sortBy !== 'distance') queryParams.append('sort', sortBy);
       if (urlSearch) queryParams.append('search', urlSearch);
       if (searchParams.get('collection') === 'luxury') queryParams.append('collection', 'luxury');
       queryParams.append('limit', String(location.pathname === '/new-projects' || ['luxury','development'].includes(searchParams.get('collection')) ? 100 : PAGE_SIZE));
@@ -478,7 +482,7 @@ export default function Listings() {
   const resultLocation = filters.city || urlCity || '';
   useEffect(() => {
     if (!directoryLocation) return;
-    const canonical = `${window.location.origin}/properties-in/${directoryLocation.slug}`;
+    const canonical = `${window.location.origin}${directoryUrl(directoryLocation.slug)}`;
     let element = document.querySelector('link[rel=canonical]');
     const created = !element;
     if (!element) { element = document.createElement('link'); element.rel = 'canonical'; document.head.appendChild(element); }
@@ -812,7 +816,7 @@ export default function Listings() {
           </section>
 
           {directoryLocation && <div className="lq-directory-selection" style={{padding:'14px 20px',margin:'12px 0',border:'1px solid #d8dfeb',borderRadius:8}}>
-            <strong>Location: {directoryLocation.name}</strong> · <Link to="/buy">Clear location</Link> · <Link to="/" onClick={() => sessionStorage.setItem('lq:directory-focus','1')}>Change location</Link>
+            <strong>Ubicación: {directoryLocation.name}</strong> · <Link to={`${directoryPrefix}/buy`}>Ver todas las propiedades</Link> · <Link to={directoryPrefix || '/'} onClick={() => sessionStorage.setItem('lq:directory-focus','1')}>Cambiar ubicación</Link>
           </div>}
           {/* Properties + map split */}
           {loading ? (
@@ -825,8 +829,8 @@ export default function Listings() {
             <div className="listings-empty-state">
               <div className="listings-empty-icon">🏠</div>
               <h3 className="listings-empty-title">{t('listings.noPropertiesFound')}</h3>
-              {directoryLocation && <p>No published listings currently match {directoryLocation.name}. <Link to="/buy">Explore all locations</Link>.</p>}
-              {directoryLocation && <p>Nearby locations: {nearbyLocations(directoryLocation).map((item, i) => <span key={item.slug}>{i > 0 ? ' · ' : ''}<Link to={`/properties-in/${item.slug}`}>{item.name}</Link></span>)}</p>}
+              {directoryLocation && <p>No hay propiedades publicadas en {directoryLocation.name} que coincidan con tu búsqueda. <Link to={`${directoryPrefix}/buy`}>Explorar todas las ubicaciones</Link>.</p>}
+              {directoryLocation && <p>Ubicaciones cercanas: {nearbyLocations(directoryLocation).map((item, i) => <span key={item.slug}>{i > 0 ? ' · ' : ''}<Link to={directoryUrl(item.slug)}>{item.name}</Link></span>)}</p>}
               <p className="listings-empty-text">
                 {filters.search || filters.type || filters.propertyType || filters.city || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms
                   ? t('listings.tryAdjustingFilters')

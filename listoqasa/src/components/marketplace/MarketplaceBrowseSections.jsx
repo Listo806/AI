@@ -1,7 +1,7 @@
 import { listingDisplayTitle } from "../../utils/listingDisplayTitle";
 import { getHomepageCollections } from "../../api/listingsApi";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   ArrowRight,
   ChevronLeft,
@@ -15,10 +15,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import {
-  getLocationCount,
-  getVacationRentalsLayoutData,
-} from "../../api/vacationRentalsApi";
+import apiClient from "../../api/apiClient";
 
 import "./MarketplaceBrowseSections.css";
 import { propertyCoverImage, isPublicMarketplaceProperty, isResidentialProperty, isDevelopmentProject, diverseListings, hasListingPhoto, listingKind, listingMode, selectBalancedListings } from "../../api/propertyPresentation";
@@ -298,7 +295,10 @@ function MarketplacePropertyRow({
 }
 
 export default function MarketplaceBrowseSections() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const route = useLocation();
+  const localePrefix = route.pathname.startsWith('/es-ec') ? '/es-ec' : route.pathname.startsWith('/es') ? '/es' : route.pathname.startsWith('/pt') ? '/pt' : route.pathname.startsWith('/en') ? '/en' : '';
+  const isSpanish = localePrefix === '/es-ec' || localePrefix === '/es' || i18n.language?.startsWith('es');
 
   const [loading, setLoading] = useState(true);
 
@@ -339,7 +339,7 @@ export default function MarketplaceBrowseSections() {
 
       const countResults = await Promise.allSettled(
         LOCATION_CONFIG.map((location) =>
-          getLocationCount(location.city, controller.signal)
+          apiClient.request(`/listings?locationSlug=${encodeURIComponent(location.slug)}&limit=1&offset=0`, { signal: controller.signal })
         )
       );
 
@@ -350,8 +350,8 @@ export default function MarketplaceBrowseSections() {
       countResults.forEach((result, index) => {
         nextCounts[LOCATION_CONFIG[index].city] =
           result.status === "fulfilled"
-            ? result.value.total
-            : 0;
+            ? Number(result.value.total ?? 0)
+            : null;
       });
 
       setLocationCounts(nextCounts);
@@ -367,9 +367,7 @@ export default function MarketplaceBrowseSections() {
       LOCATION_CONFIG.map((location) => ({
         ...location,
         image: getLocationImage(location.slug),
-        count: Number(
-          locationCounts[location.city] || 0
-        ),
+        count: locationCounts[location.city] ?? null,
       })),
     [locationCounts]
   );
@@ -424,22 +422,18 @@ export default function MarketplaceBrowseSections() {
 
         <section className="lq-vr-locations-section">
           <div className="lq-vr-locations-intro">
-            <span className="lq-mobile-section-eyebrow">{t("vacationBrowse.exploreLabel", { defaultValue: "EXPLORE" })}</span>
+            <span className="lq-mobile-section-eyebrow">{isSpanish ? "EXPLORAR" : t("vacationBrowse.exploreLabel", { defaultValue: "EXPLORE" })}</span>
           </div>
           <h2>
-            {t("vacationBrowse.exploreEcuador", {
-              defaultValue: "Explore Ecuador by Location",
-            })}
+            {isSpanish ? "Explora Ecuador por ubicación" : t("vacationBrowse.exploreEcuador", { defaultValue: "Explore Ecuador by Location" })}
           </h2>
 
-          <p className="lq-vr-locations-subtitle">{t("vacationBrowse.exploreDescription", { defaultValue: "Discover popular cities and find your next property." })}</p>
+          <p className="lq-vr-locations-subtitle">{isSpanish ? "Descubre ciudades y encuentra tu próxima propiedad." : t("vacationBrowse.exploreDescription", { defaultValue: "Discover popular cities and find your next property." })}</p>
           <div className="lq-vr-locations">
             {locations.map((location) => (
               <Link
                 key={location.slug}
-                to={`/buy?city=${encodeURIComponent(
-                  location.city
-                )}`}
+                to={`${localePrefix}/properties-in/${location.slug}`}
                 className="lq-vr-location-card"
               >
                 {location.image && (
@@ -456,10 +450,7 @@ export default function MarketplaceBrowseSections() {
                   <strong>{location.city}</strong>
 
                   <span>
-                    {location.count.toLocaleString()}{" "}
-                    {t("vacationBrowse.properties", {
-                      defaultValue: "Properties",
-                    })}
+                    {location.count === null ? (isSpanish ? "Consultar propiedades" : "Browse properties") : `${location.count.toLocaleString()} ${isSpanish ? "propiedades" : "properties"}`}
                   </span>
                 </div>
               </Link>

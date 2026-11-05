@@ -47,6 +47,7 @@ export class ListingsController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'offset', required: false })
+  @ApiQuery({ name: 'sort', required: false, description: 'newest, price-low, price-high' })
   @ApiResponse({ status: 200, description: 'Published sale/rent listings' })
   async searchPublishedSaleRent(
     @Query('city') city?: string,
@@ -58,6 +59,7 @@ export class ListingsController {
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('collection') collection?: string,
+    @Query('sort') sort?: string,
   ) {
     const pagination = {
       limit: limit != null ? parseInt(limit, 10) : undefined,
@@ -66,7 +68,7 @@ export class ListingsController {
     const directoryLocation = locationSlug ? findDirectoryLocation(locationSlug) : undefined;
     if (locationSlug && !directoryLocation) throw new BadRequestException('Unknown location slug');
     return this.propertiesService.findPublic(
-      { city: directoryLocation ? undefined : city, location: directoryLocation, propertyType, mode, country, search, collection },
+      { city: directoryLocation ? undefined : city, location: directoryLocation, propertyType, mode, country, search, collection, sort },
       pagination,
     );
   }

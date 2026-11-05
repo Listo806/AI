@@ -98,8 +98,14 @@ export default function App() {
         <Route path="/pt" element={<HomePage />} />
         <Route path="/property/:id" element={<PropertyDetailBoundary><ListingDetail /></PropertyDetailBoundary>} />
         <Route path="/property" element={<LegacyPropertyRedirect />} />
+        <Route path="/properties-in/:slug" element={<Listings />} />
+        <Route path="/es-ec/properties-in/:slug" element={<Listings />} />
+        <Route path="/es/properties-in/:slug" element={<Listings />} />
+        <Route path="/en/properties-in/:slug" element={<Listings />} />
+        <Route path="/pt/properties-in/:slug" element={<Listings />} />
         <Route path="/app" element={<Listings />} />
         <Route path="/buy" element={<Listings />} />
+        {['es-ec', 'es', 'en', 'pt'].map((lang) => <Route key={`${lang}-buy`} path={`/${lang}/buy`} element={<Listings />} />)}
         <Route path="/rent" element={<Listings />} />
         <Route path="/apartments" element={<Listings />} />
         <Route path="/houses" element={<Listings />} />
