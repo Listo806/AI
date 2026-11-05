@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "node scripts/generate-organic-seo.mjs",
-    "build": "vite build && node scripts/build-category-html.mjs",
+    "build": "vite build && node scripts/build-category-html.mjs && node scripts/build-property-html.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },

@@ -1,6 +1,6 @@
 /** Generate conservative public SEO assets. Run: node scripts/generate-organic-seo.mjs
  * Optional PUBLISHED_LISTINGS_JSON=/absolute/path.json: array of {url, published, indexable, canonical, updatedAt}.
- * Do not include unverified inventory. Homepage descriptions are approved and emitted by build-category-html.mjs.
+ * Do not include unverified inventory. Homepage descriptions were approved by the client.
  */
 import fs from 'node:fs';
 import path from 'node:path';
