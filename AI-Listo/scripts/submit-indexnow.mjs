@@ -3,9 +3,9 @@
  * URL file: JSON array of absolute URLs. Submit after deployment, not at build time.
  */
 import fs from 'node:fs';
-const origin = process.env.INDEXNOW_ORIGIN;
+const origin = process.env.INDEXNOW_ORIGIN || 'https://www.cortexaaicrm.com';
 const key = process.env.INDEXNOW_KEY;
-const file = process.env.INDEXNOW_URLS_FILE;
+const file = process.env.INDEXNOW_URLS_FILE || 'indexnow-urls.json';
 if (!origin || !key || !file) throw Error('Set INDEXNOW_ORIGIN, INDEXNOW_KEY and INDEXNOW_URLS_FILE');
 const site = new URL(origin);
 if (site.protocol !== 'https:' || !/^[a-zA-Z0-9-]{8,128}$/.test(key)) throw Error('Invalid origin or key');
