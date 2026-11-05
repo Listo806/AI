@@ -48,6 +48,7 @@ export default function PropertyMap({
   properties = [],
   selectedProperty = null,
   onPropertyClick = null,
+  onPropertyOpen = null,
   /** 'dot' | 'pricePill' — pricePill shows price (or pricePerNight + /nt when priceMarkerVariant is perNight) */
   markerStyle = 'dot',
   priceMarkerVariant = 'default',
@@ -69,6 +70,8 @@ export default function PropertyMap({
   // Keep callbacks current without re-registering Mapbox layer listeners on every React render.
   const onPropertyClickRef = useRef(onPropertyClick);
   onPropertyClickRef.current = onPropertyClick;
+  const onPropertyOpenRef = useRef(onPropertyOpen);
+  onPropertyOpenRef.current = onPropertyOpen;
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_TOKEN) {
@@ -153,36 +156,46 @@ export default function PropertyMap({
     });
     const pins = [];
     const popups = [];
+    let closeTimer;
+    const lang = (i18n.language || 'es').slice(0, 2);
+    const labels = {
+      es: { view: 'Ver propiedad', properties: 'propiedades', price: 'Precio a consultar' },
+      en: { view: 'View property', properties: 'properties', price: 'Price on request' },
+      pt: { view: 'Ver imóvel', properties: 'imóveis', price: 'Preço sob consulta' },
+    }[lang] || { view: 'Ver propiedad', properties: 'propiedades', price: 'Precio a consultar' };
+    const cancelClose = () => { clearTimeout(closeTimer); };
+    const closePopups = () => { cancelClose(); popups.forEach(popup => popup.remove()); popups.length = 0; };
+    const scheduleClose = () => { cancelClose(); closeTimer = setTimeout(closePopups, 240); };
+    const openProperty = (property, event) => {
+      if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) return;
+      if (onPropertyOpenRef.current) onPropertyOpenRef.current(property);
+      else window.location.assign(`/property/${encodeURIComponent(property.id)}`);
+    };
     groups.forEach((matches, key) => {
       const [lng, lat] = key.split(',').map(Number);
       const el = document.createElement('button');
       el.type = 'button';
-      el.setAttribute('aria-label', `Show ${matches.length} ${matches.length === 1 ? 'property' : 'properties'} on map`);
-      el.title = `${matches.length} ${matches.length === 1 ? 'property' : 'properties'}`;
-      el.style.cssText = 'width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #1259da;box-shadow:0 1px 5px #0004;cursor:pointer;padding:0;display:block;';
+      el.className = 'property-marker-price-pill lq-map-price-marker';
+      const firstPrice = formatMarkerPrice(matches[0], priceMarkerVariant);
+      el.textContent = matches.length === 1 ? (firstPrice || labels.price) : `${matches.length} ${labels.properties}`;
+      el.setAttribute('aria-label', matches.length === 1
+        ? `${matches[0].title || matches[0].propertyType || 'Property'}: ${firstPrice || labels.price}`
+        : `${matches.length} ${labels.properties}`);
       const marker = new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(m);
       pins.push(marker);
-      const openPopup = event => {
-        event.stopPropagation();
+      const showPopup = () => {
+        cancelClose();
         if (disposed || activeMapRef.current !== m) return;
-        popups.forEach(p => p.remove());
-        popups.length = 0;
+        closePopups();
         const root = document.createElement('div');
-        root.className = 'map-popup';
-        const heading = document.createElement('strong');
-        heading.textContent = matches.length === 1 ? 'Property' : `${matches.length} properties in this area`;
-        root.appendChild(heading);
+        root.className = 'map-popup lq-map-property-preview';
+        root.addEventListener('mouseenter', cancelClose);
+        root.addEventListener('mouseleave', scheduleClose);
         const list = document.createElement('div');
-        list.style.cssText = 'max-height:260px;overflow-y:auto;min-width:220px;';
+        list.className = 'lq-map-preview-list';
         matches.forEach(property => {
-          const link = document.createElement('a');
-          const vacation = mapRegion === 'vacation' || priceMarkerVariant === 'perNight';
-          link.href = vacation
-            ? `/vacation-rentals/property/${encodeURIComponent(property.id)}`
-            : `/property/${encodeURIComponent(property.id)}?type=${encodeURIComponent(property.type || 'sale')}`;
-          link.style.cssText = 'display:block;padding:9px 0;border-bottom:1px solid #e5e7eb;color:#1557c0;text-decoration:none;';
-          // Vacation search API uses primaryImage; marketplace records may use other image fields.
-          // Only render an actual supplied image URL (never invent a listing photo).
+          const item = document.createElement('div');
+          item.className = 'lq-map-preview-item';
           const imageCandidate = property.primaryImage || property.thumbnailUrl || property.imageUrl || property.image || property.coverImage || property.coverUrl;
           const imageUrl = typeof imageCandidate === 'string' ? imageCandidate : imageCandidate?.url;
           if (imageUrl && (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith('/'))) {
@@ -190,27 +203,43 @@ export default function PropertyMap({
             img.src = imageUrl;
             img.alt = property.title || property.propertyType || 'Property';
             img.loading = 'lazy';
-            img.style.cssText = 'display:block;width:100%;height:115px;object-fit:cover;border-radius:7px;margin:0 0 6px;';
-            link.appendChild(img);
+            img.className = 'lq-map-preview-image';
+            item.appendChild(img);
           }
-          const details = document.createElement('span');
-          details.textContent = `${property.propertyType || property.title || 'Property'} · ${formatMarkerPrice(property, priceMarkerVariant) || ''}`;
-          link.appendChild(details);
-          link.addEventListener('click', e => {
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-            if (onPropertyClickRef.current) {
-              e.preventDefault();
-              onPropertyClickRef.current(property);
+          const title = document.createElement('strong');
+          title.className = 'lq-map-preview-title';
+          title.textContent = property.title || property.propertyType || 'Property';
+          item.appendChild(title);
+          const price = document.createElement('div');
+          price.className = 'lq-map-preview-price';
+          price.textContent = formatMarkerPrice(property, priceMarkerVariant) || labels.price;
+          item.appendChild(price);
+          const link = document.createElement('a');
+          const vacation = mapRegion === 'vacation' || priceMarkerVariant === 'perNight';
+          link.href = vacation
+            ? `/vacation-rentals/property/${encodeURIComponent(property.id)}`
+            : `/property/${encodeURIComponent(property.id)}${property.type ? `?type=${encodeURIComponent(property.type)}` : ''}`;
+          link.className = 'lq-map-preview-link';
+          link.textContent = `${labels.view} →`;
+          link.addEventListener('click', event => {
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            if (onPropertyOpenRef.current) {
+              event.preventDefault();
+              openProperty(property, event);
             }
           });
-          list.appendChild(link);
+          item.appendChild(link);
+          list.appendChild(item);
         });
         root.appendChild(list);
-        const popup = new mapboxgl.Popup({ offset: 16, maxWidth: '320px', closeOnClick: false })
+        const popup = new mapboxgl.Popup({ offset: 18, maxWidth: '300px', closeOnClick: false, closeButton: true })
           .setLngLat([lng, lat]).setDOMContent(root).addTo(m);
         popups.push(popup);
       };
-      el.addEventListener('click', openPopup);
+      el.addEventListener('mouseenter', showPopup);
+      el.addEventListener('mouseleave', scheduleClose);
+      el.addEventListener('click', event => { event.stopPropagation(); showPopup(); });
+      el.addEventListener('focus', showPopup);
     });
     if (valid.length) {
       const bounds = new mapboxgl.LngLatBounds();
@@ -220,10 +249,11 @@ export default function PropertyMap({
     }
     return () => {
       disposed = true;
+      clearTimeout(closeTimer);
       popups.forEach(p => p.remove());
       pins.forEach(p => p.remove());
     };
-  }, [properties, mapLoaded, mapRegion, priceMarkerVariant]);
+  }, [properties, mapLoaded, mapRegion, priceMarkerVariant, i18n.language]);
 
   // Center map on selected property
   useEffect(() => {

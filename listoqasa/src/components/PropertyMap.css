@@ -107,3 +107,14 @@
 .lq-city-map-marker:hover { background:#0b3282; }
 
 .lq-map-coordinate-notice { position:absolute; left:12px; bottom:25px; right:12px; z-index:2; background:rgba(255,255,255,.96); color:#334155; border:1px solid #cbd5e1; border-radius:8px; padding:9px 12px; font-size:12px; line-height:1.4; box-shadow:0 2px 8px #0002; pointer-events:none; }
+
+/* Listing price pins and previews; no changes to map dimensions or layout. */
+.lq-map-price-marker { border-color:#1d5cdd; color:#0c3c9b; font-weight:750; padding:5px 10px; font-size:12px; }
+.lq-map-price-marker:hover, .lq-map-price-marker:focus-visible { background:#155bd8; color:white; outline:2px solid white; outline-offset:1px; }
+.lq-map-property-preview { min-width:190px; padding:3px; }
+.lq-map-preview-list { max-height:320px; overflow-y:auto; }
+.lq-map-preview-item + .lq-map-preview-item { border-top:1px solid #e2e8f0; padding-top:10px; margin-top:10px; }
+.lq-map-preview-image { display:block; width:100%; height:110px; object-fit:cover; border-radius:7px; margin-bottom:7px; }
+.lq-map-preview-title { display:block; font-size:13px; line-height:1.35; color:#15233b; }
+.lq-map-preview-price { font-weight:750; color:#1358cc; margin:5px 0; font-size:14px; }
+.lq-map-preview-link { display:inline-block; padding:6px 9px; border-radius:6px; background:#1261dc; color:white !important; text-decoration:none; font-weight:650; font-size:12px; }

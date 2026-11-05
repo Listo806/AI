@@ -995,14 +995,20 @@ export default function Listings() {
                 >
                   <PropertyMap
                     mapRegion="ecuador"
-                    properties={mapProperties}
+                    properties={properties}
                     onCityClick={(city) => {
                       const params = new URLSearchParams(searchParams);
                       if (['Cumbayá', 'Cumbaya', 'Tumbaco'].includes(city)) { params.delete('city'); params.set('search', city); }
                       else { params.set('city', city); params.delete('search'); }
                       params.delete('page'); setSearchParams(params);
                     }}
-                    markerStyle="dot"
+                    markerStyle="pricePill"
+                    onPropertyOpen={(property) => {
+                      const detailPath = property.type
+                        ? `/property/${encodeURIComponent(property.id)}?type=${encodeURIComponent(property.type)}`
+                        : `/property/${encodeURIComponent(property.id)}`;
+                      openDetail(detailPath);
+                    }}
                     onPropertyClick={(property) => {
                       setSelectedProperty(property);
                       const card = [...document.querySelectorAll('[data-property-id]')].find(el => el.getAttribute('data-property-id') === String(property.id));
