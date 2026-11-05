@@ -2062,7 +2062,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/br.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/br.png`} alt="Flag of Brazil" loading="lazy" decoding="async" />
                   <span className="m-market-name">Brazil</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2099,7 +2099,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/mx.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/mx.png`} alt="Flag of Mexico" loading="lazy" decoding="async" />
                   <span className="m-market-name">Mexico</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2136,7 +2136,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/ar.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/ar.png`} alt="Flag of Argentina" loading="lazy" decoding="async" />
                   <span className="m-market-name">Argentina</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2173,7 +2173,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/cl.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/cl.png`} alt="Flag of Chile" loading="lazy" decoding="async" />
                   <span className="m-market-name">Chile</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2210,7 +2210,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/co.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/co.png`} alt="Flag of Colombia" loading="lazy" decoding="async" />
                   <span className="m-market-name">Colombia</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2247,7 +2247,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/pe.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/pe.png`} alt="Flag of Peru" loading="lazy" decoding="async" />
                   <span className="m-market-name">Peru</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2280,7 +2280,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/ec.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/ec.png`} alt="Flag of Ecuador" loading="lazy" decoding="async" />
                   <span className="m-market-name">Ecuador</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2319,7 +2319,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/gb.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/gb.png`} alt="Flag of United Kingdom" loading="lazy" decoding="async" />
                   <span className="m-market-name">United Kingdom</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2356,7 +2356,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/es.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/es.png`} alt="Flag of Spain" loading="lazy" decoding="async" />
                   <span className="m-market-name">Spain</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2389,7 +2389,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/pt.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/pt.png`} alt="Flag of Portugal" loading="lazy" decoding="async" />
                   <span className="m-market-name">Portugal</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2420,7 +2420,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/us.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/us.png`} alt="Flag of United States" loading="lazy" decoding="async" />
                   <span className="m-market-name">United States</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2457,7 +2457,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/ca.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/ca.png`} alt="Flag of Canada" loading="lazy" decoding="async" />
                   <span className="m-market-name">Canada</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>
@@ -2490,7 +2490,7 @@ export default function LandingMobile() {
                 }
               >
                 <div className="m-market-left">
-                  <img src={`https://flagcdn.com/w40/au.png`} alt="" loading="lazy" decoding="async" />
+                  <img src={`https://flagcdn.com/w40/au.png`} alt="Flag of Australia" loading="lazy" decoding="async" />
                   <span className="m-market-name">Australia</span>
                 </div>
                 <span className="m-arrow-icon">▼</span>

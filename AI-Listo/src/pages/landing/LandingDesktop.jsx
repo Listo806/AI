@@ -2333,7 +2333,7 @@ export default function Landing() {
                   <div className="cx-customer-person">
                     <img
                       src={avatars[index]}
-                      alt=""
+                      alt={`${item.role} — ${item.workspace}`}
                       width="102"
                       height="102"
                       loading="lazy"
