@@ -214,6 +214,36 @@ export default function PropertyMap({
           price.className = 'lq-map-preview-price';
           price.textContent = formatMarkerPrice(property, priceMarkerVariant) || labels.price;
           item.appendChild(price);
+          // Show the same factual property attributes used by the listing detail.
+          // Missing fields are omitted rather than displaying fabricated values.
+          const facts = [];
+          const bedrooms = property.bedrooms ?? property.beds;
+          const bathrooms = property.bathrooms ?? property.baths;
+          const area = property.lotSize ?? property.lot_size ?? property.area_m2 ?? property.areaM2 ?? property.areaSqm;
+          const factLabels = {
+            es: { beds: 'hab.', baths: 'baños' },
+            en: { beds: 'beds', baths: 'baths' },
+            pt: { beds: 'quartos', baths: 'banhos' },
+          }[lang] || { beds: 'hab.', baths: 'baños' };
+          const addCount = (value, label) => {
+            if (value === null || value === undefined || value === '') return;
+            const count = Number(value);
+            if (Number.isFinite(count) && count >= 0) facts.push(`${count} ${label}`);
+          };
+          addCount(bedrooms, factLabels.beds);
+          addCount(bathrooms, factLabels.baths);
+          if (area !== null && area !== undefined && area !== '') {
+            const squareMetres = Number(area);
+            if (Number.isFinite(squareMetres) && squareMetres > 0) {
+              facts.push(`${new Intl.NumberFormat(lang === 'en' ? 'en-US' : lang === 'pt' ? 'pt-BR' : 'es-EC', { maximumFractionDigits: 1 }).format(squareMetres)} m²`);
+            }
+          }
+          if (facts.length) {
+            const details = document.createElement('div');
+            details.className = 'lq-map-preview-details';
+            details.textContent = facts.join(' · ');
+            item.appendChild(details);
+          }
           const link = document.createElement('a');
           const vacation = mapRegion === 'vacation' || priceMarkerVariant === 'perNight';
           link.href = vacation
