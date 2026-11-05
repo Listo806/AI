@@ -509,7 +509,7 @@ export default function Listings() {
   return (
     <SiteLayout hideHeaderOnMobile headerVariant="dark" showFooter={false} compactHeader onHeaderBack={() => navigate(-1)}>
       {category && (
-        <section className="lq-container" style={{ paddingTop: 24, paddingBottom: 12 }}>
+        <section className="lq-container lq-listings-category-intro">
           <h1>{category.title}</h1>
           <p>{category.description}</p>
         </section>
