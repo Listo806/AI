@@ -88,7 +88,7 @@ export default function Listings() {
   const pathDefaultType =
     category ? category.type : location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
   const urlTypeFromQuery = searchParams.get('type') || '';
-  const effectiveMode = urlTypeFromQuery || pathDefaultType;
+  const effectiveMode = category ? category.type : (urlTypeFromQuery || pathDefaultType);
   const urlPropertyType = category ? category.propertyType : (({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '');
   const urlSearch = searchParams.get('search') || '';
   const urlCity = directoryLocation ? '' : searchParams.get('city') || '';
@@ -182,7 +182,8 @@ export default function Listings() {
     const qpType = searchParams.get('type') || '';
     const pathDef =
       category ? category.type : location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
-    const mode = qpType || pathDef;
+    // Fixed SEO category routes must not be overridden by query-string filters.
+    const mode = category ? category.type : (qpType || pathDef);
     const urlPropertyType = category ? category.propertyType : (({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '');
     const urlSearch = searchParams.get('search') || '';
     const urlCity = directoryLocation ? '' : searchParams.get('city') || '';

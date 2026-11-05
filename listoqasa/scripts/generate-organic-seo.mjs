@@ -7,7 +7,7 @@ import path from 'node:path';
 const ORIGIN='https://listoqasa.com';
 const out=path.resolve('public');
 const categorySlugs=['propiedades-en-venta','propiedades-en-alquiler','casas-en-venta','casas-en-alquiler','departamentos-en-venta','departamentos-en-alquiler','terrenos-en-venta','propiedades-comerciales','oficinas-en-venta','oficinas-en-alquiler','alquileres-vacacionales'];
-const staticPaths=['/','/es-ec',...categorySlugs.map(x=>'/es-ec/'+x),'/owners','/agents','/find-agent','/ai-crm','/commercial-owners','/developers','/vacation-rentals','/about','/contact','/privacy','/terms'];
+const staticPaths=['/','/en','/es','/es-ec',...categorySlugs.map(x=>'/es-ec/'+x),'/es-ec/publicar-propiedad','/es-ec/propietarios','/es-ec/agentes','/owners','/agents','/find-agent','/ai-crm','/commercial-owners','/developers','/vacation-rentals','/about','/contact','/privacy','/terms'];
 const xmlEscape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const urls=new Map(staticPaths.map(p=>[ORIGIN+p,{url:ORIGIN+p}]));
 const source=process.env.PUBLISHED_LISTINGS_JSON;
