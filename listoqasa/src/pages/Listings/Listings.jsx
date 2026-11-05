@@ -182,7 +182,6 @@ export default function Listings() {
     const qpType = searchParams.get('type') || '';
     const pathDef =
       category ? category.type : location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
-    // Fixed SEO category routes must not be overridden by query-string filters.
     const mode = category ? category.type : (qpType || pathDef);
     const urlPropertyType = category ? category.propertyType : (({'/apartments':'apartment','/houses':'house','/land':'land','/commercial':'commercial'}[location.pathname]) || searchParams.get('propertyType') || '');
     const urlSearch = searchParams.get('search') || '';
@@ -317,17 +316,17 @@ export default function Listings() {
     let filtered = [...allProperties];
 
     // Only show published properties
-    filtered = filtered.filter(p => p.status === 'published');
+    filtered = filtered.filter(p => !p.status || String(p.status).toLowerCase() === 'published');
     if (location.pathname === '/new-projects') filtered = filtered.filter(isDevelopmentProject);
     if (searchParams.get('collection') === 'development') filtered = filtered.filter(p => /land|lot|plot|terreno|terrain/.test(listingKind(p)) || isDevelopmentProject(p));
     if (searchParams.get('collection') === 'luxury') filtered = filtered.filter(isLuxuryResidentialProperty);
 
     // Apply filters
-    if (filters.type) {
+    if (filters.type && !category) {
       filtered = filtered.filter(p => listingMode(p) === filters.type);
     }
 
-    if (filters.propertyType) {
+    if (filters.propertyType && !category) {
       filtered = filtered.filter(p => filters.propertyType === 'commercial' ? /^(commercial|office|retail|warehouse|industrial)$/.test(listingKind(p)) : listingKind(p) === filters.propertyType);
     }
 
