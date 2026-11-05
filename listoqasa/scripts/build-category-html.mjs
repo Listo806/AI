@@ -1,6 +1,6 @@
 /** Emit route-specific initial HTML for Ecuador categories after Vite builds.
  * Source of truth: ECUADOR_CATEGORIES in Listings.jsx. No inventory counts are invented.
- * Do not add homepage descriptions here until the customer approves them.
+ * Homepage descriptions below were approved by the customer.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -33,3 +33,24 @@ for(const {slug,title,description} of rows){
  const dir=path.join(root,'es-ec',slug);fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,'index.html'),html);
 }
 console.log(`Generated ${rows.length} category HTML entrypoints with server-visible SEO metadata`);
+
+
+// Publish approved, language-specific homepage metadata in the initial HTML.
+// Keep / and /es separate only while both are publicly accessible; both point
+// to the primary Spanish homepage canonical to avoid duplicate search results.
+const homepages = [
+  {route:'/',lang:'es',canonical:'https://listoqasa.com/',title:'ListoQasa | Propiedades en Venta y Alquiler en Ecuador',description:'Encuentra casas, departamentos, terrenos y alquileres vacacionales en Ecuador. Publica tu propiedad y conecta con compradores e inquilinos.'},
+  {route:'/es',lang:'es',canonical:'https://listoqasa.com/',title:'ListoQasa | Propiedades en Venta y Alquiler en Ecuador',description:'Encuentra casas, departamentos, terrenos y alquileres vacacionales en Ecuador. Publica tu propiedad y conecta con compradores e inquilinos.'},
+  {route:'/es-ec',lang:'es-EC',canonical:'https://listoqasa.com/es-ec',title:'ListoQasa | Propiedades en Venta y Alquiler en Ecuador',description:'Encuentra casas, departamentos, terrenos y alquileres vacacionales en Ecuador. Publica tu propiedad y conecta con compradores e inquilinos.'},
+  {route:'/en',lang:'en',canonical:'https://listoqasa.com/en',title:'ListoQasa | Homes, Property Listings & Vacation Rentals in Ecuador',description:'Explore homes, apartments, land, and vacation rentals across Ecuador. List your property on ListoQasa and connect directly with interested buyers and renters.'}
+];
+for (const page of homepages) {
+ let html=shell.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi,'')
+   .replace(/<meta\s+[^>]*name=["'](?:description|robots)["'][^>]*>/gi,'')
+   .replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>/gi,'');
+ html=html.replace(/<html\b[^>]*>/i,tag=> /\blang=/.test(tag)?tag.replace(/\blang=["'][^"']*["']/i,`lang="${page.lang}"`):tag.replace('<html',`<html lang="${page.lang}"`));
+ const head=`<title>${escape(page.title)}</title>\n<meta name="description" content="${escape(page.description)}">\n<meta name="robots" content="index,follow">\n<link rel="canonical" href="${page.canonical}">\n<meta property="og:title" content="${escape(page.title)}">\n<meta property="og:description" content="${escape(page.description)}">\n<meta property="og:url" content="${page.canonical}">`;
+ html=html.replace('</head>',`${head}\n</head>`);
+ const dir=path.join(root,page.route.slice(1));fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,'index.html'),html);
+}
+console.log(`Generated ${homepages.length} homepage HTML entrypoints with approved metadata`);

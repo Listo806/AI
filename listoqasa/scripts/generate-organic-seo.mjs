@@ -1,13 +1,13 @@
 /** Generate conservative public SEO assets. Run: node scripts/generate-organic-seo.mjs
  * Optional PUBLISHED_LISTINGS_JSON=/absolute/path.json: array of {url, published, indexable, canonical, updatedAt}.
- * Do not include unverified inventory. Homepage descriptions require approval before adding to HTML.
+ * Do not include unverified inventory. Homepage descriptions are approved and emitted by build-category-html.mjs.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 const ORIGIN='https://listoqasa.com';
 const out=path.resolve('public');
 const categorySlugs=['propiedades-en-venta','propiedades-en-alquiler','casas-en-venta','casas-en-alquiler','departamentos-en-venta','departamentos-en-alquiler','terrenos-en-venta','propiedades-comerciales','oficinas-en-venta','oficinas-en-alquiler','alquileres-vacacionales'];
-const staticPaths=['/','/en','/es','/es-ec',...categorySlugs.map(x=>'/es-ec/'+x),'/es-ec/publicar-propiedad','/es-ec/propietarios','/es-ec/agentes','/owners','/agents','/find-agent','/ai-crm','/commercial-owners','/developers','/vacation-rentals','/about','/contact','/privacy','/terms'];
+const staticPaths=['/','/en','/es-ec',...categorySlugs.map(x=>'/es-ec/'+x),'/es-ec/publicar-propiedad','/es-ec/propietarios','/es-ec/agentes','/owners','/agents','/find-agent','/ai-crm','/commercial-owners','/developers','/vacation-rentals','/about','/contact','/privacy','/terms'];
 const xmlEscape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const urls=new Map(staticPaths.map(p=>[ORIGIN+p,{url:ORIGIN+p}]));
 const source=process.env.PUBLISHED_LISTINGS_JSON;
