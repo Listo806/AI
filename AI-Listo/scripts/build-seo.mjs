@@ -615,6 +615,18 @@ function main() {
     ].join("\n"),
   );
 
+  // Serve generated XML as XML (rather than plain text) on Netlify.
+  // This also avoids content-type ambiguity for crawlers and browsers.
+  write("_headers", [
+    "/sitemap.xml",
+    "  Content-Type: application/xml; charset=utf-8",
+    "  X-Content-Type-Options: nosniff",
+    "",
+    "/robots.txt",
+    "  Content-Type: text/plain; charset=utf-8",
+    "",
+  ].join("\n"));
+
   // 7. llms.txt, the supplementary map for AI assistants.
   write("llms.txt", llmsTxt());
 

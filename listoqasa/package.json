@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "prebuild": "node scripts/generate-organic-seo.mjs",
+    "build": "vite build && node scripts/build-category-html.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },
