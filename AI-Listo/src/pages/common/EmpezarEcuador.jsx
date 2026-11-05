@@ -78,6 +78,12 @@ export default function EmpezarEcuador() {
             {error && <p className="ce-start-error" role="alert">{error}</p>}
             <button type="submit" disabled={busy}>{busy ? "Guardando..." : "Continuar"}<ArrowRight aria-hidden="true" /></button>
           </form>
+          <a
+            href="/es-ec"
+            style={{ display: "block", width: "fit-content", margin: "12px auto 0", color: "#0866f5", fontSize: "14px", textAlign: "center", textDecoration: "underline", textUnderlineOffset: "2px" }}
+          >
+            Explorar Cortexa →
+          </a>
         </section>
       </div>
     </div>
