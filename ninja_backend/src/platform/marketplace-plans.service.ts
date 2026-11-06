@@ -5,6 +5,7 @@ import { NuveiClientService } from '../nuvei/nuvei-client.service';
 import { ConfigService } from '../config/config.service';
 import * as crypto from 'crypto';
 import { MarketplacePurchaseService } from './marketplace-purchase.service';
+import { ListoqasaLifecycleEmailService } from './listoqasa-lifecycle-email.service';
 
 // Marketplace-only entitlements. No modification to CRM or E-Commerce Nuvei products.
 const PLANS = {
@@ -20,7 +21,7 @@ const PLANS = {
 @Injectable()
 export class MarketplacePlansService {
   private readonly logger = new Logger(MarketplacePlansService.name);
-  constructor(private readonly db: DatabaseService, private readonly nuvei: NuveiClientService, private readonly config: ConfigService, private readonly workspaceEntitlements: WorkspaceEntitlementsService, private readonly purchases: MarketplacePurchaseService) {}
+  constructor(private readonly db: DatabaseService, private readonly nuvei: NuveiClientService, private readonly config: ConfigService, private readonly workspaceEntitlements: WorkspaceEntitlementsService, private readonly purchases: MarketplacePurchaseService, private readonly lifecycleEmail: ListoqasaLifecycleEmailService) {}
   private async schema() {
     await this.db.query(`CREATE TABLE IF NOT EXISTS marketplace_plan_enrollments (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES users(id),
@@ -141,6 +142,7 @@ export class MarketplacePlansService {
       const existing = await this.db.query(`SELECT * FROM marketplace_plan_enrollments WHERE user_id=$1 AND plan_key=$2 AND status='active' ORDER BY created_at DESC LIMIT 1`,[userId,planKey]);
       if (existing.rows.length) return { enrollment: existing.rows[0], next: '/create-listing', message:'Your account is ready. Create your first listing' };
       const r=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents) VALUES ($1,$2,'active',0) RETURNING *`,[userId,planKey]);
+      void this.lifecycleEmail.send(r.rows[0].id,'welcome').catch(err => this.logger.warn(`ListoQasa email dispatch failed: ${String(err)}`));
       return { enrollment:r.rows[0], next:'/my-listings', message:'Your account is ready. Create your first listing' };
     }
     const existing=await this.db.query(`SELECT * FROM marketplace_plan_enrollments
@@ -149,6 +151,7 @@ export class MarketplacePlansService {
     if(existing.rows.length) return {enrollment:existing.rows[0],next:'/marketplace/checkout',requiresPayment:true};
     const r=await this.db.query(`INSERT INTO marketplace_plan_enrollments(user_id,plan_key,status,price_cents,billing_interval)
       VALUES ($1,$2,'pending_payment',$3,$4) RETURNING *`,[userId,planKey,approvedPrice,interval]);
+    void this.lifecycleEmail.send(r.rows[0].id,'welcome').catch(err => this.logger.warn(`ListoQasa email dispatch failed: ${String(err)}`));
     return {enrollment:r.rows[0],next:'/marketplace/checkout',requiresPayment:true};
   }
   /** Administrative access is verified against the server-side internal access grant,
@@ -225,6 +228,7 @@ export class MarketplacePlansService {
     if (!reference.startsWith('LQB-')) throw new BadRequestException('A card payment is already in progress');
     // Bank transfers are never activated automatically from a browser claim.
     // Operations must reconcile actual bank settlement before activating.
+    void this.lifecycleEmail.send(enrollmentId,'bank_instructions').catch(err => this.logger.warn(`ListoQasa email dispatch failed: ${String(err)}`));
     return {reference,status:'pending_payment',amount:Number(row.price_cents)/100,currency:'USD',requiresManualVerification:true};
   }
 
@@ -260,6 +264,7 @@ export class MarketplacePlansService {
       WHERE marketplace_bank_transfer_requests.status='rejected'
       RETURNING id,status,reference,created_at`,[enrollmentId,userId,row.payment_reference,ref,String(note||'').slice(0,1000),receipt?.buffer||null,receipt?.mimetype||null,receipt?.originalname?.slice(0,200)||null]);
     if(!result.rows.length) throw new BadRequestException('This transfer is already awaiting review or approved');
+    void this.lifecycleEmail.send(enrollmentId,'receipt_received').catch(err => this.logger.warn(`ListoQasa email dispatch failed: ${String(err)}`));
     return {request:result.rows[0],next:'/marketplace/payment-pending'};
   }
   async bankRequestStatus(userId:string,enrollmentId:string) {
@@ -305,6 +310,7 @@ export class MarketplacePlansService {
       return {enrollment_id:request.enrollment_id,status:approve?'approved':'rejected',user_id:request.user_id};
     });
     if(approve) {
+      void this.lifecycleEmail.send(row.enrollment_id,'activated').catch(err => this.logger.warn(`ListoQasa email dispatch failed: ${String(err)}`));
       await this.syncAgentCrm(row.user_id,row.enrollment_id).catch(err=>this.logger.error(`CRM provisioning retry required: ${String(err)}`));
       void this.purchases.flush().catch(err=>this.logger.error(`Purchase upload retry required: ${String(err)}`));
     }

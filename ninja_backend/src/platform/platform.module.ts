@@ -1,3 +1,4 @@
+import { ListoqasaLifecycleEmailService } from './listoqasa-lifecycle-email.service';
 import { EcuadorBankTrialLifecycleService } from './ecuador-bank-trial-lifecycle.service';
 import { PlatformMailModule } from '../platform-mail/platform-mail.module';
 import { EcuadorBankCheckoutService } from './ecuador-bank-checkout.service';
@@ -20,7 +21,7 @@ import { ProductBillingService } from './product-billing.service';
 @Module({
   imports: [GoogleAdsModule, PlatformMailModule, DatabaseModule, SubscriptionsModule, NuveiModule, WorkspacesModule],
   controllers: [EcuadorBankCheckoutController, PlatformController, MarketplacePlansController, MarketplaceBankAdminController, ProductBillingController],
-  providers: [EcuadorBankTrialLifecycleService, EcuadorBankCheckoutService, PlatformListingsService, MarketplacePlansService, MarketplacePurchaseService, ProductBillingService],
+  providers: [ListoqasaLifecycleEmailService, EcuadorBankTrialLifecycleService, EcuadorBankCheckoutService, PlatformListingsService, MarketplacePlansService, MarketplacePurchaseService, ProductBillingService],
   exports: [MarketplacePlansService],
 })
 export class PlatformModule {}
