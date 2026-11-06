@@ -65,6 +65,21 @@ export class PlatformMailController {
     return { data };
   }
 
+  // One-off admin-authored email to an arbitrary address (not a CRM user).
+  @Post('direct-send')
+  @ApiOperation({ summary: 'Send a composed email to an external recipient' })
+  async directSend(@Body() body: { to?: string; subject?: string; html?: string; language?: string }) {
+    const to = String(body?.to || '').trim().toLowerCase();
+    const subject = String(body?.subject || '').trim();
+    const html = String(body?.html || '').trim();
+    const language = normalizeBulkLang(body?.language) || 'en';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) || to.length > 254) return { ok: false, error: 'Enter a valid recipient email.' };
+    if (!subject || subject.length > 250) return { ok: false, error: 'Enter a subject (maximum 250 characters).' };
+    if (!html || html.length > 200000 || !html.replace(/<[^>]*>/g, '').trim() && !/<img\b/i.test(html)) return { ok: false, error: 'Add email content.' };
+    const result = await this.mailer.sendCustomEmail({ to, subject, html: this.mailer.wrapCustomEmail(html), language, template: 'admin_direct' });
+    return { ok: result.sent, sent: result.sent, error: result.reason || null };
+  }
+
   @Post('test-send')
   @ApiOperation({
     summary: 'Send a test of any lifecycle email to any address (admin)',
