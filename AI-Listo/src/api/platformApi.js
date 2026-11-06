@@ -936,3 +936,7 @@ export async function cancelTeamInvite(
 
   return response?.data || response;
 }
+// Send a one-off custom email to an address that is not necessarily a CRM customer.
+export async function sendDirectAdminEmail({ to, subject, html, language = "en" }) {
+  return apiClient.request("/admin/email/direct-send", { method: "POST", body: JSON.stringify({ to, subject, html, language }) });
+}

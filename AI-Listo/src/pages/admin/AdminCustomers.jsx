@@ -79,6 +79,7 @@ import aiUnitsApi from "../../api/aiUnitsApi";
 import { nuveiRefund, nuveiRefundTransactions } from "../../api/nuveiApi";
 import AdminPlans from "./AdminPlans";
 import BulkEmailModal from "../../components/BulkEmailModal";
+import DirectEmailModal from "../../components/DirectEmailModal";
 import EmailAuditModal from "../../components/EmailAuditModal";
 import EmailComposer from "../../components/EmailComposer";
 import EmailPreview from "../../components/EmailPreview";
@@ -803,6 +804,7 @@ export default function AdminCustomers() {
   const [rowMenu, setRowMenu] = useState(null);
   // Recipients for the bulk-email campaign modal (array of { id }), or null.
   const [bulkEmailFor, setBulkEmailFor] = useState(null);
+  const [showDirectEmail, setShowDirectEmail] = useState(false);
   const [selectingAll, setSelectingAll] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
 
@@ -1739,12 +1741,15 @@ export default function AdminCustomers() {
               onClick={() => {
                 if (selected.size > 1) {
                   openBulkEmail();
-                } else {
-                  const c = oneSelected();
+                } else if (selected.size === 1) {
+                  // Existing customer: preserve the original single-recipient flow.
+                  const c = selectedRows[0];
                   if (c) setTemplateEmailFor(c);
+                } else {
+                  // No selection: compose to any email address without an alert.
+                  setShowDirectEmail(true);
                 }
               }}
-              disabled={!selected.size}
             >
               {selected.size > 1
                 ? `Send Email — ${selected.size} recipients`
@@ -2198,6 +2203,7 @@ export default function AdminCustomers() {
         />
       )}
       {showPlans && <ManagePlansModal onClose={() => setShowPlans(false)} />}
+      {showDirectEmail && <DirectEmailModal onClose={() => setShowDirectEmail(false)} />}
       {bulkEmailFor && (
         <BulkEmailModal
           recipients={bulkEmailFor}
