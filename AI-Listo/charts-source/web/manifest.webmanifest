@@ -1,0 +1,24 @@
+{
+  "id": "/charts/app/",
+  "name": "Cortexa Charts",
+  "short_name": "Cortexa",
+  "start_url": "/charts/app/",
+  "scope": "/charts/app/",
+  "display": "standalone",
+  "background_color": "#050b19",
+  "theme_color": "#050b19",
+  "icons": [
+    {
+      "src": "/charts/app/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/charts/app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

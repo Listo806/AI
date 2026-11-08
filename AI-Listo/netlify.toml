@@ -1,11 +1,7 @@
-# Build only. Every redirect, rewrite and 404 rule is generated into
-# dist/_redirects by scripts/build-seo.mjs from src/seo/site.js, so there is one
-# place to change them and no chance of two files disagreeing.
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[functions]
+  node_bundler = "esbuild"

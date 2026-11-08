@@ -1,0 +1,14 @@
+import fs from 'node:fs/promises';import assert from 'node:assert/strict';
+const code=await fs.readFile('worker/index.js','utf8');const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+const now=Date.now(),candles=Array.from({length:40},(_,i)=>({time:now-(41-i)*60000,open:100,high:102,low:99,close:101,volume:10}));
+const snapshot={version:1,requestId:'test-report',symbol:'USD/JPY',frame:'1min',mode:'setup',capturedAt:now,candles,indicators:[{name:'RSI',value:55}],mtf:{'1min':'Bullish'}};
+const req=(data=snapshot,auth=true)=>new Request('https://test/api/analysis',{method:'POST',headers:{'content-type':'application/json',...(auth?{'x-cortexa-authenticated-user':'test-user'}:{})},body:JSON.stringify(data)});
+assert.equal((await worker.fetch(req(snapshot,false),{})).status,401);
+assert.equal((await worker.fetch(req({...snapshot,symbol:'BAD'}),{})).status,400);
+assert.equal((await worker.fetch(req(),{})).status,503);
+const env={CORTEXA_AI_GATEWAY_URL:'https://ai.example.test/analyze',CORTEXA_AI_GATEWAY_TOKEN:'mock-only',AI_RATE_LIMITER:{limit:async()=>({success:true})}};
+let sent;globalThis.fetch=async(url,options)=>{sent=JSON.parse(options.body);return Response.json({version:1,sections:['overview','indicators','confluence','structure','scenarios','invalidation'].map(id=>({id,title:'Evidence',summary:'Conditional interpretation.',reasoning:'Based on the snapshot.',levelRefs:['recentHigh']}))});};
+const good=await worker.fetch(req(),env);assert.equal(good.status,200);const body=await good.json();assert.equal(body.symbol,'USD/JPY');assert.equal(body.levels.recentHigh,102);assert.equal(body.requestId,'test-report');assert.equal(body.provenance,'client_snapshot_not_independently_verified');assert.ok(!JSON.stringify(sent).includes('mock-only'));
+globalThis.fetch=async()=>Response.json({version:1,sections:[]});assert.equal((await worker.fetch(req(),env)).status,502);
+assert.equal((await worker.fetch(req(),{...env,AI_RATE_LIMITER:{limit:async()=>({success:false})}})).status,429);
+console.log('Passed authentication presence, invalid snapshots, disconnected service, mock report, evidence mapping, malformed output and throttling checks.');

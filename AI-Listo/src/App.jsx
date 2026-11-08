@@ -28,6 +28,7 @@ import LanguageAutoDetect, {
 } from "./components/LanguageAutoDetect";
 import TrackDebugPanel from "./components/TrackDebugPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ChartsLaunch from "./pages/charts/ChartsLaunch";
 import VaRouteGuard from "./components/VaRouteGuard";
 import FeatureRoute from "./components/FeatureRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -305,6 +306,8 @@ function publicRoutes(prefix) {
 function AppRoutes() {
   return (
     <Routes>
+        <Route path="/charts/open" element={<ChartsLaunch />} />
+
       {/* Public site — English at root, Spanish at /es, Portuguese at /pt.
           The URL decides the language; LocaleLayout sets it + hreflang/canonical. */}
       <Route element={<LocaleLayout code="en" />}>{publicRoutes("")}</Route>

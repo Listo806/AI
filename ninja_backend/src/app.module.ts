@@ -1,3 +1,4 @@
+import { ChartsModule } from './charts/charts.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { ConfigModule } from './config/config.module';
@@ -56,6 +57,7 @@ import { ContactModule } from './contact/contact.module';
     DatabaseModule,
     PlansModule,
     AuthModule,
+    ChartsModule,
     NuveiModule,
     UsersModule,
     TeamsModule,
