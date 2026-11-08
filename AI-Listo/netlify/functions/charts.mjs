@@ -37,7 +37,27 @@ export default async function charts(request) {
   const target = new URL(`https://charts.internal${internalPath}${url.search}`);
   if (target.pathname !== internalPath) return reply('Not found', 404);
 
-  // Authentication must be checked for EVERY asset, page and API request.
+  // PWA metadata and app icons contain no account or market data. Browsers may
+  // fetch the manifest without the Charts session cookie; serve only these
+  // exact resources anonymously, while keeping HTML, scripts and APIs gated.
+  const publicMetadata = new Set([
+    '/manifest.webmanifest', '/favicon.png', '/apple-touch-icon.png',
+    '/icon-192.png', '/icon-512.png',
+  ]);
+  if ((method === 'GET' || method === 'HEAD') && publicMetadata.has(internalPath)) {
+    try {
+      const result = await worker.fetch(new Request(target, { method }), {}, {});
+      const headers = new Headers({
+        'cache-control': 'public, max-age=300',
+        'x-content-type-options': 'nosniff',
+        'x-robots-tag': 'noindex, nofollow',
+      });
+      headers.set('content-type', result.headers.get('content-type') || 'application/octet-stream');
+      return new Response(method === 'HEAD' ? null : result.body, { status: result.status, headers });
+    } catch { return reply('Charts metadata unavailable', 502); }
+  }
+
+  // Authenticate all dashboard HTML, executable scripts, styles, and API requests.
   // Never trust browser-provided identity headers.
   let identity;
   try {
