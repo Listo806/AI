@@ -644,7 +644,7 @@ function main() {
     "",
     "# Charts: private dashboard via same-site Netlify Function (never static public files).",
     "/charts/app    /.netlify/functions/charts    200!",
-    "/charts/app/*    /.netlify/functions/charts?chartPath=:splat    200!",
+    "/charts/app/*    /.netlify/functions/charts/:splat    200!",
     "/charts/open    /app.html    200",
     "/charts/open/    /app.html    200",
     "/charts    /charts/    301",

@@ -17,14 +17,23 @@ export default async function charts(request) {
   if (!['GET', 'HEAD', 'POST'].includes(method)) return reply('Method not allowed', 405);
 
   const url = new URL(request.url);
-  const suffix = url.searchParams.get('chartPath');
-  // Netlify rewrite: /charts/app/* -> /.netlify/functions/charts?chartPath=:splat
-  // Preserve all other query params (timeframe, symbols, etc.).
-  const path = suffix === null ? PREFIX : `${PREFIX}/${suffix.replace(/^\/+/, '')}`;
-  url.searchParams.delete('chartPath');
-  if (path !== PREFIX && !path.startsWith(`${PREFIX}/`)) return reply('Not found', 404);
-  // Do not allow dot-segment escapes into another route.
-  const internalPath = path.slice(PREFIX.length) || '/';
+  // Netlify forwards splat routes as /.netlify/functions/charts/<asset>.
+  // Resolve the asset from the actual request path instead of relying on a
+  // rewrite query parameter that can be lost by the platform.
+  const functionPrefix = '/.netlify/functions/charts';
+  let internalPath;
+  if (url.pathname === functionPrefix || url.pathname === `${functionPrefix}/`) {
+    internalPath = '/';
+  } else if (url.pathname.startsWith(`${functionPrefix}/`)) {
+    internalPath = url.pathname.slice(functionPrefix.length);
+  } else {
+    // Compatibility with Netlify versions that preserve the original URL.
+    if (url.pathname === PREFIX || url.pathname === `${PREFIX}/`) internalPath = '/';
+    else if (url.pathname.startsWith(`${PREFIX}/`)) internalPath = url.pathname.slice(PREFIX.length);
+    else return reply('Not found', 404);
+  }
+  // Do not route an asset request to the dashboard HTML by accident.
+  if (internalPath.includes('\\') || internalPath.split('/').includes('..')) return reply('Not found', 404);
   const target = new URL(`https://charts.internal${internalPath}${url.search}`);
   if (target.pathname !== internalPath) return reply('Not found', 404);
 
