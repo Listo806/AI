@@ -366,7 +366,7 @@
    nothing is squeezed and dates show cleanly. Percentages sum to ~100%. */
 .cxc-table thead th:nth-child(1)  { width: 32px; }  /* checkbox */
 .cxc-table thead th:nth-child(2)  { width: 17%; }   /* Customer */
-.cxc-table thead th:nth-child(3)  { width: 11%; }   /* Plan & Pricing */
+.cxc-table thead th:nth-child(3)  { width: 18%; }   /* Plan & Pricing */
 .cxc-table thead th:nth-child(4)  { width: 8%; }    /* Seats / Users */
 .cxc-table thead th:nth-child(5)  { width: 9%; }    /* AI Credits */
 .cxc-table thead th:nth-child(6)  { width: 10%; }   /* Next Billing */
