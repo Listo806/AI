@@ -406,6 +406,17 @@ export class CustomersAdminService {
     offer_used, checkout_status, payment_status, plan, selected_plan,
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
     signup_source, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
+    CASE
+      WHEN COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, '')) IS NULL THEN NULL
+      ELSE COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, ''))
+    END AS original_source_url,
+    CASE
+      WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%/charts/%' THEN 'Charts'
+      WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%vacation%' THEN 'Vacation Rentals'
+      WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%listoqasa.com%' THEN 'Marketplace'
+      WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%cortexaaicrm.com%' THEN 'CRM'
+      ELSE 'Unknown'
+    END AS original_platform,
     gclid, landing_page, signup_country, trial_ends_at, created_at, registered_at, upgraded_at, last_seen_at,
     first_touch_source, first_touch_medium, first_touch_campaign,
     first_touch_landing_route, first_visit_at,

@@ -1884,13 +1884,9 @@ export default function AdminCustomers() {
                     />
                   </th>
                   <th>Customer</th>
-                  <th>
-                    Plan &amp; Pricing<small>Billing Cycle</small>
-                  </th>
-                  <th>Seats / Users</th>
-                  <th>AI Credits</th>
-                  <th>Next Billing</th>
-                  <th>Payment Status</th>
+                  <th>Source</th>
+                  <th>Plan</th>
+                  <th>Status</th>
                   <th>Country</th>
                   <th>
                     Registered<small>Date &amp; Time</small>
@@ -1902,14 +1898,14 @@ export default function AdminCustomers() {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={11} style={{ padding: 20, color: "#64748b" }}>
+                    <td colSpan={8} style={{ padding: 20, color: "#64748b" }}>
                       Loading…
                     </td>
                   </tr>
                 )}
                 {!loading && rows.length === 0 && (
                   <tr>
-                    <td colSpan={11} style={{ padding: 20, color: "#64748b" }}>
+                    <td colSpan={8} style={{ padding: 20, color: "#64748b" }}>
                       No customers match these filters.
                     </td>
                   </tr>
@@ -1935,6 +1931,14 @@ export default function AdminCustomers() {
                               <div className="cxc-cust-email">{r.email}</div>
                             </div>
                           </div>
+                        </td>
+                        <td>
+                          <div style={{fontWeight: 600, fontSize: 12}}>{r.original_platform || "Unknown"}</div>
+                          {r.original_source_url && (
+                            <div className="cxc-muted" style={{fontSize: 11, maxWidth: 200, overflowWrap: "anywhere"}}>
+                              {r.original_source_url}
+                            </div>
+                          )}
                         </td>
                         <td>
                           <div className="cxc-plan-badge">
@@ -1966,32 +1970,6 @@ export default function AdminCustomers() {
                             </div>
                           ) : (
                             <div className="cxc-sub-date" />
-                          )}
-                        </td>
-                        <td className="cxc-mono">
-                          {r.seats_used ?? r.seat_count ?? 0} /{" "}
-                          {r.seats_limit ?? "—"}
-                        </td>
-                        <td className="cxc-mono">
-                          {r.credits_unlimited ? (
-                            "Unlimited"
-                          ) : r.credits_remaining != null &&
-                            r.credits_total != null ? (
-                            `${r.credits_remaining} / ${r.credits_total}`
-                          ) : (
-                            <span className="cxc-muted">—</span>
-                          )}
-                        </td>
-                        <td>
-                          {r.next_billing ? (
-                            <>
-                              {fmtDate(r.next_billing)}
-                              <div className="cxc-sub-date">
-                                {relDays(r.next_billing)}
-                              </div>
-                            </>
-                          ) : (
-                            <span className="cxc-muted">—</span>
                           )}
                         </td>
                         <td>
