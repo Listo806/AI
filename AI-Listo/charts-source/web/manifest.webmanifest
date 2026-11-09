@@ -1,7 +1,7 @@
 {
   "id": "/charts/app/",
   "name": "Cortexa Charts",
-  "short_name": "Cortexa",
+  "short_name": "Cortexa Charts",
   "start_url": "/charts/app/",
   "scope": "/charts/app/",
   "display": "standalone",

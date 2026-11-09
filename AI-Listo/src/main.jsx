@@ -1,3 +1,4 @@
+import './homeScreenIcons.js';
 import './i18n/config';
 
 import ReactDOM from 'react-dom/client';
