@@ -165,6 +165,7 @@ import IntegrationsPage from "./pages/common/IntegrationsPage";
 import FeaturesPage from "./pages/common/FeaturesPage";
 import AdminBillingCalendar from "./pages/admin/AdminBillingCalendar";
 import MarketplaceBankTransferApprovals from "./pages/admin/MarketplaceBankTransferApprovals";
+import ChartsBankTransferApprovals from "./pages/admin/ChartsBankTransferApprovals";
 import AestheticWellnessWorkspace from "./pages/aesthetic-wellness/AestheticWellnessWorkspace";
 import AestheticClients from "./pages/aesthetic-wellness/AestheticClients";
 import AestheticClientProfile from "./pages/aesthetic-wellness/AestheticClientProfile";
@@ -444,6 +445,7 @@ function AppRoutes() {
         <Route path="admin/customers" element={<AdminCustomers />} />
         <Route path="admin/billing-calendar" element={<AdminBillingCalendar />}  />
         <Route path="admin/marketplace/bank-transfers" element={<MarketplaceBankTransferApprovals />} />
+        <Route path="admin/charts/bank-transfers" element={<ChartsBankTransferApprovals />} />
         <Route path="admin/signups" element={<AdminSignups />} />
         <Route
           path="admin/customers-legacy"
