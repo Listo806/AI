@@ -6,14 +6,8 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 .nav-cta>span,.button>span,.text-link>span,.quote b{font-family:Arial,sans-serif}.check-list li:before{content:'+';font-family:Arial,sans-serif}
 
-/* Animated landing-page sample. The outer terminal, cards and toolbar never move. */
-.chart-area{overflow:hidden;isolation:isolate}
-.chart-motion-layer{width:100%;transform:translate3d(0,0,0);will-change:auto}
-.chart-motion-layer>img{display:block;width:100%;height:auto}
-.rsi{overflow:hidden}
-.rsi-motion{transform:translate3d(0,0,0);transform-origin:center;will-change:auto}
-.quote em{transition:color 1.1s ease}
-.quote em.sample-down{color:#ef617b}
-.quote em.sample-up{color:#55d49c}
-.mtf span{transition:background-color 1.8s ease,border-color 1.8s ease,color 1.8s ease}
-@media(prefers-reduced-motion:reduce){.quote em,.mtf span{transition:none}.chart-motion-layer,.rsi-motion{transform:none!important}}
+/* Updated static Charts landing preview; contained in the existing terminal position. */
+.chart-preview-image{position:relative;display:block;overflow:hidden;background:#0c1119;line-height:0}
+.chart-preview-image>img{display:block;width:100%;height:auto;aspect-ratio:1366/683;object-fit:contain}
+.chart-preview-note{position:absolute;left:1.25%;bottom:1%;padding:3px 7px;border-radius:3px;background:rgba(10,14,20,.8);color:#d0d8e1;font:10px/1.4 system-ui,sans-serif;letter-spacing:.01em;line-height:1.4}
+@media(max-width:600px){.chart-preview-note{font-size:7px;padding:2px 4px}}
