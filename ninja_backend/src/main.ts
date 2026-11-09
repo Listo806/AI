@@ -16,6 +16,12 @@ async function bootstrap() {
     bodyParser: true, // Enable body parser for JSON and URL-encoded
   });
 
+  // Use Nest's own body-parser registration so rawBody/webhook handling stays intact.
+  // IMPORTANT: Do not mount express.json() on individual Charts routes here:
+  // that caused a regression in the production login flow in the previous build.
+  // Chart controllers must still enforce their own strict payload limits.
+  app.useBodyParser("json", { limit: "900kb" });
+
   // Correct client IP behind proxies (e.g. Render) for Site Assist abuse logging / rate limits
   app.set("trust proxy", 1);
 
