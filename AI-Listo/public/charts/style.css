@@ -11,3 +11,66 @@
 .chart-preview-image>img{display:block;width:100%;height:auto;aspect-ratio:1366/683;object-fit:contain}
 .chart-preview-note{position:absolute;left:1.25%;bottom:1%;padding:3px 7px;border-radius:3px;background:rgba(10,14,20,.8);color:#d0d8e1;font:10px/1.4 system-ui,sans-serif;letter-spacing:.01em;line-height:1.4}
 @media(max-width:600px){.chart-preview-note{font-size:7px;padding:2px 4px}}
+
+/* Multi-chart workspace: marketing-only section */
+.multi-chart{background:#0b130d;color:#e9ecdd;padding-top:76px;padding-bottom:68px}
+.multi-chart-intro{display:grid;grid-template-columns:1fr 1fr;gap:7%;align-items:center}
+.multi-chart .eyebrow{color:#d0eb84;font-size:11px;letter-spacing:2px;font-weight:700}
+.multi-chart h2{font-size:clamp(38px,4.4vw,67px);line-height:1.03;letter-spacing:-2.7px;margin:18px 0 0}
+.multi-chart h2 span{color:#d2ee82}
+.multi-chart-description p{font-size:clamp(15px,1.65vw,23px);line-height:1.4;max-width:510px;margin:0 0 10px}
+.multi-chart-description p+p{font-size:clamp(13px,1.3vw,17px);color:#b2bd93}
+.multi-chart-chooser{display:flex;align-items:center;gap:25px;margin:24px 0 15px}
+.multi-chart-chooser>span{font-size:11px;letter-spacing:2px;color:#c8cfc0;white-space:nowrap}
+.multi-chart-options{display:flex;flex-wrap:wrap;gap:10px}
+.multi-chart-options span{border:1px solid #657263;border-radius:5px;color:#e6eadf;font-size:12px;padding:7px 13px;line-height:1;white-space:nowrap}
+.multi-chart-showcase{border-top:1px solid #81935c;padding-top:23px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}
+.multi-chart-example{min-width:0}
+.multi-chart-kicker{color:#d1e68b;font-size:11px;font-weight:700;letter-spacing:1.7px;margin-bottom:7px}
+.multi-chart-example h3{font-size:clamp(21px,2.2vw,31px);letter-spacing:-.8px;line-height:1.2;font-weight:500;margin:0 0 17px}
+.multi-chart-example img{display:block;width:100%;height:auto;aspect-ratio:604 / 288;object-fit:contain;border-radius:7px;border:1px solid #6e815c;background:#0c1119}
+.multi-chart-benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));text-align:center;gap:12px;align-items:center;padding:26px 0;border-bottom:1px solid #81935c;font-size:clamp(12px,1.2vw,16px)}
+.multi-chart-benefits span+span{border-left:1px solid #647750}
+.multi-chart-bottom{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-top:18px}
+.multi-chart-bottom a{color:#d5ed91;text-decoration:none;border-bottom:1px solid #d5ed91;padding-bottom:5px;font-size:15px}
+.multi-chart-bottom a:hover{color:white;border-color:white}
+.multi-chart-bottom small{color:#a9b69b;font-size:11px}
+@media(max-width:760px){.multi-chart{padding-top:56px;padding-bottom:52px}.multi-chart-intro{grid-template-columns:1fr;gap:22px}.multi-chart h2{letter-spacing:-1.5px}.multi-chart-chooser{flex-direction:column;align-items:flex-start;gap:12px;margin:24px 0}.multi-chart-showcase{grid-template-columns:1fr;gap:32px}.multi-chart-example h3{font-size:24px}.multi-chart-benefits{grid-template-columns:1fr;text-align:left;gap:14px;padding:22px 0}.multi-chart-benefits span+span{border-left:0}.multi-chart-bottom{align-items:flex-start;flex-direction:column}.multi-chart-example img{width:100%;height:auto}}
+
+/* Heisenberg edge: landing-page illustration only; the trading application is unchanged. */
+.heisenberg-edge{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(35px,5.5vw,100px);align-items:center;background:#0b130d;color:#e8ece0}
+.heisenberg-edge-copy{min-width:0}
+.heisenberg-edge-copy .eyebrow{font-size:11px;letter-spacing:1.6px;color:#d2e78b;font-weight:700}
+.heisenberg-edge-copy h2{font-size:clamp(38px,4.2vw,65px);letter-spacing:-2.3px;line-height:1.08;margin:24px 0 26px;font-weight:600}
+.heisenberg-edge-copy h2 em{font-style:normal;color:#d3ec87}
+.heisenberg-edge-copy>p{font-size:clamp(15px,1.3vw,19px);line-height:1.65;max-width:580px;color:#cdd5c9;margin:0 0 25px}
+.heisenberg-highlights{display:flex;flex-wrap:wrap;gap:0;margin-bottom:33px;color:#b7c2a7;font-size:clamp(12px,1.1vw,16px)}
+.heisenberg-highlights span{padding:0 20px;border-left:1px solid #a8b88a}
+.heisenberg-highlights span:first-child{padding-left:0;border-left:0}
+.heisenberg-edge-copy .text-link{display:inline-flex;gap:13px;align-items:center;color:#d6ee8f;border-bottom:1px solid #b8d376;padding-bottom:10px;text-decoration:none;font-size:15px}
+.heisenberg-preview{display:grid;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);gap:12px;padding:18px;border:1px solid #47573e;border-radius:6px;background:linear-gradient(135deg,#1c2819,#121b14);min-width:0;box-shadow:0 12px 35px #0002}
+.heisenberg-mtf-card,.heisenberg-signals-card{min-width:0;border:1px solid #62735b;border-radius:10px;background:#111a15;overflow:hidden}
+.heisenberg-mtf-card h3{font-size:15px;font-weight:700;letter-spacing:.1px;padding:16px 17px;margin:0;background:#1b281d;border-bottom:1px solid #435444}
+.heisenberg-mtf-card table{width:100%;border-collapse:collapse;font-size:14px;text-align:left;color:#e5e8de}
+.heisenberg-mtf-card th{font-weight:500;font-size:12px;color:#e1e6dc}
+.heisenberg-mtf-card td,.heisenberg-mtf-card th{padding:9px 15px;border-bottom:1px solid #36473b}
+.heisenberg-mtf-card tbody tr:last-child td{border-bottom:0}
+.heisenberg-status{display:inline-block;min-width:65px;text-align:center;border-radius:5px;padding:4px 7px;font-size:13px}
+.heisenberg-status.bullish{background:#234d24;color:#c2f4a5}
+.heisenberg-status.bearish{background:#642b2b;color:#ffcccc}
+.heisenberg-signals-card{padding:15px 16px 10px}
+.heisenberg-signals-card h3{font-size:19px;line-height:1.2;font-weight:600;margin:0 0 4px}
+.heisenberg-subtitle{color:#9eae99;font-size:12px;margin:0 0 12px}
+.heisenberg-active{font-size:12px;color:#cbe889;display:flex;gap:8px;align-items:center;padding-bottom:9px}
+.heisenberg-active span{background:#49e03d;width:11px;height:11px;border-radius:50%;display:inline-block}
+.heisenberg-signal{border-top:1px solid #3c4b3b;display:flex;gap:12px;align-items:center;padding:10px 0}
+.heisenberg-action{border-radius:5px;padding:5px 9px;font-size:13px;font-weight:700;color:white}
+.heisenberg-action.buy{background:#267532}.heisenberg-action.sell{background:#98352f}
+.heisenberg-signal>div{flex:1;min-width:0}.heisenberg-signal strong{font-size:14px;font-weight:600;display:block}.heisenberg-signal small{font-size:11px;color:#a7b6a7;display:block;margin-top:3px}
+.heisenberg-signal a{color:#d5ec96;font-size:11px;text-decoration:none;white-space:nowrap}
+.heisenberg-alerts{border-top:1px solid #526348;padding:13px 0 11px}.heisenberg-alerts h4{font-size:15px;font-weight:600;margin:0 0 12px}
+.heisenberg-alert-row{display:flex;align-items:flex-start;gap:14px;font-size:13px}.heisenberg-alert-row small{display:block;font-size:11px;color:#aab5a6;margin-top:4px}
+.heisenberg-toggle{display:inline-block;flex:none;width:40px;height:21px;background:#7cab3b;border-radius:20px;position:relative}.heisenberg-toggle:after{content:"";position:absolute;width:16px;height:16px;right:3px;top:2.5px;border-radius:50%;background:white}
+.heisenberg-sample{border-top:1px solid #3e4e3b;text-align:right;padding-top:9px;color:#9da899;font-size:10px}
+@media(max-width:1000px){.heisenberg-edge{grid-template-columns:1fr;gap:32px}.heisenberg-preview{max-width:720px;width:100%}}
+@media(max-width:520px){.heisenberg-edge-copy h2{letter-spacing:-1.5px}.heisenberg-highlights{gap:9px}.heisenberg-highlights span{padding:0 10px}.heisenberg-preview{padding:8px;gap:7px;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr)}.heisenberg-mtf-card h3{font-size:10px;padding:11px 7px}.heisenberg-mtf-card td,.heisenberg-mtf-card th{padding:7px 5px;font-size:10px}.heisenberg-status{min-width:0;font-size:10px;padding:4px}.heisenberg-signals-card{padding:9px 7px}.heisenberg-signals-card h3{font-size:14px}.heisenberg-subtitle,.heisenberg-active{font-size:9px}.heisenberg-signal{gap:5px;flex-wrap:wrap}.heisenberg-action{font-size:9px;padding:3px 5px}.heisenberg-signal strong{font-size:10px}.heisenberg-signal small,.heisenberg-signal a{font-size:9px}.heisenberg-alerts h4{font-size:12px}.heisenberg-alert-row{font-size:10px}.heisenberg-alert-row small,.heisenberg-sample{font-size:9px}}
