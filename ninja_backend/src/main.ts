@@ -16,12 +16,6 @@ async function bootstrap() {
     bodyParser: true, // Enable body parser for JSON and URL-encoded
   });
 
-  // Charts endpoints need larger, bounded JSON bodies than Express's 100 KB default.
-  // This middleware is registered before NestJS installs its global parser.
-  const chartsPrefix = String(process.env.API_PREFIX || 'api').replace(/^\/+|\/+$/g, '');
-  app.use(`/${chartsPrefix}/charts/engine`, express.json({limit: '900kb'}));
-  app.use(`/${chartsPrefix}/charts/analysis`, express.json({limit: '180kb'}));
-
   // Correct client IP behind proxies (e.g. Render) for Site Assist abuse logging / rate limits
   app.set("trust proxy", 1);
 
