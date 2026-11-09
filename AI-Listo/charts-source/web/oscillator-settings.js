@@ -1,7 +1,7 @@
 'use strict';
 const OscSettings=(()=>{
  const defaults={rsi:{length:14,source:'close',offset:0,show:true,color:'#3293ff',width:2,style:'solid',precision:'default',labels:false,upper:70,lower:30,levels:true,levelColor:'#8296b8',background:true,fill:'#51436d',opacity:12},ma:{length:9,type:'SMA',offset:0,show:true,color:'#ff334c',width:2,style:'solid',precision:'default',labels:false}};
- const configs={};for(const kind of ['rsi','ma']){configs[kind]={...defaults[kind]};try{configs[kind]={...configs[kind],...JSON.parse(localStorage.getItem('market-'+kind+'-settings-v1'))};}catch{}}
+ const configs={};for(const kind of ['rsi','ma']){configs[kind]={...defaults[kind]};try{configs[kind]={...configs[kind],...JSON.parse(ChartStorage.getItem('market-'+kind+'-settings-v1'))};}catch{}}
  const select=(k,id,opts)=>`<select id="osc-${k}-${id}">${opts.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>`,input=(k,id,type,attrs='')=>`<input id="osc-${k}-${id}" type="${type}" ${attrs}>`,row=(t,c)=>`<label class="aa-row"><span>${t}</span>${c}</label>`;
  const dialogs={};
  for(const kind of ['rsi','ma']){
@@ -13,7 +13,7 @@ const OscSettings=(()=>{
   const populate=c=>Object.entries(c).forEach(([k,v])=>el(k)[typeof v==='boolean'?'checked':'value']=v);
   dialog.querySelectorAll('[data-osctab]').forEach(b=>b.onclick=()=>{dialog.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==b.dataset.osctab);dialog.querySelectorAll('[data-osctab]').forEach(t=>t.classList.toggle('active',t===b));});
   dialog.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>dialog.close());dialog.querySelector('[data-defaults]').onclick=()=>populate(defaults[kind]);
-  dialog.querySelector('form').onsubmit=e=>{e.preventDefault();const next={};Object.entries(defaults[kind]).forEach(([k,v])=>next[k]=typeof v==='boolean'?el(k).checked:typeof v==='number'?Number(el(k).value):el(k).value);if(kind==='rsi'&&next.upper<=next.lower){dialog.querySelector('[data-error]').textContent='Upper level must be greater than lower level.';return;}configs[kind]=next;try{localStorage.setItem('market-'+kind+'-settings-v1',JSON.stringify(next));}catch{}dialog.close();render();};
+  dialog.querySelector('form').onsubmit=e=>{e.preventDefault();const next={};Object.entries(defaults[kind]).forEach(([k,v])=>next[k]=typeof v==='boolean'?el(k).checked:typeof v==='number'?Number(el(k).value):el(k).value);if(kind==='rsi'&&next.upper<=next.lower){dialog.querySelector('[data-error]').textContent='Upper level must be greater than lower level.';return;}configs[kind]=next;try{ChartStorage.setItem('market-'+kind+'-settings-v1',JSON.stringify(next));}catch{}dialog.close();render();};
   dialog.populate=()=>{populate(configs[kind]);dialog.querySelector('[data-error]').textContent='';};
  }
  const shift=(values,offset)=>values.map((_,i)=>values[i-offset]??null);

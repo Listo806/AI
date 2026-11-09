@@ -1,0 +1,11 @@
+import vm from 'node:vm';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const c={};vm.createContext(c);vm.runInContext(readFileSync(new URL('../web/signal-monitor.js',import.meta.url),'utf8')+';this.M=SignalMonitor',c);const tracker=c.M.create();
+const record=(id,closedAt)=>({id,closedAt});const snap=(latestClosed,signals,extra={})=>({context:'USDJPY|1min|rules',enabled:true,latestClosed,signals,now:latestClosed+1000,duration:60000,...extra});
+assert.equal(c.M.observe(tracker,snap(120000,[record('old',120000)])).length,0,'enabling seeds existing history silently');
+assert.equal(c.M.observe(tracker,snap(180000,[record('new',180000),record('old',120000)])).length,1,'newly closed signal notifies');
+assert.equal(c.M.observe(tracker,snap(180000,[record('new',180000)])).length,0,'live updates do not repeat the same signal');
+assert.equal(c.M.observe(tracker,snap(180000,[record('late-backfill',120000)])).length,0,'late historical recalculation does not notify');
+c.M.observe(tracker,snap(240000,[],{enabled:false}));assert.equal(c.M.observe(tracker,snap(300000,[record('disabled-period',300000)])).length,0,'disabled period does not replay alerts when re-enabled');
+assert.equal(c.M.observe(tracker,snap(360000,[record('new-market-history',360000)],{context:'GOLD|1h|rules'})).length,0,'changing chart context seeds a new baseline');
+assert.equal(c.M.observe(tracker,snap(420000,[record('stale',420000)],{context:'GOLD|1h|rules',now:1000000})).length,0,'stale data cannot trigger a current alert');
+console.log('Signals: historical suppression, closed-candle alerts, deduplication, off/re-enable, context changes, and stale-feed checks passed.');

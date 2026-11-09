@@ -1,6 +1,7 @@
 'use strict';
 // Public SignalR JSON stream. Heartbeats alone do not establish a healthy price feed.
 const LiveStream=(()=>{
+ if(window.ChartEmbed){let off=null;return {start(){off?.();off=parent.ChartGridHost.subscribe(ChartEmbed.id,()=>markets[selected].symbol,tick=>onMarketTick(tick));},reload(){this.start();},fresh(symbol){return parent.ChartGridHost.fresh(symbol);},get active(){return parent.ChartGridHost.active();}};}
  const rs='\x1e';let symbols=[];
  let ws=null,timer=null,ping=null,delay=1000,generation=0,connecting=false,stopped=false;
  const ticks=new Map(),tickTimes=new Map();
@@ -8,7 +9,7 @@ const LiveStream=(()=>{
  function retry(){closeCurrent();if(stopped)return;clearTimeout(timer);timer=setTimeout(connect,delay);delay=Math.min(delay*2,30000);}
  async function connect(){
   if(stopped||connecting||ws?.readyState===1)return;
-  symbols=markets.map(m=>m.symbol.replace('/',''));connecting=true;const id=++generation;let authTimer;
+  symbols=[...new Set([...markets.map(m=>m.symbol),...(window.ChartGridHost?.symbols()||[])])].map(s=>s.replace('/',''));connecting=true;const id=++generation;let authTimer;
   try{
    const r=await fetch('https://biquote.io/hubs/tick/negotiate?negotiateVersion=1',{method:'POST',credentials:'omit',signal:AbortSignal.timeout(15000)});
    if(id!==generation||stopped)return;

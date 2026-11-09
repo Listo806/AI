@@ -1,7 +1,7 @@
 const instruments=["EUR/USD","GBP/USD","USD/JPY","USD/CHF","USD/CAD","AUD/USD","NZD/USD","GBP/JPY","EUR/JPY","AUD/JPY","CAD/JPY","CHF/JPY","NZD/JPY","EUR/GBP","EUR/AUD","EUR/CAD","EUR/CHF","GBP/AUD","GBP/CAD","AUD/NZD","XAU/USD","XAG/USD","XCU/USD","XPT/USD","XPD/USD","USOIL","UKOIL","XNG/USD","US500","USTEC","US30","DE30","UK100","JP225","AUS200","STOXX50","DXY"];
 const providerQuoteCache=new Map(),providerQuoteRequests=new Map();
 export async function quoteResponse(requestUrl){
- const requested=requestUrl?.searchParams.getAll('symbol')||[];const chosen=requested.length?requested.filter(s=>instruments.includes(s)).slice(0,4):['USD/JPY','XAG/USD','GBP/JPY','XAU/USD'];const quoteKey=chosen.join('|');if(!chosen.length)return Response.json({error:'Unsupported markets'},{status:400});const providerQuotes=providerQuoteCache.get(quoteKey);
+ const requested=requestUrl?.searchParams.getAll('symbol')||[];const chosen=requested.length?requested.filter(s=>instruments.includes(s)).slice(0,10):['USD/JPY','XAG/USD','GBP/JPY','XAU/USD'];const quoteKey=chosen.join('|');if(!chosen.length)return Response.json({error:'Unsupported markets'},{status:400});const providerQuotes=providerQuoteCache.get(quoteKey);
  if(providerQuotes&&providerQuotes.quoteKey===quoteKey&&Date.now()-providerQuotes.fetchedAt<5000)return Response.json(providerQuotes,{headers:{'cache-control':'no-store'}});
  if(!providerQuoteRequests.has(quoteKey))providerQuoteRequests.set(quoteKey,(async()=>{
   const url=new URL('https://biquote.io/api/latest');chosen.forEach(s=>url.searchParams.append('symbols',s.replace('/','')));

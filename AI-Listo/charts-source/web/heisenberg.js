@@ -1,7 +1,7 @@
 'use strict';
 const Heisenberg = {
   defaults: {tramaLength:20,snakeSmooth:6,snakeWidthAtr:.75,cooldownBars:20,bbLength:20,bbMult:2,rsiLength:14,rsiMaLength:9,vwapDevMult:1.5,rocLength:3,candlePowerMult:.6,useMTFFilter:true,useRsiRegimeFilter:true,bullRsiThreshold:45,bearRsiThreshold:55,showFullAlignment:true},
-  durations: {'1min':60000,'5min':300000,'15min':900000,'30min':1800000,'1h':3600000,'4h':14400000,'1day':86400000},
+  durations: {'1min':60000,'5min':300000,'15min':900000,'30min':1800000,'1h':3600000,'4h':14400000,'1day':86400000,'2h':7200000,'1week':604800000,'1month':2678400000},
   ema(values,length) {
     let previous=null;
     return values.map(value=>{if(!Number.isFinite(value))return null;previous=previous===null?value:previous+(2/(length+1))*(value-previous);return previous;});
@@ -25,7 +25,7 @@ const Heisenberg = {
     const series=Object.fromEntries(['1min',...frames].map(tf=>{const entry=frameEntries[tf];return [tf,entry&&!entry.reference?{bars:entry.bars,...this.trendSeries(entry.bars,config)}:null];}));
     function state(tf,at){const data=series[tf];if(!data)return 'Unavailable';let low=0,high=data.bars.length-1,found=-1;while(low<=high){const mid=(low+high)>>1;if(data.bars[mid].time+Heisenberg.durations[tf]<=at){found=mid;low=mid+1;}else high=mid-1;}if(found<0||at-(data.bars[found].time+Heisenberg.durations[tf])>Heisenberg.durations[tf]*3)return 'Unavailable';const a=data.trama[found],b=data.vwap[found];if(!Number.isFinite(a)||!Number.isFinite(b))return 'Unavailable';return a>b?'Bullish':a<b?'Bearish':'Neutral';}
     const signals=[],alignment=[],bias=trama.map((v,i)=>!Number.isFinite(vwap[i])?'Neutral':v>vwap[i]?'Bullish':v<vwap[i]?'Bearish':'Neutral');let lastBuy=null,lastSell=null,previousFullBull=false,previousFullBear=false;
-    bars.forEach((bar,i)=>{const at=bar.time+(this.durations[frame]||86400000);if(at>now)return;const states=frames.map(tf=>state(tf,at)),bullCount=states.filter(v=>v==='Bullish').length,bearCount=states.filter(v=>v==='Bearish').length,fullBull=bullCount===5,fullBear=bearCount===5;
+    bars.forEach((bar,i)=>{const at=bar.endTime??(bar.time+(this.durations[frame]||86400000));if(at>now)return;const states=frames.map(tf=>state(tf,at)),bullCount=states.filter(v=>v==='Bullish').length,bearCount=states.filter(v=>v==='Bearish').length,fullBull=bullCount===5,fullBear=bearCount===5;
       if(config.showFullAlignment&&fullBull&&!previousFullBull)alignment.push({index:i,side:'BUY'});if(config.showFullAlignment&&fullBear&&!previousFullBear)alignment.push({index:i,side:'SELL'});previousFullBull=fullBull;previousFullBear=fullBear;
       if(!i||!Number.isFinite(center[i])||!Number.isFinite(center[i-1])||!Number.isFinite(atr[i]))return;
       const bull=bias[i]==='Bullish',bear=bias[i]==='Bearish',bullTrend=bull&&center[i]>center[i-1]&&bar.close>center[i],bearTrend=bear&&center[i]<center[i-1]&&bar.close<center[i];

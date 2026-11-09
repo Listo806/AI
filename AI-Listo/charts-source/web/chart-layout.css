@@ -1,0 +1,36 @@
+.view-charts-button{white-space:nowrap}.chart-grid-status{font-size:9px;color:#79cfb4;white-space:nowrap;align-self:center}.chart-grid-status:empty{display:none}
+.chart-layout-picker{position:fixed;z-index:80;width:215px;padding:10px;background:#111923;border:1px solid #415368;border-radius:7px;box-shadow:0 12px 35px #0009}.chart-layout-picker[hidden],.chart-grid[hidden],.chart-grid-pane[hidden]{display:none!important}.chart-layout-picker>strong{display:block;color:#fff;font-size:12px;padding:3px 5px 9px}.layout-choice{display:flex;align-items:center;gap:15px;width:100%;border:0;border-radius:3px;background:transparent;padding:8px;color:#eaf2ff;font-size:12px;text-align:left}.layout-choice:hover,.layout-choice.selected{background:#233e43;color:#9ce9d1}.layout-mini-grid{display:grid;grid-template-columns:repeat(var(--columns),1fr);width:43px;height:27px;gap:2px}.layout-mini-grid i{width:auto;height:auto;border:1px solid #87a5bb;background:#203346;border-radius:1px}
+.chart-grid{display:grid;grid-template-columns:repeat(var(--grid-columns),minmax(0,1fr));grid-template-rows:repeat(var(--grid-rows),minmax(0,1fr));gap:5px;min-height:0;flex:1;padding-bottom:2px}.chart-grid-pane{position:relative;min-width:0;min-height:0;border:1px solid #344255;background:#101010;border-radius:3px;overflow:hidden}.chart-grid-pane.active{border-color:#63c9ae;box-shadow:0 0 0 1px #63c9ae}.chart-grid iframe{display:block;width:100%;height:100%;border:0}.chart-grid-maximized{grid-template-columns:1fr!important;grid-template-rows:1fr!important}.multi-chart-mode .chart-shell{display:none!important}.multi-chart-mode article{display:flex;flex-direction:column;min-height:0}.multi-chart-mode .chart-navigation{flex-shrink:0}.multi-chart-mode .statusline,.multi-chart-mode .note{display:none!important}
+html.chart-embedded,html.chart-embedded body{width:100%;height:100%;overflow:hidden}.chart-embedded #chartHeaderToggle,.chart-embedded #chartAccountButton,.chart-embedded .toolbar,.chart-embedded .market-heading,.chart-embedded .chart-navigation,.chart-embedded header,.chart-embedded .statusline,.chart-embedded .note,.chart-embedded .chart-footer{display:none!important}.chart-embedded main{height:100%!important;min-height:0;padding:0}.chart-embedded article{display:flex;flex-direction:column;width:100%;height:100%!important;min-height:0;padding:0!important}.chart-embedded .chart-shell{display:flex;flex-direction:column;flex:1;min-height:0;border:0;border-radius:0;overflow:auto}.chart-embedded .canvas-wrap{height:auto!important;min-height:70px!important;flex:1;flex-shrink:0}.chart-embedded #priceChart{height:100%}.chart-embedded #rsiChart{height:65px;flex-shrink:0}.chart-embedded .rsi-header{min-height:24px;padding:2px 5px;gap:4px}.chart-embedded .chart-shell:not(:has(#rsiOn:checked)):not(:has(#maOn:checked)) .rsi-header,.chart-embedded .chart-shell:not(:has(#rsiOn:checked)):not(:has(#maOn:checked)) #rsiChart{display:none!important}.chart-embedded .extra-pane{height:55px!important;max-height:55px}.chart-embedded .extra-pane-controls{min-height:23px;padding:1px 5px}.chart-embedded .canvas-wrap>.legend{left:5px;top:5px;gap:0}.chart-embedded .canvas-wrap>.legend label,.chart-embedded .extra-toggle{font-size:9px;padding:2px}.chart-embedded .canvas-wrap>.legend .aa-settings{font-size:10px;padding:1px 3px}.chart-embedded .chart-mtf-panel{right:78px!important;top:4px!important;width:78px!important}.chart-embedded .chart-mtf-panel th,.chart-embedded .chart-mtf-panel td{height:17px!important;font-size:8px!important;padding:1px!important}.chart-embedded .chart-mtf-panel th:first-child{width:23px}.chart-embedded .chart-mtf-heading{padding:2px!important}.chart-embedded .chart-mtf-heading .mtf-title{font-size:5px!important}.chart-embedded #chartMTFToggle{min-width:15px;width:15px;height:15px;font-size:11px}.chart-embedded .pane-local-header{display:flex;align-items:center;gap:4px;flex-shrink:0;height:28px;min-height:28px;padding:2px 4px;background:#171e28;border-bottom:1px solid #354558}.pane-local-header select{color:#e7f0fc;background:#171e28;border:0;border-radius:2px;font-size:10px;padding:2px;min-width:0}.pane-symbol{flex:1;width:80px}.pane-frame{width:48px}.pane-local-header button{font-size:14px;line-height:1;padding:3px 5px;border:0;background:transparent;color:#b8cadc}.chart-embedded .market-picker.indicator-dropdown{top:30px!important;right:4px!important;max-height:calc(100vh - 35px);max-width:calc(100vw - 8px);width:300px}.chart-embedded dialog{max-width:calc(100vw - 8px);width:420px;padding:12px;max-height:calc(100vh - 12px)}
+@media(max-height:300px){.chart-embedded .chart-mtf-panel{width:68px!important}.chart-embedded .chart-mtf-panel th,.chart-embedded .chart-mtf-panel td{height:14px!important;font-size:7px!important}.chart-embedded .canvas-wrap>.legend{max-width:calc(100% - 155px)}.chart-embedded #chartIndicatorList{max-height:80px;overflow:auto}.chart-embedded .rsi-header{min-height:20px}.chart-embedded #rsiChart{height:45px}.chart-embedded #oscPaneToggle{height:18px}}
+@media(max-width:760px){.multi-chart-mode article{height:calc(100dvh - 12px)!important}.chart-grid{gap:3px}.pane-local-header{gap:1px!important}.pane-local-header select{font-size:9px}.pane-local-header .pane-indicators{display:none}}
+
+.chart-grid{order:2}.multi-chart-mode .market-heading{order:1}.multi-chart-mode .toolbar{order:0}
+/* Leave room for the layout control without crowding the existing toolbar. */
+#chartIndicatorControls .chart-navigation{gap:5px}
+#chartIndicatorControls .chart-navigation .timeframes{gap:1px}
+#chartIndicatorControls .chart-navigation .timeframes button{min-width:25px;padding-left:5px;padding-right:5px}
+#chartIndicatorControls .history-ranges{gap:1px;padding-left:5px}
+#chartIndicatorControls .history-ranges button{min-width:22px;padding-left:4px;padding-right:4px}
+
+/* SPLIT-CHART INDICATOR CONTROLS FIX */
+
+/* Show installed indicators even when they are switched off. */
+.chart-embedded #chartIndicatorList > .indicator-box:not(.picker-removed) {
+  display: flex;
+}
+
+/* Show the Price control. */
+.chart-embedded #chartIndicatorList > label {
+  display: flex;
+}
+
+/* Keep explicitly removed indicators hidden. */
+.chart-embedded #chartIndicatorList > .picker-removed {
+  display: none;
+}
+
+/* Preserve the arrow's collapse behavior. */
+.chart-embedded #chartIndicatorList[hidden] {
+  display: none;
+}

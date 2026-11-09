@@ -52,3 +52,127 @@ article{position:relative}#chartHeaderToggle{position:absolute;right:10px;top:2p
 .toolbar nav .market-quote-status{font-size:10px!important;font-weight:600;letter-spacing:0;font-variant-numeric:tabular-nums;margin-top:4px}.toolbar nav .market-quote-status.day-up{color:#49e4a1}.toolbar nav .market-quote-status.day-down{color:#ff5b70}@media(max-width:760px){.toolbar nav .market-quote-status{font-size:8px!important}}
 /* Compact account access stays with the expanded header. */
 #chartHeaderToggle{right:39px}#chartAccount{position:absolute;right:10px;top:2px;z-index:12}#chartAccountButton{display:flex;align-items:center;justify-content:center;width:22px;height:22px;min-width:0;padding:0;border:1px solid #52647c;border-radius:50%;background:#263344;color:#dbe6f4}#chartAccountButton:hover,#chartAccountButton[aria-expanded=true]{background:#3b526e;border-color:#93aac6}#chartAccountButton:focus-visible{outline:2px solid #abc8eb;outline-offset:2px}#chartAccountMenu{position:absolute;right:0;top:28px;width:184px;padding:8px;background:#18212d;border:1px solid #475a70;border-radius:6px;box-shadow:0 10px 28px #0008}#chartAccountMenu[hidden]{display:none}#chartAccountMenu>strong{display:block;padding:5px 8px 9px;font-size:11px;font-weight:600;color:#aebfd1}#chartAccountMenu>button{display:block;width:100%;padding:9px 8px;background:transparent;border:0;border-radius:3px;text-align:left;font-size:12px;color:#e0e9f5}#chartAccountMenu>button:hover:enabled{background:#2b3b50}#chartAccountMenu>button:disabled{color:#7e8c9d;cursor:default;opacity:.7}#chartAccountMenu>small{display:block;margin-top:5px;padding:9px 8px 3px;border-top:1px solid #344253;font-size:9px;color:#8998ac}.chart-header-collapsed>#chartAccount{display:none!important}.chart-header-collapsed #chartHeaderToggle{right:12px}#chartAccountDialog{max-width:380px}#chartAccountDialog h2{font-size:18px}#chartAccountDialog p{font-size:13px;line-height:1.7;color:#a9b7cb;margin:17px 0}#chartAccountDialog>button{width:100%}
+
+#chartAccountMenu{width:210px}#chartAccountMenu>button{padding:11px 10px}#chartAccountMenu>button:last-child{border-top:1px solid #344253;margin-top:5px;border-radius:0}#chartAccountMenu .account-soon{float:right;font-size:9px;padding:2px 5px;border-radius:4px;color:#b5c6dc;background:#29394d}
+
+/* Compact intervals and unobtrusive chart-side indicator controls. */
+.market-heading{justify-content:space-between;flex-wrap:wrap;gap:6px;min-height:38px}
+.chart-navigation{display:flex;align-items:center;gap:14px;min-width:0}
+#chartTicker{font-size:12px;white-space:nowrap;color:#d9e6f2;padding-left:8px}
+.chart-navigation .timeframes{display:flex;gap:3px;flex-wrap:wrap}
+.chart-navigation .timeframes button{background:transparent;border:0;border-radius:3px;padding:6px 8px;font-size:12px;min-width:30px;color:#a9b9cc}
+.chart-navigation .timeframes button.active{background:#223c43;color:#70e0c7;box-shadow:none}
+.canvas-wrap>.legend{position:absolute;left:14px;top:9px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:0;min-height:0;background:transparent;max-width:calc(100% - 100px)}
+.canvas-wrap>.legend .indicator-box{display:flex;align-items:center;border:0;background:transparent;border-radius:0;overflow:visible;gap:3px}
+.canvas-wrap>.legend label{display:flex;align-items:center;gap:6px;white-space:nowrap;border:0;background:transparent!important;box-shadow:none;padding:3px 4px;font-size:11px;border-radius:0;color:#d5e0eb;text-shadow:0 1px 3px #000}
+.canvas-wrap>.legend label span{display:none}
+.canvas-wrap>.legend input{position:absolute;opacity:0;width:1px;height:1px}
+.canvas-wrap>.legend i{width:7px;height:7px;border-radius:1px}
+.canvas-wrap>.legend .aa-settings{border:0;background:transparent;box-shadow:none;padding:2px 5px;color:#9faec0;font-size:12px}
+.canvas-wrap>.legend .aa-settings:hover{color:white;background:#263344}
+.canvas-wrap>.legend label:has(input:focus-visible){outline:2px solid #80d6bd}
+.canvas-wrap>.legend label:not(.indicator-enabled){opacity:.55}
+@media(max-width:760px){.chart-navigation{flex-wrap:wrap;gap:4px}.market-heading .actions{margin:0;justify-content:flex-start}.canvas-wrap>.legend{left:8px;top:7px}.chart-navigation .timeframes button{padding:5px 7px}}
+
+.canvas-wrap>.legend .indicator-box:has(input:not(:checked)){opacity:1}.canvas-wrap>.legend label:not(.indicator-enabled){opacity:.65}
+
+.chart-navigation{flex-wrap:wrap;gap:9px}.history-ranges{display:flex;gap:2px;border-left:1px solid #354252;padding-left:8px;flex-wrap:wrap}.history-ranges button{font-size:11px;padding:5px 6px;border:0;background:transparent;color:#b1bed1;min-width:28px}.history-ranges button.active{background:#223c43;color:#70e0c7}.history-ranges button:disabled{opacity:.5}.market-heading .actions{margin-left:auto}@media(max-width:760px){.history-ranges{border:0;padding-left:0}.chart-navigation{gap:5px}}
+/* Stronger contrast and a modest readability increase for chart navigation. */
+#chartIndicatorControls .chart-navigation .timeframes button,
+#chartIndicatorControls .history-ranges button,
+#chartIndicatorControls #chartTicker{color:#fff;font-weight:600}
+#chartIndicatorControls .actions button,
+#chartIndicatorControls .market-tool,
+#chartIndicatorControls .chart-styles button{color:#fff;font-size:12px;font-weight:600}
+#chartIndicatorControls .chart-navigation button.active{color:#fff;border-bottom:2px solid #70e0c7}
+#chartIndicatorControls .chart-styles button.active{color:#fff}
+
+.chart-indicator-list{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+#chartLegendToggle{display:flex;align-items:center;justify-content:center;width:25px;height:21px;min-width:25px;padding:0;margin:3px 0 0 3px;border:1px solid #45576a;border-radius:4px;background:#1c2938;color:#fff;font-size:15px;line-height:1}
+#chartLegendToggle:hover{background:#334b64;border-color:#91afcb}
+#chartLegendToggle:focus-visible{outline:2px solid #80d6bd;outline-offset:2px}
+
+/* Heisenberg's existing six states, organized inside the chart. */
+.canvas-wrap>.chart-mtf-panel{position:absolute;z-index:3;right:88px;top:10px;width:184px;padding:8px;gap:7px;background:#111b27ed;border:1px solid #35465b;border-radius:7px}
+.chart-mtf-heading{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.chart-mtf-heading .mtf-title{font-size:9px;letter-spacing:.7px;color:#dce7f5;text-align:left;white-space:nowrap}
+#chartMTFToggle{padding:0;width:20px;height:19px;min-width:20px;font-size:13px;line-height:1;background:#253449;color:#fff;border:1px solid #4c6078;border-radius:3px}
+.chart-mtf-panel table,.chart-mtf-panel tbody{display:block;width:100%;border-spacing:0}
+.chart-mtf-panel tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.chart-mtf-panel td{display:flex;flex-direction:column;align-items:center;justify-content:center;height:44px;min-width:0;padding:5px 3px;border-radius:4px;box-shadow:none!important}
+.chart-mtf-panel td small{font-size:11px;margin-bottom:3px;font-weight:600}
+.chart-mtf-panel td span{font-size:10px}
+.chart-mtf-panel td.bullish{background:#183e32;border-color:#348165;color:#a8f0cc}
+.chart-mtf-panel td.bearish{background:#48242d;border-color:#8a4555;color:#ffbac4}
+.chart-mtf-panel td.neutral,.chart-mtf-panel td.unavailable{background:#232e3e;border-color:#3a4a61;color:#b4c3d8}
+@media(max-width:760px){.canvas-wrap>.chart-mtf-panel{right:79px;top:8px;width:152px;padding:6px}.chart-mtf-heading .mtf-title{font-size:8px;letter-spacing:0}.chart-mtf-panel td{height:39px}.chart-mtf-panel td span{font-size:9px}}
+/* Six small square MTF cards in one vertical column. */
+.canvas-wrap>.chart-mtf-panel{width:76px;padding:5px;gap:5px;right:88px}
+.chart-mtf-heading{flex-direction:column;gap:4px}
+.chart-mtf-heading .mtf-title{font-size:8px;letter-spacing:0;white-space:normal;text-align:center;line-height:1.25}
+.chart-mtf-heading .mtf-title b{display:block;margin:1px 0 0}
+.chart-mtf-panel tr{grid-template-columns:1fr;gap:4px}
+.chart-mtf-panel td{width:64px;height:64px;padding:4px 2px}
+.chart-mtf-panel td small{font-size:11px;margin-bottom:4px}
+.chart-mtf-panel td span{font-size:10px}
+@media(max-width:760px){.canvas-wrap>.chart-mtf-panel{width:64px;right:79px;padding:4px}.chart-mtf-panel td{width:54px;height:54px}.chart-mtf-panel td small{font-size:10px;margin-bottom:3px}.chart-mtf-panel td span{font-size:9px}}
+
+/* TradingView-style TF / Trend table: compact rows, color on status only. */
+.canvas-wrap>.chart-mtf-panel{width:114px;padding:0;gap:0;background:#151a22ed;border:1px solid #424b59;border-radius:3px;overflow:hidden}
+.chart-mtf-heading{flex-direction:row;padding:4px 5px;gap:4px}
+.chart-mtf-heading .mtf-title{font-size:8px;line-height:1.15;text-align:left;white-space:normal}
+.chart-mtf-heading .mtf-title b{display:inline;margin-left:3px}
+.chart-mtf-panel table{display:table;width:100%;table-layout:fixed;border-collapse:collapse}
+.chart-mtf-panel thead{display:table-header-group}.chart-mtf-panel tbody{display:table-row-group}
+.chart-mtf-panel tr{display:table-row}
+.chart-mtf-panel th,.chart-mtf-panel td{display:table-cell;width:auto;height:25px;padding:3px 5px;border:1px solid #424b59;border-radius:0;text-align:center;font-size:11px;line-height:1.3;color:#fff;box-shadow:none!important}
+.chart-mtf-panel th:first-child{width:34px}
+.chart-mtf-panel thead th{background:#343b48;font-weight:600}
+.chart-mtf-panel tbody th{background:#242b36;font-weight:500}
+.chart-mtf-panel td.bullish{background:#43a94d;border-color:#424b59;color:#fff;font-weight:600}
+.chart-mtf-panel td.bearish{background:#ef3b50;border-color:#424b59;color:#fff;font-weight:600}
+.chart-mtf-panel td.unavailable,.chart-mtf-panel td.neutral{background:#353f50;color:#d7e1ef}
+@media(max-width:760px){.canvas-wrap>.chart-mtf-panel{width:105px;padding:0}.chart-mtf-panel th,.chart-mtf-panel td{height:24px;font-size:10px}.chart-mtf-heading .mtf-title{font-size:7px}}
+
+/* Open market cards expand across the freed top row; removals are separate buttons. */
+.toolbar{grid-template-columns:minmax(0,1fr)}.toolbar #markets{grid-column:1/-1;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px;width:100%}
+.market-card{position:relative;min-width:0}.toolbar #markets .market-select{width:100%;height:88px;min-height:88px;padding:9px 9px;margin:0}
+.toolbar #markets .market-name{max-width:calc(100% - 12px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.toolbar #markets .market-price{font-size:19px}.toolbar #markets .market-quote-status{font-size:9px!important}
+.toolbar #markets .price-light{top:43px;right:6px;width:4px;height:4px}
+.toolbar #markets .market-card-remove{position:absolute;top:4px;right:4px;width:17px;height:17px;min-height:0;min-width:0;padding:0;margin:0;display:flex;align-items:center;justify-content:center;border:0;background:transparent;box-shadow:none;color:#9db0c5;font-size:14px;border-radius:3px;line-height:1}
+.toolbar #markets .market-card-remove:hover{background:#52313b;color:#fff}
+@media(max-width:1100px){.toolbar #markets{display:flex;overflow-x:auto;gap:7px;padding-bottom:3px}.market-card{flex:0 0 120px}.toolbar{padding-left:12px;padding-right:12px}}
+
+/* Unboxed oscillator labels match the price-chart legend. */
+.rsi-header .indicator-box{border:0;border-radius:0;background:transparent;overflow:visible;gap:3px}
+.rsi-header .indicator-box label{background:transparent;border:0;border-radius:0;padding:3px 4px;gap:6px;font-size:11px;color:#d5e0eb}
+.rsi-header .indicator-box .aa-settings{border:0;background:transparent;padding:2px 5px;color:#9faec0;font-size:12px}
+.rsi-header .indicator-box input{position:absolute;opacity:0;width:1px;height:1px}
+.rsi-header .indicator-box i{width:7px;height:7px;border-radius:1px}
+.rsi-header label:has(input:focus-visible){outline:2px solid #80d6bd}
+
+/* Trim horizontal whitespace in the Heisenberg table; preserve row heights. */
+.canvas-wrap>.chart-mtf-panel{width:102px}
+.chart-mtf-heading{padding-left:3px;padding-right:3px;gap:2px}
+.chart-mtf-heading .mtf-title{font-size:7px;white-space:nowrap;letter-spacing:0}
+.chart-mtf-heading .mtf-title b{margin-left:2px}
+.chart-mtf-panel th,.chart-mtf-panel td{padding-left:3px;padding-right:3px}
+.chart-mtf-panel th:first-child{width:29px}
+@media(max-width:760px){.canvas-wrap>.chart-mtf-panel{width:98px}}
+
+.canvas-wrap>.chart-mtf-panel{width:94px}
+.chart-mtf-panel th:first-child{width:26px}
+.chart-mtf-heading{padding-left:2px;padding-right:2px;gap:1px}
+.chart-mtf-heading .mtf-title{font-size:6.5px}
+.chart-mtf-panel th,.chart-mtf-panel td{padding-left:2px;padding-right:2px}
+@media(max-width:760px){.canvas-wrap>.chart-mtf-panel{width:94px}}
+
+/* Keep intervals, history ranges and chart actions together on one row. */
+#chartIndicatorControls{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+#chartIndicatorControls .chart-navigation,
+#chartIndicatorControls .timeframes,
+#chartIndicatorControls .history-ranges,
+#chartIndicatorControls .actions{flex-wrap:nowrap;flex-shrink:0;white-space:nowrap}
+#chartIndicatorControls .actions{gap:3px}
+#chartIndicatorControls .actions button{padding-left:6px;padding-right:6px}
