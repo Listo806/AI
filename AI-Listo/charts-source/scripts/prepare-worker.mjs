@@ -22,14 +22,18 @@ const assets = {};
 for (const [path, [file, contentType]] of Object.entries(files)) assets[path] = { body: await readFile(new URL('../web/' + file, import.meta.url), contentType==='image/png'?'base64':'utf8'), contentType, binary: contentType==='image/png' };
 const quoteSource = (await readFile(new URL('../worker/quotes.js', import.meta.url), 'utf8')).replace('export async function quoteResponse', 'async function quoteResponse');
 const candleSource = (await readFile(new URL('../worker/candles.js', import.meta.url), 'utf8')).replace('export async function candleResponse', 'async function candleResponse');
+const usageGateSource=await readFile(new URL('../worker/ai-usage-gate.js',import.meta.url),'utf8');
+const evidenceSource=await readFile(new URL('../worker/verified-evidence.js',import.meta.url),'utf8');
 const aiSource=await readFile(new URL('../worker/analysis.js',import.meta.url),'utf8');
 const pureIndicators=await readFile(new URL('../web/indicators.js',import.meta.url),'utf8');
-const pureEngine=await readFile(new URL('../web/heisenberg.js',import.meta.url),'utf8');
-const source = calendarSource+'\n'+pureIndicators+'\n'+pureEngine+'\n'+aiSource+'\n'+quoteSource + '\n' + candleSource + '\nconst assets = ' + JSON.stringify(assets) + `;
+const pureEngine=await readFile(new URL('../worker/heisenberg-engine.js',import.meta.url),'utf8');
+const engineSource=await readFile(new URL('../worker/engine-response.js',import.meta.url),'utf8');
+const source = usageGateSource+'\n'+calendarSource+'\n'+pureIndicators+'\n'+pureEngine+'\n'+engineSource+'\n'+evidenceSource+'\n'+aiSource+'\n'+quoteSource + '\n' + candleSource + '\nconst assets = ' + JSON.stringify(assets) + `;
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if(url.pathname==='/api/analysis')return analysisResponse(request,env);
+    if(url.pathname==='/api/engine')return engineResponse(request,env);
+    if(url.pathname==='/api/analysis')return analysisResponse(request,{...env,...usageGateBindings(env.AI_USAGE_GATE)});
     if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
     if (url.pathname === '/api/calendar') return calendarResponse(request);
     if (url.pathname === '/api/quotes') return quoteResponse(url);

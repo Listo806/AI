@@ -1,45 +1,27 @@
-import { Controller, Get, Post, Req, Res, UseGuards, ForbiddenException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UseGuards, ForbiddenException, ServiceUnavailableException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SecurityService } from '../auth/security.service';
 import { AuthService } from '../auth/auth.service';
 import { createHmac, timingSafeEqual } from 'crypto';
-import { ChartsSubscriptionService } from './charts-subscription.service';
-import { Body, Param, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/entities/user.entity';
 
 @Controller('charts')
 export class ChartsController {
-  constructor(private readonly security: SecurityService, private readonly auth: AuthService, private readonly subscriptions: ChartsSubscriptionService) {}
+  constructor(private readonly security: SecurityService, private readonly auth: AuthService) {}
   private secret() {
     const secret = process.env.CHARTS_SESSION_SECRET;
     if (!secret || secret.length < 32) throw new ServiceUnavailableException('Charts session secret is not configured');
     return secret;
   }
-  @Post('trial/start') @UseGuards(JwtAuthGuard)
-  startTrial(@Req() req:any) { return this.subscriptions.startTrial(String(req.user.id)); }
-  @Get('entitlement') @UseGuards(JwtAuthGuard)
-  entitlement(@Req() req:any) { return this.subscriptions.access(String(req.user.id)); }
-  @Post('checkout') @UseGuards(JwtAuthGuard)
-  checkout(@Req() req:any,@Body() body:{billing:string}) {return this.subscriptions.createOrder(String(req.user.id),String(body?.billing||''));}
-  @Get('orders') @UseGuards(JwtAuthGuard)
-  orders(@Req() req:any) {return this.subscriptions.myOrders(String(req.user.id));}
-  @Post('orders/:id/receipt') @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('receipt',{limits:{fileSize:5*1024*1024}}))
-  receipt(@Req() req:any,@Param('id') id:string,@Body() body:any,@UploadedFile() receipt?:Express.Multer.File) {return this.subscriptions.submitReceipt(String(req.user.id),id,String(body?.bankTransactionReference||''),receipt);}
-  @Get('admin/orders') @UseGuards(JwtAuthGuard,RolesGuard) @Roles(UserRole.SUPER_ADMIN,UserRole.ADMIN)
-  adminOrders(@Query('status') status?:string) {return this.subscriptions.adminOrders(status);}
-  @Get('admin/orders/:id/receipt') @UseGuards(JwtAuthGuard,RolesGuard) @Roles(UserRole.SUPER_ADMIN,UserRole.ADMIN)
-  async adminReceipt(@Param('id') id:string,@Res() res:any) {const r=await this.subscriptions.adminReceipt(id);res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type',r.receipt_mime);res.setHeader('Content-Disposition','attachment; filename=receipt');return res.send(r.receipt_data);}
-  @Post('admin/orders/:id/review') @UseGuards(JwtAuthGuard,RolesGuard) @Roles(UserRole.SUPER_ADMIN,UserRole.ADMIN)
-  review(@Param('id') id:string,@Req() req:any,@Body() body:any) {return this.subscriptions.review(id,String(req.user.id),body?.approve===true,String(body?.note||''));}
+  private owner(id: string) {
+    const allowed = process.env.CHARTS_OWNER_USER_ID;
+    if (!allowed) throw new ServiceUnavailableException('Charts owner is not configured');
+    if (id !== allowed) throw new ForbiddenException('Charts access is restricted');
+  }
   private sign(payload: string) { return createHmac('sha256', this.secret()).update(payload).digest('base64url'); }
   @Post('session')
   @UseGuards(JwtAuthGuard)
   async create(@Req() req: any, @Res({passthrough:true}) res: any) {
-    if (!(await this.subscriptions.access(String(req.user?.id || '')).then(x=>x.allowed))) throw new ForbiddenException('Charts subscription or trial required');
+    this.owner(String(req.user?.id || ''));
     const sid = req.user?.sessionId || req.user?.sid || null;
     if (!sid) throw new UnauthorizedException('Please sign in again to open Charts');
     // Recheck owner and session at the validation endpoint on every request.
@@ -49,9 +31,7 @@ export class ChartsController {
     res.setHeader('Cache-Control','no-store');
     return {ok:true,redirect:'/charts/app/'};
   }
-  @Get('validate')
-  async validate(@Req() req: any, @Res({passthrough:true}) res: any) {
-    res.setHeader('Cache-Control','no-store');
+  private async validateChartsSession(req: any): Promise<string> {
     const token = /(?:^|;\s*)cortexa_charts=([^;]+)/.exec(String(req.headers.cookie || ''))?.[1] || '';
     const [payload,signature,...extra] = token.split('.');
     if (!payload || !signature || extra.length) throw new UnauthorizedException();
@@ -60,9 +40,70 @@ export class ChartsController {
     let session: any;
     try { session = JSON.parse(Buffer.from(payload,'base64url').toString()); } catch { throw new UnauthorizedException(); }
     if (!session?.id || !Number.isFinite(session.exp) || session.exp < Date.now()) throw new UnauthorizedException();
-    if (!(await this.subscriptions.access(String(session.id)).then(x=>x.allowed))) throw new ForbiddenException('Charts subscription or trial required');
+    this.owner(String(session.id));
     if (!(await this.auth.validateUser(session.id))) throw new UnauthorizedException();
     if (!session.sid || !(await this.security.sessionValid(session.id,session.sid))) throw new UnauthorizedException();
-    return {ok:true,userId:String(session.id)};
+    return String(session.id);
+  }
+  @Get('validate')
+  async validate(@Req() req: any, @Res({passthrough:true}) res: any) {
+    res.setHeader('Cache-Control','no-store');
+    return {ok:true,userId:await this.validateChartsSession(req)};
+  }
+  @Post('analysis')
+  async analysis(@Req() req: any, @Res() res: any, @Body() body: unknown) {
+    return this.proxyCharts(req,res,body,'analysis');
+  }
+  @Post('engine')
+  async engine(@Req() req: any, @Res() res: any, @Body() body: unknown) {
+    return this.proxyCharts(req,res,body,'engine');
+  }
+  private async proxyCharts(req: any, res: any, body: unknown, endpoint: 'analysis'|'engine') {
+    res.setHeader('Cache-Control','no-store');
+    const userId=await this.validateChartsSession(req);
+    // Browser calls must be same-origin; never trust client-supplied identity headers.
+    const origin=String(req.headers.origin||'');
+    if(origin!=='https://www.cortexaaicrm.com' && origin!=='https://cortexaaicrm.com')
+      throw new ForbiddenException('Invalid Charts request origin');
+    const referer=String(req.headers.referer||'');
+    if(!referer.startsWith(origin+'/charts/'))throw new ForbiddenException('Invalid Charts referrer');
+    const raw=JSON.stringify(body);
+    if(!raw || raw==='undefined' || Buffer.byteLength(raw,'utf8')>(endpoint==='engine'?900000:180000))throw new BadRequestException('Invalid analysis request size');
+    const secret=process.env.CHARTS_TRUSTED_PROXY_SECRET;
+    const upstream=process.env.CHARTS_WORKER_ORIGIN;
+    if(!secret||secret.length<32||!upstream)throw new ServiceUnavailableException('Charts AI proxy is not configured');
+    let target:URL;
+    try {
+      target=new URL(upstream);
+      if(target.protocol!=='https:'||target.username||target.password||target.search||target.hash||target.pathname!=='/')
+        throw Error();
+    }catch{throw new ServiceUnavailableException('Invalid Charts Worker origin');}
+    target.pathname='/api/'+endpoint;
+    let response:Response;
+    try{
+      response=await fetch(target,{method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),headers:{
+        'content-type':'application/json',
+        'origin':target.origin,
+        'x-cortexa-proxy-secret':secret,
+        'x-cortexa-authenticated-user':userId,
+      },body:raw});
+    }catch{throw new ServiceUnavailableException('Charts AI is temporarily unavailable');}
+    // Bound upstream response even if a gateway or edge is compromised.
+    const reader=response.body?.getReader();
+    if(!reader)throw new ServiceUnavailableException('Empty Charts AI response');
+    const chunks:Uint8Array[]=[];let bytes=0;
+    try{
+      while(true){
+        const {done,value}=await reader.read();
+        if(done)break;
+        bytes+=value.byteLength;
+        if(bytes>(endpoint==='engine'?600000:45000))throw new ServiceUnavailableException('Charts AI response too large');
+        chunks.push(value);
+      }
+    }finally{await reader.cancel().catch(()=>undefined);}
+    const output=Buffer.concat(chunks.map(c=>Buffer.from(c)));
+    res.status(response.status);
+    res.type('application/json');
+    return res.send(output);
   }
 }

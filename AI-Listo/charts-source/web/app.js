@@ -30,7 +30,26 @@ try{const saved=JSON.parse(ChartStorage.getItem('heisenberg-settings'));if(saved
 engineInputs.forEach(([key,label,min,max,step])=>{const wrapper=document.createElement('label');wrapper.className='field';wrapper.textContent=label;const input=document.createElement('input');input.id='engine-'+key;input.type='number';input.min=min;input.max=max;input.step=step;input.value=engineConfig[key];input.required=true;wrapper.append(input);$('engineFields').append(wrapper);});
 [['useMTFFilter','Multi-timeframe filter'],['useRsiRegimeFilter','RSI regime filter'],['showFullAlignment','Full alignment markers']].forEach(([key,label])=>{const wrapper=document.createElement('label');wrapper.className='toggle';const input=document.createElement('input');input.id='engine-'+key;input.type='checkbox';input.checked=engineConfig[key];wrapper.append(input,document.createTextNode(label));$('engineToggles').append(wrapper);});
 function readEngineSettings(){engineInputs.forEach(([key])=>engineConfig[key]=Number($('engine-'+key).value));['useMTFFilter','useRsiRegimeFilter','showFullAlignment'].forEach(key=>engineConfig[key]=$('engine-'+key).checked);try{ChartStorage.setItem('heisenberg-settings',JSON.stringify(engineConfig));}catch{}}
-function computeEngine(){const entries=Object.fromEntries(Object.keys(Heisenberg.durations).map(tf=>[tf,cache.get(markets[selected].symbol+'|'+tf)]));return Heisenberg.compute(bars(),entries,frame,EngineSettings.inputs);}
+let engineResult=null,engineKey='',enginePending='',engineAbort=null,engineTimer=null,engineError=false;
+function emptyEngine(n){const blank=()=>Array(n).fill(null);return {trama:blank(),vwap:blank(),atr:blank(),rsi:blank(),rsiMA:blank(),bb:{upper:blank(),middle:blank(),lower:blank()},center:blank(),upper:blank(),lower:blank(),vwapUpper:blank(),vwapLower:blank(),bias:Array(n).fill('Neutral'),signals:[],alignment:[],table:Object.fromEntries(['1min','5min','15min','30min','1h','4h'].map(tf=>[tf,'Unavailable']))};}
+function computeEngine(){
+ const data=bars(),market=markets[selected].symbol;
+ const frames=Object.fromEntries(['1min','5min','15min','30min','1h','4h'].map(tf=>[tf,cache.get(market+'|'+tf)?.bars||[]]));
+ const sig=JSON.stringify([market,frame,data.length,data.at(-1)?.time,data.at(-1)?.close,EngineSettings.inputs,...Object.entries(frames).map(([tf,b])=>[tf,b.length,b.at(-1)?.time,b.at(-1)?.close])]);
+ if(engineKey===sig&&engineResult)return engineResult;
+ if(enginePending!==sig){
+   engineAbort?.abort();clearTimeout(engineTimer);enginePending=sig;
+   if(data.length){engineTimer=setTimeout(async()=>{
+     const controller=new AbortController();engineAbort=controller;
+     try{const response=await fetch('/charts/app/api/engine',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',signal:controller.signal,body:JSON.stringify({frame,bars:data.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.volume??null})),frames:Object.fromEntries(Object.entries(frames).map(([tf,b])=>[tf,b.map(v=>({time:v.time,open:v.open,high:v.high,low:v.low,close:v.close,volume:v.volume??null}))])),settings:EngineSettings.inputs})});
+       if(!response.ok)throw Error('Server engine unavailable');const value=await response.json();if(enginePending!==sig||controller.signal.aborted)return;
+       if(!Array.isArray(value.center)||value.center.length!==data.length||!value.bb||!Array.isArray(value.bb.upper))throw Error('Invalid engine output');
+       engineResult=value;engineKey=sig;engineError=false;draw();
+     }catch(error){if(!controller.signal.aborted&&enginePending===sig){engineResult=null;engineKey='';engineError=true;$('engineStatus').textContent='Heisenberg server unavailable';setTimeout(()=>{if(enginePending===sig){enginePending='';draw();}},15000);}}
+   },250);}
+ }
+ return emptyEngine(data.length);
+}
 function updateMTF(engine) {
   document.querySelector('.mtf-table').style.visibility=EngineSettings.style.tables?'visible':'hidden';
   const body = $('mtfRows');
@@ -43,7 +62,7 @@ function updateMTF(engine) {
     row.append(tf,trend);body.append(row);
   });
   $('tramaLabel').textContent=[TramaSettings.settings.inputs?TramaSettings.settings.length+' · '+TramaSettings.settings.source:'',TramaSettings.settings.values?(()=>{const v=TramaSettings.series(bars()).at(-1);return Number.isFinite(v)?v.toFixed(TramaSettings.settings.precision==='default'?3:Number(TramaSettings.settings.precision)):'';})():''].filter(Boolean).join(' · ');
-  $('engineStatus').textContent = bars().length && !entry()?.reference && bars().every(bar => Number.isFinite(bar.volume))
+  $('engineStatus').textContent = engineError ? 'Heisenberg server unavailable' : bars().length && !entry()?.reference && bars().every(bar => Number.isFinite(bar.volume))
     ? 'Heisenberg active · closed candles'
     : 'Heisenberg awaits OHLC + volume';
 }

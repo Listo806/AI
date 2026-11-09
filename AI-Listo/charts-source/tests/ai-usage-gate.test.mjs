@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {AIUsageGate,usageGateBindings} from '../worker/ai-usage-gate.js';
+const memory=new Map();
+const state={storage:{get:async key=>memory.get(key),put:async(key,value)=>memory.set(key,structuredClone(value))},blockConcurrencyWhile:async fn=>fn()};
+const gate=new AIUsageGate(state);
+const ns={idFromName: x=>x,get:()=>({fetch:(url,init)=>gate.fetch(new Request(url,init))})};
+const {AI_RATE_LIMITER:rate,AI_CONCURRENCY_GATE:concurrency,AI_COST_BUDGET:budget}=usageGateBindings(ns);
+for(let i=0;i<6;i++)assert.equal((await rate.limit({key:'account1'})).success,true);
+assert.equal((await rate.limit({key:'account1'})).success,false);
+const a=await concurrency.acquire({user:'account1',requestId:'a',ttlSeconds:35});
+const b=await concurrency.acquire({user:'account1',requestId:'b',ttlSeconds:35});
+assert.equal(a.id,'a');assert.equal(b.id,'b');
+assert.equal((await concurrency.acquire({user:'account1',requestId:'c',ttlSeconds:35})).id,null);
+assert.equal((await concurrency.release({user:'account1',leaseId:'a'})).released,true);
+assert.equal((await concurrency.acquire({user:'account1',requestId:'c',ttlSeconds:35})).id,'c');
+console.log('Shared usage gate tests passed.');
+
+const hold=await budget.reserve({user:'account1',requestId:'budget-a',amountMicros:100000,dailyLimitMicros:100000});
+assert.equal(hold.success,true);
+assert.equal((await budget.reserve({user:'account1',requestId:'budget-b',amountMicros:100000,dailyLimitMicros:100000})).success,false);
+assert.equal((await budget.settle({user:'account1',requestId:'budget-a',spentMicros:0})).settled,true);
+assert.equal((await budget.reserve({user:'account1',requestId:'budget-b',amountMicros:100000,dailyLimitMicros:100000})).success,true);
+assert.equal((await budget.settle({user:'account1',requestId:'budget-b',spentMicros:100000})).settled,true);
+assert.equal((await budget.reserve({user:'account1',requestId:'budget-c',amountMicros:100000,dailyLimitMicros:100000})).success,false);

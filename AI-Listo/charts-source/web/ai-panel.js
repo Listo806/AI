@@ -5,19 +5,19 @@ const button=e('button','market-tool ai-launch','✦ Cortexa AI');button.id='cor
 const panel=e('section','ai-panel');panel.id='cortexaPanel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Cortexa AI market analysis');
 const head=e('div','ai-head'),brand=e('div','ai-brand');brand.append(e('span','ai-orb','✦'));const title=e('div');title.append(e('h2','','Cortexa AI'),e('small','','YOUR CHART, EXPLAINED'));brand.append(title);const close=e('button','ai-close','×');close.setAttribute('aria-label','Close Cortexa AI');head.append(brand,close);
 const context=e('div','ai-context'),symbol=e('strong'),frameLabel=e('span'),hint=e('p','ai-intro');context.append(e('span','context-dot'),symbol,frameLabel);
-const service=e('label','ai-service'),serviceCheck=e('input');serviceCheck.type='checkbox';serviceCheck.id='useConnectedAI';service.append(serviceCheck,document.createTextNode('Use connected Cortexa AI'));service.hidden=true;
+
 const choices=e('div','ai-choices'),setup=e('button','selected','Current setup'),outlook=e('button','','Intraday outlook');choices.append(setup,outlook);
-const content=e('div','ai-content'),action=e('button','ai-analyze'),footer=e('div','ai-footer'),note=e('div','ai-preview-note','ANALYSIS PREVIEW · Rule-based readings. AI connection pending.');
+const content=e('div','ai-content'),action=e('button','ai-analyze'),footer=e('div','ai-footer'),note=e('div','ai-preview-note','CORTEXA AI · Analysis available when the secure service is configured.');
 footer.append(action,e('small','','Analysis is a snapshot. Live prices keep moving.'));
-panel.append(head,note,context,hint,choices,service,content,footer);document.body.append(panel);
-let mode='setup',lastContext='',reportKey='',busy=false,request=0;
+panel.append(head,note,context,hint,choices,content,footer);document.body.append(panel);
+let mode='setup',lastContext='',reportKey='',busy=false,request=0,activeController=null;
 const tf=()=>({'1min':'1 minute','5min':'5 minutes','15min':'15 minutes','30min':'30 minutes','1h':'1 hour','4h':'4 hours','1day':'Daily'}[frame]||frame);
 function signature(){return JSON.stringify({market:markets[selected].symbol,frame,indicators:['bbOn','vwapOn','tramaOn','engineOn','rsiOn','maOn'].map(id=>$(id).checked),vwap:VwapAA.settings,trama:TramaSettings.settings,bb:BBSettings.settings,rsi:OscSettings.rsi,ma:OscSettings.ma,engine:EngineSettings.inputs});}
-function reset(){request++;busy=false;reportKey='';content.replaceChildren();action.disabled=false;action.textContent='Analyze '+markets[selected].name;hint.textContent='Understand the current conditions, your indicator readings, and the scenarios worth watching.';empty();}
+function reset(){activeController?.abort();activeController=null;request++;busy=false;reportKey='';content.replaceChildren();action.disabled=false;action.textContent='Analyze '+markets[selected].name;hint.textContent='Understand the current conditions, your indicator readings, and the scenarios worth watching.';empty();}
 function empty(){content.replaceChildren();const card=e('div','ai-welcome');card.append(e('div','welcome-glyph','⌁'),e('h3','','A clearer view of '+markets[selected].name),e('p','','One overview of price action, your active indicators, and multi-timeframe alignment.'));const items=e('div','ai-preview-list');for(const [mark,text] of [['01','Understand current conditions'],['02','See where indicators agree or conflict'],['03','Explore conditional scenarios']]){const row=e('div');row.append(e('span','',mark),e('span','',text));items.append(row);}card.append(items);content.append(card);}
 function sync(){const key=markets[selected].symbol+'|'+frame;symbol.textContent=markets[selected].name;frameLabel.textContent=tf();if(key!==lastContext){lastContext=key;reset();}else if(reportKey&&reportKey!==signature()){reportKey='';hint.textContent='Your indicator settings changed. Update the analysis to use the new setup.';action.textContent='Update analysis';content.classList.add('ai-outdated');}}
 function open(){panel.hidden=false;button.setAttribute('aria-expanded','true');sync();action.focus();}
-function hide(){panel.hidden=true;button.setAttribute('aria-expanded','false');button.focus();}
+function hide(){activeController?.abort();activeController=null;request++;busy=false;action.disabled=false;panel.hidden=true;button.setAttribute('aria-expanded','false');button.focus();}
 button.onclick=()=>panel.hidden?open():hide();close.onclick=hide;
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden)hide();});
 for(const [b,m] of [[setup,'setup'],[outlook,'outlook']])b.onclick=()=>{mode=m;setup.classList.toggle('selected',mode==='setup');outlook.classList.toggle('selected',mode==='outlook');reset();};
@@ -56,22 +56,22 @@ function build(){
 function snapshot(){
  const data=bars(),engine=computeEngine(),indicators=[];const add=(id,name,value)=>{if($(id).checked)indicators.push({name,value:Number.isFinite(value)?value:null});};
  add('vwapOn','VWAP AA',lastFinite(VwapAA.plots(data,frame)[0].values));add('tramaOn','TRAMA',lastFinite(TramaSettings.series(data)));add('bbOn','Bollinger basis',lastFinite(BBSettings.plots(data,frame,cache.get(markets[selected].symbol+'|'+BBSettings.settings.timeframe)?.bars)[0].values));const osc=OscSettings.series(data);add('rsiOn','RSI',lastFinite(osc.rsi));add('maOn','Moving Average',lastFinite(osc.ma));
- return {version:1,requestId:crypto.randomUUID(),symbol:markets[selected].symbol,frame,mode,capturedAt:Date.now(),candles:data.slice(-600).map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.volume})),indicators,mtf:engine.table};
+ return {version:1,requestId:crypto.randomUUID(),symbol:markets[selected].symbol,frame,mode,capturedAt:Date.now(),candles:data.slice(-600).map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.volume})),indicators,mtf:engine.table,settings:{bb:{length:BBSettings.settings.length,mult:BBSettings.settings.mult,ma:BBSettings.settings.ma,source:BBSettings.settings.source,timeframe:BBSettings.settings.timeframe},rsi:{length:OscSettings.rsi.length,source:OscSettings.rsi.source},trama:{length:TramaSettings.settings.length,source:TramaSettings.settings.source},vwap:{anchor:VwapAA.settings.anchor,sessionTimezone:VwapAA.settings.sessionTimezone,sessionStart:VwapAA.settings.sessionStart,length:VwapAA.settings.length,source:VwapAA.settings.source,mode:VwapAA.settings.mode},engine:EngineSettings.inputs}};
 }
 async function connected(id,key){
- try{const response=await fetch('/charts/app/api/analysis',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify(snapshot()),signal:AbortSignal.timeout(30000)});const report=await response.json();if(id!==request||key!==signature())return;
+ const controller=new AbortController();activeController=controller;const timeout=setTimeout(()=>controller.abort(),30000);
+ try{const response=await fetch('/charts/app/api/analysis',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify(snapshot()),signal:controller.signal});const report=await response.json();if(id!==request||key!==signature())return;
  content.replaceChildren();if(!response.ok)throw Error(report.error?.message||'Analysis is unavailable.');
  if(report.symbol!==markets[selected].symbol||report.frame!==frame||!Array.isArray(report.sections))throw Error('Analysis context did not match this chart.');
  note.textContent='CONNECTED SERVICE · '+new Date(report.generatedAt).toLocaleTimeString();
- for(const item of report.sections){const card=section(item.id.toUpperCase(),item.title,item.summary,item.reasoning);for(const ref of item.levelRefs||[]){const value=report.levels?.[ref];if(Number.isFinite(value))card.append(e('small','ai-caveat',ref+': '+display(value)));}}
+ for(const item of report.sections){const card=section(item.id.toUpperCase(),item.title,item.summary,item.reasoning);for(const ref of item.levelRefs||[]){const value=report.levels?.[ref];if(Number.isFinite(value))card.append(e('small','ai-caveat',ref+': '+display(value)));}for(const eventId of item.eventRefs||[]){const event=report.calendar?.events?.find(event=>event.id===eventId);if(event){const when=Number.isFinite(event.ts)?new Date(event.ts*1000).toLocaleString(undefined,{timeZone:'UTC'})+' UTC':'Time unavailable';card.append(e('small','ai-caveat',[event.title,when,event.currency,event.actual?'Actual: '+event.actual:'Result not available'].filter(Boolean).join(' · ')));}}}
  for(const warning of report.warnings||[])content.append(e('p','ai-data-note',warning));reportKey=key;
- }catch(error){if(id===request){content.replaceChildren();section('SERVICE CONNECTION','AI is not connected yet',error.message);note.textContent='PREVIEW · Live AI integration pending. Rule-based preview remains available.';}}
- finally{if(id===request){busy=false;action.disabled=false;action.textContent='Update analysis';}}
+ }catch(error){if(id===request){content.replaceChildren();section('SERVICE CONNECTION','AI is not connected yet',error.message);note.textContent='CORTEXA AI · Service unavailable. Please retry.';}}
+ finally{clearTimeout(timeout);if(activeController===controller)activeController=null;if(id===request){busy=false;action.disabled=false;action.textContent='Update analysis';}}
 }
 action.onclick=()=>{
  if(busy)return;busy=true;const id=++request,key=signature();action.disabled=true;action.textContent='Reading your chart…';content.classList.remove('ai-outdated');content.replaceChildren(e('div','ai-loading','✦  Gathering chart readings…'));
- if(serviceCheck.checked){connected(id,key);return;}
- setTimeout(()=>{if(id!==request)return;if(key!==signature()){busy=false;action.disabled=false;action.textContent='Update analysis';empty();hint.textContent='Settings changed while reading the chart. Update to use the new setup.';sync();return;}content.replaceChildren();try{build();reportKey=key;hint.textContent='A structured view of the evidence on your current chart.';}catch{section('DATA CHECK','Could not read this setup','Some chart data is still loading. Please try again.');}action.disabled=false;action.textContent='Update analysis';busy=false;},450);
+ connected(id,key);
 };
 setInterval(()=>{if(!panel.hidden)sync();},350);
 // Open the first-use preview so its proposed placement and content are immediately visible.
