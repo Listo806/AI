@@ -32,6 +32,21 @@ engineInputs.forEach(([key,label,min,max,step])=>{const wrapper=document.createE
 function readEngineSettings(){engineInputs.forEach(([key])=>engineConfig[key]=Number($('engine-'+key).value));['useMTFFilter','useRsiRegimeFilter','showFullAlignment'].forEach(key=>engineConfig[key]=$('engine-'+key).checked);try{ChartStorage.setItem('heisenberg-settings',JSON.stringify(engineConfig));}catch{}}
 let engineResult=null,engineKey='',enginePending='',engineAbort=null,engineTimer=null,engineError=false;
 function emptyEngine(n){const blank=()=>Array(n).fill(null);return {trama:blank(),vwap:blank(),atr:blank(),rsi:blank(),rsiMA:blank(),bb:{upper:blank(),middle:blank(),lower:blank()},center:blank(),upper:blank(),lower:blank(),vwapUpper:blank(),vwapLower:blank(),bias:Array(n).fill('Neutral'),signals:[],alignment:[],table:Object.fromEntries(['1min','5min','15min','30min','1h','4h'].map(tf=>[tf,'Unavailable']))};}
+// The private engine accepts at most 1,000 candles per timeframe. Keep chart history intact.
+const MAX_ENGINE_BARS=1000;
+function engineRequestBars(values){return values.slice(-MAX_ENGINE_BARS).map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.volume??null}));}
+function alignEngineResponse(value,fullLength,requestedLength){
+ const offset=fullLength-requestedLength;
+ if(offset<=0)return value;
+ const pad=(items,fill=null)=>Array(offset).fill(fill).concat(items);
+ for(const key of ['trama','vwap','atr','rsi','rsiMA','center','upper','lower','vwapUpper','vwapLower']){
+  if(Array.isArray(value[key]))value[key]=pad(value[key]);
+ }
+ if(Array.isArray(value.bias))value.bias=pad(value.bias,'Neutral');
+ if(value.bb){for(const key of ['upper','middle','lower'])if(Array.isArray(value.bb[key]))value.bb[key]=pad(value.bb[key]);}
+ for(const key of ['signals','alignment'])if(Array.isArray(value[key]))value[key]=value[key].map(item=>({...item,index:item.index+offset}));
+ return value;
+}
 function computeEngine(){
  const data=bars(),market=markets[selected].symbol;
  const frames=Object.fromEntries(['1min','5min','15min','30min','1h','4h'].map(tf=>[tf,cache.get(market+'|'+tf)?.bars||[]]));
@@ -41,8 +56,8 @@ function computeEngine(){
    engineAbort?.abort();clearTimeout(engineTimer);enginePending=sig;
    if(data.length){engineTimer=setTimeout(async()=>{
      const controller=new AbortController();engineAbort=controller;
-     try{const response=await fetch('/charts/app/api/engine',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',signal:controller.signal,body:JSON.stringify({frame,bars:data.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.volume??null})),frames:Object.fromEntries(Object.entries(frames).map(([tf,b])=>[tf,b.map(v=>({time:v.time,open:v.open,high:v.high,low:v.low,close:v.close,volume:v.volume??null}))])),settings:EngineSettings.inputs})});
-       if(!response.ok)throw Error('Server engine unavailable');const value=await response.json();if(enginePending!==sig||controller.signal.aborted)return;
+     try{const response=await fetch('/charts/app/api/engine',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',signal:controller.signal,body:JSON.stringify({frame,bars:engineRequestBars(data),frames:Object.fromEntries(Object.entries(frames).map(([tf,b])=>[tf,engineRequestBars(b)])),settings:EngineSettings.inputs})});
+       if(!response.ok)throw Error('Server engine unavailable');const value=alignEngineResponse(await response.json(),data.length,Math.min(data.length,MAX_ENGINE_BARS));if(enginePending!==sig||controller.signal.aborted)return;
        if(!Array.isArray(value.center)||value.center.length!==data.length||!value.bb||!Array.isArray(value.bb.upper))throw Error('Invalid engine output');
        engineResult=value;engineKey=sig;engineError=false;draw();
      }catch(error){if(!controller.signal.aborted&&enginePending===sig){engineResult=null;engineKey='';engineError=true;$('engineStatus').textContent='Heisenberg server unavailable';setTimeout(()=>{if(enginePending===sig){enginePending='';draw();}},15000);}}
