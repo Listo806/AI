@@ -60,6 +60,10 @@ function computeEngine(){
      try{const response=await fetch('/charts/app/api/engine',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',signal:controller.signal,body:JSON.stringify({frame,bars:engineRequestBars(data),frames:Object.fromEntries(Object.entries(frames).map(([tf,b])=>[tf,engineRequestBars(b)])),settings:EngineSettings.inputs})});
        if(!response.ok)throw Error('Server engine unavailable');const value=alignEngineResponse(await response.json(),data.length,Math.min(data.length,MAX_ENGINE_BARS));if(enginePending!==sig||controller.signal.aborted)return;
        if(!Array.isArray(value.center)||value.center.length!==data.length||!value.bb||!Array.isArray(value.bb.upper))throw Error('Invalid engine output');
+       // Diagnostic only: never synthesize missing confluence values or signals.
+       const plotKeys=['center','upper','lower','vwapUpper','vwapLower'];
+       const plotCounts=Object.fromEntries(plotKeys.map(key=>[key,Array.isArray(value[key])?value[key].filter(Number.isFinite).length:0]));
+       if(plotKeys.some(key=>plotCounts[key]===0))console.warn('[Heisenberg] Overlay data unavailable', {symbol:market,frame,candles:data.length,plotCounts,volumeCandles:data.filter(b=>Number.isFinite(b.volume)).length});
        engineResult=value;engineKey=sig;engineContext=context;engineError=false;draw();
      }catch(error){if(!controller.signal.aborted&&enginePending===sig){engineError=true;$('engineStatus').textContent='Heisenberg server unavailable';setTimeout(()=>{if(enginePending===sig){enginePending='';draw();}},15000);}}
    },250);}
@@ -69,6 +73,11 @@ function computeEngine(){
  const pending=emptyEngine(data.length);
  if(engineResult&&engineContext===context&&engineResult.table){
    pending.table={...engineResult.table};
+   // Reuse the last fully computed overlay only when candle indices still match.
+   // A changed history length needs a fresh server result; never shift signals.
+   if(engineResult.center?.length===data.length){
+     return engineResult;
+   }
  }
  return pending;
 }
