@@ -81,7 +81,11 @@ function computeEngine(){
  }
  return pending;
 }
+let lastMTFRenderKey='';
 function updateMTF(engine) {
+  const mtfRenderKey=JSON.stringify([EngineSettings.style.tables,engine.table,engineError,markets[selected].symbol,frame,TramaSettings.settings]);
+  if(lastMTFRenderKey===mtfRenderKey)return;
+  lastMTFRenderKey=mtfRenderKey;
   document.querySelector('.mtf-table').style.visibility=EngineSettings.style.tables?'visible':'hidden';
   const body = $('mtfRows');
   body.replaceChildren();
@@ -203,7 +207,7 @@ function crosshairTimeLabel(data,view,pointerX,width){
 function drawCrosshair(chart,point,minimum,maximum,digits,timeLabel){
  const {ctx,width,height}=chart,left=15,right=width-78,top=15,bottom=height-28;
  if(point.x<left||point.x>right||point.y<top||point.y>bottom)return;
- ctx.save();ctx.strokeStyle='#ffffff';ctx.globalAlpha=.9;ctx.lineWidth=1.4;ctx.setLineDash([2,4]);
+ ctx.save();ctx.strokeStyle='#ffffff';ctx.globalAlpha=.9;ctx.lineWidth=1;ctx.lineCap='butt';ctx.setLineDash([6,4]);
  ctx.beginPath();ctx.moveTo(point.x,top);ctx.lineTo(point.x,bottom);ctx.moveTo(left,point.y);ctx.lineTo(right,point.y);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
  const value=maximum-(point.y-top)/(bottom-top)*(maximum-minimum),labelY=Math.max(top+10,Math.min(bottom-10,point.y));
  ctx.fillStyle='#263342';ctx.fillRect(right+1,labelY-10,76,20);ctx.strokeStyle='#ffffff';ctx.lineWidth=1;ctx.strokeRect(right+1,labelY-10,76,20);ctx.fillStyle='#ffffff';ctx.font='bold 12px system-ui';ctx.fillText(value.toFixed(digits),right+5,labelY+4);
@@ -222,16 +226,20 @@ function paneView(pane){return pane==='rsi'?oscView:{count,offset};}
 function setPaneView(pane,view){if(pane==='rsi')Object.assign(oscView,view);else{count=view.count;offset=view.offset;}}
 function zoom(factor,pane='price',verticalStep=1){const previousBounds=pane==='price'&&verticalStep!==1?{...currentPriceBounds}:null;const view=paneView(pane),previousCount=view.count;view.count=Math.max(20,Math.min(Math.max(500,bars().length+50),Math.round(previousCount*factor)));if(view.count===previousCount)return;if(previousBounds){const latestPosition=1+(view.offset-.5)/previousCount;const shift=.15*(1-previousCount/view.count);view.offset=(latestPosition+shift-1)*view.count+.5;}else view.offset=Math.max(-view.count+20,view.offset);setPaneView(pane,view);if(pane==='price'){verticalScales.price.factor=1;verticalScales.price.center=null;}hover=-1;crosshair=null;draw();if(previousBounds?.span>0){const progress=Math.log(view.count/previousCount)/Math.log(factor),targetSpan=previousBounds.span/Math.pow(verticalStep,progress);verticalScales.price.factor=currentPriceBounds.span/targetSpan;verticalScales.price.center=previousBounds.center;draw();}}
 $('panLeft').onclick=()=>{offset=Math.max(-count+20,offset-Math.round(count*.15));hover=-1;crosshair=null;draw();};$('panRight').onclick=()=>{offset=Math.min(Math.max(0,bars().length-20),offset+Math.round(count*.15));hover=-1;crosshair=null;draw();};
+// Coalesce pointer updates: one chart render for the newest pointer event per frame.
+let pointerFrame=0;
+const schedulePointerDraw=()=>{if(pointerFrame)return;pointerFrame=requestAnimationFrame(()=>{pointerFrame=0;draw();});};
 $('zoomIn').onclick=()=>zoom(.8);$('zoomOut').onclick=()=>zoom(1.25);$('reset').onclick=()=>{verticalScales.price={factor:1,center:null};count=170;offset=-Math.round(count*.05);hover=-1;crosshair=null;draw();};let dragging=null;
 for(const canvas of [$('priceChart'),$('rsiChart')]){
  const pane=canvas.id==='priceChart'?'price':'rsi';
  const inAxis=event=>event.clientX-canvas.getBoundingClientRect().left>=canvas.getBoundingClientRect().width-78;
  canvas.onwheel=event=>{event.preventDefault();if(inAxis(event)){const scale=verticalScales[pane];scale.factor=Math.max(.2,Math.min(12,scale.factor*Math.exp(-event.deltaY*.002)));draw();}else zoom(event.deltaY>0?1.12:.88,pane,event.deltaY>0?1/1.035:1.035);};
  canvas.ondblclick=event=>{verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=170;setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
- canvas.onpointerdown=event=>{const view=paneView(pane);dragging={kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,pane};canvas.setPointerCapture(event.pointerId);};
- canvas.onpointerup=canvas.onpointercancel=()=>dragging=null;
- canvas.onpointermove=event=>{const rect=canvas.getBoundingClientRect(),view=paneView(pane),viewStart=bars().length-view.count-view.offset,first=Math.max(0,Math.floor(viewStart)),last=Math.min(bars().length,Math.ceil(viewStart+view.count));hoverPane=pane;canvas.style.cursor=inAxis(event)?'ns-resize':dragging?'grabbing':'crosshair';if(dragging?.pane===pane){if(dragging.kind==='scale')verticalScales[pane].factor=Math.max(.2,Math.min(12,dragging.factor*Math.exp((dragging.y-event.clientY)/160)));else{view.offset=Math.max(-view.count+20,Math.min(Math.max(0,bars().length-20),dragging.offset+Math.round((event.clientX-dragging.x)/Math.max(1,rect.width-93)*dragging.count)));setPaneView(pane,view);verticalScales[pane].center=dragging.center+(event.clientY-dragging.y)/Math.max(1,rect.height-43)*dragging.span;}hover=-1;crosshair=null;}else{hover=inAxis(event)?-1:Math.floor(viewStart+(event.clientX-rect.left-15)/Math.max(1,rect.width-93)*view.count)-first;if(hover<0||hover>=last-first)hover=-1;crosshair=null;const px=event.clientX-rect.left,py=event.clientY-rect.top;if(px>=15&&px<=rect.width-78&&py>=15&&py<=rect.height-28)crosshair={pane,x:px,y:py};}draw();};
- canvas.onpointerleave=()=>{hover=-1;crosshair=null;if(!dragging)draw();};
+ canvas.onpointerdown=event=>{if(event.button!==0)return;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,pane};canvas.setPointerCapture(event.pointerId);};
+ const releaseDrag=event=>{if(!dragging||dragging.pointerId!==event.pointerId)return;dragging=null;if(canvas.hasPointerCapture?.(event.pointerId))canvas.releasePointerCapture(event.pointerId);schedulePointerDraw();};
+ canvas.onpointerup=releaseDrag;canvas.onpointercancel=releaseDrag;canvas.onlostpointercapture=event=>{if(dragging?.pointerId===event.pointerId){dragging=null;schedulePointerDraw();}};
+ canvas.onpointermove=event=>{if(dragging&&dragging.pointerId!==event.pointerId)return;const rect=canvas.getBoundingClientRect(),view=paneView(pane),viewStart=bars().length-view.count-view.offset,first=Math.max(0,Math.floor(viewStart)),last=Math.min(bars().length,Math.ceil(viewStart+view.count));hoverPane=pane;canvas.style.cursor=inAxis(event)?'ns-resize':dragging?'grabbing':'crosshair';if(dragging?.pane===pane){if(dragging.kind==='scale')verticalScales[pane].factor=Math.max(.2,Math.min(12,dragging.factor*Math.exp((dragging.y-event.clientY)/160)));else{view.offset=Math.max(-view.count+20,Math.min(Math.max(0,bars().length-20),dragging.offset+Math.round((event.clientX-dragging.x)/Math.max(1,rect.width-93)*dragging.count)));setPaneView(pane,view);verticalScales[pane].center=dragging.center+(event.clientY-dragging.y)/Math.max(1,rect.height-43)*dragging.span;}hover=-1;crosshair=null;}else{hover=inAxis(event)?-1:Math.floor(viewStart+(event.clientX-rect.left-15)/Math.max(1,rect.width-93)*view.count)-first;if(hover<0||hover>=last-first)hover=-1;crosshair=null;const px=event.clientX-rect.left,py=event.clientY-rect.top;if(px>=15&&px<=rect.width-78&&py>=15&&py<=rect.height-28)crosshair={pane,x:px,y:py};}schedulePointerDraw();};
+ canvas.onpointerleave=()=>{if(dragging)return;hover=-1;crosshair=null;schedulePointerDraw();};
 }
 document.querySelectorAll('[data-frame]').forEach(button=>button.onclick=()=>{document.querySelectorAll('[data-range]').forEach(b=>b.classList.remove('active'));selectFrame(button.dataset.frame);});['bbOn','vwapOn','rsiOn','maOn','tramaOn','engineOn','priceOn'].forEach(id=>$(id).onchange=draw);
 $('candlesStyle').onclick=()=>{chartStyle='candles';if(entry()?.reference)showFeedNotice('Candlesticks need open, high, low and close history. This feed supplies a single daily reference price. Connect a candle feed through Indicators → Manage data feed.');draw();};$('lineStyle').onclick=()=>{chartStyle='line';$('chartNotice').hidden=true;draw();};
