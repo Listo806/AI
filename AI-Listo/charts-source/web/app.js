@@ -30,7 +30,7 @@ try{const saved=JSON.parse(ChartStorage.getItem('heisenberg-settings'));if(saved
 engineInputs.forEach(([key,label,min,max,step])=>{const wrapper=document.createElement('label');wrapper.className='field';wrapper.textContent=label;const input=document.createElement('input');input.id='engine-'+key;input.type='number';input.min=min;input.max=max;input.step=step;input.value=engineConfig[key];input.required=true;wrapper.append(input);$('engineFields').append(wrapper);});
 [['useMTFFilter','Multi-timeframe filter'],['useRsiRegimeFilter','RSI regime filter'],['showFullAlignment','Full alignment markers']].forEach(([key,label])=>{const wrapper=document.createElement('label');wrapper.className='toggle';const input=document.createElement('input');input.id='engine-'+key;input.type='checkbox';input.checked=engineConfig[key];wrapper.append(input,document.createTextNode(label));$('engineToggles').append(wrapper);});
 function readEngineSettings(){engineInputs.forEach(([key])=>engineConfig[key]=Number($('engine-'+key).value));['useMTFFilter','useRsiRegimeFilter','showFullAlignment'].forEach(key=>engineConfig[key]=$('engine-'+key).checked);try{ChartStorage.setItem('heisenberg-settings',JSON.stringify(engineConfig));}catch{}}
-let engineResult=null,engineKey='',enginePending='',engineAbort=null,engineTimer=null,engineError=false;
+let engineResult=null,engineKey='',enginePending='',engineAbort=null,engineTimer=null,engineError=false,engineContext='';
 function emptyEngine(n){const blank=()=>Array(n).fill(null);return {trama:blank(),vwap:blank(),atr:blank(),rsi:blank(),rsiMA:blank(),bb:{upper:blank(),middle:blank(),lower:blank()},center:blank(),upper:blank(),lower:blank(),vwapUpper:blank(),vwapLower:blank(),bias:Array(n).fill('Neutral'),signals:[],alignment:[],table:Object.fromEntries(['1min','5min','15min','30min','1h','4h'].map(tf=>[tf,'Unavailable']))};}
 // The private engine accepts at most 1,000 candles per timeframe. Keep chart history intact.
 const MAX_ENGINE_BARS=1000;
@@ -50,6 +50,7 @@ function alignEngineResponse(value,fullLength,requestedLength){
 function computeEngine(){
  const data=bars(),market=markets[selected].symbol;
  const frames=Object.fromEntries(['1min','5min','15min','30min','1h','4h'].map(tf=>[tf,cache.get(market+'|'+tf)?.bars||[]]));
+ const context=JSON.stringify([market,frame,EngineSettings.inputs]);
  const sig=JSON.stringify([market,frame,data.length,data.at(-1)?.time,data.at(-1)?.close,EngineSettings.inputs,...Object.entries(frames).map(([tf,b])=>[tf,b.length,b.at(-1)?.time,b.at(-1)?.close])]);
  if(engineKey===sig&&engineResult)return engineResult;
  if(enginePending!==sig){
@@ -59,11 +60,17 @@ function computeEngine(){
      try{const response=await fetch('/charts/app/api/engine',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',signal:controller.signal,body:JSON.stringify({frame,bars:engineRequestBars(data),frames:Object.fromEntries(Object.entries(frames).map(([tf,b])=>[tf,engineRequestBars(b)])),settings:EngineSettings.inputs})});
        if(!response.ok)throw Error('Server engine unavailable');const value=alignEngineResponse(await response.json(),data.length,Math.min(data.length,MAX_ENGINE_BARS));if(enginePending!==sig||controller.signal.aborted)return;
        if(!Array.isArray(value.center)||value.center.length!==data.length||!value.bb||!Array.isArray(value.bb.upper))throw Error('Invalid engine output');
-       engineResult=value;engineKey=sig;engineError=false;draw();
-     }catch(error){if(!controller.signal.aborted&&enginePending===sig){engineResult=null;engineKey='';engineError=true;$('engineStatus').textContent='Heisenberg server unavailable';setTimeout(()=>{if(enginePending===sig){enginePending='';draw();}},15000);}}
+       engineResult=value;engineKey=sig;engineContext=context;engineError=false;draw();
+     }catch(error){if(!controller.signal.aborted&&enginePending===sig){engineError=true;$('engineStatus').textContent='Heisenberg server unavailable';setTimeout(()=>{if(enginePending===sig){enginePending='';draw();}},15000);}}
    },250);}
  }
- return emptyEngine(data.length);
+ // Preserve the last valid MTF reading during a refresh. Do not display a
+ // previous symbol, timeframe or settings as though they were current.
+ const pending=emptyEngine(data.length);
+ if(engineResult&&engineContext===context&&engineResult.table){
+   pending.table={...engineResult.table};
+ }
+ return pending;
 }
 function updateMTF(engine) {
   document.querySelector('.mtf-table').style.visibility=EngineSettings.style.tables?'visible':'hidden';
