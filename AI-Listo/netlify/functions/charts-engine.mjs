@@ -10,7 +10,8 @@ globalThis.Indicators = require('./_charts-engine/indicators.cjs');
 globalThis.Heisenberg = require('./_charts-engine/heisenberg-engine.cjs');
 const { engineResponse } = require('./_charts-engine/engine-response.cjs');
 
-export const config = { path: '/charts/app/api/engine' };
+// Use the standard Netlify Functions endpoint. The generated _redirects
+// forwards /charts/app/api/engine here; do not register a competing custom path.
 
 const headers = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' };
 const json = (error, status) => Response.json({error}, {status, headers});
