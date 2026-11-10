@@ -643,6 +643,7 @@ function main() {
     "https://stirring-liger-864437.netlify.app/*    https://www.cortexaaicrm.com/:splat    301!",
     "",
     "# Charts: private dashboard via same-site Netlify Function (never static public files).",
+    "/charts/app/api/engine    /.netlify/functions/charts-engine    200!",
     "/charts/app/api/calendar    /.netlify/functions/charts-calendar    200!",
     "/charts/app    /.netlify/functions/charts    200!",
     "/charts/app/*    /.netlify/functions/charts?chartPath=:splat    200!",
