@@ -5,3 +5,11 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Route Charts Heisenberg POST to the deployed Netlify Function.
+# force=true prevents static SPA/chart assets from shadowing this API path.
+[[redirects]]
+  from = "/charts/app/api/engine"
+  to = "/.netlify/functions/charts-engine"
+  status = 200
+  force = true
