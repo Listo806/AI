@@ -14,6 +14,7 @@
    timeframe(value){if(!frames.some(([tf])=>tf===value))return;selectFrame(value).then(()=>this.notify());},
    command(action){const target=action==='indicators'?document.querySelector('.market-tools button:last-child'):action==='calendar'?$('calendarButton'):action==='ai'?$('cortexaAI'):action==='candles'?$('candlesStyle'):action==='line'?$('lineStyle'):action==='reset'?$('reset'):null;target?.click();this.notify();},
    range(value){document.querySelector('[data-range="'+value+'"]')?.click();},
+   zoom(direction){return window.ChartZoom?.change(direction,'price')??false;},
    activate(){parent.ChartLayouts?.activate(ChartEmbed.id);}
   };
   header=make('div','pane-local-header');symbolSelect=make('select','pane-symbol');symbolSelect.setAttribute('aria-label','Chart market');for(const m of MarketCatalog){const option=make('option','',m.name);option.value=m.symbol;symbolSelect.append(option);}symbolSelect.value=markets[selected].symbol;symbolSelect.onchange=()=>ChartPaneAPI.market(symbolSelect.value);

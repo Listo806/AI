@@ -253,12 +253,31 @@ function drawCrosshair(chart,point,minimum,maximum,digits,timeLabel){
 }
 function paneView(pane){return pane==='rsi'?oscView:{count,offset};}
 function setPaneView(pane,view){if(pane==='rsi')Object.assign(oscView,view);else{count=view.count;offset=view.offset;}}
-function zoom(factor,pane='price',verticalStep=1){const previousBounds=pane==='price'&&verticalStep!==1?{...currentPriceBounds}:null;const view=paneView(pane),previousCount=view.count;view.count=Math.max(20,Math.min(Math.max(500,bars().length+50),Math.round(previousCount*factor)));if(view.count===previousCount)return;if(previousBounds){const latestPosition=1+(view.offset-.5)/previousCount;const shift=.15*(1-previousCount/view.count);view.offset=(latestPosition+shift-1)*view.count+.5;}else view.offset=Math.max(-view.count+20,view.offset);setPaneView(pane,view);if(pane==='price'){verticalScales.price.factor=1;verticalScales.price.center=null;}hover=-1;crosshair=null;draw();if(previousBounds?.span>0){const progress=Math.log(view.count/previousCount)/Math.log(factor),targetSpan=previousBounds.span/Math.pow(verticalStep,progress);verticalScales.price.factor=currentPriceBounds.span/targetSpan;verticalScales.price.center=previousBounds.center;draw();}}
+// Center-anchored horizontal zoom. The renderer uses start = length - count - offset.
+// Preserve the same center candle index, including fractional centers.
+function zoom(factor,pane='price',verticalStep=1){
+ const previousBounds=pane==='price'&&verticalStep!==1?{...currentPriceBounds}:null;
+ const view=paneView(pane),oldCount=view.count,oldOffset=view.offset;
+ const nextCount=Math.max(20,Math.min(Math.max(500,bars().length+50),Math.round(oldCount*factor)));
+ if(nextCount===oldCount)return false;
+ const centerIndex=bars().length-oldOffset-oldCount/2;
+ const nextOffset=bars().length-centerIndex-nextCount/2;
+ setPaneView(pane,{count:nextCount,offset:nextOffset});
+ // Horizontal zoom must not reset or change the vertical price viewport.
+ hover=-1;crosshair=null;draw();
+ if(previousBounds?.span>0){const progress=Math.log(nextCount/oldCount)/Math.log(factor),targetSpan=previousBounds.span/Math.pow(verticalStep,progress);verticalScales.price.factor=currentPriceBounds.span/targetSpan;verticalScales.price.center=previousBounds.center;draw();}
+ return true;
+}
+window.ChartZoom={change(direction,pane='price'){
+ // In multi-chart layouts the toolbar belongs to the parent; delegate to active iframe.
+ if(window.ChartLayouts?.multiple){const child=window.ChartLayouts.chartWindow();return child?.ChartPaneAPI?.zoom?.(direction)??false;}
+ return zoom(direction==='in'?.8:direction==='out'?1.25:Number(direction),pane);
+}};
 $('panLeft').onclick=()=>{offset=Math.max(-count+20,offset-Math.round(count*.15));hover=-1;crosshair=null;draw();};$('panRight').onclick=()=>{offset=Math.min(Math.max(0,bars().length-20),offset+Math.round(count*.15));hover=-1;crosshair=null;draw();};
 // Coalesce pointer updates: one chart render for the newest pointer event per frame.
 let pointerFrame=0;
 const schedulePointerDraw=()=>{if(pointerFrame)return;pointerFrame=requestAnimationFrame(()=>{pointerFrame=0;draw(true);});};
-$('zoomIn').onclick=()=>zoom(.8);$('zoomOut').onclick=()=>zoom(1.25);$('reset').onclick=()=>{verticalScales.price={factor:1,center:null};count=170;offset=-Math.round(count*.05);hover=-1;crosshair=null;draw();};let dragging=null;
+$('zoomIn').onclick=()=>window.ChartZoom.change('in');$('zoomOut').onclick=()=>window.ChartZoom.change('out');$('reset').onclick=()=>{verticalScales.price={factor:1,center:null};count=170;offset=-Math.round(count*.05);hover=-1;crosshair=null;draw();};let dragging=null;
 for(const canvas of [$('priceChart'),$('rsiChart')]){
  const pane=canvas.id==='priceChart'?'price':'rsi';
  const inAxis=event=>event.clientX-canvas.getBoundingClientRect().left>=canvas.getBoundingClientRect().width-78;

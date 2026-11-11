@@ -35,6 +35,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if(url.pathname==='/api/engine')return engineResponse(request,env);
+    if(url.pathname==='/api/evidence')return verifiedEvidenceResponse(request,env);
     if(url.pathname==='/api/analysis')return analysisResponse(request,{...env,...usageGateBindings(env.AI_USAGE_GATE)});
     if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
     if (url.pathname === '/api/calendar') return calendarResponse(request);

@@ -68,7 +68,7 @@ async function connected(id,key){
  const report=await response.json();if(id!==request||key!==signature())return;
  content.replaceChildren();if(!response.ok){
    console.error('[Cortexa AI] Analysis API error',{status:response.status,code:report?.error?.code||'UNKNOWN'});
-   throw Error('Analysis service unavailable. Please try again.');
+   throw Error('Analysis service unavailable ('+String(report?.error?.code||'HTTP_'+response.status)+'). Please try again.');
  }
  if(report.symbol!==markets[selected].symbol||report.frame!==frame||!Array.isArray(report.sections))throw Error('Analysis context did not match this chart.');
  note.textContent='CONNECTED SERVICE · '+new Date(report.generatedAt).toLocaleTimeString();

@@ -110,8 +110,10 @@ export default async function charts(request) {
         }, body: buffer,
       }), workerEnv, {});
       if (!evidenceResponse.ok) {
-        return Response.json({error:{code:'MARKET_EVIDENCE_UNAVAILABLE',message:'Verified market data is temporarily unavailable.'}},
-          {status:503,headers:PRIVATE_HEADERS});
+        let detail;try{detail=await evidenceResponse.json();}catch{}
+        const code=detail?.error?.code==='INVALID_SNAPSHOT'?'INVALID_SNAPSHOT':detail?.error?.code==='TRUSTED_PROXY_REQUIRED'?'EVIDENCE_PROXY_AUTH_FAILED':'MARKET_EVIDENCE_UNAVAILABLE';
+        return Response.json({error:{code,message:code==='INVALID_SNAPSHOT'?'Chart snapshot is invalid or expired.':'Verified market data is temporarily unavailable.'}},
+          {status:code==='INVALID_SNAPSHOT'?400:503,headers:PRIVATE_HEADERS});
       }
       const verified = await evidenceResponse.json();
       const original = JSON.parse(new TextDecoder().decode(buffer));
