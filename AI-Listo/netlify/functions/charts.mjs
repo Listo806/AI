@@ -85,6 +85,17 @@ export default async function charts(request) {
   const contentType = request.headers.get('content-type');
   if (contentType) headers.set('content-type', contentType);
   headers.set('x-cortexa-authenticated-user', identity);
+  // Assert the validated session to the private Worker, never to the browser.
+  const workerEnv = {};
+  if (internalPath === '/api/analysis') {
+    const secret = process.env.CHARTS_TRUSTED_PROXY_SECRET;
+    if (typeof secret !== 'string' || secret.length < 32) {
+      return reply('Charts AI proxy is not configured', 503);
+    }
+    headers.set('x-cortexa-proxy-secret', secret);
+    headers.set('origin', target.origin);
+    workerEnv.CHARTS_TRUSTED_PROXY_SECRET = secret;
+  }
   let body;
   if (method === 'POST') {
     const buffer = await request.arrayBuffer();
@@ -92,7 +103,7 @@ export default async function charts(request) {
     body = buffer;
   }
   try {
-    const result = await worker.fetch(new Request(target, { method, headers, body }), {}, {});
+    const result = await worker.fetch(new Request(target, { method, headers, body }), workerEnv, {});
     const resultHeaders = new Headers(PRIVATE_HEADERS);
     resultHeaders.set('content-type', result.headers.get('content-type') || 'application/octet-stream');
     return new Response(method === 'HEAD' ? null : result.body, { status: result.status, headers: resultHeaders });
