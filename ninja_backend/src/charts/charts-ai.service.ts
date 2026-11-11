@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException, BadRequestException, TooManyRequestsException } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import OpenAI from 'openai';
 
 const FRAMES: Record<string, number> = {'1min':60000,'5min':300000,'15min':900000,'30min':1800000,'1h':3600000,'4h':14400000,'1day':86400000};
@@ -12,7 +12,7 @@ export class ChartsAiService {
   async analyze(raw:any, user:string) {
     const now=Date.now();
     if (!raw || raw.version!==1 || typeof raw.requestId!=='string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(raw.requestId) ||
-      typeof raw.symbol!=='string' || !/^[A-Z0-9/._-]{2,24}$/.test(raw.symbol) || !Object.hasOwn(FRAMES,raw.frame) ||
+      typeof raw.symbol!=='string' || !/^[A-Z0-9/._-]{2,24}$/.test(raw.symbol) || !Object.prototype.hasOwnProperty.call(FRAMES,raw.frame) ||
       !['setup','outlook'].includes(raw.mode) || !Number.isFinite(raw.capturedAt) || Math.abs(now-raw.capturedAt)>120000)
       throw new BadRequestException({code:'INVALID_SNAPSHOT',message:'Invalid market context or expired snapshot'});
     if(!Array.isArray(raw.candles)||raw.candles.length<30||raw.candles.length>600)throw new BadRequestException({code:'INVALID_SNAPSHOT',message:'Invalid candle count'});
@@ -32,7 +32,7 @@ export class ChartsAiService {
     const mtf=Object.fromEntries(mtfFrames.map(tf=>[tf,states.includes(raw.mtf?.[tf])?raw.mtf[tf]:'Unavailable']));
     const recent=closed.slice(-20), levels={recentHigh:Math.max(...recent.map((c:any)=>c.high)),recentLow:Math.min(...recent.map((c:any)=>c.low))};
     const existing=limit.get(user);const state=existing&&now-existing.window<60000?existing:{window:now,count:0,busy:false};
-    if(state.busy||state.count>=3)throw new TooManyRequestsException('Please wait before requesting another analysis');
+    if(state.busy||state.count>=3)throw new HttpException('Please wait before requesting another analysis', HttpStatus.TOO_MANY_REQUESTS);
     state.count++;state.busy=true;limit.set(user,state);
     try{
       const key=process.env.OPENAI_API_KEY;
@@ -53,7 +53,7 @@ export class ChartsAiService {
         !IDS.every(id=>output.sections.some((s:any)=>s.id===id)))throw new Error('Invalid AI report sections');
       const sections=output.sections.map((s:any)=>{
         const safe=(v:any,n:number)=>{if(typeof v!=='string'||v.length>n||/[<>]/.test(v))throw new Error('Invalid AI report text');return v;};
-        if(!Array.isArray(s.levelRefs)||s.levelRefs.some((id:any)=>!Object.hasOwn(levels,id))||!Array.isArray(s.eventRefs)||s.eventRefs.length)
+        if(!Array.isArray(s.levelRefs)||s.levelRefs.some((id:any)=>!Object.prototype.hasOwnProperty.call(levels,id))||!Array.isArray(s.eventRefs)||s.eventRefs.length)
           throw new Error('Invalid AI references');
         return {id:s.id,title:safe(s.title,120),summary:safe(s.summary,1500),reasoning:safe(s.reasoning,2200),levelRefs:s.levelRefs,eventRefs:[]};
       });
@@ -61,7 +61,7 @@ export class ChartsAiService {
         warnings:['Analysis is based on the selected chart snapshot; independent market-feed verification is unavailable.','Browser indicator readings and Heisenberg MTF states are not independently verified.','Economic calendar is unavailable; this does not mean there are no events.'],
         provenance:'client_snapshot_not_independently_verified',calendar:{source:'Unavailable',stale:true,events:[]}};
     }catch(error){
-      if(error instanceof ServiceUnavailableException||error instanceof BadRequestException||error instanceof TooManyRequestsException)throw error;
+      if(error instanceof ServiceUnavailableException||error instanceof BadRequestException||error instanceof HttpException)throw error;
       // Do not expose upstream provider error details or credentials.
       throw new ServiceUnavailableException({code:'AI_UNAVAILABLE',message:'Cortexa AI could not complete the analysis. Please try again.'});
     }finally{state.busy=false;}
