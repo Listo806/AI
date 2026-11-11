@@ -3,10 +3,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SecurityService } from '../auth/security.service';
 import { AuthService } from '../auth/auth.service';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { ChartsAiService } from './charts-ai.service';
 
 @Controller('charts')
 export class ChartsController {
-  constructor(private readonly security: SecurityService, private readonly auth: AuthService) {}
+  constructor(private readonly security: SecurityService, private readonly auth: AuthService, private readonly chartsAi: ChartsAiService) {}
   private secret() {
     const secret = process.env.CHARTS_SESSION_SECRET;
     if (!secret || secret.length < 32) throw new ServiceUnavailableException('Charts session secret is not configured');
@@ -49,6 +50,19 @@ export class ChartsController {
   async validate(@Req() req: any, @Res({passthrough:true}) res: any) {
     res.setHeader('Cache-Control','no-store');
     return {ok:true,userId:await this.validateChartsSession(req)};
+  }
+  // Private Netlify-to-Render analysis endpoint. Never expose this secret to the browser.
+  @Post('analysis/internal')
+  async internalAnalysis(@Req() req: any, @Body() body: unknown) {
+    const expected = process.env.CHARTS_TRUSTED_PROXY_SECRET;
+    const supplied = String(req.headers['x-cortexa-proxy-secret'] || '');
+    if (!expected || expected.length < 32 || supplied.length !== expected.length ||
+        !timingSafeEqual(Buffer.from(expected), Buffer.from(supplied)))
+      throw new UnauthorizedException('Trusted Charts proxy required');
+    const user = String(req.headers['x-cortexa-authenticated-user'] || '');
+    if (!user || !/^[-a-zA-Z0-9_:.@]{1,160}$/.test(user)) throw new UnauthorizedException();
+    this.owner(user);
+    return this.chartsAi.analyze(body, user);
   }
   @Post('analysis')
   async analysis(@Req() req: any, @Res() res: any, @Body() body: unknown) {

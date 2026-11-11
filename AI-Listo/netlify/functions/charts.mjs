@@ -11,11 +11,6 @@ const PRIVATE_HEADERS = {
   'x-robots-tag': 'noindex, nofollow',
 };
 const reply = (message, status) => new Response(message, { status, headers: PRIVATE_HEADERS });
-// Stable, non-sensitive diagnostics for API failures; never expose secrets or tokens.
-const analysisError = (status, code, message) => new Response(
-  JSON.stringify({ error: { code, message } }),
-  { status, headers: { ...PRIVATE_HEADERS, 'content-type': 'application/json; charset=utf-8', 'x-charts-error-source': 'netlify-proxy' } }
-);
 
 export default async function charts(request) {
   const method = request.method.toUpperCase();
@@ -95,11 +90,36 @@ export default async function charts(request) {
   if (internalPath === '/api/analysis') {
     const secret = process.env.CHARTS_TRUSTED_PROXY_SECRET;
     if (typeof secret !== 'string' || secret.length < 32) {
-      return analysisError(503, 'PROXY_SECRET_UNAVAILABLE', 'Charts AI proxy configuration is unavailable for this deployment.');
+      return reply('Charts AI proxy is not configured', 503);
     }
     headers.set('x-cortexa-proxy-secret', secret);
     headers.set('origin', target.origin);
     workerEnv.CHARTS_TRUSTED_PROXY_SECRET = secret;
+  }
+  // Analysis uses the existing OpenAI key on Render; no AI key is present on Netlify.
+  // The browser has already passed the CRM session check above.
+  if (internalPath === '/api/analysis' && method === 'POST') {
+    const buffer = await request.arrayBuffer();
+    if (buffer.byteLength > 180000) return reply('Request too large', 413);
+    try {
+      const upstream = await fetch('https://backend.cortexaaicrm.com/api/charts/analysis/internal', {
+        method: 'POST', redirect: 'error', signal: AbortSignal.timeout(29000),
+        headers: {
+          'content-type': 'application/json',
+          'x-cortexa-proxy-secret': workerEnv.CHARTS_TRUSTED_PROXY_SECRET,
+          'x-cortexa-authenticated-user': identity,
+        },
+        body: buffer,
+      });
+      const data = await upstream.text();
+      if (data.length > 60000) return reply('Analysis response too large', 502);
+      const outHeaders = new Headers(PRIVATE_HEADERS);
+      outHeaders.set('content-type', 'application/json; charset=utf-8');
+      return new Response(data, { status: upstream.status, headers: outHeaders });
+    } catch {
+      return Response.json({error:{code:'AI_BACKEND_UNAVAILABLE',message:'Cortexa AI backend is temporarily unavailable.'}},
+        {status:503,headers:PRIVATE_HEADERS});
+    }
   }
   let body;
   if (method === 'POST') {
@@ -111,13 +131,6 @@ export default async function charts(request) {
     const result = await worker.fetch(new Request(target, { method, headers, body }), workerEnv, {});
     const resultHeaders = new Headers(PRIVATE_HEADERS);
     resultHeaders.set('content-type', result.headers.get('content-type') || 'application/octet-stream');
-    if (internalPath === '/api/analysis' && result.status >= 400) resultHeaders.set('x-charts-error-source', 'charts-worker');
     return new Response(method === 'HEAD' ? null : result.body, { status: result.status, headers: resultHeaders });
-  } catch (error) {
-    if (internalPath === '/api/analysis') {
-      console.error('[charts-analysis] Worker invocation failed', { name: error?.name || 'Error' });
-      return analysisError(502, 'WORKER_INVOCATION_FAILED', 'Charts AI service could not be reached.');
-    }
-    return reply('Charts service unavailable', 502);
-  }
+  } catch { return reply('Charts service unavailable', 502); }
 }
