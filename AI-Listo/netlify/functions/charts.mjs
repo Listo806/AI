@@ -11,6 +11,11 @@ const PRIVATE_HEADERS = {
   'x-robots-tag': 'noindex, nofollow',
 };
 const reply = (message, status) => new Response(message, { status, headers: PRIVATE_HEADERS });
+// Stable, non-sensitive diagnostics for API failures; never expose secrets or tokens.
+const analysisError = (status, code, message) => new Response(
+  JSON.stringify({ error: { code, message } }),
+  { status, headers: { ...PRIVATE_HEADERS, 'content-type': 'application/json; charset=utf-8', 'x-charts-error-source': 'netlify-proxy' } }
+);
 
 export default async function charts(request) {
   const method = request.method.toUpperCase();
@@ -90,7 +95,7 @@ export default async function charts(request) {
   if (internalPath === '/api/analysis') {
     const secret = process.env.CHARTS_TRUSTED_PROXY_SECRET;
     if (typeof secret !== 'string' || secret.length < 32) {
-      return reply('Charts AI proxy is not configured', 503);
+      return analysisError(503, 'PROXY_SECRET_UNAVAILABLE', 'Charts AI proxy configuration is unavailable for this deployment.');
     }
     headers.set('x-cortexa-proxy-secret', secret);
     headers.set('origin', target.origin);
@@ -106,6 +111,13 @@ export default async function charts(request) {
     const result = await worker.fetch(new Request(target, { method, headers, body }), workerEnv, {});
     const resultHeaders = new Headers(PRIVATE_HEADERS);
     resultHeaders.set('content-type', result.headers.get('content-type') || 'application/octet-stream');
+    if (internalPath === '/api/analysis' && result.status >= 400) resultHeaders.set('x-charts-error-source', 'charts-worker');
     return new Response(method === 'HEAD' ? null : result.body, { status: result.status, headers: resultHeaders });
-  } catch { return reply('Charts service unavailable', 502); }
+  } catch (error) {
+    if (internalPath === '/api/analysis') {
+      console.error('[charts-analysis] Worker invocation failed', { name: error?.name || 'Error' });
+      return analysisError(502, 'WORKER_INVOCATION_FAILED', 'Charts AI service could not be reached.');
+    }
+    return reply('Charts service unavailable', 502);
+  }
 }
