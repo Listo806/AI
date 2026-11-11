@@ -60,8 +60,16 @@ function snapshot(){
 }
 async function connected(id,key){
  const controller=new AbortController();activeController=controller;const timeout=setTimeout(()=>controller.abort(),30000);
- try{const response=await fetch('/charts/app/api/analysis',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify(snapshot()),signal:controller.signal});const report=await response.json();if(id!==request||key!==signature())return;
- content.replaceChildren();if(!response.ok)throw Error(report.error?.message||'Analysis is unavailable.');
+ try{const response=await fetch('/charts/app/api/analysis',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify(snapshot()),signal:controller.signal});const type=response.headers.get('content-type')||'';
+ if(!type.toLowerCase().includes('application/json')){
+   console.error('[Cortexa AI] Non-JSON analysis response',{status:response.status,contentType:type,url:response.url});
+   throw Error('Analysis service unavailable. Please try again.');
+ }
+ const report=await response.json();if(id!==request||key!==signature())return;
+ content.replaceChildren();if(!response.ok){
+   console.error('[Cortexa AI] Analysis API error',{status:response.status,code:report?.error?.code||'UNKNOWN'});
+   throw Error('Analysis service unavailable. Please try again.');
+ }
  if(report.symbol!==markets[selected].symbol||report.frame!==frame||!Array.isArray(report.sections))throw Error('Analysis context did not match this chart.');
  note.textContent='CONNECTED SERVICE · '+new Date(report.generatedAt).toLocaleTimeString();
  for(const item of report.sections){const card=section(item.id.toUpperCase(),item.title,item.summary,item.reasoning);for(const ref of item.levelRefs||[]){const value=report.levels?.[ref];if(Number.isFinite(value))card.append(e('small','ai-caveat',ref+': '+display(value)));}for(const eventId of item.eventRefs||[]){const event=report.calendar?.events?.find(event=>event.id===eventId);if(event){const when=Number.isFinite(event.ts)?new Date(event.ts*1000).toLocaleString(undefined,{timeZone:'UTC'})+' UTC':'Time unavailable';card.append(e('small','ai-caveat',[event.title,when,event.currency,event.actual?'Actual: '+event.actual:'Result not available'].filter(Boolean).join(' · ')));}}}
