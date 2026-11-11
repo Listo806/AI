@@ -7,6 +7,7 @@ files['/chart-studies.js']=['chart-studies.js','text/javascript'];
 files['/market-tools.js']=['market-tools.js','text/javascript'];
 files['/market-tools.css']=['market-tools.css','text/css'];
 files['/chart-zoom.css']=['chart-zoom.css','text/css'];
+files['/chart-zoom.js']=['chart-zoom.js','text/javascript'];
 files['/ai-panel.js']=['ai-panel.js','text/javascript'];
 files['/ai-panel.css']=['ai-panel.css','text/css'];
 files['/calendar.js']=['calendar.js','text/javascript'];
@@ -34,7 +35,6 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if(url.pathname==='/api/engine')return engineResponse(request,env);
-    if(url.pathname==='/api/evidence')return verifiedEvidenceResponse(request,env);
     if(url.pathname==='/api/analysis')return analysisResponse(request,{...env,...usageGateBindings(env.AI_USAGE_GATE)});
     if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
     if (url.pathname === '/api/calendar') return calendarResponse(request);
