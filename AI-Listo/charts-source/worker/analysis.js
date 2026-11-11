@@ -55,7 +55,21 @@ async function analysisResponse(request,env={}){
  const origin=request.headers.get('origin');const target=new URL(request.url);if(origin!==target.origin)return analysisFailure(403,'ORIGIN_DENIED','Cross-origin analysis requests are not allowed.');
  if(!request.headers.get('content-type')?.startsWith('application/json'))return analysisFailure(415,'JSON_REQUIRED','Send JSON.');
  let text='';let bytes=0;try{const reader=request.body?.getReader();if(!reader)return analysisFailure(400,'EMPTY_BODY','Missing analysis snapshot.');const decoder=new TextDecoder();while(true){const {done,value}=await reader.read();if(done)break;bytes+=value.byteLength;if(bytes>180000){await reader.cancel();return analysisFailure(413,'TOO_LARGE','The analysis snapshot is too large.');}text+=decoder.decode(value,{stream:true});}text+=decoder.decode();}catch{return analysisFailure(400,'INVALID_BODY','Could not read analysis snapshot.');}if(bytes>180000)return analysisFailure(413,'TOO_LARGE','The analysis snapshot is too large.');
- let snapshot;try{snapshot=validateSnapshot(JSON.parse(text));}catch{return analysisFailure(400,'INVALID_SNAPSHOT','The chart context is invalid or outdated. Refresh analysis.');}
+ let snapshot;try{snapshot=validateSnapshot(JSON.parse(text));}catch(error){
+  // Report only a fixed validation category; never echo submitted prices or identifiers.
+  const categories={
+    'Invalid market context':'MARKET_CONTEXT',
+    'Invalid request identifier':'REQUEST_ID',
+    'Expired snapshot':'SNAPSHOT_EXPIRED',
+    'Invalid candle history':'CANDLE_HISTORY',
+    'Invalid candle':'CANDLE_VALUES',
+    'Invalid indicators':'INDICATOR_LIST',
+    'Invalid indicator':'INDICATOR_VALUES',
+    'No completed candles':'NO_CLOSED_CANDLES'
+  };
+  const reason=categories[error?.message]||'MALFORMED_JSON';
+  return analysisFailure(400,'INVALID_SNAPSHOT','The chart context is invalid or outdated. Refresh analysis. ('+reason+')');
+ }
  if(!env.CORTEXA_AI_GATEWAY_URL||!env.CORTEXA_AI_GATEWAY_TOKEN)return analysisFailure(503,'AI_NOT_CONNECTED','Your developer has not connected the Cortexa AI service yet.');
  let url;try{url=new URL(env.CORTEXA_AI_GATEWAY_URL);if(url.protocol!=='https:')throw Error();}catch{return analysisFailure(503,'AI_CONFIG','AI service configuration is invalid.');}
  // Public deployment MUST supply a shared limiter; per-isolate memory alone is insufficient.

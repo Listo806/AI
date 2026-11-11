@@ -51,7 +51,7 @@ function computeEngine(){
  const data=bars(),market=markets[selected].symbol;
  const frames=Object.fromEntries(['1min','5min','15min','30min','1h','4h'].map(tf=>[tf,cache.get(market+'|'+tf)?.bars||[]]));
  const context=JSON.stringify([market,frame,EngineSettings.inputs]);
- const sig=JSON.stringify([market,frame,data.length,data.at(-1)?.time,data.at(-1)?.close,EngineSettings.inputs,...Object.entries(frames).map(([tf,b])=>[tf,b.length,b.at(-1)?.time,b.at(-1)?.close])]);
+ const sig=JSON.stringify([market,frame,data.length,data.at(-1)?.time,data.at(-2)?.time,data.at(-2)?.close,Math.floor(Date.now()/15000),EngineSettings.inputs,...Object.entries(frames).map(([tf,b])=>[tf,b.length,b.at(-1)?.time,b.at(-2)?.time,b.at(-2)?.close])]);
  if(engineKey===sig&&engineResult)return engineResult;
  if(enginePending!==sig){
    engineAbort?.abort();clearTimeout(engineTimer);enginePending=sig;
