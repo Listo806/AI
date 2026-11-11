@@ -6,6 +6,7 @@ files['/market-catalog.js']=['market-catalog.js','text/javascript'];
 files['/chart-studies.js']=['chart-studies.js','text/javascript'];
 files['/market-tools.js']=['market-tools.js','text/javascript'];
 files['/market-tools.css']=['market-tools.css','text/css'];
+files['/chart-zoom.css']=['chart-zoom.css','text/css'];
 files['/ai-panel.js']=['ai-panel.js','text/javascript'];
 files['/ai-panel.css']=['ai-panel.css','text/css'];
 files['/calendar.js']=['calendar.js','text/javascript'];
