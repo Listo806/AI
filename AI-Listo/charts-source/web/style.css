@@ -176,3 +176,9 @@ article{position:relative}#chartHeaderToggle{position:absolute;right:10px;top:2p
 #chartIndicatorControls .actions{flex-wrap:nowrap;flex-shrink:0;white-space:nowrap}
 #chartIndicatorControls .actions{gap:3px}
 #chartIndicatorControls .actions button{padding-left:6px;padding-right:6px}
+
+/* 2026-11-11: precise MTF offset and single pane separators. */
+.canvas-wrap > .chart-mtf-panel{top:4px}
+.chart-shell > .rsi-header{border-top:1px solid #303844}
+.chart-shell > .extra-pane-controls{border-top:1px solid #303844}
+.chart-shell > .extra-pane-controls + .extra-pane{border-top:0}

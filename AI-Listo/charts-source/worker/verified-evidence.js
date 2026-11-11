@@ -51,5 +51,22 @@ async function verifiedChartEvidence(snapshot){
  const configuredBB=typeof Indicators!=='undefined'?Indicators.bollingerAdvanced(barValues,settings.bb.length,settings.bb.mult,settings.bb.ma,settings.bb.source):{middle:[]};
  const rsiInput=barValues.map(b=>settings.rsi.source==='hl2'?(b.high+b.low)/2:settings.rsi.source==='hlc3'?(b.high+b.low+b.close)/3:settings.rsi.source==='ohlc4'?(b.open+b.high+b.low+b.close)/4:b[settings.rsi.source]);
  const indicators=[{name:'TRAMA',value:number(configuredTrama.at(-1))},{name:'RSI',value:rsi(rsiInput,settings.rsi.length)},{name:'SMA',value:sma(closes,20)},{name:'Moving Average',value:sma(closes,20)},{name:'EMA',value:ema(closes,20)},{name:'VWAP AA',value:number(configuredVwap.middle.at(-1))},{name:'Bollinger basis',value:number(configuredBB.middle.at(-1))},{name:'Volume',value:closed.at(-1).volume},{name:'MACD',value:macd(closes)},{name:'ATR',value:atr(closed)},{name:'Stochastic',value:stochastic(closed)},{name:'Donchian Channels',value:number((Math.max(...donchian.map(b=>b.high))+Math.min(...donchian.map(b=>b.low)))/2)}];
- return {candles,levels:{recentHigh:Math.max(...recent.map(b=>b.high)),recentLow:Math.min(...recent.map(b=>b.low))},indicators,mtf,provenance:'server_fetched_biquote_closed_candles',marketData:{provider:data.provider,fetchedAt:data.fetchedAt,volumeType:data.volumeType,barCount:closed.length},warnings:['Server-calculated indicator settings are validated. Alternate-timeframe Bollinger Bands are not yet supported.','Heisenberg readings are computed server-side with default settings; public chart still contains the engine and requires migration before production approval.']};
+ return {candles,levels:{recentHigh:Math.max(...recent.map(b=>b.high)),recentLow:Math.min(...recent.map(b=>b.low))},indicators,mtf,provenance:'server_fetched_biquote_closed_candles',marketData:{provider:data.provider,fetchedAt:data.fetchedAt,volumeType:data.volumeType,barCount:closed.length},warnings:['Server-calculated indicator settings are validated. Alternate-timeframe Bollinger Bands are not yet supported.','Heisenberg readings are calculated server-side using the validated chart engine settings; unavailable timeframes are not inferred.']};
+}
+
+// Internal-only evidence endpoint: Netlify authenticates the CRM session first.
+async function verifiedEvidenceResponse(request,env){
+ const secret=env.CHARTS_TRUSTED_PROXY_SECRET;
+ if(typeof secret!=='string'||secret.length<32||request.headers.get('x-cortexa-proxy-secret')!==secret)return Response.json({error:{code:'TRUSTED_PROXY_REQUIRED'}},{status:401});
+ if(request.method!=='POST')return Response.json({error:{code:'METHOD_NOT_ALLOWED'}},{status:405});
+ let raw;
+ try{const body=await request.text();if(body.length>180000)throw Error('Size');raw=JSON.parse(body);}
+ catch{return Response.json({error:{code:'INVALID_SNAPSHOT'}},{status:400});}
+ let snapshot;
+ try{snapshot=validateSnapshot(raw);}catch{return Response.json({error:{code:'INVALID_SNAPSHOT'}},{status:400});}
+ try{
+  const evidence=await verifiedChartEvidence(snapshot);
+  const calendar=await analysisCalendarEvidence(new Request('https://charts.internal/api/calendar'),snapshot);
+  return Response.json({evidence,calendar},{headers:{'cache-control':'no-store'}});
+ }catch{return Response.json({error:{code:'MARKET_EVIDENCE_UNAVAILABLE'}},{status:503});}
 }

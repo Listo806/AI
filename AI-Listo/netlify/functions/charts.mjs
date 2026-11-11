@@ -102,6 +102,21 @@ export default async function charts(request) {
     const buffer = await request.arrayBuffer();
     if (buffer.byteLength > 180000) return reply('Request too large', 413);
     try {
+      // Build evidence server-side from BiQuote; ignore any browser-supplied evidence.
+      const evidenceResponse = await worker.fetch(new Request(new URL('/api/evidence', target.origin), {
+        method: 'POST', headers: {
+          'content-type': 'application/json',
+          'x-cortexa-proxy-secret': workerEnv.CHARTS_TRUSTED_PROXY_SECRET,
+        }, body: buffer,
+      }), workerEnv, {});
+      if (!evidenceResponse.ok) {
+        return Response.json({error:{code:'MARKET_EVIDENCE_UNAVAILABLE',message:'Verified market data is temporarily unavailable.'}},
+          {status:503,headers:PRIVATE_HEADERS});
+      }
+      const verified = await evidenceResponse.json();
+      const original = JSON.parse(new TextDecoder().decode(buffer));
+      // Browser cannot inject trusted fields: this object is constructed exclusively here.
+      const payload = JSON.stringify({ ...original, trustedEvidence: verified.evidence, trustedCalendar: verified.calendar });
       const upstream = await fetch('https://backend.cortexaaicrm.com/api/charts/analysis/internal', {
         method: 'POST', redirect: 'error', signal: AbortSignal.timeout(29000),
         headers: {
@@ -109,7 +124,7 @@ export default async function charts(request) {
           'x-cortexa-proxy-secret': workerEnv.CHARTS_TRUSTED_PROXY_SECRET,
           'x-cortexa-authenticated-user': identity,
         },
-        body: buffer,
+        body: payload,
       });
       const data = await upstream.text();
       if (data.length > 60000) return reply('Analysis response too large', 502);
