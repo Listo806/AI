@@ -93,7 +93,7 @@ function renderRows(){
    function group(name){if(groups.has(name))return groups.get(name);const details=el('details','indicator-category'),summary=el('summary','',name);details.open=Boolean(search)||categoryOpen.get((lower?'lower:':'price:')+name)!==false;details.ontoggle=()=>{if(!search)categoryOpen.set((lower?'lower:':'price:')+name,details.open);};details.append(summary);groups.set(name,details);list.append(details);return details;}
    function addRow(name,key,cat,handler){const row=el('button','indicator-add-row',name);row.setAttribute('aria-label','Add '+name+(lower?' to lower panel':' to price chart'));row.append(el('span','indicator-destination',lower?'Lower':'Price'));row.onclick=handler;group(cat).append(row);return row;}
    if(lower){
-    const smoothGroup=group('SMOOTHING'),select=el('select','smoothing-target');select.setAttribute('aria-label','Moving Average target panel');const targets=[['rsi','RSI panel'],...[...extras].filter(([k])=>isLower(k)&&k!=='volume').map(([k,e])=>[k,e.name+' panel'])];if(!targets.some(([k])=>k===smoothingTarget))smoothingTarget='rsi';for(const [value,name]of targets){const option=el('option','',name);option.value=value;select.append(option);}select.value=smoothingTarget;select.onchange=()=>{smoothingTarget=select.value;};smoothGroup.append(select);
+    const smoothGroup=group('SMOOTHING'),select=el('select','smoothing-target');select.setAttribute('aria-label','Moving Average target panel');const targets=[['rsi','RSI panel'],...[...extras].filter(([k])=>isLower(k)&&k!=='volume'&&k!=='atr').map(([k,e])=>[k,e.name+' panel'])];if(!targets.some(([k])=>k===smoothingTarget))smoothingTarget='rsi';for(const [value,name]of targets){const option=el('option','',name);option.value=value;select.append(option);}select.value=smoothingTarget;select.onchange=()=>{smoothingTarget=select.value;};smoothGroup.append(select);
     if(matching('Moving Average smoothing')){const row=el('button','indicator-add-row','Moving Average');row.setAttribute('aria-label','Add Moving Average to selected lower panel');row.onclick=()=>{if(smoothingTarget==='rsi'){for(const id of ['rsiOn','maOn']){$(id).closest('.indicator-box').classList.remove('picker-removed');$(id).checked=true;}ensureLower();}else{const target=extras.get(smoothingTarget);target.smoothing={period:9,method:'SMA',color:'#ed6375',show:true};target.show=true;target.collapsed=false;syncExtraPane(target);}saveWorkspace();draw();renderRows();};smoothGroup.append(row);}
    }
    for(const [name,id,detail]of originals){const check=$(id),box=check.closest('.indicator-box'),label=displayName(name,id);if(id==='maOn'||lowerOriginal(id)!==lower||!matching(label+' '+detail))continue;const addedRow=addRow(label,id,lower?'Oscillators':id==='bbOn'?'Trend':'Cortexa',()=>{const apply=()=>{box.classList.remove('picker-removed');check.checked=true;if(lower)ensureLower();saveWorkspace();draw();renderRows();};if(lower)apply();else atLimit(apply);});if(!box.classList.contains('picker-removed')){addedRow.disabled=true;addedRow.querySelector('.indicator-destination').textContent='Added';}}
@@ -118,9 +118,9 @@ function bindLowerPane(extra){
 function syncExtraPane(extra){if(!extra.pane)return;extra.pane.hidden=extra.collapsed||!extra.show;extra.collapseButton.textContent=extra.collapsed?'▸':'▾';extra.collapseButton.setAttribute('aria-expanded',String(!extra.collapsed));extra.collapseButton.setAttribute('aria-label',(extra.collapsed?'Show ':'Hide ')+extra.name+' pane');}
 function addExtra(key,saved=null){
  const def=extraDefs.find(d=>d[0]===key);const extra={key,name:def[1],period:def[3],color:def[4],width:2,show:true,options:ChartStudies.options(key,saved?.options)};extra.collapsed=saved?.collapsed===true;if(saved?.smoothing){const sm=saved.smoothing;extra.smoothing={period:Number.isInteger(sm.period)&&sm.period>=2&&sm.period<=200?sm.period:9,method:['SMA','EMA','RMA','WMA'].includes(sm.method)?sm.method:'SMA',color:/^#[0-9a-f]{6}$/i.test(sm.color)?sm.color:'#ed6375',show:sm.show!==false};}if(saved){if(Number.isInteger(saved.period)&&saved.period>=2&&saved.period<=200)extra.period=saved.period;if(/^#[0-9a-f]{6}$/i.test(saved.color))extra.color=saved.color;if([1,2,3,4].includes(saved.width))extra.width=saved.width;extra.show=saved.show!==false;}extras.set(key,extra);
- const box=el('div','indicator-box extra-indicator'),toggle=el('button','extra-toggle',extra.name),swatch=el('i');swatch.style.background=extra.color;toggle.prepend(swatch);const gear=el('button','aa-settings','⚙');gear.setAttribute('aria-label',extra.name+' settings');gear.onclick=()=>settings(extra);const remove=el('button','extra-remove','×');remove.title='Remove '+extra.name;remove.setAttribute('aria-label','Remove '+extra.name);remove.onclick=()=>removeExtra(key);toggle.onclick=()=>{extra.show=!extra.show;box.style.opacity=extra.show?1:.5;saveWorkspace();draw();};box.append(toggle,gear);const lower=isLower(key);if(lower){const paneControls=el('div','extra-pane-controls'),collapse=el('button','lower-pane-toggle');collapse.type='button';extra.collapseButton=collapse;collapse.onclick=()=>{extra.collapsed=!extra.collapsed;syncExtraPane(extra);saveWorkspace();draw();};paneControls.append(collapse,box);document.querySelector('.chart-shell').append(paneControls);extra.controls=paneControls;}else document.querySelector('#chartIndicatorList').append(box);extra.box=box;box.style.opacity=extra.show?1:.5;
- if(isLower(key)){extra.pane=el('canvas','extra-pane');extra.pane.setAttribute('aria-label',extra.name+' chart');document.querySelector('.chart-shell').append(extra.pane);bindLowerPane(extra);syncExtraPane(extra);}
- if(!saved)saveWorkspace();draw();if(key==='pivots')ensurePivotHistory();
+ const box=el('div','indicator-box extra-indicator'),toggle=el('button','extra-toggle',extra.name),swatch=el('i');swatch.style.background=extra.color;toggle.prepend(swatch);const gear=el('button','aa-settings','⚙');gear.setAttribute('aria-label',extra.name+' settings');gear.onclick=()=>settings(extra);const remove=el('button','extra-remove','×');remove.title='Remove '+extra.name;remove.setAttribute('aria-label','Remove '+extra.name);remove.onclick=()=>removeExtra(key);toggle.onclick=()=>{extra.show=!extra.show;box.style.opacity=extra.show?1:.5;saveWorkspace();draw();};box.append(toggle,gear);const lower=isLower(key);if(key==='atr'){document.querySelector('.rsi-header').append(box);box.classList.add('atr-in-rsi');}else if(lower){const paneControls=el('div','extra-pane-controls'),collapse=el('button','lower-pane-toggle');collapse.type='button';extra.collapseButton=collapse;collapse.onclick=()=>{extra.collapsed=!extra.collapsed;syncExtraPane(extra);saveWorkspace();draw();};paneControls.append(collapse,box);document.querySelector('.chart-shell').append(paneControls);extra.controls=paneControls;}else if(key!=='atr')document.querySelector('#chartIndicatorList').append(box);extra.box=box;box.style.opacity=extra.show?1:.5;
+ if(isLower(key)&&key!=='atr'){extra.pane=el('canvas','extra-pane');extra.pane.setAttribute('aria-label',extra.name+' chart');document.querySelector('.chart-shell').append(extra.pane);bindLowerPane(extra);syncExtraPane(extra);}
+ if(key==='atr'){const shell=document.querySelector('.chart-shell');if(shell?.classList.contains('osc-pane-collapsed'))document.querySelector('#oscPaneToggle')?.click();}if(!saved)saveWorkspace();draw();if(key==='pivots')ensurePivotHistory();
 }
 const dialog=el('dialog','preview-settings');document.body.append(dialog);
 function settings(extra){
@@ -141,8 +141,46 @@ async function ensurePivotHistory(){const symbol=markets[selected].symbol;if(piv
 
 const originalDraw=draw;
 draw=function(){originalDraw();drawExtras();};
+// ATR shares the RSI canvas, but its values are mapped to a separate ATR-only scale.
+// The oscillator 0–100 scale and the existing RSI/MA settings remain unchanged.
+function drawAtrInRsi(data){
+ const atr=extras.get('atr');if(!atr||!atr.show||!data.length)return;
+ const canvas=$('rsiChart');if(!canvas||canvas.hidden||document.querySelector('.chart-shell')?.classList.contains('osc-pane-collapsed'))return;
+ const tr=data.map((b,i)=>Math.max(b.high-b.low,i?Math.abs(b.high-data[i-1].close):0,i?Math.abs(b.low-data[i-1].close):0));
+ const values=Indicators.movingAverage(tr,atr.period,'RMA');
+ const view=typeof oscView!=='undefined'?oscView:{count,offset};
+ const firstFloat=data.length-view.count-view.offset,first=Math.max(0,Math.floor(firstFloat)),last=Math.min(data.length,Math.ceil(firstFloat+view.count));
+ const valid=values.slice(first,last).filter(Number.isFinite);if(!valid.length)return;
+ const chart=canvasContext(canvas),c=chart.ctx,plotHeight=Math.max(1,chart.height-43),plotWidth=chart.width-79;
+ const minimum=Math.min(...valid),maximum=Math.max(...valid),padding=Math.max((maximum-minimum)*.08,Math.abs(maximum)*.015,1e-9);
+ const lo=Math.max(0,minimum-padding),hi=maximum+padding,span=Math.max(hi-lo,1e-9);
+ const x=i=>15+(i-firstFloat+.5)*plotWidth/view.count,y=v=>15+(hi-v)/span*plotHeight;
+ c.save();c.beginPath();c.rect(15,15,plotWidth,plotHeight);c.clip();c.strokeStyle=atr.color;c.lineWidth=atr.width;c.beginPath();let active=false;
+ for(let i=first;i<last;i++){const v=values[i];if(!Number.isFinite(v)){active=false;continue;}if(active)c.lineTo(x(i),y(v));else c.moveTo(x(i),y(v));active=true;}c.stroke();c.restore();
+ // ATR has its own numeric scale; the RSI 0–100 labels remain unchanged.
+ // Draw ATR extrema in a compact right-side track, and place the latest value
+ // at its actual ATR y-coordinate instead of the RSI scale.
+ const fmt=v=>Number(v).toFixed(v>=10?2:v>=1?3:5);
+ const axisX=chart.width-63;
+ const axisYTop=17,axisYBottom=15+plotHeight;
+ c.save();
+ c.font='9px system-ui';c.textAlign='right';c.textBaseline='middle';
+ c.fillStyle=atr.color;
+ c.fillText('ATR',chart.width-7,8);
+ c.globalAlpha=.78;
+ c.fillText(fmt(hi),chart.width-7,axisYTop);
+ c.fillText(fmt(lo),chart.width-7,axisYBottom);
+ c.globalAlpha=1;
+ const latest=valid.at(-1),latestY=Math.max(axisYTop+10,Math.min(axisYBottom-10,y(latest)));
+ c.fillStyle='#101820';c.strokeStyle=atr.color;c.lineWidth=1;
+ const label=fmt(latest),labelWidth=Math.min(62,c.measureText(label).width+7);
+ c.fillRect(chart.width-labelWidth-3,latestY-7,labelWidth+1,14);
+ c.strokeRect(chart.width-labelWidth-3,latestY-7,labelWidth+1,14);
+ c.fillStyle=atr.color;c.fillText(label,chart.width-6,latestY);
+ c.restore();
+}
 function drawExtras(){
- const data=bars();if(!data.length)return;const startFloat=data.length-count-offset,start=Math.max(0,Math.floor(startFloat)),end=Math.min(data.length,Math.ceil(startFloat+count)),canvas=$('priceChart'),rect=canvas.getBoundingClientRect(),ctx=canvas.getContext('2d'),w=rect.width,h=rect.height,step=(w-93)/count,x=i=>15+(i-startFloat+.5)*step;const low=currentPriceBounds.center-currentPriceBounds.span/2,high=low+currentPriceBounds.span,y=v=>15+(high-v)/(high-low)*(h-43),close=data.map(b=>b.close);
+ const data=bars();if(!data.length)return;drawAtrInRsi(data);const startFloat=data.length-count-offset,start=Math.max(0,Math.floor(startFloat)),end=Math.min(data.length,Math.ceil(startFloat+count)),canvas=$('priceChart'),rect=canvas.getBoundingClientRect(),ctx=canvas.getContext('2d'),w=rect.width,h=rect.height,step=(w-93)/count,x=i=>15+(i-startFloat+.5)*step;const low=currentPriceBounds.center-currentPriceBounds.span/2,high=low+currentPriceBounds.span,y=v=>15+(high-v)/(high-low)*(h-43),close=data.map(b=>b.close);
  const plot=(c,values,mapY,color,width=2,xx=x,from=start,to=end)=>{c.strokeStyle=color;c.lineWidth=width;c.beginPath();let active=false;for(let i=from;i<to;i++){if(!Number.isFinite(values[i])){active=false;continue;}if(active)c.lineTo(xx(i),mapY(values[i]));else c.moveTo(xx(i),mapY(values[i]));active=true;}c.stroke();};
  for(const e of extras.values()){
   if(e.pane)e.pane.hidden=!e.show||e.collapsed;if(!e.show)continue;

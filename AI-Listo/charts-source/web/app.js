@@ -213,6 +213,37 @@ if($('engineOn').checked&&!entry()?.reference){
  const status=[style.inputs?Object.entries(EngineSettings.inputs).map(([k,v])=>k+'='+v).join(', '):'',style.values?plots.map((p,i)=>['Snake Upper','Snake Lower','Snake Center','VWAP Upper','VWAP Lower','BB Upper','BB Lower'][i]+': '+(Number.isFinite(p.values.at(-1))?p.values.at(-1).toFixed(style.precision==='default'?3:Number(style.precision)):'—')).join(' · '):''].filter(Boolean).join(' | ');$('engineOn').closest('label').title=status;
 }
 // Price tracking uses the most recent live tick, never the historical window's last close.
+// UTC session extremes use the full available session, not the panned viewport.
+// Mark incomplete sessions explicitly: do not claim a full-day high/low without coverage.
+const quoteForSession=liveQuotes.get(markets[selected].symbol);
+const sessionClock=Number.isFinite(quoteForSession?.timestamp)?quoteForSession.timestamp:Date.now();
+const utcStart=Math.floor(sessionClock/86400000)*86400000;
+const utcEnd=utcStart+86400000;
+const sessionBars=data.filter(bar=>Number.isFinite(bar.time)&&bar.time>=utcStart&&bar.time<utcEnd&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
+if(sessionBars.length){
+ const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),Number.isFinite(quoteForSession?.price)?quoteForSession.price:-Infinity);
+ const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),Number.isFinite(quoteForSession?.price)?quoteForSession.price:Infinity);
+ const firstTime=Math.min(...sessionBars.map(bar=>bar.time));
+ const tfDuration=chartDurations[frame]||60000;
+ const completeStart=firstTime<=utcStart+Math.max(tfDuration,60000);
+ const digits=markets[selected].category==='FOREIGN EXCHANGE'&&!markets[selected].symbol.endsWith('JPY')?5:3;
+ for(const [value,highSide] of [[sessionHigh,true],[sessionLow,false]]){
+  const py=y(value);
+  if(!Number.isFinite(py)||py<15||py>top.height-28)continue;
+  const c=top.ctx;c.save();c.strokeStyle='rgba(186,199,214,0.65)';c.lineWidth=1;c.setLineDash([7,5]);
+  c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(top.width-right,Math.round(py)+.5);c.stroke();c.setLineDash([]);
+  c.fillStyle='#182431';c.fillRect(top.width-right+1,py-9,right-2,18);
+  c.fillStyle='#d5e2ed';c.font='bold 10px system-ui';c.textAlign='right';
+  c.fillText(value.toFixed(digits),top.width-7,py+3);
+  c.restore();
+ }
+ // A clear source/coverage note, never an invented official session extreme.
+ const note=document.getElementById('chartDayLevelsStatus');
+ if(note)note.textContent=completeStart?'UTC session high/low from available feed':'UTC high/low · partial session history';
+}else{
+ const note=document.getElementById('chartDayLevelsStatus');
+ if(note)note.textContent='UTC day high/low unavailable · no session candles';
+}
 // Keep it independent of the enabled indicator plots and of day-high/day-low levels.
 const latestLiveQuote=liveQuotes.get(markets[selected].symbol);
 const liveValue=Number(latestLiveQuote?.price);
@@ -302,9 +333,20 @@ $('zoomIn').onclick=()=>window.ChartZoom.change('in');$('zoomOut').onclick=()=>w
 for(const canvas of [$('priceChart'),$('rsiChart')]){
  const pane=canvas.id==='priceChart'?'price':'rsi';
  const inAxis=event=>event.clientX-canvas.getBoundingClientRect().left>=canvas.getBoundingClientRect().width-64;
- canvas.onwheel=event=>{event.preventDefault();if(inAxis(event)){const scale=verticalScales[pane];scale.factor=Math.max(.2,Math.min(12,scale.factor*Math.exp(-event.deltaY*.002)));draw();}else zoom(event.deltaY>0?1.12:.88,pane,event.deltaY>0?1/1.035:1.035);};
+ canvas.onwheel=event=>{event.preventDefault();
+  if(inAxis(event)){const scale=verticalScales[pane];scale.factor=Math.max(.2,Math.min(12,scale.factor*Math.exp(-event.deltaY*.002)));draw();return;}
+  // Wheel navigates time; +/- toolbar alone changes candle width.
+  const view=paneView(pane),maxOffset=Math.max(0,bars().length-20),minOffset=-view.count+20;
+  const step=Math.max(1,Math.round(view.count*.08));
+  const next=Math.max(minOffset,Math.min(maxOffset,view.offset+(event.deltaY>0?step:-step)));
+  if(next===view.offset)return;
+  view.offset=next;setPaneView(pane,view);
+  zoomPriceOverride=null;hover=-1;crosshair=null;
+  // In auto mode draw() recomputes price bounds from the newly visible candles.
+  draw();
+ };
  canvas.ondblclick=event=>{verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=170;setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
- canvas.onpointerdown=event=>{if(event.button!==0)return;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
+ canvas.onpointerdown=event=>{if(event.button!==0)return;event.preventDefault();zoomPriceOverride=null;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
  const releaseDrag=event=>{if(!dragging||dragging.pointerId!==event.pointerId)return;dragging=null;if(canvas.hasPointerCapture?.(event.pointerId))canvas.releasePointerCapture(event.pointerId);schedulePointerDraw();};
  canvas.onpointerup=releaseDrag;canvas.onpointercancel=releaseDrag;canvas.onlostpointercapture=event=>{if(dragging?.pointerId===event.pointerId){dragging=null;schedulePointerDraw();}};
  canvas.onpointermove=event=>{if(dragging&&dragging.pointerId!==event.pointerId)return;const rect=canvas.getBoundingClientRect(),view=paneView(pane),viewStart=bars().length-view.count-view.offset,first=Math.max(0,Math.floor(viewStart)),last=Math.min(bars().length,Math.ceil(viewStart+view.count));hoverPane=pane;canvas.style.cursor=inAxis(event)?'ns-resize':dragging?'grabbing':'crosshair';if(dragging?.pane===pane){if(dragging.kind==='scale')verticalScales[pane].factor=Math.max(.2,Math.min(12,dragging.factor*Math.exp((dragging.y-event.clientY)/160)));else{view.offset=Math.max(-view.count+20,Math.min(Math.max(0,bars().length-20),dragging.offset+Math.round((event.clientX-dragging.x)/Math.max(1,rect.width-79)*dragging.count)));setPaneView(pane,view);if(pane==='price' && dragging.manualAtStart)verticalScales.price.center=dragging.center+(event.clientY-dragging.y)/Math.max(1,rect.height-43)*dragging.span;}hover=-1;crosshair=null;}else{hover=inAxis(event)?-1:Math.floor(viewStart+(event.clientX-rect.left-15)/Math.max(1,rect.width-79)*view.count)-first;if(hover<0||hover>=last-first)hover=-1;crosshair=null;const px=event.clientX-rect.left,py=event.clientY-rect.top;if(px>=15&&px<=rect.width-64&&py>=15&&py<=rect.height-28)crosshair={pane,x:px,y:py};}schedulePointerDraw();};

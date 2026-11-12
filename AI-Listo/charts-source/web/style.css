@@ -247,16 +247,5 @@ html:not(.chart-embedded):not(.multi-chart-mode) article .canvas-wrap > .legend 
 }
 .canvas-wrap > .legend .chart-indicator-list { pointer-events: auto; }
 
-/* Keep the legend toggle above the drawing surface in both expanded and collapsed states. */
-.canvas-wrap > .legend{z-index:60!important;pointer-events:auto!important;overflow:visible!important}
-.canvas-wrap > .legend #chartLegendToggle{z-index:61!important;display:flex!important;visibility:visible!important;pointer-events:auto!important}
-.canvas-wrap > .legend .chart-indicator-list[hidden]{display:none!important}
-
-/* 2026-11-12: lift the complete timeframe/history/action toolbar by 6px.
-   Adjust only the vertical flow; leave control geometry and horizontal layout intact.
-   The existing chart overlay measures the resulting header position on resize. */
-@media (min-width: 761px) {
-  html:not(.chart-embedded):not(.multi-chart-mode) article #chartIndicatorControls {
-    margin-top: -20px !important;
-  }
-}
+/* ATR belongs to the shared oscillator pane; no separate ATR header/canvas. */
+.rsi-header .atr-in-rsi{display:inline-flex;align-items:center;gap:3px;min-width:0;margin-left:5px}.rsi-header .atr-in-rsi .extra-toggle{font-size:10px;padding:2px 4px;white-space:nowrap}.rsi-header .atr-in-rsi .aa-settings,.rsi-header .atr-in-rsi .extra-remove{font-size:11px;padding:2px 3px;min-width:16px}.rsi-header .atr-in-rsi i{display:inline-block;width:7px;height:7px;margin-right:4px}

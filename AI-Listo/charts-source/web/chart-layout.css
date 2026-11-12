@@ -37,3 +37,7 @@ html.chart-embedded,html.chart-embedded body{width:100%;height:100%;overflow:hid
 
 /* Compact embedded MTF, keeping the existing anchor and row heights. */
 .chart-embedded .chart-mtf-panel{width:55px!important;right:64px!important}.chart-embedded .chart-mtf-panel th:first-child{width:18px}.chart-embedded .chart-mtf-panel th,.chart-embedded .chart-mtf-panel td{font-size:7px!important}
+
+/* ATR is an overlay on the RSI oscillator canvas, not a standalone lower pane. */
+.chart-embedded .chart-shell:has(.atr-in-rsi:not([hidden])) .rsi-header,.chart-embedded .chart-shell:has(.atr-in-rsi:not([hidden])) #rsiChart{display:flex}
+.chart-embedded .chart-shell:has(.atr-in-rsi:not([hidden])) #rsiChart{display:block}

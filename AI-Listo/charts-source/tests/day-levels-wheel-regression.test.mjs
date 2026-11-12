@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const code=readFileSync(new URL('../web/app.js',import.meta.url),'utf8');
+assert.match(code,/canvas\.onwheel=event=>/);
+assert.match(code,/view\.offset\+\(event\.deltaY>0\?step:-step\)/);
+assert.match(code,/zoomPriceOverride=null;hover=-1;crosshair=null;/);
+assert.match(code,/utcStart=Math\.floor\(sessionClock\/86400000\)\*86400000/);
+assert.match(code,/sessionBars=data\.filter/);
+assert.match(code,/completeStart/);
+assert.match(code,/canvas\.onpointerdown=event=>/);
+assert.match(code,/canvas\.setPointerCapture\(event\.pointerId\)/);
+assert.match(code,/window\.ChartZoom=\{change/);
+console.log('Source invariants PASS: UTC levels, wheel pan, pointer drag, separate centered zoom');
