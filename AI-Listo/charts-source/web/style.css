@@ -251,3 +251,12 @@ html:not(.chart-embedded):not(.multi-chart-mode) article .canvas-wrap > .legend 
 .canvas-wrap > .legend{z-index:60!important;pointer-events:auto!important;overflow:visible!important}
 .canvas-wrap > .legend #chartLegendToggle{z-index:61!important;display:flex!important;visibility:visible!important;pointer-events:auto!important}
 .canvas-wrap > .legend .chart-indicator-list[hidden]{display:none!important}
+
+/* 2026-11-12: lift the complete timeframe/history/action toolbar by 6px.
+   Adjust only the vertical flow; leave control geometry and horizontal layout intact.
+   The existing chart overlay measures the resulting header position on resize. */
+@media (min-width: 761px) {
+  html:not(.chart-embedded):not(.multi-chart-mode) article #chartIndicatorControls {
+    margin-top: -6px !important;
+  }
+}
