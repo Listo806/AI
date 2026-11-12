@@ -257,6 +257,6 @@ html:not(.chart-embedded):not(.multi-chart-mode) article .canvas-wrap > .legend 
    The existing chart overlay measures the resulting header position on resize. */
 @media (min-width: 761px) {
   html:not(.chart-embedded):not(.multi-chart-mode) article #chartIndicatorControls {
-    margin-top: -6px !important;
+    margin-top: -25px !important;
   }
 }
