@@ -8,6 +8,7 @@ files['/market-tools.js']=['market-tools.js','text/javascript'];
 files['/market-tools.css']=['market-tools.css','text/css'];
 files['/chart-zoom.css']=['chart-zoom.css','text/css'];
 files['/chart-zoom.js']=['chart-zoom.js','text/javascript'];
+files['/chart-toolbar-overlay.js']=['chart-toolbar-overlay.js','text/javascript'];
 files['/ai-panel.js']=['ai-panel.js','text/javascript'];
 files['/ai-panel.css']=['ai-panel.css','text/css'];
 files['/calendar.js']=['calendar.js','text/javascript'];

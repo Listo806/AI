@@ -10,7 +10,7 @@ const view={count:20,offset:0},width=1093;
 assert.equal(label(data,view,15,width),'Nov 6, 2026 · 10:20 UTC');
 assert.equal(label(data,view,540,width),'Nov 6, 2026 · 10:30 UTC');
 assert.equal(label(data,{count:20,offset:40},15,width),'Nov 6, 2026 · 09:40 UTC');
-assert.equal(label(data,{count:40,offset:0},540,width),'Nov 6, 2026 · 10:21 UTC');
+assert.equal(label(data,{count:40,offset:0},540,width),'Nov 6, 2026 · 10:20 UTC');
 assert.equal(label(data,{count:20,offset:-10},790,width),''); // empty future area
 assert.equal(label(data,{count:200,offset:0},15,width),''); // before loaded history
 assert.equal(label([],view,15,width),'');

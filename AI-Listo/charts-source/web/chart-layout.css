@@ -34,3 +34,6 @@ html.chart-embedded,html.chart-embedded body{width:100%;height:100%;overflow:hid
 .chart-embedded #chartIndicatorList[hidden] {
   display: none;
 }
+
+/* Compact embedded MTF, keeping the existing anchor and row heights. */
+.chart-embedded .chart-mtf-panel{width:55px!important;right:64px!important}.chart-embedded .chart-mtf-panel th:first-child{width:18px}.chart-embedded .chart-mtf-panel th,.chart-embedded .chart-mtf-panel td{font-size:7px!important}
