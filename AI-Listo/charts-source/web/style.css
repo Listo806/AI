@@ -211,3 +211,26 @@ article{position:relative}#chartHeaderToggle{position:absolute;right:10px;top:2p
 .chart-embedded .chart-mtf-panel{width:55px!important}
 .chart-embedded .chart-mtf-panel th:first-child{width:17px!important}
 .chart-embedded .chart-mtf-panel th,.chart-embedded .chart-mtf-panel td{font-size:7px!important;padding-left:1px!important;padding-right:1px!important}
+/* Desktop header overlay: the plotting canvas is physically extended beneath the
+   transparent header; controls and cards remain clickable above it. */
+@media(min-width:761px){
+ html:not(.chart-embedded):not(.multi-chart-mode) article{isolation:isolate}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar,
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.market-heading{position:relative;z-index:5;background:transparent!important;border-bottom:0!important}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar{margin-bottom:4px!important;padding-bottom:0!important}
+ html:not(.chart-embedded):not(.multi-chart-mode) article .chart-shell{z-index:1;overflow:visible;background:transparent;border-top:0}
+ html:not(.chart-embedded):not(.multi-chart-mode) article .market-select{background-color:rgba(22,32,43,.78)}
+ html:not(.chart-embedded):not(.multi-chart-mode) article .market-price,
+ html:not(.chart-embedded):not(.multi-chart-mode) article .market-name{text-shadow:0 1px 3px #000b}
+ .canvas-wrap>.chart-mtf-panel{width:30px!important;right:68px!important;top:calc(var(--chart-toolbar-overlap,0px) + 4px)!important;padding:0!important}
+ .chart-mtf-panel .chart-mtf-heading{min-height:19px;padding:1px!important}
+ .chart-mtf-panel .mtf-title{font-size:9px!important;letter-spacing:0!important}
+ .chart-mtf-panel #chartMTFToggle{width:12px!important;min-width:12px!important;padding:0!important}
+ .chart-mtf-panel table{width:100%!important}
+ .chart-mtf-panel thead{display:none!important}
+ .chart-mtf-panel tbody tr{display:flex!important;flex-direction:column!important;height:25px!important;position:relative}
+ .chart-mtf-panel tbody th{width:100%!important;height:25px!important;font-size:9px!important;line-height:25px!important;padding:0!important;text-align:center!important;position:relative;z-index:2;background:transparent!important;border:0!important;color:#fff!important;text-shadow:0 1px 2px #000!important}
+ .chart-mtf-panel tbody td{position:absolute!important;inset:0!important;width:100%!important;height:25px!important;padding:0!important;border:1px solid #354252!important}
+ .chart-mtf-panel tbody td.bullish{background:#43a94d!important}
+ .chart-mtf-panel tbody td.bearish{background:#ef3b50!important}
+}

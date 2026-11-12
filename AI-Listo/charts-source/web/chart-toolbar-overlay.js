@@ -8,11 +8,11 @@
   const shell=article.querySelector('.chart-shell');
   const controls=article.querySelector('#chartIndicatorControls');
   if(!shell||!controls||excluded){article.style.removeProperty('--chart-toolbar-overlap');return;}
-  const top=controls.getBoundingClientRect().top;
+  const top=(article.querySelector('#markets')||article.querySelector('.toolbar')||controls).getBoundingClientRect().top;
   const bottom=shell.getBoundingClientRect().top;
   // Shell already has a negative margin; undo the previous overlap when measuring.
   const previous=parseFloat(article.style.getPropertyValue('--chart-toolbar-overlap'))||0;
-  const measured=Math.max(0,Math.min(160,Math.round(bottom+previous-top)));
+  const measured=Math.max(0,Math.min(240,Math.round(bottom+previous-top)));
   if(Math.abs(measured-previous)>1)article.style.setProperty('--chart-toolbar-overlap',measured+'px');
  }
  let pending=0;
