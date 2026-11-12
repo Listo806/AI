@@ -234,3 +234,20 @@ article{position:relative}#chartHeaderToggle{position:absolute;right:10px;top:2p
  .chart-mtf-panel tbody td.bullish{background:#43a94d!important}
  .chart-mtf-panel tbody td.bearish{background:#ef3b50!important}
 }
+
+/* Regression repair: keep indicator restore control above the canvas and below overlay toolbar. */
+html:not(.chart-embedded):not(.multi-chart-mode) article .canvas-wrap > .legend {
+  top: calc(var(--chart-toolbar-overlap, 0px) + 9px) !important;
+  z-index: 30 !important;
+  pointer-events: auto;
+}
+.canvas-wrap > .legend #chartLegendToggle {
+  display: flex !important; visibility: visible !important; opacity: 1 !important;
+  position: relative; z-index: 31; pointer-events: auto;
+}
+.canvas-wrap > .legend .chart-indicator-list { pointer-events: auto; }
+
+/* Keep the legend toggle above the drawing surface in both expanded and collapsed states. */
+.canvas-wrap > .legend{z-index:60!important;pointer-events:auto!important;overflow:visible!important}
+.canvas-wrap > .legend #chartLegendToggle{z-index:61!important;display:flex!important;visibility:visible!important;pointer-events:auto!important}
+.canvas-wrap > .legend .chart-indicator-list[hidden]{display:none!important}
