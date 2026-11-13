@@ -343,7 +343,15 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   if(next===view.offset)return;
   view.offset=next;setPaneView(pane,view);
   zoomPriceOverride=null;hover=-1;crosshair=null;
-  // In auto mode draw() recomputes price bounds from the newly visible candles.
+  // Wheel-only vertical bloom: history expands candles, returning contracts
+  // toward the normal auto-scaled height, never below it. The horizontal
+  // offset, pointer drag, axis controls, Reset and +/- zoom stay unchanged.
+  if(pane==='price' && Number.isFinite(event.deltaY) && event.deltaY!==0){
+   const scale=verticalScales.price;
+   const magnitude=Math.min(.075,Math.max(.012,Math.abs(event.deltaY)/120*.04));
+   const direction=event.deltaY>0?1:-1;
+   scale.factor=Math.max(1,Math.min(2.5,scale.factor*Math.exp(direction*magnitude)));
+  }
   draw();
  };
  canvas.ondblclick=event=>{verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=170;setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
