@@ -348,8 +348,8 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   const previousOffset=view.offset;
   view.offset=next;setPaneView(pane,view);
   zoomPriceOverride=null;hover=-1;crosshair=null;
-  // Port of the customer's working v112 preview. Our offset increases into
-  // history (the reference offset decreases), so progress uses the opposite sign.
+  // Vertical flower direction reversed per latest user test feedback.
+  // Keep the existing horizontal wheel movement unchanged.
   // Anchor the original center/span once, then use the distance from that
   // anchor; reversing the wheel returns EXACTLY to the original price span.
   if(pane==='price'){
@@ -357,7 +357,7 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
     wheelFlowerBase={market:key(),count:view.count,offset:previousOffset,
       center:currentPriceBounds.center,span:currentPriceBounds.span};
    }
-   const progress=Math.max(0,(next-wheelFlowerBase.offset)/view.count);
+   const progress=Math.max(0,(wheelFlowerBase.offset-next)/view.count);
    const expansion=Math.exp(Math.min(Math.log(6),progress*2.0));
    wheelFlowerSpan=wheelFlowerBase.span/expansion;
    verticalScales.price.center=wheelFlowerBase.center;
