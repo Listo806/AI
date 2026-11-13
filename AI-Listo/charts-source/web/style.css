@@ -269,3 +269,29 @@ html:not(.chart-embedded):not(.multi-chart-mode) article .canvas-wrap > .legend 
    position:absolute;z-index:45;pointer-events:auto;
  }
 }
+
+/* Header stacking repair: the canvas must never cover market cards or header actions.
+   Preserve the chart-under-toolbar design without changing chart geometry. */
+@media (min-width:761px) {
+  html:not(.chart-embedded):not(.multi-chart-mode) article { isolation:isolate; }
+  html:not(.chart-embedded):not(.multi-chart-mode) article > .toolbar {
+    position:relative; z-index:40; overflow:visible !important;
+  }
+  html:not(.chart-embedded):not(.multi-chart-mode) article > .toolbar #markets {
+    position:relative; z-index:41; overflow:visible !important; min-width:0;
+  }
+  html:not(.chart-embedded):not(.multi-chart-mode) article > .toolbar #markets .market-card,
+  html:not(.chart-embedded):not(.multi-chart-mode) article > .toolbar #markets .market-select {
+    position:relative; z-index:1;
+  }
+  html:not(.chart-embedded):not(.multi-chart-mode) article > .market-heading {
+    position:relative; z-index:39; overflow:visible !important;
+  }
+  html:not(.chart-embedded):not(.multi-chart-mode) article > .chart-shell {
+    position:relative; z-index:1;
+  }
+  html:not(.chart-embedded):not(.multi-chart-mode) article > #chartHeaderToggle,
+  html:not(.chart-embedded):not(.multi-chart-mode) article > #chartAccount {
+    z-index:60 !important;
+  }
+}
