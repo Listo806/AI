@@ -344,19 +344,31 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   const previousOffset=view.offset;
   view.offset=next;setPaneView(pane,view);
   zoomPriceOverride=null;hover=-1;crosshair=null;
-  // Wheel-only vertical bloom: history expands candles, returning contracts
-  // toward the normal auto-scaled height, never below it. The horizontal
-  // offset, pointer drag, axis controls, Reset and +/- zoom stay unchanged.
-  if(pane==='price' && Number.isFinite(event.deltaY) && event.deltaY!==0){
+  // Bloom from the FIRST history step, not only after reaching old candles.
+  // Normalize against the newly visible candle range: older history can have
+  // greater volatility, which otherwise cancels a simple factor multiplier.
+  // This changes only wheel-driven vertical scaling; horizontal movement and
+  // all pointer/axis/toolbar handlers remain untouched.
+  if(pane==='price' && Number.isFinite(wheelUnits) && wheelUnits!==0){
    const scale=verticalScales.price;
-   // Derive bloom direction from the ACTUAL history movement, not wheel
-   // delta sign: input devices and scroll adapters can reverse wheel polarity.
-   // Older candles mean a larger history offset; newer candles a smaller one.
-   const movingIntoHistory=next>previousOffset;
-   const magnitude=Math.min(.16,Math.max(.045,Math.abs(wheelUnits)/120*.11));
-   scale.factor=movingIntoHistory
-    ? Math.min(3.5,Math.max(1,scale.factor)*Math.exp(magnitude))
-    : Math.max(1,scale.factor*Math.exp(-magnitude));
+   const history=bars();
+   const first=Math.max(0,Math.floor(history.length-view.count-next));
+   const last=Math.min(history.length,Math.ceil(history.length-next));
+   const visible=history.slice(first,Math.max(first,last));
+   if(visible.length){
+    const lows=visible.map(bar=>bar.low),highs=visible.map(bar=>bar.high);
+    const low=Math.min(...lows),high=Math.max(...highs);
+    const normalSpan=(high-low)+2*Math.max((high-low)*.08,high*.0001);
+    const oldSpan=currentPriceBounds.span>0?currentPriceBounds.span:normalSpan;
+    const amount=Math.min(.14,Math.max(.055,Math.abs(wheelUnits)/120*.10));
+    // offset grows toward history; reduce visible price span immediately.
+    const intoHistory=next>previousOffset;
+    const desiredSpan=intoHistory
+     ? oldSpan*Math.exp(-amount)
+     : Math.min(normalSpan,oldSpan*Math.exp(amount));
+    // Normal height is factor=1. Never contract below it on return.
+    scale.factor=Math.max(1,Math.min(12,normalSpan/Math.max(normalSpan/12,desiredSpan)));
+   }
   }
   draw();
  };
