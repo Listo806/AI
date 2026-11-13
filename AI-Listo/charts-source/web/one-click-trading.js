@@ -22,11 +22,25 @@
   button.onkeyup=stopHold;button.onblur=stopHold;
  }
  window.addEventListener('pointerup',stopHold);window.addEventListener('blur',stopHold);document.addEventListener('visibilitychange',()=>{if(document.hidden)stopHold();});
- volume.append(down,input,up);panel.append(sell,buy,volume);wrap.append(panel);
+ volume.append(down,input,up);panel.append(sell,buy,volume);
+ // In the single workspace the chart canvas overlaps the header. Mount the
+ // order controls at article level so the header cannot paint over them.
+ const host=embedded?wrap:document.querySelector('article');
+ host.append(panel);
  const localToggle=make('button','one-click-toggle');localToggle.type='button';localToggle.setAttribute('aria-controls',panel.id);const icon=make('span','one-click-icon','⇄'),words=make('span','one-click-words','One Click Trading');localToggle.append(icon,words);
  let opened=false;
  function updateToggle(button,on){button.setAttribute('aria-expanded',String(on));button.setAttribute('aria-pressed',String(on));button.setAttribute('aria-label',on?'Hide One Click Trading':'Show One Click Trading');button.title=on?'Hide One Click Trading':'Show One Click Trading';button.querySelector('.one-click-words').hidden=on;button.classList.toggle('active',on);}
- function setOpen(value){stopHold();opened=Boolean(value);panel.hidden=!opened;wrap.classList.toggle('one-click-open',opened);updateToggle(localToggle,opened);if(embedded)parent.ChartOneClick?.syncHost();}
+ function positionPanel(){
+  if(embedded||!opened)return;
+  const article=document.querySelector('article');
+  const strip=article?.querySelector('.one-click-control-strip');
+  if(!article||!strip)return;
+  const parentRect=article.getBoundingClientRect(),stripRect=strip.getBoundingClientRect();
+  panel.style.top=Math.max(0,stripRect.bottom-parentRect.top+3)+'px';
+  panel.style.left=Math.max(0,stripRect.left-parentRect.left+8)+'px';
+ }
+ function setOpen(value){stopHold();opened=Boolean(value);panel.hidden=!opened;wrap.classList.toggle('one-click-open',opened);updateToggle(localToggle,opened);positionPanel();if(embedded)parent.ChartOneClick?.syncHost();}
+ if(!embedded){window.addEventListener('resize',positionPanel,{passive:true});document.addEventListener('scroll',positionPanel,true);}
  window.OneClickPanel={toggle(){setOpen(!opened);},get opened(){return opened;}};
  panel.addEventListener('pointerdown',e=>e.stopPropagation());panel.addEventListener('wheel',e=>e.stopPropagation());
  if(embedded){

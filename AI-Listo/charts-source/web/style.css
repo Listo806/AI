@@ -249,3 +249,23 @@ html:not(.chart-embedded):not(.multi-chart-mode) article .canvas-wrap > .legend 
 
 /* ATR belongs to the shared oscillator pane; no separate ATR header/canvas. */
 .rsi-header .atr-in-rsi{display:inline-flex;align-items:center;gap:3px;min-width:0;margin-left:5px}.rsi-header .atr-in-rsi .extra-toggle{font-size:10px;padding:2px 4px;white-space:nowrap}.rsi-header .atr-in-rsi .aa-settings,.rsi-header .atr-in-rsi .extra-remove{font-size:11px;padding:2px 3px;min-width:16px}.rsi-header .atr-in-rsi i{display:inline-block;width:7px;height:7px;margin-right:4px}
+
+/* Source 10: compact header, with no negative transform of the controls. */
+@media (min-width:761px){
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar{
+   padding-top:0!important;padding-bottom:0!important;
+   margin-top:0!important;margin-bottom:4px!important;
+   row-gap:0!important;min-height:0!important;
+ }
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar #markets{margin-top:0!important;margin-bottom:0!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article #chartIndicatorControls{
+   margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important;
+ }
+ html:not(.chart-embedded):not(.multi-chart-mode) article .one-click-control-strip{
+   padding-top:1px;padding-bottom:1px;min-height:20px;
+ }
+ /* Order panel is deliberately outside the overlapped chart shell. */
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.one-click-panel{
+   position:absolute;z-index:45;pointer-events:auto;
+ }
+}
