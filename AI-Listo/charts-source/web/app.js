@@ -341,6 +341,7 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   const step=Math.max(1,Math.round(view.count*.08));
   const next=Math.max(minOffset,Math.min(maxOffset,view.offset+(wheelUnits>0?step:-step)));
   if(next===view.offset)return;
+  const previousOffset=view.offset;
   view.offset=next;setPaneView(pane,view);
   zoomPriceOverride=null;hover=-1;crosshair=null;
   // Wheel-only vertical bloom: history expands candles, returning contracts
@@ -348,9 +349,14 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   // offset, pointer drag, axis controls, Reset and +/- zoom stay unchanged.
   if(pane==='price' && Number.isFinite(event.deltaY) && event.deltaY!==0){
    const scale=verticalScales.price;
-   const magnitude=Math.min(.075,Math.max(.012,Math.abs(event.deltaY)/120*.04));
-   const direction=event.deltaY>0?1:-1;
-   scale.factor=Math.max(1,Math.min(2.5,scale.factor*Math.exp(direction*magnitude)));
+   // Derive bloom direction from the ACTUAL history movement, not wheel
+   // delta sign: input devices and scroll adapters can reverse wheel polarity.
+   // Older candles mean a larger history offset; newer candles a smaller one.
+   const movingIntoHistory=next>previousOffset;
+   const magnitude=Math.min(.16,Math.max(.045,Math.abs(wheelUnits)/120*.11));
+   scale.factor=movingIntoHistory
+    ? Math.min(3.5,Math.max(1,scale.factor)*Math.exp(magnitude))
+    : Math.max(1,scale.factor*Math.exp(-magnitude));
   }
   draw();
  };
