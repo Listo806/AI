@@ -16,6 +16,9 @@ function saveHistoryBackup(k,entry){try{const entries=JSON.parse(ChartStorage.ge
 
 const liveQuotes = new Map();
 const verticalScales={price:{factor:1,center:null},rsi:{factor:2,center:50}};
+// v112 reference: a fixed price mapping while wheel-navigating history.
+let wheelFlowerBase=null, wheelFlowerSpan=null;
+function clearWheelFlower(){wheelFlowerBase=null;wheelFlowerSpan=null;}
 let nativeHistoryBlockedUntil=0;
 const streamLastTicks=new Map();let streamDrawPending=false;let streamHasConnected=false;
 let nativeLoadRunning=false;
@@ -121,7 +124,7 @@ const key = () => markets[selected].symbol+'|'+frame;
 const entry = () => cache.get(key());
 const bars = () => entry()?.bars || [];
 function saveOpenMarkets(){try{ChartStorage.setItem('market-watch-open-v2',JSON.stringify(markets.map(m=>m.symbol)));}catch{}}
-function selectMarket(index){if(!markets[index])return;verticalScales.price={factor:1,center:null};$('chartNotice').hidden=true;selected=index;offset=-Math.round(count*.05);hover=-1;crosshair=null;requestId++;render();if(!entry())loadFeed();else if(apiKey)loadMTF();else loadNativeMTF();}
+function selectMarket(index){if(!markets[index])return;clearWheelFlower();verticalScales.price={factor:1,center:null};$('chartNotice').hidden=true;selected=index;offset=-Math.round(count*.05);hover=-1;crosshair=null;requestId++;render();if(!entry())loadFeed();else if(apiKey)loadMTF();else loadNativeMTF();}
 function removeOpenMarket(symbol){const index=markets.findIndex(m=>m.symbol===symbol);if(index<0)return;if(markets.length===1){showFeedNotice('Keep at least one market open. Add another market before removing this one.');return;}const active=markets[selected].symbol;markets.splice(index,1);const retained=markets.findIndex(m=>m.symbol===active);selected=retained>=0?retained:Math.min(index,markets.length-1);saveOpenMarkets();renderMarketCards();selectMarket(selected);LiveStream.reload();document.dispatchEvent(new Event('openmarketschange'));}
 function renderMarketCards(){
  $('markets').replaceChildren();markets.forEach((market,index)=>{
@@ -195,7 +198,7 @@ function draw(pointerOnly=false){
  if(!pointerOnly)syncIndicatorButtons();
  updateMTF(engine);const data=bars(),viewStart=data.length-count-offset,start=Math.max(0,Math.floor(viewStart)),end=Math.min(data.length,Math.ceil(viewStart+count)),visible=data.slice(start,Math.max(start,end));const oscStartFloat=data.length-oscView.count-oscView.offset,oscStart=Math.max(0,Math.floor(oscStartFloat)),oscEnd=Math.min(data.length,Math.ceil(oscStartFloat+oscView.count));const studies=getCachedChartStudies(data),{close,bbPlots,osc,aaPlots,tramaPlot}=studies,rsi=osc.rsi,ma=osc.ma,vwap=aaPlots[0].values;const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.settings.precision);$('bbOn').closest('label').title=[BBSettings.settings.inputs?BBSettings.settings.length+' · '+BBSettings.settings.ma+' · '+BBSettings.settings.source+' · '+BBSettings.settings.mult+'σ':'',BBSettings.settings.values?bbPlots.map((p,i)=>['Basis','Upper','Lower'][i]+': '+(Number.isFinite(p.values.at(-1))?p.values.at(-1).toFixed(bbDigits):'—')).join(' · '):''].filter(Boolean).join(' | ');const top=canvasContext($('priceChart')),bottom=canvasContext($('rsiChart'));const left=15,right=64;function grid(chart,minimum,maximum,steps){const {ctx,width,height}=chart;ctx.font='600 13px system-ui';for(let i=0;i<=steps;i++){const y=15+(height-43)*i/steps;ctx.strokeStyle='#202c39';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(width-right,y);ctx.stroke();ctx.fillStyle='#f3f6ff';ctx.fillText(data.length?(maximum-(maximum-minimum)*i/steps).toFixed(markets[selected].category==='FOREIGN EXCHANGE'&&!markets[selected].symbol.endsWith('JPY')?5:maximum>100?2:3):'—',width-right+10,y+3);}for(let i=0;i<5;i++){const x=left+(width-right-left)*i/4;ctx.strokeStyle='#1c2834';ctx.beginPath();ctx.moveTo(x,15);ctx.lineTo(x,height-28);ctx.stroke();}}
 let low=0,high=1;if(visible.length){// Candle prices alone define autoscale; overlay toggles must not resize the candles.
-const values=visible.flatMap(b=>[b.low,b.high]);low=Math.min(...values);high=Math.max(...values);const pad=Math.max((high-low)*.08,high*.0001);low-=pad;high+=pad;}const autoCenter=(high+low)/2,range=(high-low)/verticalScales.price.factor;const priceCenter=zoomPriceOverride?.center??verticalScales.price.center??autoCenter;const effectiveRange=zoomPriceOverride?.span??range;currentPriceBounds={center:priceCenter,span:effectiveRange};low=priceCenter-effectiveRange/2;high=priceCenter+effectiveRange/2;grid(top,low,high,5);const plotWidth=top.width-right-left,step=plotWidth/count,x=i=>left+(start-viewStart+i+.5)*step,y=value=>15+(high-value)/(high-low)*(top.height-43),ry=value=>15+(verticalScales.rsi.center+50/verticalScales.rsi.factor-value)/(100/verticalScales.rsi.factor)*(bottom.height-43);function line(chart,values,color,mapY,style){const isOsc=chart===bottom,sliceStart=isOsc?oscStart:start,sliceEnd=isOsc?oscEnd:end,plotX=isOsc?(i=>left+(oscStart-oscStartFloat+i+.5)*(bottom.width-right-left)/oscView.count):x;const {ctx}=chart;ctx.strokeStyle=color;ctx.lineWidth=color==='#ffe638'?3:color==='#ff263e'?2.5:(color==='#3293ff'||color==='#ff334c')?2:1.4;if(style){ctx.lineWidth=style.width;ctx.setLineDash(style.style==='dashed'?[7,5]:style.style==='dotted'?[2,4]:[]);}ctx.beginPath();let active=false;values.slice(sliceStart,sliceEnd).forEach((value,i)=>{if(!Number.isFinite(value)){active=false;return;}if(active)ctx.lineTo(plotX(i),mapY(value));else ctx.moveTo(plotX(i),mapY(value));active=true;});ctx.stroke();ctx.setLineDash([]);}
+const values=visible.flatMap(b=>[b.low,b.high]);low=Math.min(...values);high=Math.max(...values);const pad=Math.max((high-low)*.08,high*.0001);low-=pad;high+=pad;}const autoCenter=(high+low)/2,range=(high-low)/verticalScales.price.factor;const priceCenter=zoomPriceOverride?.center??verticalScales.price.center??autoCenter;const effectiveRange=zoomPriceOverride?.span??wheelFlowerSpan??range;currentPriceBounds={center:priceCenter,span:effectiveRange};low=priceCenter-effectiveRange/2;high=priceCenter+effectiveRange/2;grid(top,low,high,5);const plotWidth=top.width-right-left,step=plotWidth/count,x=i=>left+(start-viewStart+i+.5)*step,y=value=>15+(high-value)/(high-low)*(top.height-43),ry=value=>15+(verticalScales.rsi.center+50/verticalScales.rsi.factor-value)/(100/verticalScales.rsi.factor)*(bottom.height-43);function line(chart,values,color,mapY,style){const isOsc=chart===bottom,sliceStart=isOsc?oscStart:start,sliceEnd=isOsc?oscEnd:end,plotX=isOsc?(i=>left+(oscStart-oscStartFloat+i+.5)*(bottom.width-right-left)/oscView.count):x;const {ctx}=chart;ctx.strokeStyle=color;ctx.lineWidth=color==='#ffe638'?3:color==='#ff263e'?2.5:(color==='#3293ff'||color==='#ff334c')?2:1.4;if(style){ctx.lineWidth=style.width;ctx.setLineDash(style.style==='dashed'?[7,5]:style.style==='dotted'?[2,4]:[]);}ctx.beginPath();let active=false;values.slice(sliceStart,sliceEnd).forEach((value,i)=>{if(!Number.isFinite(value)){active=false;return;}if(active)ctx.lineTo(plotX(i),mapY(value));else ctx.moveTo(plotX(i),mapY(value));active=true;});ctx.stroke();ctx.setLineDash([]);}
 if($('bbOn').checked){const c=top.ctx,u=bbPlots[1],l=bbPlots[2];if(BBSettings.settings.background&&u.show&&l.show){c.save();c.fillStyle=BBSettings.settings.fill;c.globalAlpha=BBSettings.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}bbPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
 if($('vwapOn').checked){const c=top.ctx;if(VwapAA.settings.background){for(let k=0;k<3;k++){const u=aaPlots[1+k*2],l=aaPlots[2+k*2];if(!u.show||!l.show)continue;c.save();c.fillStyle=VwapAA.settings.fill;c.globalAlpha=VwapAA.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}}aaPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
 if($('bbOn').checked){bbPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}if(!entry()?.reference&&chartStyle==='candles'&&$('priceOn').checked)visible.forEach((bar,i)=>drawHollowCandle(top.ctx,bar,x(i),y,step));if((entry()?.reference||chartStyle==='line')&&$('priceOn').checked){line(top,close,'#d8e4ed',y);const ctx=top.ctx;if(visible.length){const last=visible.length-1;ctx.fillStyle='#d8e4ed';ctx.beginPath();ctx.arc(x(last),y(visible[last].close),3.5,0,Math.PI*2);ctx.fill();}}if($('vwapOn').checked){aaPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}
@@ -304,6 +307,7 @@ function setPaneView(pane,view){if(pane==='rsi')Object.assign(oscView,view);else
 // Center-anchored horizontal zoom. The renderer uses start = length - count - offset.
 // Preserve the same center candle index, including fractional centers.
 function zoom(factor,pane='price',verticalStep=1){
+ clearWheelFlower();
  const previousBounds=pane==='price'?{...currentPriceBounds}:null;
  const view=paneView(pane),oldCount=view.count,oldOffset=view.offset;
  const nextCount=Math.max(20,Math.min(Math.max(500,bars().length+50),Math.round(oldCount*factor)));
@@ -329,12 +333,12 @@ $('panLeft').onclick=()=>{zoomPriceOverride=null;offset=Math.max(-count+20,offse
 // Coalesce pointer updates: one chart render for the newest pointer event per frame.
 let pointerFrame=0;
 const schedulePointerDraw=()=>{if(pointerFrame)return;pointerFrame=requestAnimationFrame(()=>{pointerFrame=0;draw(true);});};
-$('zoomIn').onclick=()=>window.ChartZoom.change('in');$('zoomOut').onclick=()=>window.ChartZoom.change('out');$('reset').onclick=()=>{zoomPriceOverride=null;verticalScales.price={factor:1,center:null};count=170;offset=-Math.round(count*.05);hover=-1;crosshair=null;draw();};let dragging=null;
+$('zoomIn').onclick=()=>window.ChartZoom.change('in');$('zoomOut').onclick=()=>window.ChartZoom.change('out');$('reset').onclick=()=>{clearWheelFlower();zoomPriceOverride=null;verticalScales.price={factor:1,center:null};count=170;offset=-Math.round(count*.05);hover=-1;crosshair=null;draw();};let dragging=null;
 for(const canvas of [$('priceChart'),$('rsiChart')]){
  const pane=canvas.id==='priceChart'?'price':'rsi';
  const inAxis=event=>event.clientX-canvas.getBoundingClientRect().left>=canvas.getBoundingClientRect().width-64;
  canvas.onwheel=event=>{event.preventDefault();
-  if(inAxis(event)){const scale=verticalScales[pane];scale.factor=Math.max(.2,Math.min(12,scale.factor*Math.exp(-event.deltaY*.002)));draw();return;}
+  if(inAxis(event)){clearWheelFlower();const scale=verticalScales[pane];scale.factor=Math.max(.2,Math.min(12,scale.factor*Math.exp(-event.deltaY*.002)));draw();return;}
   // Wheel navigates time; +/- toolbar alone changes candle width.
   const view=paneView(pane),maxOffset=Math.max(0,bars().length-20),minOffset=-view.count+20;
   const wheelUnits=event.deltaMode===1?event.deltaY*16:event.deltaMode===2?event.deltaY*canvas.clientHeight:event.deltaY;
@@ -344,36 +348,24 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   const previousOffset=view.offset;
   view.offset=next;setPaneView(pane,view);
   zoomPriceOverride=null;hover=-1;crosshair=null;
-  // Bloom from the FIRST history step, not only after reaching old candles.
-  // Normalize against the newly visible candle range: older history can have
-  // greater volatility, which otherwise cancels a simple factor multiplier.
-  // This changes only wheel-driven vertical scaling; horizontal movement and
-  // all pointer/axis/toolbar handlers remain untouched.
-  if(pane==='price' && Number.isFinite(wheelUnits) && wheelUnits!==0){
-   const scale=verticalScales.price;
-   const history=bars();
-   const first=Math.max(0,Math.floor(history.length-view.count-next));
-   const last=Math.min(history.length,Math.ceil(history.length-next));
-   const visible=history.slice(first,Math.max(first,last));
-   if(visible.length){
-    const lows=visible.map(bar=>bar.low),highs=visible.map(bar=>bar.high);
-    const low=Math.min(...lows),high=Math.max(...highs);
-    const normalSpan=(high-low)+2*Math.max((high-low)*.08,high*.0001);
-    const oldSpan=currentPriceBounds.span>0?currentPriceBounds.span:normalSpan;
-    const amount=Math.min(.14,Math.max(.055,Math.abs(wheelUnits)/120*.10));
-    // offset grows toward history; reduce visible price span immediately.
-    const intoHistory=next>previousOffset;
-    const desiredSpan=intoHistory
-     ? oldSpan*Math.exp(-amount)
-     : Math.min(normalSpan,oldSpan*Math.exp(amount));
-    // Normal height is factor=1. Never contract below it on return.
-    scale.factor=Math.max(1,Math.min(12,normalSpan/Math.max(normalSpan/12,desiredSpan)));
+  // Port of the customer's working v112 preview. Our offset increases into
+  // history (the reference offset decreases), so progress uses the opposite sign.
+  // Anchor the original center/span once, then use the distance from that
+  // anchor; reversing the wheel returns EXACTLY to the original price span.
+  if(pane==='price'){
+   if(!wheelFlowerBase || wheelFlowerBase.market!==key() || wheelFlowerBase.count!==view.count){
+    wheelFlowerBase={market:key(),count:view.count,offset:previousOffset,
+      center:currentPriceBounds.center,span:currentPriceBounds.span};
    }
+   const progress=Math.max(0,(next-wheelFlowerBase.offset)/view.count);
+   const expansion=Math.exp(Math.min(Math.log(6),progress*2.0));
+   wheelFlowerSpan=wheelFlowerBase.span/expansion;
+   verticalScales.price.center=wheelFlowerBase.center;
   }
   draw();
  };
- canvas.ondblclick=event=>{verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=170;setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
- canvas.onpointerdown=event=>{if(event.button!==0)return;event.preventDefault();zoomPriceOverride=null;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
+ canvas.ondblclick=event=>{clearWheelFlower();verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=170;setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
+ canvas.onpointerdown=event=>{if(event.button!==0)return;event.preventDefault();clearWheelFlower();zoomPriceOverride=null;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
  const releaseDrag=event=>{if(!dragging||dragging.pointerId!==event.pointerId)return;dragging=null;if(canvas.hasPointerCapture?.(event.pointerId))canvas.releasePointerCapture(event.pointerId);schedulePointerDraw();};
  canvas.onpointerup=releaseDrag;canvas.onpointercancel=releaseDrag;canvas.onlostpointercapture=event=>{if(dragging?.pointerId===event.pointerId){dragging=null;schedulePointerDraw();}};
  canvas.onpointermove=event=>{if(dragging&&dragging.pointerId!==event.pointerId)return;const rect=canvas.getBoundingClientRect(),view=paneView(pane),viewStart=bars().length-view.count-view.offset,first=Math.max(0,Math.floor(viewStart)),last=Math.min(bars().length,Math.ceil(viewStart+view.count));hoverPane=pane;canvas.style.cursor=inAxis(event)?'ns-resize':dragging?'grabbing':'crosshair';if(dragging?.pane===pane){if(dragging.kind==='scale')verticalScales[pane].factor=Math.max(.2,Math.min(12,dragging.factor*Math.exp((dragging.y-event.clientY)/160)));else{view.offset=Math.max(-view.count+20,Math.min(Math.max(0,bars().length-20),dragging.offset+Math.round((event.clientX-dragging.x)/Math.max(1,rect.width-79)*dragging.count)));setPaneView(pane,view);if(pane==='price' && Math.abs(event.clientY-dragging.y)>3){verticalScales.price.center=dragging.center+(event.clientY-dragging.y)/Math.max(1,rect.height-43)*dragging.span;}}hover=-1;crosshair=null;}else{hover=inAxis(event)?-1:Math.floor(viewStart+(event.clientX-rect.left-15)/Math.max(1,rect.width-79)*view.count)-first;if(hover<0||hover>=last-first)hover=-1;crosshair=null;const px=event.clientX-rect.left,py=event.clientY-rect.top;if(px>=15&&px<=rect.width-64&&py>=15&&py<=rect.height-28)crosshair={pane,x:px,y:py};}schedulePointerDraw();};
@@ -463,12 +455,12 @@ async function selectFrame(next){
   if(next===frame)return;
   const id=++requestId,symbol=markets[selected].symbol,button=document.querySelector('[data-frame="'+next+'"]');
   const existing=cache.get(symbol+'|'+next);
-  if(existing){frame=next;count=170;verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);hover=-1;crosshair=null;$('chartNotice').hidden=true;render();return;}
+  if(existing){frame=next;count=170;clearWheelFlower();verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);hover=-1;crosshair=null;$('chartNotice').hidden=true;render();return;}
   button.classList.add('loading');button.setAttribute('aria-busy','true');
   try{
     const native=await fetchNativeHistory(symbol,next);
     if(id!==requestId||symbol!==markets[selected].symbol)return;
-    cache.set(symbol+'|'+next,native);replayRecentTick(symbol);frame=next;count=170;verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);hover=-1;crosshair=null;$('chartNotice').hidden=true;render();loadNativeMTF();
+    cache.set(symbol+'|'+next,native);replayRecentTick(symbol);frame=next;count=170;clearWheelFlower();verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);hover=-1;crosshair=null;$('chartNotice').hidden=true;render();loadNativeMTF();
   }catch(error){
     if(id!==requestId)return;
     if(apiKey){frame=next;render();loadFeed();}
