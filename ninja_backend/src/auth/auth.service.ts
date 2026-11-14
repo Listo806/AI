@@ -36,7 +36,7 @@ export class AuthService {
 
   async signup(
     signupDto: SignupDto,
-    geo?: { country?: string | null; region?: string | null; ip?: string | null },
+    geo?: { country?: string | null; region?: string | null; ip?: string | null; origin?: string | null; referer?: string | null },
   ) {
     const { password, role } = signupDto;
     // Normalize the email so it is stored consistently and can always be matched
@@ -125,7 +125,32 @@ export class AuthService {
 
     // Where this customer originally came from, when the browser sends it.
     // Write-once, so a later visit through another channel cannot replace it.
-    void captureFirstTouch(this.db, user.id, signupDto);
+    // Preserve the browser's first-touch route when supplied. When old signup
+    // clients omit it, use only a recognized requesting website as a fallback.
+    // Never infer the website from the API host or from the customer's country.
+    const trustedHost = (raw?: string | null): string | null => {
+      try {
+        const u = new URL(String(raw || ''));
+        if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+        const host = u.hostname.toLowerCase().replace(/^www\./, '');
+        return host === 'cortexaaicrm.com' || host === 'listoqasa.com' ? u.origin : null;
+      } catch { return null; }
+    };
+    const requestOrigin = trustedHost(geo?.origin) || trustedHost(geo?.referer);
+    const ft = signupDto.firstTouch && typeof signupDto.firstTouch === 'object'
+      ? signupDto.firstTouch : {};
+    const suppliedRoute = String(ft.landingRoute || '').trim();
+    const normalizedRoute = suppliedRoute && suppliedRoute.startsWith('/') && requestOrigin
+      ? requestOrigin + suppliedRoute : suppliedRoute;
+    const refererRoute = trustedHost(geo?.referer) ? String(geo?.referer) : '';
+    const attributionDto = {
+      ...signupDto,
+      firstTouch: {
+        ...ft,
+        landingRoute: normalizedRoute || refererRoute || requestOrigin || null,
+      },
+    };
+    void captureFirstTouch(this.db, user.id, attributionDto);
 
     // And the visit that brought them back today, stored beside it rather than
     // over it, so both the original and the closing source are known.

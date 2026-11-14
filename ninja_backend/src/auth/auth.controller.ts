@@ -49,6 +49,8 @@ export class AuthController {
       country: countryFromHeaders(req?.headers),
       region: regionFromHeaders(req?.headers),
       ip: clientIpFromHeaders(req?.headers, req),
+      origin: req?.headers?.origin || null,
+      referer: req?.headers?.referer || req?.headers?.referrer || null,
     });
   }
 
