@@ -64,6 +64,7 @@ export default function FreeWebsiteReview({embedded=false, embeddedLang}){
  const[loading,setLoading]=useState(false),[error,setError]=useState(""),[success,setSuccess]=useState(false);
  const setLang=(v)=>{setLangState(v);localStorage.setItem("cortexa_lang",v);localStorage.setItem("cortexa_locale",v);document.documentElement.lang=v==="pt"?"pt-BR":v};
  useEffect(()=>{document.documentElement.lang=lang==="pt"?"pt-BR":lang},[lang]);
+ useEffect(()=>{const onAiInquiry=()=>setForm(p=>({...p,improvements:p.improvements.includes(tr.opts[6])?p.improvements:[...p.improvements,tr.opts[6]]}));window.addEventListener("cortexa-ai-agent-inquiry",onAiInquiry);return()=>window.removeEventListener("cortexa-ai-agent-inquiry",onAiInquiry);},[tr]);
  const update=k=>e=>setForm(p=>({...p,[k]:e.target.type==="checkbox"?e.target.checked:e.target.value}));
  const toggle=v=>setForm(p=>({...p,improvements:p.improvements.includes(v)?p.improvements.filter(x=>x!==v):[...p.improvements,v]}));
  const submit=async e=>{

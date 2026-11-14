@@ -12,6 +12,7 @@ import footdarklogoImg from "../../assets/cortexa/headlogotran.png";
 import { useAuth } from "../../context/AuthContext";
 import { trackEvent } from "../../utils/track";
 import telehealthImg from "./web-solutions-telehealth.png";
+import aiAgentImg from "./ai-agent-workflow-reference.png";
 import "./WebSolutions.css";
 import FreeWebsiteReview from "./FreeWebsiteReview";
 
@@ -20,7 +21,7 @@ const HREFS = ["/#features","/#ai-assistant","/#automation","/#pipeline","/#anal
 const COPY = {
   en: {
     nav:["Features","AI Assistant","AI Workflows","Pipeline","Analytics","Pricing","Cost Calculator","Web & Software Development|Systems Integration","Get Started"],
-    hero:{eyebrow:"CORTEXA WEB & SOFTWARE DEVELOPMENT",title1:"SOFTWARE DEVELOPMENT +",title2:"SYSTEMS INTEGRATION",gradient:"Design. Develop. Modernize. Connect.",desc:"We build and improve websites, digital products, customer portals, and business software—then connect them to your CRM, AI agent, payments, appointments, communications, automation, and data.",lead:"Start with a free professional evaluation.",button:"Request Your Free Evaluation",note:"No payment. No obligation."},
+    hero:{eyebrow:"CORTEXA WEB & SOFTWARE DEVELOPMENT",title1:"AI AGENT DEVELOPMENT +",title2:"SOFTWARE DEVELOPMENT +\nSYSTEMS INTEGRATION",gradient:"Design. Develop. Modernize. Connect.",desc:"We build AI agents, websites, digital products, customer portals, and business software—then connect them to your CRM, payments, appointments, communications, automation, and data.",lead:"Start with a free professional evaluation.",button:"Request Your Free Evaluation",note:"No payment. No obligation."},
     trust:[["Website + technology assessment","We start with your website to understand your goals, audience, and current setup."],["Built around your business","Recommendations are tailored to your industry, tools, and growth goals."],["Clear scope before development","You’ll know exactly what we’ll build, why it matters, and what it will cost."]],
     design:{title:"What We Design, Develop, and Connect.",lead:"From a professional website to a connected business platform, every solution is designed around how your company operates and grows.",items:[["Web Development","Professional websites, landing pages, e-commerce experiences, and responsive web platforms."],["Custom Software Development","Business applications, customer portals, dashboards, and purpose-built internal systems."],["Digital Product Engineering","Product strategy, UX/UI, prototypes, MVPs, frontend, backend, testing, and deployment."],["Redesign + Modernization","Improve outdated websites and platforms for better design, mobile usability, speed, and conversion."],["CRM, AI + Systems Integration","Connect customer records, AI agents, payments, scheduling, communications, analytics, and existing tools."],["APIs + Automation","Connect systems and automate lead routing, follow-ups, notifications, tasks, and customer journeys."]]},
     build:{title:"Build New—or Modernize What You Already Have.",leftTitle:"Build Something New",left:["Business websites","Web applications","Customer portals","Internal platforms","MVPs and digital products","E-commerce systems"],rightTitle:"Modernize What Exists",right:["Website redesign","Platform restructuring","Mobile optimization","Performance improvements","New functionality","CRM, AI, payment, and scheduling integrations"],note:"We build, rebuild, improve, and connect—according to what your business actually needs."},
@@ -111,9 +112,9 @@ function NavLabel({label,desktop=false}){
 }
 
 const WS_HEADER_NAV = {
-  en: ["Web Development", "Software & CRM", "AI & Automation", "Systems Integration", "Brand Management"],
-  es: ["Desarrollo Web", "Software y CRM", "IA y Automatización", "Integración de Sistemas", "Gestión de Marca"],
-  pt: ["Desenvolvimento Web", "Software e CRM", "IA e Automação", "Integração de Sistemas", "Gestão de Marca"],
+  en: ["Web Development", "Software & CRM", "AI Agents", "AI & Automation", "Systems Integration", "Brand Management"],
+  es: ["Desarrollo Web", "Software y CRM", "Agentes de IA", "IA y Automatización", "Integración de Sistemas", "Gestión de Marca"],
+  pt: ["Desenvolvimento Web", "Software e CRM", "Agentes de IA", "IA e Automação", "Integração de Sistemas", "Gestão de Marca"],
 };
 // Scroll in-page without changing the URL hash or triggering anchor navigation.
 function scrollToWsSection(event, id) {
@@ -138,7 +139,7 @@ function scrollToWsSection(event, id) {
   requestAnimationFrame(frame);
 }
 
-const WS_HEADER_LINKS = ["#ws-design", "#ws-products", "#ws-needs", "#ws-lifecycle", "#ws-management"];
+const WS_HEADER_LINKS = ["#ws-design", "#ws-products", "#ws-ai-agents", "#ws-needs", "#ws-lifecycle", "#ws-management"];
 
 function Header({tr,lang,setLang,lp}){
   const {isAuthenticated}=useAuth();
@@ -164,6 +165,25 @@ function Footer({tr,lang,setLang,lp}){
 }
 
 function ReviewButton({children,ctaId,lang}){const scrollToForm=(event)=>{event.preventDefault();trackEvent("primary_cta_click",{cta_id:ctaId,cta_text:String(children),page_path:window.location.pathname,language:lang});scrollToWsSection(event,"ws-free-evaluation");};return <a className="ws-review-btn" href="#ws-free-evaluation" onClick={scrollToForm}><span>{children}</span><ArrowRight size={18}/></a>}
+
+const AI_COPY={
+ en:{eyebrow:"AI AGENT DEVELOPMENT",title:"AI agents that put your business tools to work.",lead:"We build custom AI agents connected to your business knowledge, software, and workflows.",services:[["Sales & customer support","Answer questions, capture leads, and prepare follow-ups."],["Tasks & appointments","Update CRM records, create tasks, and coordinate bookings."],["Connected business workflows","Connect your website, CRM, email, calendars, and payment systems."]],button:"Discuss Your AI Agent",workflow:"Example workflow",knowledge:"Business knowledge",saved:"Lead saved",draft:"Draft ready",approval:"Awaiting approval",strip:["Your business knowledge","Authorized connections","Human approvals"]},
+ es:{eyebrow:"DESARROLLO DE AGENTES DE IA",title:"Agentes de IA que ponen tus herramientas empresariales a trabajar.",lead:"Creamos agentes de IA personalizados conectados a tus conocimientos, software y flujos de trabajo.",services:[["Ventas y atención al cliente","Responde preguntas, capta clientes potenciales y prepara seguimientos."],["Tareas y citas","Actualiza el CRM, crea tareas y coordina reservas."],["Flujos empresariales conectados","Conecta tu sitio web, CRM, correo, calendarios y pagos."]],button:"Hablemos de tu agente de IA",workflow:"Ejemplo de flujo",knowledge:"Conocimiento empresarial",saved:"Lead guardado",draft:"Borrador listo",approval:"Pendiente de aprobación",strip:["Conocimiento empresarial","Conexiones autorizadas","Aprobaciones humanas"]},
+ pt:{eyebrow:"DESENVOLVIMENTO DE AGENTES DE IA",title:"Agentes de IA que colocam suas ferramentas de negócios para trabalhar.",lead:"Criamos agentes de IA personalizados conectados ao conhecimento, software e fluxos de trabalho da sua empresa.",services:[["Vendas e atendimento","Responda perguntas, capture leads e prepare acompanhamentos."],["Tarefas e agendamentos","Atualize o CRM, crie tarefas e coordene reservas."],["Fluxos de trabalho conectados","Conecte seu site, CRM, e-mail, calendários e pagamentos."]],button:"Converse sobre seu agente de IA",workflow:"Exemplo de fluxo",knowledge:"Conhecimento empresarial",saved:"Lead salvo",draft:"Rascunho pronto",approval:"Aguardando aprovação",strip:["Conhecimento empresarial","Conexões autorizadas","Aprovações humanas"]}
+};
+function AiAgentSection({lang}){
+ const c=AI_COPY[lang]||AI_COPY.en;
+ const serviceIcons=[Headphones,CalendarDays,Network],toolIcons=[FileText,UsersRound,FileText,CalendarDays,CreditCard];
+ const tools=[c.knowledge,"CRM","Email","Calendar","Payments"];
+ const startInquiry=e=>{scrollToWsSection(e,"ws-free-evaluation");window.dispatchEvent(new CustomEvent("cortexa-ai-agent-inquiry"));trackEvent("primary_cta_click",{cta_id:"web_solutions_ai_agent_inquiry",page_path:window.location.pathname,language:lang});};
+ return <section id="ws-ai-agents" className="ws-ai-agents ws-section"><div className="ws-container">
+   <div className="ws-ai-intro"><div className="ws-eyebrow">{c.eyebrow}</div><h2>{c.title}</h2><p>{c.lead}</p></div>
+   <div className="ws-ai-grid"><div className="ws-ai-services">{c.services.map(([name,description],i)=>{const Icon=serviceIcons[i];return <article key={name}><span className="ws-ai-service-icon"><Icon/></span><div><h3>{name}</h3><p>{description}</p></div></article>})}<a href="#ws-free-evaluation" className="ws-review-btn" onClick={startInquiry}>{c.button}<ArrowRight size={20}/></a></div>
+   <div className="ws-ai-visual"><img src={aiAgentImg} alt="Cortexa AI Agent example workflow connecting business knowledge, CRM, email, calendar and payments" loading="lazy" decoding="async" /></div></div>
+   <div className="ws-ai-bottom">{c.strip.map((item,i)=>{const Icon=[FileText,Network,UserRoundCheck][i];return <div key={item}><Icon size={25}/><b>{item}</b></div>})}</div>
+ </div></section>;
+}
+
 function CheckList({items}){return <ul>{items.map(x=><li key={x}><Check size={16}/><span>{x}</span></li>)}</ul>}
 
 export default function WebSolutions(){
@@ -177,9 +197,10 @@ export default function WebSolutions(){
   const tr=COPY[lang]||COPY.en, ex=EXT_COPY[lang]||EXT_COPY.en;
   const needIcons=[UsersRound,CreditCard,BarChart3,CalendarDays,Headphones,LayoutDashboard,CreditCard,ChartNoAxesColumnIncreasing];
   return <div className="ws-page"><Header tr={tr} lang={lang} setLang={setLang} lp={lp}/><main>
-    <section className="ws-hero"><div className="ws-container"><div className="ws-eyebrow">{tr.hero.eyebrow}</div><h1>{tr.hero.title1}<br/>{tr.hero.title2}</h1><h2>{tr.hero.gradient}</h2><p>{tr.hero.desc}</p><ReviewButton ctaId="web_solutions_hero_free_evaluation" lang={lang}>{tr.hero.button}</ReviewButton></div></section>
+    <section className="ws-hero"><div className="ws-container"><div className="ws-eyebrow">{tr.hero.eyebrow}</div><h1>{tr.hero.title1}<br/>{tr.hero.title2.split("\n").map((line,i)=><React.Fragment key={line}>{i>0&&<br/>}{line}</React.Fragment>)}</h1><h2>{tr.hero.gradient}</h2><p>{tr.hero.desc}</p><ReviewButton ctaId="web_solutions_hero_free_evaluation" lang={lang}>{tr.hero.button}</ReviewButton></div></section>
     <section className="ws-trust-strip"><div className="ws-container ws-trust-grid">{tr.trust.map(([t,p],i)=>{const I=[FileSearch,Settings,Shield][i];return <article key={t}><I/><div><b>{t}</b><p>{p}</p></div></article>})}</div></section>
     <section id="ws-design" className="ws-section ws-design"><div className="ws-container"><h2>{tr.design.title}</h2><p className="ws-section-lead">{tr.design.lead}</p><div className="ws-design-grid">{tr.design.items.map(([t,p],i)=>{const I=DESIGN_ICONS[i];return <article key={t}><span className="ws-design-icon"><I aria-hidden="true"/></span><div><h3>{t}</h3><p>{p}</p></div></article>})}</div></div></section>
+    <AiAgentSection lang={lang}/>
     <section className="ws-section ws-build"><div className="ws-container"><h2>{tr.build.title}</h2><div className="ws-build-grid"><article><div className="ws-build-head"><span className="ws-feature-icon"><Rocket/></span><h3>{tr.build.leftTitle}</h3></div><CheckList items={tr.build.left}/></article><article><div className="ws-build-head"><span className="ws-feature-icon"><Box/></span><h3>{tr.build.rightTitle}</h3></div><CheckList items={tr.build.right}/></article></div><p className="ws-build-note">{tr.build.note}</p></div></section>
     <section className="ws-section ws-outcomes"><div className="ws-container"><div className="ws-eyebrow">{tr.outcomes.eyebrow}</div><h2>{ex.outcomesTitle}</h2><p className="ws-section-lead">{ex.outcomesLead}</p><div className="ws-outcome-grid">{tr.outcomes.items.map(([t,p],i)=>{const I=OUTCOME_ICONS[i];return <article key={t}><span className="ws-feature-icon"><I/></span><h3>{t}</h3><p>{p}</p></article>})}</div></div></section>
     <section className="ws-ongoing-hero"><div className="ws-container"><div className="ws-eyebrow">{ex.ongoing.eyebrow}</div><h2>{ex.ongoing.title}</h2><p>{ex.ongoing.lead}</p></div></section>
