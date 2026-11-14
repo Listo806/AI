@@ -123,34 +123,54 @@ export class AuthService {
     // first, IP fallback. Never blocks or fails signup; missing shows as Unknown.
     void captureSignupCountry(this.db, user.id, geo || {});
 
+    // First-touch product attribution is separate from marketing acquisition.
+    // Use a trusted known website host; never guess a platform from a relative path.
+    // Persist before returning signup success, and do not overwrite on subsequent visits.
+    const sourceCandidates = [
+      signupDto.originalSourceUrl,
+      geo?.referer,
+      geo?.origin,
+      signupDto.firstTouch?.landingPage,
+      signupDto.firstTouch?.landingRoute,
+    ];
+    let sourceUrl: string | null = null;
+    let platform: string | null = null;
+    for (const candidate of sourceCandidates) {
+      try {
+        const parsed = new URL(String(candidate || ''));
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') continue;
+        const host = parsed.hostname.toLowerCase();
+        if (host === 'listoqasa.com' || host === 'www.listoqasa.com') {
+          platform = /vacation|alquileres-vacacionales|vacacional/i.test(parsed.pathname) ? 'Vacation Rentals' : 'Marketplace';
+        } else if (host === 'cortexaaicrm.com' || host === 'www.cortexaaicrm.com' || host === 'backend.cortexaaicrm.com') {
+          platform = /^\/charts(?:\/|$)/i.test(parsed.pathname) ? 'Charts' : 'CRM';
+        } else if (['localhost', '127.0.0.1'].includes(host) && ['CRM', 'Marketplace', 'Vacation Rentals', 'Charts'].includes(String(signupDto.originalPlatform))) {
+          platform = String(signupDto.originalPlatform);
+        } else continue;
+        sourceUrl = parsed.origin + parsed.pathname + parsed.search;
+        break;
+      } catch { /* relative URLs cannot prove which website was used */ }
+    }
+    // Explicit product is useful for shared signup routes, but cannot contradict a known host.
+    const declared = signupDto.originalPlatform;
+    if (platform === 'Marketplace' && declared === 'Vacation Rentals') platform = declared;
+    if (platform === 'CRM' && declared === 'Charts') platform = declared;
+    if (!platform || !sourceUrl) {
+      // Do not silently create another user without verifiable product attribution.
+      await this.db.query('DELETE FROM users WHERE id = $1', [user.id]).catch(() => {});
+      throw new BadRequestException('Original website URL is required for signup attribution');
+    }
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS original_platform TEXT`);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS original_source_url TEXT`);
+    await this.db.query(
+      `UPDATE users SET original_platform = COALESCE(NULLIF(original_platform, ''), $2),
+                        original_source_url = COALESCE(NULLIF(original_source_url, ''), $3)
+        WHERE id = $1`, [user.id, platform, sourceUrl],
+    );
+
     // Where this customer originally came from, when the browser sends it.
     // Write-once, so a later visit through another channel cannot replace it.
-    // Preserve the browser's first-touch route when supplied. When old signup
-    // clients omit it, use only a recognized requesting website as a fallback.
-    // Never infer the website from the API host or from the customer's country.
-    const trustedHost = (raw?: string | null): string | null => {
-      try {
-        const u = new URL(String(raw || ''));
-        if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
-        const host = u.hostname.toLowerCase().replace(/^www\./, '');
-        return host === 'cortexaaicrm.com' || host === 'listoqasa.com' ? u.origin : null;
-      } catch { return null; }
-    };
-    const requestOrigin = trustedHost(geo?.origin) || trustedHost(geo?.referer);
-    const ft = signupDto.firstTouch && typeof signupDto.firstTouch === 'object'
-      ? signupDto.firstTouch : {};
-    const suppliedRoute = String(ft.landingRoute || '').trim();
-    const normalizedRoute = suppliedRoute && suppliedRoute.startsWith('/') && requestOrigin
-      ? requestOrigin + suppliedRoute : suppliedRoute;
-    const refererRoute = trustedHost(geo?.referer) ? String(geo?.referer) : '';
-    const attributionDto = {
-      ...signupDto,
-      firstTouch: {
-        ...ft,
-        landingRoute: normalizedRoute || refererRoute || requestOrigin || null,
-      },
-    };
-    void captureFirstTouch(this.db, user.id, attributionDto);
+    void captureFirstTouch(this.db, user.id, signupDto);
 
     // And the visit that brought them back today, stored beside it rather than
     // over it, so both the original and the closing source are known.

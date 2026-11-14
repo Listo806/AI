@@ -50,7 +50,7 @@ export class AuthController {
       region: regionFromHeaders(req?.headers),
       ip: clientIpFromHeaders(req?.headers, req),
       origin: req?.headers?.origin || null,
-      referer: req?.headers?.referer || req?.headers?.referrer || null,
+      referer: req?.headers?.referer || null,
     });
   }
 

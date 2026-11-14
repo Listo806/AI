@@ -58,7 +58,7 @@ export default function SignUp() {
       try {
         res = await apiClient.request('/auth/signup', {
           method: 'POST',
-          body: JSON.stringify({ email, password, role, language, firstTouch, lastTouch }),
+          body: JSON.stringify({ email, password, role, language, firstTouch, lastTouch, originalPlatform: 'CRM', originalSourceUrl: window.location.href }),
         });
       } catch (err) {
         // Resilience: an older backend that predates the `language` or
@@ -69,13 +69,13 @@ export default function SignUp() {
           try {
             res = await apiClient.request('/auth/signup', {
               method: 'POST',
-              body: JSON.stringify({ email, password, role, language }),
+              body: JSON.stringify({ email, password, role, language, originalPlatform: 'CRM', originalSourceUrl: window.location.href }),
             });
           } catch (err2) {
             if (err2 && err2.status === 400) {
               res = await apiClient.request('/auth/signup', {
                 method: 'POST',
-                body: JSON.stringify({ email, password, role }),
+                body: JSON.stringify({ email, password, role, originalPlatform: 'CRM', originalSourceUrl: window.location.href }),
               });
             } else {
               throw err2;

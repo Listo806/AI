@@ -43,7 +43,7 @@ export default function MarketplaceSignupPage() {
     if (form.password !== form.confirm) return setError('Passwords do not match.');
     setBusy(true);
     try {
-      const result = await marketplaceRequest('/auth/signup', {method:'POST',body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password,role,fullName:form.name.trim(),...(isEcuador?{phone:(JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}').phone||'')}:{}),language:isEcuador?'es':undefined})});
+      const result = await marketplaceRequest('/auth/signup', {method:'POST',body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password,role,fullName:form.name.trim(),...(isEcuador?{phone:(JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}').phone||'')}:{}),language:isEcuador?'es':undefined,originalPlatform:'Marketplace',originalSourceUrl:window.location.href})});
       saveSession(result);
       // Retain the pre-registration phone for the Ecuador checkout display.
       // The signup API now persists the Ecuador phone on the canonical user record.

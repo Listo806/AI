@@ -45,6 +45,17 @@ export class SignupDto {
   @IsIn(['en', 'es', 'pt'])
   language?: string;
 
+  @ApiPropertyOptional({ description: 'Original website URL, including domain' })
+  @IsOptional()
+  @IsString()
+  originalSourceUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Original product platform: CRM, Marketplace, Vacation Rentals, Charts' })
+  @IsOptional()
+  @IsString()
+  @IsIn(['CRM', 'Marketplace', 'Vacation Rentals', 'Charts'])
+  originalPlatform?: string;
+
   // Where the visitor originally came from, as recorded by the browser on their
   // first visit. Optional, and stored once: a later visit never replaces it.
   @ApiPropertyOptional({

@@ -127,6 +127,8 @@ export class CustomersAdminService {
     // First-touch acquisition, written once at sign-up and never changed. Read by
     // the source filter, the customer detail and the CSV export.
     for (const col of [
+      `original_platform TEXT`,
+      `original_source_url TEXT`,
       `first_touch_source TEXT`,
       `first_touch_medium TEXT`,
       `first_touch_campaign TEXT`,
@@ -406,31 +408,18 @@ export class CustomersAdminService {
     offer_used, checkout_status, payment_status, plan, selected_plan,
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
     signup_source, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
+    COALESCE(NULLIF(original_source_url, ''),
+      CASE WHEN COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, '')) ~* '^https?://' 
+           THEN COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, ''))
+           ELSE COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, '')) END
+    ) AS original_source_url,
     CASE
-      WHEN COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, '')) IS NULL THEN NULL
-      ELSE COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, ''))
-    END AS original_source_url,
-    CASE
-      -- Explicit original website evidence takes precedence over campaign tags.
-      WHEN LOWER(COALESCE(NULLIF(first_touch_landing_route,''), NULLIF(landing_page,''),'')) ~ '(cortexaaicrm\.com/charts|/charts(/|$))' THEN 'Charts'
-      WHEN LOWER(COALESCE(NULLIF(first_touch_landing_route,''), NULLIF(landing_page,''),'')) LIKE '%vacation%' THEN 'Vacation Rentals'
-      WHEN LOWER(COALESCE(NULLIF(first_touch_landing_route,''), NULLIF(landing_page,''),'')) LIKE '%listoqasa.com%' THEN 'Marketplace'
-      WHEN LOWER(COALESCE(NULLIF(first_touch_landing_route,''), NULLIF(landing_page,''),'')) LIKE '%cortexaaicrm.com%' THEN 'CRM'
-      -- Legacy records may have a platform marker but no landing URL.
-      WHEN LOWER(COALESCE(signup_source,'')) ~ '(vacation|rental)' THEN 'Vacation Rentals'
-      WHEN LOWER(COALESCE(signup_source,'')) ~ '(listoqasa|marketplace)' THEN 'Marketplace'
-      WHEN LOWER(COALESCE(signup_source,'')) LIKE '%charts%' THEN 'Charts'
-      WHEN LOWER(COALESCE(signup_source,'')) ~ '(^crm$|cortexa)' THEN 'CRM'
-      -- Relative route is not a reliable platform identifier unless the source
-      -- itself identifies the website. Both websites have /es-ec/empezar.
-      WHEN LOWER(COALESCE(NULLIF(first_touch_landing_route,''),NULLIF(landing_page,''),''))
-           ~ '^/(es-ec|es|en|pt)(/empezar|/get-started)/?$'
-        AND (LOWER(COALESCE(first_touch_source,'')) ~ '(^crm$|cortexa)'
-             OR (COALESCE(signup_source,'') = '' AND COALESCE(first_touch_source,'') = '')) THEN 'CRM'
-      -- Administrative fallback for historical records without verifiable platform.
-      -- Marketplace is an assumed classification, NOT a verified first-touch origin.
-      -- Never persist this assumption into first-touch evidence columns.
-      ELSE 'Marketplace'
+      WHEN original_platform IN ('CRM', 'Marketplace', 'Vacation Rentals', 'Charts') THEN original_platform
+      WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%listoqasa.com%' AND LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%vacation%' THEN 'Vacation Rentals'
+      WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%listoqasa.com%' THEN 'Marketplace'
+      WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%cortexaaicrm.com/charts%' THEN 'Charts'
+      WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%cortexaaicrm.com%' THEN 'CRM'
+      ELSE 'Unknown'
     END AS original_platform,
     gclid, landing_page, signup_country, trial_ends_at, created_at, registered_at, upgraded_at, last_seen_at,
     first_touch_source, first_touch_medium, first_touch_campaign,
