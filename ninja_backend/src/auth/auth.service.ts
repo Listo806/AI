@@ -68,6 +68,43 @@ export class AuthService {
       throw new UnauthorizedException('This role cannot be assigned via signup');
     }
 
+    // Source is first-touch product attribution, not the marketing channel.
+    // Resolve before creating a user: a missing/invalid source must never create
+    // a partial account, tenant or email that blocks subsequent retries.
+    const sourceCandidates = [signupDto.originalSourceUrl, geo?.referer, geo?.origin];
+    let sourceUrl: string | null = null;
+    let platform: 'CRM' | 'Marketplace' | 'Vacation Rentals' | 'Charts' | null = null;
+    for (const candidate of sourceCandidates) {
+      if (typeof candidate !== 'string' || !candidate.trim()) continue;
+      try {
+        const parsed = new URL(candidate);
+        if (!['https:', 'http:'].includes(parsed.protocol)) continue;
+        const host = parsed.hostname.toLowerCase();
+        let inferred: typeof platform = null;
+        if (host === 'listoqasa.com' || host === 'www.listoqasa.com') {
+          inferred = /vacation|alquileres-vacacionales|vacacional/i.test(parsed.pathname)
+            ? 'Vacation Rentals' : 'Marketplace';
+        } else if (host === 'cortexaaicrm.com' || host === 'www.cortexaaicrm.com') {
+          inferred = /^\/charts(?:\/|$)/i.test(parsed.pathname) ? 'Charts' : 'CRM';
+        } else if (['localhost', '127.0.0.1'].includes(host)) {
+          const declared = signupDto.originalPlatform;
+          if (declared === 'CRM' || declared === 'Marketplace' || declared === 'Vacation Rentals' || declared === 'Charts') {
+            inferred = declared;
+          }
+        }
+        if (!inferred) continue;
+        // A declared subproduct can refine the host but never cross products.
+        if (inferred === 'Marketplace' && signupDto.originalPlatform === 'Vacation Rentals') inferred = 'Vacation Rentals';
+        if (inferred === 'CRM' && signupDto.originalPlatform === 'Charts') inferred = 'Charts';
+        sourceUrl = parsed.href;
+        platform = inferred;
+        break;
+      } catch { /* Ignore malformed / relative URLs; they cannot identify a site. */ }
+    }
+    if (!platform || !sourceUrl) {
+      throw new BadRequestException('Full original website URL and valid platform are required for signup');
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -123,49 +160,14 @@ export class AuthService {
     // first, IP fallback. Never blocks or fails signup; missing shows as Unknown.
     void captureSignupCountry(this.db, user.id, geo || {});
 
-    // First-touch product attribution is separate from marketing acquisition.
-    // Use a trusted known website host; never guess a platform from a relative path.
-    // Persist before returning signup success, and do not overwrite on subsequent visits.
-    const sourceCandidates = [
-      signupDto.originalSourceUrl,
-      geo?.referer,
-      geo?.origin,
-      signupDto.firstTouch?.landingPage,
-      signupDto.firstTouch?.landingRoute,
-    ];
-    let sourceUrl: string | null = null;
-    let platform: string | null = null;
-    for (const candidate of sourceCandidates) {
-      try {
-        const parsed = new URL(String(candidate || ''));
-        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') continue;
-        const host = parsed.hostname.toLowerCase();
-        if (host === 'listoqasa.com' || host === 'www.listoqasa.com') {
-          platform = /vacation|alquileres-vacacionales|vacacional/i.test(parsed.pathname) ? 'Vacation Rentals' : 'Marketplace';
-        } else if (host === 'cortexaaicrm.com' || host === 'www.cortexaaicrm.com' || host === 'backend.cortexaaicrm.com') {
-          platform = /^\/charts(?:\/|$)/i.test(parsed.pathname) ? 'Charts' : 'CRM';
-        } else if (['localhost', '127.0.0.1'].includes(host) && ['CRM', 'Marketplace', 'Vacation Rentals', 'Charts'].includes(String(signupDto.originalPlatform))) {
-          platform = String(signupDto.originalPlatform);
-        } else continue;
-        sourceUrl = parsed.origin + parsed.pathname + parsed.search;
-        break;
-      } catch { /* relative URLs cannot prove which website was used */ }
-    }
-    // Explicit product is useful for shared signup routes, but cannot contradict a known host.
-    const declared = signupDto.originalPlatform;
-    if (platform === 'Marketplace' && declared === 'Vacation Rentals') platform = declared;
-    if (platform === 'CRM' && declared === 'Charts') platform = declared;
-    if (!platform || !sourceUrl) {
-      // Do not silently create another user without verifiable product attribution.
-      await this.db.query('DELETE FROM users WHERE id = $1', [user.id]).catch(() => {});
-      throw new BadRequestException('Original website URL is required for signup attribution');
-    }
+    // Persist verified source after user/tenant creation; values were validated
+    // before any database writes and must not overwrite an existing first touch.
     await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS original_platform TEXT`);
     await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS original_source_url TEXT`);
     await this.db.query(
       `UPDATE users SET original_platform = COALESCE(NULLIF(original_platform, ''), $2),
                         original_source_url = COALESCE(NULLIF(original_source_url, ''), $3)
-        WHERE id = $1`, [user.id, platform, sourceUrl],
+       WHERE id = $1`, [user.id, platform, sourceUrl],
     );
 
     // Where this customer originally came from, when the browser sends it.
