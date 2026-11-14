@@ -427,10 +427,10 @@ export class CustomersAdminService {
            ~ '^/(es-ec|es|en|pt)(/empezar|/get-started)/?$'
         AND (LOWER(COALESCE(first_touch_source,'')) ~ '(^crm$|cortexa)'
              OR (COALESCE(signup_source,'') = '' AND COALESCE(first_touch_source,'') = '')) THEN 'CRM'
-      -- Legacy administrative default: classify un-attributed records as CRM for
-      -- reporting, without claiming a verified original website or overwriting
-      -- first-touch URL / campaign evidence. This is an assumption, not fact.
-      ELSE 'CRM'
+      -- Administrative fallback for historical records without verifiable platform.
+      -- Marketplace is an assumed classification, NOT a verified first-touch origin.
+      -- Never persist this assumption into first-touch evidence columns.
+      ELSE 'Marketplace'
     END AS original_platform,
     gclid, landing_page, signup_country, trial_ends_at, created_at, registered_at, upgraded_at, last_seen_at,
     first_touch_source, first_touch_medium, first_touch_campaign,
