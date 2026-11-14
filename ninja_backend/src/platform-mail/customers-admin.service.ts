@@ -415,6 +415,15 @@ export class CustomersAdminService {
       WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%vacation%' THEN 'Vacation Rentals'
       WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%listoqasa.com%' THEN 'Marketplace'
       WHEN LOWER(COALESCE(first_touch_landing_route, landing_page, '')) LIKE '%cortexaaicrm.com%' THEN 'CRM'
+      -- Cortexa's registration flow can persist a relative landing route rather
+      -- than the hostname. Recognize only its known signup route, and never
+      -- override explicit Marketplace / Vacation Rentals attribution.
+      WHEN LOWER(SPLIT_PART(SPLIT_PART(COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, ''), ''), '?', 1), '#', 1))
+           ~ '^/(es-ec|es|en|pt)(/empezar|/get-started)/?$'
+        AND LOWER(COALESCE(signup_source, '')) NOT LIKE '%listoqasa%'
+        AND LOWER(COALESCE(signup_source, '')) NOT LIKE '%marketplace%'
+        AND LOWER(COALESCE(signup_source, '')) NOT LIKE '%vacation%'
+        THEN 'CRM'
       ELSE 'Unknown'
     END AS original_platform,
     gclid, landing_page, signup_country, trial_ends_at, created_at, registered_at, upgraded_at, last_seen_at,
