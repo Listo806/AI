@@ -1,6 +1,7 @@
 import { attachMarketplaceAdClick } from '../../api/marketplaceAdAttribution';
 import { trackGoogleAdsSuccess } from '../../api/googleAdsTracking';
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { marketplaceRequest } from '../../api/marketplaceApi';
@@ -15,6 +16,7 @@ const saveSession = (result) => {
 };
 export default function MarketplaceSignupPage() {
   const [params] = useSearchParams();
+  const { i18n } = useTranslation();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isEcuador = pathname.startsWith("/es-ec/") || params.get("country")?.toUpperCase() === "EC" || sessionStorage.getItem("listoqasa_ecuador_context") === "1";
@@ -43,7 +45,7 @@ export default function MarketplaceSignupPage() {
     if (form.password !== form.confirm) return setError('Passwords do not match.');
     setBusy(true);
     try {
-      const result = await marketplaceRequest('/auth/signup', {method:'POST',body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password,role,fullName:form.name.trim(),...(isEcuador?{phone:(JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}').phone||'')}:{}),language:isEcuador?'es':undefined,originalPlatform:'Marketplace',originalSourceUrl:window.location.href})});
+      const result = await marketplaceRequest('/auth/signup', {method:'POST',body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password,role,fullName:form.name.trim(),...(isEcuador?{phone:(JSON.parse(sessionStorage.getItem('listoqasa_ecuador_lead')||'{}').phone||'')}:{}),language:(pathname.startsWith('/es-ec/') || pathname.startsWith('/es/')) ? 'es' : (pathname.startsWith('/pt/') ? 'pt' : (['en','es','pt'].includes((i18n.resolvedLanguage || i18n.language || '').split('-')[0]) ? (i18n.resolvedLanguage || i18n.language).split('-')[0] : 'en')),originalPlatform:'Marketplace',originalSourceUrl:window.location.href})});
       saveSession(result);
       // Retain the pre-registration phone for the Ecuador checkout display.
       // The signup API now persists the Ecuador phone on the canonical user record.

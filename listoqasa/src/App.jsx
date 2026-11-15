@@ -187,6 +187,59 @@ export default function App() {
         <Route path="/es/developer-plans" element={<AgentDeveloperPlansPage />} />
         <Route path="/vacation-rental-plans" element={<VacationRentalPlansPage />} />
         <Route path="/es/vacation-rental-plans" element={<VacationRentalPlansPage />} />
+        {/* Localized aliases preserve the selected language and the current page. */}
+        {['en', 'es', 'pt', 'es-ec'].flatMap((locale) => [
+          ['/owners', <OwnersPage />],
+          ['/owners/create', <CreateListingPage />],
+          ['/commercial-owners', <CommercialOwnersPage />],
+          ['/sell', <OwnersPage />],
+          ['/agents', <AgentsPage />],
+          ['/find-agent', <FindAgentPage />],
+          ['/developers', <DevelopersPage />],
+          ['/ai-crm', <AiCrmPage />],
+          ['/ai-help', <AiCrmPage />],
+          ['/ai-help/pricing', <AiHelpPricingPage />],
+          ['/buy', <Listings />],
+          ['/rent', <Listings />],
+          ['/apartments', <Listings />],
+          ['/houses', <Listings />],
+          ['/land', <Listings />],
+          ['/commercial', <Listings />],
+          ['/new-projects', <Listings />],
+          ['/property/:id', <PropertyDetailBoundary><ListingDetail /></PropertyDetailBoundary>],
+          ['/marketplace/signup', <MarketplaceSignupPage />],
+          ['/marketplace/login', <MarketplaceLoginPage />],
+          ['/marketplace/checkout', <MarketplaceCheckoutPage />],
+          ['/marketplace/subscription', <MarketplaceSubscriptionPage />],
+          ['/marketplace/purchase-confirmation', <MarketplacePurchaseConfirmationPage />],
+          ['/marketplace/payment-pending', <MarketplacePaymentPendingPage />],
+          ['/my-listings', <MyListingsPage />],
+          ['/create-listing', <CreateListingPage />],
+          ['/owner-plans', <OwnerPlansPage />],
+          ['/agent-plans', <AgentDeveloperPlansPage />],
+          ['/developer-plans', <AgentDeveloperPlansPage />],
+          ['/vacation-rental-plans', <VacationRentalPlansPage />],
+          ['/vacation-rentals', <VacationRentalsPage />],
+          ['/vacation-rentals/host', <VacationHostLanding />],
+          ['/vacation-rentals/search', <VacationResults />],
+          ['/vacation-rentals/app', <VacationResults />],
+          ['/vacation-rentals/property/:id', <VacationDetail />],
+          ['/about', <AboutPage />],
+          ['/about-us', <AboutPage />],
+          ['/contact', <ContactPage />],
+          ['/contact-us', <ContactPage />],
+          ['/terms', <LegalPage type="terms" />],
+          ['/terms-and-conditions', <LegalPage type="terms" />],
+          ['/privacy', <LegalPage type="privacy" />],
+          ['/privacy-policy', <LegalPage type="privacy" />],
+          ['/cancellation-policy', <LegalPage type="refund" />],
+          ['/refund-policy', <LegalPage type="refund" />],
+          ['/help', <HelpCenterPage />],
+          ['/my-trips', <StayAccountPage mode="trips" />],
+          ['/saved-stays', <StayAccountPage mode="saved" />],
+        ].map(([path, element]) => (
+          <Route key={`${locale}:${path}`} path={`/${locale}${path}`} element={element} />
+        )))}
       </Routes>
     </BrowserRouter>
   );
