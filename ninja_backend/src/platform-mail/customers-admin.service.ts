@@ -31,6 +31,12 @@ import {
 // succeeded. Shared by the checkout-pending / registered predicates below so the
 // tabs, filters, KPI counts, and the row status all split the two states the
 // SAME way (single source of truth).
+// Marketplace enrollments are a separate billing system from CRM plans.
+// Only use them for accounts explicitly attributed to ListoQasa.
+const MARKETPLACE_USER_SQL = `original_platform = 'Marketplace'`;
+const MARKETPLACE_LATEST_SQL = `(SELECT e.status FROM marketplace_plan_enrollments e WHERE e.user_id = users.id ORDER BY e.created_at DESC, e.id DESC LIMIT 1)`;
+const MARKETPLACE_ACTIVE_SQL = `(${MARKETPLACE_USER_SQL} AND ${MARKETPLACE_LATEST_SQL} = 'active')`;
+const MARKETPLACE_PENDING_SQL = `(${MARKETPLACE_USER_SQL} AND ${MARKETPLACE_LATEST_SQL} = 'pending_payment')`;
 const PAID_SELECTED_SQL = `LOWER(COALESCE(selected_plan,'')) IN ('solo','pro','team','business','growth','scale')`;
 
 // Checkout pending: a paid plan is in flight but no successful payment yet.
@@ -38,12 +44,12 @@ const PAID_SELECTED_SQL = `LOWER(COALESCE(selected_plan,'')) IN ('solo','pro','t
 // current signup flow, where the account is created 'registered' with a paid plan
 // chosen (Register -> Pricing -> Checkout). This is exactly what the main table
 // shows as "Checkout Pending", so the dedicated Checkout Pending view/tab uses it too.
-const CHECKOUT_PENDING_SQL = `(payment_status IN ('trial', 'pending') OR (COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid' AND ${PAID_SELECTED_SQL}))`;
+const CHECKOUT_PENDING_SQL = `(${MARKETPLACE_PENDING_SQL} OR (NOT (${MARKETPLACE_ACTIVE_SQL}) AND (payment_status IN ('trial', 'pending') OR (COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid' AND ${PAID_SELECTED_SQL}))))`;
 
 // Registered - No Plan: account created but no paid plan chosen and not on Free.
 // The complement of CHECKOUT_PENDING_SQL within the registered universe, so a
 // customer is counted in exactly one of the two.
-const REGISTERED_NO_PLAN_SQL = `(COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid' AND NOT (${PAID_SELECTED_SQL}))`;
+const REGISTERED_NO_PLAN_SQL = `(NOT (${MARKETPLACE_ACTIVE_SQL} OR ${MARKETPLACE_PENDING_SQL}) AND COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid' AND NOT (${PAID_SELECTED_SQL}))`;
 
 // The plans that count as a paid tier SELECTION, mirrored in JS for deriveStatus
 // so the row's status matches the SQL predicates above exactly.
@@ -407,6 +413,12 @@ export class CustomersAdminService {
     id, email, name, phone, COALESCE(preferred_language, 'en') AS language,
     offer_used, checkout_status, payment_status, plan, selected_plan,
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
+    (SELECT e.plan_key FROM marketplace_plan_enrollments e WHERE e.user_id=users.id ORDER BY e.created_at DESC,e.id DESC LIMIT 1) AS marketplace_plan_key,
+    (SELECT e.status FROM marketplace_plan_enrollments e WHERE e.user_id=users.id ORDER BY e.created_at DESC,e.id DESC LIMIT 1) AS marketplace_enrollment_status,
+    (SELECT e.billing_interval FROM marketplace_plan_enrollments e WHERE e.user_id=users.id ORDER BY e.created_at DESC,e.id DESC LIMIT 1) AS marketplace_billing_interval,
+    (SELECT e.price_cents FROM marketplace_plan_enrollments e WHERE e.user_id=users.id ORDER BY e.created_at DESC,e.id DESC LIMIT 1) AS marketplace_price_cents,
+    (SELECT e.current_period_start FROM marketplace_plan_enrollments e WHERE e.user_id=users.id ORDER BY e.created_at DESC,e.id DESC LIMIT 1) AS marketplace_period_start,
+    (SELECT e.current_period_end FROM marketplace_plan_enrollments e WHERE e.user_id=users.id ORDER BY e.created_at DESC,e.id DESC LIMIT 1) AS marketplace_period_end,
     signup_source, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
     COALESCE(NULLIF(original_source_url, ''),
       CASE WHEN COALESCE(NULLIF(first_touch_landing_route, ''), NULLIF(landing_page, '')) ~* '^https?://' 
@@ -510,6 +522,12 @@ export class CustomersAdminService {
 
   // Normalized lifecycle status the tabs and badges use.
   private deriveStatus(row: any): string {
+    if (row.original_platform === 'Marketplace' && row.marketplace_plan_key) {
+      if (row.marketplace_enrollment_status === 'active') return 'active';
+      if (row.marketplace_enrollment_status === 'pending_payment') return 'checkout_pending';
+      if (row.marketplace_enrollment_status === 'canceled') return 'canceled';
+      if (row.marketplace_enrollment_status === 'failed') return 'failed';
+    }
     const ps = String(row.payment_status || '').toLowerCase();
     const cs = String(row.checkout_status || '').toLowerCase();
     // A lapsed/terminated payment_status wins over checkout_status='paid' (set at
@@ -653,6 +671,23 @@ export class CustomersAdminService {
   private enrich(row: any) {
     if (!row) return row;
     const status = this.deriveStatus(row);
+    // Marketplace enrollment owns its own selected plan, payment state and price.
+    // Do not modify CRM entitlement or users.plan to display it.
+    if (row.original_platform === 'Marketplace' && row.marketplace_plan_key) {
+      const key = String(row.marketplace_plan_key);
+      const label = key.split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+      const amount = Number(row.marketplace_price_cents || 0) / 100;
+      const interval = row.marketplace_billing_interval || 'monthly';
+      return {
+        ...row, status, plan_id: key, plan_label: label,
+        billing: interval, billing_cycle: interval,
+        intro_amount: 0, recurring_amount: amount,
+        seats_limit: 1, seats_used: Math.max(Number(row.seats_used) || 0, 1),
+        country: row.signup_country || null,
+        next_billing: row.marketplace_period_end || null,
+        ...this.locationView(row), ...acquisitionView(row),
+      };
+    }
     // Same source of truth as the CRM guard and the usage layer: selected_plan is
     // intent only; a paid/grandfathered tier comes from `plan`; a terminated paid
     // account drops back to Free.
@@ -766,7 +801,7 @@ export class CustomersAdminService {
       case 'active':
         // checkout_status='paid' is sticky and never cleared on cancel, so exclude a
         // terminated payment_status from the paid-active set.
-        return `(payment_status = 'active' OR (checkout_status = 'paid' AND LOWER(COALESCE(payment_status,'')) NOT IN ('canceled','cancelled','suspended','past_due','refunded','expired','failed')))`;
+        return `(${MARKETPLACE_ACTIVE_SQL} OR (payment_status = 'active' OR (checkout_status = 'paid' AND LOWER(COALESCE(payment_status,'')) NOT IN ('canceled','cancelled','suspended','past_due','refunded','expired','failed'))))`;
       case 'past_due':
         return `payment_status = 'past_due'`;
       case 'canceled':
@@ -779,6 +814,10 @@ export class CustomersAdminService {
   private planClause(plan: string, params: any[]): string | null {
     const key = String(plan || '').toLowerCase();
     const eff = `LOWER(COALESCE(selected_plan, plan, ''))`;
+    if (key.startsWith('owner-') || key.startsWith('agent-') || key.startsWith('developer-')) {
+      params.push(key);
+      return `(${MARKETPLACE_USER_SQL} AND EXISTS (SELECT 1 FROM marketplace_plan_enrollments e WHERE e.user_id=users.id AND e.plan_key=$${params.length}))`;
+    }
     if (key === 'free') return `(${eff} = 'free' OR payment_status = 'free')`;
     if (key === 'solo') return `${eff} IN ('solo', 'pro')`;
     if (key === 'business') return `${eff} IN ('team', 'business')`;
@@ -807,7 +846,7 @@ export class CustomersAdminService {
     }
     if (opts.billing && opts.billing !== 'all') {
       params.push(String(opts.billing).toLowerCase());
-      clauses.push(`LOWER(COALESCE(billing_cycle,'')) = $${params.length}`);
+      clauses.push(`(LOWER(COALESCE(billing_cycle,'')) = $${params.length} OR (${MARKETPLACE_USER_SQL} AND EXISTS (SELECT 1 FROM marketplace_plan_enrollments e WHERE e.user_id=users.id AND LOWER(e.billing_interval)=$${params.length})))`);
     }
     if (opts.paymentStatus && opts.paymentStatus !== 'all') {
       const psv = String(opts.paymentStatus).toLowerCase();
@@ -819,7 +858,7 @@ export class CustomersAdminService {
         clauses.push(CHECKOUT_PENDING_SQL);
       } else {
         params.push(psv);
-        clauses.push(`LOWER(COALESCE(payment_status,'')) = $${params.length}`);
+        clauses.push(`(LOWER(COALESCE(payment_status,'')) = $${params.length} OR ($${params.length} = 'active' AND ${MARKETPLACE_ACTIVE_SQL}))`);
       }
     }
     if (opts.source && opts.source !== 'all') {
@@ -1171,7 +1210,7 @@ export class CustomersAdminService {
     const { rows: k } = await this.db.query(
       `SELECT
          COUNT(*)::int AS total_registered,
-         COUNT(*) FILTER (WHERE payment_status = 'active' OR checkout_status = 'paid')::int AS active_paid,
+         COUNT(*) FILTER (WHERE ${MARKETPLACE_ACTIVE_SQL} OR payment_status = 'active' OR checkout_status = 'paid')::int AS active_paid,
          COUNT(*) FILTER (WHERE payment_status = 'free')::int AS free_accounts,
          COUNT(*) FILTER (WHERE payment_status = 'trialing')::int AS trialing,
          COUNT(*) FILTER (WHERE ${CHECKOUT_PENDING_SQL})::int AS checkout_pending,
@@ -1484,9 +1523,9 @@ export class CustomersAdminService {
     const { rows: f } = await this.db.query(
       `SELECT
          COUNT(*)::int AS registered,
-         COUNT(*) FILTER (WHERE selected_plan IS NOT NULL)::int AS plan_selected,
+         COUNT(*) FILTER (WHERE selected_plan IS NOT NULL OR (${MARKETPLACE_USER_SQL} AND ${MARKETPLACE_LATEST_SQL} IS NOT NULL))::int AS plan_selected,
          COUNT(*) FILTER (WHERE payment_status IN ('trial','pending','active','past_due','canceled') OR checkout_status = 'paid')::int AS checkout_started,
-         COUNT(*) FILTER (WHERE payment_status = 'active' OR checkout_status = 'paid')::int AS payment_completed
+         COUNT(*) FILTER (WHERE ${MARKETPLACE_ACTIVE_SQL} OR payment_status = 'active' OR checkout_status = 'paid')::int AS payment_completed
        FROM users WHERE ${where}`,
       params,
     );
@@ -1586,6 +1625,25 @@ export class CustomersAdminService {
   }
 
   private async subscription(row: any) {
+    if (row.original_platform === 'Marketplace' && row.marketplace_plan_key) {
+      const key = String(row.marketplace_plan_key);
+      const interval = row.marketplace_billing_interval || 'monthly';
+      const label = key.split('-').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+      return {
+        plan: label, planId: key, isFree: Number(row.marketplace_price_cents || 0) === 0,
+        status: this.deriveStatus(row), billingCycle: interval,
+        seatsLimit: 1, introAmount: 0,
+        recurringAmount: Number(row.marketplace_price_cents || 0) / 100,
+        startDate: row.marketplace_period_start || row.created_at,
+        nextBillingDate: row.marketplace_period_end || null,
+        paddleCustomerId: null, paddleSubscriptionId: null,
+        originalSource: row.source_label || null,
+        originalMedium: acquisitionView(row).first_touch_medium,
+        originalCampaign: acquisitionView(row).first_touch_campaign,
+        originalLandingRoute: acquisitionView(row).first_touch_landing_route,
+        firstVisitAt: row.first_visit_at || null,
+      };
+    }
     const planId = normalizePlanId(row.selected_plan || row.plan);
     const cfg = getPlan(planId);
     const cycle = row.billing_cycle === 'annual' ? 'annual' : 'monthly';
