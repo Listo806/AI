@@ -61,6 +61,23 @@ function renderRows(){
   list.append(el('h3','picker-section',category.toUpperCase()));
   for(const m of rows){
    const openIndex=markets.findIndex(x=>x.symbol===m.symbol);
+   // Crypto gets the dedicated two-line instrument layout shown in the UX reference.
+   // Keep all other market categories and their existing actions untouched.
+   if(category==='Crypto' && m.group==='Crypto'){
+    const row=el('div','crypto-market-row');
+    const logos={'BTC/USDT':['₿','btc'],'ETH/USDT':['◆','eth'],'SOL/USDT':['≋','sol'],'XRP/USDT':['×','xrp'],'DOGE/USDT':['Ð','doge'],'LINK/USDT':['⬡','link']};
+    const [glyph,token]=logos[m.symbol]||['◆','generic'];
+    const mark=el('span','crypto-market-icon crypto-icon-'+token,glyph);
+    mark.setAttribute('aria-hidden','true');
+    const identity=el('div','crypto-market-identity');
+    identity.append(el('strong','crypto-market-name',m.name),el('small','crypto-market-pair',m.symbol));
+    const open=el('button','crypto-market-open',pendingMarkets.has(m.symbol)?'Loading…':'Open');
+    open.type='button';open.disabled=pendingMarkets.has(m.symbol);
+    open.setAttribute('aria-label','Open '+m.name+' '+m.symbol+' chart');
+    open.onclick=()=>openIndex>=0?(selectMarket(openIndex),renderRows()):chooseMarket(m);
+    row.append(mark,identity,open,favoriteButton(m));list.append(row);
+    continue;
+   }
    if(openIndex>=0){
     const row=el('div','compact-indicator-row'),select=el('button','open-market-select',m.name),remove=el('button','indicator-row-action','×');select.title=m.symbol;select.onclick=()=>{selectMarket(markets.findIndex(x=>x.symbol===m.symbol));renderRows();};if(markets[selected].symbol===m.symbol)select.classList.add('selected');remove.setAttribute('aria-label','Remove '+m.name+' from open markets');remove.onclick=()=>removeOpenMarket(m.symbol);row.append(select,el('span','market-open-label','Open'),favoriteButton(m),remove);list.append(row);
    }else{
@@ -68,7 +85,7 @@ function renderRows(){
    }
   }
   if(!rows.length)list.append(el('p','indicator-empty',search?'No matching markets.':category==='Favorites'?'No favorites yet. Click ☆ beside a market to save it.':'No markets to show.'));
-  foot.textContent=marketMessage||markets.length+' / 10 markets open · ☆ Favorite · × Close market';
+  foot.textContent=marketMessage||(category==='Crypto'?'6 crypto markets · Click Open to view chart':markets.length+' / 10 markets open · ☆ Favorite · × Close market');
 
 
 

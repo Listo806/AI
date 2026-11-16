@@ -31,3 +31,33 @@
 
 /* ATR only: retain the separator above the header; remove the duplicate above its graph. */
 .extra-pane[aria-label="ATR chart"]{border-top:0}
+
+/* Crypto Market Watch: reference-matched layout; scoped to the market drawer. */
+.market-picker.market-watch-dropdown{width:410px;max-width:calc(100vw - 24px);bottom:auto;max-height:calc(100dvh - 115px);border-radius:7px;background:#121a23;border-color:#3c5365}
+.market-watch-dropdown .picker-head{padding:12px 13px 8px}
+.market-watch-dropdown .picker-head h2{font-size:17px;font-weight:700;letter-spacing:0;margin:0}
+.market-watch-dropdown .picker-head small,.market-watch-dropdown .picker-description{display:none}
+.market-watch-dropdown .picker-search{margin:3px 11px 10px;width:calc(100% - 22px);padding:10px 11px;font-size:12px;border-radius:4px;background:#0e1720}
+.market-watch-dropdown .picker-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;gap:2px;padding:3px 10px 8px;min-height:37px}
+.market-watch-dropdown .picker-tabs button{font-size:10px;padding:5px 7px;white-space:nowrap;border-radius:5px}
+.market-watch-dropdown .picker-tabs button.selected{background:#1d554e;color:#d9fff5;border-bottom:2px solid #51ddba}
+.market-watch-dropdown .picker-list{padding:4px 11px 10px;min-height:0}
+.market-watch-dropdown .picker-section{font-size:11px;letter-spacing:.4px;color:#c5d4e1;margin:7px 0 5px;padding-bottom:5px;border-bottom:1px solid #2d3c4b}
+.crypto-market-row{display:flex;align-items:center;gap:10px;min-height:39px;padding:4px 5px;border-bottom:1px solid #253442}
+.crypto-market-row:hover{background:#1b2a35}
+.crypto-market-icon{width:25px;height:25px;flex:0 0 25px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;line-height:1;color:white}
+.crypto-icon-btc,.crypto-icon-doge{border-radius:50%;font-size:20px;background:#f5a623}
+.crypto-icon-doge{background:#b79b43}
+.crypto-icon-eth{color:#9da7e9;font-size:27px}
+.crypto-icon-sol{color:#83e7d0;font-size:29px;transform:rotate(-12deg)}
+.crypto-icon-xrp{color:#f3f7fc;font-size:31px;font-weight:400}
+.crypto-icon-link{color:#376df6;font-size:29px}
+.crypto-market-identity{display:flex;flex:1;min-width:0;flex-direction:column;gap:1px}
+.crypto-market-name{font-size:12px;font-weight:650;color:#eef4fa;line-height:16px}
+.crypto-market-pair{font-size:10px;color:#a8b9ca;line-height:13px}
+.crypto-market-open{border:1px solid #54d6ba;border-radius:5px;background:#142a2b;color:#83f1d5;font-weight:700;font-size:11px;min-width:54px;height:25px;padding:2px 10px}
+.crypto-market-open:hover{background:#235148}
+.crypto-market-open:disabled{opacity:.6;cursor:wait}
+.crypto-market-row .market-favorite{font-size:22px;min-width:26px;color:#a8b7c8}
+.market-watch-dropdown .picker-foot{padding:10px 12px;font-size:10px}
+@media(max-width:480px){.market-picker.market-watch-dropdown{width:calc(100vw - 20px);right:10px;top:58px;max-height:calc(100dvh - 70px)}.market-watch-dropdown .picker-tabs button{font-size:10px}}
