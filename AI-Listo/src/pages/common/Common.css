@@ -3292,3 +3292,20 @@
  .pricing-reference-columns li svg{width:16px!important;height:16px!important;margin-top:2px!important}
  .pricing-reference-extra{font-size:16px!important;line-height:22px!important;margin:8px 0 0!important}
 }
+
+/* 2026-11-16: additional ~9% vertical spacing reduction, desktop only. */
+@media (min-width: 701px) {
+ .pricing-page, .pricing-reference-main{min-height:0!important;height:auto!important}
+ .pricing-reference-main{padding-top:8px!important;padding-bottom:10px!important}
+ .pricing-reference h1{margin-bottom:6px!important}
+ .pricing-reference-billing{margin-bottom:7px!important}
+ .pricing-reference-card{padding-top:9px!important;padding-bottom:10px!important}
+ .pricing-reference-card h2{margin-bottom:6px!important}
+ .pricing-reference-included{padding-bottom:6px!important}
+ .pricing-reference-price{margin-top:5px!important;margin-bottom:5px!important}
+ .pricing-reference-annual{margin-bottom:3px!important}
+ .pricing-reference-cta{margin-bottom:7px!important}
+ .pricing-reference-features{padding-top:6px!important}
+ .pricing-reference-features h3{margin-bottom:4px!important}
+ .pricing-reference-extra{margin-top:5px!important;margin-bottom:0!important}
+}

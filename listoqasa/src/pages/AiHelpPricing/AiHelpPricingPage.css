@@ -98,3 +98,19 @@
  .lq-ai-feature-columns li svg{width:16px!important;height:16px!important;margin-top:2px!important}
  .lq-ai-reference-extra{font-size:16px!important;line-height:22px!important;margin:8px 0 0!important}
 }
+
+/* 2026-11-16: match Cortexa additional ~9% vertical spacing reduction. */
+@media (min-width: 701px) {
+ .lq-ai-pricing-page{min-height:0!important;height:auto!important;padding-top:8px!important;padding-bottom:10px!important}
+ .lq-ai-pricing-header{margin-bottom:7px!important}
+ .lq-ai-pricing-header h1{margin-bottom:6px!important}
+ .lq-ai-single-card{padding-top:9px!important;padding-bottom:10px!important}
+ .lq-ai-single-card h2{margin-bottom:6px!important}
+ .lq-ai-reference-included{padding-bottom:6px!important}
+ .lq-ai-single-price{margin-top:5px!important;margin-bottom:5px!important}
+ .lq-ai-single-year{margin-bottom:3px!important}
+ .lq-ai-single-cta{margin-bottom:7px!important}
+ .lq-ai-single-divider{margin-bottom:6px!important}
+ .lq-ai-single-card h3{margin-bottom:4px!important}
+ .lq-ai-reference-extra{margin-top:5px!important;margin-bottom:0!important}
+}
