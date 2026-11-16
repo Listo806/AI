@@ -1,20 +1,13 @@
-// Landing-page navigation; chart preview is now a static reference image.
-const menu = document.getElementById('menu');
-const nav = document.querySelector('header nav');
-if (menu && nav) {
-  menu.addEventListener('click', () => {
-    const open = nav.classList.toggle('open');
-    menu.setAttribute('aria-expanded', String(open));
-  });
-  nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
-    nav.classList.remove('open');
-    menu.setAttribute('aria-expanded', 'false');
-  }));
-}
-// The old product-tour controls no longer exist after the image replacement.
-document.querySelectorAll('[data-open]').forEach(link => {
-  link.addEventListener('click', () => {
-    const target = document.getElementById('explore');
-    if (target) target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'center' });
-  });
-});
+const menu=document.getElementById('menu'),nav=document.getElementById('primary-nav');
+menu?.addEventListener('click',()=>{const open=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));});
+nav?.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');menu.setAttribute('aria-expanded','false');}));
+const account=document.getElementById('account-trigger'),accountMenu=document.getElementById('account-menu');
+function closeAccount(){accountMenu.hidden=true;account?.setAttribute('aria-expanded','false');}
+account?.addEventListener('click',e=>{e.stopPropagation();const open=accountMenu.hidden;accountMenu.hidden=!open;account.setAttribute('aria-expanded',String(open));});
+document.addEventListener('click',e=>{if(!e.target.closest('.account-wrap'))closeAccount();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAccount();});
+const examples={clean:['01 / DRAW YOUR PERSPECTIVE','Less on the chart. More room for your analysis.','Choose a white background with hollow candles. Connect swing points with trendlines, and plan entry, stop loss and take profit.','assets/drawing-swing.svg'],mtf:['02 / INDICATORS + MTF','Read price with confluence.','Compare six Heisenberg timeframes and add indicators for context. Mixed readings are not trade instructions.','assets/chart-indicators-reference.png'],trade:['03 / ONE-CLICK TRADING','Plan before you execute.','Preview Buy, Sell and volume controls. Live execution requires an authorized broker connection.','assets/execution-dark.svg']};
+document.querySelectorAll('[data-tool]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-selected',String(b===button)));const [k,t,d,img]=examples[button.dataset.tool];document.getElementById('tool-kicker').textContent=k;document.getElementById('tool-title').textContent=t;document.getElementById('tool-description').textContent=d;document.getElementById('tool-image').src=img;}));
+document.querySelectorAll('[data-preview]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-preview]').forEach(b=>b.classList.toggle('active',b===button));const img=document.querySelector('#workspace-preview img');img.src=button.dataset.preview==='white'?'assets/chart-natural-reference.png':'assets/hero-open-rally.svg';}));
+const events=[{day:'today',time:'08:30',currency:'USD',impact:'high',name:'Consumer Price Index',actual:'3.1%',forecast:'3.0%',previous:'3.2%',explanation:'Illustrative inflation release; actual values may affect rate expectations.'},{day:'today',time:'10:00',currency:'EUR',impact:'medium',name:'Business Confidence',actual:'—',forecast:'95.2',previous:'94.8',explanation:'Illustrative survey of business sentiment.'},{day:'tomorrow',time:'09:00',currency:'GBP',impact:'high',name:'Interest Rate Decision',actual:'—',forecast:'4.00%',previous:'4.25%',explanation:'Illustrative central-bank decision; not a live event.'},{day:'week',time:'12:30',currency:'JPY',impact:'high',name:'Employment Report',actual:'—',forecast:'2.6%',previous:'2.5%',explanation:'Illustrative labor-market release.'}];let day='today';
+function renderCalendar(){const list=document.getElementById('event-list');if(!list)return;const high=document.getElementById('high-impact')?.checked,currency=document.getElementById('currency-filter')?.value||'all';const filtered=events.filter(e=>(day==='week'||e.day===day)&&( !high||e.impact==='high')&&(currency==='all'||e.currency===currency));list.innerHTML='<div class="event-table-head"><span>Time</span><span>Event / Currency</span><span>Impact</span><span>Actual</span><span>Forecast</span><span>Previous</span></div>'+ (filtered.length?filtered.map((e,i)=>`<button class="event-row" data-event="${events.indexOf(e)}"><span>${e.time}</span><span>${e.currency} · ${e.name}</span><span>${e.impact}</span><span>${e.actual}</span><span>${e.forecast}</span><span>${e.previous}</span></button>`).join(''):'<p class="no-events">No sample events match these filters.</p>');list.querySelectorAll('[data-event]').forEach(b=>b.addEventListener('click',()=>{const e=events[Number(b.dataset.event)];const d=document.getElementById('event-detail');d.hidden=false;d.textContent=e.currency+' · '+e.name+': '+e.explanation;}));}
+document.querySelectorAll('[data-day]').forEach(b=>b.addEventListener('click',()=>{day=b.dataset.day;document.querySelectorAll('[data-day]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('event-detail').hidden=true;renderCalendar();}));document.getElementById('high-impact')?.addEventListener('change',renderCalendar);document.getElementById('currency-filter')?.addEventListener('change',renderCalendar);document.getElementById('calendar-tz')?.addEventListener('change',renderCalendar);renderCalendar();
