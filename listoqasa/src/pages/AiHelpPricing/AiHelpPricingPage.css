@@ -68,3 +68,33 @@
 .lq-ai-feature-columns li svg{width:19px;height:19px;margin-top:2px;color:#080808}
 .lq-ai-reference-extra{font-size:23px;color:#080808}
 @media(max-width:700px){.lq-ai-pricing-page{padding:24px 12px 40px}.lq-ai-pricing-toggle{gap:9px;font-size:13px}.lq-ai-pricing-toggle>strong{font-size:12px;padding:5px 9px}.lq-ai-pricing-switch{width:55px;height:31px;padding:4px}.lq-ai-pricing-switch i{width:23px;height:23px;top:4px;left:4px}.lq-ai-pricing-switch.annual i{transform:translateX(24px)}.lq-ai-single-card{padding:18px 16px 24px}.lq-ai-single-card h2{font-size:21px}.lq-ai-reference-included{font-size:13px;gap:12px}.lq-ai-reference-included span+span{padding-left:12px}.lq-ai-single-price strong{font-size:43px}.lq-ai-single-price span{font-size:19px}.lq-ai-single-cta{font-size:19px}.lq-ai-feature-columns{grid-template-columns:1fr;gap:0}.lq-ai-feature-columns li{font-size:14px;margin:3px 0}.lq-ai-single-card h3{font-size:18px}.lq-ai-reference-extra{font-size:16px}}
+
+
+/* 2026-11-16 compact desktop reference: same dimensions as Cortexa CRM */
+@media (min-width: 701px) {
+ .lq-ai-pricing-page{min-height:0!important;padding:12px 16px 16px!important}
+ .lq-ai-pricing-shell{width:min(1000px,100%)!important}
+ .lq-ai-pricing-header{margin-bottom:10px!important}
+ .lq-ai-pricing-header h1{font-size:28px!important;line-height:34px!important;letter-spacing:-.6px!important;margin:0 0 8px!important}
+ .lq-ai-pricing-toggle{font-size:14px!important;gap:10px!important;line-height:24px!important}
+ .lq-ai-pricing-toggle>strong{font-size:14px!important;padding:3px 11px!important;margin:0!important}
+ .lq-ai-pricing-switch{width:44px!important;height:24px!important;padding:0!important}
+ .lq-ai-pricing-switch i{width:18px!important;height:18px!important;top:3px!important;left:3px!important}
+ .lq-ai-pricing-switch.annual i{transform:translateX(20px)!important}
+ .lq-ai-single-card{box-sizing:border-box!important;width:100%!important;max-width:1000px!important;padding:12px 16px 14px!important;border-radius:18px!important}
+ .lq-ai-single-card h2{font-size:16px!important;line-height:22px!important;margin:0 0 8px!important}
+ .lq-ai-reference-included{font-size:16px!important;line-height:20px!important;gap:18px!important;padding:0 0 8px!important}
+ .lq-ai-reference-included span+span{padding-left:18px!important}
+ .lq-ai-single-price{gap:5px!important;margin:8px 0!important}
+ .lq-ai-single-price strong{font-size:40px!important;line-height:44px!important}
+ .lq-ai-single-price span{font-size:18px!important}
+ .lq-ai-single-year{font-size:12px!important;margin:0 0 5px!important}
+ .lq-ai-single-cta{box-sizing:border-box!important;width:min(280px,100%)!important;min-height:38px!important;height:38px!important;max-width:280px!important;padding:0 10px!important;font-size:16px!important;line-height:20px!important;border-radius:9px!important;margin:0 auto 10px!important}
+ .lq-ai-single-divider{margin:0 0 8px!important}
+ .lq-ai-single-card h3{font-size:14px!important;line-height:20px!important;margin:0 0 6px!important}
+ .lq-ai-feature-columns{gap:24px!important}
+ .lq-ai-feature-columns ul{gap:0!important}
+ .lq-ai-feature-columns li{font-size:14px!important;line-height:20px!important;margin:0 0 2px!important;gap:8px!important}
+ .lq-ai-feature-columns li svg{width:16px!important;height:16px!important;margin-top:2px!important}
+ .lq-ai-reference-extra{font-size:16px!important;line-height:22px!important;margin:8px 0 0!important}
+}

@@ -1055,3 +1055,25 @@
 .ec-pricing-page .ec-price-card li>svg{stroke:#080808!important;color:#080808!important;width:19px!important;height:19px!important;flex:0 0 19px!important}
 .ec-pricing-page .ec-annual-saving{color:#333!important}
 @media(max-width:600px){.ec-pricing-page{padding:22px 12px 36px!important}.ec-pricing-page>h1{font-size:26px!important}.ec-pricing-page .ec-toggle{gap:8px!important}.ec-pricing-page .ec-toggle .ec-toggle-label{font-size:13px!important}.ec-pricing-page .ec-toggle>strong{font-size:12px!important}.ec-pricing-page .ec-price-card{padding:18px 16px!important}.ec-pricing-page .ec-price-card h2{font-size:24px!important}.ec-pricing-page .ec-price-card .ec-price{font-size:38px!important}.ec-pricing-page .ec-price-card li{font-size:14px!important}}
+
+
+/* 2026-11-16 compact E-commerce pricing, no clipping or hidden overflow */
+@media (min-width: 701px) {
+ .ec-pricing-page{min-height:0!important;padding:12px 16px 16px!important}
+ .ec-pricing-page>h1{font-size:28px!important;line-height:34px!important;margin:0 0 8px!important;letter-spacing:-.6px!important}
+ .ec-pricing-page .ec-toggle{gap:10px!important;margin:0 0 10px!important;line-height:24px!important}
+ .ec-pricing-page .ec-toggle .ec-toggle-label{font-size:14px!important}
+ .ec-pricing-page .ec-toggle>button{width:44px!important;height:24px!important;padding:3px!important}
+ .ec-pricing-page .ec-toggle>button i{width:18px!important;height:18px!important}
+ .ec-pricing-page .ec-toggle>strong{font-size:14px!important;padding:3px 11px!important}
+ .ec-pricing-page .ec-price-card{box-sizing:border-box!important;width:min(520px,100%)!important;max-width:520px!important;padding:16px!important;border-radius:18px!important}
+ .ec-pricing-page .ec-price-card h2{font-size:24px!important;line-height:27px!important;margin:0 0 8px!important}
+ .ec-pricing-page .ec-price-card .ec-price{font-size:40px!important;line-height:44px!important;margin:0 0 8px!important}
+ .ec-pricing-page .ec-price-card .ec-price small{font-size:18px!important}
+ .ec-pricing-page .ec-price-button{box-sizing:border-box!important;height:38px!important;min-height:38px!important;padding:0 10px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:16px!important;line-height:20px!important;border-radius:9px!important;margin:0 0 10px!important}
+ .ec-pricing-page .ec-price-card hr{margin:0 0 8px!important}
+ .ec-pricing-page .ec-price-card h3{font-size:14px!important;line-height:20px!important;margin:0 0 6px!important}
+ .ec-pricing-page .ec-price-card li{font-size:14px!important;line-height:20px!important;margin:0 0 2px!important;gap:8px!important}
+ .ec-pricing-page .ec-price-card li>svg{width:16px!important;height:16px!important;min-width:16px!important;flex:0 0 16px!important;margin-top:2px!important}
+ .ec-pricing-page .ec-annual-saving{font-size:12px!important;margin:0 0 5px!important}
+}

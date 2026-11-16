@@ -3262,3 +3262,33 @@
 .pricing-reference-annual{text-align:center;margin:-6px 0 12px}.pricing-reference-cta{display:block;border:2px solid #111;border-radius:14px;color:#080808!important;background:white;text-decoration:none;text-align:center;font-weight:700;font-size:25px;padding:7px;max-width:390px;margin:0 auto 16px}.pricing-reference-cta:hover{background:#f2f2f2}
 .pricing-reference-features{border-top:1px solid #ccc;padding-top:12px}.pricing-reference-features h3{font-size:21px;font-weight:700;margin:0 0 7px;color:#080808;text-align: left;}.pricing-reference-columns{display:grid;grid-template-columns:1fr 1fr;gap:30px}.pricing-reference-columns ul{list-style:none;margin:0;padding:0}.pricing-reference-columns li{display:flex;align-items:flex-start;gap:12px;font-size:17px;line-height:1.45;margin:2px 0}.pricing-reference-columns li svg{flex-shrink:0;margin-top:2px}.pricing-reference-extra{text-align:center;font-size:23px;margin:14px 0}
 @media(max-width:700px){.pricing-reference-main{padding:25px 12px!important}.pricing-reference-billing{font-size:14px;gap:9px}.pricing-reference-billing strong{font-size:13px}.pricing-reference-switch{width:57px;height:32px}.pricing-reference-switch i{width:24px;height:24px}.pricing-reference-switch.annual i{transform:translateX(25px)}.pricing-reference-card{padding:15px}.pricing-reference-card h2{font-size:20px}.pricing-reference-included{gap:10px;font-size:12px}.pricing-reference-included span{gap:5px}.pricing-reference-included span+span{padding-left:10px}.pricing-reference-price strong{font-size:42px}.pricing-reference-price span{font-size:20px}.pricing-reference-columns{grid-template-columns:1fr;gap:0}.pricing-reference-columns li{font-size:14px}.pricing-reference-extra{font-size:16px}}
+
+
+/* 2026-11-16 compact desktop reference: identical measurements on both CRM sites */
+@media (min-width: 701px) {
+ .pricing-reference-main{padding:12px 16px 16px!important;min-height:0!important}
+ .pricing-reference{max-width:1000px!important}
+ .pricing-reference h1{font-size:28px!important;line-height:34px!important;letter-spacing:-.6px!important;margin:0 0 8px!important}
+ .pricing-reference-billing{font-size:14px!important;gap:10px!important;margin:0 0 10px!important;line-height:24px!important}
+ .pricing-reference-billing strong{font-size:14px!important;padding:3px 11px!important}
+ .pricing-reference-switch{width:44px!important;height:24px!important;padding:3px!important}
+ .pricing-reference-switch i{width:18px!important;height:18px!important}
+ .pricing-reference-switch.annual i{transform:translateX(20px)!important}
+ .pricing-reference-card{max-width:1000px!important;box-sizing:border-box!important;padding:12px 16px 14px!important;border-radius:18px!important}
+ .pricing-reference-card h2{font-size:16px!important;line-height:22px!important;margin:0 0 8px!important}
+ .pricing-reference-included{font-size:16px!important;line-height:20px!important;gap:18px!important;padding:0 0 8px!important}
+ .pricing-reference-included span{gap:7px!important}
+ .pricing-reference-included span+span{padding-left:18px!important}
+ .pricing-reference-included svg{width:18px!important;height:18px!important}
+ .pricing-reference-price{margin:8px 0!important;gap:5px!important}
+ .pricing-reference-price strong{font-size:40px!important;line-height:44px!important}
+ .pricing-reference-price span{font-size:18px!important}
+ .pricing-reference-annual{font-size:12px!important;margin:0 0 5px!important}
+ .pricing-reference-cta{box-sizing:border-box!important;width:min(280px,100%)!important;height:38px!important;max-width:280px!important;padding:0 10px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:16px!important;line-height:20px!important;border-radius:9px!important;margin:0 auto 10px!important}
+ .pricing-reference-features{padding-top:8px!important}
+ .pricing-reference-features h3{font-size:14px!important;line-height:20px!important;margin:0 0 6px!important}
+ .pricing-reference-columns{gap:24px!important}
+ .pricing-reference-columns li{font-size:14px!important;line-height:20px!important;margin:0 0 2px!important;gap:8px!important}
+ .pricing-reference-columns li svg{width:16px!important;height:16px!important;margin-top:2px!important}
+ .pricing-reference-extra{font-size:16px!important;line-height:22px!important;margin:8px 0 0!important}
+}
