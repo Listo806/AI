@@ -8,3 +8,39 @@
 .calendar-upgrade{background:#e5e9d9;color:#26301e}.calendar-upgrade .eyebrow{color:#738957}.calendar-upgrade h2 span{color:#728365}.calendar-upgrade-pitch{display:grid;grid-template-columns:1fr 1fr;gap:8%;margin:24px 0 35px}.calendar-upgrade-pitch p{font-size:13px;line-height:1.8;color:#66755c}.calendar-workspace-preview{border:1px solid #b8c7b0;background:#f8faf4;border-radius:6px;overflow:hidden}.calendar-workspace-top{display:flex;justify-content:space-between;gap:15px;background:#233222;color:#c7e0b8;padding:12px 17px;font-size:9px;letter-spacing:1px}.calendar-workspace-top small{color:#a6b99b}.calendar-workspace-body{display:grid;grid-template-columns:40% 60%}.calendar-chart-context{padding:15px;border-right:1px solid #cdd9c7;min-width:0}.calendar-context-heading,.calendar-context-plan{display:flex;justify-content:space-between;gap:10px;font-size:10px}.calendar-chart-context img{width:100%;height:auto;display:block;margin:14px 0}.calendar-context-note{font-size:10px;color:#77856c;line-height:1.6}.calendar-live-demo{padding:17px;min-width:0}.calendar-live-heading{display:flex;justify-content:space-between;align-items:center}.calendar-live-heading small{font-size:8px;color:#7e906f}.calendar-live-heading h3{font-size:22px;margin-top:6px}.calendar-sample-tag{font-size:9px;background:#e4ecd8;padding:7px}.calendar-live-controls{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0}.calendar-range-controls{display:flex;gap:4px}.calendar-range-controls button{font-size:10px;padding:7px 10px;border:1px solid #cbd6c3;background:transparent}.calendar-range-controls button.active{background:#2e4428;color:white}.calendar-live-controls label{font-size:10px}.calendar-live-controls select,.calendar-demo-filters select{border:1px solid #c7d3c0;background:white;padding:6px;font-size:10px}.calendar-demo-filters{display:flex;gap:12px;align-items:center;margin-bottom:12px;font-size:10px}.calendar-table-wrap{overflow-x:auto}.calendar-event-table{border-collapse:collapse;width:100%;min-width:420px;font-size:10px}.calendar-event-table th,.calendar-event-table td{text-align:left;border-bottom:1px solid #d6e0d0;padding:9px 5px}.calendar-event-table th{font-size:9px;color:#72836c}.calendar-event-table tr{cursor:pointer}.calendar-event-table tr:hover{background:#edf3e8}.calendar-event-detail{font-size:10px;color:#52674b;padding:12px}.calendar-event-detail[hidden]{display:none}.calendar-live-footer,.calendar-upgrade-bottom{display:flex;justify-content:space-between;gap:15px;margin-top:14px;font-size:10px;color:#75876b}.calendar-upgrade-bottom{margin-top:22px}
 .execution-image{margin:0}.execution-image img{width:100%;display:block;border:1px solid #40533a}.execution-image figcaption{font-size:10px;color:#8fa183;padding-top:10px}
 @media(max-width:760px){.account-nav{margin-left:auto}.account-nav .nav-cta{font-size:11px}.account-nav #login-menu{right:0}.hero .hero-bottom{align-items:flex-start}.hero-chart figcaption,.showcase-frame figcaption,.calendar-upgrade-bottom{flex-wrap:wrap}.showcase-copy,.tools-feature-notes,.broker-connect-section,.execution-section,.calendar-upgrade-pitch,.calendar-workspace-body{display:block}.showcase-copy p{margin-top:15px}.tools-feature-notes>*{margin-bottom:10px}.broker-connect-panel,.execution-image{margin-top:30px}.calendar-chart-context{border-right:0;border-bottom:1px solid #cdd9c7}.calendar-workspace-top{font-size:7px;flex-wrap:wrap}.calendar-live-demo{padding:12px}.calendar-live-heading h3{font-size:19px}.showcase-tabs button{font-size:10px;padding:9px}.hero .hero-bottom .button{align-self:flex-start}}
+
+/* Layout hotfix: prevent SVG intrinsic dimensions from stretching the entire page. */
+*,*::before,*::after{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:clip}
+.landing-page img{max-width:100%;height:auto}
+.landing-page figure{min-width:0}
+.landing-page section,.landing-page main{min-width:0}
+.landing-page header{position:relative;z-index:30}
+.landing-page header nav{min-width:0;align-items:center}
+.landing-page header nav .open-chart-nav{margin-left:4px;color:var(--lime);white-space:nowrap}
+.mtf-guide{width:100%;min-width:0;max-width:100%;margin:0;display:flex;flex-direction:column;overflow:hidden}
+.mtf-guide-chart{width:100%;max-width:100%;position:relative;min-width:0;overflow:hidden}
+.mtf-guide-chart>img{width:100%;height:auto;display:block;max-width:100%}
+.mtf-red-annotation{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.mtf-guide-detail{display:grid;grid-template-columns:minmax(0,0.8fr) minmax(0,1.2fr);gap:20px;align-items:start;padding:18px;min-width:0}
+.mtf-zoom{min-width:0;max-width:100%;overflow:hidden}
+.mtf-zoom>span{display:block;font-size:10px;letter-spacing:1px;margin-bottom:10px}
+.mtf-zoom>svg{display:block;width:100%;height:210px;max-height:210px;overflow:hidden;background:#111a16;border:1px solid #344533}
+.mtf-reading{min-width:0;overflow-wrap:break-word}
+.mtf-reading h3{font-size:clamp(20px,2.5vw,32px);line-height:1.15;margin:12px 0}
+.mtf-reading p,.mtf-reading small{font-size:12px;line-height:1.65}
+.mtf-color-key{display:flex;flex-wrap:wrap;gap:10px}
+.actual-workspace,.showcase-frame,.tools-feature-image,.calendar-workspace-preview,.execution-image{max-width:100%;min-width:0;overflow:hidden}
+.actual-workspace>img,.showcase-frame>img,.tools-feature-image>img,.execution-image>img{display:block;width:100%;height:auto;object-fit:contain}
+@media(max-width:760px){
+ .landing-page header{gap:10px}
+ .landing-page header nav{width:min(340px,calc(100vw - 24px));max-width:calc(100vw - 24px);left:auto;right:12px;top:100%;z-index:50;overflow-y:auto;max-height:calc(100dvh - 75px)}
+ .landing-page header nav.open{display:flex;flex-direction:column;align-items:stretch}
+ .landing-page header nav a{display:block;width:100%;padding:11px 10px}
+ .landing-page header nav .open-chart-nav{margin-left:0;border-top:1px solid #3c4a38}
+ .mtf-guide-detail{grid-template-columns:1fr;padding:12px;gap:14px}
+ .mtf-zoom>svg{height:170px;max-height:170px}
+ .mtf-reading h3{font-size:23px}
+ .confluence{min-width:0}
+ .confluence-copy,.confluence .mtf-guide{width:100%;max-width:100%}
+}
