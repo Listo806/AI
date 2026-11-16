@@ -1,6 +1,6 @@
 const candleCache=new Map(),candleRequests=new Map();
 const candleFrames={'1min':{provider:'1m',ttl:60},'5min':{provider:'5m',ttl:120},'15min':{provider:'15m',ttl:300},'30min':{provider:'30m',ttl:300},'1h':{provider:'1h',ttl:600},'4h':{provider:'4h',ttl:1800},'1day':{provider:'1d',ttl:1800}};
-const candleSymbols=["EUR/USD","GBP/USD","USD/JPY","USD/CHF","USD/CAD","AUD/USD","NZD/USD","GBP/JPY","EUR/JPY","AUD/JPY","CAD/JPY","CHF/JPY","NZD/JPY","EUR/GBP","EUR/AUD","EUR/CAD","EUR/CHF","GBP/AUD","GBP/CAD","AUD/NZD","XAU/USD","XAG/USD","XCU/USD","XPT/USD","XPD/USD","USOIL","UKOIL","XNG/USD","US500","USTEC","US30","DE30","UK100","JP225","AUS200","STOXX50","DXY"];
+const candleSymbols=["EUR/USD","GBP/USD","USD/JPY","USD/CHF","USD/CAD","AUD/USD","NZD/USD","GBP/JPY","EUR/JPY","AUD/JPY","CAD/JPY","CHF/JPY","NZD/JPY","EUR/GBP","EUR/AUD","EUR/CAD","EUR/CHF","GBP/AUD","GBP/CAD","AUD/NZD","XAU/USD","XAG/USD","XCU/USD","XPT/USD","XPD/USD","USOIL","UKOIL","XNG/USD","US500","USTEC","US30","DE30","UK100","JP225","AUS200","STOXX50","DXY","BTC/USDT","ETH/USDT","SOL/USDT","XRP/USDT","DOGE/USDT","LINK/USDT"];
 export async function candleResponse(url){
  const symbol=url.searchParams.get('symbol'),interval=url.searchParams.get('interval');if(!candleSymbols.includes(symbol)||!candleFrames[interval])return Response.json({error:'Unsupported market or interval'},{status:400});
  const key=symbol+'|'+interval,ttl=candleFrames[interval].ttl,previous=candleCache.get(key);if(previous&&Date.now()-previous.fetchedAt<ttl*1000)return Response.json(previous);
