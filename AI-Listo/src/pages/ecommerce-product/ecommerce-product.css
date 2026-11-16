@@ -1025,3 +1025,33 @@
 .ec-public-language-menu button{display:block;width:100%;border:0;background:transparent;text-align:left;padding:10px 11px;border-radius:5px;color:#0b1b44;font-size:13px;cursor:pointer}
 .ec-public-language-menu button:hover,.ec-public-language-menu button.active{background:#edf4ff;color:#075cf2}
 @media(max-width:520px){.ec-header-actions{gap:8px!important}.ec-public-language-menu{right:-44px}}
+
+/* Updated e-commerce pricing reference */
+.ec-pricing-page .ec-price-card{max-width:515px;margin-left:auto;margin-right:auto;border:1px solid #bbb;border-radius:22px;padding:22px 28px 24px}
+.ec-pricing-page .ec-price-card h2{text-align:center;font-weight:800;line-height:1.08}
+.ec-pricing-page .ec-price-button{border:1px solid #777;border-radius:12px;text-align:center}
+@media(max-width:600px){.ec-pricing-page .ec-price-card{max-width:100%;padding:20px 16px}}
+
+/* 2026-11-16: white E-Commerce pricing reference; overrides legacy dark !important rules */
+.ec-pricing-page{background:#fff!important;color:#080808!important;padding:22px 18px 50px!important;min-height:100vh!important}
+.ec-pricing-page>h1{color:#080808!important;font-size:clamp(26px,3vw,34px)!important;line-height:1.2!important;letter-spacing:-.8px!important;margin:0 0 10px!important;white-space:normal!important;text-align:center!important}
+.ec-pricing-page>h1 em{background:none!important;-webkit-text-fill-color:#080808!important;color:#080808!important}
+.ec-pricing-page .ec-toggle{display:flex!important;gap:15px!important;justify-content:center!important;align-items:center!important;margin-bottom:12px!important;flex-wrap:wrap!important}
+.ec-pricing-page .ec-toggle .ec-toggle-label{color:#111!important;opacity:1!important;font-size:17px!important}
+.ec-pricing-page .ec-toggle .ec-toggle-label.on{color:#080808!important;font-weight:800!important}
+.ec-pricing-page .ec-toggle>button{background:#a2a2a2!important;width:60px!important;height:34px!important;padding:4px!important;border-radius:40px!important}
+.ec-pricing-page .ec-toggle>button i{background:#fff!important;width:26px!important;height:26px!important}
+.ec-pricing-page .ec-toggle>strong{background:#eee!important;color:#111!important;border-radius:24px!important;font-size:15px!important;padding:5px 13px!important;margin:0!important}
+.ec-pricing-page .ec-price-card{box-sizing:border-box!important;width:min(515px,100%)!important;max-width:515px!important;margin:0 auto!important;padding:16px 28px 20px!important;background:#fff!important;color:#080808!important;border:1px solid #aaa!important;border-radius:20px!important;box-shadow:none!important}
+.ec-pricing-page .ec-price-card h2{font-size:28px!important;color:#080808!important;line-height:1.1!important;margin:0 0 10px!important;font-weight:800!important}
+.ec-pricing-page .ec-price-card .ec-price{font-size:42px!important;color:#080808!important;line-height:1.15!important;margin:0 0 12px!important;font-weight:800!important}
+.ec-pricing-page .ec-price-card .ec-price small{font-size:25px!important;color:#080808!important}
+.ec-pricing-page .ec-price-button{display:block!important;background:#fff!important;color:#080808!important;border:1px solid #777!important;border-radius:11px!important;padding:8px 12px!important;font-size:22px!important;font-weight:800!important;line-height:1.2!important;margin:0 0 13px!important}
+.ec-pricing-page .ec-price-button:hover{background:#f2f2f2!important;color:#080808!important}
+.ec-pricing-page .ec-price-card hr{border-top:1px solid #ccc!important;margin:0 0 10px!important}
+.ec-pricing-page .ec-price-card h3{font-size:17px!important;color:#080808!important;font-weight:800!important;text-align:center!important;margin:0 0 7px!important}
+.ec-pricing-page .ec-price-card ul{display:table!important;margin:0 auto!important;padding:0!important}
+.ec-pricing-page .ec-price-card li{color:#080808!important;font-size:16px!important;line-height:1.28!important;margin:4px 0!important;gap:10px!important}
+.ec-pricing-page .ec-price-card li>svg{stroke:#080808!important;color:#080808!important;width:19px!important;height:19px!important;flex:0 0 19px!important}
+.ec-pricing-page .ec-annual-saving{color:#333!important}
+@media(max-width:600px){.ec-pricing-page{padding:22px 12px 36px!important}.ec-pricing-page>h1{font-size:26px!important}.ec-pricing-page .ec-toggle{gap:8px!important}.ec-pricing-page .ec-toggle .ec-toggle-label{font-size:13px!important}.ec-pricing-page .ec-toggle>strong{font-size:12px!important}.ec-pricing-page .ec-price-card{padding:18px 16px!important}.ec-pricing-page .ec-price-card h2{font-size:24px!important}.ec-pricing-page .ec-price-card .ec-price{font-size:38px!important}.ec-pricing-page .ec-price-card li{font-size:14px!important}}

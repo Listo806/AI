@@ -11,13 +11,13 @@
 .lq-ai-single-card{padding:19px 22px 49px;border:3px solid #146bff;border-radius:19px;background:#061b37;color:#fff;box-shadow:0 18px 36px rgba(4,23,47,.18)}
 .lq-ai-single-card h2{margin:0;text-align:center;font-size:27px;line-height:1.25;font-weight:800;letter-spacing:.2px}
 .lq-ai-single-price{display:flex;align-items:baseline;justify-content:center;gap:8px;margin:9px 0 8px}
-.lq-ai-single-price strong{font-size:38px;line-height:1.1;font-weight:800}
+.lq-ai-single-price strong{font-size:38px;line-height:1.1;font-weight:700}
 .lq-ai-single-price span{font-size:16px}
 .lq-ai-single-year{text-align:center;margin:0 0 10px;color:#c5d7ef;font-size:13px}
 .lq-ai-single-cta{display:flex;align-items:center;justify-content:center;width:100%;min-height:43px;margin:9px 0 16px;border-radius:12px;background:linear-gradient(100deg,#167cff 0%,#6534ff 60%,#a400f3 100%);color:white;text-decoration:none;font-size:16px;font-weight:750}
 .lq-ai-single-cta:hover{filter:brightness(1.12);color:white}
 .lq-ai-single-divider{height:1px;background:#48607a;margin:0 0 8px}
-.lq-ai-single-card h3{text-align:center;margin:0 0 23px;font-size:12px;font-weight:800;letter-spacing:.2px}
+.lq-ai-single-card h3{text-align:center;margin:0 0 23px;font-size:12px;font-weight:700;letter-spacing:.2px}
 .lq-ai-feature-columns{display:grid;grid-template-columns:1fr 1fr;gap:26px}
 .lq-ai-feature-columns ul{list-style:none;padding:0 18px 0 26px;margin:0;display:grid;gap:17px}
 .lq-ai-feature-columns li{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.35}
@@ -31,3 +31,40 @@
 .lq-ai-feature-columns{gap:16px}
 .lq-ai-feature-columns ul{padding:0 8px;gap:14px}
 @media(max-width:650px){.lq-ai-pricing-page{padding:28px 12px 40px}.lq-ai-single-card{padding:20px 15px 30px}.lq-ai-feature-columns ul{padding:0 5px;gap:13px}}
+
+/* Agentic CRM pricing reference */
+.lq-ai-pricing-header h1{font-weight:800;text-align:center;letter-spacing:-.8px}
+.lq-ai-reference-included{display:flex;justify-content:center;gap:24px;align-items:center;padding:10px 0 16px;border-bottom:1px solid #ddd;font-size:20px;font-weight:700}
+.lq-ai-reference-included span+span{border-left:1px solid #777;padding-left:24px}
+.lq-ai-reference-extra{text-align:center;font-size:20px;margin:14px auto 24px}
+@media(max-width:600px){.lq-ai-reference-included{font-size:12px;gap:10px}.lq-ai-reference-included span+span{padding-left:10px}.lq-ai-reference-extra{font-size:15px}}
+
+/* 2026-11-16: shared light Agentic CRM pricing reference (Cortexa / ListoQasa) */
+.lq-ai-pricing-page{background:#fff;color:#090909;padding:30px 20px 54px}
+.lq-ai-pricing-shell{width:min(1060px,100%)}
+.lq-ai-pricing-header{margin-bottom:18px}
+.lq-ai-pricing-header h1{font-family:Arial,Helvetica,sans-serif;font-size:clamp(28px,3vw,43px);letter-spacing:-1.4px;color:#080808;margin-bottom:16px}
+.lq-ai-pricing-toggle{gap:18px;font-size:20px;color:#222}
+.lq-ai-pricing-toggle span.selected{color:#080808;font-weight:800}
+.lq-ai-pricing-toggle>strong{background:#eee;color:#111;font-size:19px;padding:6px 18px;margin-left:0}
+.lq-ai-pricing-switch{width:80px;height:43px;background:#a2a2a2;padding:5px}
+.lq-ai-pricing-switch i{width:33px;height:33px;top:5px;left:5px}
+.lq-ai-pricing-switch.annual i{transform:translateX(37px)}
+.lq-ai-single-card{background:#fff;color:#080808;border:1px solid #aaa;border-radius:24px;box-shadow:none;padding:10px 32px 22px}
+.lq-ai-single-card h2{color:#080808;font-size:26px;font-weight:500;letter-spacing:0;margin:0 0 12px}
+.lq-ai-reference-included{font-size:22px;padding:0 0 16px;gap:28px}
+.lq-ai-reference-included span+span{border-left:2px solid #333;padding-left:28px}
+.lq-ai-single-price{gap:7px;margin:8px 0 12px}
+.lq-ai-single-price strong{font-size:56px}
+.lq-ai-single-price span{font-size:28px}
+.lq-ai-single-year{color:#333}
+.lq-ai-single-cta{width:min(390px,100%);min-height:46px;margin:0 auto 16px;border:2px solid #111;border-radius:14px;background:#fff;color:#080808;font-size:25px;font-weight:700}
+.lq-ai-single-cta:hover{background:#f2f2f2;color:#080808;filter:none}
+.lq-ai-single-divider{background:#ccc;margin:0 0 12px}
+.lq-ai-single-card h3{text-align:left;font-size:21px;letter-spacing:0;margin:0 0 7px;color:#080808}
+.lq-ai-feature-columns{gap:30px}
+.lq-ai-feature-columns ul{padding:0;gap:0}
+.lq-ai-feature-columns li{font-size:17px;line-height:1.45;gap:12px;margin:2px 0;color:#080808}
+.lq-ai-feature-columns li svg{width:19px;height:19px;margin-top:2px;color:#080808}
+.lq-ai-reference-extra{font-size:23px;color:#080808}
+@media(max-width:700px){.lq-ai-pricing-page{padding:24px 12px 40px}.lq-ai-pricing-toggle{gap:9px;font-size:13px}.lq-ai-pricing-toggle>strong{font-size:12px;padding:5px 9px}.lq-ai-pricing-switch{width:55px;height:31px;padding:4px}.lq-ai-pricing-switch i{width:23px;height:23px;top:4px;left:4px}.lq-ai-pricing-switch.annual i{transform:translateX(24px)}.lq-ai-single-card{padding:18px 16px 24px}.lq-ai-single-card h2{font-size:21px}.lq-ai-reference-included{font-size:13px;gap:12px}.lq-ai-reference-included span+span{padding-left:12px}.lq-ai-single-price strong{font-size:43px}.lq-ai-single-price span{font-size:19px}.lq-ai-single-cta{font-size:19px}.lq-ai-feature-columns{grid-template-columns:1fr;gap:0}.lq-ai-feature-columns li{font-size:14px;margin:3px 0}.lq-ai-single-card h3{font-size:18px}.lq-ai-reference-extra{font-size:16px}}

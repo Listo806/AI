@@ -16,7 +16,7 @@ const FEATURES_PT = [
   ["Acesso avançado à API", "Acesso ao aplicativo móvel", "Pontuação e qualificação avançada de leads", "Segmentação inteligente", "Gestão avançada de múltiplos funis", "Pesquisa e filtros avançados", "Análises preditivas", "Marca branca (sua marca)", "Domínio personalizado", "Garantia de SLA e disponibilidade", "Suporte prioritário (e-mail, chat, telefone e 24/7)", "Gerente de conta dedicado", "Integração e implementação"]
 ];
 const COPY = {
-  en: { title: "Agentic CRM", monthly: "Billed monthly", annual: "Billed annually", save: "Save 20%", heading: "All the Tools You Need", perMonth: "/month", year: "billed annually", cta: "Get Started", features: "FEATURES INCLUDED:" },
+  en: { title: "Simple Pricing. One Complete Agentic CRM.", monthly: "Billed monthly", annual: "Billed annually", save: "Save 20%", heading: "Everything you need to get started.", perMonth: "/month", year: "billed annually", cta: "Get Started", features: "FEATURES INCLUDED:" },
   es: { title: "CRM Agéntico", monthly: "Facturación mensual", annual: "Facturación anual", save: "Ahorra 20%", heading: "Todas las herramientas que necesitas", perMonth: "/mes", year: "facturado anualmente", cta: "Comenzar", features: "FUNCIONES INCLUIDAS:" },
   pt: { title: "CRM Agêntico", monthly: "Cobrança mensal", annual: "Cobrança anual", save: "Economize 20%", heading: "Todas as ferramentas de que você precisa", perMonth: "/mês", year: "cobrado anualmente", cta: "Começar", features: "RECURSOS INCLUÍDOS:" }
 };
@@ -46,6 +46,7 @@ export default function AiHelpPricingPage() {
           </header>
           <section className="lq-ai-single-card" aria-label={c.title}>
             <h2>{c.heading}</h2>
+            <div className="lq-ai-reference-included"><span>✓ &nbsp; 1 Workspace Included</span><span>♙ &nbsp; 1 User Included</span></div>
             <div className="lq-ai-single-price"><strong>${formatPrice(price)}</strong><span>{c.perMonth}</span></div>
             {annual && <p className="lq-ai-single-year">${formatPrice(1219.20)} {c.year}</p>}
             <a className="lq-ai-single-cta" href={href}>{c.cta}</a>
@@ -57,6 +58,7 @@ export default function AiHelpPricingPage() {
               ))}
             </div>
           </section>
+          <p className="lq-ai-reference-extra">Additional team members: $97/user/month</p>
         </div>
       </main>
     </>

@@ -563,140 +563,41 @@ export default function PricingPage() {
     })();
   };
 
+  const referenceFeatures = [
+    "Full CRM & Contact Management", "Lead & Pipeline Management", "Advanced Dashboard, Reports & Analytics",
+    "Team Workspace with Advanced Permissions & Roles", "Custom Dashboards, Objects & Fields", "Premium AI Chat",
+    "Unlimited AI Usage & Conversations", "Advanced Workflow Builder", "Advanced Automations (Unlimited)",
+    "Calendar & Scheduling", "Documents, File Storage & eSignatures", "Forms & Surveys", "Web Forms",
+    "Integrations (Core, Zapier, Make & Custom)", "Advanced API Access", "Mobile App Access",
+    "Lead Scoring & Qualification (Advanced)", "Smart Segmentation", "Multi-Pipeline Management (Advanced)",
+    "Advanced Search & Filters", "Predictive Analytics", "White Label (Your Brand)", "Custom Domain",
+    "SLA & Uptime Guarantee", "Priority Support (Email, Chat, Phone & 24/7)",
+    "Dedicated Account Manager", "Onboarding & Implementation"
+  ];
   return (
     <div className="pricing-page pricing-v3-page">
-      <main className="main-content pricing-v3-main">
-        <section className="cx-pricing-v3" aria-labelledby="pricing-v3-title">
-          <div className="cx-pricing-v3-heading">
-            <h1 id="pricing-v3-title">{pv3.title}</h1>
-
-            <div
-              className="cx-pricing-v3-billing"
-              aria-label="Billing frequency"
-            >
-              <button
-                type="button"
-                className={billingCycle === "monthly" ? "active" : ""}
-                onClick={() => setBillingCycle("monthly")}
-              >
-                {pv3.monthly}
-              </button>
-
-              <button
-                type="button"
-                className={`cx-pricing-v3-switch ${billingCycle === "annually" ? "annual" : ""}`}
-                onClick={() =>
-                  setBillingCycle((current) =>
-                    current === "monthly" ? "annually" : "monthly",
-                  )
-                }
-                aria-label={`${pv3.monthly} / ${pv3.annually}`}
-                aria-pressed={billingCycle === "annually"}
-              >
-                <span />
-              </button>
-
-              <button
-                type="button"
-                className={billingCycle === "annually" ? "active" : ""}
-                onClick={() => setBillingCycle("annually")}
-              >
-                {pv3.annually}
-              </button>
-
-              <span className="cx-pricing-v3-save">{pv3.save}</span>
-            </div>
+      <main className="main-content pricing-reference-main">
+        <section className="pricing-reference" aria-labelledby="pricing-reference-title">
+          <h1 id="pricing-reference-title">Simple Pricing. One Complete Agentic CRM.</h1>
+          <div className="pricing-reference-billing">
+            <b className={billingCycle === "monthly" ? "selected" : ""}>{pv3.monthly}</b>
+            <button type="button" className={`pricing-reference-switch ${billingCycle === "annually" ? "annual" : ""}`}
+              onClick={() => setBillingCycle(v => v === "monthly" ? "annually" : "monthly")}
+              role="switch" aria-checked={billingCycle === "annually"} aria-label="Toggle annual billing"><i /></button>
+            <span className={billingCycle === "annually" ? "selected" : ""}>{pv3.annually}</span>
+            <strong>{pv3.save}</strong>
           </div>
-
-          <div className="cx-pricing-v3-grid">
-            <article className="cx-pricing-v3-card">
-              <div className="cx-pricing-v3-card-top">
-                <h2>{pv3.plans.solo.name}</h2>
-                <p className="cx-pricing-v3-desc">{pv3.plans.solo.desc}</p>
-                {renderPaidPrice("solo")}
-                <Link
-                  to={`${funnelPath("/trial")}?from=pricing`}
-                  className="cx-pricing-v3-cta"
-                  onClick={(e) => onPlanCta(e, "solo")}
-                >
-                  {pv3.ctaTrial}
-                </Link>
-              </div>
-              <div className="cx-pricing-v3-features">
-                <h3>{pv3.keyFeatures}</h3>
-                <ul>
-                  {pv3.plans.solo.features.map((feature) => (
-                    <li key={feature}>
-                      <Check size={18} strokeWidth={2.5} />{" "}
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-
-            <article className="cx-pricing-v3-card cx-pricing-v3-card-business">
-              <div className="cx-pricing-v3-card-top">
-                <div className="cx-pricing-v3-name-row">
-                  <h2>{pv3.plans.business.name}</h2>
-                  {pv3.popular && (
-                    <span className="cx-pricing-v3-popular">{pv3.popular}</span>
-                  )}
-                </div>
-                <p className="cx-pricing-v3-desc">{pv3.plans.business.desc}</p>
-                {renderPaidPrice("team")}
-                <Link
-                  to={`${funnelPath("/trial")}?from=pricing`}
-                  className="cx-pricing-v3-cta cx-pricing-v3-cta-business"
-                  onClick={(e) => onPlanCta(e, "team")}
-                >
-                  {pv3.ctaTrial}
-                </Link>
-              </div>
-              <div className="cx-pricing-v3-features">
-                <h3>{pv3.keyFeatures}</h3>
-                <ul>
-                  {pv3.plans.business.features.map((feature) => (
-                    <li key={feature}>
-                      <Check size={18} strokeWidth={2.5} />{" "}
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-
-            <article className="cx-pricing-v3-card">
-              <div className="cx-pricing-v3-card-top">
-                <h2>{pv3.plans.scale.name}</h2>
-                <p className="cx-pricing-v3-desc">{pv3.plans.scale.desc}</p>
-                {renderPaidPrice("growth")}
-                <Link
-                  to={`${funnelPath("/trial")}?from=pricing`}
-                  className="cx-pricing-v3-cta"
-                  onClick={(e) => onPlanCta(e, "growth")}
-                >
-                  {pv3.ctaTrial}
-                </Link>
-              </div>
-              <div className="cx-pricing-v3-features">
-                <h3>{pv3.keyFeatures}</h3>
-                <ul>
-                  {pv3.plans.scale.features.map((feature) => (
-                    <li key={feature}>
-                      <Check size={18} strokeWidth={2.5} />{" "}
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-          </div>
-
-          <p className="cx-pricing-v3-paid-trial-note">
-            {pv3.paidTrialNote}
-          </p>
-
+          <article className="pricing-reference-card">
+            <h2>Everything you need to get started.</h2>
+            <div className="pricing-reference-included"><span><Check size={24}/> <b>1 Workspace Included</b></span><span><User size={24}/> <b>1 User Included</b></span></div>
+            <div className="pricing-reference-price"><strong>{cycle === "annual" ? "$101.60" : "$127"}</strong><span>/month</span></div>
+            {cycle === "annual" && <p className="pricing-reference-annual">$1,219.20 billed annually</p>}
+            <Link to={`${funnelPath("/trial")}?from=pricing`} className="pricing-reference-cta" onClick={e => onPlanCta(e, "solo")}>Get Started</Link>
+            <div className="pricing-reference-features"><h3>FEATURES INCLUDED:</h3><div className="pricing-reference-columns">
+              {[referenceFeatures.slice(0,14), referenceFeatures.slice(14)].map((group,i) => <ul key={i}>{group.map(feature => <li key={feature}><Check size={20} strokeWidth={2.5}/><span>{feature}</span></li>)}</ul>)}
+            </div></div>
+          </article>
+          <p className="pricing-reference-extra">Additional team members: $97/user/month</p>
         </section>
       </main>
     </div>

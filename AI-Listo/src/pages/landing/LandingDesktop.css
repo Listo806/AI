@@ -3477,6 +3477,7 @@ section#footer {
   gap: 16px;
   border-bottom: 1px solid #d7dce3;
   color: #323844;
+  display: none;
 }
 
 #cortexa-ai-crm-landing .hero-free-access-meta>span {

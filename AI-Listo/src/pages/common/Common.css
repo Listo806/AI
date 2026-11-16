@@ -3245,3 +3245,20 @@
   .pricing-page .cx-pricing-v3-inclusions { gap: 7px; font-size: 10.5px; }
   .pricing-page .cx-pricing-v3-inclusions span { gap: 4px; }
 }
+
+/* Reference pricing redesign - scoped to pricing page */
+.pricing-reference-main{padding:38px 20px 60px!important;background:#fff;color:#090909;min-height:70vh}
+.pricing-reference{max-width:1100px;margin:auto;font-family:Arial,Helvetica,sans-serif;color:#080808}
+.pricing-reference h1{text-align:center;font-size:clamp(27px,3vw,43px);font-weight:800;letter-spacing:-1.4px;line-height:1.15;margin:0 0 16px;color:#080808}
+.pricing-reference-billing{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;font-size:20px;margin-bottom:20px}
+.pricing-reference-billing .selected{font-weight:800}.pricing-reference-billing strong{background:#eee;border-radius:30px;padding:6px 18px;font-size:19px}
+.pricing-reference-switch{width:80px;height:43px;background:#a2a2a2;border:0;border-radius:40px;padding:5px;cursor:pointer;display:flex;align-items:center}
+.pricing-reference-switch i{width:33px;height:33px;background:white;border-radius:50%;display:block;transition:transform .2s}.pricing-reference-switch.annual i{transform:translateX(37px)}
+.pricing-reference-card{border:1px solid #aaa;border-radius:24px;padding:10px 32px 22px;max-width:1060px;margin:auto;background:white}
+.pricing-reference-card h2{text-align:center;font-size:26px;font-weight:500;margin:0 0 12px;color:#080808}
+.pricing-reference-included{display:flex;align-items:center;justify-content:center;gap:28px;border-bottom:1px solid #ccc;padding:0 0 16px;font-size:22px}
+.pricing-reference-included span{display:flex;align-items:center;gap:12px}.pricing-reference-included span+span{border-left:2px solid #333;padding-left:28px}
+.pricing-reference-price{display:flex;align-items:baseline;justify-content:center;margin:8px 0 12px;gap:7px}.pricing-reference-price strong{font-size:56px;line-height:1.2}.pricing-reference-price span{font-size:28px}
+.pricing-reference-annual{text-align:center;margin:-6px 0 12px}.pricing-reference-cta{display:block;border:2px solid #111;border-radius:14px;color:#080808!important;background:white;text-decoration:none;text-align:center;font-weight:700;font-size:25px;padding:7px;max-width:390px;margin:0 auto 16px}.pricing-reference-cta:hover{background:#f2f2f2}
+.pricing-reference-features{border-top:1px solid #ccc;padding-top:12px}.pricing-reference-features h3{font-size:21px;font-weight:700;margin:0 0 7px;color:#080808;text-align: left;}.pricing-reference-columns{display:grid;grid-template-columns:1fr 1fr;gap:30px}.pricing-reference-columns ul{list-style:none;margin:0;padding:0}.pricing-reference-columns li{display:flex;align-items:flex-start;gap:12px;font-size:17px;line-height:1.45;margin:2px 0}.pricing-reference-columns li svg{flex-shrink:0;margin-top:2px}.pricing-reference-extra{text-align:center;font-size:23px;margin:14px 0}
+@media(max-width:700px){.pricing-reference-main{padding:25px 12px!important}.pricing-reference-billing{font-size:14px;gap:9px}.pricing-reference-billing strong{font-size:13px}.pricing-reference-switch{width:57px;height:32px}.pricing-reference-switch i{width:24px;height:24px}.pricing-reference-switch.annual i{transform:translateX(25px)}.pricing-reference-card{padding:15px}.pricing-reference-card h2{font-size:20px}.pricing-reference-included{gap:10px;font-size:12px}.pricing-reference-included span{gap:5px}.pricing-reference-included span+span{padding-left:10px}.pricing-reference-price strong{font-size:42px}.pricing-reference-price span{font-size:20px}.pricing-reference-columns{grid-template-columns:1fr;gap:0}.pricing-reference-columns li{font-size:14px}.pricing-reference-extra{font-size:16px}}
