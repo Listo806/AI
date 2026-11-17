@@ -1,0 +1,16 @@
+/* Landing language control: desktop and mobile, aligned with account login. */
+.charts-language{position:relative;display:flex;align-items:center;flex-shrink:0;z-index:100}
+.charts-language-trigger{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:5px 10px;color:#e8f1dc;border:0;border-bottom:1px solid #55664b;background:transparent;font:600 12px/1.2 inherit;cursor:pointer;white-space:nowrap}
+.charts-language-trigger:hover,.charts-language-trigger[aria-expanded="true"]{color:#d8f48e}
+.charts-language-trigger span:first-child{font-size:17px;color:#d5f18c}
+.charts-language-menu{position:absolute;top:calc(100% + 12px);right:0;min-width:208px;padding:13px;border:1px solid #45543c;border-radius:9px;background:#172318;box-shadow:0 14px 34px #0008;color:#e9f1e3;z-index:10000}
+.charts-language-menu[hidden]{display:none!important}
+.charts-language-label{display:block;margin:3px 8px 9px;font-size:9px;letter-spacing:1.5px;color:#9ba995}
+.charts-language-menu button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:20px;text-align:left;background:transparent;color:#f1f4eb;border:0;border-radius:5px;padding:12px 10px;font-size:12px;cursor:pointer}
+.charts-language-menu button span{font-size:10px;color:#bbc5b2}
+.charts-language-menu button:hover,.charts-language-menu button.selected{background:#283b24;color:#d6f18a}
+/* Existing header is a flex layout: prevent account/login from being pushed off-screen. */
+header .charts-language{margin-left:auto}
+header .account-nav{margin-left:0}
+@media(max-width:850px){header .charts-language{margin-left:auto}.charts-language-trigger{padding:5px 7px;gap:4px}.charts-language-menu{right:0;top:calc(100% + 8px)}}
+@media(max-width:480px){.charts-language-menu{min-width:190px}.charts-language-trigger{font-size:11px;min-height:34px}.charts-language-trigger span:first-child{font-size:14px}}
