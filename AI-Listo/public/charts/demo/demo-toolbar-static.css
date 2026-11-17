@@ -1,0 +1,18 @@
+/* Static source-backed toolbar: no injected controls, no clipping. */
+article>.toolbar{display:block!important;position:relative!important;min-height:40px!important;overflow:visible!important;margin:0!important;padding:0!important;width:100%!important;max-width:100%!important}
+article>.toolbar>#markets,article>.toolbar>.mtf-table,article>.toolbar>.timeframes,article>.toolbar>.demo-chart-rail{display:none!important}
+#demoStaticToolbar{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;gap:3px!important;white-space:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;padding:4px 5px!important;scrollbar-width:thin;scrollbar-color:#657383 #101820;min-height:39px!important}
+#demoStaticToolbar>*{flex:0 0 auto!important;white-space:nowrap!important}
+#demoStaticToolbar .demo-static-frames,#demoStaticToolbar .demo-static-ranges,#demoStaticToolbar .demo-static-actions{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:2px!important}
+#demoStaticToolbar button{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;white-space:nowrap!important;visibility:visible!important;opacity:1!important;position:static!important;width:auto!important;min-width:0!important;height:27px!important;padding:3px 5px!important;margin:0!important;background:#151c25!important;color:#f3f6fa!important;border:1px solid #3c4b59!important;border-radius:4px!important;font:600 10px/1.2 system-ui,sans-serif!important;cursor:pointer!important}
+#demoStaticToolbar button:hover{background:#2d3948!important;border-color:#7b93a6!important}
+#demoStaticToolbar button.is-active{background:#305c58!important;border-color:#59c5b8!important}
+#demoStaticToolbar .demo-static-symbol{font:700 11px system-ui,sans-serif;color:#fff;margin-right:2px}
+#demoStaticToolbar .demo-static-ranges{border-left:1px solid #475360;padding-left:4px}
+#demoStaticToolbar .demo-static-actions{margin-left:auto}
+#demoStaticToolbar .demo-static-actions button[data-demo-action="ai"]{background:#194c43!important;border-color:#397c70!important}
+/* On desktops fit all buttons without hiding them. On smaller widths, keep one row and scroll. */
+@media(max-width:1100px){#demoStaticToolbar{overflow-x:auto!important}}
+.demo-static-dialog{position:fixed;z-index:100100;top:50%;left:50%;transform:translate(-50%,-50%);width:min(520px,92vw);max-height:80vh;overflow:auto;background:#111b25;color:#f2f6fb;border:1px solid #627587;border-radius:10px;padding:18px;box-shadow:0 20px 60px #0009}
+.demo-static-dialog::backdrop{background:#0009}.demo-static-dialog header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.demo-static-dialog button{padding:8px;background:#243444;color:white;border:1px solid #64788b;border-radius:5px;cursor:pointer}.demo-static-dialog .tools{display:flex;flex-wrap:wrap;gap:8px}.demo-static-dialog p{line-height:1.5}
+.demo-static-drawing{position:absolute;inset:0;pointer-events:none;z-index:30;touch-action:none}
