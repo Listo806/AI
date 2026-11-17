@@ -446,6 +446,7 @@ function AppRoutes() {
         <Route path="admin/billing-calendar" element={<AdminBillingCalendar />}  />
         <Route path="admin/marketplace/bank-transfers" element={<MarketplaceBankTransferApprovals />} />
         <Route path="admin/charts/bank-transfers" element={<ChartsBankTransferApprovals />} />
+        <Route path="admin/charts/payments" element={<ChartsBankTransferApprovals />} />
         <Route path="admin/signups" element={<AdminSignups />} />
         <Route
           path="admin/customers-legacy"

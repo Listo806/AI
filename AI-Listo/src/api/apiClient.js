@@ -53,7 +53,6 @@ class ApiClient {
 
     // Only add auth header if we have a token and it's not a public endpoint
     const token = this.accessToken || localStorage.getItem(STORAGE_PREFIX + 'access_token');
-    console.log("TOKEN SEND:", token);
     if (token && !isPublicEndpoint) { 
       headers['Authorization'] = `Bearer ${token}`;
     }
