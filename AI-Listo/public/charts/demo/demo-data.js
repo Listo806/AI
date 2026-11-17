@@ -8,7 +8,7 @@ window.CortexaDemoData=(()=>{
  const random=seed=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
  function candles(symbol,interval,count=600){
   const ms=durations[interval]||60000,now=Math.floor(Date.now()/ms)*ms;
-  const seed=hash(symbol+'|'+interval),rng=random(seed);
+  const seed=hash(symbol+'|'+interval+'|'+Math.floor(now/ms)),rng=random(seed);
   const initial=seeds[symbol]||(/^BTC|^ETH/.test(symbol)?80000:/JPY/.test(symbol)?155:/XAU/.test(symbol)?3800:/XAG/.test(symbol)?45:/USD|EUR|GBP/.test(symbol)?1.2:100);
   const scale=/JPY/.test(symbol)?.0008:/BTC|ETH/.test(symbol)?.005:/XAU|XAG/.test(symbol)?.002:.0015;
   let price=initial*(1+(rng()-.5)*.02);const rows=[];

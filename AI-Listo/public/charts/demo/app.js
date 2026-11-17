@@ -51,38 +51,16 @@ function alignEngineResponse(value,fullLength,requestedLength){
  return value;
 }
 function computeEngine(){
- const data=bars(),market=markets[selected].symbol;
- const frames=Object.fromEntries(['1min','5min','15min','30min','1h','4h'].map(tf=>[tf,cache.get(market+'|'+tf)?.bars||[]]));
- const context=JSON.stringify([market,frame,EngineSettings.inputs]);
- const sig=JSON.stringify([market,frame,data.length,data.at(-1)?.time,data.at(-2)?.time,data.at(-2)?.close,Math.floor(Date.now()/15000),EngineSettings.inputs,...Object.entries(frames).map(([tf,b])=>[tf,b.length,b.at(-1)?.time,b.at(-2)?.time,b.at(-2)?.close])]);
- if(engineKey===sig&&engineResult)return engineResult;
- if(enginePending!==sig){
-   engineAbort?.abort();clearTimeout(engineTimer);enginePending=sig;
-   if(data.length){engineTimer=setTimeout(async()=>{
-     const controller=new AbortController();engineAbort=controller;
-     try{const response=await fetch('/charts/demo/blocked-engine',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',signal:controller.signal,body:JSON.stringify({frame,bars:engineRequestBars(data),frames:Object.fromEntries(Object.entries(frames).map(([tf,b])=>[tf,engineRequestBars(b)])),settings:EngineSettings.inputs})});
-       if(!response.ok)throw Error('Server engine unavailable');const value=alignEngineResponse(await response.json(),data.length,Math.min(data.length,MAX_ENGINE_BARS));if(enginePending!==sig||controller.signal.aborted)return;
-       if(!Array.isArray(value.center)||value.center.length!==data.length||!value.bb||!Array.isArray(value.bb.upper))throw Error('Invalid engine output');
-       // Diagnostic only: never synthesize missing confluence values or signals.
-       const plotKeys=['center','upper','lower','vwapUpper','vwapLower'];
-       const plotCounts=Object.fromEntries(plotKeys.map(key=>[key,Array.isArray(value[key])?value[key].filter(Number.isFinite).length:0]));
-       if(plotKeys.some(key=>plotCounts[key]===0))console.warn('[Heisenberg] Overlay data unavailable', {symbol:market,frame,candles:data.length,plotCounts,volumeCandles:data.filter(b=>Number.isFinite(b.volume)).length});
-       engineResult=value;engineKey=sig;engineContext=context;engineError=false;draw();
-     }catch(error){if(!controller.signal.aborted&&enginePending===sig){engineError=true;$('engineStatus').textContent='Heisenberg server unavailable';setTimeout(()=>{if(enginePending===sig){enginePending='';draw();}},15000);}}
-   },250);}
+ const data=bars(),symbol=markets[selected].symbol;
+ const result=emptyEngine(data.length);
+ // Demo-only local approximation: show timeframe trends without requesting the paid engine.
+ for(const tf of Object.keys(result.table)){
+  const series=cache.get(symbol+'|'+tf)?.bars||[];
+  const last=series.at(-1),previous=series.at(-Math.min(21,series.length));
+  result.table[tf]=last&&previous?(last.close>previous.close?'Bullish':last.close<previous.close?'Bearish':'Neutral'):'Unavailable';
  }
- // Preserve the last valid MTF reading during a refresh. Do not display a
- // previous symbol, timeframe or settings as though they were current.
- const pending=emptyEngine(data.length);
- if(engineResult&&engineContext===context&&engineResult.table){
-   pending.table={...engineResult.table};
-   // Reuse the last fully computed overlay only when candle indices still match.
-   // A changed history length needs a fresh server result; never shift signals.
-   if(engineResult.center?.length===data.length){
-     return engineResult;
-   }
- }
- return pending;
+ engineError=false;
+ return result;
 }
 let lastMTFRenderKey='';
 function updateMTF(engine) {
@@ -100,12 +78,13 @@ function updateMTF(engine) {
     row.append(tf,trend);body.append(row);
   });
   $('tramaLabel').textContent=[TramaSettings.settings.inputs?TramaSettings.settings.length+' · '+TramaSettings.settings.source:'',TramaSettings.settings.values?(()=>{const v=TramaSettings.series(bars()).at(-1);return Number.isFinite(v)?v.toFixed(TramaSettings.settings.precision==='default'?3:Number(TramaSettings.settings.precision)):'';})():''].filter(Boolean).join(' · ');
-  $('engineStatus').textContent = engineError ? 'Heisenberg server unavailable' : bars().length && !entry()?.reference && bars().every(bar => Number.isFinite(bar.volume))
+  $('engineStatus').textContent = engineError ? 'Demo engine · local simulation' : bars().length && !entry()?.reference && bars().every(bar => Number.isFinite(bar.volume))
     ? 'Heisenberg active · closed candles'
     : 'Heisenberg awaits OHLC + volume';
 }
 let mtfRequest=0;
 async function loadMTF(){
+  if(window.CORTEXA_DEMO)return;
   if(!apiKey)return;
   const id=++mtfRequest,symbol=markets[selected].symbol,secret=apiKey;
   for(const tf of ['1min','5min','15min','30min','1h','4h']){
@@ -136,7 +115,7 @@ function renderMarketCards(){
  });
 }
 renderMarketCards();
-function render(){const market=markets[selected];document.documentElement.style.setProperty('--selected',colors[selected%colors.length]);$('marketTitle').textContent=market.name;$('symbol').textContent=market.symbol+(entry()?.reference?' · Reference price line · ':chartStyle==='candles'?' · Candles · ':' · Price line · ')+({'2h':'2 hour','1week':'Weekly','1month':'Monthly','1day':'Daily','4h':'4 hour','1h':'1 hour','30min':'30 minute','15min':'15 minute','5min':'5 minute','1min':'1 minute'}[frame]);$('category').textContent=market.category;const attribution=$('attribution');attribution.hidden=!(entry()?.reference&&market.category==='PRECIOUS METAL');attribution.href='https://standardbullion.com/market-data';attribution.textContent='Data by Standard Bullion';$('priceChart').setAttribute('aria-label',entry()?.reference?'Daily reference price line with Bollinger Bands':'Candlestick chart with Bollinger Bands and VWAP');document.querySelectorAll('#markets .market-select').forEach((button,i)=>{button.classList.toggle('active',i===selected);});document.querySelectorAll('[data-frame]').forEach(button=>button.classList.toggle('active',button.dataset.frame===frame));const data=bars(),last=data.at(-1),previous=data.at(-2);$('empty').hidden=!!data.length;const intraday=frame!=='1day';$('empty').querySelector('h3').textContent=intraday?'Intraday data needed':'Loading market history';$('empty').querySelector('p').textContent=intraday?'Waiting for Live feed candles. If its request/quota limit is reached, loading resumes after the provider allows requests.':'Daily reference history loads automatically. Use Refresh if the provider is temporarily unavailable.';$('lastPrice').textContent=last?format(last.close):'—';$('change').textContent=previous?((last.close-previous.close)>=0?'+':'')+((last.close/previous.close-1)*100).toFixed(2)+'% · vs previous observation':last?'Last candle '+last.date:'Connect a feed to see prices';$('dataStatus').textContent=entry()?entry().source+' · '+data.length+' candles · last '+last.date:'Awaiting market data';$('feedState').textContent=apiKey?'● Custom feed':entry()?'● Daily history connected':'◌ Loading daily history';$('bbLabel').textContent=config.bbPeriod+', '+config.bbMult;$('rsiLabel').textContent=config.rsiPeriod+' · Wilder';$('maLabel').textContent=config.maPeriod+' · SMA';$('anchorLabel').textContent=[VwapAA.settings.inputs?VwapAA.settings.anchor+' · '+VwapAA.settings.source+' · '+(VwapAA.settings.mode==='stdev'?'σ':'%')+' '+VwapAA.settings.multipliers.filter((_,i)=>VwapAA.settings.enabled[i]).join(', '):'',VwapAA.settings.values&&data.length?(()=>{const v=VwapAA.plots(data,frame)[0].values.at(-1);return Number.isFinite(v)?v.toFixed(VwapAA.settings.precision==='default'?3:Number(VwapAA.settings.precision)):'';})():''].filter(Boolean).join(' · ');$('vwapStatus').textContent=data.length?(data.every(b=>Number.isFinite(b.volume))?'VWAP uses supplied volume · '+$('anchorLabel').textContent:'VWAP unavailable where volume is missing'):'VWAP requires volume supplied by your feed.';updateLiveQuoteLabels();draw();setTimeout(()=>{ensureBBHistory();},0);}
+function render(){const market=markets[selected];document.documentElement.style.setProperty('--selected',colors[selected%colors.length]);$('marketTitle').textContent=market.name;$('symbol').textContent=market.symbol+(entry()?.reference?' · Reference price line · ':chartStyle==='candles'?' · Candles · ':' · Price line · ')+({'2h':'2 hour','1week':'Weekly','1month':'Monthly','1day':'Daily','4h':'4 hour','1h':'1 hour','30min':'30 minute','15min':'15 minute','5min':'5 minute','1min':'1 minute'}[frame]);$('category').textContent=market.category;const attribution=$('attribution');attribution.hidden=!(entry()?.reference&&market.category==='PRECIOUS METAL');attribution.href='https://standardbullion.com/market-data';attribution.textContent='Data by Standard Bullion';$('priceChart').setAttribute('aria-label',entry()?.reference?'Daily reference price line with Bollinger Bands':'Candlestick chart with Bollinger Bands and VWAP');document.querySelectorAll('#markets .market-select').forEach((button,i)=>{button.classList.toggle('active',i===selected);});document.querySelectorAll('[data-frame]').forEach(button=>button.classList.toggle('active',button.dataset.frame===frame));const data=bars(),last=data.at(-1),previous=data.at(-2);$('empty').hidden=!!data.length;const intraday=frame!=='1day';$('empty').querySelector('h3').textContent=intraday?'Intraday data needed':'Loading market history';$('empty').querySelector('p').textContent=intraday?'Waiting for Live feed candles. If its request/quota limit is reached, loading resumes after the provider allows requests.':'Daily reference history loads automatically. Use Refresh if the provider is temporarily unavailable.';$('lastPrice').textContent=last?format(last.close):'—';$('change').textContent=previous?((last.close-previous.close)>=0?'+':'')+((last.close/previous.close-1)*100).toFixed(2)+'% · vs previous observation':last?'Last candle '+last.date:'Connect a feed to see prices';$('dataStatus').textContent=entry()?entry().source+' · '+data.length+' candles · last '+last.date:'Awaiting market data';$('feedState').textContent=apiKey?'● Custom feed':entry()?'● Simulated local history':'◌ Loading daily history';$('bbLabel').textContent=config.bbPeriod+', '+config.bbMult;$('rsiLabel').textContent=config.rsiPeriod+' · Wilder';$('maLabel').textContent=config.maPeriod+' · SMA';$('anchorLabel').textContent=[VwapAA.settings.inputs?VwapAA.settings.anchor+' · '+VwapAA.settings.source+' · '+(VwapAA.settings.mode==='stdev'?'σ':'%')+' '+VwapAA.settings.multipliers.filter((_,i)=>VwapAA.settings.enabled[i]).join(', '):'',VwapAA.settings.values&&data.length?(()=>{const v=VwapAA.plots(data,frame)[0].values.at(-1);return Number.isFinite(v)?v.toFixed(VwapAA.settings.precision==='default'?3:Number(VwapAA.settings.precision)):'';})():''].filter(Boolean).join(' · ');$('vwapStatus').textContent=data.length?(data.every(b=>Number.isFinite(b.volume))?'VWAP uses supplied volume · '+$('anchorLabel').textContent:'VWAP unavailable where volume is missing'):'VWAP requires volume supplied by your feed.';updateLiveQuoteLabels();draw();setTimeout(()=>{ensureBBHistory();},0);}
 
 function syncIndicatorButtons(){
   if($('chartTicker'))$('chartTicker').textContent=markets[selected].symbol;
@@ -513,52 +492,18 @@ function updateLiveQuoteLabels() {
     $('change').textContent = (stale ? 'Last quote · ' : 'Current quote · ') + new Date(quote.timestamp).toLocaleTimeString('en-GB', {timeZone:'UTC', hour12:false}) + ' UTC';
   }
 }
-async function pollQuotes() {
-  if(window.ChartEmbed)return;
-  if (quoteRequestRunning || (typeof LiveStream!=='undefined'&&LiveStream.fresh(markets[selected].symbol))) return;
-  quoteRequestRunning = true;
-  try {
-    let response;
-    try {
-      const url=new URL('https://biquote.io/api/latest');markets.forEach(m=>url.searchParams.append('symbols',m.symbol.replace('/','')));
-      const direct=await fetch(url,{signal:AbortSignal.timeout(8000),cache:'no-store',credentials:'omit'});
-      if(!direct.ok)throw Error('Direct quote unavailable');const raw=await direct.json();
-      const rows=Array.isArray(raw)?raw:raw.ticks||raw.data||Object.values(raw);
-      const quotes=rows.flatMap(q=>{const market=markets.find(m=>m.symbol.replace('/','')===q.symbol),bid=Number(q.bid),ask=Number(q.ask),timestamp=Date.parse(q.timestamp);return market&&bid>0&&ask>=bid&&Number.isFinite(timestamp)?[{symbol:market.symbol,bid,ask,price:(bid+ask)/2,timestamp,source:'biquote · live midpoint backup',dayDiffPercent:q.dayDiffPercent}]:[];});
-      if(!quotes.length)throw Error('No quotes');response={ok:true,json:async()=>({quotes})};
-    }catch{response=await fetch('/api/quotes?'+new URLSearchParams(markets.map(m=>['symbol',m.symbol])),{signal:AbortSignal.timeout(10000),cache:'no-store'});}
-    if (!response.ok){if(response.status===429){nativeHistoryBlockedUntil=Date.now()+Math.max(60,Number(response.headers.get('Retry-After'))||60)*1000;showFeedNotice('Live feed request/quota limit reached. Live data is paused. Saved candles, if available, remain visible.');}throw new Error('Quote connection unavailable');}
-    const result = await response.json();
-    if (!Array.isArray(result.quotes)) throw new Error('Invalid quote response');
-    result.quotes.forEach(quote => {
-      if (!markets.some(market => market.symbol === quote.symbol) || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(quote.timestamp)) return;
-      const previous = liveQuotes.get(quote.symbol);
-      if (previous && quote.timestamp < previous.timestamp) return;
-      const direction = previous ? Math.sign(quote.price - previous.price) : 0;
-      liveQuotes.set(quote.symbol, {...quote, receivedAt:Date.now(), direction:direction || previous?.direction || 0});
-      if(Number.isFinite(quote.bid)&&Number.isFinite(quote.ask))updateStreamCandles(quote.symbol,{bid:quote.bid,ask:quote.ask,timestamp:new Date(quote.timestamp).toISOString()});
-      const button = document.querySelectorAll('#markets .market-select')[markets.findIndex(market => market.symbol === quote.symbol)];
-      if (direction) {
-        button.classList.remove('flash-up','flash-down');
-        void button.offsetWidth;
-        button.classList.add(direction > 0 ? 'flash-up' : 'flash-down');
-      }
-    });
-    (result.errors || []).forEach(error => {
-      const index = markets.findIndex(market => market.symbol === error.symbol);
-      if (index < 0) return;
-      const button = document.querySelectorAll('#markets .market-select')[index];
-      if (!liveQuotes.has(error.symbol)) button.querySelector('.market-quote-status').textContent = 'Quote unavailable';
-    });
-    applyQuoteSnapshots();updateLiveQuoteLabels();if(!document.hidden)draw();
-  } catch {
-    document.querySelectorAll('#markets .market-select').forEach(button => {
-      button.classList.add('quote-stale');
-      button.querySelector('.market-quote-status').textContent = 'Reconnecting quotes…';
-    });
-  } finally {
-    quoteRequestRunning = false;
-  }
+async function pollQuotes(){
+ if(window.ChartEmbed)return;
+ const now=Date.now();
+ markets.forEach((market,i)=>{
+  const candles=CortexaDemoData.candles(market.symbol,'1min',30);
+  const current=candles.at(-1),previous=candles.at(-2);
+  if(!current)return;
+  const old=liveQuotes.get(market.symbol);
+  const direction=old?Math.sign(current.close-old.price):Math.sign(current.close-previous.close);
+  liveQuotes.set(market.symbol,{symbol:market.symbol,price:current.close,bid:current.close,ask:current.close,timestamp:now,receivedAt:now,direction,source:'Simulated demo',dayDiffPercent:(current.close/previous.close-1)*100});
+ });
+ applyQuoteSnapshots();updateLiveQuoteLabels();if(!document.hidden)draw();
 }
 
 new ResizeObserver(draw).observe($('priceChart'));new ResizeObserver(draw).observe($('rsiChart'));setInterval(()=>{if(apiKey)loadFeed();},15*60*1000);render();loadFeed();pollQuotes();setInterval(pollQuotes,5000);setInterval(updateLiveQuoteLabels,1000);setInterval(()=>{if(!document.hidden&&!apiKey){loadNativeMTF();if(!['1min','5min','15min','30min','1h','4h'].includes(frame)){const current=entry();if(!current||Date.now()-current.fetchedAt>(current.refreshAfter||1800)*1000)loadFeed();}}},60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){updateLiveQuoteLabels();draw();pollQuotes();}});
