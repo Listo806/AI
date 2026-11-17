@@ -1,3 +1,4 @@
+import ChartsAdminPanel from './ChartsAdminPanel';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -579,5 +580,6 @@ export default function AdminBillingCalendar() {
 
       {modal.type === "retry-results" && <div className="abc-modal-list">{(modal.data || []).map((r, i) => <div className="abc-retry-row" key={i}><span><b>{r.row?.customerName}</b><small>{r.error || r.message || "Paddle automatic recovery is active."}</small></span>{r.updatePaymentMethodUrl && <button onClick={() => window.open(r.updatePaymentMethodUrl, "_blank", "noopener,noreferrer")}>Open secure payment update</button>}</div>)}</div>}
     </Modal>}
-  </div>;
+  <ChartsAdminPanel mode="calendar" />
+</div>;
 }

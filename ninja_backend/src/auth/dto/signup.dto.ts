@@ -11,6 +11,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../users/entities/user.entity';
 
 export class SignupDto {
+  @IsOptional()
+  marketingConsent?: boolean;
   @ApiPropertyOptional({ description: "Customer full name" })
   @IsOptional()
   @IsString()

@@ -12,5 +12,5 @@ export class ForgotPasswordDto {
   })
   @IsOptional()
   @IsIn(['/reset-password', '/e-commerce/reset-password'])
-  resetPath?: '/reset-password' | '/e-commerce/reset-password';
+  resetPath?: '/reset-password' | '/e-commerce/reset-password' | '/charts/reset-password/';
 }

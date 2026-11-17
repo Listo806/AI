@@ -172,6 +172,13 @@ export class AuthService {
 
     // Where this customer originally came from, when the browser sends it.
     // Write-once, so a later visit through another channel cannot replace it.
+    if (platform === 'Charts') {
+      await this.db.query(`CREATE TABLE IF NOT EXISTS charts_marketing_preferences (
+        user_id uuid PRIMARY KEY REFERENCES users(id), opted_in boolean NOT NULL DEFAULT false,
+        updated_at timestamptz NOT NULL DEFAULT now())`);
+      await this.db.query(`INSERT INTO charts_marketing_preferences(user_id,opted_in) VALUES($1,$2)
+        ON CONFLICT(user_id) DO NOTHING`, [user.id, signupDto.marketingConsent === true]);
+    }
     void captureFirstTouch(this.db, user.id, signupDto);
 
     // And the visit that brought them back today, stored beside it rather than
@@ -486,7 +493,7 @@ export class AuthService {
   // Always returns a generic response so we never reveal whether an email exists.
   async forgotPassword(
     email: string,
-    resetPath: '/reset-password' | '/e-commerce/reset-password' = '/reset-password',
+    resetPath: '/reset-password' | '/e-commerce/reset-password' | '/charts/reset-password/' = '/reset-password',
   ) {
     const normalized = (email || '').trim().toLowerCase();
     const genericResponse = {

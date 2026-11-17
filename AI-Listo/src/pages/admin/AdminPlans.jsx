@@ -1,3 +1,4 @@
+import ChartsAdminPanel from './ChartsAdminPanel';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/subscriptionApi';
@@ -1033,6 +1034,7 @@ export default function AdminPlans() {
         />
       )}
 
-    </div>
+    <ChartsAdminPanel mode="plans" />
+</div>
   );
 }

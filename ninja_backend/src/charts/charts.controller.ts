@@ -3,26 +3,28 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SecurityService } from '../auth/security.service';
 import { AuthService } from '../auth/auth.service';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { ChartsSubscriptionService } from './charts-subscription.service';
 import { ChartsAiService } from './charts-ai.service';
 
 @Controller('charts')
 export class ChartsController {
-  constructor(private readonly security: SecurityService, private readonly auth: AuthService, private readonly chartsAi: ChartsAiService) {}
+  constructor(private readonly security: SecurityService, private readonly auth: AuthService, private readonly chartsAi: ChartsAiService, private readonly subscriptions: ChartsSubscriptionService) {}
   private secret() {
     const secret = process.env.CHARTS_SESSION_SECRET;
     if (!secret || secret.length < 32) throw new ServiceUnavailableException('Charts session secret is not configured');
     return secret;
   }
-  private owner(id: string) {
+  private async owner(id: string) {
     const allowed = process.env.CHARTS_OWNER_USER_ID;
-    if (!allowed) throw new ServiceUnavailableException('Charts owner is not configured');
-    if (id !== allowed) throw new ForbiddenException('Charts access is restricted');
+    if (allowed && id===allowed) return;
+    const access=await this.subscriptions.access(id);
+    if (!access.paidActive) throw new ForbiddenException('Charts requires an active paid subscription');
   }
   private sign(payload: string) { return createHmac('sha256', this.secret()).update(payload).digest('base64url'); }
   @Post('session')
   @UseGuards(JwtAuthGuard)
   async create(@Req() req: any, @Res({passthrough:true}) res: any) {
-    this.owner(String(req.user?.id || ''));
+    await this.owner(String(req.user?.id || ''));
     const sid = req.user?.sessionId || req.user?.sid || null;
     if (!sid) throw new UnauthorizedException('Please sign in again to open Charts');
     // Recheck owner and session at the validation endpoint on every request.
@@ -41,7 +43,7 @@ export class ChartsController {
     let session: any;
     try { session = JSON.parse(Buffer.from(payload,'base64url').toString()); } catch { throw new UnauthorizedException(); }
     if (!session?.id || !Number.isFinite(session.exp) || session.exp < Date.now()) throw new UnauthorizedException();
-    this.owner(String(session.id));
+    await this.owner(String(session.id));
     if (!(await this.auth.validateUser(session.id))) throw new UnauthorizedException();
     if (!session.sid || !(await this.security.sessionValid(session.id,session.sid))) throw new UnauthorizedException();
     return String(session.id);
@@ -61,7 +63,7 @@ export class ChartsController {
       throw new UnauthorizedException('Trusted Charts proxy required');
     const user = String(req.headers['x-cortexa-authenticated-user'] || '');
     if (!user || !/^[-a-zA-Z0-9_:.@]{1,160}$/.test(user)) throw new UnauthorizedException();
-    this.owner(user);
+    await this.owner(user);
     return this.chartsAi.analyze(body, user);
   }
   @Post('analysis')
