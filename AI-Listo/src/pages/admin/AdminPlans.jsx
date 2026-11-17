@@ -1,4 +1,4 @@
-import ChartsAdminPanel from './ChartsAdminPanel';
+import apiClient from '../../api/apiClient';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/subscriptionApi';
@@ -628,13 +628,15 @@ const getCoreFeatures = (plan) => {
 const PRODUCT_CATEGORIES = [
   ['agentic_crm','Agentic CRM'],['ecommerce','E-Commerce'],
   ['marketplace','Marketplace'],['vacation_rentals','Vacation Rentals'],
-  ['marketplace_agents','Marketplace Agents'],
+  ['marketplace_agents','Marketplace Agents'],['charts','Cortexa Charts'],
 ];
 
 export default function AdminPlans() {
   const { t } = useTranslation();
   const { showSuccess, showError } = useNotification();
   const [plans, setPlans] = useState([]);
+  const [chartsPlans,setChartsPlans]=useState([]);
+  const [chartsError,setChartsError]=useState('');
   const [productFilter,setProductFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
@@ -646,6 +648,14 @@ export default function AdminPlans() {
     try {
       const list = await getPlans(false);
       setPlans(Array.isArray(list) ? list : []);
+      try {
+        const response=await apiClient.request('/charts/admin/plans');
+        setChartsPlans(Array.isArray(response) ? response : Array.isArray(response?.data) ? response.data : []);
+        setChartsError('');
+      } catch (err) {
+        setChartsPlans([]);
+        setChartsError(err?.message||'Unable to load Charts plans');
+      }
     } catch (err) {
       showError(err?.message || t('common.error'));
       setPlans([]);
@@ -717,7 +727,8 @@ export default function AdminPlans() {
     const category = p.planCategory || 'marketplace';
     return category === productFilter || (productFilter === 'agentic_crm' && category === 'ai_crm');
   });
-  const total = visiblePlans.length;
+  const visibleCharts = (productFilter==='all'||productFilter==='charts') ? chartsPlans : [];
+  const total = visiblePlans.length+visibleCharts.length;
 
   return (
     <div className="crm-page admin-plan-management-page">
@@ -735,7 +746,7 @@ export default function AdminPlans() {
 
         <div className="admin-plan-header-actions">
           <span className="admin-plan-live-badge"><CheckCircle2 size={16} /> {t('admin.plans.livePricing', 'Live pricing')}</span>
-          <button type="button" className="admin-plan-add-button" onClick={() => setModal({plan:null})}>
+          <button type="button" className="admin-plan-add-button" disabled={productFilter==='charts'} title={productFilter==='charts'?'Charts pricing is configured on the backend':undefined} onClick={() => setModal({plan:null})}>
             <Plus size={18}/>{t('admin.plans.addPlan','Add Plan')}
           </button>
         </div>
@@ -748,11 +759,12 @@ export default function AdminPlans() {
           {PRODUCT_CATEGORIES.map(([value,label])=><option key={value} value={value}>{label}</option>)}
         </select>
       </div>
+      {chartsError && <p role="status" style={{fontSize:12,color:'#b45309'}}>Charts catalog unavailable: {chartsError}</p>}
       {loading ? (
         <div className="admin-plan-state">
           {t('common.loading')}
         </div>
-      ) : visiblePlans.length === 0 ? (
+      ) : total === 0 ? (
         <div className="admin-plan-state">
           {t('admin.plans.noPlans')}
         </div>
@@ -794,6 +806,17 @@ export default function AdminPlans() {
               </thead>
 
               <tbody>
+                {visibleCharts.map((plan)=>(
+                  <tr key={`charts-${plan.code}`}>
+                    <td><div className="admin-plan-name-cell"><div className="admin-plan-icon" style={{background:'#eaf2ff',color:'#2563eb'}}><Gauge size={20}/></div><div className="admin-plan-name-copy"><strong>{plan.name}</strong><small>Cortexa Charts · {plan.billing==='annual'?'12 months':'Monthly'} · {plan.visibility==='exit-popup-only'?'Exit offer':'Standard'}</small></div></div></td>
+                    <td><div className="admin-plan-metric"><strong>$0</strong><small>to start</small></div></td>
+                    <td><div className="admin-plan-metric"><strong>${(Number(plan.amount_cents||0)/100).toFixed(0)}</strong><small>/{plan.billing==='annual'?'year':'month'}</small></div></td>
+                    <td>1</td><td>—</td><td>—</td><td>—</td>
+                    <td><div className="admin-plan-feature-list"><div><CheckCircle2 size={14}/><span>Charts workspace</span></div>{plan.renewal_amount_cents&&<small>Renews at ${(plan.renewal_amount_cents/100).toFixed(0)}/year</small>}</div></td>
+                    <td><span className="admin-plan-status is-active">Live</span></td>
+                    <td><span style={{fontSize:12,color:'#64748b'}}>Server-managed</span></td>
+                  </tr>
+                ))}
                 {visiblePlans.map((plan) => {
                   const visual = getPlanVisual(plan);
                   const PlanIcon = visual.Icon;
@@ -1034,7 +1057,7 @@ export default function AdminPlans() {
         />
       )}
 
-    <ChartsAdminPanel mode="plans" />
+
 </div>
   );
 }

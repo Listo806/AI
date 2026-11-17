@@ -352,7 +352,7 @@ export default function DashboardLayout() {
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}
                           >
-                            Bank Transfer Approvals
+                            Bank Transfers · Marketplace & Charts
                           </Link>
                           <Link
                             to="/dashboard/admin/billing-calendar"
