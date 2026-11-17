@@ -53,13 +53,38 @@
   toolbar.prepend(rail);
   const oldNav=toolbar.querySelector('#markets');if(oldNav)oldNav.classList.add('demo-hidden-original-market');
   const oldMtf=toolbar.querySelector('.mtf-table');if(oldMtf)oldMtf.classList.add('demo-hidden-original-mtf');
+  // Keep all controls on screen on desktop by fitting the complete rail, not by clipping its tail.
+  let fitQueued=false;
+  const fit=()=>{
+   fitQueued=false;
+   const rail=document.querySelector('.demo-chart-rail');
+   if(!rail)return;
+   rail.style.zoom='1';
+   rail.classList.add('demo-measuring');
+   const required=rail.scrollWidth;
+   const available=rail.parentElement?.clientWidth||window.innerWidth;
+   const ratio=Math.min(1,Math.max(.68,(available-12)/Math.max(required,1)));
+   rail.style.zoom=String(ratio);
+   rail.classList.remove('demo-measuring');
+  };
+  const scheduleFit=()=>{if(!fitQueued){fitQueued=true;requestAnimationFrame(fit);}};
+  window.addEventListener('resize',scheduleFit,{passive:true});
   const relocate=()=>{
    const target=document.getElementById('demoChartsSlot'),native=document.getElementById('viewChartsButton'),fullscreen=document.getElementById('chartFullscreenButton');
    if(native&&native.parentElement!==target)target.append(native);
    if(fullscreen&&fullscreen.parentElement!==target)target.append(fullscreen);
+   // The native controls are mounted asynchronously by chart-layout.js.
+   // A fixed-order rail prevents the actions being split or clipped.
+   scheduleFit();
    const name=document.querySelector('#markets button.active')?.textContent?.trim();if(name)symbol.textContent=name;
   };
-  new MutationObserver(relocate).observe(document.querySelector('article'),{childList:true,subtree:true});relocate();
+  const nativeObserver=new MutationObserver(changes=>{
+    if(changes.some(change=>[...change.addedNodes].some(node=>node.nodeType===1&&(node.id==='viewChartsButton'||node.id==='chartFullscreenButton'))))relocate();
+  });
+  nativeObserver.observe(document.querySelector('article'),{childList:true,subtree:true});
+  relocate();
+  document.fonts?.ready?.then(scheduleFit);
+  setTimeout(scheduleFit,300);
   document.getElementById('markets')?.addEventListener('click',()=>setTimeout(relocate,0));
   // Preserve all controls in one line. Scrolling is horizontal when needed.
   rail.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&rail.scrollWidth>rail.clientWidth){e.preventDefault();rail.scrollLeft+=e.deltaY;}},{passive:false});

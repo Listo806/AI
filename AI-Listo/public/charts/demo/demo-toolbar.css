@@ -23,3 +23,15 @@ article>.toolbar .demo-chart-rail .timeframes{display:flex!important}
 .demo-tool-notice{position:fixed;z-index:100002;bottom:20px;left:50%;transform:translateX(-50%);padding:9px 14px;border-radius:7px;background:#273b47;color:#fff;font:13px system-ui}
 .demo-drawing-layer{position:absolute;inset:0;z-index:19;pointer-events:none;touch-action:none}
 @media(max-width:760px){article>.toolbar{min-height:42px!important;display:flex!important}article>.toolbar>.demo-chart-rail{max-width:100vw;padding:3px 5px}.demo-chart-rail button{font-size:11px!important}}
+/* Desktop: all toolbar commands fit in one row, including controls at the far right. */
+article>.toolbar{width:100%!important;max-width:100%!important;overflow:hidden!important;box-sizing:border-box!important;margin:0!important}
+article>.toolbar>.demo-chart-rail{flex:0 0 auto!important;width:max-content!important;max-width:none!important;overflow:visible!important;scrollbar-width:none!important;transform-origin:left center!important;box-sizing:border-box!important;gap:3px!important;padding:2px 4px!important}
+article>.toolbar>.demo-chart-rail.demo-measuring{zoom:1!important}
+.demo-chart-rail .demo-chart-timeframes,.demo-chart-rail .demo-chart-ranges,.demo-chart-rail .demo-chart-zoom,.demo-chart-rail .demo-chart-action-group,.demo-chart-rail .demo-chart-style,.demo-chart-rail .demo-chart-native{gap:1px!important}
+.demo-chart-rail button{height:29px!important;padding:3px 5px!important;font-size:11px!important;letter-spacing:-.1px!important}
+.demo-chart-rail .demo-chart-symbol{padding:0 1px!important;font-size:11px!important}
+.demo-chart-rail .demo-chart-ranges{padding-left:3px!important}
+.demo-chart-rail .demo-chart-style{padding-left:2px!important}
+/* Native toolbar clones are never allowed to occupy a second row. */
+article>.toolbar>.actions,article>.toolbar>.chart-navigation{display:none!important}
+@media(max-width:900px){article>.toolbar{overflow-x:auto!important;overflow-y:hidden!important}article>.toolbar>.demo-chart-rail{zoom:1!important}}
