@@ -8,6 +8,7 @@ import { UserRole } from '../users/entities/user.entity';
 export class ChartsBillingController {
  constructor(private readonly billing: ChartsSubscriptionService) {}
  @Get('access') access(@Req() req:any){return this.billing.access(req.user.id);}
+ @Get('exit-offer-eligibility') exitOfferEligibility(@Req() req:any){return this.billing.exitOfferEligibility(req.user.id);}
  @Post('exit-offer-token') exitOfferToken(@Req() req:any){return this.billing.issueExitOffer(req.user.id);}
  @Post('checkout') checkout(@Req() req:any,@Body() body:{billing:string;offerCode?:string;offerToken?:string}){return this.billing.createOrder(req.user.id,body?.billing,body?.offerCode,body?.offerToken);}
  @Get('orders') orders(@Req() req:any){return this.billing.myOrders(req.user.id);}

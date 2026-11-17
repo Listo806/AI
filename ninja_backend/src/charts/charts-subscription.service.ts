@@ -56,7 +56,21 @@ export class ChartsSubscriptionService {
       VALUES($1,now(),now()+interval '7 days') ON CONFLICT(user_id) DO NOTHING`,[userId]);
     return this.access(userId);
   }
-  issueExitOffer(userId:string) {
+  async exitOfferEligibility(userId:string) {
+    await this.schema();
+    // Account creation must have been confirmed by the Auth service and attributed to Charts.
+    // A visit to Pricing alone never creates eligibility.
+    const result=await this.db.query(`SELECT original_platform FROM users WHERE id=$1`,[userId]);
+    if(result.rows[0]?.original_platform!=='Charts') return {eligible:false};
+    const paid=await this.db.query(`SELECT 1 FROM charts_entitlements WHERE user_id=$1 AND paid_until IS NOT NULL LIMIT 1`,[userId]);
+    if(paid.rows.length) return {eligible:false};
+    const purchased=await this.db.query(`SELECT 1 FROM charts_bank_orders WHERE user_id=$1 AND status='approved' LIMIT 1`,[userId]);
+    if(purchased.rows.length) return {eligible:false};
+    const used=await this.db.query(`SELECT 1 FROM charts_offer_claims WHERE user_id=$1 AND offer_code='CHARTS_EXIT_444'`,[userId]);
+    return {eligible:used.rows.length===0};
+  }
+  async issueExitOffer(userId:string) {
+    if(!(await this.exitOfferEligibility(userId)).eligible) throw new ForbiddenException('Charts exit offer is not available for this account');
     const secret=String(process.env.CHARTS_EXIT_OFFER_SECRET||'');
     if(secret.length<32) throw new ServiceUnavailableException('Charts offer signing key is not configured');
     const payload=Buffer.from(JSON.stringify({userId,offer:'CHARTS_EXIT_444',exp:Date.now()+15*60*1000})).toString('base64url');
@@ -81,6 +95,7 @@ export class ChartsSubscriptionService {
     const offer=offerCode||null;
     if(offer) {
       this.verifyExitOffer(userId,offerToken);
+      if(!(await this.exitOfferEligibility(userId)).eligible) throw new ForbiddenException('Charts exit offer is not available for this account');
       const existingPaid=await this.db.query('SELECT 1 FROM charts_entitlements WHERE user_id=$1 AND paid_until>now()',[userId]);
       if(existingPaid.rows.length) throw new BadRequestException('Introductory offer is for new Charts subscriptions');
       const previous=await this.db.query(`SELECT 1 FROM charts_offer_claims WHERE user_id=$1 AND offer_code=$2`,[userId,offer]);
