@@ -1,0 +1,3 @@
+'use strict';
+// Public metadata only. Proprietary calculations run in the authenticated Worker.
+const Heisenberg = Object.freeze({defaults:Object.freeze({tramaLength:20,snakeSmooth:6,snakeWidthAtr:.75,cooldownBars:20,bbLength:20,bbMult:2,rsiLength:14,rsiMaLength:9,vwapDevMult:1.5,rocLength:3,candlePowerMult:.6,useMTFFilter:true,useRsiRegimeFilter:true,bullRsiThreshold:45,bearRsiThreshold:55,showFullAlignment:true}),durations:Object.freeze({'1min':60000,'5min':300000,'15min':900000,'30min':1800000,'1h':3600000,'4h':14400000,'1day':86400000,'2h':7200000,'1week':604800000,'1month':2678400000})});

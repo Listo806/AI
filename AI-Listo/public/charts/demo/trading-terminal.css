@@ -1,0 +1,40 @@
+.trading-terminal[hidden]{display:none!important}
+.trading-terminal{order:3;display:flex;flex-direction:column;flex:0 0 auto;min-height:100px;max-height:75dvh;border:1px solid #34465a;border-radius:4px;background:#101820;color:#ecf2f9;font-size:11px;overflow:hidden;margin-top:4px;--terminal-line:#2b3a49}
+.terminal-divider{height:9px;flex:0 0 9px;display:flex;justify-content:center;align-items:center;cursor:ns-resize;touch-action:none;background:#16232d;border-bottom:1px solid #42596b;color:#9ab2c6;user-select:none}
+.terminal-divider:hover,.terminal-divider:focus-visible{background:#284956;outline:1px solid #70d7c0;outline-offset:-1px}
+.terminal-divider span{font-size:18px;line-height:7px;width:32px;text-align:center}
+.terminal-header{display:flex;align-items:center;gap:10px;min-height:36px;padding:3px 8px;border-bottom:1px solid var(--terminal-line);flex-shrink:0;white-space:nowrap}
+.terminal-header>strong{font-size:11px}.terminal-header button{font-size:11px;padding:5px 10px;border-radius:4px;color:inherit}.terminal-collapse{padding:4px!important;font-size:17px!important;background:transparent;border:0}.terminal-tabs{display:flex;gap:5px}.terminal-tabs [aria-selected=true]{border-color:#63c9ae;background:#163b36;color:#ecfff8}.terminal-demo-badge{margin-left:auto;padding:4px 7px;border:1px solid #435a6e;border-radius:4px;font-size:9px;color:#becedd}.terminal-table-wrap{overflow:auto;flex:1;min-height:0}.terminal-table{border-collapse:collapse;width:100%;white-space:nowrap;font-size:11px;font-variant-numeric:tabular-nums}.terminal-table th{position:sticky;top:0;background:#18232d;z-index:1;color:#fff;font-weight:600}.terminal-table th,.terminal-table td{padding:6px 9px;border-bottom:1px solid var(--terminal-line);text-align:right}.terminal-table th:nth-child(-n+3),.terminal-table td:nth-child(-n+3),.terminal-table th:nth-child(5),.terminal-table td:nth-child(5){text-align:left}.terminal-table tbody tr:nth-child(even){background:#14202a}.terminal-table tbody tr:hover{background:#1c303c}.terminal-table tfoot{position:sticky;bottom:0;background:#18232d;font-weight:600}.terminal-table tfoot td:first-child{text-align:left}.terminal-positive{color:#4fe3a3!important}.terminal-negative{color:#ff6176!important}.terminal-close-order{border:0;background:transparent;color:#ecf2f9;padding:0 5px;font-size:16px;line-height:16px}.terminal-close-order:hover{color:#ff7085;background:#3b252d}.terminal-account-summary{display:flex;flex-wrap:wrap;gap:10px 20px;padding:8px 10px;border-top:1px solid var(--terminal-line);flex-shrink:0;font-size:11px}.terminal-account-summary>span{white-space:nowrap}.terminal-notice{font-size:9px;color:#99adbf;padding:0 10px 5px;flex-shrink:0}.terminal-empty{text-align:center!important;padding:20px!important;color:#99adbf}.terminal-resizing{cursor:ns-resize!important;user-select:none}.terminal-resizing iframe{pointer-events:none}.terminal-open .chart-shell,.terminal-open .chart-grid{min-height:100px}.terminal-open .chart-shell{overflow:auto}.terminal-open .canvas-wrap{min-height:100px}.terminal-open .toolbar,.terminal-open #chartIndicatorControls{flex-shrink:0}
+html[data-theme=light] .trading-terminal{background:#fff;color:#23394c;--terminal-line:#d1dbe4;border-color:#aebfcd}html[data-theme=light] .terminal-header,html[data-theme=light] .terminal-account-summary{background:#f3f6f9}html[data-theme=light] .terminal-table th,html[data-theme=light] .terminal-table tfoot{background:#e6edf3;color:#20364a}html[data-theme=light] .terminal-table tbody tr:nth-child(even){background:#f4f7fa}html[data-theme=light] .terminal-table tbody tr:hover{background:#e4f1ee}html[data-theme=light] .terminal-divider{background:#dce6ed;color:#3b6073}html[data-theme=light] .terminal-positive{color:#08784a!important}html[data-theme=light] .terminal-negative{color:#c42b45!important}html[data-theme=light] .terminal-notice,html[data-theme=light] .terminal-demo-badge{color:#4e687c}html[data-theme=light] .terminal-close-order{color:#263c4e}
+@media(max-width:760px){.terminal-header{gap:5px;overflow-x:auto}.terminal-demo-badge{font-size:8px}.terminal-header button{padding:5px}.terminal-account-summary{gap:5px 12px;font-size:10px}.trading-terminal{max-height:65dvh}}
+/* Never let the longer toolbar overlap the history-range controls. */
+#chartIndicatorControls .chart-navigation{flex:0 0 auto;min-width:max-content}
+
+/* Account figures share the bottom row with the single profit total. */
+.terminal-table .terminal-account-cell{text-align:left;padding:0}
+.terminal-account-summary{border:0;padding:7px 8px;gap:6px 14px;flex-wrap:nowrap;font-weight:400}
+.terminal-account-summary b{font-weight:600}
+/* Compact single-row toolbar without a horizontal scrollbar. */
+#chartIndicatorControls{overflow:visible;gap:4px}
+#chartIndicatorControls .chart-navigation{gap:4px}
+#chartIndicatorControls .actions{gap:3px;min-width:0}
+#chartIndicatorControls .actions button{font-size:11px;padding-left:5px;padding-right:5px;white-space:nowrap}
+#chartIndicatorControls .timeframes{gap:0}
+#chartIndicatorControls .timeframes button{font-size:11px;min-width:23px;padding-left:4px;padding-right:4px}
+#chartIndicatorControls .history-ranges{gap:0;padding-left:4px}
+#chartIndicatorControls .history-ranges button{font-size:10px;min-width:21px;padding-left:3px;padding-right:3px}
+#chartFullscreenButton{min-width:29px;font-size:17px!important;padding:3px!important}
+@media(max-width:1100px){#chartIndicatorControls .actions button{font-size:10px;padding-left:3px;padding-right:3px}#chartIndicatorControls .chart-navigation{gap:2px}#chartIndicatorControls .timeframes button{min-width:20px;padding-left:2px;padding-right:2px}#chartIndicatorControls .history-ranges button{min-width:19px;padding-left:2px;padding-right:2px}}
+@media(max-width:900px){#chartIndicatorControls{flex-wrap:wrap}#chartIndicatorControls .actions{margin-left:0}.terminal-account-summary{gap:5px 10px;font-size:10px}}
+
+/* Use the recovered space for legible text and an explicit fullscreen label. */
+#chartIndicatorControls .actions button{font-size:11.5px;padding-left:6px;padding-right:6px}
+#chartIndicatorControls .timeframes button{font-size:11.5px;min-width:24px}
+#chartIndicatorControls .history-ranges button{font-size:10.5px;min-width:22px}
+#chartIndicatorControls #chartFullscreenButton{font-size:11.5px!important;padding:6px!important;min-width:0}
+#chartIndicatorControls #terminalToggle[aria-expanded=true]{background:#174338;border-color:#55c8a3;color:#c9ffe9;box-shadow:inset 0 0 0 1px #55c8a333}
+#chartIndicatorControls #terminalToggle[aria-expanded=true]:hover{background:#5b2730;border-color:#dc7080;color:#ffe1e5}
+html[data-theme=light] #chartIndicatorControls #terminalToggle[aria-expanded=true]{background:#d6f1e6;border-color:#369c78;color:#145940}
+@media(max-width:1250px){#chartIndicatorControls .actions button{font-size:11px;padding-left:5px;padding-right:5px}#chartIndicatorControls .timeframes button{font-size:11px;min-width:23px}#chartIndicatorControls .history-ranges button{font-size:10px;min-width:21px}#chartIndicatorControls #chartFullscreenButton{font-size:11px!important;padding:5px!important}}
+/* Footer uses colspans, so override positional cell rules for its profit cell. */
+.terminal-table tfoot td[aria-label="Combined profit or loss"]{text-align:right;padding-right:9px}
