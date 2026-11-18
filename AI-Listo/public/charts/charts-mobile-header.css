@@ -1,0 +1,29 @@
+/* Mobile-only header alignment. Desktop remains unchanged. */
+.charts-mobile-pricing{display:none}
+@media(max-width:760px){
+  header{display:flex;align-items:center;justify-content:space-between;gap:clamp(5px,1.5vw,12px);padding-inline:clamp(9px,3vw,18px);width:100%;min-width:0}
+  header .brand{display:inline-flex;align-items:center;flex:0 1 auto;min-width:0;gap:6px;white-space:nowrap;font-size:inherit;letter-spacing:normal}
+  header .brand img{width:clamp(25px,7vw,32px);height:clamp(25px,7vw,32px);flex-shrink:0}
+  header .brand .charts-brand-stack{display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0;margin:0;align-self:auto}
+  header .brand .charts-brand-name{font-family:'Space Grotesk',sans-serif;font-size:clamp(12px,3.5vw,17px);line-height:1.1;letter-spacing:clamp(.5px,.2vw,1.4px);font-weight:650;color:#ecf0df;margin:0;align-self:auto}
+  header .brand .charts-brand-sub{font-family:'Space Grotesk',sans-serif;font-size:clamp(8px,2vw,10px);line-height:1.1;letter-spacing:2px;color:#a4ad9f;margin:0;align-self:auto}
+  header .charts-mobile-pricing{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:44px;padding:0 3px;font-size:clamp(11px,3vw,14px);font-weight:500;color:#ecf0df;white-space:nowrap}
+  header .charts-mobile-pricing:hover{color:#d5ef86}
+  header .charts-language{margin-left:0;flex:0 0 auto;min-width:0}
+  header .charts-language-trigger{min-height:44px;padding:0 3px;gap:4px;white-space:nowrap}
+  header .charts-language-trigger .charts-language-globe{width:16px;height:16px;flex-basis:16px}
+  header #charts-language-code{font-size:12px}
+  header .account-nav{flex:0 0 auto;min-width:0;margin-left:0}
+  header .nav-cta{min-height:44px;margin:0;padding:0 3px;display:inline-flex;align-items:center;gap:5px;font-size:clamp(11px,3vw,13px);white-space:nowrap}
+  header #menu{display:none}
+}
+@media(max-width:370px){
+  header{gap:4px;padding-inline:7px}
+  header .brand{gap:4px}
+  header .brand .charts-brand-name{font-size:12px;letter-spacing:.3px}
+  header .brand .charts-brand-sub{font-size:8px;letter-spacing:1.3px}
+  header .charts-language-trigger{gap:2px;padding-inline:1px}
+  header .charts-language-trigger .charts-language-globe{width:14px;height:14px;flex-basis:14px}
+  header .charts-mobile-pricing{font-size:11px;padding:0 1px}
+  header .nav-cta{gap:3px;font-size:11px;padding:0 1px}
+}
