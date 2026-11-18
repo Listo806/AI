@@ -218,29 +218,53 @@ if($('engineOn').checked&&!entry()?.reference){
 // Price tracking uses the most recent live tick, never the historical window's last close.
 // UTC session extremes use the full available session, not the panned viewport.
 // Mark incomplete sessions explicitly: do not claim a full-day high/low without coverage.
+// UTC day extremes are calculated from the available full session history,
+// never from the current viewport. Do not substitute historical days.
 const quoteForSession=liveQuotes.get(markets[selected].symbol);
 const sessionClock=Number.isFinite(quoteForSession?.timestamp)?quoteForSession.timestamp:Date.now();
 const utcStart=Math.floor(sessionClock/86400000)*86400000;
 const utcEnd=utcStart+86400000;
 const sessionBars=data.filter(bar=>Number.isFinite(bar.time)&&bar.time>=utcStart&&bar.time<utcEnd&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
 if(sessionBars.length){
- const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),Number.isFinite(quoteForSession?.price)?quoteForSession.price:-Infinity);
- const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),Number.isFinite(quoteForSession?.price)?quoteForSession.price:Infinity);
+ const quotePrice=Number(quoteForSession?.price);
+ const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),Number.isFinite(quotePrice)?quotePrice:-Infinity);
+ const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),Number.isFinite(quotePrice)?quotePrice:Infinity);
  const firstTime=Math.min(...sessionBars.map(bar=>bar.time));
  const tfDuration=chartDurations[frame]||60000;
  const completeStart=firstTime<=utcStart+Math.max(tfDuration,60000);
  const digits=markets[selected].category==='FOREIGN EXCHANGE'&&!markets[selected].symbol.endsWith('JPY')?5:3;
- for(const [value,highSide] of [[sessionHigh,true],[sessionLow,false]]){
-  const py=y(value);
-  if(!Number.isFinite(py)||py<15||py>top.height-28)continue;
-  const c=top.ctx;c.save();c.strokeStyle='rgba(186,199,214,0.65)';c.lineWidth=1;c.setLineDash([7,5]);
-  c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(top.width-right,Math.round(py)+.5);c.stroke();c.setLineDash([]);
-  c.fillStyle='#182431';c.fillRect(top.width-right+1,py-9,right-2,18);
-  c.fillStyle='#d5e2ed';c.font='bold 10px system-ui';c.textAlign='right';
-  c.fillText(value.toFixed(digits),top.width-7,py+3);
+ // Keep both captions aligned to the same right edge, with room for the
+ // Heisenberg MTF overlay at the far right of the price chart.
+ const c=top.ctx,plotRight=top.width-right;
+ const labelRight=Math.max(left+115,plotRight-118);
+ const labelWidth=112,labelHeight=17;
+ const plotTop=15,plotBottom=top.height-28;
+ const levels=[{value:sessionHigh,caption:'Day High · UTC'},{value:sessionLow,caption:'Day Low · UTC'}];
+ const rendered=[];
+ for(const level of levels){
+  const py=y(level.value);
+  if(!Number.isFinite(py)||py<plotTop||py>plotBottom)continue;
+  c.save();
+  c.strokeStyle='rgba(180,196,213,.60)';c.lineWidth=1;c.setLineDash([3,5]);
+  c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(plotRight,Math.round(py)+.5);c.stroke();c.setLineDash([]);
+  c.restore();
+  rendered.push({py,caption:level.caption});
+ }
+ // Draw captions last so chart candles and indicator overlays cannot cover them.
+ // Keep labels clear of the top and bottom edges and prevent collisions.
+ rendered.sort((a,b)=>a.py-b.py);
+ for(let i=0;i<rendered.length;i++){
+  const item=rendered[i];
+  let labelY=Math.max(plotTop+11,Math.min(plotBottom-10,item.py-10));
+  if(i&&labelY<rendered[i-1].labelY+labelHeight+3)labelY=rendered[i-1].labelY+labelHeight+3;
+  item.labelY=Math.min(plotBottom-9,labelY);
+  c.save();
+  c.fillStyle='rgba(10,16,22,.84)';
+  c.fillRect(labelRight-labelWidth,item.labelY-9,labelWidth+3,labelHeight);
+  c.fillStyle='#aab8c7';c.font='10px system-ui';c.textAlign='right';
+  c.fillText(item.caption,labelRight,item.labelY+3);
   c.restore();
  }
- // A clear source/coverage note, never an invented official session extreme.
  const note=document.getElementById('chartDayLevelsStatus');
  if(note)note.textContent=completeStart?'UTC session high/low from available feed':'UTC high/low · partial session history';
 }else{
