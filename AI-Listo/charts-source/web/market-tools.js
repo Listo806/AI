@@ -50,7 +50,7 @@ function atLimit(add){
  const cancel=el('button','replacement-cancel','Cancel');cancel.onclick=()=>dialog.close();dialog.append(cancel);dialog.showModal();
 }
 function saveWorkspace(){try{ChartStorage.setItem('market-indicator-picker-v1',JSON.stringify({removed:originals.filter(([,id])=>$(id).closest('.indicator-box').classList.contains('picker-removed')).map(([,id])=>id),extras:[...extras.values()].map(({key,period,color,width,show,options,collapsed,smoothing})=>({key,period,color,width,show,options,collapsed,smoothing}))}));}catch{}}
-function restoreWorkspace(){try{const saved=JSON.parse(ChartStorage.getItem('market-indicator-picker-v1')||'null');if(!saved)return;for(const [,id] of originals){if(saved.removed?.includes(id)){$(id).checked=false;$(id).closest('.indicator-box').classList.add('picker-removed');}}for(const item of saved.extras||[]){if(indicatorCount()>=8&&!isLower(item.key))continue;if(extraDefs.some(d=>d[0]===item.key))addExtra(item.key,item);} }catch{}}
+function restoreWorkspace(){try{const saved=JSON.parse(ChartStorage.getItem('market-indicator-picker-v1')||'null');if(!saved)return;for(const [,id] of originals){if(saved.removed?.includes(id)){$(id).checked=false;$(id).closest('.indicator-box').classList.add('picker-removed');}}for(const item of saved.extras||[]){if(indicatorCount()>=8&&!isLower(item.key))continue;if(extraDefs.some(d=>d[0]===item.key))addExtra(item.key,item);}syncOscPane(); }catch{syncOscPane();}}
 
 function renderRows(){
  closeMenu();list.replaceChildren();
@@ -97,13 +97,13 @@ function renderRows(){
   const lowerOriginal=id=>['rsiOn','maOn'].includes(id);
   for(const lower of [false,true]){
    section(lower?'ON LOWER PANELS':'ON CHART');let installed=0;
-   for(const [name,id,detail] of originals){const check=$(id),box=check.closest('.indicator-box'),label=displayName(name,id);if(lowerOriginal(id)!==lower||box.classList.contains('picker-removed')||!matching(label+' '+detail))continue;installed++;const row=el('div','compact-indicator-row');row.append(el('span','compact-indicator-name',label));rowAction(row,'Settings for '+label,'⚙',()=>box.querySelector('.aa-settings')?.click());rowAction(row,(check.checked?'Hide ':'Show ')+label,check.checked?'◉':'○',()=>{check.checked=!check.checked;saveWorkspace();draw();renderRows();});rowAction(row,'Remove '+label,'×',()=>{check.checked=false;box.classList.add('picker-removed');saveWorkspace();draw();renderRows();});list.append(row);}
+   for(const [name,id,detail] of originals){const check=$(id),box=check.closest('.indicator-box'),label=displayName(name,id);if(lowerOriginal(id)!==lower||box.classList.contains('picker-removed')||!matching(label+' '+detail))continue;installed++;const row=el('div','compact-indicator-row');row.append(el('span','compact-indicator-name',label));rowAction(row,'Settings for '+label,'⚙',()=>box.querySelector('.aa-settings')?.click());rowAction(row,(check.checked?'Hide ':'Show ')+label,check.checked?'◉':'○',()=>{check.checked=!check.checked;saveWorkspace();draw();renderRows();});rowAction(row,'Remove '+label,'×',()=>{check.checked=false;box.classList.add('picker-removed');if(lower)syncOscPane();saveWorkspace();draw();renderRows();});list.append(row);}
    for(const [key,e] of extras){if(isLower(key)!==lower||!matching(e.name))continue;installed++;const row=el('div','compact-indicator-row');row.append(el('span','compact-indicator-name',displayName(e.name,key)));rowAction(row,'Settings for '+e.name,'⚙',()=>settings(e));rowAction(row,(e.show?'Hide ':'Show ')+e.name,e.show?'◉':'○',()=>{e.show=!e.show;e.box.style.opacity=e.show?1:.5;saveWorkspace();draw();renderRows();});rowAction(row,'Remove '+e.name,'×',()=>{removeExtra(key);renderRows();});list.append(row);
     if(e.smoothing){const smooth=el('div','compact-indicator-row');smooth.append(el('span','compact-indicator-name','Moving Average · '+e.name));rowAction(smooth,'Settings for Moving Average · '+e.name,'⚙',()=>smoothingSettings(e));rowAction(smooth,'Toggle Moving Average · '+e.name,e.smoothing.show?'◉':'○',()=>{e.smoothing.show=!e.smoothing.show;saveWorkspace();draw();renderRows();});rowAction(smooth,'Remove Moving Average · '+e.name,'×',()=>{e.smoothing=null;saveWorkspace();draw();renderRows();});list.append(smooth);}
    }
    if(!installed)list.append(el('p','indicator-empty',lower?'No lower-panel indicators added.':'No price-chart indicators added.'));
   }
-  const ensureLower=()=>{if(oscPaneCollapsed){oscPaneCollapsed=false;syncOscPane();}};
+  const ensureLower=()=>{oscPaneCollapsed=false;syncOscPane();};
   for(const lower of [false,true]){
    section(lower?'ADD TO LOWER PANEL':'ADD TO PRICE CHART');list.append(el('p','indicator-location-note',lower?'Adds directly below the main chart.':'Adds directly to the main chart.'));
    const groups=new Map();
@@ -122,7 +122,12 @@ function renderRows(){
 
  }
 }
-function removeExtra(key){const extra=extras.get(key);extra?.box.remove();extra?.pane?.remove();extra?.controls?.remove();extras.delete(key);saveWorkspace();draw();}
+function removeExtra(key){
+ const extra=extras.get(key);if(!extra)return;
+ extra.box?.remove();extra.pane?.remove();extra.controls?.remove();extras.delete(key);
+ if(isLower(key))syncOscPane();
+ saveWorkspace();draw();
+}
 function bindLowerPane(extra){
  const canvas=extra.pane;let pan=null;
  canvas.title='Drag left or right to position this indicator. Double-click to match the price chart.';
@@ -137,7 +142,7 @@ function addExtra(key,saved=null){
  const def=extraDefs.find(d=>d[0]===key);const extra={key,name:def[1],period:def[3],color:def[4],width:2,show:true,options:ChartStudies.options(key,saved?.options)};extra.collapsed=saved?.collapsed===true;if(saved?.smoothing){const sm=saved.smoothing;extra.smoothing={period:Number.isInteger(sm.period)&&sm.period>=2&&sm.period<=200?sm.period:9,method:['SMA','EMA','RMA','WMA'].includes(sm.method)?sm.method:'SMA',color:/^#[0-9a-f]{6}$/i.test(sm.color)?sm.color:'#ed6375',show:sm.show!==false};}if(saved){if(Number.isInteger(saved.period)&&saved.period>=2&&saved.period<=200)extra.period=saved.period;if(/^#[0-9a-f]{6}$/i.test(saved.color))extra.color=saved.color;if([1,2,3,4].includes(saved.width))extra.width=saved.width;extra.show=saved.show!==false;}extras.set(key,extra);
  const box=el('div','indicator-box extra-indicator'),toggle=el('button','extra-toggle',extra.name),swatch=el('i');swatch.style.background=extra.color;toggle.prepend(swatch);const gear=el('button','aa-settings','⚙');gear.setAttribute('aria-label',extra.name+' settings');gear.onclick=()=>settings(extra);const remove=el('button','extra-remove','×');remove.title='Remove '+extra.name;remove.setAttribute('aria-label','Remove '+extra.name);remove.onclick=()=>removeExtra(key);toggle.onclick=()=>{extra.show=!extra.show;box.style.opacity=extra.show?1:.5;saveWorkspace();draw();};box.append(toggle,gear);const lower=isLower(key);if(key==='atr'){document.querySelector('.rsi-header').append(box);box.classList.add('atr-in-rsi');}else if(lower){const paneControls=el('div','extra-pane-controls'),collapse=el('button','lower-pane-toggle');collapse.type='button';extra.collapseButton=collapse;collapse.onclick=()=>{extra.collapsed=!extra.collapsed;syncExtraPane(extra);saveWorkspace();draw();};paneControls.append(collapse,box);document.querySelector('.chart-shell').append(paneControls);extra.controls=paneControls;}else if(key!=='atr')document.querySelector('#chartIndicatorList').append(box);extra.box=box;box.style.opacity=extra.show?1:.5;
  if(isLower(key)&&key!=='atr'){extra.pane=el('canvas','extra-pane');extra.pane.setAttribute('aria-label',extra.name+' chart');document.querySelector('.chart-shell').append(extra.pane);bindLowerPane(extra);syncExtraPane(extra);}
- if(key==='atr'){const shell=document.querySelector('.chart-shell');if(shell?.classList.contains('osc-pane-collapsed'))document.querySelector('#oscPaneToggle')?.click();}if(!saved)saveWorkspace();draw();if(key==='pivots')ensurePivotHistory();
+ if(key==='atr'){if(!saved)oscPaneCollapsed=false;syncOscPane();}if(!saved)saveWorkspace();draw();if(key==='pivots')ensurePivotHistory();
 }
 const dialog=el('dialog','preview-settings');document.body.append(dialog);
 function settings(extra){

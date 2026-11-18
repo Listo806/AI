@@ -239,7 +239,7 @@ if(sessionBars.length){
  const labelRight=Math.max(left+115,plotRight-118);
  const labelWidth=112,labelHeight=17;
  const plotTop=15,plotBottom=top.height-28;
- const levels=[{value:sessionHigh,caption:'Day High · UTC',lineColor:'#4a5a55',textColor:'#8bac9f'},{value:sessionLow,caption:'Day Low · UTC',lineColor:'#746267',textColor:'#ae9299'}];
+ const levels=[{value:sessionHigh,caption:'Day High · UTC',lineColor:'#746267',textColor:'#ae9299'},{value:sessionLow,caption:'Day Low · UTC',lineColor:'#746267',textColor:'#ae9299'}];
  const rendered=[];
  for(const level of levels){
   const py=y(level.value);
@@ -247,6 +247,14 @@ if(sessionBars.length){
   c.save();
   c.strokeStyle=level.lineColor;c.lineWidth=1;c.setLineDash([3,5]);
   c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(plotRight,Math.round(py)+.5);c.stroke();c.setLineDash([]);
+  // Session prices are essential: keep their axis tags even if the caption
+  // has to move to avoid the MTF overlay.
+  const priceText=level.value.toLocaleString('en-US',{minimumFractionDigits:digits,maximumFractionDigits:digits});
+  c.font='bold 11px system-ui';c.textAlign='left';
+  const tagX=plotRight+2,tagH=17,tagW=Math.max(right-4,c.measureText(priceText).width+12);
+  c.fillStyle='#18232e';c.fillRect(tagX,py-tagH/2,tagW,tagH);
+  c.strokeStyle=level.lineColor;c.strokeRect(tagX+.5,py-tagH/2+.5,tagW-1,tagH-1);
+  c.fillStyle='#e4edf4';c.fillText(priceText,tagX+5,py+4);
   c.restore();
   rendered.push({py,caption:level.caption,textColor:level.textColor});
  }
@@ -650,7 +658,24 @@ const engineGear=document.createElement('button');engineGear.type='button';engin
 // Collapse the whole oscillator pane while preserving a compact restore control.
 const oscPaneToggle=document.createElement('button');oscPaneToggle.type='button';oscPaneToggle.id='oscPaneToggle';oscPaneToggle.setAttribute('aria-controls','rsiChart');document.querySelector('.rsi-header').prepend(oscPaneToggle);
 let oscPaneCollapsed=false;try{oscPaneCollapsed=ChartStorage.getItem('market-osc-pane-collapsed')==='true';}catch{}
-function syncOscPane(){document.querySelector('.chart-shell').classList.toggle('osc-pane-collapsed',oscPaneCollapsed);oscPaneToggle.textContent=oscPaneCollapsed?'▴':'▾';oscPaneToggle.title=oscPaneCollapsed?'Show RSI and Moving Average pane':'Hide RSI and Moving Average pane';oscPaneToggle.setAttribute('aria-label',oscPaneToggle.title);oscPaneToggle.setAttribute('aria-expanded',String(!oscPaneCollapsed));$('rsiChart').setAttribute('aria-hidden',String(oscPaneCollapsed));requestAnimationFrame(draw);}
+function sharedOscInstalled(){
+ return ['rsiOn','maOn'].some(id=>{
+  const input=$(id),box=input?.closest('.indicator-box');
+  return Boolean(box&&!box.classList.contains('picker-removed'));
+ }) || Boolean(document.querySelector('.rsi-header .atr-in-rsi'));
+}
+function syncOscPane(){
+ const installed=sharedOscInstalled(),shell=document.querySelector('.chart-shell');
+ shell.classList.toggle('osc-pane-absent',!installed);
+ shell.classList.toggle('osc-pane-collapsed',installed&&oscPaneCollapsed);
+ oscPaneToggle.hidden=!installed;
+ oscPaneToggle.textContent=oscPaneCollapsed?'▴':'▾';
+ oscPaneToggle.title=oscPaneCollapsed?'Reopen indicator panel':'Collapse indicator panel';
+ oscPaneToggle.setAttribute('aria-label',oscPaneToggle.title);
+ oscPaneToggle.setAttribute('aria-expanded',String(installed&&!oscPaneCollapsed));
+ $('rsiChart').setAttribute('aria-hidden',String(!installed||oscPaneCollapsed));
+ requestAnimationFrame(draw);
+}
 oscPaneToggle.onclick=()=>{oscPaneCollapsed=!oscPaneCollapsed;hover=-1;crosshair=null;try{ChartStorage.setItem('market-osc-pane-collapsed',String(oscPaneCollapsed));}catch{}syncOscPane();};syncOscPane();
 
 // Compact chart navigation; preserve the market-card and MTF grid above.

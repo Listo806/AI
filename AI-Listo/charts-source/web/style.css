@@ -295,3 +295,10 @@ html:not(.chart-embedded):not(.multi-chart-mode) article .canvas-wrap > .legend 
     z-index:60 !important;
   }
 }
+
+/* Lower shared oscillator pane: no empty header or arrow after last removal.
+   Collapse retains a visible restore arrow and all installed indicators. */
+.chart-shell.osc-pane-absent > .rsi-header,
+.chart-shell.osc-pane-absent > #rsiChart {display:none!important;height:0!important;min-height:0!important;border:0!important;padding:0!important}
+.chart-shell.osc-pane-absent > .canvas-wrap{flex:1;min-height:80px}
+.chart-shell.osc-pane-collapsed:not(.osc-pane-absent) .rsi-header #oscPaneToggle{display:inline-flex!important;visibility:visible!important}
