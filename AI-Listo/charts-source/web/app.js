@@ -239,16 +239,16 @@ if(sessionBars.length){
  const labelRight=Math.max(left+115,plotRight-118);
  const labelWidth=112,labelHeight=17;
  const plotTop=15,plotBottom=top.height-28;
- const levels=[{value:sessionHigh,caption:'Day High · UTC'},{value:sessionLow,caption:'Day Low · UTC'}];
+ const levels=[{value:sessionHigh,caption:'Day High · UTC',color:'#36c99a'},{value:sessionLow,caption:'Day Low · UTC',color:'#ef5366'}];
  const rendered=[];
  for(const level of levels){
   const py=y(level.value);
   if(!Number.isFinite(py)||py<plotTop||py>plotBottom)continue;
   c.save();
-  c.strokeStyle='rgba(180,196,213,.60)';c.lineWidth=1;c.setLineDash([3,5]);
+  c.strokeStyle=level.color;c.lineWidth=1;c.setLineDash([3,5]);
   c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(plotRight,Math.round(py)+.5);c.stroke();c.setLineDash([]);
   c.restore();
-  rendered.push({py,caption:level.caption});
+  rendered.push({py,caption:level.caption,color:level.color});
  }
  // Draw captions last so chart candles and indicator overlays cannot cover them.
  // Keep labels clear of the top and bottom edges and prevent collisions.
@@ -261,7 +261,7 @@ if(sessionBars.length){
   c.save();
   c.fillStyle='rgba(10,16,22,.84)';
   c.fillRect(labelRight-labelWidth,item.labelY-9,labelWidth+3,labelHeight);
-  c.fillStyle='#aab8c7';c.font='10px system-ui';c.textAlign='right';
+  c.fillStyle=item.color;c.font='10px system-ui';c.textAlign='right';
   c.fillText(item.caption,labelRight,item.labelY+3);
   c.restore();
  }
