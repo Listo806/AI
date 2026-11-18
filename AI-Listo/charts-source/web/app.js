@@ -239,7 +239,7 @@ if(sessionBars.length){
  const labelRight=Math.max(left+115,plotRight-118);
  const labelWidth=112,labelHeight=17;
  const plotTop=15,plotBottom=top.height-28;
- const levels=[{value:sessionHigh,caption:'Day High · UTC',color:'#36c99a'},{value:sessionLow,caption:'Day Low · UTC',color:'#ef5366'}];
+ const levels=[{value:sessionHigh,caption:'Day High · UTC',color:'#30b58b'},{value:sessionLow,caption:'Day Low · UTC',color:'#d94c5d'}];
  const rendered=[];
  for(const level of levels){
   const py=y(level.value);
@@ -275,7 +275,7 @@ if(sessionBars.length){
 const latestLiveQuote=liveQuotes.get(markets[selected].symbol);
 const liveValue=Number(latestLiveQuote?.price);
 if(Number.isFinite(liveValue)&&liveValue>0){
- const liveColor=latestLiveQuote.direction<0?'#ef5366':'#36c99a';
+ const liveColor=latestLiveQuote.direction<0?'#d94c5d':'#30b58b';
  const liveY=y(liveValue);
  if(liveY>=15&&liveY<=top.height-28){
   const c=top.ctx;c.save();c.strokeStyle=liveColor;c.lineWidth=1;c.setLineDash([4,4]);
