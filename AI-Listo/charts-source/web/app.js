@@ -239,16 +239,16 @@ if(sessionBars.length){
  const labelRight=Math.max(left+115,plotRight-118);
  const labelWidth=112,labelHeight=17;
  const plotTop=15,plotBottom=top.height-28;
- const levels=[{value:sessionHigh,caption:'Day High · UTC',color:'#30b58b'},{value:sessionLow,caption:'Day Low · UTC',color:'#d94c5d'}];
+ const levels=[{value:sessionHigh,caption:'Day High · UTC',lineColor:'#4a5a55',textColor:'#8bac9f'},{value:sessionLow,caption:'Day Low · UTC',lineColor:'#746267',textColor:'#ae9299'}];
  const rendered=[];
  for(const level of levels){
   const py=y(level.value);
   if(!Number.isFinite(py)||py<plotTop||py>plotBottom)continue;
   c.save();
-  c.strokeStyle=level.color;c.lineWidth=1;c.setLineDash([3,5]);
+  c.strokeStyle=level.lineColor;c.lineWidth=1;c.setLineDash([3,5]);
   c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(plotRight,Math.round(py)+.5);c.stroke();c.setLineDash([]);
   c.restore();
-  rendered.push({py,caption:level.caption,color:level.color});
+  rendered.push({py,caption:level.caption,textColor:level.textColor});
  }
  // Draw captions last so chart candles and indicator overlays cannot cover them.
  // Keep labels clear of the top and bottom edges and prevent collisions.
@@ -261,7 +261,7 @@ if(sessionBars.length){
   c.save();
   c.fillStyle='rgba(10,16,22,.84)';
   c.fillRect(labelRight-labelWidth,item.labelY-9,labelWidth+3,labelHeight);
-  c.fillStyle=item.color;c.font='10px system-ui';c.textAlign='right';
+  c.fillStyle=item.textColor;c.font='10px system-ui';c.textAlign='right';
   c.fillText(item.caption,labelRight,item.labelY+3);
   c.restore();
  }
@@ -275,7 +275,7 @@ if(sessionBars.length){
 const latestLiveQuote=liveQuotes.get(markets[selected].symbol);
 const liveValue=Number(latestLiveQuote?.price);
 if(Number.isFinite(liveValue)&&liveValue>0){
- const liveColor=latestLiveQuote.direction<0?'#d94c5d':'#30b58b';
+ const liveColor=latestLiveQuote.direction<0?'#ef5366':'#36c99a';
  const liveY=y(liveValue);
  if(liveY>=15&&liveY<=top.height-28){
   const c=top.ctx;c.save();c.strokeStyle=liveColor;c.lineWidth=1;c.setLineDash([4,4]);
