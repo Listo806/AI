@@ -239,7 +239,7 @@ if(sessionBars.length){
  const labelRight=Math.max(left+115,plotRight-118);
  const labelWidth=112,labelHeight=17;
  const plotTop=15,plotBottom=top.height-28;
- const levels=[{value:sessionHigh,caption:'Day High · UTC',lineColor:'#746267',textColor:'#ae9299'},{value:sessionLow,caption:'Day Low · UTC',lineColor:'#746267',textColor:'#ae9299'}];
+ const levels=[{value:sessionHigh,caption:'Day High · UTC',lineColor:'#607b70',textColor:'#a1bfb1'},{value:sessionLow,caption:'Day Low · UTC',lineColor:'#746267',textColor:'#ae9299'}];
  const rendered=[];
  for(const level of levels){
   const py=y(level.value);
