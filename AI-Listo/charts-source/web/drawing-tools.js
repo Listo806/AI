@@ -1,13 +1,10 @@
 /* Chart drawing tools: isolated overlay, no market data or chart API changes. */
 (()=>{'use strict';
+const actions=document.querySelector('.market-heading .actions');
 const wrap=document.querySelector('.canvas-wrap');const price=document.getElementById('priceChart');
-let btn=document.getElementById('drawingToolsButton');
-if(!btn){
- const host=document.querySelector('.market-tools')||document.querySelector('.market-heading .actions');
- if(host){btn=document.createElement('button');btn.id='drawingToolsButton';btn.type='button';btn.className='market-tool';btn.textContent='✎ Drawing Tools';const indicators=[...host.querySelectorAll('button')].find(b=>/Indicators/i.test(b.textContent));if(indicators)indicators.before(btn);else host.append(btn);}
-}
-if(!btn||!wrap||!price||document.querySelector('.charts-draw-bar'))return;
-btn.title='Open drawing tools';
+if(!actions||!wrap||!price)return;
+const btn=document.getElementById('drawingToolsButton')||document.createElement('button');btn.id='drawingToolsButton';btn.type='button';btn.textContent='✎ Drawing Tools';btn.setAttribute('aria-expanded','false');btn.title='Open drawing tools';
+const controls=actions.querySelector('.market-tools');if(controls){const watch=controls.querySelector('button');watch?.after(btn);}else if(!btn.isConnected)actions.prepend(btn);
 const bar=document.createElement('div');bar.className='charts-draw-bar';bar.hidden=true;bar.setAttribute('aria-label','Drawing tools');
 const modes=[['select','Select'],['trend','Trend line'],['horizontal','Horizontal line'],['vertical','Vertical line'],['rectangle','Rectangle'],['ray','Ray'],['erase','Erase last'],['clear','Clear drawings']];
 let mode='select',start=null,shapes=[],preview=null;let overlay=null;

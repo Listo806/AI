@@ -224,22 +224,23 @@ const quoteForSession=liveQuotes.get(markets[selected].symbol);
 const sessionClock=Number.isFinite(quoteForSession?.timestamp)?quoteForSession.timestamp:Date.now();
 const utcStart=Math.floor(sessionClock/86400000)*86400000;
 const utcEnd=utcStart+86400000;
-const sessionBars=data.filter(bar=>Number.isFinite(bar.time)&&bar.time>=utcStart&&bar.time<utcEnd&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
-// Retain observed ticks for the current UTC session when the historical feed has no
-// intraday candles. These are observed-session extremes, never invented prices.
-const observedKey=markets[selected].symbol;
-window.__chartsUtcObservedLevels ||= new Map();
-const observed=window.__chartsUtcObservedLevels;
-const quotePrice=Number(quoteForSession?.price);
-let observation=observed.get(observedKey);
-if(!observation||observation.utcStart!==utcStart){observation={utcStart,high:-Infinity,low:Infinity};observed.set(observedKey,observation);}
-if(Number.isFinite(quotePrice)&&quotePrice>0){observation.high=Math.max(observation.high,quotePrice);observation.low=Math.min(observation.low,quotePrice);}
-if(sessionBars.length||Number.isFinite(observation.high)){
- const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),observation.high);
- const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),observation.low);
- const firstTime=sessionBars.length?Math.min(...sessionBars.map(bar=>bar.time)):sessionClock;
+let sessionBars=data.filter(bar=>Number.isFinite(bar.time)&&bar.time>=utcStart&&bar.time<utcEnd&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
+// The feed may deliver a delayed intraday session; use the most recent
+// observed UTC day rather than hiding both levels. Never invent a price.
+let levelsSessionStart=utcStart;
+if(!sessionBars.length){
+ const valid=data.filter(bar=>Number.isFinite(bar.time)&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
+ if(valid.length){levelsSessionStart=Math.floor(Math.max(...valid.map(bar=>bar.time))/86400000)*86400000;
+ sessionBars=valid.filter(bar=>bar.time>=levelsSessionStart&&bar.time<levelsSessionStart+86400000);}
+}
+if(sessionBars.length){
+ const quotePrice=Number(quoteForSession?.price);
+ const sameUtcDay=levelsSessionStart===utcStart;
+ const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),sameUtcDay&&Number.isFinite(quotePrice)?quotePrice:-Infinity);
+ const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),sameUtcDay&&Number.isFinite(quotePrice)?quotePrice:Infinity);
+ const firstTime=Math.min(...sessionBars.map(bar=>bar.time));
  const tfDuration=chartDurations[frame]||60000;
- const completeStart=firstTime<=utcStart+Math.max(tfDuration,60000);
+ const completeStart=firstTime<=levelsSessionStart+Math.max(tfDuration,60000);
  const digits=markets[selected].category==='FOREIGN EXCHANGE'&&!markets[selected].symbol.endsWith('JPY')?5:3;
  // Keep both captions aligned to the same right edge, with room for the
  // Heisenberg MTF overlay at the far right of the price chart.
@@ -250,22 +251,22 @@ if(sessionBars.length||Number.isFinite(observation.high)){
  const levels=[{value:sessionHigh,caption:'Day High · UTC',lineColor:'#607b70',textColor:'#a1bfb1'},{value:sessionLow,caption:'Day Low · UTC',lineColor:'#746267',textColor:'#ae9299'}];
  const rendered=[];
  for(const level of levels){
-  const py=y(level.value);
-  if(!Number.isFinite(py))continue;
-  const displayY=Math.max(plotTop+2,Math.min(plotBottom-2,py));
+  const rawPy=y(level.value);
+  if(!Number.isFinite(rawPy))continue;
+  const py=Math.max(plotTop+12,Math.min(plotBottom-12,rawPy));
   c.save();
   c.strokeStyle=level.lineColor;c.lineWidth=1;c.setLineDash([3,5]);
-  c.beginPath();c.moveTo(left,Math.round(displayY)+.5);c.lineTo(plotRight,Math.round(displayY)+.5);c.stroke();c.setLineDash([]);
+  c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(plotRight,Math.round(py)+.5);c.stroke();c.setLineDash([]);
   // Session prices are essential: keep their axis tags even if the caption
   // has to move to avoid the MTF overlay.
   const priceText=level.value.toLocaleString('en-US',{minimumFractionDigits:digits,maximumFractionDigits:digits});
   c.font='bold 11px system-ui';c.textAlign='left';
   const tagX=plotRight+2,tagH=17,tagW=Math.max(right-4,c.measureText(priceText).width+12);
-  c.fillStyle='#18232e';c.fillRect(tagX,displayY-tagH/2,tagW,tagH);
-  c.strokeStyle=level.lineColor;c.strokeRect(tagX+.5,displayY-tagH/2+.5,tagW-1,tagH-1);
-  c.fillStyle='#e4edf4';c.fillText(priceText,tagX+5,displayY+4);
+  c.fillStyle='#18232e';c.fillRect(tagX,py-tagH/2,tagW,tagH);
+  c.strokeStyle=level.lineColor;c.strokeRect(tagX+.5,py-tagH/2+.5,tagW-1,tagH-1);
+  c.fillStyle='#e4edf4';c.fillText(priceText,tagX+5,py+4);
   c.restore();
-  rendered.push({py:displayY,caption:level.caption,textColor:level.textColor});
+  rendered.push({py,caption:level.caption,textColor:level.textColor});
  }
  // Draw captions last so chart candles and indicator overlays cannot cover them.
  // Keep labels clear of the top and bottom edges and prevent collisions.
@@ -283,10 +284,10 @@ if(sessionBars.length||Number.isFinite(observation.high)){
   c.restore();
  }
  const note=document.getElementById('chartDayLevelsStatus');
- if(note)note.textContent=completeStart?'UTC session high/low from available feed':'UTC high/low · partial session history';
+ if(note)note.textContent=(levelsSessionStart===utcStart?'Current UTC session':'Latest available UTC session')+(completeStart?' · observed high/low':' · partial observed high/low');
 }else{
  const note=document.getElementById('chartDayLevelsStatus');
- if(note)note.textContent='UTC day high/low unavailable · no observed session prices';
+ if(note)note.textContent='UTC day high/low unavailable · no session candles';
 }
 // Keep it independent of the enabled indicator plots and of day-high/day-low levels.
 const latestLiveQuote=liveQuotes.get(markets[selected].symbol);
