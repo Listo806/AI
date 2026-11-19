@@ -197,32 +197,73 @@ if($('engineOn').checked&&!entry()?.reference){
 // Price tracking uses the most recent live tick, never the historical window's last close.
 // UTC session extremes use the full available session, not the panned viewport.
 // Mark incomplete sessions explicitly: do not claim a full-day high/low without coverage.
+// UTC day extremes are calculated from the available full session history,
+// never from the current viewport. Do not substitute historical days.
 const quoteForSession=liveQuotes.get(markets[selected].symbol);
 const sessionClock=Number.isFinite(quoteForSession?.timestamp)?quoteForSession.timestamp:Date.now();
 const utcStart=Math.floor(sessionClock/86400000)*86400000;
 const utcEnd=utcStart+86400000;
-const sessionBars=data.filter(bar=>Number.isFinite(bar.time)&&bar.time>=utcStart&&bar.time<utcEnd&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
+const validBars=data.filter(bar=>Number.isFinite(bar.time)&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
+const todayBars=validBars.filter(bar=>bar.time>=utcStart&&bar.time<utcEnd);
+// If today's history has not arrived, retain visible reference labels using
+// the latest UTC date actually present in the feed (never invented prices).
+const latestBarTime=validBars.length?Math.max(...validBars.map(bar=>bar.time)):NaN;
+const latestUtcStart=Number.isFinite(latestBarTime)?Math.floor(latestBarTime/86400000)*86400000:NaN;
+const sessionBars=todayBars.length?todayBars:validBars.filter(bar=>bar.time>=latestUtcStart&&bar.time<latestUtcStart+86400000);
 if(sessionBars.length){
- const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),Number.isFinite(quoteForSession?.price)?quoteForSession.price:-Infinity);
- const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),Number.isFinite(quoteForSession?.price)?quoteForSession.price:Infinity);
+ const quotePrice=Number(quoteForSession?.price);
+ const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),todayBars.length&&Number.isFinite(quotePrice)?quotePrice:-Infinity);
+ const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),todayBars.length&&Number.isFinite(quotePrice)?quotePrice:Infinity);
  const firstTime=Math.min(...sessionBars.map(bar=>bar.time));
  const tfDuration=chartDurations[frame]||60000;
- const completeStart=firstTime<=utcStart+Math.max(tfDuration,60000);
+ const completeStart=todayBars.length>0&&firstTime<=utcStart+Math.max(tfDuration,60000);
  const digits=markets[selected].category==='FOREIGN EXCHANGE'&&!markets[selected].symbol.endsWith('JPY')?5:3;
- for(const [value,highSide] of [[sessionHigh,true],[sessionLow,false]]){
-  const py=y(value);
-  if(!Number.isFinite(py)||py<15||py>top.height-28)continue;
-  const c=top.ctx;c.save();c.strokeStyle='rgba(186,199,214,0.65)';c.lineWidth=1;c.setLineDash([7,5]);
-  c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(top.width-right,Math.round(py)+.5);c.stroke();c.setLineDash([]);
-  c.fillStyle='#182431';c.fillRect(top.width-right+1,py-9,right-2,18);
-  c.fillStyle='#d5e2ed';c.font='bold 10px system-ui';c.textAlign='right';
-  c.fillText(value.toFixed(digits),top.width-7,py+3);
+ // Keep both captions aligned to the same right edge, with room for the
+ // Heisenberg MTF overlay at the far right of the price chart.
+ const c=top.ctx,plotRight=top.width-right;
+ const labelRight=Math.max(left+115,plotRight-118);
+ const labelWidth=112,labelHeight=17;
+ const plotTop=15,plotBottom=top.height-28;
+ const levels=[{value:sessionHigh,caption:'Day High · UTC',lineColor:'#607b70',textColor:'#a1bfb1'},{value:sessionLow,caption:'Day Low · UTC',lineColor:'#746267',textColor:'#ae9299'}];
+ const rendered=[];
+ for(const level of levels){
+  const rawY=y(level.value);
+  if(!Number.isFinite(rawY))continue;
+  const py=Math.max(plotTop+12,Math.min(plotBottom-12,rawY));
+  c.save();
+  c.strokeStyle=level.lineColor;c.lineWidth=1;c.setLineDash([3,5]);
+  c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(plotRight,Math.round(py)+.5);c.stroke();c.setLineDash([]);
+  // Session prices are essential: keep their axis tags even if the caption
+  // has to move to avoid the MTF overlay.
+  const priceText=level.value.toLocaleString('en-US',{minimumFractionDigits:digits,maximumFractionDigits:digits});
+  c.font='bold 11px system-ui';c.textAlign='left';
+  const tagX=plotRight+2,tagH=17,tagW=Math.max(right-4,c.measureText(priceText).width+12);
+  c.fillStyle='#18232e';c.fillRect(tagX,py-tagH/2,tagW,tagH);
+  c.strokeStyle=level.lineColor;c.strokeRect(tagX+.5,py-tagH/2+.5,tagW-1,tagH-1);
+  c.fillStyle='#e4edf4';c.fillText(priceText,tagX+5,py+4);
   c.restore();
+  rendered.push({py,caption:level.caption,textColor:level.textColor});
  }
- // A clear source/coverage note, never an invented official session extreme.
+ // Render captions in an HTML overlay above canvas drawing layers.
+ const chartWrap=$('priceChart').parentElement;
+ let captionLayer=chartWrap.querySelector('#chartDayCaptionLayer');
+ if(!captionLayer){captionLayer=document.createElement('div');captionLayer.id='chartDayCaptionLayer';captionLayer.setAttribute('aria-label','UTC daily high and low');chartWrap.append(captionLayer);}
+ captionLayer.replaceChildren();
+ const canvasRect=$('priceChart').getBoundingClientRect(),wrapRect=chartWrap.getBoundingClientRect();
+ const scaleX=canvasRect.width/Math.max(1,top.width),scaleY=canvasRect.height/Math.max(1,top.height);
+ const captionX=Math.max(75,(labelRight-8)*scaleX+canvasRect.left-wrapRect.left);
+ rendered.sort((a,b)=>a.py-b.py);
+ for(let i=0;i<rendered.length;i++){
+  const item=rendered[i];let labelY=Math.max(plotTop+12,Math.min(plotBottom-12,item.py-9));
+  if(i&&labelY<rendered[i-1].labelY+16)labelY=rendered[i-1].labelY+16;
+  item.labelY=Math.min(plotBottom-10,labelY);
+  const label=document.createElement('span');label.className='chart-day-caption';label.textContent=item.caption;
+  label.style.color=item.textColor;label.style.left=captionX+'px';label.style.top=(item.labelY*scaleY+canvasRect.top-wrapRect.top)+'px';captionLayer.append(label);
+ }
  const note=document.getElementById('chartDayLevelsStatus');
- if(note)note.textContent=completeStart?'UTC session high/low from available feed':'UTC high/low · partial session history';
+ if(note)note.textContent=todayBars.length?(completeStart?'UTC session high/low from simulated data':'UTC high/low · partial simulated session'):'Latest simulated UTC session';
 }else{
+ document.getElementById('chartDayCaptionLayer')?.replaceChildren();
  const note=document.getElementById('chartDayLevelsStatus');
  if(note)note.textContent='UTC day high/low unavailable · no session candles';
 }
