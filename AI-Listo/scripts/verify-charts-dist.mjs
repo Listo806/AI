@@ -1,18 +1,21 @@
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
+
 const root = process.cwd();
-const dist = path.join(root, 'dist', 'charts', 'app');
-const exists = async file => (await stat(file).catch(() => null))?.isFile() === true;
-const fail = message => { throw new Error(`[Charts postbuild] ${message}`); };
-for (const name of ['index.html', 'drawing-tools.js', 'drawing-tools.css', 'app.js', 'market-tools.js']) {
-  if (!(await exists(path.join(dist, name)))) fail(`Missing dist/charts/app/${name}`);
+const dir = path.join(root, 'dist', 'charts', 'app');
+const release = '20261119-release29';
+const required = ['index.html', 'drawing-tools.js', 'drawing-tools.css', 'app.js', 'market-tools.js'];
+for (const name of required) {
+  const file = path.join(dir, name);
+  try { if (!(await stat(file)).isFile()) throw new Error('not a file'); }
+  catch { throw new Error(`Charts release verification FAILED: ${file} is missing`); }
 }
-const html = await readFile(path.join(dist, 'index.html'), 'utf8');
-for (const name of ['drawing-tools.js', 'drawing-tools.css']) {
-  if (!html.includes(name)) fail(`Published index.html does not reference ${name}`);
+const html = await readFile(path.join(dir, 'index.html'), 'utf8');
+for (const token of [release, 'drawing-tools.js', 'drawing-tools.css', 'drawingToolsButton', 'chartDayCaptionLayer']) {
+  if (!html.includes(token)) throw new Error(`Charts release verification FAILED: deployed index.html missing ${token}`);
 }
-const drawing = await readFile(path.join(dist, 'drawing-tools.js'), 'utf8');
-if (!drawing.includes('drawingToolsButton')) fail('Published drawing-tools.js lacks button implementation');
-const scripts = await Promise.all(['app.js', 'market-tools.js'].map(name => readFile(path.join(dist, name), 'utf8')));
-if (!scripts.some(s => s.includes('Day High')) || !scripts.some(s => s.includes('Day Low'))) fail('Published scripts lack Day High/Low labels');
-console.log('[Charts postbuild] PASS: Drawing Tools assets, button implementation, and Day High/Low label code exist in dist/charts/app/.');
+const js = await readFile(path.join(dir, 'app.js'), 'utf8');
+for (const token of ['Day High · UTC', 'Day Low · UTC', 'chartDayCaptionLayer']) {
+  if (!js.includes(token)) throw new Error(`Charts release verification FAILED: deployed app.js missing ${token}`);
+}
+console.log(`Charts ${release}: verified dist/charts/app HTML, drawing tools, and UTC day captions.`);
