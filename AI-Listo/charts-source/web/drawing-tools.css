@@ -1,5 +1,5 @@
 /* Existing chart toolbar: no duplicate row. */
-.market-heading .actions .market-tools #drawingToolsButton{white-space:nowrap;flex:none;cursor:pointer;display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center}
+.market-heading .actions .market-tools #drawingToolsButton{white-space:nowrap;flex:none;cursor:pointer}
 .charts-draw-bar{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:5px 8px;background:#10202a;border:1px solid #324957;position:relative;z-index:9}
 .charts-draw-bar[hidden]{display:none!important}
 .charts-draw-bar button{flex:none;background:#152635;color:#e6f0f2;border:1px solid #536877;border-radius:3px;padding:6px 9px;cursor:pointer;font-size:12px}
