@@ -6,3 +6,8 @@
 .charts-draw-bar button[aria-pressed=true]{background:#31546b;border-color:#81c8d2}
 .canvas-wrap{position:relative}
 .charts-draw-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6;touch-action:none}
+
+.market-heading .actions .market-tools #drawingToolsButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;position:relative;z-index:4}
+.market-heading .actions .market-tools{flex-wrap:nowrap!important}
+#chartDayCaptionLayer{position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden}
+#chartDayCaptionLayer .chart-day-caption{position:absolute;transform:translate(-100%,-50%);font:10px/1.3 system-ui,sans-serif;white-space:nowrap;padding:1px 4px;background:rgba(10,16,22,.72);text-shadow:0 1px 2px #080c12;pointer-events:none}

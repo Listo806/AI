@@ -265,24 +265,26 @@ if(sessionBars.length){
   c.restore();
   rendered.push({py,caption:level.caption,textColor:level.textColor});
  }
- // Draw captions last so chart candles and indicator overlays cannot cover them.
- // Keep labels clear of the top and bottom edges and prevent collisions.
+ // Render captions in an HTML overlay above canvas drawing layers.
+ const chartWrap=$('priceChart').parentElement;
+ let captionLayer=chartWrap.querySelector('#chartDayCaptionLayer');
+ if(!captionLayer){captionLayer=document.createElement('div');captionLayer.id='chartDayCaptionLayer';captionLayer.setAttribute('aria-label','UTC daily high and low');chartWrap.append(captionLayer);}
+ captionLayer.replaceChildren();
+ const canvasRect=$('priceChart').getBoundingClientRect(),wrapRect=chartWrap.getBoundingClientRect();
+ const scaleX=canvasRect.width/Math.max(1,top.width),scaleY=canvasRect.height/Math.max(1,top.height);
+ const captionX=Math.max(75,(labelRight-8)*scaleX+canvasRect.left-wrapRect.left);
  rendered.sort((a,b)=>a.py-b.py);
  for(let i=0;i<rendered.length;i++){
-  const item=rendered[i];
-  let labelY=Math.max(plotTop+11,Math.min(plotBottom-10,item.py-10));
-  if(i&&labelY<rendered[i-1].labelY+labelHeight+3)labelY=rendered[i-1].labelY+labelHeight+3;
-  item.labelY=Math.min(plotBottom-9,labelY);
-  c.save();
-  c.fillStyle='rgba(10,16,22,.84)';
-  c.fillRect(labelRight-labelWidth,item.labelY-9,labelWidth+3,labelHeight);
-  c.fillStyle=item.textColor;c.font='10px system-ui';c.textAlign='right';
-  c.fillText(item.caption,labelRight,item.labelY+3);
-  c.restore();
+  const item=rendered[i];let labelY=Math.max(plotTop+12,Math.min(plotBottom-12,item.py-9));
+  if(i&&labelY<rendered[i-1].labelY+16)labelY=rendered[i-1].labelY+16;
+  item.labelY=Math.min(plotBottom-10,labelY);
+  const label=document.createElement('span');label.className='chart-day-caption';label.textContent=item.caption;
+  label.style.color=item.textColor;label.style.left=captionX+'px';label.style.top=(item.labelY*scaleY+canvasRect.top-wrapRect.top)+'px';captionLayer.append(label);
  }
  const note=document.getElementById('chartDayLevelsStatus');
  if(note)note.textContent=todayBars.length?(completeStart?'UTC session high/low from available feed':'UTC high/low · partial session history'):'Latest available UTC session (not current day)';
 }else{
+ document.getElementById('chartDayCaptionLayer')?.replaceChildren();
  const note=document.getElementById('chartDayLevelsStatus');
  if(note)note.textContent='UTC day high/low unavailable · no session candles';
 }

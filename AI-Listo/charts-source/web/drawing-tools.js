@@ -5,6 +5,10 @@ const wrap=document.querySelector('.canvas-wrap');const price=document.getElemen
 if(!actions||!wrap||!price)return;
 let btn=document.getElementById('drawingToolsButton');
 if(!btn){btn=document.createElement('button');btn.id='drawingToolsButton';btn.type='button';btn.className='market-tool';btn.textContent='✎ Drawing Tools';const controls=actions.querySelector('.market-tools');if(controls){const ind=[...controls.querySelectorAll('button')].find(b=>b.textContent.includes('Indicators'));if(ind)ind.before(btn);else controls.append(btn);}else actions.prepend(btn);}
+const group=actions.querySelector('.market-tools');
+const indicator=group&&[...group.querySelectorAll('button')].find(b=>b.textContent.includes('Indicators'));
+if(indicator)indicator.before(btn);else if(group)group.append(btn);
+btn.hidden=false;btn.style.display='inline-flex';btn.style.visibility='visible';
 btn.setAttribute('aria-expanded','false');btn.title='Open drawing tools';
 const bar=document.createElement('div');bar.className='charts-draw-bar';bar.hidden=true;bar.setAttribute('aria-label','Drawing tools');
 const modes=[['select','Select'],['trend','Trend line'],['horizontal','Horizontal line'],['vertical','Vertical line'],['rectangle','Rectangle'],['ray','Ray'],['erase','Erase last'],['clear','Clear drawings']];
