@@ -12,3 +12,8 @@
 .demo-native-dialog::backdrop{background:#000a}.demo-native-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.demo-native-dialog button{background:#203247;color:#fff;border:1px solid #526275;border-radius:5px;padding:7px 10px;cursor:pointer}.demo-native-choices{display:flex;flex-wrap:wrap;gap:9px}
 #demoNativeDrawLayer{position:absolute;inset:0;z-index:35;pointer-events:none;touch-action:none}
 @media(min-width:1150px){#chartIndicatorControls .chart-navigation{gap:2px!important}#chartIndicatorControls .actions button{font-size:10px!important;padding-left:4px!important;padding-right:4px!important}#chartIndicatorControls .timeframes button{font-size:10px!important;min-width:20px!important;padding-left:3px!important;padding-right:3px!important}}
+
+/* All native controls stay interactive above chart and MTF overlays. */
+#chartIndicatorControls,#chartIndicatorControls .chart-navigation,#chartIndicatorControls .actions{position:relative;z-index:55;}
+#chartIndicatorControls .actions button{pointer-events:auto!important;}
+#demoNativeDrawLayer{z-index:30;touch-action:none;}

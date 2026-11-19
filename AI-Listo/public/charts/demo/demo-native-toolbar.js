@@ -12,11 +12,11 @@
   d.replaceChildren();const header=document.createElement('div');header.className='demo-native-dialog-head';const h=document.createElement('strong');h.textContent=title;const close=document.createElement('button');close.type='button';close.textContent='Close';close.addEventListener('click',()=>d.close());header.append(h,close);d.append(header);build(d);d.showModal();
  };
  const addChoice=(host,label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);host.append(b);};
- let drawingMode=null;
+ let drawingMode=null;const drawings=[];
  function enableDrawing(type){
   const canvas=get('priceChart'),wrap=canvas?.parentElement;if(!wrap)return;
   let layer=get('demoNativeDrawLayer');if(!layer){layer=document.createElement('canvas');layer.id='demoNativeDrawLayer';wrap.style.position='relative';wrap.append(layer);}
-  if(type==='Clear drawings'){layer.getContext('2d').clearRect(0,0,layer.width,layer.height);layer.style.pointerEvents='none';drawingMode=null;return;}
+  if(type==='Clear drawings'){drawings.length=0;layer.getContext('2d').clearRect(0,0,layer.width,layer.height);layer.style.pointerEvents='none';drawingMode=null;return;}
   const rect=wrap.getBoundingClientRect(),ratio=devicePixelRatio||1;
   layer.width=Math.round(rect.width*ratio);layer.height=Math.round(rect.height*ratio);layer.style.width=rect.width+'px';layer.style.height=rect.height+'px';
   const ctx=layer.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);layer.style.pointerEvents='auto';drawingMode=type;
@@ -27,18 +27,14 @@
   layer.onpointerup=e=>{layer.onpointermove(e);start=null;layer.style.pointerEvents='none';drawingMode=null;};
  }
  const draw=make('✎ Drawing Tools','draw');
- const calendar=make('▦ Calendar','calendar');
- const terminal=make('▤ Terminal','terminal');
- const ai=make('✦ Cortexa AI','ai');
+ // Calendar, Terminal and AI already exist as native controls with working handlers.
+ const calendar=get('calendarButton'),terminal=get('terminalToggle'),ai=get('cortexaAI');
  // Existing native buttons retain their original event handlers.
  const marketGroup=actions.querySelector('.market-tools');
  if(marketGroup)marketGroup.append(draw);else actions.prepend(draw);
- if(marketGroup)marketGroup.after(calendar);else draw.after(calendar);
+ if(calendar){draw.after(calendar);}
  const fullscreen=get('chartFullscreenButton');
- if(fullscreen)fullscreen.after(terminal);else calendar.after(terminal);
- const reset=get('reset');if(reset)reset.after(ai);else actions.append(ai);
+ if(fullscreen&&terminal)fullscreen.after(terminal);
+ const reset=get('reset');if(reset&&ai)reset.after(ai);
  draw.addEventListener('click',()=>dialog('Drawing Tools · offline demo',d=>{const group=document.createElement('div');group.className='demo-native-choices';['Trend line','Horizontal line','Rectangle','Clear drawings'].forEach(t=>addChoice(group,t,()=>{enableDrawing(t);d.close();}));d.append(group);}));
- calendar.addEventListener('click',()=>dialog('Economic Calendar · simulated',d=>{const p=document.createElement('p');p.textContent='Simulated economic events only. No live calendar service is connected.';d.append(p);}));
- terminal.addEventListener('click',()=>dialog('Terminal · offline demo',d=>{const p=document.createElement('p');p.textContent='Trading and broker connections are disabled in this public demo. All displayed prices are simulated.';d.append(p);}));
- ai.addEventListener('click',()=>dialog('Cortexa AI · offline demo',d=>{const p=document.createElement('p');p.textContent='Cortexa AI requires a paid workspace. No AI API or customer account is accessed in this demo.';d.append(p);}));
 })();
