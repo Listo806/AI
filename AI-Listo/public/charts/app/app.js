@@ -224,19 +224,20 @@ const quoteForSession=liveQuotes.get(markets[selected].symbol);
 const sessionClock=Number.isFinite(quoteForSession?.timestamp)?quoteForSession.timestamp:Date.now();
 const utcStart=Math.floor(sessionClock/86400000)*86400000;
 const utcEnd=utcStart+86400000;
-const sessionBars=data.filter(bar=>Number.isFinite(bar.time)&&bar.time>=utcStart&&bar.time<utcEnd&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
 const validBars=data.filter(bar=>Number.isFinite(bar.time)&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
-// When the feed does not include today's UTC candles, show the latest available
-// UTC session and label it accurately rather than hiding both price levels.
-const latestSessionDay=validBars.length?Math.floor(Math.max(...validBars.map(bar=>bar.time))/86400000):null;
-const levelBars=sessionBars.length?sessionBars:(latestSessionDay===null?[]:validBars.filter(bar=>Math.floor(bar.time/86400000)===latestSessionDay));
-if(levelBars.length){
+const todayBars=validBars.filter(bar=>bar.time>=utcStart&&bar.time<utcEnd);
+// If today's history has not arrived, retain visible reference labels using
+// the latest UTC date actually present in the feed (never invented prices).
+const latestBarTime=validBars.length?Math.max(...validBars.map(bar=>bar.time)):NaN;
+const latestUtcStart=Number.isFinite(latestBarTime)?Math.floor(latestBarTime/86400000)*86400000:NaN;
+const sessionBars=todayBars.length?todayBars:validBars.filter(bar=>bar.time>=latestUtcStart&&bar.time<latestUtcStart+86400000);
+if(sessionBars.length){
  const quotePrice=Number(quoteForSession?.price);
- const sessionHigh=Math.max(...levelBars.map(bar=>bar.high),Number.isFinite(quotePrice)?quotePrice:-Infinity);
- const sessionLow=Math.min(...levelBars.map(bar=>bar.low),Number.isFinite(quotePrice)?quotePrice:Infinity);
- const firstTime=Math.min(...levelBars.map(bar=>bar.time));
+ const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),todayBars.length&&Number.isFinite(quotePrice)?quotePrice:-Infinity);
+ const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),todayBars.length&&Number.isFinite(quotePrice)?quotePrice:Infinity);
+ const firstTime=Math.min(...sessionBars.map(bar=>bar.time));
  const tfDuration=chartDurations[frame]||60000;
- const completeStart=firstTime<=utcStart+Math.max(tfDuration,60000);
+ const completeStart=todayBars.length>0&&firstTime<=utcStart+Math.max(tfDuration,60000);
  const digits=markets[selected].category==='FOREIGN EXCHANGE'&&!markets[selected].symbol.endsWith('JPY')?5:3;
  // Keep both captions aligned to the same right edge, with room for the
  // Heisenberg MTF overlay at the far right of the price chart.
@@ -249,7 +250,7 @@ if(levelBars.length){
  for(const level of levels){
   const rawY=y(level.value);
   if(!Number.isFinite(rawY))continue;
-  const py=Math.max(plotTop+3,Math.min(plotBottom-3,rawY));
+  const py=Math.max(plotTop+12,Math.min(plotBottom-12,rawY));
   c.save();
   c.strokeStyle=level.lineColor;c.lineWidth=1;c.setLineDash([3,5]);
   c.beginPath();c.moveTo(left,Math.round(py)+.5);c.lineTo(plotRight,Math.round(py)+.5);c.stroke();c.setLineDash([]);
@@ -280,7 +281,7 @@ if(levelBars.length){
   c.restore();
  }
  const note=document.getElementById('chartDayLevelsStatus');
- if(note)note.textContent=sessionBars.length?(completeStart?'UTC session high/low from available feed':'UTC high/low · partial session history'):'Latest available UTC session (not today)';
+ if(note)note.textContent=todayBars.length?(completeStart?'UTC session high/low from available feed':'UTC high/low · partial session history'):'Latest available UTC session (not current day)';
 }else{
  const note=document.getElementById('chartDayLevelsStatus');
  if(note)note.textContent='UTC day high/low unavailable · no session candles';
