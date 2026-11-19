@@ -1,40 +1,39 @@
 (()=>{
- 'use strict';
- // Add only missing controls to the EXISTING chart engine action row.
- // Never create a second toolbar, duplicate timeframes or replace native buttons.
- const actions=document.querySelector('.market-heading .actions');
- if(!actions||actions.dataset.demoNativeEnhanced==='1')return;
- actions.dataset.demoNativeEnhanced='1';
- const get=id=>document.getElementById(id);
- const make=(label,kind)=>{const b=document.createElement('button');b.type='button';b.className='demo-native-extra';b.dataset.demoExtra=kind;b.textContent=label;return b;};
- const dialog=(title,build)=>{
-  let d=get('demoNativeDialog');if(!d){d=document.createElement('dialog');d.id='demoNativeDialog';d.className='demo-native-dialog';document.body.append(d);}
-  d.replaceChildren();const header=document.createElement('div');header.className='demo-native-dialog-head';const h=document.createElement('strong');h.textContent=title;const close=document.createElement('button');close.type='button';close.textContent='Close';close.addEventListener('click',()=>d.close());header.append(h,close);d.append(header);build(d);d.showModal();
- };
- const addChoice=(host,label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);host.append(b);};
- let drawingMode=null;const drawings=[];
- function enableDrawing(type){
-  const canvas=get('priceChart'),wrap=canvas?.parentElement;if(!wrap)return;
-  let layer=get('demoNativeDrawLayer');if(!layer){layer=document.createElement('canvas');layer.id='demoNativeDrawLayer';wrap.style.position='relative';wrap.append(layer);}
-  if(type==='Clear drawings'){drawings.length=0;layer.getContext('2d').clearRect(0,0,layer.width,layer.height);layer.style.pointerEvents='none';drawingMode=null;return;}
-  const rect=wrap.getBoundingClientRect(),ratio=devicePixelRatio||1;
-  layer.width=Math.round(rect.width*ratio);layer.height=Math.round(rect.height*ratio);layer.style.width=rect.width+'px';layer.style.height=rect.height+'px';
-  const ctx=layer.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);layer.style.pointerEvents='auto';drawingMode=type;
-  let start=null,original=null;
-  const point=e=>{const r=layer.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
-  layer.onpointerdown=e=>{start=point(e);original=ctx.getImageData(0,0,layer.width,layer.height);layer.setPointerCapture(e.pointerId);};
-  layer.onpointermove=e=>{if(!start)return;const end=point(e);ctx.putImageData(original,0,0);ctx.beginPath();ctx.lineWidth=2;ctx.strokeStyle='#e8e86b';if(type==='Rectangle'){ctx.strokeRect(start.x,start.y,end.x-start.x,end.y-start.y);}else{ctx.moveTo(start.x,start.y);ctx.lineTo(end.x,type==='Horizontal line'?start.y:end.y);ctx.stroke();}};
-  layer.onpointerup=e=>{layer.onpointermove(e);start=null;layer.style.pointerEvents='none';drawingMode=null;};
- }
- const draw=make('✎ Drawing Tools','draw');
- // Calendar, Terminal and AI already exist as native controls with working handlers.
- const calendar=get('calendarButton'),terminal=get('terminalToggle'),ai=get('cortexaAI');
- // Existing native buttons retain their original event handlers.
- const marketGroup=actions.querySelector('.market-tools');
- if(marketGroup)marketGroup.append(draw);else actions.prepend(draw);
- if(calendar){draw.after(calendar);}
- const fullscreen=get('chartFullscreenButton');
- if(fullscreen&&terminal)fullscreen.after(terminal);
- const reset=get('reset');if(reset&&ai)reset.after(ai);
- draw.addEventListener('click',()=>dialog('Drawing Tools · offline demo',d=>{const group=document.createElement('div');group.className='demo-native-choices';['Trend line','Horizontal line','Rectangle','Clear drawings'].forEach(t=>addChoice(group,t,()=>{enableDrawing(t);d.close();}));d.append(group);}));
+'use strict';
+const $=id=>document.getElementById(id), actions=document.querySelector('.market-heading .actions');
+if(!actions||actions.dataset.demoFixed==='3')return;actions.dataset.demoFixed='3';
+const make=(label,id)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.id=id;b.className='demo-native-extra';return b;};
+const dialog=(title,content)=>{let d=$('demoActionDialog');if(!d){d=document.createElement('dialog');d.id='demoActionDialog';d.className='demo-native-dialog';document.body.append(d);}d.replaceChildren();const h=document.createElement('div');h.className='demo-native-dialog-head';const t=document.createElement('strong');t.textContent=title;const x=make('Close','');x.addEventListener('click',()=>d.close());h.append(t,x);d.append(h,content);d.showModal();};
+const pane=(text)=>{const p=document.createElement('p');p.textContent=text;return p;};
+const group=actions.querySelector('.market-tools');
+const draw=actions.querySelector('[data-demo-extra="draw"]')||make('✎ Drawing Tools','demoDrawingTools');draw.dataset.demoExtra='draw';
+const calendar=make('▦ Calendar','demoCalendar');
+const terminal=make('▤ Terminal','demoTerminal');
+const ai=make('✦ Cortexa AI','demoAI');
+// Restore native buttons: do not replace them or their event listeners.
+const charts=$('viewChartsButton'),full=$('chartFullscreenButton'),styles=actions.querySelector('.chart-styles'),reset=$('reset');
+if(group)group.after(draw);else actions.prepend(draw);
+draw.after(calendar);
+if(charts)calendar.after(charts);
+if(full)(charts||calendar).after(full);
+if(full)full.after(terminal);else (charts||calendar).after(terminal);
+if(styles)terminal.after(styles);
+if(reset)reset.after(ai);else actions.append(ai);
+// Keep all real native controls. Never remove them from the DOM.
+const nativeMarket=group?.querySelector('button:first-child'),nativeIndicators=group?.querySelector('button:last-child');
+if(nativeMarket)nativeMarket.textContent='☷ Market';
+if(nativeIndicators)nativeIndicators.textContent='⌁ Indicators';
+if(charts)charts.textContent='▦ Charts';
+if(full)full.textContent='⛶ Full screen';
+if(reset)reset.textContent='Reset';
+// Offline drawing overlay. Pointer input is enabled only while drawing.
+const chart=$('priceChart'),wrap=chart?.parentElement;let layer=null,mode='',start=null,drawings=[];
+const norm=(e)=>{const r=layer.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};};
+function paint(preview){if(!layer)return;const r=layer.getBoundingClientRect(),dpr=devicePixelRatio||1,ctx=layer.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,r.width,r.height);ctx.strokeStyle='#d9bd6b';ctx.lineWidth=2;for(const s of preview?[...drawings,preview]:drawings){const a={x:s.a.x*r.width,y:s.a.y*r.height},b={x:s.b.x*r.width,y:s.b.y*r.height};ctx.beginPath();if(s.mode==='Rectangle')ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);else{ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,s.mode==='Horizontal line'?a.y:b.y);ctx.stroke();}}}
+function resize(){if(!layer)return;const r=wrap.getBoundingClientRect(),dpr=devicePixelRatio||1;layer.width=Math.round(r.width*dpr);layer.height=Math.round(r.height*dpr);layer.style.width=r.width+'px';layer.style.height=r.height+'px';paint();}
+function ensureLayer(){if(layer||!wrap)return;layer=document.createElement('canvas');layer.id='demoNativeDrawLayer';wrap.style.position='relative';wrap.append(layer);layer.addEventListener('pointerdown',e=>{if(!mode)return;start=norm(e);layer.setPointerCapture(e.pointerId);e.preventDefault();});layer.addEventListener('pointermove',e=>{if(start)paint({mode,a:start,b:norm(e)});});layer.addEventListener('pointerup',e=>{if(!start)return;drawings.push({mode,a:start,b:norm(e)});start=null;mode='';layer.style.pointerEvents='none';draw.setAttribute('aria-pressed','false');paint();});layer.addEventListener('pointercancel',()=>{start=null;mode='';layer.style.pointerEvents='none';paint();});new ResizeObserver(resize).observe(wrap);resize();}
+draw.addEventListener('click',()=>{const box=document.createElement('div');box.className='demo-native-choices';for(const option of ['Trend line','Horizontal line','Rectangle','Clear drawings']){const b=make(option,'');b.onclick=()=>{ensureLayer();if(option==='Clear drawings'){drawings=[];mode='';layer.style.pointerEvents='none';paint();}else{mode=option;layer.style.pointerEvents='auto';draw.setAttribute('aria-pressed','true');} $('demoActionDialog').close();};box.append(b);}dialog('Drawing Tools · simulated data',box);});
+calendar.addEventListener('click',()=>{const box=document.createElement('div');box.append(pane('Economic Calendar · offline demo'),pane('Live economic events are intentionally unavailable. This demo makes no network requests.'));const now=document.createElement('p');now.textContent='Current UTC: '+new Date().toISOString().replace('T',' ').slice(0,16);box.append(now);dialog('Economic Calendar',box);});
+let terminalPane=null;terminal.addEventListener('click',()=>{if(!terminalPane){terminalPane=document.createElement('section');terminalPane.id='demoOfflineTerminal';terminalPane.className='demo-offline-terminal';const h=document.createElement('div');h.className='demo-native-dialog-head';const title=document.createElement('strong');title.textContent='Terminal · simulated account';const x=make('×','');x.onclick=()=>{terminalPane.hidden=true;terminal.setAttribute('aria-pressed','false');};h.append(title,x);terminalPane.append(h,pane('No broker connected. Positions, orders and account balances are not available in this offline demo.'));document.querySelector('article').append(terminalPane);}terminalPane.hidden=!terminalPane.hidden;terminal.setAttribute('aria-pressed',String(!terminalPane.hidden));});
+ai.addEventListener('click',()=>{const box=document.createElement('div');box.append(pane('Cortexa AI preview · offline mode'),pane('AI requests are disabled in this public demo to protect customer accounts and live APIs.'));const selected=document.querySelector('#markets button.active, #markets button[aria-pressed="true"]');if(selected)box.append(pane('Selected market: '+selected.textContent.trim()));dialog('Cortexa AI',box);});
 })();

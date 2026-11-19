@@ -1,19 +1,16 @@
-/* Integrate missing controls into the existing chart action row; never create another toolbar. */
-.market-heading .actions{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:3px!important;min-width:0!important;max-width:none!important;overflow:visible!important;}
-.market-heading .actions .market-tools{display:flex!important;align-items:center;flex-wrap:nowrap!important;gap:3px!important;flex-shrink:0!important;}
-.market-heading .actions button,.market-heading .actions .chart-styles{white-space:nowrap!important;flex-shrink:0!important;}
-.market-heading .actions .demo-native-extra{border:1px solid #46515e;background:#111923;color:#e6edf4;border-radius:4px;padding:5px 6px;font:600 10px system-ui,sans-serif;cursor:pointer;}
-.market-heading .actions .demo-native-extra:hover{background:#263747;border-color:#93a5b8;}
-/* Preserve one row. At narrow widths allow horizontal scrolling instead of clipping controls. */
-#chartIndicatorControls .chart-navigation{flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:thin;}
-#chartIndicatorControls .timeframes,#chartIndicatorControls .history-ranges{flex-shrink:0!important;flex-wrap:nowrap!important;}
-#chartIndicatorControls .actions{flex-shrink:0!important;}
-.demo-native-dialog{background:#111b26;color:#edf5ff;border:1px solid #526275;border-radius:10px;padding:20px;width:min(95vw,470px);box-shadow:0 15px 60px #0009;}
-.demo-native-dialog::backdrop{background:#000a}.demo-native-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.demo-native-dialog button{background:#203247;color:#fff;border:1px solid #526275;border-radius:5px;padding:7px 10px;cursor:pointer}.demo-native-choices{display:flex;flex-wrap:wrap;gap:9px}
-#demoNativeDrawLayer{position:absolute;inset:0;z-index:35;pointer-events:none;touch-action:none}
-@media(min-width:1150px){#chartIndicatorControls .chart-navigation{gap:2px!important}#chartIndicatorControls .actions button{font-size:10px!important;padding-left:4px!important;padding-right:4px!important}#chartIndicatorControls .timeframes button{font-size:10px!important;min-width:20px!important;padding-left:3px!important;padding-right:3px!important}}
 
-/* All native controls stay interactive above chart and MTF overlays. */
-#chartIndicatorControls,#chartIndicatorControls .chart-navigation,#chartIndicatorControls .actions{position:relative;z-index:55;}
-#chartIndicatorControls .actions button{pointer-events:auto!important;}
-#demoNativeDrawLayer{z-index:30;touch-action:none;}
+/* Ensure the complete real action row is visible without deleting existing buttons. */
+#chartIndicatorControls .chart-navigation{overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:thin!important}
+#chartIndicatorControls .actions{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:3px!important;flex-shrink:0!important;overflow:visible!important}
+#chartIndicatorControls .actions button{display:inline-flex!important;align-items:center!important;white-space:nowrap!important;flex-shrink:0!important;pointer-events:auto!important}
+#chartIndicatorControls .actions .market-tools{display:flex!important;flex-wrap:nowrap!important;flex-shrink:0!important}
+#chartIndicatorControls .chart-navigation,#chartIndicatorControls{position:relative;z-index:55}
+#demoNativeDrawLayer{position:absolute;inset:0;z-index:30;pointer-events:none;touch-action:none}
+.demo-native-extra{background:#111923;color:#e6edf4;border:1px solid #46515e;border-radius:4px;padding:5px 6px;font:600 10px system-ui;cursor:pointer}
+.demo-native-dialog{background:#111b26;color:#edf5ff;border:1px solid #526275;border-radius:10px;padding:20px;width:min(95vw,470px)}
+.demo-native-dialog::backdrop{background:#000a}
+.demo-native-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:14px}
+.demo-native-dialog button,.demo-offline-terminal button{background:#203247;color:#fff;border:1px solid #526275;border-radius:5px;padding:7px 10px;cursor:pointer}
+.demo-native-choices{display:flex;flex-wrap:wrap;gap:9px}
+.demo-offline-terminal{background:#121d27;color:#e5edf4;border-top:1px solid #526275;padding:14px 20px}
+.demo-offline-terminal[hidden]{display:none}
