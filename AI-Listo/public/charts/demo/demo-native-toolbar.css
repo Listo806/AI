@@ -14,3 +14,11 @@
 .demo-native-choices{display:flex;flex-wrap:wrap;gap:9px}
 .demo-offline-terminal{background:#121d27;color:#e5edf4;border-top:1px solid #526275;padding:14px 20px}
 .demo-offline-terminal[hidden]{display:none}
+
+/* Demo toolbar matches the primary Charts layout. */
+#chartIndicatorControls #panLeft,#chartIndicatorControls #panRight,
+.market-heading .actions #panLeft,.market-heading .actions #panRight{display:none!important}
+.market-heading .actions #zoomOut,.market-heading .actions #zoomIn{min-width:23px;justify-content:center;padding:5px 5px}
+.market-heading .actions .market-tools #drawingToolsButton{white-space:nowrap}
+/* Preserve native controls and allow horizontal scrolling on smaller screens. */
+#chartIndicatorControls .chart-navigation{max-width:100%;overflow-x:auto!important}

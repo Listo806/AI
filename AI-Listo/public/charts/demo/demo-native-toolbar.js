@@ -24,6 +24,15 @@ if(nativeIndicators)nativeIndicators.textContent='⌁ Indicators';
 if(charts)charts.textContent='▦ Charts';
 if(full)full.textContent='⛶ Full screen';
 if(reset)reset.textContent='Reset';
+// Match the reference toolbar: keep one zoom pair immediately before Market.
+const zoomOut=$('zoomOut'),zoomIn=$('zoomIn');
+if(group){if(zoomOut)group.before(zoomOut);if(zoomIn)group.before(zoomIn);}
+if(zoomOut){zoomOut.textContent='−';zoomOut.title='Zoom out';}
+if(zoomIn){zoomIn.textContent='+';zoomIn.title='Zoom in';}
+// Pan controls remain in the DOM (their listeners are preserved), but are not
+// duplicated beside the reference toolbar's zoom pair.
+for(const id of ['panLeft','panRight']){const b=$(id);if(b)b.hidden=true;}
+
 calendar.addEventListener('click',()=>{const box=document.createElement('div');box.append(pane('Economic Calendar · offline demo'),pane('Live economic events are intentionally unavailable. This demo makes no network requests.'));const now=document.createElement('p');now.textContent='Current UTC: '+new Date().toISOString().replace('T',' ').slice(0,16);box.append(now);dialog('Economic Calendar',box);});
 let terminalPane=null;terminal.addEventListener('click',()=>{if(!terminalPane){terminalPane=document.createElement('section');terminalPane.id='demoOfflineTerminal';terminalPane.className='demo-offline-terminal';const h=document.createElement('div');h.className='demo-native-dialog-head';const title=document.createElement('strong');title.textContent='Terminal · simulated account';const x=make('×','');x.onclick=()=>{terminalPane.hidden=true;terminal.setAttribute('aria-pressed','false');};h.append(title,x);terminalPane.append(h,pane('No broker connected. Positions, orders and account balances are not available in this offline demo.'));document.querySelector('article').append(terminalPane);}terminalPane.hidden=!terminalPane.hidden;terminal.setAttribute('aria-pressed',String(!terminalPane.hidden));});
 ai.addEventListener('click',()=>{const box=document.createElement('div');box.append(pane('Cortexa AI preview · offline mode'),pane('AI requests are disabled in this public demo to protect customer accounts and live APIs.'));const selected=document.querySelector('#markets button.active, #markets button[aria-pressed="true"]');if(selected)box.append(pane('Selected market: '+selected.textContent.trim()));dialog('Cortexa AI',box);});
