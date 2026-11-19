@@ -7,3 +7,8 @@
 /* Release 30: zoom must not disappear when the timeframe row fills the gap. */
 #chartGapZoom.chart-gap-zoom{position:static!important;left:auto!important;top:auto!important;display:inline-flex!important;visibility:visible!important;width:auto!important;height:25px!important;gap:3px!important;flex:0 0 auto!important;margin-right:3px!important;z-index:10}
 #chartGapZoom.chart-gap-zoom button{transform:none!important;width:23px!important;height:23px!important;min-width:23px!important;max-width:23px!important;min-height:23px!important;max-height:23px!important;font-size:19px!important;font-weight:700!important;line-height:1!important}
+
+/* Fix 34: exact 16x16 zoom controls, black +/- glyphs. */
+#chartGapZoom.chart-gap-zoom{height:16px!important;gap:4px!important;margin-right:4px!important;align-self:center!important}
+#chartGapZoom.chart-gap-zoom button{box-sizing:border-box!important;flex:0 0 16px!important;width:16px!important;min-width:16px!important;max-width:16px!important;height:16px!important;min-height:16px!important;max-height:16px!important;padding:0!important;margin:0!important;transform:none!important;border-radius:50%!important;font-size:13px!important;font-weight:800!important;line-height:14px!important;color:#000!important;text-align:center!important}
+#chartGapZoom.chart-gap-zoom button svg{width:12px!important;height:12px!important;stroke:#000!important;stroke-width:2.5!important}
