@@ -1,7 +1,11 @@
 /* Chart drawing tools: isolated overlay, no market data or chart API changes. */
 (()=>{'use strict';
 const wrap=document.querySelector('.canvas-wrap');const price=document.getElementById('priceChart');
-const btn=document.getElementById('drawingToolsButton');
+let btn=document.getElementById('drawingToolsButton');
+if(!btn){
+ const host=document.querySelector('.market-tools')||document.querySelector('.market-heading .actions');
+ if(host){btn=document.createElement('button');btn.id='drawingToolsButton';btn.type='button';btn.className='market-tool';btn.textContent='✎ Drawing Tools';const indicators=[...host.querySelectorAll('button')].find(b=>/Indicators/i.test(b.textContent));if(indicators)indicators.before(btn);else host.append(btn);}
+}
 if(!btn||!wrap||!price||document.querySelector('.charts-draw-bar'))return;
 btn.title='Open drawing tools';
 const bar=document.createElement('div');bar.className='charts-draw-bar';bar.hidden=true;bar.setAttribute('aria-label','Drawing tools');
