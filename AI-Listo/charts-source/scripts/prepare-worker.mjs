@@ -20,6 +20,7 @@ for(const name of ['trading-terminal.js','trading-terminal.css'])files['/'+name]
 for(const name of ['one-click-trading.js','one-click-trading.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
 for(const name of ['trading-account.js','trading-account.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
 files['/metatrader-studies.js']=['metatrader-studies.js','text/javascript'];
+for(const name of ['drawing-tools.js','drawing-tools.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
 const calendarSource=await readFile(new URL('../worker/calendar.js',import.meta.url),'utf8');
 const assets = {};
 for (const [path, [file, contentType]] of Object.entries(files)) assets[path] = { body: await readFile(new URL('../web/' + file, import.meta.url), contentType==='image/png'?'base64':'utf8'), contentType, binary: contentType==='image/png' };
