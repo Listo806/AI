@@ -225,11 +225,19 @@ const sessionClock=Number.isFinite(quoteForSession?.timestamp)?quoteForSession.t
 const utcStart=Math.floor(sessionClock/86400000)*86400000;
 const utcEnd=utcStart+86400000;
 const sessionBars=data.filter(bar=>Number.isFinite(bar.time)&&bar.time>=utcStart&&bar.time<utcEnd&&Number.isFinite(bar.high)&&Number.isFinite(bar.low));
-if(sessionBars.length){
- const quotePrice=Number(quoteForSession?.price);
- const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),Number.isFinite(quotePrice)?quotePrice:-Infinity);
- const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),Number.isFinite(quotePrice)?quotePrice:Infinity);
- const firstTime=Math.min(...sessionBars.map(bar=>bar.time));
+// Retain observed ticks for the current UTC session when the historical feed has no
+// intraday candles. These are observed-session extremes, never invented prices.
+const observedKey=markets[selected].symbol;
+window.__chartsUtcObservedLevels ||= new Map();
+const observed=window.__chartsUtcObservedLevels;
+const quotePrice=Number(quoteForSession?.price);
+let observation=observed.get(observedKey);
+if(!observation||observation.utcStart!==utcStart){observation={utcStart,high:-Infinity,low:Infinity};observed.set(observedKey,observation);}
+if(Number.isFinite(quotePrice)&&quotePrice>0){observation.high=Math.max(observation.high,quotePrice);observation.low=Math.min(observation.low,quotePrice);}
+if(sessionBars.length||Number.isFinite(observation.high)){
+ const sessionHigh=Math.max(...sessionBars.map(bar=>bar.high),observation.high);
+ const sessionLow=Math.min(...sessionBars.map(bar=>bar.low),observation.low);
+ const firstTime=sessionBars.length?Math.min(...sessionBars.map(bar=>bar.time)):sessionClock;
  const tfDuration=chartDurations[frame]||60000;
  const completeStart=firstTime<=utcStart+Math.max(tfDuration,60000);
  const digits=markets[selected].category==='FOREIGN EXCHANGE'&&!markets[selected].symbol.endsWith('JPY')?5:3;
@@ -244,8 +252,7 @@ if(sessionBars.length){
  for(const level of levels){
   const py=y(level.value);
   if(!Number.isFinite(py))continue;
-  // Clamp the visual marker to the visible plot so panning/zooming cannot hide it.
-  const displayY=Math.max(plotTop+10,Math.min(plotBottom-10,py));
+  const displayY=Math.max(plotTop+2,Math.min(plotBottom-2,py));
   c.save();
   c.strokeStyle=level.lineColor;c.lineWidth=1;c.setLineDash([3,5]);
   c.beginPath();c.moveTo(left,Math.round(displayY)+.5);c.lineTo(plotRight,Math.round(displayY)+.5);c.stroke();c.setLineDash([]);
@@ -279,7 +286,7 @@ if(sessionBars.length){
  if(note)note.textContent=completeStart?'UTC session high/low from available feed':'UTC high/low · partial session history';
 }else{
  const note=document.getElementById('chartDayLevelsStatus');
- if(note)note.textContent='UTC day high/low unavailable · no session candles';
+ if(note)note.textContent='UTC day high/low unavailable · no observed session prices';
 }
 // Keep it independent of the enabled indicator plots and of day-high/day-low levels.
 const latestLiveQuote=liveQuotes.get(markets[selected].symbol);
