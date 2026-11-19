@@ -1,39 +1,32 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id), actions=document.querySelector('.market-heading .actions');
-if(!actions||actions.dataset.demoFixed==='3')return;actions.dataset.demoFixed='3';
-const make=(label,id)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.id=id;b.className='demo-native-extra';return b;};
-const dialog=(title,content)=>{let d=$('demoActionDialog');if(!d){d=document.createElement('dialog');d.id='demoActionDialog';d.className='demo-native-dialog';document.body.append(d);}d.replaceChildren();const h=document.createElement('div');h.className='demo-native-dialog-head';const t=document.createElement('strong');t.textContent=title;const x=make('Close','');x.addEventListener('click',()=>d.close());h.append(t,x);d.append(h,content);d.showModal();};
-const pane=(text)=>{const p=document.createElement('p');p.textContent=text;return p;};
-const group=actions.querySelector('.market-tools');
-const calendar=make('▦ Calendar','demoCalendar');
-const terminal=make('▤ Terminal','demoTerminal');
-const ai=make('✦ Cortexa AI','demoAI');
-// Restore native buttons: do not replace them or their event listeners.
-const charts=$('viewChartsButton'),full=$('chartFullscreenButton'),styles=actions.querySelector('.chart-styles'),reset=$('reset');
+if(!actions||actions.dataset.demoFixed==='4')return;actions.dataset.demoFixed='4';
+const button=(label,id)=>{const b=document.createElement('button');b.type='button';b.textContent=label;if(id)b.id=id;b.className='demo-native-extra';return b;};
+const el=(tag,txt,cls)=>{const x=document.createElement(tag);if(txt!==undefined)x.textContent=txt;if(cls)x.className=cls;return x;};
+const group=actions.querySelector('.market-tools'),charts=$('viewChartsButton'),full=$('chartFullscreenButton'),styles=actions.querySelector('.chart-styles'),reset=$('reset');
+const calendar=button('▦ Calendar','demoCalendar'),terminal=button('▤ Terminal','demoTerminal'),ai=button('✦ Cortexa AI','demoAI');
 if(group)group.after(calendar);else actions.prepend(calendar);
-if(charts)calendar.after(charts);
-if(full)(charts||calendar).after(full);
-if(full)full.after(terminal);else (charts||calendar).after(terminal);
-if(styles)terminal.after(styles);
+if(charts)calendar.after(charts);if(full)(charts||calendar).after(full);
+(full||charts||calendar).after(terminal);if(styles)terminal.after(styles);
 if(reset)reset.after(ai);else actions.append(ai);
-// Keep all real native controls. Never remove them from the DOM.
-const nativeMarket=group?.querySelector('button:first-child'),nativeIndicators=group?.querySelector('button:last-child');
-if(nativeMarket)nativeMarket.textContent='☷ Market';
-if(nativeIndicators)nativeIndicators.textContent='⌁ Indicators';
-if(charts)charts.textContent='▦ Charts';
-if(full)full.textContent='⛶ Full screen';
-if(reset)reset.textContent='Reset';
-// Match the reference toolbar: keep one zoom pair immediately before Market.
-const zoomOut=$('zoomOut'),zoomIn=$('zoomIn');
-if(group){if(zoomOut)group.before(zoomOut);if(zoomIn)group.before(zoomIn);}
-if(zoomOut){zoomOut.textContent='−';zoomOut.title='Zoom out';}
-if(zoomIn){zoomIn.textContent='+';zoomIn.title='Zoom in';}
-// Pan controls remain in the DOM (their listeners are preserved), but are not
-// duplicated beside the reference toolbar's zoom pair.
+const market=group?.querySelector('button:first-child'),indicators=group?.querySelector('button:last-child');
+if(market)market.textContent='☷ Market';if(indicators)indicators.textContent='⌁ Indicators';
+if(charts)charts.textContent='▦ Charts';if(full)full.textContent='⛶ Full screen';if(reset)reset.textContent='Reset';
+const out=$('zoomOut'),zoom=$('zoomIn');if(group){if(out)group.before(out);if(zoom)group.before(zoom);}if(out){out.textContent='−';out.title='Zoom out';}if(zoom){zoom.textContent='+';zoom.title='Zoom in';}
 for(const id of ['panLeft','panRight']){const b=$(id);if(b)b.hidden=true;}
-
-calendar.addEventListener('click',()=>{const box=document.createElement('div');box.append(pane('Economic Calendar · offline demo'),pane('Live economic events are intentionally unavailable. This demo makes no network requests.'));const now=document.createElement('p');now.textContent='Current UTC: '+new Date().toISOString().replace('T',' ').slice(0,16);box.append(now);dialog('Economic Calendar',box);});
-let terminalPane=null;terminal.addEventListener('click',()=>{if(!terminalPane){terminalPane=document.createElement('section');terminalPane.id='demoOfflineTerminal';terminalPane.className='demo-offline-terminal';const h=document.createElement('div');h.className='demo-native-dialog-head';const title=document.createElement('strong');title.textContent='Terminal · simulated account';const x=make('×','');x.onclick=()=>{terminalPane.hidden=true;terminal.setAttribute('aria-pressed','false');};h.append(title,x);terminalPane.append(h,pane('No broker connected. Positions, orders and account balances are not available in this offline demo.'));document.querySelector('article').append(terminalPane);}terminalPane.hidden=!terminalPane.hidden;terminal.setAttribute('aria-pressed',String(!terminalPane.hidden));});
-ai.addEventListener('click',()=>{const box=document.createElement('div');box.append(pane('Cortexa AI preview · offline mode'),pane('AI requests are disabled in this public demo to protect customer accounts and live APIs.'));const selected=document.querySelector('#markets button.active, #markets button[aria-pressed="true"]');if(selected)box.append(pane('Selected market: '+selected.textContent.trim()));dialog('Cortexa AI',box);});
+let dialog=$('demoActionDialog');if(!dialog){dialog=el('dialog',undefined,'demo-native-dialog');dialog.id='demoActionDialog';document.body.append(dialog);}
+function open(title,render){dialog.replaceChildren();const head=el('div',undefined,'demo-native-dialog-head');head.append(el('strong',title));const close=button('Close');close.onclick=()=>dialog.close();head.append(close);dialog.append(head);render(dialog);if(!dialog.open)dialog.showModal();}
+function info(container,message){container.append(el('p',message,'demo-muted'));}
+function chosen(){const active=document.querySelector('#markets button.active,#markets button[aria-pressed="true"]');return active?.textContent?.trim().split(/\s+/)[0]||'USD/JPY';}
+function quote(){const raw=document.querySelector('#lastPrice')?.textContent||document.querySelector('#markets button.active strong')?.textContent||'159.80';return Number(raw.replace(/[^0-9.]/g,''))||159.80;}
+// These events are deliberately labeled illustrative: no external calendar is fetched.
+const events=[['08:30','USD','Inflation report','High'],['10:00','USD','Consumer confidence','Medium'],['12:00','EUR','Economic outlook','Medium'],['14:30','GBP','Employment report','High'],['16:00','JPY','Manufacturing survey','Low']];
+calendar.onclick=()=>open('Economic Calendar · Demo',root=>{info(root,'Illustrative events only · UTC · no live economic data');const controls=el('div',undefined,'demo-filter');const select=el('select');for(const name of ['All currencies','USD','EUR','GBP','JPY']){const o=el('option',name);o.value=name;select.append(o);}controls.append(select);root.append(controls);const table=el('table',undefined,'demo-table');table.innerHTML='<thead><tr><th>UTC</th><th>Currency</th><th>Event</th><th>Impact</th></tr></thead><tbody></tbody>';root.append(table);const draw=()=>{const tbody=table.tBodies[0];tbody.replaceChildren();for(const item of events.filter(e=>select.value==='All currencies'||e[1]===select.value)){const tr=el('tr');for(const value of item)tr.append(el('td',value));tbody.append(tr);}};select.onchange=draw;draw();});
+let balance=10000,orders=[],nextId=1;
+function terminalView(root){info(root,'Simulated USD account · orders never leave this browser');const summary=el('div',undefined,'demo-account-summary');root.append(summary);const form=el('form',undefined,'demo-trade-form');const symbol=el('strong',chosen());const size=el('input');size.type='number';size.min='0.01';size.max='100';size.step='0.01';size.value='0.1';size.setAttribute('aria-label','Position size (lots)');const buy=button('Buy (demo)'),sell=button('Sell (demo)');buy.className='demo-buy';sell.className='demo-sell';form.append(symbol,el('label','Lots'),size,buy,sell);root.append(form);const table=el('table',undefined,'demo-table');table.innerHTML='<thead><tr><th>Position</th><th>Side</th><th>Lots</th><th>Entry</th><th></th></tr></thead><tbody></tbody>';root.append(table);
+const refresh=()=>{summary.textContent='Demo balance: $'+balance.toFixed(2)+' · Open positions: '+orders.length;const body=table.tBodies[0];body.replaceChildren();for(const order of orders){const tr=el('tr');for(const value of [order.symbol,order.side,order.lots.toFixed(2),order.entry.toFixed(4)])tr.append(el('td',String(value)));const cell=el('td');const close=button('Close');close.onclick=()=>{orders=orders.filter(o=>o.id!==order.id);refresh();};cell.append(close);tr.append(cell);body.append(tr);}};
+const submit=side=>{const lots=Number(size.value);if(!Number.isFinite(lots)||lots<0.01||lots>100){size.setCustomValidity('Choose 0.01 to 100 lots');size.reportValidity();return;}size.setCustomValidity('');orders.push({id:nextId++,symbol:chosen(),side,lots,entry:quote()});refresh();};form.onsubmit=e=>e.preventDefault();buy.onclick=()=>submit('Buy');sell.onclick=()=>submit('Sell');refresh();}
+terminal.onclick=()=>open('Trading Terminal · Simulated',terminalView);
+ai.onclick=()=>open('Cortexa AI · Demo Analysis',root=>{info(root,'Illustrative rule-based analysis. Not an AI API response or investment advice.');const symbol=chosen(),price=quote();root.append(el('h3',symbol+' · '+price.toFixed(price<10?5:3)));const selected=document.querySelector('.timeframes button.active,[data-frame].active');root.append(el('p','Selected timeframe: '+(selected?.textContent?.trim()||'M1')));const activeIndicators=[...document.querySelectorAll('.market-heading .legend input:checked')].map(x=>x.closest('label')?.textContent?.trim()).filter(Boolean);root.append(el('p','Enabled indicators: '+(activeIndicators.join(', ')||'None')));root.append(el('p','Demo interpretation: compare the latest candles with Day High/Low, review volatility, and confirm a trend using multiple timeframes. This is an example workflow, not a live trading signal.'));const rerun=button('Refresh analysis');rerun.onclick=()=>{dialog.close();ai.click();};root.append(rerun);});
 })();

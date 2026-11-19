@@ -22,3 +22,16 @@
 .market-heading .actions .market-tools #drawingToolsButton{white-space:nowrap}
 /* Preserve native controls and allow horizontal scrolling on smaller screens. */
 #chartIndicatorControls .chart-navigation{max-width:100%;overflow-x:auto!important}
+/* Functional offline demo panels */
+.demo-native-dialog{width:min(95vw,680px);max-height:85vh;overflow:auto;color:#edf5ff}
+.demo-muted{color:#a7b8c8;font-size:12px;line-height:1.5}
+.demo-filter{display:flex;gap:10px;margin:12px 0}
+.demo-filter select,.demo-trade-form input{background:#111923;color:#eaf4ff;border:1px solid #526275;border-radius:5px;padding:7px}
+.demo-table{border-collapse:collapse;width:100%;margin:12px 0;font-size:12px}
+.demo-table th,.demo-table td{border-bottom:1px solid #304154;text-align:left;padding:9px 5px}
+.demo-table th{color:#9bb2c9}
+.demo-account-summary{padding:12px;background:#182b36;border-radius:6px;margin:10px 0}
+.demo-trade-form{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.demo-trade-form input{width:90px}
+.demo-native-dialog .demo-buy{background:#166c53;color:#fff}
+.demo-native-dialog .demo-sell{background:#8a3644;color:#fff}
