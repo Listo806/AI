@@ -1,0 +1,62 @@
+.picker-veil{position:fixed;inset:0;background:#02060b70;z-index:50;backdrop-filter:blur(2px)}.market-picker{position:fixed;top:94px;right:14px;bottom:16px;width:450px;max-width:calc(100vw - 24px);z-index:51;display:flex;flex-direction:column;background:#111923;border:1px solid #3d5267;border-radius:12px;box-shadow:0 24px 90px #000a;overflow:hidden}.picker-head{display:flex;align-items:center;justify-content:space-between;padding:0 0 0 10px}.picker-head small{font-size:9px;letter-spacing:2px;color:#65c9ad}.picker-head h2{font-size:24px;color:#eff6ff;margin:5px 0 0;letter-spacing:-.6px}.picker-close{border:0;background:transparent;font-size:24px;padding:3px 8px;color:#9badbf}.picker-description{font-size:12px;color:#94a6bb;margin:0;padding:0 22px 18px}.market-picker .picker-search{width:calc(100% - 44px);margin:0 22px 15px;padding:11px 13px;background:#0a111a;border-color:#32475d;font-size:12px}.picker-slots{padding:0 22px 14px;display:flex;gap:5px;flex-wrap:wrap}.picker-slots small{width:100%;font-size:8px;letter-spacing:1.5px;color:#8ba0b5;margin-bottom:3px}.picker-slots button{font-size:10px;padding:6px 10px;background:#1b2533;color:#a7b7ca}.picker-slots button.selected{border-color:#69cbb1;background:#1e3c35;color:#aaf8de}.picker-tabs{display:flex;gap:5px;padding:0 22px 15px;flex-wrap:wrap;border-bottom:1px solid #283747}.picker-tabs button{font-size:10px;padding:6px 8px;border:0;background:transparent;color:#8fa5bb}.picker-tabs button.selected{background:#273a4b;color:#e2f7ff}.picker-list{overflow:auto;flex:1;padding:7px 12px 14px;scrollbar-width:thin;scrollbar-color:#3a5169 transparent}.picker-row{position:relative;display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid #1e2c3b;min-height:65px;border-radius:6px}.picker-row[role=button]{cursor:pointer}.picker-row:hover{background:#1b2a3b}.market-symbol{display:grid;place-items:center;width:33px;height:33px;border:1px solid #3c5266;background:#1b2938;border-radius:8px;color:#8bd6c3;font-size:18px;flex-shrink:0}.row-name{flex:1;min-width:0}.row-name strong{display:block;font-size:12px;font-weight:600;color:#e2eaf5}.row-name small{display:block;margin-top:4px;font-size:10px;color:#8298b0}.row-added{font-size:9px;color:#6ad2af}.row-arrow{font-size:19px;color:#8fa8bf}.market-action{position:absolute;right:12px;top:9px;z-index:3;background:#233a4b;border:1px solid #5e829a;border-radius:7px;box-shadow:0 5px 20px #000a;padding:7px;min-width:170px}.market-action button{width:100%;text-align:left;border:0;background:#2b5262;color:#d2fff2;font-size:12px;padding:8px}.market-action small{display:block;font-size:9px;color:#a5bacb;padding:6px 3px 0}.picker-foot{padding:15px 22px;border-top:1px solid #2b3b4d;font-size:10px;line-height:1.5;color:#9aafc4;background:#101720}.catalog-note{display:block;color:#6f849b;font-size:9px;line-height:1.5;padding:17px 10px 0}.picker-section{font-size:9px;letter-spacing:1.7px;color:#7d97ad;margin:18px 10px 8px}.indicator-add,.indicator-added{font-size:10px;padding:6px 9px;white-space:nowrap}.indicator-added{color:#71d8b8;border-color:#366b59;background:#1a382f}.indicator-add{color:#d3e9f8;background:#24394c;border-color:#405e77}.picker-removed{display:none!important}.extra-toggle{display:flex;align-items:center;gap:6px;background:transparent;border:0;padding:5px 8px;font-size:10px}.extra-remove{padding:2px 5px;border:0;background:transparent;color:#8fa4bb;font-size:14px}.extra-pane{height:85px!important;flex-shrink:0;border-top:1px solid #344254}.preview-settings input[type=color]{min-height:42px}.legend{flex-wrap:wrap!important}.preview-settings{z-index:70}
+.market-tools{display:flex;gap:7px;align-items:center;margin-right:8px;flex-shrink:0}.market-heading .market-tool{font-size:10px;font-weight:600;padding:6px 9px;white-space:nowrap;background:#203043;border:1px solid #4c697c;color:#edf8ff;height:28px}.market-heading .market-tool:hover{background:#2a4559;border-color:#65d1b1}.market-picker{top:94px}.replacement-option{display:block;width:100%;margin:8px 0;text-align:left}.replacement-cancel{margin-top:12px}.preview-settings input[type=color]{min-height:42px}@media(max-width:760px){.market-tools{margin-right:4px;gap:4px}.market-heading .market-tool{padding:5px;font-size:9px}.market-picker{top:12px;right:12px;bottom:12px}}
+
+.market-heading .legend{min-width:0;flex:1;flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:thin}.market-heading .legend>.indicator-box,.market-heading .legend>label{flex-shrink:0}.market-heading .actions{flex-shrink:0}.market-picker .picker-description{padding:0 22px 18px}.market-picker .picker-search{margin:0 22px 15px;width:calc(100% - 44px)}.market-picker .picker-slots{padding:0 22px 14px}.market-picker .picker-tabs{padding:0 22px 15px}.market-picker .picker-list{padding:7px 12px 14px}.extra-pane{max-height:85px}
+
+/* Slim, anchored indicator chooser. Market Watch retains its existing drawer. */
+.market-picker.indicator-dropdown{width:310px;max-width:calc(100vw - 16px);bottom:auto;max-height:calc(100dvh - 160px);border-radius:5px;box-shadow:0 12px 36px #0009;background:#141a21;backdrop-filter:none}
+.indicator-dropdown .picker-head h2{font-size:15px;margin:0;color:white;letter-spacing:0}.indicator-dropdown .picker-head small,.indicator-dropdown .picker-description{display:none}
+.indicator-dropdown .picker-close{font-size:19px}.indicator-dropdown .picker-search{width:calc(100% - 20px);margin:2px 10px 7px;padding:7px 8px;font-size:11px;border-radius:3px}
+.indicator-dropdown .picker-list{padding:0 10px;overflow:auto;min-height:0}.indicator-dropdown .picker-section{font-size:10px;letter-spacing:.6px;color:#aebac9;margin:11px 0 5px;padding:8px 0 0;border-top:1px solid #2b3542}
+.compact-indicator-row{display:flex;align-items:center;gap:3px;min-height:29px}.compact-indicator-name{flex:1;min-width:0;color:#e7edf5;font-size:11px}.indicator-row-action{border:0;background:transparent;color:#a9b7c8;padding:4px;font-size:13px;min-width:22px;line-height:1}.indicator-row-action:hover{color:white;background:#293749}
+.indicator-add-row{display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;border:0;background:transparent;border-radius:2px;padding:8px 2px;color:#e0e9f3;text-align:left;font-size:11px}.indicator-add-row:hover{background:#243244}.indicator-destination{font-size:9px;color:#93a4b9;flex:none}.indicator-empty{font-size:10px;color:#8393a8;margin:7px 0}
+.indicator-dropdown .picker-foot{font-size:9px;line-height:1.5;padding:8px 10px;color:#98a9bd;border-top:1px solid #2b3542}
+.extra-pane-controls{display:flex;flex-shrink:0;min-height:27px;background:#111820;border-top:1px solid #344254;padding:3px 9px}.extra-pane-controls .indicator-box{display:flex;align-items:center;gap:4px}.extra-pane-controls button{padding:3px 6px;font-size:10px;background:transparent;border:0;color:#dce7f4}
+@media(max-width:760px){.market-picker.indicator-dropdown{max-height:calc(100dvh - 180px)}}
+
+.market-picker.market-watch-dropdown{width:330px}.market-watch-dropdown .picker-tabs{padding:4px 9px;gap:3px;display:flex;flex-wrap:wrap;border-bottom:1px solid #2b3542}.market-watch-dropdown .picker-tabs button{font-size:9px;padding:5px 6px;flex:none}
+.open-market-select{flex:1;min-width:0;text-align:left;padding:6px 2px;background:transparent;border:0;color:#e8eff8;font-size:11px}.open-market-select.selected{color:#83e6ce;font-weight:600}.market-open-label{font-size:9px;color:#86c8b5;margin-right:5px}
+
+/* Favorites are saved independently from open market cards. */
+.market-add-row{display:flex;align-items:center;gap:4px}.market-add-row>.indicator-add-row{flex:1;min-width:0}.market-watch-dropdown .market-favorite{font-size:19px;flex-shrink:0}.market-watch-dropdown .market-favorite.is-favorite{color:#e8c76b}
+
+.extra-pane[hidden]{display:none!important}
+.extra-pane-controls{align-items:center;gap:8px}
+.extra-pane-controls .lower-pane-toggle{width:25px;height:23px;min-width:25px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #52647c;border-radius:4px;background:#263344;color:#eaf2ff;font-size:16px;line-height:1}
+.extra-pane-controls .lower-pane-toggle:hover{background:#3b526e}
+
+.extra-pane{cursor:grab;touch-action:none}
+/* Familiar categories with explicit chart destinations. */
+.indicator-category{border:0;margin:3px 0 10px;padding:0}.indicator-category>summary{cursor:pointer;list-style:none;padding:8px 7px;background:#1b2b37;border:1px solid #314654;border-radius:3px;color:#a3e4d0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}.indicator-category>summary::before{content:'▸';margin-right:8px}.indicator-category[open]>summary::before{content:'▾'}.indicator-category>summary::-webkit-details-marker{display:none}.indicator-category>.indicator-add-row{padding-left:10px}.indicator-location-note{font-size:10px;color:#9fb0bd;margin:0 7px 9px}.smoothing-target{display:block;width:calc(100% - 14px);margin:7px;border:1px solid #3b5261;background:#101d28;color:#d5e6ed;padding:7px;font-size:11px;border-radius:3px}.indicator-category .indicator-add-row{font-size:11px;white-space:normal;gap:8px}.indicator-category .indicator-destination{flex-shrink:0}html[data-theme=light] .indicator-category>summary{background:#e2f0ea;color:#25634f;border-color:#b7cec3}html[data-theme=light] .smoothing-target{background:#fff;color:#274355}
+
+/* ATR only: retain the separator above the header; remove the duplicate above its graph. */
+.extra-pane[aria-label="ATR chart"]{border-top:0}
+
+/* Crypto Market Watch: reference-matched layout; scoped to the market drawer. */
+.market-picker.market-watch-dropdown{padding:10px;width:410px;max-width:calc(100vw - 24px);bottom:auto;max-height:calc(100dvh - 115px);border-radius:7px;background:#121a23;border-color:#3c5365}
+.market-watch-dropdown .picker-head h2{font-size:17px;font-weight:700;letter-spacing:0;margin:0}
+.market-watch-dropdown .picker-head small,.market-watch-dropdown .picker-description{display:none}
+.market-watch-dropdown .picker-search{margin:3px 0 10px;width:calc(100% - 22px);padding:10px 11px;font-size:12px;border-radius:4px;background:#0e1720}
+.market-watch-dropdown .picker-tabs{scrollbar-width:thin;gap:2px;padding:3px 10px 8px;min-height:37px}
+.market-watch-dropdown .picker-tabs button{font-size:10px;padding:5px 7px;white-space:nowrap;border-radius:5px}
+.market-watch-dropdown .picker-tabs button.selected{background:#1d554e;color:#d9fff5;border-bottom:2px solid #51ddba}
+.market-watch-dropdown .picker-list{padding:4px 0 10px;min-height:0}
+.market-watch-dropdown .picker-section{font-size:11px;letter-spacing:.4px;color:#c5d4e1;margin:7px 0 5px;padding-bottom:5px;border-bottom:1px solid #2d3c4b}
+.crypto-market-row{display:flex;align-items:center;gap:10px;min-height:39px;padding:4px 5px;border-bottom:1px solid #253442}
+.crypto-market-row:hover{background:#1b2a35}
+.crypto-market-icon{width:25px;height:25px;flex:0 0 25px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;line-height:1;color:white}
+.crypto-icon-btc,.crypto-icon-doge{border-radius:50%;font-size:20px;background:#f5a623}
+.crypto-icon-doge{background:#b79b43}
+.crypto-icon-eth{color:#9da7e9;font-size:27px}
+.crypto-icon-sol{color:#83e7d0;font-size:29px;transform:rotate(-12deg)}
+.crypto-icon-xrp{color:#f3f7fc;font-size:31px;font-weight:400}
+.crypto-icon-link{color:#376df6;font-size:29px}
+.crypto-market-identity{display:flex;flex:1;min-width:0;flex-direction:column;gap:1px}
+.crypto-market-name{font-size:12px;font-weight:650;color:#eef4fa;line-height:16px}
+.crypto-market-pair{font-size:10px;color:#a8b9ca;line-height:13px}
+.crypto-market-open{border:1px solid #54d6ba;border-radius:5px;background:#142a2b;color:#83f1d5;font-weight:700;font-size:11px;min-width:54px;height:25px;padding:2px 10px}
+.crypto-market-open:hover{background:#235148}
+.crypto-market-open:disabled{opacity:.6;cursor:wait}
+.crypto-market-row .market-favorite{font-size:22px;min-width:26px;color:#a8b7c8}
+.market-watch-dropdown .picker-foot{padding:10px 12px;font-size:10px}
+@media(max-width:480px){.market-picker.market-watch-dropdown{width:calc(100vw - 20px);right:10px;top:58px;max-height:calc(100dvh - 70px)}.market-watch-dropdown .picker-tabs button{font-size:10px}}

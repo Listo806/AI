@@ -1,0 +1,70 @@
+#chartAccountMenu{max-height:calc(100dvh - 45px);overflow-y:auto;width:225px}
+.account-display-preferences{margin-top:7px;padding:9px 7px 3px;border-top:1px solid #344253;display:grid;gap:12px}.account-display-preferences>label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#dce6ef}.account-display-preferences select{width:110px!important;min-width:0;padding:6px!important;font-size:11px;border-radius:4px}.account-display-preferences input[role=switch]{appearance:none;-webkit-appearance:none;position:relative!important;opacity:1!important;width:33px!important;height:19px!important;border-radius:20px;background:#64748b;border:1px solid #7b8ca3;cursor:pointer;flex-shrink:0}.account-display-preferences input[role=switch]::after{content:'';position:absolute;left:2px;top:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .15s}.account-display-preferences input[role=switch]:checked{background:#237d69;border-color:#54b79c}.account-display-preferences input[role=switch]:checked::after{transform:translateX(14px)}
+html[data-theme=light],html[data-theme=light] body{background:#f5f7fa;color:#1b2d42}
+html[data-theme=light] button{color:#22384e;border-color:#c6d1df;background:#f1f5f9}
+html[data-theme=light] button:hover{background:#e1e9f2}
+html[data-theme=light] input:not([type=checkbox]):not([type=color]),html[data-theme=light] select,html[data-theme=light] textarea{color:#24384f;background:#fff;border-color:#b7c6d7}
+html[data-theme=light] .toolbar,html[data-theme=light] .market-heading,html[data-theme=light] .chart-navigation,html[data-theme=light] .chart-shell,html[data-theme=light] .canvas-wrap,html[data-theme=light] .rsi-header,html[data-theme=light] .extra-pane-controls{background:#fff;color:#263b52;border-color:#d4deea}
+html[data-theme=light] .toolbar #markets .market-select{background:linear-gradient(145deg,#fff,#edf2f7);border-color:#cad6e3;color:#1b3048}
+html[data-theme=light] .toolbar #markets .market-select.active{background:linear-gradient(145deg,#eaf7f3,#f5fafc);border-color:#3c8b78}
+html[data-theme=light] .market-name{color:#445b73}
+html[data-theme=light] .market-price{color:#172f4c}
+html[data-theme=light] .price-up .market-price,html[data-theme=light] .quote-up,html[data-theme=light] .day-up{color:#08784b!important}
+html[data-theme=light] .price-down .market-price,html[data-theme=light] .quote-down,html[data-theme=light] .day-down{color:#c42b45!important}
+html[data-theme=light] .market-quote-status{color:#5c7189}
+html[data-theme=light] .toolbar #markets .market-select.flash-up{background:#d2f1df!important}
+html[data-theme=light] .toolbar #markets .market-select.flash-down{background:#f8dce3!important}
+html[data-theme=light] #chartIndicatorControls button,html[data-theme=light] #chartIndicatorControls #chartTicker{color:#21374f}
+html[data-theme=light] #chartIndicatorControls .chart-navigation button.active,html[data-theme=light] #chartIndicatorControls .chart-styles button.active{background:#d8ece7;color:#135f4c;border-color:#348f78}
+html[data-theme=light] .market-heading .actions button,html[data-theme=light] .market-tools button,html[data-theme=light] .chart-styles{background:#f5f8fb;border-color:#c4d1df;color:#263b50}
+html[data-theme=light] .canvas-wrap>.legend label,html[data-theme=light] .rsi-header .indicator-box label{color:#213a54;text-shadow:none}
+html[data-theme=light] .canvas-wrap>.legend .aa-settings,html[data-theme=light] .rsi-header .indicator-box .aa-settings,html[data-theme=light] .extra-pane-controls button{color:#526e89;background:transparent}
+html[data-theme=light] #chartLegendToggle,html[data-theme=light] #oscPaneToggle,html[data-theme=light] #chartMTFToggle,html[data-theme=light] .extra-pane-controls .lower-pane-toggle{color:#2f4d68;background:#e7eef6;border-color:#b3c3d4}
+html[data-theme=light] .canvas-wrap>.chart-mtf-panel{background:#f5f7fa;border-color:#b8c6d6}
+html[data-theme=light] .chart-mtf-heading .mtf-title{color:#3c5269}
+html[data-theme=light] .chart-mtf-panel th,html[data-theme=light] .chart-mtf-panel td{border-color:#c2cedc}
+html[data-theme=light] .chart-mtf-panel thead th{background:#dce5ef;color:#2a405a}
+html[data-theme=light] .chart-mtf-panel tbody th{background:#edf2f7;color:#2a405a}
+html[data-theme=light] .chart-mtf-panel td.bullish,html[data-theme=light] .chart-mtf-panel td.bearish{color:#fff}
+html[data-theme=light] .chart-mtf-panel td.neutral,html[data-theme=light] .chart-mtf-panel td.unavailable{background:#e2e9f1;color:#5a6e85}
+html[data-theme=light] .market-picker,html[data-theme=light] .chart-layout-picker,html[data-theme=light] #chartAccountMenu,html[data-theme=light] dialog,html[data-theme=light] .trading-signals-panel{background:#fff;border-color:#b8c8da;color:#22384f;box-shadow:0 12px 38px #23384d22}
+html[data-theme=light] .picker-head h2,html[data-theme=light] .picker-head h2 *,html[data-theme=light] .chart-layout-picker>strong,html[data-theme=light] dialog h2,html[data-theme=light] dialog h3,html[data-theme=light] .signals-head h2{color:#1d354e}
+html[data-theme=light] .picker-description,html[data-theme=light] .picker-section,html[data-theme=light] .indicator-empty,html[data-theme=light] .picker-close,html[data-theme=light] .signals-muted,html[data-theme=light] .signals-head p,html[data-theme=light] .signals-alignment small,html[data-theme=light] .signals-alert-settings small,html[data-theme=light] .signal-detail small{color:#59718b}
+html[data-theme=light] .compact-indicator-row,html[data-theme=light] .indicator-add-row,html[data-theme=light] .open-market-select,html[data-theme=light] .indicator-row-action,html[data-theme=light] .picker-tabs button,html[data-theme=light] .compact-indicator-name,html[data-theme=light] .row-name strong{background:transparent;color:#29435e;border-color:#dce4ee}
+html[data-theme=light] .open-market-select.selected{color:#087a58}
+html[data-theme=light] .market-watch-dropdown .market-favorite.is-favorite{color:#ad7912}
+html[data-theme=light] .indicator-add-row:hover,html[data-theme=light] .compact-indicator-row:hover,html[data-theme=light] .layout-choice:hover,html[data-theme=light] .layout-choice.selected,html[data-theme=light] .picker-tabs button.selected{background:#e6f1ef;color:#176b55}
+html[data-theme=light] .indicator-destination,html[data-theme=light] .market-open-label{color:#5a738b}
+html[data-theme=light] .picker-foot{background:#f1f5f9;color:#526a83;border-color:#d4deea}
+html[data-theme=light] #chartAccountMenu>strong,html[data-theme=light] #chartAccountMenu>button,html[data-theme=light] .account-display-preferences>label,html[data-theme=light] #chartAccountDialog p{color:#29435d}
+html[data-theme=light] #chartAccountMenu>button:hover{background:#e8eff7}
+html[data-theme=light] .account-display-preferences{border-color:#cbd7e5}
+html[data-theme=light] #chartAccountButton,html[data-theme=light] #chartHeaderToggle{color:#34516d;background:#f2f6fa;border-color:#bccbdb}
+html[data-theme=light] .signals-head,html[data-theme=light] .signals-alignment,html[data-theme=light] .signals-alert-settings,html[data-theme=light] .signal-history-row{border-color:#d4dfeb}
+html[data-theme=light] .signals-alert-settings legend,html[data-theme=light] .signals-alignment p{color:#31566b}
+html[data-theme=light] .signals-state.is-on{background:#e1f4e9;color:#176044}
+html[data-theme=light] .signals-state.is-off{background:#edf1f6;color:#516980}
+html[data-theme=light] .signals-enable{background:#d5eee2;color:#17573c;border-color:#77b79b}
+html[data-theme=light] .signal-history-row{background:#fff;color:#29435e}
+html[data-theme=light] .signal-history-row:hover{background:#f0f5fa}
+html[data-theme=light] .signal-side.buy{background:#d9efe3;color:#14663b}
+html[data-theme=light] .signal-side.sell{background:#f8dfe5;color:#9c3046}
+html[data-theme=light] .signal-view{color:#426f90}
+html[data-theme=light] .chart-grid-pane{background:#fff;border-color:#bdcddd}
+html[data-theme=light] .chart-grid-pane.active{border-color:#218b70;box-shadow:0 0 0 1px #218b70}
+html[data-theme=light] .pane-local-header{background:#eff4f9;color:#29415b;border-color:#c8d6e4}
+html[data-theme=light] .pane-local-header select,html[data-theme=light] .pane-local-header button{background:transparent;color:#29415b}
+html[data-theme=light] .muted,html[data-theme=light] .field,html[data-theme=light] .fields label,html[data-theme=light] .toggle{color:#50677f}
+html[data-theme=light] .cal-dialog,html[data-theme=light] .cal-wrap,html[data-theme=light] .cal-detail,html[data-theme=light] .cal-next,html[data-theme=light] .ai-panel,html[data-theme=light] .ai-content,html[data-theme=light] .ai-messages{background:#fff;color:#29415b;border-color:#cad7e5}
+html[data-theme=light] .cal-dialog th,html[data-theme=light] .cal-day td{background:#eaf0f7;color:#34516d}
+html[data-theme=light] .cal-dialog td{color:#2f4965;border-color:#dce5ef}
+html[data-theme=light] .cal-dialog tr:hover td,html[data-theme=light] .cal-selected td{background:#e7f3f0}
+html[data-theme=light] .empty{background:#f5f8fc;color:#29415b}
+html[data-theme=light] .empty h3{color:#29415b}
+html[data-theme=light] .statusline,html[data-theme=light] .note{color:#526b86}
+
+html[data-theme=light] #chartIndicatorControls .chart-navigation .timeframes button{color:#263c54;background:transparent}
+html[data-theme=light] #chartIndicatorControls .chart-navigation .timeframes button.active{background:#d8ece7;color:#135f4c}
+html[data-theme=light] .canvas-wrap>.legend .extra-toggle{color:#2c435c;background:transparent}
+html[data-theme=light] #calendarDialog,html[data-theme=light] .cal-body,html[data-theme=light] .cal-table-wrap,html[data-theme=light] .cal-controls,html[data-theme=light] .cal-foot,html[data-theme=light] .ai-head,html[data-theme=light] .ai-context,html[data-theme=light] .ai-footer,html[data-theme=light] .ai-welcome,html[data-theme=light] .ai-choices,html[data-theme=light] .ai-preview-note{background:#f8fafc;color:#29415b;border-color:#c9d7e6}
+html[data-theme=light] .ai-head h2,html[data-theme=light] .ai-welcome h3,html[data-theme=light] .ai-brand small,html[data-theme=light] .ai-intro,html[data-theme=light] .ai-welcome p,html[data-theme=light] .ai-preview-list,html[data-theme=light] .cal-sub,html[data-theme=light] .cal-message,html[data-theme=light] .cal-detail h3,html[data-theme=light] .cal-next strong{color:#3a5673}
