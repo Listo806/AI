@@ -1,7 +1,7 @@
 'use strict';
 (()=>{
  const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
- const btn=el('button','market-tool','▦ Calendar');btn.id='calendarButton';document.querySelector('.market-tools button')?.after(btn);
+ const btn=el('button','market-tool','▦ Calendar');btn.id='calendarButton';(document.querySelector('.market-tools') || document.querySelector('.actions'))?.append(btn);
  const dialog=el('dialog');dialog.id='calendarDialog';dialog.setAttribute('aria-label','Economic Calendar');document.body.append(dialog);
  const head=el('div','cal-head'),title=el('div'),x=el('button','','×');x.setAttribute('aria-label','Close calendar');title.append(el('h2','','Economic Calendar'),el('div','cal-sub','The week ahead, clearly explained.'));head.append(title,x);
  const nav=el('div','cal-controls'),filters=el('div','cal-controls'),next=el('div','cal-next'),body=el('div','cal-body'),wrap=el('div','cal-table-wrap'),detail=el('aside','cal-detail'),foot=el('div','cal-foot');body.append(wrap,detail);dialog.append(head,nav,filters,next,body,foot);

@@ -26,29 +26,20 @@ const clear=document.createElement('button');clear.type='button';clear.className
 const shell=document.querySelector('.chart-shell');if(shell){const canvas=wrap;const after=canvas.nextElementSibling;if(after)after.before(bar);else canvas.after(bar);}else wrap.after(bar);
 function closeTools(){bar.hidden=true;btn.setAttribute('aria-expanded','false');picker.hidden=true;mode='select';start=null;preview=null;update();if(overlay)draw();}
 btn.addEventListener('click',()=>{const opening=bar.hidden;if(opening){bar.hidden=false;btn.setAttribute('aria-expanded','true');ensure();update();}else closeTools();});
+// Keep the existing .market-tools group intact. Calendar is injected later
+// by calendar.js; moving its children into .actions caused unstable ordering.
 function arrangeToolbar(){
- const all=[...actions.querySelectorAll('button')];
- const named=(re)=>all.find(b=>re.test((b.textContent||'').trim()) || re.test(b.getAttribute('aria-label')||''));
- const market=named(/^(?:▤\\s*)?Market(?: Watch)?$/i);
- const indicators=named(/Indicators/i);
- const calendar=named(/Calendar/i);
- if(!market||!indicators)return;
- // Move only the relevant buttons; keep the remaining controls untouched.
- if(market.parentElement!==actions)actions.append(market);
- if(btn.parentElement!==actions)actions.append(btn);
- if(indicators.parentElement!==actions)actions.append(indicators);
- if(calendar&&calendar.parentElement!==actions)actions.append(calendar);
- const anchor=calendar||indicators;
- actions.insertBefore(market,anchor);
- actions.insertBefore(btn,anchor);
- if(calendar)actions.insertBefore(indicators,calendar);
- else actions.insertBefore(btn,indicators);
+ const controls=actions.querySelector('.market-tools');
+ if(!controls)return;
+ const market=[...controls.children].find(el=>el.tagName==='BUTTON' && /Market/i.test(el.textContent));
+ const indicators=[...controls.children].find(el=>el.tagName==='BUTTON' && /Indicators/i.test(el.textContent));
+ const calendar=document.getElementById('calendarButton');
+ if(market && indicators){
+   controls.append(market,btn,indicators);
+   if(calendar)controls.append(calendar);
+ }
 }
 arrangeToolbar();
-let arranging=false;
-const toolbarObserver=new MutationObserver(()=>{if(arranging)return;arranging=true;try{arrangeToolbar();}finally{arranging=false;}});
-toolbarObserver.observe(actions,{childList:true,subtree:true});
-
 // Category browser for the reference drawing toolbar. The drawing overlay above
 // remains responsible for actual pointer interaction and undo/redo.
 const toolCategories={
