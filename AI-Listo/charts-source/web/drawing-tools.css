@@ -35,7 +35,7 @@
 .charts-tools-picker{position:fixed;z-index:99999;width:300px;max-height:min(480px,75vh);display:flex;flex-direction:column;background:#10212c;border:1px solid #456677;border-radius:7px;box-shadow:0 12px 35px #0009;color:#e4f1f5;font:12px/1.4 system-ui,sans-serif;overflow:hidden}
 .charts-tools-picker[hidden]{display:none!important}
 .charts-tools-picker-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid #365061}
-.charts-tools-picker-head button{background:transparent;color:#dcecf3;border:0;cursor:pointer;font-size:18px}
+.charts-tools-picker-head button{background:transparent;color:#dcecf3;border:0;cursor:pointer;font-size:18px;padding: 0;}
 .charts-tools-picker>input{margin:5px 2px;padding:9px 10px;background:#091824;border:1px solid #56bcb3;color:#fff;border-radius:5px;outline:none}
 .charts-tools-picker-list{overflow:auto;padding:5px 7px;min-height:45px;scrollbar-width:thin}
 .charts-tools-picker-item{display:flex;align-items:center;min-height:31px;margin:3px 0;background:#192d3b;border:1px solid #395669;border-radius:4px}
