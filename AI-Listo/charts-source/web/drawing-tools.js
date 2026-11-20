@@ -9,7 +9,7 @@ const group=actions.querySelector('.market-tools');if(group){const indicator=[..
 btn.textContent='✎ Tools';btn.hidden=false;btn.setAttribute('aria-expanded','false');btn.title='Tools';
 const bar=document.createElement('div');bar.className='charts-draw-bar';bar.hidden=true;bar.setAttribute('aria-label','Drawing tools');bar.setAttribute('role','toolbar');
 const icons={select:'<path d="M5 3l14 10-7 1-3 7z"/>',trend:'<path d="M4 20L20 4"/>',parallel:'<path d="M3 17L17 3M7 21L21 7"/>',brush:'<path d="M4 18c5-2 3-8 9-11l5-3M3 21c4 0 7-2 7-6"/>',horizontal:'<path d="M3 7h18M3 12h18M3 17h18"/>',grid:'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',zigzag:'<path d="M2 15l5-7 5 9 5-11 5 7"/>',polyline:'<path d="M3 19l5-12 6 9 7-13"/>',vertical:'<path d="M8 3v18M16 3v18"/>',rectangle:'<rect x="3" y="5" width="18" height="14"/>',curve:'<path d="M3 19c7 0 4-15 12-14s3 9 6 6"/>',text:'<path d="M4 5h16M12 5v15M8 20h8"/>',ruler:'<path d="M3 17L17 3l4 4L7 21zM11 9l3 3M8 12l3 3"/>',ray:'<path d="M3 19L21 5M15 5h6v6"/>',fib:'<rect x="3" y="4" width="18" height="16"/><path d="M3 9h18M3 13h18M3 17h18"/>',star:'<path d="M12 2l3 7 7 .5-5.5 5 1.5 7.5-6-4-6 4 1.5-7.5L2 9.5 9 9z"/>',history:'<path d="M3 7V3m0 4h4M3 7a9 9 0 1 1-1 8M12 7v5l4 2"/>',zoom:'<circle cx="10" cy="10" r="7"/><path d="M15 15l7 7"/>',sliders:'<path d="M5 3v18M12 3v18M19 3v18M2 8h6M9 15h6M16 10h6"/>',undo:'<path d="M9 5L3 11l6 6M3 11h11a6 6 0 0 1 0 12"/>',redo:'<path d="M15 5l6 6-6 6M21 11H10a6 6 0 0 0 0 12"/>',eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>'};
-const definitions=[['select','Select'],['trend','Trend line'],['parallel','Parallel lines'],['brush','Brush'],['horizontal','Horizontal line'],['grid','Grid'],['zigzag','Polyline'],['polyline','Connected lines'],['vertical','Vertical line'],['rectangle','Rectangle'],['curve','Curve'],['text','Text'],['ruler','Measure'],['ray','Ray'],['fib','Fibonacci'],['star','Favorite'],['history','History'],['zoom','Zoom'],['sliders','Settings'],['undo','Undo'],['redo','Redo']];
+const definitions=[['select','Select'],['trend','Trend line'],['parallel','Parallel lines'],['brush','Brush'],['horizontal','Horizontal line'],['grid','Grid'],['zigzag','Polyline'],['polyline','Connected lines'],['vertical','Vertical line'],['rectangle','Rectangle'],['curve','Curve'],['text','Text'],['ruler','Measure'],['ray','Ray'],['position','Position'],['star','Favorite'],['history','History'],['zoom','Zoom'],['sliders','Settings'],['undo','Undo'],['redo','Redo']];
 const drawKinds=new Set(['trend','parallel','brush','horizontal','grid','zigzag','polyline','vertical','rectangle','curve','text','ruler','ray','fib']);
 let selectedPositionIndex=-1;let mode='select',activeTool='Select',start=null,shapes=[],redoStack=[],preview=null,overlay=null,magnetMode='Off',stayOn=false,drawingsVisible=true,activeCategoryButton=null,clickPoints=[];
 const storageKey=()=>`cortexa-drawings:${(document.querySelector('.market-heading')?.textContent||'default').split(/\s+/)[0]}`;
@@ -267,17 +267,28 @@ function insertDefaultPosition(){
  const shape={kind:'ruler',name:'Position · target + stop',a:{x:x0,y:entry-risk*2},b:{x:x1,y:entry+risk},entryY:entry,targetY:entry-risk*2,stopY:entry+risk,side:'Long',selected:true};
  shapes.forEach(item=>item.selected=false);
  finishShape(shape);
- selectedPositionIndex=shapes.indexOf(shape);mode='select';activeTool=shape.name;activeCategoryButton='fib';
+ selectedPositionIndex=shapes.indexOf(shape);mode='select';activeTool=shape.name;activeCategoryButton='position';
  update();renderPositionEditor();draw();
 }
-for(const b of bar.querySelectorAll('[data-mode]')){const category=b.dataset.mode;if(!toolCategories[category])continue;b.title=toolCategories[category].title;b.setAttribute('aria-label',toolCategories[category].title);const symbol=toolGlyphs[categoryGlyph[category]]||icons[categoryGlyph[category]]||icons[category];if(symbol)b.querySelector('svg').innerHTML=symbol;b.onclick=(event)=>{event.stopPropagation();if(category==='fib'){picker.hidden=true;insertDefaultPosition();}else openCategory(category,b);};
- if(category==='fib'){
+// Position is a dedicated one-click button; the ruler category retains its popup.
+for(const b of bar.querySelectorAll('[data-mode]')){
+ const category=b.dataset.mode;
+ if(category==='position'){
   b.title='Position · target + stop';
   b.dataset.positionAction='insert';
   b.setAttribute('aria-label','Position · target + stop');
   b.querySelector('svg').innerHTML='<rect x="4" y="3" width="16" height="8" rx=".6" fill="rgba(27,174,127,.45)" stroke="#7af4c5" stroke-width="1.5"/><rect x="4" y="11" width="16" height="10" rx=".6" fill="rgba(214,62,81,.45)" stroke="#fa8395" stroke-width="1.5"/><path d="M3 11h18" stroke="#e7fff7" stroke-width="1.8"/>';
+  b.onclick=(event)=>{event.preventDefault();event.stopPropagation();picker.hidden=true;insertDefaultPosition();};
+  continue;
  }
+ if(!toolCategories[category])continue;
+ b.title=toolCategories[category].title;
+ b.setAttribute('aria-label',toolCategories[category].title);
+ const symbol=toolGlyphs[categoryGlyph[category]]||icons[categoryGlyph[category]]||icons[category];
+ if(symbol)b.querySelector('svg').innerHTML=symbol;
+ b.onclick=(event)=>{event.stopPropagation();openCategory(category,b);};
 }
+window.__cortexaPositionBuild='position35-dedicated';
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
 document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))picker.hidden=true;});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')picker.hidden=true;});
