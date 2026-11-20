@@ -30,3 +30,43 @@
 .charts-draw-option{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;font-size:10px;color:#c6d8e3;flex:0 0 auto}
 .charts-draw-option input{width:12px;height:12px;margin:0}
 .charts-draw-bar .charts-draw-clear{flex:0 0 auto;width:auto;padding:0 8px;color:#ffb5c3;border-color:#814453;font-size:11px}
+
+/* Tools category picker; fixed layer avoids chart clipping. */
+.charts-tools-picker{position:fixed;z-index:99999;width:300px;max-height:min(480px,75vh);display:flex;flex-direction:column;background:#10212c;border:1px solid #456677;border-radius:7px;box-shadow:0 12px 35px #0009;color:#e4f1f5;font:12px/1.4 system-ui,sans-serif;overflow:hidden}
+.charts-tools-picker[hidden]{display:none!important}
+.charts-tools-picker-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid #365061}
+.charts-tools-picker-head button{background:transparent;color:#dcecf3;border:0;cursor:pointer;font-size:18px}
+.charts-tools-picker>input{margin:5px 2px;padding:9px 10px;background:#091824;border:1px solid #56bcb3;color:#fff;border-radius:5px;outline:none}
+.charts-tools-picker-list{overflow:auto;padding:5px 7px;min-height:45px;scrollbar-width:thin}
+.charts-tools-picker-item{display:flex;align-items:center;min-height:31px;margin:3px 0;background:#192d3b;border:1px solid #395669;border-radius:4px}
+.charts-tools-picker-select{flex:1;text-align:left;background:none;border:0;color:#e7f2f5;padding:7px 10px;cursor:pointer;font:inherit}
+.charts-tools-picker-select:hover{color:#65e1cb}
+.charts-tools-picker-favorite{background:none;border:0;color:#d6e4ea;padding:6px 9px;cursor:pointer;font-size:16px}
+.charts-tools-picker-hint{padding:7px 9px;border-top:1px solid #345061;color:#c0d4dd;font-size:10px}
+.charts-tools-picker-empty{padding:12px 4px;color:#a9bdc7}
+#drawingToolsButton{white-space:nowrap!important}
+
+
+/* Fix 36: the tool shelf is closed on initial load and follows the Tools toggle. */
+.charts-draw-bar[hidden]{display:none!important}
+.charts-tools-picker-select{display:flex;align-items:center;gap:9px;width:100%}
+.charts-tools-item-icon{display:block;flex:0 0 20px;width:20px;height:20px;color:#8ce4d9}
+.charts-tools-picker-select span{flex:1}
+
+/* Reference popup: mint individual glyphs and compact selectable rows. */
+.charts-tools-picker-select .charts-tools-item-icon{width:21px;height:21px;flex:0 0 21px;color:#98e6da;stroke:#98e6da;stroke-width:1.7}
+.charts-tools-picker-select span{font-size:11px}
+.charts-tools-picker-item{min-height:30px;margin:3px 0}
+.charts-tools-picker-select{padding:5px 7px;gap:9px}
+.charts-tools-picker-favorite{font-size:15px}
+
+/* Reference interactions and native magnet selection */
+.charts-draw-bar button:hover,.charts-draw-bar button:focus-visible{background:#1d4551;border-color:#67d9c4;color:#fff;transition:background .12s,border-color .12s}
+.charts-draw-bar button[aria-pressed=true]{background:#12634f;border-color:#6ce8cb;color:#fff}
+.charts-draw-bar .charts-draw-magnet{box-sizing:border-box;flex:0 0 115px;width:115px;height:31px;background:#10232e;color:#e6f1f5;border:1px solid #456477;border-radius:3px;font-size:11px;padding:0 5px;cursor:pointer}
+.charts-draw-bar .charts-draw-magnet option{background:#122636;color:#f1f6f8}
+.charts-draw-confirm{display:flex;align-items:center;justify-content:center;gap:12px;padding:7px 10px;min-height:30px;background:#271c25;border:1px solid #694452;color:#f4e6e9;font:12px system-ui,sans-serif}
+.charts-draw-confirm[hidden]{display:none!important}
+.charts-draw-confirm button{background:#162c3a;color:#e9f3f7;border:1px solid #496274;border-radius:4px;padding:6px 11px;cursor:pointer}
+.charts-draw-confirm .confirm-clear{background:#b92f45;border-color:#b92f45;color:#fff}
+.charts-draw-confirm button:hover{filter:brightness(1.18)}
