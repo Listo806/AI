@@ -84,3 +84,10 @@
 .charts-position-editor input,.charts-position-editor select,.charts-position-editor button{background:#152b39;color:#e4f2f4;border:1px solid #456477;border-radius:4px;padding:5px;font:11px system-ui}
 .charts-position-editor button{cursor:pointer}
 .charts-position-editor button:hover{border-color:#50e6c4;background:#205061}
+
+/* Position editor: aligned with reference toolbar and responsive. */
+.charts-position-editor{min-height:35px;gap:6px;background:#0d1d29;border-top:1px solid #365365;border-bottom:1px solid #263f50}
+.charts-position-editor label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.charts-position-editor input{width:82px;font-variant-numeric:tabular-nums}
+.charts-position-editor select{min-width:62px}
+.charts-position-editor button:hover,.charts-position-editor button:focus-visible{border-color:#51e7c4;outline:1px solid #51e7c4}
