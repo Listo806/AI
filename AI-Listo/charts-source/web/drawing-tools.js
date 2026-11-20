@@ -267,15 +267,14 @@ function insertDefaultPosition(){
  const shape={kind:'ruler',name:'Position · target + stop',a:{x:x0,y:entry-risk*2},b:{x:x1,y:entry+risk},entryY:entry,targetY:entry-risk*2,stopY:entry+risk,side:'Long',selected:true};
  shapes.forEach(item=>item.selected=false);
  finishShape(shape);
- mode='select';activeTool=shape.name;activeCategoryButton='ruler';
+ mode='select';activeTool=shape.name;activeCategoryButton='fib';
  update();renderPositionEditor();draw();
 }
-for(const b of bar.querySelectorAll('[data-mode]')){const category=b.dataset.mode;if(!toolCategories[category])continue;b.title=toolCategories[category].title;b.setAttribute('aria-label',toolCategories[category].title);const symbol=toolGlyphs[categoryGlyph[category]]||icons[categoryGlyph[category]]||icons[category];if(symbol)b.querySelector('svg').innerHTML=symbol;b.onclick=()=>{if(category==='ruler'){picker.hidden=true;insertDefaultPosition();}else openCategory(category,b);};
- if(category==='ruler'){
-  b.title='Position · target + stop (right-click for more tools)';
+for(const b of bar.querySelectorAll('[data-mode]')){const category=b.dataset.mode;if(!toolCategories[category])continue;b.title=toolCategories[category].title;b.setAttribute('aria-label',toolCategories[category].title);const symbol=toolGlyphs[categoryGlyph[category]]||icons[categoryGlyph[category]]||icons[category];if(symbol)b.querySelector('svg').innerHTML=symbol;b.onclick=()=>{if(category==='fib'){picker.hidden=true;insertDefaultPosition();}else openCategory(category,b);};
+ if(category==='fib'){
+  b.title='Position · target + stop';
   b.setAttribute('aria-label','Position · target + stop');
   b.querySelector('svg').innerHTML=toolGlyphs['Position · target + stop']||icons.fib;
-  b.addEventListener('contextmenu',e=>{e.preventDefault();openCategory('ruler',b);});
  }
 }
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
