@@ -260,7 +260,24 @@ function openCategory(category,anchor){if(activeCategory===category&&!picker.hid
 window.addEventListener('resize',()=>{if(!picker.hidden&&pickerAnchor)placePicker(pickerAnchor);});
 window.addEventListener('scroll',()=>{if(!picker.hidden&&pickerAnchor)placePicker(pickerAnchor);},true);
 
-for(const b of bar.querySelectorAll('[data-mode]')){const category=b.dataset.mode;if(!toolCategories[category])continue;b.title=toolCategories[category].title;b.setAttribute('aria-label',toolCategories[category].title);const symbol=toolGlyphs[categoryGlyph[category]]||icons[categoryGlyph[category]]||icons[category];if(symbol)b.querySelector('svg').innerHTML=symbol;b.onclick=()=>openCategory(category,b);}
+// A single click on Position immediately inserts a complete editable position.
+function insertDefaultPosition(){
+ ensure();
+ const x0=.46,x1=.61,entry=.48,risk=.075;
+ const shape={kind:'ruler',name:'Position · target + stop',a:{x:x0,y:entry-risk*2},b:{x:x1,y:entry+risk},entryY:entry,targetY:entry-risk*2,stopY:entry+risk,side:'Long',selected:true};
+ shapes.forEach(item=>item.selected=false);
+ finishShape(shape);
+ mode='select';activeTool=shape.name;activeCategoryButton='ruler';
+ update();renderPositionEditor();draw();
+}
+for(const b of bar.querySelectorAll('[data-mode]')){const category=b.dataset.mode;if(!toolCategories[category])continue;b.title=toolCategories[category].title;b.setAttribute('aria-label',toolCategories[category].title);const symbol=toolGlyphs[categoryGlyph[category]]||icons[categoryGlyph[category]]||icons[category];if(symbol)b.querySelector('svg').innerHTML=symbol;b.onclick=()=>{if(category==='ruler'){picker.hidden=true;insertDefaultPosition();}else openCategory(category,b);};
+ if(category==='ruler'){
+  b.title='Position · target + stop (right-click for more tools)';
+  b.setAttribute('aria-label','Position · target + stop');
+  b.querySelector('svg').innerHTML=toolGlyphs['Position · target + stop']||icons.fib;
+  b.addEventListener('contextmenu',e=>{e.preventDefault();openCategory('ruler',b);});
+ }
+}
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
 document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))picker.hidden=true;});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')picker.hidden=true;});
