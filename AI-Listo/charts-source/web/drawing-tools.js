@@ -274,7 +274,7 @@ for(const b of bar.querySelectorAll('[data-mode]')){const category=b.dataset.mod
  if(category==='fib'){
   b.title='Position · target + stop';
   b.setAttribute('aria-label','Position · target + stop');
-  b.querySelector('svg').innerHTML='<rect x="3" y="3" width="18" height="9" fill="rgba(49,191,139,.22)" stroke="#6ee7bc"/><rect x="3" y="12" width="18" height="9" fill="rgba(235,75,100,.20)" stroke="#f47b90"/><path d="M3 12h18" stroke="#b4fff0"/>';
+  b.querySelector('svg').innerHTML='<rect x="4" y="3" width="16" height="8" fill="rgba(44,191,146,.35)" stroke="#68e9bd"/><rect x="4" y="11" width="16" height="10" fill="rgba(236,71,92,.32)" stroke="#f17d91"/><path d="M4 11h16" stroke="#b8fff1" stroke-width="1.8"/>';
  }
 }
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
