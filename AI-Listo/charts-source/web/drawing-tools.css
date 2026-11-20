@@ -45,3 +45,10 @@
 .charts-tools-picker-hint{padding:7px 9px;border-top:1px solid #345061;color:#c0d4dd;font-size:10px}
 .charts-tools-picker-empty{padding:12px 4px;color:#a9bdc7}
 #drawingToolsButton{white-space:nowrap!important}
+
+
+/* Fix 36: the tool shelf is closed on initial load and follows the Tools toggle. */
+.charts-draw-bar[hidden]{display:none!important}
+.charts-tools-picker-select{display:flex;align-items:center;gap:9px;width:100%}
+.charts-tools-item-icon{display:block;flex:0 0 20px;width:20px;height:20px;color:#8ce4d9}
+.charts-tools-picker-select span{flex:1}
