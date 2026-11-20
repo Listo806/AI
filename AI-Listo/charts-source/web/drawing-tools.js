@@ -50,7 +50,7 @@ function paintShape(ctx,s,w,h){
  else if(pts.length>2 && (name.includes('Channel')||name==='Parallel Channel')){const [p0,p1,p2]=pts;const ox=p2.x-p0.x,oy=p2.y-p0.y;line(p0.x,p0.y,p1.x,p1.y);line(p0.x+ox,p0.y+oy,p1.x+ox,p1.y+oy);line(p0.x+ox/2,p0.y+oy/2,p1.x+ox/2,p1.y+oy/2);}
  else if(pts.length>2 && (name.includes('Pattern')||name.includes('Combination')||name==='Polyline'||name==='Polygon'||name.startsWith('Impulse')||name.startsWith('Correction')||['ABCD','XABCD','Cypher','Three Drives'].includes(name))){ctx.moveTo(pts[0].x,pts[0].y);for(const p of pts.slice(1))ctx.lineTo(p.x,p.y);if(name==='Polygon')ctx.closePath();}
  else if(pts.length>1 && ['Brush','Highlighter','Freehand Forecast Path'].includes(name)){ctx.moveTo(pts[0].x,pts[0].y);for(const p of pts.slice(1))ctx.lineTo(p.x,p.y);}
- else if(name==='Sine Line'){const cycles=Math.max(1,Math.round(ww/170));for(let i=0;i<=100;i++){const x=a.x+dx*i/100,y=a.y+dy/2-Math.abs(dy)/2*Math.sin(2*Math.PI*cycles*i/100);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}}
+ else if(name==='Sine Line'){const cycles=Math.max(1,Math.round(ww/170));const mid=(a.y+b.y)/2,amplitude=Math.max(8,Math.abs(dy)/2);for(let i=0;i<=120;i++){const t=i/120,x=a.x+dx*t,y=mid-amplitude*Math.sin(2*Math.PI*cycles*t);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}}
  else if(name==='Ellipse / Circle'||name==='Fib Circles'){ctx.ellipse((a.x+b.x)/2,(a.y+b.y)/2,Math.max(1,ww/2),Math.max(1,hh/2),0,0,Math.PI*2);}
  else if(name==='Fib Spiral'){for(let i=0;i<=120;i++){const t=i/120*4*Math.PI,r=i/120*Math.max(ww,hh)/2,x=a.x+dx/2+r*Math.cos(t),y=a.y+dy/2+r*Math.sin(t);if(!i)ctx.moveTo(x,y);else ctx.lineTo(x,y);}}
  else if(name==='Triangle'||name==='Triangle Pattern'||name==='Triangle ABCDE'||name==='Fib Wedge'){line(a.x,(a.y+b.y)/2,(a.x+b.x)/2,b.y);line((a.x+b.x)/2,b.y,b.x,a.y);line(b.x,a.y,a.x,(a.y+b.y)/2);}
@@ -65,7 +65,8 @@ function paintShape(ctx,s,w,h){
  else if(name==='Arc'||name==='Resistance Arcs'){ctx.ellipse(a.x,a.y,Math.max(1,ww),Math.max(1,hh),0,-Math.PI/2,Math.PI/2);}
  else if(name==='Curve'||name==='Double Curve'||s.kind==='curve'){ctx.moveTo(a.x,a.y);ctx.bezierCurveTo(a.x+dx*.35,a.y-dy*.6,a.x+dx*.65,b.y+dy*.6,b.x,b.y);}
  else if(name==='Polyline'||name.includes('Pattern')||name==='ABCD'||name==='XABCD'||name==='Cypher'||name==='Three Drives'||name.includes('Combination')||name.startsWith('Impulse')||name.startsWith('Correction')){line(a.x,a.y,a.x+dx*.25,a.y+dy*.65);line(a.x+dx*.25,a.y+dy*.65,a.x+dx*.5,a.y+dy*.2);line(a.x+dx*.5,a.y+dy*.2,a.x+dx*.75,a.y+dy*.85);line(a.x+dx*.75,a.y+dy*.85,b.x,b.y);}
- else if(name==='Time Zones'||name==='Trend-Based Time'||name==='Cycle Lines'||name==='Time Cycles'){for(let i=0;i<9;i++){const t=name==='Time Zones'?[0,1,2,3,5,8,13,21,34][i]/34:i/8;line(a.x+dx*t,0,a.x+dx*t,h);}}
+ else if(name==='Cycle Lines'||name==='Time Cycles'){const count=name==='Cycle Lines'?Math.max(2,Math.round(ww/75)):Math.max(2,Math.round(ww/110));for(let i=0;i<=count;i++){const x=a.x+dx*i/count;line(x,0,x,h);}}
+ else if(name==='Time Zones'||name==='Trend-Based Time'){for(let i=0;i<9;i++){const t=name==='Time Zones'?[0,1,2,3,5,8,13,21,34][i]/34:i/8;line(a.x+dx*t,0,a.x+dx*t,h);}}
  else if(name.includes('Fan')||name.includes('Pitch')||name==='Speed Resistance Fan'){for(const f of [.25,.5,1,1.5,2])line(a.x,a.y,b.x,a.y+dy*f);}
  else if(name.includes('Channel')||name.includes('Parallel')){for(const offset of [-16,0,16])line(a.x,a.y+offset,b.x,b.y+offset);}
  else if(name==='Arrow Up'||name==='Arrow Down'||name==='Arrow Left'||name==='Arrow Right'||name==='Arrow Line'){line(a.x,a.y,b.x,b.y);const theta=Math.atan2(dy,dx);for(const delta of [-.5,.5])line(b.x,b.y,b.x-12*Math.cos(theta+delta),b.y-12*Math.sin(theta+delta));}
@@ -73,7 +74,7 @@ function paintShape(ctx,s,w,h){
  else {line(a.x,a.y,b.x,b.y);}
  ctx.stroke();
  if(name==='Retracement'||name==='Trend-Based Extension'||name==='Fib Channel'||s.kind==='fib')levels([0,.236,.382,.5,.618,.786,1,1.618]);
- if(name==='Gann Box'||name==='Gann Square'||name==='Fixed Gann Square'){ctx.beginPath();for(let i=1;i<4;i++){line(minx+ww*i/4,miny,minx+ww*i/4,miny+hh);line(minx,miny+hh*i/4,minx+ww,miny+hh*i/4);}ctx.stroke();}
+ if(name==='Gann Box'||name==='Gann Square'||name==='Fixed Gann Square'){ctx.beginPath();for(let i=1;i<4;i++){line(minx+ww*i/4,miny,minx+ww*i/4,miny+hh);line(minx,miny+hh*i/4,minx+ww,miny+hh*i/4);}if(name!=='Gann Box'){line(minx,miny,minx+ww,miny+hh);if(name==='Fixed Gann Square')line(minx+ww,miny,minx,miny+hh);}ctx.stroke();}
 
  ctx.restore();
 }
@@ -206,8 +207,8 @@ const toolGlyphs={
  'Fib Wedge':'<path d="M12 3L2 21h20z"/>',
  'Gann Fan':'<path d="M2 21L21 3M2 21L21 10M2 21L21 16"/>',
  'Gann Box':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
- 'Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M12 3v18M3 12h18M3 3l18 18"/>',
- 'Fixed Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18M3 3l18 18"/>',
+ 'Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18M3 3l18 18"/>',
+ 'Fixed Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18M3 3l18 18M21 3L3 21"/>',
  'Head & Shoulders':'<path d="M2 19l4-9 4 5 4-12 4 12 4-5"/>',
  'Inverse Head & Shoulders':'<path d="M2 5l4 9 4-5 4 12 4-12 4 5"/>',
  'Triangle Pattern':'<path d="M12 3L2 21h20z"/>',
@@ -220,9 +221,9 @@ const toolGlyphs={
  'Triangle ABCDE':'<path d="M12 3L2 21h20z"/>',
  'Double Combination WXY':'<path d="M2 18l4-10 4 9 4-12 4 9 4-8"/>',
  'Triple Combination WXYXZ':'<path d="M2 19l4-9 4 7 4-12 4 10 4-9"/>',
- 'Cycle Lines':'<path d="M3 3v18M8 3v18M12 4c-7 0-7 16 0 16s7-16 0-16M21 3v18"/>',
- 'Time Cycles':'<path d="M3 3v18M8 3v18M12 4c-7 0-7 16 0 16s7-16 0-16M21 3v18"/>',
- 'Sine Line':'<path d="M2 12c4-17 8 17 12 0s6-8 8 0"/>',
+ 'Cycle Lines':'<path d="M4 2v20M20 2v20M4 12c0-11 16-11 16 0M4 12c0 11 16 11 16 0"/>',
+ 'Time Cycles':'<path d="M4 2v20M20 2v20M4 12c0-11 16-11 16 0M4 12c0 11 16 11 16 0"/>',
+ 'Sine Line':'<path d="M2 12C5 0 8 0 11 12S17 24 20 12S22 8 23 12"/>',
  'Rotated Rectangle':'<path d="M7 2l15 8-6 12L2 14z"/>',
  'Ellipse / Circle':'<circle cx="12" cy="12" r="9"/>',
  'Triangle':'<path d="M12 3L2 21h20z"/>',
@@ -310,7 +311,7 @@ for(const b of bar.querySelectorAll('[data-mode]')){
  if(symbol)b.querySelector('svg').innerHTML=symbol;
  b.onclick=(event)=>{event.stopPropagation();openCategory(category,b);};
 }
-window.__cortexaPositionBuild='position36-drag-and-popup';
+window.__cortexaPositionBuild='position37-gann-cycles-app-only';
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
 document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))picker.hidden=true;});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')picker.hidden=true;});
