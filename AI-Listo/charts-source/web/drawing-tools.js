@@ -65,7 +65,7 @@ function paintShape(ctx,s,w,h){
  else if(name==='Arc'||name==='Resistance Arcs'){ctx.ellipse(a.x,a.y,Math.max(1,ww),Math.max(1,hh),0,-Math.PI/2,Math.PI/2);}
  else if(name==='Curve'||name==='Double Curve'||s.kind==='curve'){ctx.moveTo(a.x,a.y);ctx.bezierCurveTo(a.x+dx*.35,a.y-dy*.6,a.x+dx*.65,b.y+dy*.6,b.x,b.y);}
  else if(name==='Polyline'||name.includes('Pattern')||name==='ABCD'||name==='XABCD'||name==='Cypher'||name==='Three Drives'||name.includes('Combination')||name.startsWith('Impulse')||name.startsWith('Correction')){line(a.x,a.y,a.x+dx*.25,a.y+dy*.65);line(a.x+dx*.25,a.y+dy*.65,a.x+dx*.5,a.y+dy*.2);line(a.x+dx*.5,a.y+dy*.2,a.x+dx*.75,a.y+dy*.85);line(a.x+dx*.75,a.y+dy*.85,b.x,b.y);}
- else if(name==='Cycle Lines'||name==='Time Cycles'){const count=name==='Cycle Lines'?Math.max(2,Math.round(ww/75)):Math.max(2,Math.round(ww/110));for(let i=0;i<=count;i++){const x=a.x+dx*i/count;line(x,0,x,h);}}
+ else if(name==='Cycle Lines'||name==='Time Cycles'){const period=Math.max(8,Math.abs(dx));const direction=dx>=0?1:-1;const count=Math.min(120,Math.ceil(w/period)+2);for(let i=0;i<count;i++){const x=a.x+direction*i*period;if(x<0||x>w)break;line(x,0,x,h);}if(name==='Time Cycles'){ctx.setLineDash([4,4]);}}
  else if(name==='Time Zones'||name==='Trend-Based Time'){for(let i=0;i<9;i++){const t=name==='Time Zones'?[0,1,2,3,5,8,13,21,34][i]/34:i/8;line(a.x+dx*t,0,a.x+dx*t,h);}}
  else if(name.includes('Fan')||name.includes('Pitch')||name==='Speed Resistance Fan'){for(const f of [.25,.5,1,1.5,2])line(a.x,a.y,b.x,a.y+dy*f);}
  else if(name.includes('Channel')||name.includes('Parallel')){for(const offset of [-16,0,16])line(a.x,a.y+offset,b.x,b.y+offset);}
@@ -221,9 +221,9 @@ const toolGlyphs={
  'Triangle ABCDE':'<path d="M12 3L2 21h20z"/>',
  'Double Combination WXY':'<path d="M2 18l4-10 4 9 4-12 4 9 4-8"/>',
  'Triple Combination WXYXZ':'<path d="M2 19l4-9 4 7 4-12 4 10 4-9"/>',
- 'Cycle Lines':'<path d="M4 2v20M20 2v20M4 12c0-11 16-11 16 0M4 12c0 11 16 11 16 0"/>',
- 'Time Cycles':'<path d="M4 2v20M20 2v20M4 12c0-11 16-11 16 0M4 12c0 11 16 11 16 0"/>',
- 'Sine Line':'<path d="M2 12C5 0 8 0 11 12S17 24 20 12S22 8 23 12"/>',
+ 'Cycle Lines':'<path d="M4 2v20M10 2v20M14 2v20M20 2v20M4 4C12 4 12 20 4 20M14 4C22 4 22 20 14 20"/>',
+ 'Time Cycles':'<path d="M4 2v20M10 2v20M14 2v20M20 2v20M10 4C2 4 2 20 10 20M20 4C12 4 12 20 20 20"/>',
+ 'Sine Line':'<path d="M2 12C5 1 8 1 11 12S17 23 20 12"/>',
  'Rotated Rectangle':'<path d="M7 2l15 8-6 12L2 14z"/>',
  'Ellipse / Circle':'<circle cx="12" cy="12" r="9"/>',
  'Triangle':'<path d="M12 3L2 21h20z"/>',
