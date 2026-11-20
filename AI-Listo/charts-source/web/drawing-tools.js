@@ -26,20 +26,29 @@ const clear=document.createElement('button');clear.type='button';clear.className
 const shell=document.querySelector('.chart-shell');if(shell){const canvas=wrap;const after=canvas.nextElementSibling;if(after)after.before(bar);else canvas.after(bar);}else wrap.after(bar);
 function closeTools(){bar.hidden=true;btn.setAttribute('aria-expanded','false');picker.hidden=true;mode='select';start=null;preview=null;update();if(overlay)draw();}
 btn.addEventListener('click',()=>{const opening=bar.hidden;if(opening){bar.hidden=false;btn.setAttribute('aria-expanded','true');ensure();update();}else closeTools();});
-// Keep the existing .market-tools group intact. Calendar is injected later
-// by calendar.js; moving its children into .actions caused unstable ordering.
 function arrangeToolbar(){
- const controls=actions.querySelector('.market-tools');
- if(!controls)return;
- const market=[...controls.children].find(el=>el.tagName==='BUTTON' && /Market/i.test(el.textContent));
- const indicators=[...controls.children].find(el=>el.tagName==='BUTTON' && /Indicators/i.test(el.textContent));
- const calendar=document.getElementById('calendarButton');
- if(market && indicators){
-   controls.append(market,btn,indicators);
-   if(calendar)controls.append(calendar);
- }
+ const all=[...actions.querySelectorAll('button')];
+ const named=(re)=>all.find(b=>re.test((b.textContent||'').trim()) || re.test(b.getAttribute('aria-label')||''));
+ const market=named(/^(?:▤\\s*)?Market(?: Watch)?$/i);
+ const indicators=named(/Indicators/i);
+ const calendar=named(/Calendar/i);
+ if(!market||!indicators)return;
+ // Move only the relevant buttons; keep the remaining controls untouched.
+ if(market.parentElement!==actions)actions.append(market);
+ if(btn.parentElement!==actions)actions.append(btn);
+ if(indicators.parentElement!==actions)actions.append(indicators);
+ if(calendar&&calendar.parentElement!==actions)actions.append(calendar);
+ const anchor=calendar||indicators;
+ actions.insertBefore(market,anchor);
+ actions.insertBefore(btn,anchor);
+ if(calendar)actions.insertBefore(indicators,calendar);
+ else actions.insertBefore(btn,indicators);
 }
 arrangeToolbar();
+let arranging=false;
+const toolbarObserver=new MutationObserver(()=>{if(arranging)return;arranging=true;try{arrangeToolbar();}finally{arranging=false;}});
+toolbarObserver.observe(actions,{childList:true,subtree:true});
+
 // Category browser for the reference drawing toolbar. The drawing overlay above
 // remains responsible for actual pointer interaction and undo/redo.
 const toolCategories={
@@ -58,18 +67,95 @@ const toolCategories={
  ray:{title:'Anchored VWAP',items:[['Anchored VWAP','trend']]},
  star:{title:'Favorites',items:[]},history:{title:'Recent',items:[]}
 };
+// Individual reference-style glyphs for each drawing tool. All glyphs are
+// lightweight SVG strokes; no icon font or external assets are required.
+const toolGlyphs={
+ 'Extended Line':'<path d="M2 22L22 2"/>','Horizontal Ray':'<path d="M3 12h18"/><circle cx="3" cy="12" r="1"/>',
+ 'Cross Line':'<path d="M12 2v20M2 12h20"/>','Arrow Line':'<path d="M3 21L21 3M13 3h8v8"/>',
+ 'Info Line':'<path d="M4 20L20 4M7 14l3 3m1-8 3 3M15 4l5 5M4 15l5 5"/>',
+ 'Trend Angle':'<path d="M3 20h18M3 20L17 5M8 20a5 5 0 0 0-2-4"/>',
+ 'Regression Channel':'<path d="M2 19L18 3M6 22L22 6M2 15L15 2"/>',
+ 'Flat Top/Bottom Channel':'<path d="M2 15L17 2M6 20L21 7M3 20L18 7"/>',
+ 'Disjoint Channel':'<path d="M2 15L14 3M10 21L22 9M2 20L14 8"/>',
+ 'Pitchfork':'<path d="M3 20L19 4M7 21L21 7M3 14L14 3M8 14l4 4"/>',
+ 'Schiff Pitchfork':'<path d="M2 19L17 4M6 22L21 7M2 13L13 2M6 12l5 5"/>',
+ 'Modified Schiff Pitchfork':'<path d="M2 20L19 3M7 21L22 6M2 13L13 2M8 9l7 7"/>',
+ 'Inside Pitchfork':'<path d="M4 21L18 3M8 21L22 7M2 16L14 2M7 13l5 5"/>',
+ 'Pitchfan':'<path d="M3 21L20 3M3 21L22 9M3 21L13 2"/>',
+ 'Retracement':'<path d="M2 4h20M2 9h20M2 14h20M2 19h20"/>',
+ 'Trend-Based Extension':'<path d="M2 4h20M2 10h20M2 16h20M2 21h20"/>',
+ 'Fib Channel':'<path d="M2 20L19 3M5 22L22 5M2 13L13 2"/>',
+ 'Speed Resistance Fan':'<path d="M3 21L20 4M3 21L20 10M3 21L20 16M3 21h18"/>',
+ 'Time Zones':'<path d="M4 3v18M9 3v18M16 3v18M20 3v18"/>',
+ 'Trend-Based Time':'<path d="M4 3v18M10 3v18M14 3v18M21 3v18"/>',
+ 'Resistance Arcs':'<path d="M3 21A18 18 0 0 1 21 3M3 21A12 12 0 0 1 15 9"/>',
+ 'Fib Circles':'<circle cx="12" cy="12" r="9"/>',
+ 'Fib Spiral':'<path d="M12 12c0-3 5-3 5 1s-7 6-9 1 4-10 10-7 6 12-1 14"/>',
+ 'Fib Wedge':'<path d="M12 3L2 21h20z"/>',
+ 'Gann Fan':'<path d="M2 21L21 3M2 21L21 10M2 21L21 16"/>',
+ 'Gann Box':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
+ 'Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M12 3v18M3 12h18M3 3l18 18"/>',
+ 'Fixed Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18M3 3l18 18"/>',
+ 'Head & Shoulders':'<path d="M2 19l4-9 4 5 4-12 4 12 4-5"/>',
+ 'Inverse Head & Shoulders':'<path d="M2 5l4 9 4-5 4 12 4-12 4 5"/>',
+ 'Triangle Pattern':'<path d="M12 3L2 21h20z"/>',
+ 'ABCD':'<path d="M2 17L7 7l5 9 5-12 5 9"/>',
+ 'XABCD':'<path d="M2 14l4-8 5 12 5-10 6 9"/>',
+ 'Cypher':'<path d="M2 19l5-11 5 8 5-13 5 9"/>',
+ 'Three Drives':'<path d="M2 18l4-8 4 7 4-10 4 8 4-12"/>',
+ 'Impulse 1–5':'<path d="M2 20l4-9 4 5 4-12 4 9 4-5"/>',
+ 'Correction ABC':'<path d="M2 19l5-11 5 8 5-12 5 9"/>',
+ 'Triangle ABCDE':'<path d="M12 3L2 21h20z"/>',
+ 'Double Combination WXY':'<path d="M2 18l4-10 4 9 4-12 4 9 4-8"/>',
+ 'Triple Combination WXYXZ':'<path d="M2 19l4-9 4 7 4-12 4 10 4-9"/>',
+ 'Cycle Lines':'<path d="M3 3v18M8 3v18M12 4c-7 0-7 16 0 16s7-16 0-16M21 3v18"/>',
+ 'Time Cycles':'<path d="M3 3v18M8 3v18M12 4c-7 0-7 16 0 16s7-16 0-16M21 3v18"/>',
+ 'Sine Line':'<path d="M2 12c4-17 8 17 12 0s6-8 8 0"/>',
+ 'Rotated Rectangle':'<path d="M7 2l15 8-6 12L2 14z"/>',
+ 'Ellipse / Circle':'<circle cx="12" cy="12" r="9"/>',
+ 'Triangle':'<path d="M12 3L2 21h20z"/>',
+ 'Polygon':'<path d="M7 2l14 5-2 13-14 2L2 9z"/>',
+ 'Polyline':'<path d="M2 19l5-12 6 9 4-7 5 5"/>',
+ 'Double Curve':'<path d="M2 20Q6 4 14 8M4 22Q9 7 21 5"/>',
+ 'Arc':'<path d="M3 21A18 18 0 0 1 21 3"/>',
+ 'Highlighter':'<path d="M2 19Q6 7 11 12T22 3" stroke-width="3" opacity=".8"/>',
+ 'Freehand Forecast Path':'<path d="M2 19l5-9 5 7 5-13 5 9"/>',
+ 'Anchored Text':'<path d="M4 5h16M12 5v15M8 20h8M3 3l3 3"/>',
+ 'Note':'<path d="M4 3h16v18H4zM7 8h10M7 12h10M7 16h7"/>',
+ 'Anchored Note':'<path d="M4 3h16v18H4zM7 8h10M7 12h10M7 16h7M2 2l4 4"/>',
+ 'Callout':'<path d="M3 4h18v13H9l-5 4v-4H3z"/>',
+ 'Balloon':'<path d="M3 4h18v13H9l-5 4v-4H3z"/>',
+ 'Price Label':'<path d="M4 3h16v18H4zM7 8h10M7 12h10M7 16h7"/>',
+ 'Flag':'<path d="M5 2v20M5 3h15l-4 6 4 6H5"/>',
+ 'Arrow Up':'<path d="M12 22V3M4 11l8-8 8 8"/>',
+ 'Arrow Down':'<path d="M12 2v19M4 13l8 8 8-8"/>',
+ 'Arrow Left':'<path d="M22 12H3M11 4l-8 8 8 8"/>',
+ 'Arrow Right':'<path d="M2 12h19M13 4l8 8-8 8"/>',
+ 'Symbol / Icon':'<path d="M12 2l3 7 7 .5-5.5 5 1.5 7.5-6-4-6 4 1.5-7.5L2 9.5 9 9z"/>',
+ 'Position · target + stop':'<rect x="3" y="3" width="18" height="9"/><rect x="3" y="12" width="18" height="9"/><path d="M3 12h18"/>',
+ 'Price Range':'<path d="M12 3v18M7 7l5-5 5 5M7 17l5 5 5-5M3 12h18"/>',
+ 'Date Range / Candle Count':'<path d="M3 12h18M7 7l-5 5 5 5M17 7l5 5-5 5M12 3v18"/>',
+ 'Date & Price Range':'<rect x="3" y="5" width="18" height="14"/>',
+ 'Forecast':'<path d="M3 21L21 3M13 3h8v8"/>',
+ 'Projection':'<path d="M3 21L21 3M13 3h8v8"/>',
+ 'Bars Pattern':'<path d="M4 3v18M10 3v18M16 3v18M22 3v18M2 8h6M8 16h6M14 10h6"/>',
+ 'Ghost Feed':'<path d="M4 3v18M10 3v18M16 3v18M22 3v18M2 8h6M8 16h6M14 10h6"/>',
+ 'Anchored VWAP':'<path d="M2 19Q6 6 11 12T22 4M2 22Q6 9 11 15T22 7"/>'
+};
+const categoryGlyph={trend:'trend',parallel:'parallel',brush:'Pitchfork',horizontal:'Retracement',grid:'Gann Box',zigzag:'Head & Shoulders',polyline:'Impulse 1–5',vertical:'Cycle Lines',rectangle:'rectangle',curve:'Brush',text:'text',ruler:'ruler',ray:'Anchored VWAP',star:'star',history:'history'};
+function glyphFor(name,kind){return toolGlyphs[name]||icons[kind]||icons.trend;}
 const favoriteNames=new Set();const recentNames=[];
 const picker=document.createElement('section');picker.className='charts-tools-picker';picker.hidden=true;picker.setAttribute('aria-label','Drawing tools');
 picker.innerHTML='<div class="charts-tools-picker-head"><strong></strong><button type="button" aria-label="Close tool menu">×</button></div><input type="search" placeholder="Search all tools" aria-label="Search all tools"><div class="charts-tools-picker-list"></div><div class="charts-tools-picker-hint">Select a tool, then place it on the chart.</div>';
 const pickerTitle=picker.querySelector('strong'),pickerSearch=picker.querySelector('input'),pickerList=picker.querySelector('.charts-tools-picker-list');let activeCategory=null;
 function categoryItems(category){if(category==='star')return Object.values(toolCategories).flatMap(x=>x.items).filter(x=>favoriteNames.has(x[0]));if(category==='history')return recentNames.map(name=>Object.values(toolCategories).flatMap(x=>x.items).find(x=>x[0]===name)).filter(Boolean);return toolCategories[category].items;}
 function renderPicker(){pickerTitle.textContent=toolCategories[activeCategory].title;const query=pickerSearch.value.trim().toLowerCase();pickerList.replaceChildren();const items=categoryItems(activeCategory).filter(x=>x[0].toLowerCase().includes(query));if(!items.length){const empty=document.createElement('div');empty.className='charts-tools-picker-empty';empty.textContent='No matching tools';pickerList.append(empty);return;}
- for(const [name,kind] of items){const item=document.createElement('div');item.className='charts-tools-picker-item';const select=document.createElement('button');select.type='button';select.className='charts-tools-picker-select';const symbol=icons[kind]||icons.trend;
+ for(const [name,kind] of items){const item=document.createElement('div');item.className='charts-tools-picker-item';const select=document.createElement('button');select.type='button';select.className='charts-tools-picker-select';const symbol=glyphFor(name,kind);
 select.innerHTML='<svg class="charts-tools-item-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+symbol+'</svg><span></span>';
-select.querySelector('span').textContent=name;select.onclick=()=>{ensure();mode=kind;update();picker.hidden=true;pickerSearch.value='';recentNames.unshift(name);if(recentNames.length>15)recentNames.pop();bar.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===activeCategory)));};const fav=document.createElement('button');fav.type='button';fav.className='charts-tools-picker-favorite';fav.textContent=favoriteNames.has(name)?'★':'☆';fav.title='Toggle favorite';fav.setAttribute('aria-label','Favorite '+name);fav.onclick=()=>{if(favoriteNames.has(name))favoriteNames.delete(name);else favoriteNames.add(name);renderPicker();};item.append(select,fav);pickerList.append(item);}
+select.querySelector('span').textContent=name;select.onclick=()=>{ensure();mode=kind;update();picker.hidden=true;pickerSearch.value='';recentNames.splice(recentNames.indexOf(name),recentNames.includes(name)?1:0);recentNames.unshift(name);if(recentNames.length>15)recentNames.pop();bar.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===activeCategory)));};const fav=document.createElement('button');fav.type='button';fav.className='charts-tools-picker-favorite';fav.textContent=favoriteNames.has(name)?'★':'☆';fav.title='Toggle favorite';fav.setAttribute('aria-label','Favorite '+name);fav.onclick=()=>{if(favoriteNames.has(name))favoriteNames.delete(name);else favoriteNames.add(name);renderPicker();};item.append(select,fav);pickerList.append(item);}
 }
-function openCategory(category,anchor){if(activeCategory===category&&!picker.hidden){picker.hidden=true;return;}activeCategory=category;pickerSearch.value='';picker.hidden=false;renderPicker();const rect=anchor.getBoundingClientRect();const left=Math.max(8,Math.min(window.innerWidth-320,rect.left));const top=rect.top>360?rect.top-12:rect.bottom+6;picker.style.left=left+'px';picker.style.top=Math.min(window.innerHeight-100,Math.max(8,top))+'px';if(rect.top>360)picker.style.transform='translateY(-100%)';else picker.style.transform='none';pickerSearch.focus();}
-for(const b of bar.querySelectorAll('[data-mode]')){const category=b.dataset.mode;if(!toolCategories[category])continue;b.title=toolCategories[category].title;b.setAttribute('aria-label',toolCategories[category].title);b.onclick=()=>openCategory(category,b);}
+function openCategory(category,anchor){if(activeCategory===category&&!picker.hidden){picker.hidden=true;return;}activeCategory=category;pickerSearch.value='';picker.hidden=false;renderPicker();const rect=anchor.getBoundingClientRect();const left=Math.max(8,Math.min(window.innerWidth-308,rect.left));const top=rect.top>360?rect.top-12:rect.bottom+6;picker.style.left=left+'px';picker.style.top=Math.min(window.innerHeight-100,Math.max(8,top))+'px';if(rect.top>360)picker.style.transform='translateY(-100%)';else picker.style.transform='none';pickerSearch.focus();}
+for(const b of bar.querySelectorAll('[data-mode]')){const category=b.dataset.mode;if(!toolCategories[category])continue;b.title=toolCategories[category].title;b.setAttribute('aria-label',toolCategories[category].title);const symbol=toolGlyphs[categoryGlyph[category]]||icons[categoryGlyph[category]]||icons[category];if(symbol)b.querySelector('svg').innerHTML=symbol;b.onclick=()=>openCategory(category,b);}
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
 document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))picker.hidden=true;});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')picker.hidden=true;});
