@@ -12,6 +12,7 @@ import { currentSiteLanguage } from "../../i18n/currentLanguage";
 import { localePrefixFromPath, withLocalePrefix } from "../../i18n/funnelLocale";
 import {
   ArrowRight,
+  Layers,
   Box,
   Eye,
   EyeOff,
@@ -22,6 +23,14 @@ import {
   User,
 } from "lucide-react";
 import "./Common.css";
+
+const CRM_WORKSPACES = [
+  ["business-suite", "Business Suite"], ["sales", "Sales Workspace"],
+  ["e-commerce", "E-Commerce"], ["customer-service", "Customer Service"],
+  ["team", "Team Workspace"], ["real-estate", "Real Estate Workspace"],
+  ["financial_services", "Financial Services"], ["insurance", "Insurance Workspace"],
+  ["aesthetic-wellness", "Aesthetic & Wellness"], ["clinic-medical", "Clinic & Medical"],
+];
 
 const t = {
   en: {
@@ -212,6 +221,7 @@ export default function StartTrial() {
     email: "",
     phone: "",
     password: "",
+    workspaceId: "",
   });
 
   const tr = t[lang] || t.en;
@@ -272,6 +282,7 @@ export default function StartTrial() {
         email: form.email,
         phone: form.phone,
         password: form.password,
+        workspaceId: form.workspaceId,
 
         plan: registrationPlan,
         billingCycle: registrationBilling,
@@ -538,6 +549,20 @@ export default function StartTrial() {
                 {showPassword ? <EyeOff size={27} /> : <Eye size={27} />}
               </button>
             </label>
+          </div>
+
+          <div className="trial-v3-workspace-group">
+            <label htmlFor="signup-workspace" className="trial-v3-workspace-label">
+              {lang === "es" ? "Elige tu espacio de trabajo" : lang === "pt" ? "Escolha seu espaço de trabalho" : "Choose your workspace"} *
+            </label>
+            <div className="trial-v3-workspace-select-wrap">
+              <Layers size={26} aria-hidden="true" />
+              <select id="signup-workspace" name="workspaceId" required value={form.workspaceId} onChange={handleChange}>
+                <option value="">{lang === "es" ? "Selecciona un espacio de trabajo" : lang === "pt" ? "Selecione um espaço de trabalho" : "Select a workspace"}</option>
+                {CRM_WORKSPACES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+              </select>
+            </div>
+            <p className="trial-v3-workspace-hint">{lang === "es" ? "Tu espacio de trabajo seleccionado se abrirá al iniciar sesión." : lang === "pt" ? "Seu espaço de trabalho selecionado abrirá ao entrar." : "Your selected workspace will open automatically when you sign in."}</p>
           </div>
 
           <button type="submit" className="trial-v3-submit" disabled={loading}>

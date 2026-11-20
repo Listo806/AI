@@ -272,6 +272,7 @@ export default function Landing() {
   const [activeFAQ, setActiveFAQ] = useState(0);
   const [selectedWorkspace, setSelectedWorkspace] = useState(10);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [platformMenuOpen, setPlatformMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const localePrefix = localePrefixFromPath(pathname);
   const lp = (path) => withLocalePrefix(localePrefix, path);
@@ -1558,6 +1559,31 @@ export default function Landing() {
     },
   };
 
+  const approvedHeroCopy = {
+    en: {
+      title: ["Agentic CRM.", "Automate.", "Scale."],
+      description: "Capture leads, manage conversations, automate follow-ups, and move sales forward with Cortexa Agentic CRM.",
+      getStarted: "Get Started",
+      demo: "Try Interactive Demo",
+      checks: ["AI agents", "Automated follow-ups", "One connected workspace"],
+    },
+    es: {
+      title: ["CRM agéntico.", "Automatiza.", "Crece."],
+      description: "Capta clientes potenciales, gestiona conversaciones, automatiza seguimientos e impulsa tus ventas con Cortexa Agentic CRM.",
+      getStarted: "Comenzar",
+      demo: "Probar demo interactiva",
+      checks: ["Agentes de IA", "Seguimientos automatizados", "Un espacio de trabajo conectado"],
+    },
+    pt: {
+      title: ["CRM agêntico.", "Automatize.", "Cresça."],
+      description: "Capture leads, gerencie conversas, automatize acompanhamentos e impulsione suas vendas com o Cortexa Agentic CRM.",
+      getStarted: "Começar",
+      demo: "Experimentar demonstração interativa",
+      checks: ["Agentes de IA", "Acompanhamentos automatizados", "Um espaço de trabalho conectado"],
+    },
+  };
+  const heroCopy = approvedHeroCopy[lang] || approvedHeroCopy.en;
+
   const tr = t[lang];
   const customerExperience = CUSTOMER_EXPERIENCES_COPY[lang] || CUSTOMER_EXPERIENCES_COPY.en;
 
@@ -1649,36 +1675,16 @@ export default function Landing() {
           </div>
 
           <nav className="cx-nav">
-            {tr.nav.map((n, i) => {
-              const ids = [
-                "features",
-                "ai-assistant",
-                "whatsapp", // AI Workflows: the AI insights / workflows section
-                "pipeline",
-                "analytics",
-                "testimonials",
-              ];
-              // Testimonials section removed (was illustrative/sample content); skip its nav link.
-              if (ids[i] === "testimonials") return null;
-
-              return (
-                <HashLink
-                  className="nav-menu"
-                  key={i}
-                  smooth
-                  to={lp(`/#${ids[i]}`)}
-                >
-                  {n}
-                </HashLink>
-              );
-            })}
-            <a
-              className="nav-menu"
-              href={lp("/pricing")}
-              onClick={trackCta("nav_pricing", tr.pricing)}
-            >
-              {tr.pricing}
-            </a>
+            <div className="cx-workspace-nav cx-platform-nav" onKeyDown={(event) => { if (event.key === "Escape") setPlatformMenuOpen(false); }}>
+              <button type="button" className="nav-menu cx-workspace-nav-toggle" aria-expanded={platformMenuOpen} onClick={() => setPlatformMenuOpen(!platformMenuOpen)}>
+                Platform <ChevronDown size={16}/>
+              </button>
+              {platformMenuOpen && <div className="cx-workspace-nav-dropdown cx-platform-dropdown">
+                {[["Features","features"],["AI Assistant","ai-assistant"],["AI Workflows","whatsapp"],["Pipeline","pipeline"],["Analytics","analytics"]].map(([label,id]) =>
+                  <HashLink key={id} className="cx-platform-option" smooth to={lp(`/#${id}`)} onClick={() => setPlatformMenuOpen(false)}>{label}</HashLink>
+                )}
+              </div>}
+            </div>
             <div className="cx-workspace-nav" onMouseEnter={() => setWorkspaceMenuOpen(true)} onMouseLeave={() => setWorkspaceMenuOpen(false)} onKeyDown={(event) => {if (event.key === "Escape") setWorkspaceMenuOpen(false);}}>
               <button type="button" className="nav-menu cx-workspace-nav-toggle" aria-expanded={workspaceMenuOpen} onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}>
                 {lang === "es" ? "Espacios de trabajo" : "Workspaces"} <ChevronDown size={16}/>
@@ -1695,6 +1701,13 @@ export default function Landing() {
                 })}
               </div>}
             </div>
+            <a
+              className="nav-menu"
+              href={lp("/pricing")}
+              onClick={trackCta("nav_pricing", tr.pricing)}
+            >
+              {tr.pricing}
+            </a>
             <a
               className="nav-menu nav-menu-web-solutions"
               href={lp("/web-solutions")}
@@ -1788,49 +1801,23 @@ export default function Landing() {
               <div className="hero-dead-wrap">
                 <span className="hero-head">{tr.heroHead}</span>
               </div>
-              <h1 className="hero-title">
-                {tr.heroTitleLine1} <br />
-                <span className="text-os">{tr.heroTitleLine2}</span><br />
-                <span className="text-os">{tr.heroTitleLine3}</span>
+              <h1 className="hero-title hero-title-approved">
+                {heroCopy.title[0]}<br/><span>{heroCopy.title[1]}</span><br/><span>{heroCopy.title[2]}</span>
               </h1>
-              <div className="hero-checks hero-p">
-                <p>{tr.herotextabove}</p>
-              </div>
+              <div className="hero-checks hero-p"><p>{heroCopy.description}</p></div>
               <div className="hero-inline hero-inline-free-access">
                 <a
                   href={lp("/trial?flow=free-access&plan=free")}
                   className="hero-btn hero-btn-trial hero-btn-free-access-main"
-                  onClick={trackCta("hero_get_started", tr.heroCTA)}
+                  onClick={trackCta("hero_get_started", heroCopy.getStarted)}
                 >
-                  {tr.heroCTA}
+                  {heroCopy.getStarted}
                 </a>
+                <a className="hero-btn hero-btn-demo-approved" href="/crm-demo">{heroCopy.demo}</a>
               </div>
 
-              <div className="hero-free-access-meta">
-                <span>
-                  <CreditCard size={20} />
-                  {tr.heroNoCard}
-                </span>
-                <i aria-hidden="true" />
-                <span>
-                  <Infinity size={24} />
-                  {tr.heroFreeForever}
-                </span>
-              </div>
-              <div className="hero-checks ul">
-                {[
-                  tr.heroCheck6,
-                  tr.heroCheck7,
-                  tr.heroCheck8,
-                  tr.heroCheck9,
-                ].map((item, index) => (
-                  <div className="check-item" key={index}>
-                    <span className="check">
-                      <CheckCircle size={18} />
-                    </span>
-                    <span>{item}</span>
-                  </div>
-                ))}
+              <div className="hero-checks ul hero-approved-checks">
+                {heroCopy.checks.map((item) => <div className="check-item" key={item}><span className="check"><CheckCircle size={20}/></span><span>{item}</span></div>)}
               </div>
             </div>
           </div>

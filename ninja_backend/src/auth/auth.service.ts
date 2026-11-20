@@ -217,6 +217,7 @@ export class AuthService {
         paymentStatus: user.paymentStatus ?? null,
         plan: user.plan ?? null,
         selectedPlan: user.selectedPlan ?? null,
+        selectedWorkspaceId: user.selectedWorkspaceId ?? null,
         emailVerifiedAt: user.emailVerifiedAt ?? null,
         accountStatus: user.accountStatus ?? null,
         paymentConfirmedAt: user.paymentConfirmedAt ?? null,
@@ -284,6 +285,7 @@ export class AuthService {
           paymentStatus: user.paymentStatus ?? null,
           plan: user.plan ?? null,
           selectedPlan: user.selectedPlan ?? null,
+        selectedWorkspaceId: user.selectedWorkspaceId ?? null,
         emailVerifiedAt: user.emailVerifiedAt ?? null,
         accountStatus: user.accountStatus ?? null,
         paymentConfirmedAt: user.paymentConfirmedAt ?? null,
@@ -440,6 +442,7 @@ export class AuthService {
         paymentStatus: user.paymentStatus ?? null,
         plan: user.plan ?? null,
         selectedPlan: user.selectedPlan ?? null,
+        selectedWorkspaceId: user.selectedWorkspaceId ?? null,
         emailVerifiedAt: user.emailVerifiedAt ?? null,
         accountStatus: user.accountStatus ?? null,
         paymentConfirmedAt: user.paymentConfirmedAt ?? null,
@@ -485,6 +488,7 @@ export class AuthService {
         paymentStatus: user.paymentStatus ?? null,
         plan: user.plan ?? null,
         selectedPlan: user.selectedPlan ?? null,
+        selectedWorkspaceId: user.selectedWorkspaceId ?? null,
       },
     };
   }

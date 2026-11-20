@@ -1024,6 +1024,8 @@ export default function Sidebar({
   const role =
     typeof user?.role === "string" ? user.role.toLowerCase() : user?.role;
   const isDeveloper = role === "developer";
+  const showAllWorkspaces = isInternalAccount(user) || role === "super_admin";
+  const selectedWorkspace = workspaceItems.find((ws) => ({ business: "business-suite", ecommerce: "e-commerce", financial: "financial_services" }[ws.id] || ws.id) === user?.selectedWorkspaceId);
   const isFullAccessRole =
     isInternalAccount(user) || ["super_admin", "admin", "developer"].includes(role);
 
@@ -1054,12 +1056,6 @@ export default function Sidebar({
 
 
   const operationalNav = [
-    {
-      path: "/dashboard/home",
-      icon: "home",
-      labelKey: "nav.dashboard",
-    },
-
     ...(canSeeAiCenter
       ? [
           {
@@ -1095,12 +1091,6 @@ export default function Sidebar({
       icon: "calendar",
       labelKey: "nav.calendar",
       feature: "calendar",
-    },
-
-    {
-      path: "/dashboard/analytics",
-      icon: "bar-chart-3",
-      labelKey: "nav.analytics",
     },
 
     {
@@ -1183,7 +1173,13 @@ export default function Sidebar({
 
         <nav className="crm-nav">
           {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.core")}</div>*/}
-          {navItems.map((item, index) => (
+          {!showAllWorkspaces && selectedWorkspace && (
+            <NavLink to={selectedWorkspace.path} className="crm-nav-link crm-selected-workspace" onClick={onClose}>
+              <SidebarIcon name={selectedWorkspace.icon} className="crm-nav-icon" />
+              {!isCollapsed && <span className="crm-nav-label">{getWorkspaceLabel(selectedWorkspace)}</span>}
+            </NavLink>
+          )}
+          {navItems.filter((item) => !["/dashboard/home", "/dashboard/analytics"].includes(item.path)).map((item, index) => (
             <span key={`${item.path}-${index}`} style={{ display: "contents" }}>
               <NavLink
                 to={item.path}
@@ -1330,7 +1326,7 @@ export default function Sidebar({
             )}
           </NavLink>
 
-          {!isCollapsed && (
+          {!isCollapsed && showAllWorkspaces && (
             <section
               className="crm-workspaces-section"
               onMouseLeave={() => setHoveredWorkspace(null)}
@@ -1558,7 +1554,7 @@ export default function Sidebar({
       </aside>
 
 
-      {!isCollapsed && hoveredWorkspace && (
+      {showAllWorkspaces && !isCollapsed && hoveredWorkspace && (
         <aside
           className="crm-workspace-flyout"
           onMouseEnter={() => {

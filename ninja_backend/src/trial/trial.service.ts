@@ -132,6 +132,16 @@ export class TrialService {
         throw new ConflictException('Email already exists');
       }
 
+      // Bind the customer's single chosen workspace to their account, not the browser.
+      const allowedWorkspaces = new Set([
+        'business-suite', 'sales', 'e-commerce', 'customer-service', 'team',
+        'real-estate', 'financial_services', 'insurance', 'aesthetic-wellness', 'clinic-medical',
+      ]);
+      const workspaceId = String(dto.workspaceId || '').trim();
+      if (!allowedWorkspaces.has(workspaceId)) {
+        throw new BadRequestException('Choose a valid workspace');
+      }
+
       const hashed = await bcrypt.hash(password, 10);
 
       /*
@@ -301,6 +311,8 @@ export class TrialService {
       console.log('INSERTED USER:', rows);
 
       const newUserId = rows[0].id;
+      // Existing deployments can add this column without discarding user data.
+      await this.db.query(`UPDATE users SET selected_workspace_id = $2 WHERE id = $1`, [newUserId, workspaceId]);
 
       // Best-effort, non-blocking: resolve and store the registration country
       // (Cloudflare country header first, IP fallback). Fire-and-forget so it never

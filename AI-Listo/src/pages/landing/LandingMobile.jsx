@@ -1201,6 +1201,8 @@ export default function LandingMobile() {
             {tr.ctaButtonText}
           </a>
 
+          <a href="/crm-demo" className="m-hero-cta" style={{background:'white',color:'#5d25d9',border:'2px solid #6426dc',marginTop:12,textAlign:'center'}}>{window.location.pathname.startsWith('/es') ? 'Probar demo interactiva' : window.location.pathname.startsWith('/pt') ? 'Experimentar demonstração interativa' : 'Try Interactive Demo'}</a>
+
           <div className="m-hero-free-access-meta">
             <span>
               <CreditCard size={23} />

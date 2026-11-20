@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { isInternalAccount } from "../utils/internalAccess";
+import { selectedWorkspaceRoute } from "../utils/selectedWorkspace";
 
 /**
  * Redirects /dashboard to the default page based on user role.
@@ -14,5 +15,5 @@ export default function DashboardIndexRedirect() {
     return <Navigate to="/dashboard/admin/listings" replace />;
   }
 
-  return <Navigate to="/dashboard/whatsapp" replace />;
+  return <Navigate to={selectedWorkspaceRoute(user) || "/dashboard/whatsapp"} replace />;
 }

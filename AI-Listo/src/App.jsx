@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import ProductBillingPlans from "./pages/ProductBillingPlans";
 import Landing from "./pages/landing/Landing";
+import CRMDemo from "./pages/demo/CRMDemo";
 
 import {
   BrowserRouter,
@@ -307,6 +308,7 @@ function AppRoutes() {
   return (
     <Routes>
         <Route path="/charts/open" element={<ChartsLaunch />} />
+        <Route path="/crm-demo" element={<CRMDemo />} />
 
       {/* Public site — English at root, Spanish at /es, Portuguese at /pt.
           The URL decides the language; LocaleLayout sets it + hreflang/canonical. */}

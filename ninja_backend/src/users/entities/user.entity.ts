@@ -31,5 +31,7 @@ export interface User {
   accountActivatedAt?: Date | null;
   preferredLanguage?: string | null;
   landingPage?: string | null;
+  selectedWorkspaceId?: string | null;
+  selectedWorkspaceId?: string | null;
 }
 

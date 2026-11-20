@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 import { isInternalAccount } from '../utils/internalAccess';
+import { selectedWorkspaceRoute } from '../utils/selectedWorkspace';
 import { applyUserLanguage, userLocalePrefix } from '../i18n/funnelLocale';
 
 const AuthContext = createContext(null);
@@ -149,6 +150,13 @@ export function AuthProvider({ children }) {
           // Internal staff land in the admin area whatever their customer role is.
           if (isInternalAccount(u)) {
             navigate('/dashboard/admin/listings');
+            return response;
+          }
+
+          // Customer workspace is persisted on the account, not in browser storage.
+          const workspaceRoute = selectedWorkspaceRoute(u);
+          if (workspaceRoute && !isInternalAccount(u)) {
+            navigate(workspaceRoute);
             return response;
           }
 
