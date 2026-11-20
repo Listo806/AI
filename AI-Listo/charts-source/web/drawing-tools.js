@@ -85,10 +85,31 @@ function snap(p){if(magnetMode==='Off')return p;const r=overlay.getBoundingClien
 function update(){bar.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode==='select' ? mode==='select' && !activeCategoryButton && selectedPositionIndex<0 : !!activeCategoryButton&&b.dataset.mode===activeCategoryButton)));bar.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('tool-current',b.dataset.mode===activeCategoryButton));if(overlay){overlay.style.pointerEvents=(drawKinds.has(mode)||shapes.some(s=>s.name==='Position · target + stop'&&!s.hidden))?'auto':'none';overlay.style.cursor=drawKinds.has(mode)?'crosshair':'default';}}
 let draggingPosition=null;function ensure(){if(overlay)return;overlay=document.createElement('canvas');overlay.className='charts-draw-overlay';overlay.setAttribute('aria-label','Chart drawing surface');wrap.append(overlay);
  overlay.addEventListener('pointerdown',e=>{
-  if(mode==='select'&&e.button===0){const p=norm(e);const r=overlay.getBoundingClientRect();for(let i=shapes.length-1;i>=0;i--){const s=shapes[i];if(s.name!=='Position · target + stop'||s.hidden)continue;const right=Math.max(s.a.x,s.b.x),left=Math.min(s.a.x,s.b.x);const entry=s.entryY??(s.a.y+s.b.y)/2,target=s.targetY??Math.min(s.a.y,s.b.y),stop=s.stopY??Math.max(s.a.y,s.b.y);if(p.x<left-.015||p.x>right+.025)continue;const handles=[['targetY',target],['entryY',entry],['stopY',stop]];const nearest=handles.reduce((a,b)=>Math.abs(p.y-b[1])<Math.abs(p.y-a[1])?b:a);if(Math.abs(p.y-nearest[1])*r.height<16||p.y>=Math.min(target,stop)&&p.y<=Math.max(target,stop)){selectedPositionIndex=i;shapes.forEach((x,j)=>x.selected=j===i);draggingPosition=s.locked?null:{shape:s,key:Math.abs(p.y-nearest[1])*r.height<16?nearest[0]:'move',start:p,original:{entryY:entry,targetY:target,stopY:stop}};overlay.setPointerCapture(e.pointerId);renderPositionEditor();draw();e.preventDefault();return;}}return;}
+  if(mode==='select'&&e.button===0){const p=norm(e);const r=overlay.getBoundingClientRect();for(let i=shapes.length-1;i>=0;i--){const s=shapes[i];if(s.name!=='Position · target + stop'||s.hidden)continue;const right=Math.max(s.a.x,s.b.x),left=Math.min(s.a.x,s.b.x);const entry=s.entryY??(s.a.y+s.b.y)/2,target=s.targetY??Math.min(s.a.y,s.b.y),stop=s.stopY??Math.max(s.a.y,s.b.y);if(p.x<left-.015||p.x>right+.025)continue;const handles=[['targetY',target],['entryY',entry],['stopY',stop]];const nearest=handles.reduce((a,b)=>Math.abs(p.y-b[1])<Math.abs(p.y-a[1])?b:a);if(Math.abs(p.y-nearest[1])*r.height<16||p.y>=Math.min(target,stop)&&p.y<=Math.max(target,stop)){selectedPositionIndex=i;shapes.forEach((x,j)=>x.selected=j===i);const nearRight=Math.abs(p.x-right)*r.width<=12;
+   const nearLeft=Math.abs(p.x-left)*r.width<=10;
+   const nearLine=Math.abs(p.y-nearest[1])*r.height<=11;
+   const key=nearRight&&nearLine?nearest[0]:(nearRight||nearLeft)&&!nearLine?'width':'move';
+   draggingPosition=s.locked?null:{shape:s,key,start:p,original:{a:{...s.a},b:{...s.b},entryY:entry,targetY:target,stopY:stop}};
+   if(draggingPosition)overlay.setPointerCapture(e.pointerId);
+   renderPositionEditor();draw();e.preventDefault();e.stopPropagation();return;}}return;}
   if(!drawKinds.has(mode)||e.button!==0)return;e.preventDefault();const p=snap(norm(e));const count=multiCounts[activeTool];if(count){clickPoints.push(p);if(clickPoints.length>=count){finishShape({kind:mode,name:activeTool,a:clickPoints[0],b:p,points:[...clickPoints]});}else{preview={kind:mode,name:activeTool,a:clickPoints[0],b:p,points:[...clickPoints]};draw();}return;}start=p;preview={kind:mode,name:activeTool,a:p,b:p,points:[p]};overlay.setPointerCapture(e.pointerId);draw();});
- overlay.addEventListener('pointermove',e=>{const p=snap(norm(e));if(draggingPosition){const d=draggingPosition;if(d.key==='move'){const delta=p.y-d.start.y;for(const key of ['entryY','targetY','stopY'])d.shape[key]=Math.max(0,Math.min(1,d.original[key]+delta));}else d.shape[d.key]=p.y;renderPositionEditor();draw();return;}if(clickPoints.length){preview={kind:mode,name:activeTool,a:clickPoints[0],b:p,points:[...clickPoints,p]};draw();return;}if(!start)return;preview={kind:mode,name:activeTool,a:start,b:p,points:['Brush','Highlighter','Freehand Forecast Path'].includes(activeTool)?[...(preview?.points||[start]),p]:[start,p]};draw();});
- overlay.addEventListener('pointerup',e=>{if(draggingPosition){draggingPosition=null;persist();draw();return;}if(!start)return;const p=snap(norm(e));finishShape({...preview,b:p});});
+ overlay.addEventListener('pointermove',e=>{const p=snap(norm(e));if(draggingPosition){const d=draggingPosition;if(d.key==='move'){
+    const dx=p.x-d.start.x,dy=p.y-d.start.y;
+    const minX=Math.min(d.original.a.x,d.original.b.x),maxX=Math.max(d.original.a.x,d.original.b.x);
+    const minY=Math.min(d.original.entryY,d.original.targetY,d.original.stopY);
+    const maxY=Math.max(d.original.entryY,d.original.targetY,d.original.stopY);
+    const shiftX=Math.max(-minX,Math.min(1-maxX,dx));
+    const shiftY=Math.max(-minY,Math.min(1-maxY,dy));
+    d.shape.a={x:d.original.a.x+shiftX,y:d.original.a.y+shiftY};
+    d.shape.b={x:d.original.b.x+shiftX,y:d.original.b.y+shiftY};
+    for(const field of ['entryY','targetY','stopY'])d.shape[field]=d.original[field]+shiftY;
+   }else if(d.key==='width'){
+    const width=Math.max(.012,Math.min(1-Math.min(d.original.a.x,d.original.b.x),Math.max(d.original.a.x,d.original.b.x)-Math.min(d.original.a.x,d.original.b.x)+p.x-d.start.x));
+    if(d.original.a.x<=d.original.b.x)d.shape.b.x=d.original.a.x+width;
+    else d.shape.a.x=d.original.b.x+width;
+   }else d.shape[d.key]=p.y;
+   e.preventDefault();e.stopPropagation();renderPositionEditor();draw();return;}if(clickPoints.length){preview={kind:mode,name:activeTool,a:clickPoints[0],b:p,points:[...clickPoints,p]};draw();return;}if(!start)return;preview={kind:mode,name:activeTool,a:start,b:p,points:['Brush','Highlighter','Freehand Forecast Path'].includes(activeTool)?[...(preview?.points||[start]),p]:[start,p]};draw();});
+ overlay.addEventListener('pointerup',e=>{if(draggingPosition){draggingPosition=null;persist();draw();e.preventDefault();e.stopPropagation();return;}if(!start)return;const p=snap(norm(e));finishShape({...preview,b:p});});
  overlay.addEventListener('pointercancel',()=>{draggingPosition=null;start=null;preview=null;clickPoints=[];update();draw();});new ResizeObserver(position).observe(wrap);position();}
 for(const [key,label] of definitions){const b=document.createElement('button');b.type='button';b.dataset.mode=key;b.title=label;b.setAttribute('aria-label',label);b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+icons[key]+'</svg>';b.onclick=()=>{ensure();if(key==='undo'){if(shapes.length)redoStack.push(shapes.pop());persist();mode='select';activeCategoryButton=null;draw();renderPositionEditor();}else if(key==='redo'){if(redoStack.length)shapes.push(redoStack.pop());persist();mode='select';activeCategoryButton=null;draw();renderPositionEditor();}else if(drawKinds.has(key)||key==='select'){mode=key;activeCategoryButton=null;if(key==='select')selectedPositionIndex=-1;}else{mode='select';activeCategoryButton=null;}update();};bar.append(b);}
 const magnet=document.createElement('select');magnet.className='charts-draw-magnet';magnet.setAttribute('aria-label','Magnet mode');for(const value of ['Off','Near','Strong']){const option=document.createElement('option');option.value=value;option.textContent='Magnet: '+value;magnet.append(option);}magnet.addEventListener('change',()=>magnetMode=magnet.value);bar.append(magnet);
@@ -223,7 +244,8 @@ const toolGlyphs={
  'Arrow Left':'<path d="M22 12H3M11 4l-8 8 8 8"/>',
  'Arrow Right':'<path d="M2 12h19M13 4l8 8-8 8"/>',
  'Symbol / Icon':'<path d="M12 2l3 7 7 .5-5.5 5 1.5 7.5-6-4-6 4 1.5-7.5L2 9.5 9 9z"/>',
- 'Position · target + stop':'<rect x="3" y="3" width="18" height="9"/><rect x="3" y="12" width="18" height="9"/><path d="M3 12h18"/>',
+ 'Position · target + stop':'<rect x="3" y="3" width="18" height="9" fill="#173f35" stroke="#8ce8cf"/><rect x="3" y="12" width="18" height="9" fill="#552b3b" stroke="#f18a9a"/><path d="M3 12h18" stroke="#9cebd8"/>',
+ 'Ruler':'<path d="M3 17L17 3l4 4L7 21zM11 9l3 3M8 12l3 3"/>',
  'Price Range':'<path d="M12 3v18M7 7l5-5 5 5M7 17l5 5 5-5M3 12h18"/>',
  'Date Range / Candle Count':'<path d="M3 12h18M7 7l-5 5 5 5M17 7l5 5-5 5M12 3v18"/>',
  'Date & Price Range':'<rect x="3" y="5" width="18" height="14"/>',
@@ -288,7 +310,7 @@ for(const b of bar.querySelectorAll('[data-mode]')){
  if(symbol)b.querySelector('svg').innerHTML=symbol;
  b.onclick=(event)=>{event.stopPropagation();openCategory(category,b);};
 }
-window.__cortexaPositionBuild='position35-dedicated';
+window.__cortexaPositionBuild='position36-drag-and-popup';
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
 document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))picker.hidden=true;});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')picker.hidden=true;});

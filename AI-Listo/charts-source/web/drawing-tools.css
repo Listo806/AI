@@ -91,3 +91,8 @@
 .charts-position-editor input{width:82px;font-variant-numeric:tabular-nums}
 .charts-position-editor select{min-width:62px}
 .charts-position-editor button:hover,.charts-position-editor button:focus-visible{border-color:#51e7c4;outline:1px solid #51e7c4}
+
+/* Fix 36: search ring is fully inside the picker; no cropped right corners. */
+.charts-tools-picker{box-sizing:border-box;padding-left:0;padding-right:0}
+.charts-tools-picker>input[type="search"]{display:block;box-sizing:border-box;min-width:0;width:calc(100% - 12px);max-width:calc(100% - 12px);margin:6px 6px 7px;outline:0;border:1px solid #50cbb7;box-shadow:0 0 0 1px #2da995}
+.charts-tools-picker>input[type="search"]:focus{border-color:#7af9dd;box-shadow:0 0 0 2px #38d8bd}
