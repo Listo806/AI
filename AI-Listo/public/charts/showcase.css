@@ -35,7 +35,7 @@
 
 /* Center the Charts landing hero headline and supporting copy. */
 @media (min-width: 761px) {
-  .landing-page .hero > h1 { text-align: center !important; margin-left: auto !important; margin-right: auto !important; }
+  .landing-page .hero > h1 { margin-left: auto !important; margin-right: auto !important; }
   .landing-page .hero-bottom { justify-content: center; align-items: center; }
   .landing-page .hero-bottom > p { text-align: center !important; margin-left: auto; margin-right: auto; }
 }
