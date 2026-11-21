@@ -47,6 +47,12 @@ export class SignupDto {
   @IsIn(['en', 'es', 'pt'])
   language?: string;
 
+  @ApiPropertyOptional({ description: 'CRM workspace selected at account creation' })
+  @IsOptional()
+  @IsString()
+  @IsIn(['business-suite', 'sales', 'e-commerce', 'customer-service', 'real-estate', 'financial_services', 'insurance', 'aesthetic-wellness', 'clinic-medical'])
+  selectedWorkspaceId?: string;
+
   @ApiPropertyOptional({ description: 'Original website URL, including domain' })
   @IsOptional()
   @IsString()

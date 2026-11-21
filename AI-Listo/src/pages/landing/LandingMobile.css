@@ -3690,3 +3690,25 @@ body .cx-reporting-footer .fdes{
 .mobile-landing .m-workspace-closing-custom-message b{font-weight:750}
 .mobile-landing .m-workspace-closing-custom-message strong{color:#4387f2}
 .mobile-landing .m-workspace-request{white-space:normal;text-align:center}
+
+/* Match the approved desktop Agentic CRM hero copy on mobile. */
+.mobile-landing .m-hero .m-title-approved {
+  font-size: clamp(32px, 8.4vw, 46px);
+  line-height: 1.16;
+  letter-spacing: -0.035em;
+  overflow-wrap: normal;
+  text-wrap: balance;
+  margin: 24px 0 0;
+  text-align: center;
+}
+.mobile-landing .m-hero .m-description-approved {
+  margin: 18px auto 0;
+  max-width: 560px;
+  font-size: clamp(16px, 4.1vw, 19px);
+  line-height: 1.55;
+  text-align: center;
+  color: #fff;
+}
+.mobile-landing .m-hero .m-description-approved + .m-hero-actions {
+  margin-top: 26px;
+}

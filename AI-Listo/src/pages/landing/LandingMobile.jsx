@@ -1181,17 +1181,13 @@ export default function LandingMobile() {
           </p>
         </div>
 
-        <h1 className="m-title">
-          {tr.heroTitle1}
-          <br />
-          {tr.heroTitle11}
-          <br />
-          {tr.heroTitle2}
-          <br />
-          {tr.heroTitle3}
+        <h1 className="m-title m-title-approved">
+          {lang === 'es' ? <>CRM agéntico.<br /><span>Automatiza.</span><br /><span>Crece.</span></> : lang === 'pt' ? <>CRM agêntico.<br /><span>Automatize.</span><br /><span>Cresça.</span></> : <>Agentic CRM.<br /><span>Automate.</span><br /><span>Scale.</span></>}
         </h1>
 
-        <p className="m-description">{tr.heroDesc}</p>
+        <p className="m-description m-description-approved">
+          {lang === 'es' ? 'Capta clientes potenciales, gestiona conversaciones, automatiza seguimientos e impulsa tus ventas con Cortexa Agentic CRM.' : lang === 'pt' ? 'Capture leads, gerencie conversas, automatize acompanhamentos e impulsione suas vendas com o Cortexa Agentic CRM.' : 'Capture leads, manage conversations, automate follow-ups, and move sales forward with Cortexa Agentic CRM.'}
+        </p>
         <div className="m-hero-actions">
           <a
             href={lp("/trial?flow=free-access&plan=free")}

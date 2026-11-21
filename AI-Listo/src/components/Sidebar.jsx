@@ -1173,12 +1173,15 @@ export default function Sidebar({
 
         <nav className="crm-nav">
           {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.core")}</div>*/}
-          {!showAllWorkspaces && selectedWorkspace && (
-            <NavLink to={selectedWorkspace.path} className="crm-nav-link crm-selected-workspace" onClick={onClose}>
-              <SidebarIcon name={selectedWorkspace.icon} className="crm-nav-icon" />
-              {!isCollapsed && <span className="crm-nav-label">{getWorkspaceLabel(selectedWorkspace)}</span>}
-            </NavLink>
-          )}
+          <NavLink
+            to={selectedWorkspace?.path || "/dashboard"}
+            className={({ isActive }) => `crm-nav-link crm-selected-workspace ${isActive ? "active" : ""}`}
+            onClick={onClose}
+            title={isCollapsed ? "Dashboard" : undefined}
+          >
+            <SidebarIcon name="home" className="crm-nav-icon" />
+            {!isCollapsed && <span className="crm-nav-label">Dashboard</span>}
+          </NavLink>
           {navItems.filter((item) => !["/dashboard/home", "/dashboard/analytics"].includes(item.path)).map((item, index) => (
             <span key={`${item.path}-${index}`} style={{ display: "contents" }}>
               <NavLink
@@ -1280,9 +1283,25 @@ export default function Sidebar({
             </>
           )}
 
-          {/* Core-CRM growth action: invite a teammate. Persistent, above the
-              Workspaces section, visible on every core CRM page (desktop) and in
-              the mobile drawer. Opens the global Invite Team Member modal. */}
+          <NavLink
+            to="/account/settings"
+            className={({ isActive }) =>
+              `crm-nav-link crm-settings-link ${isActive ? "active" : ""}`
+            }
+            onClick={() => {
+              if (onClose) onClose();
+            }}
+            title={isCollapsed ? t("header.settings", "Settings") : undefined}
+          >
+            <SidebarIcon name="settings" className="crm-nav-icon" />
+            {!isCollapsed && (
+              <span className="crm-nav-label">
+                {t("header.settings", "Settings")}
+              </span>
+            )}
+          </NavLink>
+
+
           <button
             type="button"
             className="crm-nav-link crm-invite-team-link"
@@ -1307,24 +1326,6 @@ export default function Sidebar({
               <span className="crm-nav-label">{t("nav.inviteTeamMember")}</span>
             )}
           </button>
-
-          <NavLink
-            to="/account/settings"
-            className={({ isActive }) =>
-              `crm-nav-link crm-settings-link ${isActive ? "active" : ""}`
-            }
-            onClick={() => {
-              if (onClose) onClose();
-            }}
-            title={isCollapsed ? t("header.settings", "Settings") : undefined}
-          >
-            <SidebarIcon name="settings" className="crm-nav-icon" />
-            {!isCollapsed && (
-              <span className="crm-nav-label">
-                {t("header.settings", "Settings")}
-              </span>
-            )}
-          </NavLink>
 
           {!isCollapsed && showAllWorkspaces && (
             <section

@@ -32,3 +32,14 @@
  .landing-page .hero-actions>.button,.landing-page .hero-actions>.charts-demo-button{width:100%;min-height:54px;padding:16px 20px;font-size:16px}
  .landing-page .hero-actions>.charts-demo-note{font-size:12px;margin:5px 0 0;text-align:center}
 }
+
+/* Center the Charts landing hero headline and supporting copy. */
+@media (min-width: 761px) {
+  .landing-page .hero > h1 { text-align: center !important; margin-left: auto !important; margin-right: auto !important; }
+  .landing-page .hero-bottom { justify-content: center; align-items: center; }
+  .landing-page .hero-bottom > p { text-align: center !important; margin-left: auto; margin-right: auto; }
+}
+@media (max-width: 760px) {
+  .landing-page .hero > h1 { text-align: center !important; margin-left: auto !important; margin-right: auto !important; }
+  .landing-page .hero-bottom > p { text-align: center !important; }
+}

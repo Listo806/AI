@@ -147,6 +147,15 @@ export class AuthService {
         );
         return createdTeamId;
       });
+      // Persist the explicit CRM workspace on the authenticated account ID.
+      // Never infer a workspace from the browser or modify privileged accounts.
+      if (signupDto.selectedWorkspaceId && platform === 'CRM') {
+        await this.db.query(
+          `UPDATE users SET selected_workspace_id = $2, updated_at = NOW() WHERE id = $1`,
+          [user.id, signupDto.selectedWorkspaceId],
+        );
+        user.selectedWorkspaceId = signupDto.selectedWorkspaceId;
+      }
       user.teamId = teamId;
     } catch (err: any) {
       // Do not leave a half-created signup that can never be retried because the
