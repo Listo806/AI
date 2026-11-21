@@ -19,3 +19,16 @@
 @media(max-width:600px){.calendar-upgrade h2{font-size:37px;letter-spacing:-1.7px;line-height:1.13;margin:22px 0}.calendar-upgrade-pitch{grid-template-columns:1fr;gap:18px}.calendar-upgrade-pitch p{font-size:12px}.calendar-workspace-preview{margin-top:28px;border-radius:6px}.calendar-workspace-top{padding:12px;font-size:7px;gap:10px}.calendar-workspace-top small{font-size:6px;max-width:130px;text-align:right;line-height:1.5}.calendar-chart-context{display:block;padding:16px}.calendar-context-heading{margin-bottom:14px}.calendar-chart-context>img{width:100%}.calendar-context-plan{padding:15px 0 0}.calendar-context-note{display:none}.calendar-live-demo{padding:19px 14px}.calendar-live-heading h3{font-size:25px}.calendar-range-controls button{font-size:9px;padding:8px 10px}.calendar-live-controls{gap:14px;margin-top:20px}.calendar-live-controls>label{font-size:8px}.calendar-demo-filters{gap:12px;font-size:8px}.calendar-demo-filters>span{display:none}.calendar-table-wrap{margin:0 -5px}.calendar-event-table{min-width:470px}.calendar-event-table td{padding:12px 7px}.calendar-event-table th{font-size:8px}.calendar-event-table button{font-size:10px}.calendar-event-detail{padding:15px;margin-top:16px}.calendar-live-footer{flex-direction:column;gap:5px;font-size:6px}.calendar-upgrade-bottom{flex-direction:column;gap:13px;font-size:11px;padding:24px 0}.calendar-data-note{font-size:8px}}
 @media(max-width:600px){.calendar-upgrade-pitch p{font-size:14px}.calendar-event-detail p{font-size:11px}}
 @media(max-width:760px){.landing-page .hero-top{flex-wrap:wrap;gap:14px}.landing-page .hero-top .edition{display:block;font-size:8px;letter-spacing:.7px;line-height:1.7;color:#9eae90}}
+
+/* Charts hero demo CTA: desktop and mobile, matching approved artwork. */
+.landing-page .hero-actions{display:flex;flex-direction:column;align-items:stretch;gap:8px;flex:0 0 232px;min-width:0}
+.landing-page .hero-actions>.button,.landing-page .hero-actions>.charts-demo-button{width:100%;min-height:52px;display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-radius:4px;font-size:13px;font-weight:600;line-height:1.4}
+.landing-page .hero-actions>.charts-demo-button{background:transparent;border:1px solid var(--lime);color:var(--lime);transition:background .2s}
+.landing-page .hero-actions>.charts-demo-button:hover{background:rgba(213,239,134,.09)}
+.landing-page .hero-actions>.charts-demo-note{font-size:11px;line-height:1.5;color:#b5bcad;text-align:center;margin:7px 0 0;max-width:none}
+@media(max-width:760px){
+ .landing-page .hero-bottom{flex-direction:column;align-items:stretch;gap:26px}
+ .landing-page .hero-actions{width:100%;flex:none;gap:12px}
+ .landing-page .hero-actions>.button,.landing-page .hero-actions>.charts-demo-button{width:100%;min-height:54px;padding:16px 20px;font-size:16px}
+ .landing-page .hero-actions>.charts-demo-note{font-size:12px;margin:5px 0 0;text-align:center}
+}
