@@ -5219,3 +5219,11 @@ section#footer {
  #cortexa-ai-crm-landing .hero-inline.hero-inline-free-access { flex-direction:column; align-items:stretch; }
  #cortexa-ai-crm-landing .hero-inline .hero-btn-free-access-main, #cortexa-ai-crm-landing .hero-btn-demo-approved { width:100%; box-sizing:border-box; }
 }
+
+/* Compact, click-controlled workspace menu: ten choices, no internal scrollbar. */
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown:not(.cx-platform-dropdown){width:310px;max-height:none;overflow:visible;padding:7px 8px;}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown:not(.cx-platform-dropdown) .cx-workspace-nav-heading{padding:5px 9px 7px;font-size:10px;letter-spacing:1.5px;}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown:not(.cx-platform-dropdown) .cx-workspace-nav-option{min-height:34px;padding:2px 7px;gap:8px;font-size:13px;border-radius:7px;}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown:not(.cx-platform-dropdown) .cx-workspace-nav-option .cx-ws-choice-icon{flex:0 0 27px;width:27px;min-width:27px;height:27px;}
+#cortexa-ai-crm-landing .cx-workspace-nav-dropdown:not(.cx-platform-dropdown) .cx-workspace-nav-option>svg{width:13px;height:13px;}
+#cortexa-ai-crm-landing [id^="workspace-choice-"]{scroll-margin-top:100px;}

@@ -1685,17 +1685,17 @@ export default function Landing() {
                 )}
               </div>}
             </div>
-            <div className="cx-workspace-nav" onMouseEnter={() => setWorkspaceMenuOpen(true)} onMouseLeave={() => setWorkspaceMenuOpen(false)} onKeyDown={(event) => {if (event.key === "Escape") setWorkspaceMenuOpen(false);}}>
+            <div className="cx-workspace-nav" onKeyDown={(event) => {if (event.key === "Escape") setWorkspaceMenuOpen(false);}}>
               <button type="button" className="nav-menu cx-workspace-nav-toggle" aria-expanded={workspaceMenuOpen} onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}>
                 {lang === "es" ? "Espacios de trabajo" : "Workspaces"} <ChevronDown size={16}/>
               </button>
               {workspaceMenuOpen && <div className="cx-workspace-nav-dropdown">
                 <div className="cx-workspace-nav-heading">{lang === "es" ? "ELIGE TU WORKSPACE" : lang === "pt" ? "ESCOLHA SEU WORKSPACE" : "CHOOSE YOUR WORKSPACE"}</div>
-                {[0,1,4,5,7,8,6,3,2,9,10].map((index) => {
+                {[0,1,4,5,7,6,3,2,9,10].map((index) => {
                   const Icon = [Building2,TrendingUp,ShieldCheck,Landmark,ShoppingCart,Headphones,Home,Users2,Magnet,HeartPulse,Stethoscope][index];
                   return <button key={index} type="button" className={`cx-workspace-nav-option ${selectedWorkspace === index ? "is-selected" : ""}`}
                     onClick={() => {setSelectedWorkspace(index);setWorkspaceMenuOpen(false);document.getElementById("features")?.scrollIntoView({behavior:"smooth",block:"start"});}}>
-                    <span className={`cx-ws-choice-icon cx-ws-choice-icon-${index+1}`}><Icon size={22}/></span>
+                    <span className={`cx-ws-choice-icon cx-ws-choice-icon-${index+1}`}><Icon size={17}/></span>
                     <span>{tr.workspaceSection.workspaces[index]}</span><ChevronRight size={17}/>
                   </button>;
                 })}
@@ -1925,6 +1925,7 @@ export default function Landing() {
               return (
                 <div
                   className={`cx-ws-choice ${isClinic ? "is-active" : ""}`}
+                  id={`workspace-choice-${index}`}
                   key={tr.workspaceSection.workspaces[index]}
                   role="button" tabIndex={0} onClick={() => setSelectedWorkspace(index)}
                   onKeyDown={(e) => {if(e.key === "Enter" || e.key === " ") {e.preventDefault();setSelectedWorkspace(index);}}}
