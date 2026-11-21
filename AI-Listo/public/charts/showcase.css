@@ -21,7 +21,7 @@
 @media(max-width:760px){.landing-page .hero-top{flex-wrap:wrap;gap:14px}.landing-page .hero-top .edition{display:block;font-size:8px;letter-spacing:.7px;line-height:1.7;color:#9eae90}}
 
 /* Charts hero demo CTA: desktop and mobile, matching approved artwork. */
-.landing-page .hero-actions{display:flex;flex-direction:column;align-items:stretch;gap:8px;flex:0 0 232px;min-width:0}
+.landing-page .hero-actions{display:flex;flex-direction:column;align-items:stretch;gap:8px;flex:0 0 250px;min-width:0}
 .landing-page .hero-actions>.button,.landing-page .hero-actions>.charts-demo-button{width:100%;min-height:52px;display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-radius:4px;font-size:13px;font-weight:600;line-height:1.4}
 .landing-page .hero-actions>.charts-demo-button{background:transparent;border:1px solid var(--lime);color:var(--lime);transition:background .2s}
 .landing-page .hero-actions>.charts-demo-button:hover{background:rgba(213,239,134,.09)}
