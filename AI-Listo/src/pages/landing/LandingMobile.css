@@ -194,13 +194,6 @@ body .m-header {
   font-weight: 700;
 }
 
-.m-title span {
-  background: linear-gradient(90deg, #0b63ff, #d21fdd);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 .m-description {
   margin-top: 22px;
   font-size: 16px;

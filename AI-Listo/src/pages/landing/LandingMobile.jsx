@@ -1182,7 +1182,7 @@ export default function LandingMobile() {
         </div>
 
         <h1 className="m-title m-title-approved">
-          {lang === 'es' ? <>CRM agéntico.<br /><span>Automatiza.</span><br /><span>Crece.</span></> : lang === 'pt' ? <>CRM agêntico.<br /><span>Automatize.</span><br /><span>Cresça.</span></> : <>Agentic CRM.<br /><span>Automate.</span><br /><span>Scale.</span></>}
+          {lang === 'es' ? <>CRM agéntico.<br /><span>Automatiza.</span><span> Crece.</span></> : lang === 'pt' ? <>CRM agêntico.<br /><span>Automatize.</span><span> Cresça.</span></> : <>Agentic CRM.<br /><span>Automate.</span><span> Scale.</span></>}
         </h1>
 
         <p className="m-description m-description-approved">
