@@ -1,38 +1,15 @@
-/* Toolbar gap controls. Uses the chart renderer's center-anchored ChartZoom API. */
+/* Persistent compact zoom controls beside Market; preserve ChartZoom API. */
 (()=>{
- function setup(){
+ function init(){
   if(document.getElementById('chartGapZoom'))return;
-  const toolbar=document.querySelector('.chart-navigation')||document.querySelector('.toolbar');
-  if(!toolbar)return;
-  const control=document.createElement('div');control.id='chartGapZoom';control.className='chart-gap-zoom';
-  control.setAttribute('role','group');control.setAttribute('aria-label','Chart zoom');
-  const icons={out:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>',in:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>'};
-  for(const [direction,label] of [['out','Zoom out'],['in','Zoom in']]){
-   const button=document.createElement('button');button.type='button';button.innerHTML=icons[direction];
-   button.title=label;button.setAttribute('aria-label',label);
-   for(const event of ['pointerdown','mousedown','touchstart','dblclick'])button.addEventListener(event,e=>e.stopPropagation());
-   button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();window.ChartZoom?.change(direction);});
-   control.append(button);
+  const actions=document.querySelector('.market-heading .actions');
+  if(!actions)return;
+  const control=document.createElement('div');control.id='chartGapZoom';control.className='chart-gap-zoom';control.setAttribute('role','group');control.setAttribute('aria-label','Chart zoom');
+  for(const [direction,label,symbol] of [['out','Zoom out','−'],['in','Zoom in','+']]){
+   const b=document.createElement('button');b.type='button';b.textContent=symbol;b.title=label;b.setAttribute('aria-label',label);
+   b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(window.ChartZoom?.change)window.ChartZoom.change(direction);else document.getElementById(direction==='in'?'zoomIn':'zoomOut')?.click();});control.append(b);
   }
-  document.body.append(control);
-  let raf=0;
-  function position(){
-   raf=0;
-   const navigation=document.querySelector('.chart-navigation')||document.querySelector('.timeframes');
-   const watch=document.querySelector('.market-tools')||document.querySelector('.actions');
-   if(!navigation||!watch){control.hidden=true;return;}
-   const a=navigation.getBoundingClientRect(),b=watch.getBoundingClientRect();
-   const gap=b.left-a.right;
-   // Do not overlay any existing control when the viewport is too narrow.
-   control.hidden=gap<52||a.height===0||b.height===0;
-   if(control.hidden)return;
-   control.style.left=Math.round(a.right+gap/2-26)+'px';
-   control.style.top=Math.round((b.top+b.bottom)/2-12)+'px';
-  }
-  function schedule(){if(!raf)raf=requestAnimationFrame(position);}
-  window.addEventListener('resize',schedule,{passive:true});
-  new MutationObserver(schedule).observe(toolbar,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
-  schedule();
+  actions.prepend(control);
  }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

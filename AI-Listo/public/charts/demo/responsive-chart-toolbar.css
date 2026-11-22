@@ -12,3 +12,12 @@
 #chartIndicatorControls .actions #demoAI{flex-shrink:0;color:#a5f3db;background:#17473e}
 #chartIndicatorControls.cx-compact-period{flex-wrap:wrap!important}
 #chartIndicatorControls .cx-more-panel{min-width:120px}
+
+/* Demo v41: expanded details must actually be open for native browser rendering. */
+#chartIndicatorControls:not(.cx-compact-period) .cx-period-menu>.timeframes{display:flex!important;position:static!important;width:auto!important;max-width:none!important;background:none!important;border:0!important;padding:0!important;box-shadow:none!important;gap:0!important;flex-wrap:nowrap!important}
+#chartIndicatorControls .chart-navigation{overflow:visible!important;max-width:none!important}
+#chartIndicatorControls .actions [hidden]{display:none!important}
+#chartIndicatorControls .actions .market-tools{margin-right:0!important;gap:3px!important}
+#chartIndicatorControls{min-height:34px!important;padding-block:2px!important}
+#chartIndicatorControls .cx-period-menu summary{display:none}
+#chartIndicatorControls.cx-compact-period .cx-period-menu summary{display:block}
