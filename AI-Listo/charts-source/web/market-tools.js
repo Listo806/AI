@@ -25,7 +25,7 @@ function dismiss(){drawer.hidden=true;veil.hidden=true;closeMenu();(mode==='mark
 close.onclick=veil.onclick=dismiss;document.addEventListener('keydown',e=>{if(e.key==='Escape')dismiss();});
 function show(which){mode=which;if(which==='markets')category='Open Markets';drawer.classList.add('indicator-dropdown');drawer.classList.toggle('market-watch-dropdown',which==='markets');drawer.setAttribute('aria-modal','false');{const rect=(which==='markets'?watchButton:indButton).getBoundingClientRect();drawer.style.top=Math.min(rect.bottom+5,window.innerHeight-220)+'px';drawer.style.right=Math.max(8,window.innerWidth-rect.right)+'px';}search='';input.value='';slot=selected;drawer.hidden=false;veil.hidden=true;title.textContent=which==='markets'?'Market Watch':'Indicators';drawer.setAttribute('aria-label',title.textContent);input.placeholder=which==='markets'?'Search symbol or market…':'Search indicators…';description.textContent=which==='markets'?'Open markets and save favorites with the star.':'Your setup, your choice. Add only what you need.';slotBar.hidden=true;tabs.hidden=which!=='markets';renderPicker();input.focus();}
 watchButton.onclick=()=>{if(!drawer.hidden&&mode==='markets')dismiss();else show('markets');};indButton.onclick=()=>{if(!drawer.hidden&&mode==='indicators')dismiss();else show('indicators');};document.addEventListener('pointerdown',event=>{if(!drawer.hidden&&!drawer.contains(event.target)&&!indButton.contains(event.target)&&!watchButton.contains(event.target))dismiss();});input.oninput=()=>{search=input.value.toLowerCase();renderRows();};
-function renderPicker(){slotBar.replaceChildren();tabs.replaceChildren();['Open Markets','Favorites',...Object.keys(groups)].forEach(name=>{const button=el('button',name===category?'selected':'',name);button.onclick=()=>{category=name;renderPicker();};tabs.append(button);});renderRows();}
+function renderPicker(){slotBar.replaceChildren();tabs.replaceChildren();['Open Markets','Favorites',...Object.keys(groups)].forEach(name=>{const button=el('button',name===category?'selected':'',name==='Open Markets'?'Open':name);button.onclick=()=>{category=name;renderPicker();};tabs.append(button);});renderRows();}
 
 function closeMenu(){menu?.remove();menu=null;}
 function openMenu(row,m){closeMenu();menu=el('div','market-action');const b=el('button','','Open chart  ↗');const note=el('small','','Replace '+markets[slot].name+' · card '+(slot+1));b.onclick=()=>chooseMarket(m);menu.append(b,note);row.append(menu);}
@@ -49,8 +49,8 @@ function atLimit(add){
  for(const [key,e] of extras){if(isLower(key))continue;const b=el('button','replacement-option',e.name);b.onclick=()=>{removeExtra(key);dialog.close();add();saveWorkspace();renderRows();};dialog.append(b);}
  const cancel=el('button','replacement-cancel','Cancel');cancel.onclick=()=>dialog.close();dialog.append(cancel);dialog.showModal();
 }
-function saveWorkspace(){try{ChartStorage.setItem('market-indicator-picker-v1',JSON.stringify({removed:originals.filter(([,id])=>$(id).closest('.indicator-box').classList.contains('picker-removed')).map(([,id])=>id),extras:[...extras.values()].map(({key,period,color,width,show,options,collapsed,smoothing})=>({key,period,color,width,show,options,collapsed,smoothing}))}));}catch{}}
-function restoreWorkspace(){try{const saved=JSON.parse(ChartStorage.getItem('market-indicator-picker-v1')||'null');if(!saved)return;for(const [,id] of originals){if(saved.removed?.includes(id)){$(id).checked=false;$(id).closest('.indicator-box').classList.add('picker-removed');}}for(const item of saved.extras||[]){if(indicatorCount()>=8&&!isLower(item.key))continue;if(extraDefs.some(d=>d[0]===item.key))addExtra(item.key,item);}syncOscPane(); }catch{syncOscPane();}}
+function saveWorkspace(){try{ChartStorage.setItem('market-indicator-picker-v1',JSON.stringify({visibility:Object.fromEntries(originals.map(([,id])=>[id,$(id).checked])),removed:originals.filter(([,id])=>$(id).closest('.indicator-box').classList.contains('picker-removed')).map(([,id])=>id),extras:[...extras.values()].map(({key,period,color,width,show,options,collapsed,smoothing})=>({key,period,color,width,show,options,collapsed,smoothing}))}));}catch{}}
+function restoreWorkspace(){try{const saved=JSON.parse(ChartStorage.getItem('market-indicator-picker-v1')||'null');if(!saved)return;for(const [,id] of originals){if(typeof saved.visibility?.[id]==='boolean')$(id).checked=saved.visibility[id];if(saved.removed?.includes(id)){$(id).checked=false;$(id).closest('.indicator-box').classList.add('picker-removed');}}for(const item of saved.extras||[]){if(indicatorCount()>=8&&!isLower(item.key))continue;if(extraDefs.some(d=>d[0]===item.key))addExtra(item.key,item);}syncOscPane(); }catch{syncOscPane();}}
 
 function renderRows(){
  closeMenu();list.replaceChildren();
@@ -58,32 +58,9 @@ function renderRows(){
   const catalog=Object.entries(groups).flatMap(([group,items])=>items.map(([name,symbol])=>({name,symbol,category:group==='Forex'?'FOREIGN EXCHANGE':group==='Metals'?'PRECIOUS METAL':group.toUpperCase(),group})));
   let rows=category==='Open Markets'?markets:category==='Favorites'?catalog.filter(m=>favoriteSymbols.has(m.symbol)):catalog.filter(m=>m.group===category);
   if(search)rows=rows.filter(m=>(m.name+' '+m.symbol).toLowerCase().includes(search));
-  list.append(el('h3','picker-section',category.toUpperCase()));
-  for(const m of rows){
-   const openIndex=markets.findIndex(x=>x.symbol===m.symbol);
-   // Crypto gets the dedicated two-line instrument layout shown in the UX reference.
-   // Keep all other market categories and their existing actions untouched.
-   if(category==='Crypto' && m.group==='Crypto'){
-    const row=el('div','crypto-market-row');
-    const logos={'BTC/USDT':['₿','btc'],'ETH/USDT':['◆','eth'],'SOL/USDT':['≋','sol'],'XRP/USDT':['×','xrp'],'DOGE/USDT':['Ð','doge'],'LINK/USDT':['⬡','link']};
-    const [glyph,token]=logos[m.symbol]||['◆','generic'];
-    const mark=el('span','crypto-market-icon crypto-icon-'+token,glyph);
-    mark.setAttribute('aria-hidden','true');
-    const identity=el('div','crypto-market-identity');
-    identity.append(el('strong','crypto-market-name',m.name),el('small','crypto-market-pair',m.symbol));
-    const open=el('button','crypto-market-open',pendingMarkets.has(m.symbol)?'Loading…':'Open');
-    open.type='button';open.disabled=pendingMarkets.has(m.symbol);
-    open.setAttribute('aria-label','Open '+m.name+' '+m.symbol+' chart');
-    open.onclick=()=>openIndex>=0?(selectMarket(openIndex),renderRows()):chooseMarket(m);
-    row.append(mark,identity,open,favoriteButton(m));list.append(row);
-    continue;
-   }
-   if(openIndex>=0){
-    const row=el('div','compact-indicator-row'),select=el('button','open-market-select',m.name),remove=el('button','indicator-row-action','×');select.title=m.symbol;select.onclick=()=>{selectMarket(markets.findIndex(x=>x.symbol===m.symbol));renderRows();};if(markets[selected].symbol===m.symbol)select.classList.add('selected');remove.setAttribute('aria-label','Remove '+m.name+' from open markets');remove.onclick=()=>removeOpenMarket(m.symbol);row.append(select,el('span','market-open-label','Open'),favoriteButton(m),remove);list.append(row);
-   }else{
-    const row=el('div','market-add-row'),button=el('button','indicator-add-row',m.name);button.setAttribute('aria-label','Add '+m.name+' to open markets');button.append(el('span','indicator-destination',pendingMarkets.has(m.symbol)?'Loading…':m.symbol));button.disabled=pendingMarkets.has(m.symbol);button.onclick=()=>chooseMarket(m);row.append(button,favoriteButton(m));list.append(row);
-   }
-  }
+  const header=el('div','cx-quote-row cx-quote-head');for(const t of ['Symbol','Bid','Ask','☆','×'])header.append(el('span','',t));list.append(header);
+  for(const m of rows){const index=markets.findIndex(x=>x.symbol===m.symbol),row=el('div','cx-quote-row'),button=el('button','open-market-select',m.name);button.title=m.symbol;button.disabled=pendingMarkets.has(m.symbol);button.onclick=()=>chooseMarket(m);if(markets[selected]?.symbol===m.symbol)row.classList.add('selected');row.append(button);for(const field of ['bid','ask']){const cell=el('span','cx-quote-value','—');cell.dataset.symbol=m.symbol;cell.dataset.field=field;row.append(cell);}row.append(favoriteButton(m));const remove=el('button','indicator-row-action','×');remove.disabled=index<0;remove.onclick=()=>removeOpenMarket(m.symbol);row.append(remove);list.append(row);}updatePickerQuotes();requestPickerQuotes();
+
   if(!rows.length)list.append(el('p','indicator-empty',search?'No matching markets.':category==='Favorites'?'No favorites yet. Click ☆ beside a market to save it.':'No markets to show.'));
   foot.textContent=marketMessage||(category==='Crypto'?'6 crypto markets · Click Open to view chart':markets.length+' / 10 markets open · ☆ Favorite · × Close market');
 
@@ -91,33 +68,16 @@ function renderRows(){
 
 
  }else{
-  const section=t=>list.append(el('h3','picker-section',t));
-  const matching=name=>name.toLowerCase().includes(search);
-  function rowAction(row,label,text,handler){const button=el('button','indicator-row-action',text);button.setAttribute('aria-label',label);button.title=label;button.onclick=handler;row.append(button);}
-  const lowerOriginal=id=>['rsiOn','maOn'].includes(id);
-  for(const lower of [false,true]){
-   section(lower?'ON LOWER PANELS':'ON CHART');let installed=0;
-   for(const [name,id,detail] of originals){const check=$(id),box=check.closest('.indicator-box'),label=displayName(name,id);if(lowerOriginal(id)!==lower||box.classList.contains('picker-removed')||!matching(label+' '+detail))continue;installed++;const row=el('div','compact-indicator-row');row.append(el('span','compact-indicator-name',label));rowAction(row,'Settings for '+label,'⚙',()=>box.querySelector('.aa-settings')?.click());rowAction(row,(check.checked?'Hide ':'Show ')+label,check.checked?'◉':'○',()=>{check.checked=!check.checked;saveWorkspace();draw();renderRows();});rowAction(row,'Remove '+label,'×',()=>{check.checked=false;box.classList.add('picker-removed');if(lower)syncOscPane();saveWorkspace();draw();renderRows();});list.append(row);}
-   for(const [key,e] of extras){if(isLower(key)!==lower||!matching(e.name))continue;installed++;const row=el('div','compact-indicator-row');row.append(el('span','compact-indicator-name',displayName(e.name,key)));rowAction(row,'Settings for '+e.name,'⚙',()=>settings(e));rowAction(row,(e.show?'Hide ':'Show ')+e.name,e.show?'◉':'○',()=>{e.show=!e.show;e.box.style.opacity=e.show?1:.5;saveWorkspace();draw();renderRows();});rowAction(row,'Remove '+e.name,'×',()=>{removeExtra(key);renderRows();});list.append(row);
-    if(e.smoothing){const smooth=el('div','compact-indicator-row');smooth.append(el('span','compact-indicator-name','Moving Average · '+e.name));rowAction(smooth,'Settings for Moving Average · '+e.name,'⚙',()=>smoothingSettings(e));rowAction(smooth,'Toggle Moving Average · '+e.name,e.smoothing.show?'◉':'○',()=>{e.smoothing.show=!e.smoothing.show;saveWorkspace();draw();renderRows();});rowAction(smooth,'Remove Moving Average · '+e.name,'×',()=>{e.smoothing=null;saveWorkspace();draw();renderRows();});list.append(smooth);}
-   }
-   if(!installed)list.append(el('p','indicator-empty',lower?'No lower-panel indicators added.':'No price-chart indicators added.'));
-  }
-  const ensureLower=()=>{oscPaneCollapsed=false;syncOscPane();};
-  for(const lower of [false,true]){
-   section(lower?'ADD TO LOWER PANEL':'ADD TO PRICE CHART');list.append(el('p','indicator-location-note',lower?'Adds directly below the main chart.':'Adds directly to the main chart.'));
-   const groups=new Map();
-   function group(name){if(groups.has(name))return groups.get(name);const details=el('details','indicator-category'),summary=el('summary','',name);details.open=Boolean(search)||categoryOpen.get((lower?'lower:':'price:')+name)!==false;details.ontoggle=()=>{if(!search)categoryOpen.set((lower?'lower:':'price:')+name,details.open);};details.append(summary);groups.set(name,details);list.append(details);return details;}
-   function addRow(name,key,cat,handler){const row=el('button','indicator-add-row',name);row.setAttribute('aria-label','Add '+name+(lower?' to lower panel':' to price chart'));row.append(el('span','indicator-destination',lower?'Lower':'Price'));row.onclick=handler;group(cat).append(row);return row;}
-   if(lower){
-    const smoothGroup=group('SMOOTHING'),select=el('select','smoothing-target');select.setAttribute('aria-label','Moving Average target panel');const targets=[['rsi','RSI panel'],...[...extras].filter(([k])=>isLower(k)&&k!=='volume'&&k!=='atr').map(([k,e])=>[k,e.name+' panel'])];if(!targets.some(([k])=>k===smoothingTarget))smoothingTarget='rsi';for(const [value,name]of targets){const option=el('option','',name);option.value=value;select.append(option);}select.value=smoothingTarget;select.onchange=()=>{smoothingTarget=select.value;};smoothGroup.append(select);
-    if(matching('Moving Average smoothing')){const row=el('button','indicator-add-row','Moving Average');row.setAttribute('aria-label','Add Moving Average to selected lower panel');row.onclick=()=>{if(smoothingTarget==='rsi'){for(const id of ['rsiOn','maOn']){$(id).closest('.indicator-box').classList.remove('picker-removed');$(id).checked=true;}ensureLower();}else{const target=extras.get(smoothingTarget);target.smoothing={period:9,method:'SMA',color:'#ed6375',show:true};target.show=true;target.collapsed=false;syncExtraPane(target);}saveWorkspace();draw();renderRows();};smoothGroup.append(row);}
-   }
-   for(const [name,id,detail]of originals){const check=$(id),box=check.closest('.indicator-box'),label=displayName(name,id);if(id==='maOn'||lowerOriginal(id)!==lower||!matching(label+' '+detail))continue;const addedRow=addRow(label,id,lower?'Oscillators':id==='bbOn'?'Trend':'Cortexa',()=>{const apply=()=>{box.classList.remove('picker-removed');check.checked=true;if(lower)ensureLower();saveWorkspace();draw();renderRows();};if(lower)apply();else atLimit(apply);});if(!box.classList.contains('picker-removed')){addedRow.disabled=true;addedRow.querySelector('.indicator-destination').textContent='Added';}}
-   // Fixed group ordering matches the familiar MetaTrader categories.
-   for(const cat of (lower?['Trend','Oscillators','Volumes','Bill Williams']:['Trend','Bill Williams']))for(const [key,name,detail]of extraDefs){if(groupFor(key)!==cat||isLower(key)!==lower||!matching(displayName(name,key)+' '+name+' '+detail))continue;const addedRow=addRow(displayName(name,key),key,cat,()=>{const add=()=>{addExtra(key);renderRows();};if(lower)add();else atLimit(add);});if(extras.has(key)){addedRow.disabled=true;addedRow.querySelector('.indicator-destination').textContent='Added';}}
-   for(const name of ['SMOOTHING','Cortexa','Trend','Oscillators','Volumes','Bill Williams'])if(groups.has(name))list.append(groups.get(name));
-  }
+  const matching=name=>name.toLowerCase().includes(search), groupsUI=new Map();
+  function group(name){if(groupsUI.has(name))return groupsUI.get(name);const d=el('details','indicator-category');d.open=categoryOpen.get(name)!==false||!!search;d.ontoggle=()=>{if(!search)categoryOpen.set(name,d.open);};d.append(el('summary','',name.toUpperCase()));groupsUI.set(name,d);return d;}
+  function action(row,label,text,fn){const b=el('button','indicator-row-action',text);b.title=label;b.setAttribute('aria-label',label);b.onclick=fn;row.append(b);}
+  function active(name,show,settingsFn,toggle,remove){if(!matching(name))return;const row=el('div','compact-indicator-row');row.append(el('span','compact-indicator-name',name));action(row,'Settings '+name,'⚙',settingsFn);action(row,'Visibility '+name,show?'◉':'○',toggle);action(row,'Remove '+name,'×',remove);group('Active').append(row);}
+  function available(name,cat,fn){if(!matching(name))return;const b=el('button','indicator-add-row',name);b.append(el('span','', '+'));b.onclick=fn;group(cat).append(b);}
+  const commit=()=>{saveWorkspace();syncOscPane();draw();renderRows();};
+  for(const [name,id] of originals){if(id==='maOn')continue;const check=$(id),box=check.closest('.indicator-box'),label=displayName(name,id);if(!box.classList.contains('picker-removed'))active(label,check.checked,()=>box.querySelector('.aa-settings')?.click(),()=>{check.checked=!check.checked;commit();},()=>{check.checked=false;box.classList.add('picker-removed');if(id==='rsiOn')$('maOn').checked=false;commit();});else available(label,id==='rsiOn'?'Oscillators':id==='bbOn'?'Trend':'Cortexa',()=>{const add=()=>{box.classList.remove('picker-removed');check.checked=true;if(id==='rsiOn'){oscPaneCollapsed=false;ChartStorage.setItem('market-osc-pane-collapsed','false');$('maOn').checked=OscSettings.ma.show;}commit();};if(id==='rsiOn')add();else atLimit(add);});}
+  for(const [key,e] of extras)active(displayName(e.name,key),e.show,()=>settings(e),()=>{e.show=!e.show;e.box.style.opacity=e.show?1:.5;syncExtraPane(e);commit();},()=>{removeExtra(key);renderRows();});
+  for(const [key,name] of extraDefs){if(extras.has(key))continue;available(displayName(name,key),groupFor(key),()=>{const add=()=>{addExtra(key);renderRows();};if(isLower(key))add();else atLimit(add);});}
+  for(const name of ['Active','Cortexa','Trend','Oscillators','Volumes','Bill Williams'])if(groupsUI.has(name))list.append(groupsUI.get(name));
   foot.textContent='Click an indicator to add it · ⚙ Settings · ○ Visibility · × Remove';
 
  }
@@ -140,9 +100,9 @@ function bindLowerPane(extra){
 function syncExtraPane(extra){if(!extra.pane)return;extra.pane.hidden=extra.collapsed||!extra.show;extra.collapseButton.textContent=extra.collapsed?'▸':'▾';extra.collapseButton.setAttribute('aria-expanded',String(!extra.collapsed));extra.collapseButton.setAttribute('aria-label',(extra.collapsed?'Show ':'Hide ')+extra.name+' pane');}
 function addExtra(key,saved=null){
  const def=extraDefs.find(d=>d[0]===key);const extra={key,name:def[1],period:def[3],color:def[4],width:2,show:true,options:ChartStudies.options(key,saved?.options)};extra.collapsed=saved?.collapsed===true;if(saved?.smoothing){const sm=saved.smoothing;extra.smoothing={period:Number.isInteger(sm.period)&&sm.period>=2&&sm.period<=200?sm.period:9,method:['SMA','EMA','RMA','WMA'].includes(sm.method)?sm.method:'SMA',color:/^#[0-9a-f]{6}$/i.test(sm.color)?sm.color:'#ed6375',show:sm.show!==false};}if(saved){if(Number.isInteger(saved.period)&&saved.period>=2&&saved.period<=200)extra.period=saved.period;if(/^#[0-9a-f]{6}$/i.test(saved.color))extra.color=saved.color;if([1,2,3,4].includes(saved.width))extra.width=saved.width;extra.show=saved.show!==false;}extras.set(key,extra);
- const box=el('div','indicator-box extra-indicator'),toggle=el('button','extra-toggle',extra.name),swatch=el('i');swatch.style.background=extra.color;toggle.prepend(swatch);const gear=el('button','aa-settings','⚙');gear.setAttribute('aria-label',extra.name+' settings');gear.onclick=()=>settings(extra);const remove=el('button','extra-remove','×');remove.title='Remove '+extra.name;remove.setAttribute('aria-label','Remove '+extra.name);remove.onclick=()=>removeExtra(key);toggle.onclick=()=>{extra.show=!extra.show;box.style.opacity=extra.show?1:.5;saveWorkspace();draw();};box.append(toggle,gear);const lower=isLower(key);if(key==='atr'){document.querySelector('.rsi-header').append(box);box.classList.add('atr-in-rsi');}else if(lower){const paneControls=el('div','extra-pane-controls'),collapse=el('button','lower-pane-toggle');collapse.type='button';extra.collapseButton=collapse;collapse.onclick=()=>{extra.collapsed=!extra.collapsed;syncExtraPane(extra);saveWorkspace();draw();};paneControls.append(collapse,box);document.querySelector('.chart-shell').append(paneControls);extra.controls=paneControls;}else if(key!=='atr')document.querySelector('#chartIndicatorList').append(box);extra.box=box;box.style.opacity=extra.show?1:.5;
- if(isLower(key)&&key!=='atr'){extra.pane=el('canvas','extra-pane');extra.pane.setAttribute('aria-label',extra.name+' chart');document.querySelector('.chart-shell').append(extra.pane);bindLowerPane(extra);syncExtraPane(extra);}
- if(key==='atr'){if(!saved)oscPaneCollapsed=false;syncOscPane();}if(!saved)saveWorkspace();draw();if(key==='pivots')ensurePivotHistory();
+ const box=el('div','indicator-box extra-indicator'),toggle=el('button','extra-toggle',extra.name),swatch=el('i');swatch.style.background=extra.color;toggle.prepend(swatch);const gear=el('button','aa-settings','⚙');gear.setAttribute('aria-label',extra.name+' settings');gear.onclick=()=>settings(extra);const remove=el('button','extra-remove','×');remove.title='Remove '+extra.name;remove.setAttribute('aria-label','Remove '+extra.name);remove.onclick=()=>removeExtra(key);toggle.onclick=()=>{extra.show=!extra.show;box.style.opacity=extra.show?1:.5;saveWorkspace();draw();};box.append(toggle,gear);const lower=isLower(key);if(lower){const paneControls=el('div','extra-pane-controls'),collapse=el('button','lower-pane-toggle');collapse.type='button';extra.collapseButton=collapse;collapse.onclick=()=>{extra.collapsed=!extra.collapsed;syncExtraPane(extra);saveWorkspace();draw();};paneControls.append(collapse,box);document.querySelector('.chart-shell').append(paneControls);extra.controls=paneControls;}else if(key!=='atr')document.querySelector('#chartIndicatorList').append(box);extra.box=box;box.style.opacity=extra.show?1:.5;
+ if(isLower(key)){extra.pane=el('canvas','extra-pane');extra.pane.setAttribute('aria-label',extra.name+' chart');document.querySelector('.chart-shell').append(extra.pane);bindLowerPane(extra);syncExtraPane(extra);}
+ if(!saved)saveWorkspace();draw();if(key==='pivots')ensurePivotHistory();
 }
 const dialog=el('dialog','preview-settings');document.body.append(dialog);
 function settings(extra){
@@ -202,7 +162,7 @@ function drawAtrInRsi(data){
  c.restore();
 }
 function drawExtras(){
- const data=bars();if(!data.length)return;drawAtrInRsi(data);const startFloat=data.length-count-offset,start=Math.max(0,Math.floor(startFloat)),end=Math.min(data.length,Math.ceil(startFloat+count)),canvas=$('priceChart'),rect=canvas.getBoundingClientRect(),ctx=canvas.getContext('2d'),w=rect.width,h=rect.height,step=(w-93)/count,x=i=>15+(i-startFloat+.5)*step;const low=currentPriceBounds.center-currentPriceBounds.span/2,high=low+currentPriceBounds.span,y=v=>15+(high-v)/(high-low)*(h-43),close=data.map(b=>b.close);
+ const data=bars();if(!data.length)return;const startFloat=data.length-count-offset,start=Math.max(0,Math.floor(startFloat)),end=Math.min(data.length,Math.ceil(startFloat+count)),canvas=$('priceChart'),rect=canvas.getBoundingClientRect(),ctx=canvas.getContext('2d'),w=rect.width,h=rect.height,step=(w-93)/count,x=i=>15+(i-startFloat+.5)*step;const low=currentPriceBounds.center-currentPriceBounds.span/2,high=low+currentPriceBounds.span,y=v=>15+(high-v)/(high-low)*(h-43),close=data.map(b=>b.close);
  const plot=(c,values,mapY,color,width=2,xx=x,from=start,to=end)=>{c.strokeStyle=color;c.lineWidth=width;c.beginPath();let active=false;for(let i=from;i<to;i++){if(!Number.isFinite(values[i])){active=false;continue;}if(active)c.lineTo(xx(i),mapY(values[i]));else c.moveTo(xx(i),mapY(values[i]));active=true;}c.stroke();};
  for(const e of extras.values()){
   if(e.pane)e.pane.hidden=!e.show||e.collapsed;if(!e.show)continue;
@@ -228,5 +188,9 @@ if(ChartStudies.lower.has(e.key)){let legendX=15;for(const l of e.studyCache.res
  }
  if(crosshair&&crosshair.pane==='price'&&!dragging)drawCrosshair({ctx,width:w,height:h},crosshair,low,high,3);
 }
-restoreWorkspace();draw();
+const pickerQuotes=new Map();let pickerPending=false;
+function updatePickerQuotes(){for(const cell of list.querySelectorAll('.cx-quote-value')){const symbol=cell.dataset.symbol,q=[liveQuotes.get(symbol),pickerQuotes.get(symbol)].filter(Boolean).sort((a,b)=>b.timestamp-a.timestamp)[0],v=q?.[cell.dataset.field];cell.textContent=Number.isFinite(v)&&v>0?format(v,symbol):'—';cell.title=q?.timestamp?new Date(q.timestamp).toISOString(): 'Quote unavailable';}}
+async function requestPickerQuotes(){if(pickerPending||drawer.hidden||mode!=='markets')return;pickerPending=true;try{const symbols=[...new Set([...list.querySelectorAll('.cx-quote-value')].map(c=>c.dataset.symbol))];await Promise.allSettled(Array.from({length:Math.ceil(symbols.length/10)},async(_,i)=>{const r=await fetch('/api/quotes?'+new URLSearchParams(symbols.slice(i*10,i*10+10).map(s=>['symbol',s])),{cache:'no-store',signal:AbortSignal.timeout(20000)});if(!r.ok)return;for(const q of (await r.json()).quotes||[])if(Number.isFinite(q.timestamp)&&q.timestamp>=(pickerQuotes.get(q.symbol)?.timestamp||0))pickerQuotes.set(q.symbol,q);}));updatePickerQuotes();}finally{pickerPending=false;}}
+setInterval(()=>{if(!drawer.hidden&&mode==='markets'){updatePickerQuotes();requestPickerQuotes();}},5000);
+restoreWorkspace();$('maOn').closest('.indicator-box').hidden=true;draw();
 })();
