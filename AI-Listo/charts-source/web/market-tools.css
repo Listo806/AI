@@ -98,3 +98,8 @@
 #chartIndicatorControls .cx43-more .cx43-panel{display:flex;align-items:center}
 #chartIndicatorControls .cx43-more:not([open])>.cx43-panel{display:none!important}
 #chartIndicatorControls .cx43-period[open]>.timeframes{z-index:101}
+
+/* Toolbar45: quick timeframes are outside native closed details on desktop. */
+#chartIndicatorControls .chart-navigation>.timeframes{display:flex!important;flex:0 0 auto!important;width:max-content!important;align-items:center!important;gap:0!important}
+#chartIndicatorControls .chart-navigation>.timeframes>button{display:inline-flex!important;flex:0 0 auto!important;align-items:center;justify-content:center;padding:4px 4px!important;min-width:22px!important}
+#chartIndicatorControls .cx43-period[hidden]{display:none!important}
