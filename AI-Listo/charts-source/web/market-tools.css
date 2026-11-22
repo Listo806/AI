@@ -131,3 +131,19 @@ html.cx-mobile-chart .charts-draw-bar>button{flex:0 0 36px;min-height:36px;width
 html.cx-mobile-chart .cx-mobile-bottom{display:flex!important;background:#101010;border-top:1px solid #343a3d;flex:none;padding:4px 0 calc(4px + env(safe-area-inset-bottom));z-index:15;gap:1px}html.cx-mobile-chart .cx-mobile-bottom .cx-mobile-button{flex:1;flex-direction:column;font-size:9px;min-height:47px;white-space:nowrap}html.cx-mobile-chart .cx-mobile-bottom .cx-mobile-button[aria-current]{color:#00ddbb;background:#172521;border-radius:7px}
 html.cx-mobile-chart .market-picker.indicator-dropdown{position:fixed!important;left:8px!important;right:8px!important;top:110px!important;width:auto!important;max-width:none!important;max-height:calc(100dvh - 190px)!important;overflow:auto}html.cx-mobile-chart .cx-mobile-style{max-width:calc(100vw - 24px);background:#17232b;color:#fff;border:1px solid #527078;border-radius:8px}html.cx-mobile-chart .cx-mobile-style button{display:block;min-height:42px;width:100%;margin:4px 0}
 }
+
+/* Mobile47: keep quote content inside cards and trading strip above canvas. */
+@media(max-width:760px){
+html.cx-mobile-chart #chartTopControls{box-sizing:border-box!important;padding:8px 8px 4px!important;flex-shrink:0!important}
+html.cx-mobile-chart #markets{box-sizing:border-box!important;justify-content:flex-start!important;align-items:stretch!important;height:auto!important;min-height:76px!important;max-height:none!important;scroll-snap-type:x mandatory;scroll-padding-inline:0;overscroll-behavior-x:contain}
+html.cx-mobile-chart #markets .market-card{box-sizing:border-box!important;flex:0 0 max(112px,calc((100% - 12px)/3))!important;height:auto!important;min-height:76px!important;max-height:none!important}
+html.cx-mobile-chart #markets .market-select{box-sizing:border-box!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:2px!important;height:76px!important;min-height:76px!important;max-height:none!important;padding:6px 6px!important;margin:0!important}
+html.cx-mobile-chart #markets .market-name{display:block!important;flex:none!important;line-height:14px!important;margin:0!important;max-width:100%!important}
+html.cx-mobile-chart #markets .market-price{display:block!important;flex:none!important;line-height:21px!important;margin:0!important;white-space:nowrap;font-size:clamp(12px,3.7vw,16px)!important}
+html.cx-mobile-chart #markets .market-quote-status{display:block!important;flex:none!important;line-height:13px!important;margin:0!important;max-width:100%!important;font-size:8px!important;letter-spacing:-.15px!important}
+html.cx-mobile-chart article>.one-click-control-strip{order:0!important;flex:0 0 auto!important;min-height:30px!important;padding:0 6px!important;box-sizing:border-box!important}
+html.cx-mobile-chart article>.one-click-control-strip>.one-click-toggle{min-height:30px!important;padding:0 4px!important}
+html.cx-mobile-chart article{position:relative}
+html.cx-mobile-chart article>.one-click-panel{z-index:20;max-width:calc(100% - 16px)}
+html.cx-mobile-chart .cx-mobile-bottom{order:100!important}
+}
