@@ -1,0 +1,14 @@
+#chartIndicatorControls{box-sizing:border-box!important;width:100%;max-width:100%;min-width:0!important;display:flex!important;flex-wrap:nowrap!important;gap:4px!important;overflow:visible!important;justify-content:space-between!important}
+.chart-header-collapsed>#chartIndicatorControls{display:none!important}
+#chartIndicatorControls .chart-navigation,#chartIndicatorControls .actions{display:flex;align-items:center;flex-wrap:nowrap!important;flex:none!important;min-width:0!important;gap:3px!important;margin:0!important;white-space:nowrap}
+#chartIndicatorControls .actions button{padding:4px 5px!important;font-size:11px!important;min-width:0!important;white-space:nowrap}
+#chartIndicatorControls .timeframes{flex-wrap:nowrap!important;gap:0!important}
+#chartIndicatorControls .timeframes button{padding:4px 3px!important;min-width:20px!important}
+.cx-toolbar-menu{position:relative;flex:none;color:#e4edf4;font:11px system-ui}.cx-toolbar-menu[hidden]{display:none!important}.cx-toolbar-menu summary{cursor:pointer;border:1px solid #34465a;border-radius:4px;background:#172532;padding:6px;white-space:nowrap;list-style:none}.cx-toolbar-menu summary:after{content:' ▾'}.cx-toolbar-menu>div{position:absolute;top:100%;left:0;z-index:80;background:#14232e;border:1px solid #456477;border-radius:5px;padding:5px;box-shadow:0 5px 14px #0008}.cx-toolbar-menu:not([open])>div{display:none!important}.cx-toolbar-menu[open]>div{display:flex!important;flex-wrap:wrap!important;width:max-content;max-width:min(280px,80vw);gap:4px!important}.cx-more-menu>div{left:auto;right:0}.cx-period-menu>summary{display:none}.cx-period-menu:not([open])>.timeframes{display:flex!important;position:static;background:none;border:0;box-shadow:none;padding:0}.cx-compact-period .cx-period-menu>summary{display:block}.cx-compact-period .cx-period-menu:not([open])>.timeframes{display:none!important}.cx-compact-period .cx-period-menu[open]>.timeframes{position:absolute}.cx-more-panel .chart-styles,.cx-more-panel .market-tools{flex-wrap:wrap!important}
+@media(max-width:460px){#chartIndicatorControls{flex-wrap:wrap!important;justify-content:flex-start!important}#chartIndicatorControls .actions{margin-left:auto!important}}
+
+#chartIndicatorControls .chart-navigation{overflow:visible!important;max-width:none!important}
+#chartIndicatorControls .actions [hidden]{display:none!important}
+#chartIndicatorControls .actions #demoAI{flex-shrink:0;color:#a5f3db;background:#17473e}
+#chartIndicatorControls.cx-compact-period{flex-wrap:wrap!important}
+#chartIndicatorControls .cx-more-panel{min-width:120px}

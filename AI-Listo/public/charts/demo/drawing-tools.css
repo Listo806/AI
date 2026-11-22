@@ -70,3 +70,31 @@
 .charts-draw-confirm button{background:#162c3a;color:#e9f3f7;border:1px solid #496274;border-radius:4px;padding:6px 11px;cursor:pointer}
 .charts-draw-confirm .confirm-clear{background:#b92f45;border-color:#b92f45;color:#fff}
 .charts-draw-confirm button:hover{filter:brightness(1.18)}
+
+/* Reference popup anchoring, search, active tool and position controls. */
+.charts-tools-picker{box-sizing:border-box;max-height:calc(100vh - 16px)}
+.charts-tools-picker>input{margin:5px 2px 6px;border:1px solid #50cbb7;box-shadow:0 0 0 1px #2da995;transition:border-color .12s,box-shadow .12s}
+.charts-tools-picker>input:focus{border-color:#7af9dd;box-shadow:0 0 0 2px #38d8bd;outline:none}
+.charts-draw-bar button[data-mode]:hover{background:#214b53;border-color:#65dcc4}
+.charts-draw-bar button.tool-current,.charts-draw-bar button[data-mode][aria-pressed=true]{background:#105b4a;border-color:#50e6c4;color:#f2fffd;box-shadow:inset 0 0 0 1px #168c73}
+.charts-position-editor{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:5px 9px;background:#0e202c;border-top:1px solid #365568;color:#dcecf3;font:11px system-ui}
+.charts-position-editor[hidden]{display:none!important}
+.charts-position-editor strong{font-size:11px}
+.charts-position-editor input{width:76px}
+.charts-position-editor input,.charts-position-editor select,.charts-position-editor button{background:#152b39;color:#e4f2f4;border:1px solid #456477;border-radius:4px;padding:5px;font:11px system-ui}
+.charts-position-editor button{cursor:pointer}
+.charts-position-editor button:hover{border-color:#50e6c4;background:#205061}
+
+/* Position editor: aligned with reference toolbar and responsive. */
+.charts-position-editor{min-height:35px;gap:6px;background:#0d1d29;border-top:1px solid #365365;border-bottom:1px solid #263f50}
+.charts-position-editor label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.charts-position-editor input{width:82px;font-variant-numeric:tabular-nums}
+.charts-position-editor select{min-width:62px}
+.charts-position-editor button:hover,.charts-position-editor button:focus-visible{border-color:#51e7c4;outline:1px solid #51e7c4}
+
+/* Fix 36: search ring is fully inside the picker; no cropped right corners. */
+.charts-tools-picker{box-sizing:border-box;padding-left:0;padding-right:0}
+.charts-tools-picker>input[type="search"]{display:block;box-sizing:border-box;min-width:0;width:calc(100% - 12px);max-width:calc(100% - 12px);margin:6px 6px 7px;outline:0;border:1px solid #50cbb7;box-shadow:0 0 0 1px #2da995}
+.charts-tools-picker>input[type="search"]:focus{border-color:#7af9dd;box-shadow:0 0 0 2px #38d8bd}
+
+.charts-position-editor{box-sizing:border-box;max-width:100%;flex-wrap:nowrap;overflow-x:auto;gap:6px;min-height:36px}.charts-position-editor>*{flex:0 0 auto;white-space:nowrap}.charts-position-editor select{width:62px!important;min-width:62px!important;padding:5px!important}.charts-position-editor input{width:86px!important;padding:5px!important}.charts-position-editor label{flex:0 0 auto}.charts-position-editor button{padding:5px 7px}
