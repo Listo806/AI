@@ -28,16 +28,16 @@ function paintShape(ctx,s,w,h){
   const top=Math.min(targetY,entryY,stopY),bottom=Math.max(targetY,entryY,stopY);
   ctx.save();ctx.lineWidth=1.5;ctx.font='11px system-ui';
   const zone=(y1,y2,fill)=>{ctx.fillStyle=fill;ctx.fillRect(x0,Math.min(y1,y2),width,Math.abs(y2-y1));};
-  zone(targetY,entryY,side==='Long'?'rgba(33,171,113,.20)':'rgba(238,69,92,.20)');
-  zone(entryY,stopY,side==='Long'?'rgba(238,69,92,.20)':'rgba(33,171,113,.20)');
+  zone(targetY,entryY,'rgba(33,171,113,.20)');
+  zone(entryY,stopY,'rgba(238,69,92,.20)');
   for(const [y,color] of [[targetY,'#43dfac'],[entryY,'#5ae8c8'],[stopY,'#ff6377']]){
    ctx.strokeStyle=color;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
   }
-  ctx.strokeStyle='#50e6c4';ctx.strokeRect(x0,top,width,bottom-top);
+  ctx.strokeStyle='#33bd91';ctx.strokeRect(x0,Math.min(targetY,entryY),width,Math.abs(targetY-entryY));ctx.strokeStyle='#ff6377';ctx.beginPath();ctx.moveTo(x0,entryY);ctx.lineTo(x0,stopY);ctx.lineTo(x1,stopY);ctx.lineTo(x1,entryY);ctx.stroke();
   const risk=Math.abs(stopY-entryY),reward=Math.abs(targetY-entryY);
   ctx.fillStyle='#60e8c5';ctx.fillText('R:R '+(risk>0?(reward/risk).toFixed(2):'—'),x0+5,entryY-6);
   const labels=[['Target',targetY,'#58e8bc'],['Entry',entryY,'#68ead0'],['Stop',stopY,'#ff7081']];
-  for(const [label,y,color] of labels){ctx.fillStyle=color;ctx.fillText(label,Math.min(w-48,x1+5),Math.max(12,Math.min(h-4,y-3)));}
+  for(const [label,y,color] of labels){ctx.fillStyle=color;ctx.fillText(label+' '+(window.CortexaDrawingPrice?.format(window.CortexaDrawingPrice.fromY(y/h,h))||''),Math.min(w-100,x1+5),Math.max(12,Math.min(h-4,y-3)));}
   if(s.selected){for(const y of [targetY,entryY,stopY]){ctx.beginPath();ctx.fillStyle='#6ef2d1';ctx.arc(x1,y,4,0,Math.PI*2);ctx.fill();}}
   ctx.restore();return;
  }
@@ -50,7 +50,16 @@ function paintShape(ctx,s,w,h){
  else if(pts.length>2 && (name.includes('Channel')||name==='Parallel Channel')){const [p0,p1,p2]=pts;const ox=p2.x-p0.x,oy=p2.y-p0.y;line(p0.x,p0.y,p1.x,p1.y);line(p0.x+ox,p0.y+oy,p1.x+ox,p1.y+oy);line(p0.x+ox/2,p0.y+oy/2,p1.x+ox/2,p1.y+oy/2);}
  else if(pts.length>2 && (name.includes('Pattern')||name.includes('Combination')||name==='Polyline'||name==='Polygon'||name.startsWith('Impulse')||name.startsWith('Correction')||['ABCD','XABCD','Cypher','Three Drives'].includes(name))){ctx.moveTo(pts[0].x,pts[0].y);for(const p of pts.slice(1))ctx.lineTo(p.x,p.y);if(name==='Polygon')ctx.closePath();}
  else if(pts.length>1 && ['Brush','Highlighter','Freehand Forecast Path'].includes(name)){ctx.moveTo(pts[0].x,pts[0].y);for(const p of pts.slice(1))ctx.lineTo(p.x,p.y);}
- else if(name==='Sine Line'){const cycles=Math.max(1,Math.round(ww/170));const mid=(a.y+b.y)/2,amplitude=Math.max(8,Math.abs(dy)/2);for(let i=0;i<=120;i++){const t=i/120,x=a.x+dx*t,y=mid-amplitude*Math.sin(2*Math.PI*cycles*t);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}}
+ else if(name==='Sine Line'){
+  // First anchor defines the zero crossing; second defines the next opposite crossing.
+  // Continue the same wave over the visible chart, rather than stopping at the second click.
+  const halfPeriod=Math.max(8,Math.abs(dx)),amplitude=Math.max(6,Math.abs(dy));
+  const direction=dx<0?-1:1,verticalSign=dy<0?-1:1;
+  for(let x=0;x<=w;x+=2){const phase=(x-a.x)*Math.PI/(halfPeriod*direction);
+   const y=a.y+verticalSign*amplitude*Math.sin(phase);
+   if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  }
+ }
  else if(name==='Ellipse / Circle'||name==='Fib Circles'){ctx.ellipse((a.x+b.x)/2,(a.y+b.y)/2,Math.max(1,ww/2),Math.max(1,hh/2),0,0,Math.PI*2);}
  else if(name==='Fib Spiral'){for(let i=0;i<=120;i++){const t=i/120*4*Math.PI,r=i/120*Math.max(ww,hh)/2,x=a.x+dx/2+r*Math.cos(t),y=a.y+dy/2+r*Math.sin(t);if(!i)ctx.moveTo(x,y);else ctx.lineTo(x,y);}}
  else if(name==='Triangle'||name==='Triangle Pattern'||name==='Triangle ABCDE'||name==='Fib Wedge'){line(a.x,(a.y+b.y)/2,(a.x+b.x)/2,b.y);line((a.x+b.x)/2,b.y,b.x,a.y);line(b.x,a.y,a.x,(a.y+b.y)/2);}
@@ -65,7 +74,12 @@ function paintShape(ctx,s,w,h){
  else if(name==='Arc'||name==='Resistance Arcs'){ctx.ellipse(a.x,a.y,Math.max(1,ww),Math.max(1,hh),0,-Math.PI/2,Math.PI/2);}
  else if(name==='Curve'||name==='Double Curve'||s.kind==='curve'){ctx.moveTo(a.x,a.y);ctx.bezierCurveTo(a.x+dx*.35,a.y-dy*.6,a.x+dx*.65,b.y+dy*.6,b.x,b.y);}
  else if(name==='Polyline'||name.includes('Pattern')||name==='ABCD'||name==='XABCD'||name==='Cypher'||name==='Three Drives'||name.includes('Combination')||name.startsWith('Impulse')||name.startsWith('Correction')){line(a.x,a.y,a.x+dx*.25,a.y+dy*.65);line(a.x+dx*.25,a.y+dy*.65,a.x+dx*.5,a.y+dy*.2);line(a.x+dx*.5,a.y+dy*.2,a.x+dx*.75,a.y+dy*.85);line(a.x+dx*.75,a.y+dy*.85,b.x,b.y);}
- else if(name==='Cycle Lines'||name==='Time Cycles'){const period=Math.max(8,Math.abs(dx));const direction=dx>=0?1:-1;const count=Math.min(120,Math.ceil(w/period)+2);for(let i=0;i<count;i++){const x=a.x+direction*i*period;if(x<0||x>w)break;line(x,0,x,h);}if(name==='Time Cycles'){ctx.setLineDash([4,4]);}}
+ else if(name==='Cycle Lines'||name==='Time Cycles'){
+  const period=Math.max(8,Math.abs(dx));
+  // Both anchors set the period; project cycles in both time directions.
+  for(let x=a.x;x<=w;x+=period)line(x,0,x,h);
+  for(let x=a.x-period;x>=0;x-=period)line(x,0,x,h);
+ }
  else if(name==='Time Zones'||name==='Trend-Based Time'){for(let i=0;i<9;i++){const t=name==='Time Zones'?[0,1,2,3,5,8,13,21,34][i]/34:i/8;line(a.x+dx*t,0,a.x+dx*t,h);}}
  else if(name.includes('Fan')||name.includes('Pitch')||name==='Speed Resistance Fan'){for(const f of [.25,.5,1,1.5,2])line(a.x,a.y,b.x,a.y+dy*f);}
  else if(name.includes('Channel')||name.includes('Parallel')){for(const offset of [-16,0,16])line(a.x,a.y+offset,b.x,b.y+offset);}
@@ -74,13 +88,13 @@ function paintShape(ctx,s,w,h){
  else {line(a.x,a.y,b.x,b.y);}
  ctx.stroke();
  if(name==='Retracement'||name==='Trend-Based Extension'||name==='Fib Channel'||s.kind==='fib')levels([0,.236,.382,.5,.618,.786,1,1.618]);
- if(name==='Gann Box'||name==='Gann Square'||name==='Fixed Gann Square'){ctx.beginPath();for(let i=1;i<4;i++){line(minx+ww*i/4,miny,minx+ww*i/4,miny+hh);line(minx,miny+hh*i/4,minx+ww,miny+hh*i/4);}if(name!=='Gann Box'){line(minx,miny,minx+ww,miny+hh);if(name==='Fixed Gann Square')line(minx+ww,miny,minx,miny+hh);}ctx.stroke();}
+ if(name==='Gann Box'||name==='Gann Square'||name==='Fixed Gann Square'){ctx.beginPath();for(let i=1;i<4;i++){line(minx+ww*i/4,miny,minx+ww*i/4,miny+hh);line(minx,miny+hh*i/4,minx+ww,miny+hh*i/4);}ctx.stroke();}
 
  ctx.restore();
 }
 function draw(){if(!overlay)return;const c=overlay.getContext('2d'),r=overlay.getBoundingClientRect(),ratio=window.devicePixelRatio||1;c.setTransform(ratio,0,0,ratio,0,0);c.clearRect(0,0,r.width,r.height);if(!drawingsVisible)return;for(const shape of [...shapes,...(preview?[preview]:[])])if(!shape.hidden)paintShape(c,shape,r.width,r.height);}
 function position(){if(!overlay)return;const r=wrap.getBoundingClientRect(),ratio=window.devicePixelRatio||1;overlay.width=Math.max(1,Math.round(r.width*ratio));overlay.height=Math.max(1,Math.round(r.height*ratio));draw();}
-const multiCounts={'Pitchfork':3,'Schiff Pitchfork':3,'Modified Schiff Pitchfork':3,'Inside Pitchfork':3,'Pitchfan':3,'Parallel Channel':3,'Regression Channel':3,'Flat Top/Bottom Channel':3,'Disjoint Channel':3,'Head & Shoulders':5,'Inverse Head & Shoulders':5,'Triangle Pattern':3,'ABCD':4,'XABCD':5,'Cypher':5,'Three Drives':6,'Impulse 1–5':6,'Correction ABC':4,'Triangle ABCDE':5,'Double Combination WXY':4,'Triple Combination WXYXZ':6,'Polygon':5,'Polyline':5};
+const multiCounts={'Sine Line':2,'Cycle Lines':2,'Time Cycles':2,'Pitchfork':3,'Schiff Pitchfork':3,'Modified Schiff Pitchfork':3,'Inside Pitchfork':3,'Pitchfan':3,'Parallel Channel':3,'Regression Channel':3,'Flat Top/Bottom Channel':3,'Disjoint Channel':3,'Head & Shoulders':5,'Inverse Head & Shoulders':5,'Triangle Pattern':3,'ABCD':4,'XABCD':5,'Cypher':5,'Three Drives':6,'Impulse 1–5':6,'Correction ABC':4,'Triangle ABCDE':5,'Double Combination WXY':4,'Triple Combination WXYXZ':6,'Polygon':5,'Polyline':5};
 function finishShape(shape){shapes.push(shape);if(shape.name==='Position · target + stop'){selectedPositionIndex=shapes.length-1;shape.selected=true;shape.side=shape.side||'Long';shape.entryY??=(shape.a.y+shape.b.y)/2;shape.targetY??=Math.min(shape.a.y,shape.b.y);shape.stopY??=Math.max(shape.a.y,shape.b.y);for(const other of shapes)if(other!==shape)other.selected=false;}persist();redoStack=[];start=null;preview=null;clickPoints=[];if(!stayOn){mode='select';activeCategoryButton=null;}update();draw();renderPositionEditor();}
 function snap(p){if(magnetMode==='Off')return p;const r=overlay.getBoundingClientRect();let best=p,dist=magnetMode==='Strong'?24:12;for(const shape of shapes){for(const q of [shape.a,shape.b,...(shape.points||[])]){const d=Math.hypot((p.x-q.x)*r.width,(p.y-q.y)*r.height);if(d<dist){best=q;dist=d;}}}return best;}
 function update(){bar.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode==='select' ? mode==='select' && !activeCategoryButton && selectedPositionIndex<0 : !!activeCategoryButton&&b.dataset.mode===activeCategoryButton)));bar.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('tool-current',b.dataset.mode===activeCategoryButton));if(overlay){overlay.style.pointerEvents=(drawKinds.has(mode)||shapes.some(s=>s.name==='Position · target + stop'&&!s.hidden))?'auto':'none';overlay.style.cursor=drawKinds.has(mode)?'crosshair':'default';}}
@@ -123,10 +137,10 @@ const positionEditor=document.createElement('div');positionEditor.className='cha
 function renderPositionEditor(){
  const shape=shapes[selectedPositionIndex];if(!shape||shape.name!=='Position · target + stop'){positionEditor.hidden=true;return;}
  positionEditor.hidden=false;positionEditor.replaceChildren();
- const title=document.createElement('strong');title.textContent='Position · '+(selectedPositionIndex+1)+' position(s)';positionEditor.append(title);
+ const title=document.createElement('strong');title.textContent='Position · '+shapes.filter(x=>x.name==='Position · target + stop').length+' position(s)';positionEditor.append(title);
  const side=document.createElement('select');side.setAttribute('aria-label','Position direction');for(const v of ['Long','Short']){const o=document.createElement('option');o.value=v;o.textContent=v;side.append(o);}side.value=shape.side||'Long';side.onchange=()=>{shape.side=side.value;persist();draw();};positionEditor.append(side);
  const makeField=(label,key,initial)=>{const holder=document.createElement('label');holder.textContent=label+' ';const input=document.createElement('input');input.type='number';input.step='any';input.value=String(shape[key]??initial);input.setAttribute('aria-label',label);input.onchange=()=>{const v=Number(input.value);if(Number.isFinite(v)){shape[key]=v;persist();renderPositionEditor();draw();}};holder.append(input);positionEditor.append(holder);};
- const yField=(label,key)=>{const holder=document.createElement('label');holder.textContent=label+' ';const input=document.createElement('input');input.type='number';input.step='0.1';input.min='0';input.max='100';input.value=((shape[key]??0)*100).toFixed(1);input.title='Chart vertical position (%)';input.setAttribute('aria-label',label+' chart position percent');input.onchange=()=>{const v=Number(input.value);if(Number.isFinite(v)){shape[key]=Math.min(1,Math.max(0,v/100));persist();renderPositionEditor();draw();}};holder.append(input);positionEditor.append(holder);};
+ const yField=(label,key)=>{const holder=document.createElement('label');holder.textContent=label+' ';const input=document.createElement('input');input.type='number';input.step='any';const h=price.getBoundingClientRect().height;const api=window.CortexaDrawingPrice;input.value=api?String(Number(api.fromY(shape[key],h).toFixed(8))):'';input.setAttribute('aria-label',label);input.onchange=()=>{const v=Number(input.value);if(api&&Number.isFinite(v)){shape[key]=api.toY(v,h);persist();renderPositionEditor();draw();}};holder.append(input);positionEditor.append(holder);};
  yField('Entry','entryY');yField('Target','targetY');yField('Stop','stopY');
  const rr=document.createElement('span');const entry=Number(shape.entryY??.5),target=Number(shape.targetY??.3),stop=Number(shape.stopY??.7);const risk=Math.abs(entry-stop);rr.textContent='R:R '+(risk>0?(Math.abs(target-entry)/risk).toFixed(2):'—');positionEditor.append(rr);
  const action=(label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;positionEditor.append(b);};
@@ -207,8 +221,8 @@ const toolGlyphs={
  'Fib Wedge':'<path d="M12 3L2 21h20z"/>',
  'Gann Fan':'<path d="M2 21L21 3M2 21L21 10M2 21L21 16"/>',
  'Gann Box':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
- 'Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18M3 3l18 18"/>',
- 'Fixed Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18M3 3l18 18M21 3L3 21"/>',
+ 'Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M12 3v18M3 12h18M3 3l18 18"/>',
+ 'Fixed Gann Square':'<rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18M3 3l18 18"/>',
  'Head & Shoulders':'<path d="M2 19l4-9 4 5 4-12 4 12 4-5"/>',
  'Inverse Head & Shoulders':'<path d="M2 5l4 9 4-5 4 12 4-12 4 5"/>',
  'Triangle Pattern':'<path d="M12 3L2 21h20z"/>',
@@ -221,9 +235,9 @@ const toolGlyphs={
  'Triangle ABCDE':'<path d="M12 3L2 21h20z"/>',
  'Double Combination WXY':'<path d="M2 18l4-10 4 9 4-12 4 9 4-8"/>',
  'Triple Combination WXYXZ':'<path d="M2 19l4-9 4 7 4-12 4 10 4-9"/>',
- 'Cycle Lines':'<path d="M4 2v20M10 2v20M14 2v20M20 2v20M4 4C12 4 12 20 4 20M14 4C22 4 22 20 14 20"/>',
- 'Time Cycles':'<path d="M4 2v20M10 2v20M14 2v20M20 2v20M10 4C2 4 2 20 10 20M20 4C12 4 12 20 20 20"/>',
- 'Sine Line':'<path d="M2 12C5 1 8 1 11 12S17 23 20 12"/>',
+ 'Cycle Lines':'<path d="M4 3v18M20 3v18M4 12c2-12 6-12 8 0s6 12 8 0"/>',
+ 'Time Cycles':'<path d="M4 3v18M20 3v18M4 12c2-12 6-12 8 0s6 12 8 0"/>',
+ 'Sine Line':'<path d="M2 12c4-17 8 17 12 0s6-8 8 0"/>',
  'Rotated Rectangle':'<path d="M7 2l15 8-6 12L2 14z"/>',
  'Ellipse / Circle':'<circle cx="12" cy="12" r="9"/>',
  'Triangle':'<path d="M12 3L2 21h20z"/>',
@@ -311,7 +325,7 @@ for(const b of bar.querySelectorAll('[data-mode]')){
  if(symbol)b.querySelector('svg').innerHTML=symbol;
  b.onclick=(event)=>{event.stopPropagation();openCategory(category,b);};
 }
-window.__cortexaPositionBuild='position37-gann-cycles-app-only';
+window.__cortexaPositionBuild='position36-drag-and-popup';
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
 document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))picker.hidden=true;});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')picker.hidden=true;});

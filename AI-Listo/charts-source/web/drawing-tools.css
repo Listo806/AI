@@ -97,10 +97,4 @@
 .charts-tools-picker>input[type="search"]{display:block;box-sizing:border-box;min-width:0;width:calc(100% - 12px);max-width:calc(100% - 12px);margin:6px 6px 7px;outline:0;border:1px solid #50cbb7;box-shadow:0 0 0 1px #2da995}
 .charts-tools-picker>input[type="search"]:focus{border-color:#7af9dd;box-shadow:0 0 0 2px #38d8bd}
 
-/* Reference-matched drawing menu: preserve a complete search-field outline. */
-.charts-tools-picker{box-sizing:border-box}
-.charts-tools-picker>input{box-sizing:border-box;display:block;width:calc(100% - 12px);min-width:0;margin:6px;flex-shrink:0;border:1px solid #4d9e9d;border-radius:5px}
-.charts-tools-picker>input:focus{outline:2px solid #43e6c8;outline-offset:0;border-color:#43e6c8;box-shadow:0 0 0 1px #10212c inset}
-.charts-tools-picker-select{display:flex;align-items:center;gap:9px;min-width:0}
-.charts-tools-item-icon{width:20px;height:20px;flex:none;color:#93e6d7}
-.charts-draw-bar button:hover{border-color:#5ecbb9;color:#f5fffd}
+.charts-position-editor{box-sizing:border-box;max-width:100%;flex-wrap:nowrap;overflow-x:auto;gap:6px;min-height:36px}.charts-position-editor>*{flex:0 0 auto;white-space:nowrap}.charts-position-editor select{width:62px!important;min-width:62px!important;padding:5px!important}.charts-position-editor input{width:86px!important;padding:5px!important}.charts-position-editor label{flex:0 0 auto}.charts-position-editor button{padding:5px 7px}
