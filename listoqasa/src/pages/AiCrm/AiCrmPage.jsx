@@ -66,10 +66,18 @@ export default function AiCrmPage() {
 
               <p>{t("aiCrm.heroDescription")}</p>
 
-              <Link to={pricingUrl} className="lq-ai-primary-btn">
-                {t("aiCrm.exploreCrm")}
-                <ArrowRight size={17} />
-              </Link>
+              <div className="lq-ai-hero-actions">
+                <Link to={pricingUrl} className="lq-ai-primary-btn">
+                  {t("aiCrm.exploreCrm")}
+                  <ArrowRight size={17} />
+                </Link>
+                <a
+                  href="/real-estate/demo"
+                  className="lq-ai-demo-btn"
+                >
+                  Try Interactive Demo
+                </a>
+              </div>
 
             </div>
 

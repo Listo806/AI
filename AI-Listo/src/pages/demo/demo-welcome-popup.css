@@ -1,0 +1,15 @@
+/* Compact, viewport-safe welcome dialog for both demos. */
+.demo-welcome-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(28,42,40,.14);padding:14px 18px;box-sizing:border-box;backdrop-filter:blur(2px)}
+.demo-welcome-dialog{position:relative;width:min(930px,100%);max-height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;background:#fff;border-radius:17px;padding:30px 30px 26px!important;text-align:left;color:#344741;box-shadow:0 16px 52px rgba(21,41,40,.16);font-family:inherit}
+.demo-welcome-dialog h2{font-size:clamp(22px,2.15vw,29px);line-height:1.2;font-weight:750;color:#12352d;text-align:center;margin:0 34px 13px}
+.demo-welcome-dialog p{font-size:clamp(14px,1.25vw,16px);line-height:1.43;margin:9px 0;color:#52615e}
+.demo-welcome-dialog strong{color:#087e66;font-weight:750}
+.demo-welcome-example{background:#e9faf3;color:#173d34;border-radius:9px;padding:12px 17px;font-size:clamp(16px,1.5vw,18px);font-weight:700;line-height:1.35;margin:12px 0}
+.demo-welcome-divider{border-top:1px solid #e7eeeb;margin:12px 0 13px}
+.demo-welcome-dialog h3{font-size:17px;color:#23433a;margin:0 0 6px;font-weight:750}
+.demo-welcome-close{position:absolute;top:11px;right:14px;border:0;background:transparent;font-size:25px!important;line-height:1;color:#52615e;cursor:pointer;padding:4px 7px}
+.demo-welcome-footer{display:flex;justify-content:center;margin-top:14px}
+.demo-welcome-start{display:inline-flex;justify-content:center;align-items:center;min-width:148px;min-height:40px;background:#009b82;color:#fff!important;border-radius:8px;font-size:15px;font-weight:700;text-decoration:none;padding:0 18px}
+.demo-welcome-start:hover{background:#007e6b}
+@media(max-width:650px){.demo-welcome-overlay{padding:10px}.demo-welcome-dialog{max-height:calc(100dvh - 20px);padding:22px 17px 18px}.demo-welcome-dialog h2{margin:0 24px 12px;font-size:22px}.demo-welcome-dialog p{font-size:14px}.demo-welcome-example{font-size:15px;padding:11px 13px}}
+@media(max-height:570px){.demo-welcome-overlay{padding:8px}.demo-welcome-dialog{max-height:calc(100dvh - 16px)}}

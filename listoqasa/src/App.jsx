@@ -39,6 +39,7 @@ import OwnerPlansPage from "./pages/OwnerPlans/OwnerPlansPage";
 import AgentDeveloperPlansPage from "./pages/AgentDeveloperPlans/AgentDeveloperPlansPage";
 import VacationRentalPlansPage from "./pages/VacationRentalPlans/VacationRentalPlansPage";
 import AiHelpPricingPage from "./pages/AiHelpPricing/AiHelpPricingPage";
+import ListoQasaRealEstateDemo from './pages/demo/ListoQasaRealEstateDemo';
 function LegacyPropertyRedirect(){const [params]=useSearchParams();const id=params.get("id");return <Navigate replace to={id?`/property/${encodeURIComponent(id)}`:"/"}/>;}
 function UrlLanguageSync() {
   const { pathname, search, hash } = useLocation();
@@ -156,6 +157,7 @@ export default function App() {
         <Route path="/ai-help" element={<AiCrmPage />} />
         <Route path="/ai-help/pricing" element={<AiHelpPricingPage />} />
         <Route path="/es-ec/ai-help/pricing" element={<AiHelpPricingPage />} />
+        <Route path="/real-estate/demo" element={<ListoQasaRealEstateDemo />} />
         <Route path="/help" element={<HelpCenterPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/about-us" element={<AboutPage />} />

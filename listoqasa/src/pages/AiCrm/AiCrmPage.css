@@ -557,3 +557,34 @@
   .lq-ai-page .lq-ai-hero .lq-ai-primary-btn { min-height: 58px; padding: 0 22px; font-size: 16px; }
   .lq-ai-page .lq-ai-chat-float { width: 120px !important; bottom: -8%; }
 }
+
+/* Real Estate CRM demo CTA: external link only, no customer data access. */
+.lq-ai-page .lq-ai-hero-actions {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.lq-ai-page .lq-ai-hero .lq-ai-demo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 55px;
+  padding: 0 20px;
+  border: 2px solid #6734ee;
+  border-radius: 10px;
+  color: #6332e9;
+  background: #fff;
+  font-size: 19px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+.lq-ai-page .lq-ai-hero .lq-ai-demo-btn:hover,
+.lq-ai-page .lq-ai-hero .lq-ai-demo-btn:focus-visible {
+  background: #f5f1ff;
+}
+@media (max-width: 650px) {
+  .lq-ai-page .lq-ai-hero-actions { flex-direction: column; align-items: stretch; }
+  .lq-ai-page .lq-ai-hero-actions > a { width: 100%; min-height: 58px; font-size: 16px; }
+}

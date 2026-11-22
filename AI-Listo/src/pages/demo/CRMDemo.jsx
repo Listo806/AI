@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import DemoWelcomePopup from './DemoWelcomePopup';
 import { Link } from 'react-router-dom';
 import './crm-demo.css';
 import InsuranceDemo from './InsuranceDemo';
@@ -115,7 +116,7 @@ function IntegrationsDemo({onConnect,onCustom}) {
   <footer className="demo-custom-integration"><div className="demo-eyebrow">CUSTOM INTEGRATIONS</div><h2>Don’t see the tool you need?</h2><p>Explore a custom integration workflow.</p><button className="demo-primary" type="button" onClick={onCustom}>Preview integration request</button></footer>
  </div>;
 }
-export default function CRMDemo(){
+export default function CRMDemo({realEstate=false}){
   const [page,setPage]=useState('Dashboard'),[tab,setTab]=useState('Policies'),[collapsed,setCollapsed]=useState(false),[mobile,setMobile]=useState(false);
   const [leads,setLeads]=useState(people),[deals,setDeals]=useState(initialDeals),[policies,setPolicies]=useState(initialPolicies),[chats,setChats]=useState(initialChats),[appointments,setAppointments]=useState(initialAppointments);
   const [active,setActive]=useState(1),[search,setSearch]=useState(''),[draft,setDraft]=useState(''),[note,setNote]=useState(''),[notes,setNotes]=useState({}),[question,setQuestion]=useState(''),[answer,setAnswer]=useState(''),[modal,setModal]=useState(''),[goal,setGoal]=useState('Capture and qualify leads'),[steps,setSteps]=useState([]),[settingsTab,setSettingsTab]=useState('Notifications'),[toggles,setToggles]=useState({}),[toast,setToast]=useState(''),[view,setView]=useState('Board');
@@ -155,7 +156,7 @@ export default function CRMDemo(){
   const filtered=leads.filter(x=>[x.name,x.company,x.status].join(' ').toLowerCase().includes(search.toLowerCase()));
   const btn=(text,fn,primary=false)=><button type="button" className={primary?'demo-primary':'demo-btn'} onClick={fn}>{text}</button>;
   const header=(title,desc,actions)=><div className="demo-heading"><div><h1>{title}</h1><p>{desc}</p></div><div className="demo-actions">{actions}</div></div>;
-  return <div className="demo-root"><div className="demo-ribbon"><span><b>INTERACTIVE DEMO</b> · Sample data · Changes reset on refresh</span><div>{btn('Reset demo',reset)}{btn('Full screen',()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.();})}<Link to="/">Exit demo</Link></div></div><div className="demo-shell">
+  return <div className="demo-root"><DemoWelcomePopup realEstate={realEstate} /><div className="demo-ribbon"><span><b>INTERACTIVE DEMO</b> · Sample data · Changes reset on refresh</span><div>{btn('Reset demo',reset)}{btn('Full screen',()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.();})}<Link to="/">Exit demo</Link></div></div><div className="demo-shell">
     <aside className={'demo-sidebar '+(collapsed?'collapsed ':'')+(mobile?'mobile-open':'')}><div className="demo-logo"><span>◈</span><div><strong>CORTEXA</strong><small>— AGENTIC CRM —</small></div></div><button className="demo-collapse" onClick={()=>setCollapsed(x=>!x)} aria-label="Collapse sidebar">{collapsed?'»':'«'}</button><nav>{nav.map(([name,icon])=><button key={name} className={page===name?'active':''} onClick={()=>go(name)}><span className="demo-navicon"><SidebarIcon name={icon}/></span><span className="demo-navlabel">{name}</span></button>)}</nav></aside>
     <div className="demo-main"><div className="demo-userbar"><button className="demo-mobile-menu" onClick={()=>setMobile(x=>!x)}>☰ Menu</button><span>◎ EN　 <b className="demo-avatar">A</b></span></div><main className="demo-content">{toast&&<div className="demo-toast">{toast} <button onClick={()=>setToast('')}>×</button></div>}
     {page==='Dashboard'&&<InsuranceDemo/>}
