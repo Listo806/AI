@@ -61,3 +61,40 @@
 .market-watch-dropdown .picker-foot{padding:10px 12px;font-size:10px}
 @media(max-width:480px){.market-picker.market-watch-dropdown{width:calc(100vw - 20px);right:10px;top:58px;max-height:calc(100dvh - 70px)}.market-watch-dropdown .picker-tabs button{font-size:10px}}
 .market-picker.indicator-dropdown{background:#fff!important;color:#263640!important;border:1px solid #d1d8dc!important;width:340px!important;max-width:calc(100vw - 16px)!important;box-shadow:0 8px 28px #0005!important}.market-picker.market-watch-dropdown{width:365px!important}.market-picker .picker-head{padding:12px!important;border-color:#e3e8eb!important}.market-picker .picker-head small,.market-picker .picker-description{display:none!important}.market-picker h2{color:#263640!important;font-size:16px!important}.market-picker .picker-search{background:#f1f4f6!important;color:#263640!important;border:1px solid #d4dce1!important;box-sizing:border-box!important;width:calc(100% - 20px)!important;margin:8px 10px!important}.market-picker .picker-tabs{background:white!important;flex-wrap:wrap!important;gap:2px!important;padding:4px 8px!important}.market-picker .picker-tabs button,.market-picker button{color:#34454e!important;background:transparent!important;border-color:transparent!important}.market-picker .picker-tabs button.selected,.cx-quote-row.selected{background:#e4f4ed!important}.market-picker .picker-list{background:#fff!important;color:#263640!important;padding:5px 8px!important}.market-picker .indicator-category summary{background:#edf0f2!important;color:#263640!important}.market-picker .indicator-add-row,.market-picker .compact-indicator-row{background:white!important;color:#263640!important;border-bottom:1px solid #e9ecee!important}.market-picker .compact-indicator-name{color:#263640!important}.market-picker .indicator-add-row{display:flex!important;justify-content:space-between!important}.market-picker .picker-foot{background:#f5f7f8!important;color:#63747e!important;border-color:#e3e8eb!important}.cx-quote-row{display:grid;grid-template-columns:minmax(0,1fr) 70px 70px 22px 22px;align-items:center;gap:3px;min-height:31px;border-bottom:1px solid #edf0f2;font-size:11px}.cx-quote-row button{min-width:0;padding:3px!important;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cx-quote-value{text-align:right;font-variant-numeric:tabular-nums}.cx-quote-head{color:#77858e;font-size:10px}.cx-quote-row button:disabled{opacity:.3}.rsi-header .indicator-box[hidden]{display:none!important}
+
+#chartIndicatorControls{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;display:flex!important;flex-wrap:nowrap!important;gap:4px!important;overflow:visible!important;justify-content:space-between!important;align-items:center!important}
+.chart-header-collapsed>#chartIndicatorControls,.chart-embedded #chartIndicatorControls{display:none!important}
+#chartIndicatorControls .chart-navigation,#chartIndicatorControls .actions{display:flex!important;align-items:center;flex-wrap:nowrap!important;flex:0 0 auto!important;min-width:0!important;width:max-content!important;gap:3px!important;margin:0!important;white-space:nowrap}
+#chartIndicatorControls .actions button{padding:4px!important;font-size:11px!important;min-width:0!important;white-space:nowrap}
+#chartIndicatorControls .timeframes{flex-wrap:nowrap!important;gap:0!important}
+#chartIndicatorControls .timeframes button{padding:4px 3px!important;min-width:20px!important;font-size:11px!important}
+#chartIndicatorControls #cxActiveQuote{display:flex!important;flex-direction:column!important;align-items:flex-start!important;line-height:1.1!important;min-width:0!important;margin:0 3px!important;font-size:13px!important}
+#chartIndicatorControls #cxActiveQuote small{display:block!important;font-size:9px!important;font-weight:400!important}
+#chartIndicatorControls .chart-styles{display:flex!important;flex:0 0 auto!important;gap:2px!important;border:0!important;background:transparent!important;overflow:visible!important;width:auto!important}
+#chartIndicatorControls .chart-styles button{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:23px!important;height:26px!important;flex:0 0 23px!important;padding:2px!important;background:transparent!important;border:0!important;box-shadow:none!important;color:#aebcc6!important}
+#chartIndicatorControls .chart-styles button.active{color:#54d9bb!important}
+#chartIndicatorControls .chart-styles svg{display:block!important;width:19px!important;height:19px!important;flex:none!important;fill:none;stroke:currentColor;stroke-width:1.5;pointer-events:none}
+.cx43-menu{position:relative;flex:none;font:11px system-ui}.cx43-menu[hidden]{display:none!important}.cx43-menu summary{cursor:pointer;border:1px solid #34465a;border-radius:4px;background:#172532;color:#e4edf4;padding:6px;white-space:nowrap;list-style:none}.cx43-menu summary::-webkit-details-marker{display:none}.cx43-menu summary:after{content:' ▾'}
+#chartIndicatorControls .cx43-menu>div{position:absolute;top:calc(100% + 4px);left:0;z-index:100;background:#fff;color:#263640;border:1px solid #d3dce1;border-radius:5px;padding:5px;box-shadow:0 5px 14px #0008;width:max-content;max-width: min(280px,80vw);gap:4px!important}
+#chartIndicatorControls .cx43-menu:not([open])>div{display:none!important}
+#chartIndicatorControls .cx43-history[open]>.history-ranges{display:grid!important;grid-template-columns:repeat(4,1fr)}
+#chartIndicatorControls .cx43-history .history-ranges button{background:#fff!important;color:#263640!important;border:0!important;padding:8px!important}
+#chartIndicatorControls .cx43-history .history-ranges button:hover{background:#e5f2ed!important}
+#chartIndicatorControls .cx43-period>summary{display:none}
+#chartIndicatorControls .cx43-period>.timeframes{display:flex!important;position:static;background:none;border:0;box-shadow:none;padding:0;max-width:none}
+#chartIndicatorControls.cx43-compact .cx43-period>summary{display:block}
+#chartIndicatorControls.cx43-compact .cx43-period:not([open])>.timeframes{display:none!important}
+#chartIndicatorControls.cx43-compact .cx43-period[open]>.timeframes{position:absolute;flex-wrap:wrap!important;background:#172532}
+#chartIndicatorControls .cx43-more>div{left:auto;right:0;background:#14232e; border-color:#456477;flex-wrap:wrap!important}
+#chartIndicatorControls .cx43-more[open]>div{display:flex!important}
+@media(max-width:480px){#chartIndicatorControls{flex-wrap:wrap!important;justify-content:flex-start!important}}
+
+/* Toolbar44: preserve quick periods at desktop widths and keep icon geometry. */
+#chartIndicatorControls .cx43-period:not([open])>.timeframes{display:flex!important}
+#chartIndicatorControls.cx43-compact .cx43-period:not([open])>.timeframes{display:none!important}
+#chartIndicatorControls .chart-styles button svg{min-width:19px!important;max-width:19px!important;stroke:currentColor!important}
+#chartIndicatorControls .chart-styles button[aria-pressed="true"]{color:#54d9bb!important}
+#chartIndicatorControls .chart-styles button{min-width:23px!important}
+#chartIndicatorControls .cx43-more .cx43-panel{display:flex;align-items:center}
+#chartIndicatorControls .cx43-more:not([open])>.cx43-panel{display:none!important}
+#chartIndicatorControls .cx43-period[open]>.timeframes{z-index:101}
