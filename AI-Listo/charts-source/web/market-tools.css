@@ -380,7 +380,7 @@ html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;whi
 /* Mobile reference restoration: show full MTF, oscillator and study names on unified black. */
 @media(max-width:760px){
  html.cx-mobile-chart .chart-mtf-panel{display:block!important;visibility:visible!important;opacity:1!important;z-index:35!important;background:#000!important;border:0!important;box-shadow:none!important;overflow:visible!important;}
- html.cx-mobile-chart #chartMTFGrid{display:table!important;visibility:visible!important;background:#000!important;}
+ html.cx-mobile-chart #chartMTFGrid{visibility:visible!important;background:#000!important;}
  html.cx-mobile-chart #chartMTFGrid tbody{display:table-row-group!important;}
  html.cx-mobile-chart #chartMTFGrid tr{display:table-row!important;}
  html.cx-mobile-chart #chartMTFGrid td{visibility:visible!important;}
