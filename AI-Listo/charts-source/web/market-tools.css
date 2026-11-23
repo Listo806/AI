@@ -203,3 +203,19 @@ html.cx-mobile-chart .cx-mobile-bottom{order:100!important}
    position:relative!important;z-index:9!important;
  }
 }
+
+/* Desktop: place the zoom pair in the middle of the free History-to-Market
+   space, as in the approved reference; leave all existing click handlers intact. */
+@media (min-width:761px) {
+  html:not(.chart-embedded):not(.multi-chart-mode) article > #chartIndicatorControls {
+    position:relative!important;
+  }
+  html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls #chartGapZoom.chart-gap-zoom {
+    position:absolute!important;
+    left:38%!important;
+    top:50%!important;
+    transform:translate(-50%,-50%)!important;
+    margin:0!important;
+    z-index:12!important;
+  }
+}
