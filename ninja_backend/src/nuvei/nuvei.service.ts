@@ -1037,18 +1037,15 @@ export class NuveiService {
     const requestedKey = String(input.planKey || '').trim().toLowerCase();
     const plan = requestedKey === 'ecommerce' ? await this.ecommercePlan() : this.plan(requestedKey);
     const productKey = plan.key === 'ecommerce' ? 'ecommerce' : 'agentic';
-    const billingCycle = productKey === 'ecommerce' ? String(input.billingCycle || 'monthly').toLowerCase() : 'monthly';
-    if (plan.key === 'listoqasa' && input.billingCycle && input.billingCycle !== 'monthly') {
-      throw new BadRequestException('ListoQasa Agentic CRM currently supports monthly billing only.');
-    }
+    const billingCycle = (productKey === 'ecommerce' || plan.key === 'listoqasa') ? String(input.billingCycle || 'monthly').toLowerCase() : 'monthly';
     if (!['monthly','annual'].includes(billingCycle)) throw new BadRequestException('Invalid billing cycle.');
     const user = await this.userRow(input.userId);
 
     // Nuvei's documented staging cards for 3DS require a specific order
     // description + amount ("3DS Challenge" 151 / "3DS FrictionLess" >=150).
     // Honored ONLY on the staging gateway so the challenge screen can be tested.
-    let activationAmount = productKey === 'ecommerce' && billingCycle === 'annual' ? 3804 : plan.activation;
-    let activationDescription = plan.key === 'listoqasa' ? 'ListoQasa Agentic CRM first monthly payment' : plan.key === 'ecommerce' ? `Cortexa ${plan.label} ${billingCycle} subscription` : `Cortexa ${plan.label} activation`;
+    let activationAmount = productKey === 'ecommerce' && billingCycle === 'annual' ? 3804 : plan.key === 'listoqasa' && billingCycle === 'annual' ? 1219.20 : plan.activation;
+    let activationDescription = plan.key === 'listoqasa' ? `ListoQasa Agentic CRM first ${billingCycle} payment` : plan.key === 'ecommerce' ? `Cortexa ${plan.label} ${billingCycle} subscription` : `Cortexa ${plan.label} activation`;
     const scenario = String(input.testScenario || '').trim().toLowerCase();
     if (scenario && this.client.environment() === 'staging') {
       if (scenario === '3ds_challenge') {
@@ -1158,7 +1155,7 @@ export class NuveiService {
         productKey,
         plan.provisionPlan,
         activationAmount,
-        productKey === 'ecommerce' && billingCycle === 'annual' ? 3804 : plan.monthly,
+        productKey === 'ecommerce' && billingCycle === 'annual' ? 3804 : plan.key === 'listoqasa' && billingCycle === 'annual' ? 1219.20 : plan.monthly,
         cardId,
         dev_reference,
         input.consentIp || null,
@@ -3794,7 +3791,7 @@ export class NuveiService {
     nextBilling: Date | null;
   } | null> {
     const { rows } = await client.query(
-      `SELECT id, plan_key, provision_plan, status
+      `SELECT id, plan_key, provision_plan, status, billing_cycle
          FROM nuvei_subscriptions
         WHERE user_id=$1 AND status='verification_pending'
         ORDER BY created_at DESC
@@ -3811,7 +3808,7 @@ export class NuveiService {
     const trialEnd = plan.trialDays > 0
       ? new Date(now.getTime() + plan.trialDays * 24 * 60 * 60 * 1000)
       : null;
-    const nextBilling = trialEnd || new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+    const nextBilling = trialEnd || this.addMonths(now, sub.billing_cycle === 'annual' ? 12 : 1);
 
     const promoted = await client.query(
       `UPDATE nuvei_subscriptions

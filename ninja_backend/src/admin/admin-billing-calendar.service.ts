@@ -112,11 +112,11 @@ export class AdminBillingCalendarService {
     if (annual) {
       if (['team', 'business'].includes(p)) return 3331.2;
       if (['growth', 'scale'].includes(p)) return 4771.2;
-      if (p === 'solo') return 1891.2;
+      if (p === 'solo') return 1219.2;
     }
     if (['team', 'business'].includes(p)) return 347;
     if (['growth', 'scale'].includes(p)) return 497;
-    if (p === 'solo') return 197;
+    if (p === 'solo') return 127;
     return 0;
   }
 
@@ -209,10 +209,10 @@ export class AdminBillingCalendarService {
         `SELECT COALESCE(SUM(CASE
                   WHEN LOWER(COALESCE(u.billing_cycle,'')) = 'annual' AND LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('business','team') THEN 3331.20
                   WHEN LOWER(COALESCE(u.billing_cycle,'')) = 'annual' AND LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('scale','growth') THEN 4771.20
-                  WHEN LOWER(COALESCE(u.billing_cycle,'')) = 'annual' AND LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 1891.20
+                  WHEN LOWER(COALESCE(u.billing_cycle,'')) = 'annual' AND LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 1219.20
                   WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('business','team') THEN 347
                   WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('scale','growth') THEN 497
-                  WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 197
+                  WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 127
                   ELSE 0 END),0)::float AS value
            FROM subscriptions s
            LEFT JOIN LATERAL (
@@ -271,10 +271,10 @@ export class AdminBillingCalendarService {
                 COALESCE(SUM(CASE
                   WHEN LOWER(COALESCE(u.billing_cycle,'')) = 'annual' AND LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('business','team') THEN 3331.20
                   WHEN LOWER(COALESCE(u.billing_cycle,'')) = 'annual' AND LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('scale','growth') THEN 4771.20
-                  WHEN LOWER(COALESCE(u.billing_cycle,'')) = 'annual' AND LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 1891.20
+                  WHEN LOWER(COALESCE(u.billing_cycle,'')) = 'annual' AND LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 1219.20
                   WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('business','team') THEN 347
                   WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('scale','growth') THEN 497
-                  WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 197
+                  WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 127
                   ELSE 0 END),0)::float AS expected_amount
            FROM subscriptions s
            LEFT JOIN LATERAL (
@@ -441,10 +441,10 @@ export class AdminBillingCalendarService {
                 CASE
                   WHEN LOWER(COALESCE(billing_cycle,''))='annual' AND LOWER(COALESCE(plan,'')) IN ('business','team') THEN 3331.20
                   WHEN LOWER(COALESCE(billing_cycle,''))='annual' AND LOWER(COALESCE(plan,'')) IN ('scale','growth') THEN 4771.20
-                  WHEN LOWER(COALESCE(billing_cycle,''))='annual' AND LOWER(COALESCE(plan,''))='solo' THEN 1891.20
+                  WHEN LOWER(COALESCE(billing_cycle,''))='annual' AND LOWER(COALESCE(plan,''))='solo' THEN 1219.20
                   WHEN LOWER(COALESCE(plan,'')) IN ('business','team') THEN 347
                   WHEN LOWER(COALESCE(plan,'')) IN ('scale','growth') THEN 497
-                  WHEN LOWER(COALESCE(plan,'')) = 'solo' THEN 197
+                  WHEN LOWER(COALESCE(plan,'')) = 'solo' THEN 127
                   ELSE 0 END END),0)::float AS amount
          FROM day_rows
         GROUP BY billing_status`,
@@ -507,7 +507,7 @@ export class AdminBillingCalendarService {
               COALESCE(SUM(CASE
                 WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('business','team') THEN 347
                 WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) IN ('scale','growth') THEN 497
-                WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 197
+                WHEN LOWER(COALESCE(u.selected_plan,u.plan,'')) = 'solo' THEN 127
                 ELSE 0 END),0)::float AS "expectedAmount"
          FROM subscriptions s
          LEFT JOIN LATERAL (

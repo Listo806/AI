@@ -207,13 +207,14 @@ export default function StartTrial() {
 
   const cameFromPricing = searchParams.get("from") === "pricing";
   const isRealEstateCrm = searchParams.get("workspace") === "real-estate" && pendingPlanIntent === "solo";
+  const signupSource = "trial"; // Ecuador checkout uses this exact value to apply the trial activation fee.
 
   const isFreeAccessFlow =
     searchParams.get("flow") === "free-access" ||
     searchParams.get("plan") === "free";
   // Capture the actual site language the visitor is registering in (URL version
   // first), not just a possibly-stale localStorage value.
-  const [lang] = useState(() => currentSiteLanguage());
+  const [lang] = useState(() => routePrefix === "/es-ec" || routePrefix === "/es" ? "es" : routePrefix === "/pt" ? "pt" : currentSiteLanguage());
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -390,7 +391,7 @@ export default function StartTrial() {
             validPendingPlan,
           )}&billing=${encodeURIComponent(
             registrationBilling || "monthly",
-          )}&source=trial`,
+          )}&source=${encodeURIComponent(signupSource)}${isRealEstateCrm ? "&workspace=real-estate&origin=listoqasa_real_estate_crm" : ""}`,
           {
             replace: true,
           },

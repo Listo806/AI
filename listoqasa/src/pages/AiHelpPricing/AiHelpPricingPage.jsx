@@ -46,7 +46,7 @@ export default function AiHelpPricingPage() {
           </header>
           <section className="lq-ai-single-card" aria-label={c.title}>
             <h2>{c.heading}</h2>
-            <div className="lq-ai-reference-included"><span>✓ &nbsp; 1 Workspace Included</span><span>♙ &nbsp; 1 User Included</span></div>
+            <div className="lq-ai-reference-included"><span>✓ &nbsp; {lang === "es" ? "1 espacio de trabajo incluido" : lang === "pt" ? "1 workspace incluído" : "1 Workspace Included"}</span><span>♙ &nbsp; {lang === "es" ? "1 usuario incluido" : lang === "pt" ? "1 usuário incluído" : "1 User Included"}</span></div>
             <div className="lq-ai-single-price"><strong>${formatPrice(price)}</strong><span>{c.perMonth}</span></div>
             {annual && <p className="lq-ai-single-year">${formatPrice(1219.20)} {c.year}</p>}
             <a className="lq-ai-single-cta" href={href}>{c.cta}</a>
@@ -58,7 +58,7 @@ export default function AiHelpPricingPage() {
               ))}
             </div>
           </section>
-          <p className="lq-ai-reference-extra">Additional team members: $97/user/month</p>
+          <p className="lq-ai-reference-extra">{lang === "es" ? "Usuarios adicionales: $97/usuario/mes" : lang === "pt" ? "Usuários adicionais: $97/usuário/mês" : "Additional team members: $97/user/month"}</p>
         </div>
       </main>
     </>

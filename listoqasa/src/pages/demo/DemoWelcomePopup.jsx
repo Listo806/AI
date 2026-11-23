@@ -5,9 +5,11 @@ import './demo-welcome-popup.css';
 /** A visit is one mounted demo session; refresh starts a new visit. */
 export default function DemoWelcomePopup({ realEstate = false, signupUrl }) {
   const { i18n } = useTranslation();
-  const language = (i18n.resolvedLanguage || i18n.language || 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
+  const language = (window.location.pathname.startsWith("/es") || new URLSearchParams(window.location.search).get("lang") === "es" || (i18n.resolvedLanguage || i18n.language || "en").toLowerCase().startsWith("es")) ? "es" : "en";
   const es = language === 'es';
-  const signup = (realEstate ? `https://www.cortexaaicrm.com/${es ? 'es-ec/' : ''}trial?from=pricing&plan=solo&billing=monthly&workspace=real-estate&source=listoqasa` : `https://www.cortexaaicrm.com/${es ? 'es-ec/' : ''}trial?flow=free-access&plan=free`);
+  const params = new URLSearchParams(window.location.search);
+  const billing = params.get('billing') === 'annual' || (params.get('billing') !== 'monthly' && window.sessionStorage.getItem('listoqasaCrmBilling') === 'annual') ? 'annual' : 'monthly';
+  const signup = (realEstate ? `https://www.cortexaaicrm.com/${es ? 'es-ec/' : ''}trial?from=pricing&plan=solo&billing=${billing}&workspace=real-estate&source=listoqasa` : `https://www.cortexaaicrm.com/${es ? 'es-ec/' : ''}trial?flow=free-access&plan=free`);
   const [open, setOpen] = useState(false);
   const shown = useRef(false);
   const timer = useRef(null);

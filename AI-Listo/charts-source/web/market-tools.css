@@ -157,7 +157,7 @@ html.cx-mobile-chart .cx-mobile-bottom{order:100!important}
 @media (min-width: 761px) {
     html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls #chartGapZoom.chart-gap-zoom {
         position: absolute !important;
-        left: 41% !important;
+        left: 40% !important;
         top: 50% !important;
         transform: translate(-50%, -50%) !important;
         margin: 0 !important;
