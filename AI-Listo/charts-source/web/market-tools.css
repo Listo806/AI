@@ -349,3 +349,30 @@ html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;whi
  html.cx-mobile-chart .chart-shell>.chart-footer{background:#000!important;border:0!important;box-shadow:none!important;}
  html.cx-mobile-chart .cx-mobile-bottom{border:0!important;box-shadow:none!important;}
 }
+
+/* Mobile PWA: unify all chart surfaces into true black. Desktop untouched. */
+@media(max-width:760px){
+ html.cx-mobile-chart,html.cx-mobile-chart body,html.cx-mobile-chart main,
+ html.cx-mobile-chart article,html.cx-mobile-chart .chart-shell,
+ html.cx-mobile-chart .canvas-wrap,html.cx-mobile-chart .rsi-header,
+ html.cx-mobile-chart #priceChart,html.cx-mobile-chart #rsiChart,
+ html.cx-mobile-chart .cx-mobile-rsi-time-axis,
+ html.cx-mobile-chart .cx-mobile-bottom,html.cx-mobile-chart .cx-mobile-chrome,
+ html.cx-mobile-chart .cx-mobile-tools,html.cx-mobile-chart .cx-mobile-quote {
+  background:#000!important;background-image:none!important;box-shadow:none!important;
+ }
+ html.cx-mobile-chart .chart-shell,html.cx-mobile-chart .canvas-wrap,
+ html.cx-mobile-chart .rsi-header,html.cx-mobile-chart .cx-mobile-rsi-time-axis,
+ html.cx-mobile-chart .cx-mobile-bottom,html.cx-mobile-chart .cx-mobile-quote {
+  border:0!important;border-radius:0!important;outline:0!important;
+ }
+ html.cx-mobile-chart .rsi-header{border-top:0!important;border-bottom:0!important;}
+ html.cx-mobile-chart .cx-mobile-rsi-time-axis:not([hidden]){border:0!important;}
+ html.cx-mobile-chart .cx-mobile-bottom{border-top:0!important;}
+ html.cx-mobile-chart .chart-shell>.rsi-header label,
+ html.cx-mobile-chart .chart-shell>.rsi-header .indicator-box,
+ html.cx-mobile-chart .chart-shell>.rsi-header .aa-settings{background:#000!important;border:0!important;box-shadow:none!important;}
+ html.cx-mobile-chart .cx-mobile-tools>.cx-mobile-button,
+ html.cx-mobile-chart .cx-mobile-tools>.cx-mobile-frame,
+ html.cx-mobile-chart .cx-mobile-menu>summary{background:#000!important;box-shadow:none!important;}
+}
