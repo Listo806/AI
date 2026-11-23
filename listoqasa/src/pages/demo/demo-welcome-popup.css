@@ -1,7 +1,7 @@
 /* Compact, viewport-safe welcome dialog for both demos. */
 .demo-welcome-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(28,42,40,.14);padding:14px 18px;box-sizing:border-box;backdrop-filter:blur(2px)}
 .demo-welcome-dialog{position:relative;width:min(710px,100%);max-height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;background:#fff;border-radius:17px;padding:24px 30px 24px!important;text-align:left;color:#344741;box-shadow:0 16px 52px rgba(21,41,40,.16);font-family:inherit}
-.demo-welcome-dialog h2{font-size:clamp(22px,2.15vw,29px);line-height:1.2;font-weight:750;color:#12352d;text-align:center;margin:0 34px 15px}
+.demo-welcome-dialog h2{font-size:clamp(22px,2.15vw,29px);line-height:1.2;font-weight:750;color:#12352d;text-align:center;margin:0 89px 15px}
 .demo-welcome-dialog p{font-size:clamp(14px,1.25vw,16px);line-height:1.43;margin:11px 0;color:#52615e}
 .demo-welcome-dialog strong{color:#087e66;font-weight:750}
 .demo-welcome-example{background:#e9faf3;color:#173d34;border-radius:9px;padding:12px 17px;font-size:clamp(16px,1.5vw,18px);font-weight:700;line-height:1.35;margin:14px 0}
