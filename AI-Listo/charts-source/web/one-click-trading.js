@@ -36,7 +36,7 @@
  }
  window.addEventListener('cortexa-one-click-quote',syncPrices);
  syncPrices();
- volume.append(down,input,up);panel.append(sell,buy,volume);
+ volume.append(down,input,up);panel.append(sell,volume,buy);
  // In the single workspace the chart canvas overlaps the header. Mount the
  // order controls at article level so the header cannot paint over them.
  const host=embedded?wrap:document.querySelector('article');
