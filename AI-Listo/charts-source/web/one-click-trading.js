@@ -22,6 +22,16 @@
   button.onkeyup=stopHold;button.onblur=stopHold;
  }
  window.addEventListener('pointerup',stopHold);window.addEventListener('blur',stopHold);document.addEventListener('visibilitychange',()=>{if(document.hidden)stopHold();});
+ // Prices are informational while the trade buttons are disabled.
+ function syncPrices(){
+  const quote=window.CortexaOneClickQuote?.();
+  for(const [button,value] of [[sell,quote?.bid],[buy,quote?.ask]]){
+   const display=button.querySelector('.one-click-price');
+   display.textContent=Number.isFinite(value)?value.toFixed(quote?.digits??(value>=100?3:5)):'—';
+  }
+ }
+ window.addEventListener('cortexa-one-click-quote',syncPrices);
+ syncPrices();
  volume.append(down,input,up);panel.append(sell,buy,volume);
  // In the single workspace the chart canvas overlaps the header. Mount the
  // order controls at article level so the header cannot paint over them.

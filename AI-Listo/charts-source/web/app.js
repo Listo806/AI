@@ -16,6 +16,18 @@ try{const saved=JSON.parse(ChartStorage.getItem('market-history-biquote-v1')||'[
 function saveHistoryBackup(k,entry){try{const entries=JSON.parse(ChartStorage.getItem('market-history-biquote-v1')||'[]').filter(([key])=>key!==k);entries.push([k,entry]);ChartStorage.setItem('market-history-biquote-v1',JSON.stringify(entries.slice(-12)));}catch{}}
 
 const liveQuotes = new Map();
+// Read-only prices for the mobile one-click strip. Trading stays disabled until
+// an account is connected; the displayed bid/ask come from the live quote feed.
+window.CortexaOneClickQuote = () => {
+ const market = markets[selected];
+ const quote = market && liveQuotes.get(market.symbol);
+ if (!quote || !Number.isFinite(quote.price) || quote.price <= 0) return null;
+ const bid = Number.isFinite(quote.bid) && quote.bid > 0 ? quote.bid : quote.price;
+ const ask = Number.isFinite(quote.ask) && quote.ask > 0 ? quote.ask : quote.price;
+ return { symbol: market.symbol, bid, ask, digits: market.symbol.includes('JPY') ? 3 : undefined };
+};
+function notifyOneClickQuote(){ window.dispatchEvent(new Event('cortexa-one-click-quote')); }
+
 const verticalScales={price:{factor:1,center:null},rsi:{factor:2,center:50}};
 // v112 reference: a fixed price mapping while wheel-navigating history.
 let wheelFlowerBase=null, wheelFlowerSpan=null;
@@ -585,6 +597,7 @@ function updateLiveQuoteLabels() {
     status.title=(day?'Change from the feed’s daily opening price, in '+(markets[index].symbol.includes('/')?markets[index].symbol.slice(-3):'price units')+'. ':'Daily change unavailable. ')+(stale?'Stale quote. ':'')+'Quote at '+new Date(quote.timestamp).toISOString();
     button.title = quote.source + ' · ' + new Date(quote.timestamp).toISOString();
   });
+  notifyOneClickQuote();
   const quote = liveQuotes.get(markets[selected].symbol);
   if (quote) {
     $('lastPrice').textContent = format(quote.price);
@@ -831,7 +844,7 @@ window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+c
  const terminalHistory=()=>{const t=document.getElementById('tradingTerminal');if(t?.hidden)click('terminalToggle');click('terminal-tab-history');};
  for(const [label,key,fn] of [['Watchlist','watch',market],['Charts','charts',()=>{const t=document.getElementById('tradingTerminal');if(t&&!t.hidden)click('terminalToggle');shell.scrollIntoView({block:'nearest'});}],['Account','account',()=>click('connectTradingAccount')],['History','history',terminalHistory],['Calendar','calendar',()=>click('calendarButton')]]){const b=button(label,key,fn,true);if(key==='charts')b.setAttribute('aria-current','page');bottom.append(b);}article.append(bottom);
  const bar=shell.querySelector('.charts-draw-bar');let openedByMobile=false;if(bar){const more=button('More drawing tools','more',()=>bar.classList.toggle('cx-mobile-expanded'));more.classList.add('cx-mobile-draw-more');bar.append(more);}
- function sync(){if(!mq.matches)return;const m=markets[selected],q=liveQuotes.get(m.symbol),d=q&&dayChange(q.price,q.dayDiffPercent);symbol.textContent=m.symbol+' ▾';price.textContent=q?format(q.price,m.symbol):'—';change.textContent=d?(d.percent>=0?'+':'')+d.percent.toFixed(2)+'%':'—';quote.classList.toggle('negative',!!d&&d.percent<0);tf.value=frame;}
+ function sync(){if(!mq.matches)return;notifyOneClickQuote();const m=markets[selected],q=liveQuotes.get(m.symbol),d=q&&dayChange(q.price,q.dayDiffPercent);symbol.textContent=m.symbol+' ▾';price.textContent=q?format(q.price,m.symbol):'—';change.textContent=d?(d.percent>=0?'+':'')+d.percent.toFixed(2)+'%':'—';quote.classList.toggle('negative',!!d&&d.percent<0);tf.value=frame;}
  function layout(){const active=mq.matches&&!document.documentElement.classList.contains('chart-embedded');document.documentElement.classList.toggle('cx-mobile-chart',active);if(tradingStrip){if(active)chrome.append(tradingStrip);else tradingAnchor.after(tradingStrip);}if(active){const rail=document.getElementById('markets');if(rail)rail.scrollLeft=0;}if(bar){if(active&&bar.hidden){/* Keep drawing tools closed on mobile until requested. */}else if(!active&&openedByMobile){if(!bar.hidden)click('drawingToolsButton');openedByMobile=false;bar.classList.remove('cx-mobile-expanded');}}sync();requestAnimationFrame(()=>draw());}
  const observer=new MutationObserver(sync);observer.observe(document.getElementById('cxActiveQuote'),{childList:true,subtree:true,characterData:true});observer.observe(document.getElementById('chartTicker'),{childList:true,subtree:true});document.addEventListener('click',()=>requestAnimationFrame(sync));mq.addEventListener('change',layout);layout();
  }
