@@ -281,3 +281,17 @@ html.cx-mobile-chart .cx-mobile-bottom{order:100!important}
 .cx-mobile-rsi-time-axis{display:none}
 html.cx-mobile-chart .cx-mobile-rsi-time-axis:not([hidden]){display:block;position:relative;flex:none;order:0;height:27px;min-height:27px;background:#000;color:#dce2e8;border:0;border-top:1px solid #8b9095;margin:0;padding:0;font:12px system-ui,sans-serif;overflow:hidden}
 html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;white-space:nowrap;transform:translateX(-50%);line-height:16px}
+
+/* Mobile reference: compact boxes, centered raised final quote digit, wide lot controls. */
+@media (max-width:760px){
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel{height:54px!important;min-height:54px!important;max-height:54px!important;padding:0 7px!important;align-items:center!important;background:#000!important}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-side{flex:0 0 29%!important;width:29%!important;max-width:29%!important;height:43px!important;min-height:43px!important;position:relative!important;padding:3px 7px!important;justify-content:flex-start!important;align-items:flex-start!important;text-align:left!important;overflow:visible!important;border-width:1.5px!important}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-volume{position:relative!important;left:auto!important;top:auto!important;transform:none!important;flex:1 1 auto!important;width:auto!important;min-width:0!important;height:43px!important;min-height:43px!important;display:flex!important;justify-content:space-between!important;padding:0 4px!important;border-top:1px solid #383838!important;border-bottom:1px solid #383838!important}
+ html.cx-mobile-chart .one-click-volume button{width:27px!important;flex:0 0 27px!important;font-size:22px!important;min-height:36px!important}
+ html.cx-mobile-chart .one-click-volume input{width:55px!important;max-width:65px!important;flex:1 1 auto!important;font-size:18px!important}
+ html.cx-mobile-chart .one-click-side .one-click-side-label{position:relative!important;font-size:11px!important;line-height:13px!important;align-self:flex-start!important}
+ html.cx-mobile-chart .one-click-side .one-click-price{align-self:center!important;text-align:center!important;position:relative!important;top:-2px!important;margin:auto 0 1px!important;font-size:20px!important;line-height:23px!important;letter-spacing:.15px!important;font-variant-numeric:tabular-nums!important}
+ html.cx-mobile-chart .one-click-price .cx-quote-last-digit{display:inline-block;font-size:.61em;line-height:1;vertical-align:super;position:relative;top:2px;margin-left:1px}
+ html.cx-mobile-chart .cx-mobile-quote{background:transparent!important}
+ html.cx-mobile-chart .chart-shell,html.cx-mobile-chart .canvas-wrap{background:#000!important}
+}

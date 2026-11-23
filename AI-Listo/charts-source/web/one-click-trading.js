@@ -27,7 +27,11 @@
   const quote=window.CortexaOneClickQuote?.();
   for(const [button,value] of [[sell,quote?.bid],[buy,quote?.ask]]){
    const display=button.querySelector('.one-click-price');
-   display.textContent=Number.isFinite(value)?value.toFixed(quote?.digits??(value>=100?3:5)):'—';
+   const formatted=Number.isFinite(value)?value.toFixed(quote?.digits??(value>=100?3:5)):'—';
+   // On mobile, raise only the final fractional digit, as in the supplied PWA reference.
+   if(document.documentElement.classList.contains('cx-mobile-chart') && formatted!=='—' && formatted.includes('.')){
+    display.replaceChildren(document.createTextNode(formatted.slice(0,-1)),make('span','cx-quote-last-digit',formatted.slice(-1)));
+   }else display.textContent=formatted;
   }
  }
  window.addEventListener('cortexa-one-click-quote',syncPrices);
