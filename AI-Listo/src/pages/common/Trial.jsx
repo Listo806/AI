@@ -47,7 +47,7 @@ const t = {
       password: "Password",
     },
     continueBtn: "CONTINUE TO CHOOSE YOUR FREE PLAN",
-    freeAccessSubtitle: "Create your Free Forever account.",
+    freeAccessSubtitle: "Create your Agentic CRM account.",
     loadingBtn: "CREATING ACCOUNT...",
     security: "Your information is safe and never shared.",
     errors: {
@@ -70,7 +70,7 @@ const t = {
       password: "Contraseña",
     },
     continueBtn: "CONTINUAR PARA ELEGIR TU PLAN GRATIS",
-    freeAccessSubtitle: "Crea tu cuenta Gratis para Siempre.",
+    freeAccessSubtitle: "Crea tu cuenta de CRM Agéntico.",
     loadingBtn: "CREANDO CUENTA...",
     security: "Tu información está segura y nunca se comparte.",
     errors: {
@@ -93,7 +93,7 @@ const t = {
       password: "Senha",
     },
     continueBtn: "CONTINUAR PARA ESCOLHER SEU PLANO GRÁTIS",
-    freeAccessSubtitle: "Crie sua conta Grátis para Sempre.",
+    freeAccessSubtitle: "Crie sua conta do CRM Agêntico.",
     loadingBtn: "CRIANDO CONTA...",
     security: "Suas informações estão seguras e nunca são compartilhadas.",
     errors: {
@@ -181,13 +181,13 @@ export default function StartTrial() {
   const searchParams = new URLSearchParams(window.location.search);
 
   const pendingPlanIntent = String(
-    localStorage.getItem("pendingPlanIntent") || "",
+    searchParams.get("plan") || localStorage.getItem("pendingPlanIntent") || "",
   )
     .trim()
     .toLowerCase();
 
   const pendingBillingCycle = String(
-    localStorage.getItem("pendingBillingCycle") || "",
+    searchParams.get("billing") || localStorage.getItem("pendingBillingCycle") || "",
   )
     .trim()
     .toLowerCase();
@@ -206,6 +206,7 @@ export default function StartTrial() {
     : null;
 
   const cameFromPricing = searchParams.get("from") === "pricing";
+  const isRealEstateCrm = searchParams.get("workspace") === "real-estate" && pendingPlanIntent === "solo";
 
   const isFreeAccessFlow =
     searchParams.get("flow") === "free-access" ||
@@ -221,7 +222,7 @@ export default function StartTrial() {
     email: "",
     phone: "",
     password: "",
-    workspaceId: "",
+    workspaceId: isRealEstateCrm ? "real-estate" : "",
   });
 
   const tr = t[lang] || t.en;
@@ -287,7 +288,7 @@ export default function StartTrial() {
         plan: registrationPlan,
         billingCycle: registrationBilling,
 
-        source: cameFromPricing ? "pricing_signup" : "free_access",
+        source: isRealEstateCrm ? "listoqasa_real_estate_crm" : cameFromPricing ? "pricing_signup" : "free_access",
 
         language: lang,
 
@@ -450,7 +451,7 @@ export default function StartTrial() {
             <span className="trial-v3-desktop-copy">{tr.title}</span>
             <span className="trial-v3-mobile-copy">{tr.mobileTitle}</span>
           </h1>
-          {isFreeAccessFlow && (
+          {(isFreeAccessFlow || isRealEstateCrm) && (
             <p>
               <span className="trial-v3-desktop-copy">
                 {tr.freeAccessSubtitle}
@@ -557,7 +558,7 @@ export default function StartTrial() {
             </label>
             <div className="trial-v3-workspace-select-wrap">
               <Layers size={26} aria-hidden="true" />
-              <select id="signup-workspace" name="workspaceId" required value={form.workspaceId} onChange={handleChange}>
+              <select id="signup-workspace" name="workspaceId" required value={form.workspaceId} onChange={handleChange} disabled={isRealEstateCrm}>
                 <option value="">{lang === "es" ? "Selecciona un espacio de trabajo" : lang === "pt" ? "Selecione um espaço de trabalho" : "Select a workspace"}</option>
                 {CRM_WORKSPACES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
               </select>

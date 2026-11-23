@@ -30,7 +30,7 @@ export default function AiHelpPricingPage() {
   const c = COPY[lang] || COPY.en;
   const annual = billing === "annual";
   const price = annual ? 101.60 : 127;
-  const href = `https://www.cortexaaicrm.com/${isEcuador ? "es-ec/checkout" : "trial"}?plan=solo&billing=${annual ? "annual" : "monthly"}`;
+  const href = `https://www.cortexaaicrm.com/${lang === "es" ? "es-ec/" : lang === "pt" ? "pt/" : ""}trial?from=pricing&plan=solo&workspace=real-estate&source=listoqasa&billing=${billing}`;
   return (
     <>
       <main className="lq-ai-pricing-page">
