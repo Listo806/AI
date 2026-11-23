@@ -302,3 +302,33 @@ html:not(.chart-embedded):not(.multi-chart-mode) article .canvas-wrap > .legend 
 .chart-shell.osc-pane-absent > #rsiChart {display:none!important;height:0!important;min-height:0!important;border:0!important;padding:0!important}
 .chart-shell.osc-pane-absent > .canvas-wrap{flex:1;min-height:80px}
 .chart-shell.osc-pane-collapsed:not(.osc-pane-absent) .rsi-header #oscPaneToggle{display:inline-flex!important;visibility:visible!important}
+
+/* Desktop market-card/toolbar alignment regression fix (source34).
+   Scoped away from embedded, multi-chart and mobile views. */
+@media (min-width:761px){
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar{
+  padding:0 4px!important;margin:0 0 2px!important;row-gap:0!important;gap:0!important;min-height:0!important;
+ }
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar #markets{gap:5px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar #markets .market-select{
+  height:48px!important;min-height:48px!important;padding:3px 7px!important;
+ }
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar #markets .market-name{font-size:10px!important;line-height:12px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar #markets .market-price{font-size:16px!important;line-height:19px!important;margin-top:1px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.toolbar #markets .market-quote-status{margin-top:0!important;line-height:10px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>#chartIndicatorControls{
+  min-height:27px!important;height:27px!important;align-content:center!important;
+  padding:0 5px!important;margin:0!important;gap:5px!important;
+ }
+ html:not(.chart-embedded):not(.multi-chart-mode) article>#chartIndicatorControls .chart-navigation{gap:4px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>#chartIndicatorControls .timeframes{gap:1px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>#chartIndicatorControls .timeframes button{
+  height:24px!important;min-width:25px!important;padding:2px 5px!important;font-size:11px!important;line-height:18px!important;
+ }
+ html:not(.chart-embedded):not(.multi-chart-mode) article>#chartIndicatorControls .cx43-menu summary{padding:4px 6px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>#chartIndicatorControls .actions{gap:2px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>#chartIndicatorControls .actions button{padding:2px 4px!important;font-size:11px!important;}
+ html:not(.chart-embedded):not(.multi-chart-mode) article>.one-click-control-strip{
+  min-height:18px!important;height:18px!important;padding:0 7px!important;margin:0!important;
+ }
+}
