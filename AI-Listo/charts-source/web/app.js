@@ -691,7 +691,7 @@ const chartTicker=document.createElement('strong');chartTicker.id='chartTicker';
 const activeQuote=document.createElement('span');activeQuote.id='cxActiveQuote';activeQuote.append(document.createElement('strong'),document.createElement('small'));chartNavigation.append(chartTicker,activeQuote,document.querySelector('.timeframes'));
 document.querySelector('.market-heading').prepend(chartNavigation);
 const historyRanges=document.createElement('div');historyRanges.className='history-ranges';historyRanges.setAttribute('aria-label','Visible history range');
-for(const range of ['1D','1W','1M','1Q','1Y','5Y','10Y','All']){const button=document.createElement('button');button.type='button';button.textContent=range==='All'?'All':range.replace(/^(\d+)([A-Z])$/, '$2$1');button.dataset.range=range;button.title='Show '+range+' of available history';button.onclick=()=>selectHistoryRange(range,button);historyRanges.append(button);}
+for(const range of ['1D','1W','1M','1Q','1Y','5Y','10Y','All']){const button=document.createElement('button');button.type='button';button.textContent=range==='All'?'All':range==='1M'?'MN1':range.replace(/^(\d+)([A-Z])$/, '$2$1');button.dataset.range=range;button.title='Show '+range+' of available history';button.onclick=()=>selectHistoryRange(range,button);historyRanges.append(button);}
 chartNavigation.append(historyRanges);
 async function selectHistoryRange(range,button){
  const wanted=range==='1D'?'5min':range==='1W'?'1h':range==='1M'?'4h':'1day';

@@ -148,74 +148,9 @@ html.cx-mobile-chart article>.one-click-panel{z-index:20;max-width:calc(100% - 1
 html.cx-mobile-chart .cx-mobile-bottom{order:100!important}
 }
 
-/* Desktop reference alignment (source31): market cards -> compact single control row.
-   Keep mobile, embedded and multi-chart layouts untouched. */
-@media (min-width:761px) {
- html:not(.chart-embedded):not(.multi-chart-mode) article > #chartTopControls {
-   padding-top:0!important;padding-bottom:0!important;
-   margin-top:0!important;margin-bottom:1px!important;
-   row-gap:0!important;min-height:0!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) article > #chartIndicatorControls {
-   display:flex!important;align-items:center!important;align-content:center!important;
-   justify-content:flex-start!important;flex-wrap:nowrap!important;
-   width:100%!important;min-height:31px!important;height:31px!important;
-   padding:1px 3px!important;margin:0!important;gap:5px!important;
-   box-sizing:border-box!important;white-space:nowrap!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls > .chart-navigation {
-   display:flex!important;align-items:center!important;justify-content:flex-start!important;
-   flex:0 0 auto!important;width:auto!important;min-width:0!important;
-   gap:3px!important;margin:0!important;padding:0!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls > .actions {
-   display:flex!important;align-items:center!important;justify-content:flex-end!important;
-   flex:0 1 auto!important;width:auto!important;min-width:0!important;
-   margin:0 0 0 auto!important;padding:0!important;gap:3px!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls .chart-navigation > .timeframes {
-   gap:0!important;margin:0!important;padding:0!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls .chart-navigation > .timeframes > button {
-   height:27px!important;min-height:27px!important;min-width:21px!important;
-   padding:3px 3px!important;font-size:10.5px!important;line-height:1!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls .cx43-menu > summary,
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls .actions > button,
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls .actions > .market-tool {
-   min-height:27px!important;height:27px!important;padding:3px 5px!important;
-   font-size:10.5px!important;line-height:18px!important;white-space:nowrap!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls #cxActiveQuote {
-   margin:0 3px 0 0!important;line-height:1.05!important;align-self:center!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls #cxActiveQuote small {
-   margin-top:1px!important;line-height:1.1!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls .chart-styles {
-   gap:1px!important;margin:0!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls .chart-styles button {
-   height:27px!important;width:21px!important;flex-basis:21px!important;
- }
- html:not(.chart-embedded):not(.multi-chart-mode) article > .one-click-control-strip {
-   margin:0!important;padding:1px 3px!important;min-height:20px!important;
-   position:relative!important;z-index:9!important;
- }
-}
-
-/* Desktop: place the zoom pair in the middle of the free History-to-Market
-   space, as in the approved reference; leave all existing click handlers intact. */
-@media (min-width:761px) {
-  html:not(.chart-embedded):not(.multi-chart-mode) article > #chartIndicatorControls {
-    position:relative!important;
-  }
-  html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls #chartGapZoom.chart-gap-zoom {
-    position:absolute!important;
-    left:38%!important;
-    top:50%!important;
-    transform:translate(-50%,-50%)!important;
-    margin:0!important;
-    z-index:12!important;
-  }
-}
+/* Market Watch: direction of each live Bid/Ask tick, independent of daily change. */
+.market-picker .cx-quote-value{color:#34454e;font-weight:600}
+.market-picker .cx-quote-value.quote-up{color:#08783b!important}
+.market-picker .cx-quote-value.quote-down{color:#bb202a!important}
+.market-picker .cx-quote-row.selected .cx-quote-value.quote-up{color:#08783b!important}
+.market-picker .cx-quote-row.selected .cx-quote-value.quote-down{color:#bb202a!important}

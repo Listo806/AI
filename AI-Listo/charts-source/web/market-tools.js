@@ -189,7 +189,29 @@ if(ChartStudies.lower.has(e.key)){let legendX=15;for(const l of e.studyCache.res
  if(crosshair&&crosshair.pane==='price'&&!dragging)drawCrosshair({ctx,width:w,height:h},crosshair,low,high,3);
 }
 const pickerQuotes=new Map();let pickerPending=false;
-function updatePickerQuotes(){for(const cell of list.querySelectorAll('.cx-quote-value')){const symbol=cell.dataset.symbol,q=[liveQuotes.get(symbol),pickerQuotes.get(symbol)].filter(Boolean).sort((a,b)=>b.timestamp-a.timestamp)[0],v=q?.[cell.dataset.field];cell.textContent=Number.isFinite(v)&&v>0?format(v,symbol):'—';cell.title=q?.timestamp?new Date(q.timestamp).toISOString(): 'Quote unavailable';}}
+// Keep independent Bid/Ask movement per symbol across category/search rerenders.
+// The first observed quote is neutral; an unchanged quote retains its last direction.
+const pickerQuoteMovement=new Map();
+function updatePickerQuotes(){
+ for(const cell of list.querySelectorAll('.cx-quote-value')){
+  const symbol=cell.dataset.symbol,field=cell.dataset.field;
+  const q=[liveQuotes.get(symbol),pickerQuotes.get(symbol)].filter(Boolean).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0];
+  const v=q?.[field],valid=Number.isFinite(v)&&v>0,key=symbol+'|'+field;
+  const previous=pickerQuoteMovement.get(key);
+  if(valid){
+   let direction=previous?.direction||'neutral';
+   if(previous&&v>previous.value)direction='up';
+   else if(previous&&v<previous.value)direction='down';
+   pickerQuoteMovement.set(key,{value:v,direction});
+   cell.textContent=format(v,symbol);
+   cell.classList.toggle('quote-up',direction==='up');
+   cell.classList.toggle('quote-down',direction==='down');
+  }else{
+   cell.textContent='—';cell.classList.remove('quote-up','quote-down');
+  }
+  cell.title=q?.timestamp?new Date(q.timestamp).toISOString():'Quote unavailable';
+ }
+}
 async function requestPickerQuotes(){if(pickerPending||drawer.hidden||mode!=='markets')return;pickerPending=true;try{const symbols=[...new Set([...list.querySelectorAll('.cx-quote-value')].map(c=>c.dataset.symbol))];await Promise.allSettled(Array.from({length:Math.ceil(symbols.length/10)},async(_,i)=>{const r=await fetch('/api/quotes?'+new URLSearchParams(symbols.slice(i*10,i*10+10).map(s=>['symbol',s])),{cache:'no-store',signal:AbortSignal.timeout(20000)});if(!r.ok)return;for(const q of (await r.json()).quotes||[])if(Number.isFinite(q.timestamp)&&q.timestamp>=(pickerQuotes.get(q.symbol)?.timestamp||0))pickerQuotes.set(q.symbol,q);}));updatePickerQuotes();}finally{pickerPending=false;}}
 setInterval(()=>{if(!drawer.hidden&&mode==='markets'){updatePickerQuotes();requestPickerQuotes();}},5000);
 restoreWorkspace();$('maOn').closest('.indicator-box').hidden=true;draw();
