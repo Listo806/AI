@@ -277,13 +277,7 @@ html.cx-mobile-chart .cx-mobile-bottom{order:100!important}
  html.cx-mobile-chart .one-click-side:disabled{opacity:1!important}
 }
 
-/* Mobile PWA reference: compact order tickets, expanded lot control, narrow right price axis. */
-@media (max-width:760px){
- html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel{padding:0 7px!important;justify-content:space-between!important;height:41px!important;min-height:41px!important;max-height:41px!important;background:#000!important}
- html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-side{flex:0 0 29%!important;width:29%!important;max-width:29%!important;height:38px!important;min-height:38px!important;padding:2px 5px!important;background:#000!important}
- html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-volume{width:40%!important;height:38px!important;min-height:38px!important;background:#000!important;border:0!important}
- html.cx-mobile-chart .one-click-side-label{font-size:10px!important;line-height:12px!important}
- html.cx-mobile-chart .one-click-side .one-click-price{font-size:17px!important;line-height:19px!important}
- html.cx-mobile-chart .canvas-wrap>.chart-mtf-panel{right:59px!important;width:30px!important;top:6px!important}
- html.cx-mobile-chart .cx-mobile-quote,html.cx-mobile-chart .chart-shell>.canvas-wrap{background:#000!important}
-}
+/* Mobile-only shared time axis: after RSI, never between price and RSI. */
+.cx-mobile-rsi-time-axis{display:none}
+html.cx-mobile-chart .cx-mobile-rsi-time-axis:not([hidden]){display:block;position:relative;flex:none;order:0;height:27px;min-height:27px;background:#000;color:#dce2e8;border:0;border-top:1px solid #8b9095;margin:0;padding:0;font:12px system-ui,sans-serif;overflow:hidden}
+html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;white-space:nowrap;transform:translateX(-50%);line-height:16px}
