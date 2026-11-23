@@ -202,3 +202,38 @@ html.cx-mobile-chart .cx-mobile-bottom{order:100!important}
 }
 
 @media(max-width:760px){html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel{position:relative!important;order:1!important;display:flex!important;width:100%!important;max-width:100%!important;height:49px!important;top:auto!important;left:auto!important;margin:0!important;gap:0!important;z-index:13}html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel[hidden]{display:none!important}}
+
+/* Mobile PWA reference v49 — scoped to standalone mobile; desktop unchanged. */
+@media (max-width:760px){
+ html.cx-mobile-chart,html.cx-mobile-chart body,html.cx-mobile-chart main,html.cx-mobile-chart article,html.cx-mobile-chart .chart-shell,html.cx-mobile-chart .canvas-wrap,html.cx-mobile-chart .rsi-header,html.cx-mobile-chart .cx-mobile-chrome,html.cx-mobile-chart .cx-mobile-tools,html.cx-mobile-chart .cx-mobile-quote,html.cx-mobile-chart .cx-mobile-bottom{background:#000!important}
+ html.cx-mobile-chart .cx-mobile-tools{border:0!important;border-bottom:0!important;box-shadow:none!important;padding:0 8px!important;gap:0!important;height:54px!important;min-height:54px!important}
+ html.cx-mobile-chart .cx-mobile-tools>.cx-mobile-button{border:0!important;border-radius:0!important;box-shadow:none!important;background:#000!important;min-height:46px!important;padding:0 5px!important}
+ html.cx-mobile-chart .cx-mobile-tools>.cx-mobile-menu{border:0!important}
+ html.cx-mobile-chart .cx-mobile-menu>summary{border:0!important;background:#000!important}
+ html.cx-mobile-chart .cx-mobile-frame{border:0!important;background:#000!important;flex:0 0 58px!important;width:58px!important;color:#fff!important}
+ html.cx-mobile-chart .cx-mobile-lightning{border:1px solid #fff!important;border-radius:5px!important;min-height:35px!important;flex:0 0 34px!important;margin:4px 5px!important;color:#fff!important}
+ html.cx-mobile-chart .cx-mobile-lightning[aria-pressed=true]{color:#00e7e4!important;border-color:#00e7e4!important;background:#000!important}
+ html.cx-mobile-chart .cx-mobile-quote{order:2!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:1px!important;min-height:63px!important;padding:6px 12px 2px!important;border:0!important;box-shadow:none!important}
+ html.cx-mobile-chart .cx-mobile-symbol{font-size:17px!important;line-height:22px!important;color:#fff!important}
+ html.cx-mobile-chart .cx-mobile-quote-values{display:flex!important;align-items:baseline!important;gap:9px!important;white-space:nowrap}
+ html.cx-mobile-chart .cx-mobile-price{font-size:19px!important;line-height:23px!important;font-weight:700!important;color:#2df13f!important}
+ html.cx-mobile-chart .cx-mobile-change{font-size:17px!important;line-height:23px!important;color:#2df13f!important}
+ html.cx-mobile-chart .cx-mobile-quote.negative :is(.cx-mobile-price,.cx-mobile-change){color:#ff4040!important}
+ html.cx-mobile-chart .chart-shell>.rsi-header #oscPaneToggle,html.cx-mobile-chart #oscPaneToggle{display:none!important;visibility:hidden!important}
+ html.cx-mobile-chart .chart-shell.osc-pane-collapsed #rsiChart{display:block!important;height:clamp(100px,19dvh,150px)!important}
+ html.cx-mobile-chart .chart-shell.osc-pane-collapsed .rsi-header{height:auto!important;min-height:24px!important}
+ html.cx-mobile-chart .chart-shell>.rsi-header{border-left:0!important;border-right:0!important;border-bottom:0!important;box-shadow:none!important}
+ html.cx-mobile-chart .cx-mobile-bottom{border-top:0!important;box-shadow:none!important}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel{background:#000!important;border:0!important;height:57px!important;min-height:57px!important;flex:none!important}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel[hidden]{display:none!important}
+ html.cx-mobile-chart .one-click-side{background:#000!important;box-shadow:none!important;border-radius:3px!important;padding:5px 8px!important}
+ html.cx-mobile-chart .one-click-sell{border:2px solid #f52222!important;color:#fff!important}
+ html.cx-mobile-chart .one-click-buy{border:2px solid #00e42d!important;color:#fff!important}
+ html.cx-mobile-chart .one-click-sell .one-click-price{color:#ff2828!important}
+ html.cx-mobile-chart .one-click-buy .one-click-price{color:#00f03b!important}
+ html.cx-mobile-chart .one-click-side-label{font-size:12px!important;color:#fff!important}
+ html.cx-mobile-chart .one-click-price{font-size:23px!important;line-height:25px!important}
+ html.cx-mobile-chart .one-click-volume{height:57px!important;top:0!important;width:31%!important;background:#000!important;border:0!important;border-top:1px solid #484848!important;border-bottom:1px solid #484848!important;border-radius:0!important}
+ html.cx-mobile-chart .one-click-volume input{background:#000!important;color:#fff!important;font-size:18px!important}
+ html.cx-mobile-chart .one-click-volume button{color:#fff!important;font-size:19px!important}
+}
