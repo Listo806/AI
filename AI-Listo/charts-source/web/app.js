@@ -859,7 +859,19 @@ window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+c
  for(const [label,key,fn] of [['Watchlist','watch',market],['Charts','charts',()=>{const t=document.getElementById('tradingTerminal');if(t&&!t.hidden)click('terminalToggle');shell.scrollIntoView({block:'nearest'});}],['Account','account',()=>click('connectTradingAccount')],['History','history',terminalHistory],['Calendar','calendar',()=>click('calendarButton')]]){const b=button(label,key,fn,true);if(key==='charts')b.setAttribute('aria-current','page');bottom.append(b);}article.append(bottom);
  const bar=shell.querySelector('.charts-draw-bar');let openedByMobile=false;if(bar){const more=button('More drawing tools','more',()=>bar.classList.toggle('cx-mobile-expanded'));more.classList.add('cx-mobile-draw-more');bar.append(more);}
  function sync(){if(!mq.matches)return;notifyOneClickQuote();const m=markets[selected],q=liveQuotes.get(m.symbol),d=q&&dayChange(q.price,q.dayDiffPercent);symbol.textContent=m.symbol+' ▾';price.textContent=q?format(q.price,m.symbol):'—';change.textContent=d?(d.percent>=0?'+':'')+d.percent.toFixed(2)+'%':'—';quote.classList.toggle('negative',!!d&&d.percent<0);tf.value=frame;}
- function layout(){const active=mq.matches&&!document.documentElement.classList.contains('chart-embedded');document.documentElement.classList.toggle('cx-mobile-chart',active);if(tradingStrip){if(active)chrome.append(tradingStrip);else tradingAnchor.after(tradingStrip);}if(active){const rail=document.getElementById('markets');if(rail)rail.scrollLeft=0;}if(bar){if(active&&bar.hidden){/* Keep drawing tools closed on mobile until requested. */}else if(!active&&openedByMobile){if(!bar.hidden)click('drawingToolsButton');openedByMobile=false;bar.classList.remove('cx-mobile-expanded');}}sync();requestAnimationFrame(()=>draw());}
+ let mobileVisualDefaultsApplied=false;
+ function applyMobileVisualDefaults(active){
+  if(!active)return;
+  // Mobile reference uses a visible MTF strip, two oscillator traces and the study caption.
+  // Only initialize the mobile defaults once; subsequent user toggles remain respected.
+  if(!mobileVisualDefaultsApplied){
+   for(const id of ['rsiOn','maOn']){const checkbox=document.getElementById(id);if(checkbox&&!checkbox.checked){checkbox.checked=true;checkbox.dispatchEvent(new Event('change',{bubbles:true}));}}
+   mobileVisualDefaultsApplied=true;
+  }
+  if(typeof mtfGrid!=='undefined'&&mtfGrid.hidden){mtfGrid.hidden=false;}
+  if(typeof mtfToggle!=='undefined'){mtfToggle.textContent='▴';mtfToggle.setAttribute('aria-expanded','true');}
+ }
+ function layout(){const active=mq.matches&&!document.documentElement.classList.contains('chart-embedded');document.documentElement.classList.toggle('cx-mobile-chart',active);applyMobileVisualDefaults(active);if(tradingStrip){if(active)chrome.append(tradingStrip);else tradingAnchor.after(tradingStrip);}if(active){const rail=document.getElementById('markets');if(rail)rail.scrollLeft=0;}if(bar){if(active&&bar.hidden){/* Keep drawing tools closed on mobile until requested. */}else if(!active&&openedByMobile){if(!bar.hidden)click('drawingToolsButton');openedByMobile=false;bar.classList.remove('cx-mobile-expanded');}}sync();requestAnimationFrame(()=>draw());}
  const observer=new MutationObserver(sync);observer.observe(document.getElementById('cxActiveQuote'),{childList:true,subtree:true,characterData:true});observer.observe(document.getElementById('chartTicker'),{childList:true,subtree:true});document.addEventListener('click',()=>requestAnimationFrame(sync));mq.addEventListener('change',layout);layout();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initMobile,{once:true});else initMobile();
