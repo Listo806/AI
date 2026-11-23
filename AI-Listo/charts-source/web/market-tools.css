@@ -385,7 +385,6 @@ html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;whi
  html.cx-mobile-chart #chartMTFGrid tr{display:table-row!important;}
  html.cx-mobile-chart #chartMTFGrid td{visibility:visible!important;}
  html.cx-mobile-chart .chart-mtf-heading{background:#000!important;}
- html.cx-mobile-chart #chartMTFToggle{display:none!important;}
  html.cx-mobile-chart .canvas-wrap::before{content:'VWAP AA · TRAMA · Heisenberg';position:absolute;top:38px;left:12px;z-index:19;pointer-events:none;color:#e5e5e5;background:transparent;font-size:12px;font-weight:400;white-space:nowrap;max-width:calc(100% - 116px);overflow:hidden;text-overflow:ellipsis;}
  html.cx-mobile-chart #rsiChart{display:block!important;visibility:visible!important;opacity:1!important;background:#000!important;}
  html.cx-mobile-chart .rsi-header{background:#000!important;}
