@@ -36,10 +36,10 @@
   const strip=article?.querySelector('.one-click-control-strip');
   if(!article||!strip)return;
   const parentRect=article.getBoundingClientRect(),stripRect=strip.getBoundingClientRect();
-  panel.style.top=Math.max(0,stripRect.bottom-parentRect.top+3)+'px';
+  if(document.documentElement.classList.contains('cx-mobile-chart')){const chrome=document.querySelector('.cx-mobile-chrome');const quote=chrome?.querySelector('.cx-mobile-quote');if(quote&&panel.parentNode!==chrome)quote.before(panel);panel.style.top='';panel.style.left='';return;}if(panel.parentNode!==article)article.append(panel);panel.style.top=Math.max(0,stripRect.bottom-parentRect.top+3)+'px';
   panel.style.left=Math.max(0,stripRect.left-parentRect.left+8)+'px';
  }
- function setOpen(value){stopHold();opened=Boolean(value);panel.hidden=!opened;wrap.classList.toggle('one-click-open',opened);updateToggle(localToggle,opened);positionPanel();if(embedded)parent.ChartOneClick?.syncHost();}
+ function setOpen(value){stopHold();opened=Boolean(value);panel.hidden=!opened;document.documentElement.classList.toggle('cx-mobile-trading-open',opened);wrap.classList.toggle('one-click-open',opened);updateToggle(localToggle,opened);const lightning=document.querySelector('.cx-mobile-lightning');if(lightning){lightning.setAttribute('aria-pressed',String(opened));lightning.setAttribute('aria-expanded',String(opened));}positionPanel();if(embedded)parent.ChartOneClick?.syncHost();}
  if(!embedded){window.addEventListener('resize',positionPanel,{passive:true});document.addEventListener('scroll',positionPanel,true);}
  window.OneClickPanel={toggle(){setOpen(!opened);},get opened(){return opened;}};
  panel.addEventListener('pointerdown',e=>e.stopPropagation());panel.addEventListener('wheel',e=>e.stopPropagation());

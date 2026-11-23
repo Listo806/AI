@@ -154,3 +154,51 @@ html.cx-mobile-chart .cx-mobile-bottom{order:100!important}
 .market-picker .cx-quote-value.quote-down{color:#bb202a!important}
 .market-picker .cx-quote-row.selected .cx-quote-value.quote-up{color:#08783b!important}
 .market-picker .cx-quote-row.selected .cx-quote-value.quote-down{color:#bb202a!important}
+@media (min-width: 761px) {
+    html:not(.chart-embedded):not(.multi-chart-mode) #chartIndicatorControls #chartGapZoom.chart-gap-zoom {
+        position: absolute !important;
+        left: 41% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        z-index: 12 !important;
+    }
+}
+/* Mobile v48: reference-first compact standalone chart. Desktop unaffected. */
+@media(max-width:760px){
+ html.cx-mobile-chart #chartTopControls{display:none!important}
+ html.cx-mobile-chart article{padding-top:env(safe-area-inset-top)!important;background:#000!important}
+ html.cx-mobile-chart .cx-mobile-chrome{background:#000!important;display:flex!important;flex-direction:column}
+ html.cx-mobile-chart .cx-mobile-tools{order:0;display:flex;justify-content:space-between;gap:0;padding:0 3px;height:48px;min-height:48px;border-bottom:1px solid #434343;background:#000}
+ html.cx-mobile-chart .cx-mobile-tools>.cx-mobile-button,html.cx-mobile-chart .cx-mobile-tools>.cx-mobile-menu{flex:1 1 0;min-width:0}
+ html.cx-mobile-chart .cx-mobile-tools>.cx-mobile-button{min-height:42px;border-right:1px solid #505050;border-radius:0;padding:0 3px}
+ html.cx-mobile-chart .cx-mobile-tools svg{width:22px;height:22px}
+ html.cx-mobile-chart .cx-mobile-frame{flex:0 0 57px;width:57px;min-width:0;font-size:13px;text-align:center;border-right:1px solid #505050}
+ html.cx-mobile-chart .cx-mobile-lightning{color:#fff;border:1px solid #9a9a9a!important;border-radius:5px!important;flex:0 0 34px!important;margin:3px 4px;min-height:35px!important}
+ html.cx-mobile-chart .cx-mobile-lightning[aria-pressed=true]{color:#00e6e2;border-color:#00e6e2!important;background:#062525}
+ html.cx-mobile-chart .cx-mobile-quote{order:2;min-height:42px;padding:3px 10px 0;gap:10px;background:#000;border-bottom:0;justify-content:flex-start}
+ html.cx-mobile-chart .cx-mobile-symbol{font-size:15px}.cx-mobile-price{font-variant-numeric:tabular-nums}
+ html.cx-mobile-chart .cx-mobile-price{font-size:19px;color:#00ded8}.cx-mobile-change{font-size:13px}
+ html.cx-mobile-chart .cx-mobile-bottom{background:#000!important;padding:8px 0 calc(9px + env(safe-area-inset-bottom))!important;border-top:1px solid #333!important}
+ html.cx-mobile-chart .cx-mobile-bottom .cx-mobile-button{min-height:57px!important;font-size:11px!important;gap:4px}
+ html.cx-mobile-chart .cx-mobile-bottom .cx-mobile-button svg{width:23px;height:23px}
+ html.cx-mobile-chart .cx-mobile-bottom .cx-mobile-button[aria-current]{background:transparent!important;border-radius:0!important;color:#00e6e2!important;position:relative}
+ html.cx-mobile-chart .cx-mobile-bottom .cx-mobile-button[aria-current]:after{content:'';position:absolute;bottom:0;left:22%;width:56%;height:3px;border-radius:3px;background:#00e6e2}
+ html.cx-mobile-chart article>.chart-shell{overflow:hidden!important;background:#000}
+ html.cx-mobile-chart .chart-shell>.canvas-wrap{min-height:140px!important}
+ html.cx-mobile-chart #rsiChart{height:clamp(100px,19dvh,150px)!important}
+ html.cx-mobile-chart .chart-shell>.rsi-header{min-height:24px!important}
+ html.cx-mobile-chart .chart-shell>.charts-draw-bar{display:none!important}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-control-strip{display:none!important}
+ html.cx-mobile-chart article>.one-click-panel{position:relative!important;order:1;top:auto!important;left:auto!important;right:auto!important;width:100%!important;max-width:100%!important;height:49px!important;margin:0!important;display:flex!important;gap:0!important;background:#080c0d;z-index:10}
+ html.cx-mobile-chart article>.one-click-panel[hidden]{display:none!important}
+ html.cx-mobile-chart .one-click-side{flex:1 1 0!important;width:50%!important;max-width:none!important;border-radius:0!important;padding:3px 8px!important;justify-content:space-between!important}
+ html.cx-mobile-chart .one-click-sell{background:#540d11!important;border-color:#7a1a1a!important}
+ html.cx-mobile-chart .one-click-buy{background:#00483e!important;border-color:#006e61!important}
+ html.cx-mobile-chart .one-click-price{font-size:19px!important;line-height:22px!important}
+ html.cx-mobile-chart .one-click-volume{top:0!important;left:50%!important;width:98px!important;height:49px!important;transform:translateX(-50%)!important;background:#080c0d!important;border:1px solid #333!important;border-radius:0!important;z-index:2}
+ html.cx-mobile-chart .one-click-volume input{width:50px!important}
+ html.cx-mobile-chart .one-click-volume button{min-height:40px!important}
+}
+
+@media(max-width:760px){html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel{position:relative!important;order:1!important;display:flex!important;width:100%!important;max-width:100%!important;height:49px!important;top:auto!important;left:auto!important;margin:0!important;gap:0!important;z-index:13}html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel[hidden]{display:none!important}}
