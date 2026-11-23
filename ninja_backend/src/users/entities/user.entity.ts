@@ -32,6 +32,5 @@ export interface User {
   preferredLanguage?: string | null;
   landingPage?: string | null;
   selectedWorkspaceId?: string | null;
-  selectedWorkspaceId?: string | null;
 }
 

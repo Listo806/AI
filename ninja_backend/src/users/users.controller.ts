@@ -43,7 +43,6 @@ export class UsersController {
       preferredLanguage: freshUser?.preferredLanguage ?? 'en',
       landingPage: freshUser?.landingPage ?? null,
       selectedWorkspaceId: freshUser?.selectedWorkspaceId ?? null,
-      selectedWorkspaceId: freshUser?.selectedWorkspaceId ?? null,
       internalRole: access.internalRole,
       isInternal: access.isInternal,
     };
