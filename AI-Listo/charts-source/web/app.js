@@ -694,6 +694,9 @@ const engineGear=document.createElement('button');engineGear.type='button';engin
 
 // Collapse the whole oscillator pane while preserving a compact restore control.
 const oscPaneToggle=document.createElement('button');oscPaneToggle.type='button';oscPaneToggle.id='oscPaneToggle';oscPaneToggle.setAttribute('aria-controls','rsiChart');document.querySelector('.rsi-header').prepend(oscPaneToggle);
+// The divider is a separate touch target; do not alter feed initialization.
+const mobileRsiDivider=document.createElement('div');mobileRsiDivider.id='cxMobileRsiDivider';mobileRsiDivider.setAttribute('role','separator');mobileRsiDivider.setAttribute('aria-orientation','horizontal');mobileRsiDivider.setAttribute('aria-label','Resize chart and RSI');mobileRsiDivider.tabIndex=0;document.querySelector('.rsi-header').before(mobileRsiDivider);
+const mobileRsiRestore=document.createElement('button');mobileRsiRestore.id='cxMobileRsiRestore';mobileRsiRestore.type='button';mobileRsiRestore.textContent='⌃';mobileRsiRestore.setAttribute('aria-label','Restore RSI panel');document.querySelector('.canvas-wrap').append(mobileRsiRestore);
 let oscPaneCollapsed=false;try{oscPaneCollapsed=ChartStorage.getItem('market-osc-pane-collapsed')==='true';}catch{}
 function sharedOscInstalled(){
  return !$('rsiOn').closest('.indicator-box').classList.contains('picker-removed');
@@ -707,10 +710,64 @@ function syncOscPane(){
  oscPaneToggle.title=oscPaneCollapsed?'Reopen indicator panel':'Collapse indicator panel';
  oscPaneToggle.setAttribute('aria-label',oscPaneToggle.title);
  oscPaneToggle.setAttribute('aria-expanded',String(installed&&!oscPaneCollapsed));
+ mobileRsiRestore.hidden=!installed||!oscPaneCollapsed;mobileRsiDivider.hidden=!installed||oscPaneCollapsed;
  $('rsiChart').setAttribute('aria-hidden',String(!installed||oscPaneCollapsed));
  requestAnimationFrame(draw);
 }
-oscPaneToggle.onclick=()=>{oscPaneCollapsed=!oscPaneCollapsed;hover=-1;crosshair=null;try{ChartStorage.setItem('market-osc-pane-collapsed',String(oscPaneCollapsed));}catch{}syncOscPane();};syncOscPane();
+oscPaneToggle.onclick=()=>{oscPaneCollapsed=!oscPaneCollapsed;hover=-1;crosshair=null;try{ChartStorage.setItem('market-osc-pane-collapsed',String(oscPaneCollapsed));}catch{}syncOscPane();};mobileRsiRestore.onclick=()=>{if(oscPaneCollapsed)oscPaneToggle.click();};syncOscPane();
+
+// Mobile divider resizes both panes in-place, preserving previous height across collapse.
+let mobileRsiHeight=130;
+function setMobileRsiHeight(value){
+ mobileRsiHeight=Math.max(75,Math.min(Math.max(90,window.innerHeight*.48),value));
+ document.documentElement.style.setProperty('--cx-rsi-pane-height',mobileRsiHeight+'px');
+ requestAnimationFrame(draw);
+}
+setMobileRsiHeight(mobileRsiHeight);
+let dividerDrag=null;
+mobileRsiDivider.addEventListener('pointerdown',event=>{
+ if(!document.documentElement.classList.contains('cx-mobile-chart'))return;
+ event.preventDefault();dividerDrag={id:event.pointerId,y:event.clientY,height:mobileRsiHeight};
+ mobileRsiDivider.setPointerCapture(event.pointerId);
+});
+mobileRsiDivider.addEventListener('pointermove',event=>{
+ if(!dividerDrag||dividerDrag.id!==event.pointerId)return;
+ event.preventDefault();setMobileRsiHeight(dividerDrag.height+dividerDrag.y-event.clientY);
+});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])mobileRsiDivider.addEventListener(name,()=>{dividerDrag=null;});
+mobileRsiDivider.addEventListener('keydown',event=>{if(event.key==='ArrowUp'||event.key==='ArrowDown'){event.preventDefault();setMobileRsiHeight(mobileRsiHeight+(event.key==='ArrowUp'?12:-12));}});
+
+// Pinch is handled on the existing canvases. One-finger pan remains unchanged.
+function enableMobilePinch(canvas){
+ const pointers=new Map();let pinch=null;
+ const isMobile=()=>document.documentElement.classList.contains('cx-mobile-chart');
+ canvas.addEventListener('pointerdown',event=>{
+  if(!isMobile()||event.pointerType!=='touch')return;
+  pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  if(pointers.size===2){
+   const [a,b]=[...pointers.values()],rect=canvas.getBoundingClientRect();
+   pinch={distance:Math.hypot(a.x-b.x,a.y-b.y),count,offset,midX:(a.x+b.x)/2-rect.left,width:rect.width};
+   dragging=null;hover=-1;crosshair=null;
+  }
+ },{passive:false});
+ canvas.addEventListener('pointermove',event=>{
+  if(!pointers.has(event.pointerId)||!isMobile())return;
+  pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  if(!pinch||pointers.size!==2)return;
+  event.preventDefault();const [a,b]=[...pointers.values()];
+  const distance=Math.max(8,Math.hypot(a.x-b.x,a.y-b.y));
+  const newCount=Math.max(18,Math.min(2000,pinch.count*pinch.distance/distance));
+  const midX=(a.x+b.x)/2-canvas.getBoundingClientRect().left;
+  const fraction=Math.max(0,Math.min(1,(pinch.midX-15)/Math.max(1,pinch.width-79)));
+  const currentFraction=Math.max(0,Math.min(1,(midX-15)/Math.max(1,canvas.clientWidth-79)));
+  const anchor=bars().length-pinch.count-pinch.offset+pinch.count*fraction;
+  count=newCount;offset=Math.max(-count+20,Math.min(Math.max(0,bars().length-20),bars().length+count*currentFraction-count-anchor));
+  Object.assign(oscView,{count,offset});zoomPriceOverride=null;clearWheelFlower();schedulePointerDraw();
+ },{passive:false});
+ const release=event=>{pointers.delete(event.pointerId);if(pointers.size<2)pinch=null;};
+ canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);canvas.addEventListener('lostpointercapture',release);
+}
+enableMobilePinch($('priceChart'));enableMobilePinch($('rsiChart'));
 
 // Compact chart navigation; preserve the market-card and MTF grid above.
 const chartNavigation=document.createElement('div');chartNavigation.className='chart-navigation';
@@ -852,7 +909,7 @@ window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+c
  const styleMenu=el('dialog','cx-mobile-style');for(const [label,id] of [['Candlesticks','candlesStyle'],['Line','lineStyle'],['OHLC Bars','ohlcStyle']]){const b=el('button','');b.textContent=label;b.onclick=()=>{click(id);styleMenu.close();};styleMenu.append(b);}const close=el('button','');close.textContent='Close';close.onclick=()=>styleMenu.close();styleMenu.append(close);document.body.append(styleMenu);
  const tf=el('select','cx-mobile-frame');tf.setAttribute('aria-label','Active timeframe');for(const b of root.querySelectorAll('[data-frame]')){const o=document.createElement('option');o.value=b.dataset.frame;o.textContent=b.textContent;tf.append(o);}tf.onchange=()=>selectFrame(tf.value);
  const mtfButton=el('button','cx-mobile-mtf-button');mtfButton.type='button';mtfButton.textContent='MTF';mtfButton.setAttribute('aria-label','Toggle multi-timeframe panel');mtfButton.onclick=()=>{const panel=document.querySelector('.chart-mtf-panel');if(panel){panel.classList.toggle('cx-mobile-mtf-expanded');mtfButton.setAttribute('aria-pressed',String(panel.classList.contains('cx-mobile-mtf-expanded')));}};tools.append(menu,button('Crosshair','cross',()=>click('drawingToolsButton')),button('Indicators','indicator',indicators),tf,mtfButton,button('Drawing tools','swap',()=>click('drawingToolsButton')),button('Cortexa AI','ai',()=>click('cortexaAI')),button('Add market','add',market));const lightning=button('Toggle One Click Trading','lightning',()=>window.OneClickPanel?.toggle());lightning.classList.add('cx-mobile-lightning');lightning.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 5 13h7l-1 9 8-12h-7z"/></svg>';tools.append(lightning);
- const symbol=el('button','cx-mobile-symbol');symbol.onclick=market;const price=el('strong','cx-mobile-price'),change=el('span','cx-mobile-change'),quoteValues=el('div','cx-mobile-quote-values');quoteValues.append(price,change);quote.append(symbol,quoteValues);chrome.append(tools,quote);root.after(chrome);
+ const symbol=el('button','cx-mobile-symbol');symbol.onclick=market;const mobileIndicatorArrow=el('button','cx-mobile-indicator-arrow');mobileIndicatorArrow.type='button';mobileIndicatorArrow.textContent='⌄';mobileIndicatorArrow.setAttribute('aria-label','Active indicators');mobileIndicatorArrow.onclick=indicators;const price=el('strong','cx-mobile-price'),change=el('span','cx-mobile-change'),quoteValues=el('div','cx-mobile-quote-values');quoteValues.append(price,change);quote.append(symbol,quoteValues);chrome.append(tools,quote);root.after(chrome);
  const quoteAnchor=document.createComment('desktop quote position');quote.before(quoteAnchor);const canvasWrap=shell.querySelector('.canvas-wrap');const tradingStrip=document.querySelector('article > .one-click-control-strip');const tradingAnchor=document.createComment('desktop trading strip');if(tradingStrip)tradingStrip.before(tradingAnchor);
  const news=el('dialog','cx-mobile-style');news.innerHTML='<h3>News</h3><p>Market news is not connected to the current chart feed.</p>';const nc=el('button','');nc.textContent='Close';nc.onclick=()=>news.close();news.append(nc);document.body.append(news);
  const terminalHistory=()=>{const t=document.getElementById('tradingTerminal');if(t?.hidden)click('terminalToggle');click('terminal-tab-history');};
@@ -871,7 +928,7 @@ window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+c
   if(typeof mtfGrid!=='undefined'&&mtfGrid.hidden){mtfGrid.hidden=false;}
   if(typeof mtfToggle!=='undefined'){mtfToggle.textContent='▴';mtfToggle.setAttribute('aria-expanded','true');}
  }
- function layout(){const active=mq.matches&&!document.documentElement.classList.contains('chart-embedded');document.documentElement.classList.toggle('cx-mobile-chart',active);applyMobileVisualDefaults(active);if(tradingStrip){if(active)chrome.append(tradingStrip);else tradingAnchor.after(tradingStrip);}if(canvasWrap){if(active&&quote.parentNode!==canvasWrap)canvasWrap.prepend(quote);else if(!active&&quote.parentNode!==chrome)quoteAnchor.after(quote);}if(active&&window.OneClickPanel?.opened){window.OneClickPanel.reposition?.();}if(active){const rail=document.getElementById('markets');if(rail)rail.scrollLeft=0;}if(bar){if(active&&bar.hidden){/* Keep drawing tools closed on mobile until requested. */}else if(!active&&openedByMobile){if(!bar.hidden)click('drawingToolsButton');openedByMobile=false;bar.classList.remove('cx-mobile-expanded');}}sync();requestAnimationFrame(()=>draw());}
+ function layout(){const active=mq.matches&&!document.documentElement.classList.contains('chart-embedded');document.documentElement.classList.toggle('cx-mobile-chart',active);applyMobileVisualDefaults(active);if(tradingStrip){if(active)chrome.append(tradingStrip);else tradingAnchor.after(tradingStrip);}if(canvasWrap){if(active&&quote.parentNode!==canvasWrap)canvasWrap.prepend(quote);else if(!active&&quote.parentNode!==chrome)quoteAnchor.after(quote);}if(active){const wrap=document.querySelector('.canvas-wrap');if(wrap&&mobileIndicatorArrow.parentNode!==wrap)wrap.append(mobileIndicatorArrow);}else if(mobileIndicatorArrow.parentNode){mobileIndicatorArrow.remove();}if(active&&window.OneClickPanel?.opened){window.OneClickPanel.reposition?.();}if(active){const rail=document.getElementById('markets');if(rail)rail.scrollLeft=0;}if(bar){if(active&&bar.hidden){/* Keep drawing tools closed on mobile until requested. */}else if(!active&&openedByMobile){if(!bar.hidden)click('drawingToolsButton');openedByMobile=false;bar.classList.remove('cx-mobile-expanded');}}sync();requestAnimationFrame(()=>draw());}
  const observer=new MutationObserver(sync);observer.observe(document.getElementById('cxActiveQuote'),{childList:true,subtree:true,characterData:true});observer.observe(document.getElementById('chartTicker'),{childList:true,subtree:true});document.addEventListener('click',()=>requestAnimationFrame(sync));mq.addEventListener('change',layout);layout();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initMobile,{once:true});else initMobile();

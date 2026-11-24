@@ -559,3 +559,51 @@ html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;whi
    background:#000!important;border:0!important;
  }
 }
+
+/* Mobile items 3–6: scoped overrides; desktop and market data code unchanged. */
+@media (max-width:760px) {
+ html.cx-mobile-chart .canvas-wrap>.cx-mobile-indicator-arrow {
+  position:absolute!important;top:48px!important;left:12px!important;z-index:36!important;
+  display:flex!important;align-items:center;justify-content:flex-start;
+  width:28px;height:24px;padding:0!important;margin:0!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  color:#fff!important;font-size:19px;line-height:1;cursor:pointer;
+ }
+ html.cx-mobile-chart .canvas-wrap>.cx-mobile-quote {left:0!important;padding-left:12px!important;}
+ html.cx-mobile-chart .canvas-wrap>.cx-mobile-quote .cx-mobile-symbol {padding-left:0!important;margin-left:0!important;background:transparent!important;border:0!important;}
+ html.cx-mobile-chart #cxMobileRsiDivider:not([hidden]) {
+  display:block!important;position:relative!important;flex:0 0 1px!important;
+  width:100%;height:1px!important;min-height:1px!important;
+  background:rgba(255,255,255,.78)!important;border:0!important;
+  z-index:50;touch-action:none!important;cursor:ns-resize;
+ }
+ html.cx-mobile-chart #cxMobileRsiDivider:not([hidden])::before {
+  content:'';position:absolute;left:0;right:0;top:-14px;bottom:-14px;background:transparent;
+ }
+ html.cx-mobile-chart .chart-shell:not(.osc-pane-collapsed):not(.osc-pane-absent) #rsiChart {
+  display:block!important;visibility:visible!important;opacity:1!important;
+  height:var(--cx-rsi-pane-height,130px)!important;min-height:75px!important;
+  flex:0 0 var(--cx-rsi-pane-height,130px)!important;
+ }
+ html.cx-mobile-chart .chart-shell.osc-pane-collapsed #rsiChart,
+ html.cx-mobile-chart .chart-shell.osc-pane-collapsed .rsi-header .indicator-box {
+  display:none!important;height:0!important;min-height:0!important;flex-basis:0!important;
+ }
+ html.cx-mobile-chart .chart-shell.osc-pane-collapsed>.rsi-header {
+  display:none!important;height:0!important;min-height:0!important;padding:0!important;
+ }
+ html.cx-mobile-chart .chart-shell>.rsi-header #oscPaneToggle,
+ html.cx-mobile-chart .rsi-header #oscPaneToggle {
+  display:inline-flex!important;visibility:visible!important;position:relative;
+  width:22px!important;min-width:22px!important;height:23px!important;
+  padding:0!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;color:#fff!important;
+ }
+ html.cx-mobile-chart .canvas-wrap>#cxMobileRsiRestore:not([hidden]) {
+  display:flex!important;position:absolute;bottom:3px;left:10px;z-index:40;
+  width:28px;height:25px;align-items:center;justify-content:center;
+  background:#000!important;border:0!important;color:#fff!important;font-size:19px;
+ }
+ html.cx-mobile-chart .chart-shell.osc-pane-collapsed>.canvas-wrap {flex:1 1 0!important;min-height:0!important;}
+ html.cx-mobile-chart #priceChart,html.cx-mobile-chart #rsiChart {touch-action:none!important;}
+}
