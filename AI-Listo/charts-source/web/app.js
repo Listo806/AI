@@ -518,6 +518,13 @@ function aggregateChartBars(source,interval){
  }
  return [...groups.values()].sort((a,b)=>a.time-b.time).slice(1);
 }
+async function safeMarketJson(response){
+  const type=(response.headers.get('content-type')||'').toLowerCase();
+  if(!type.includes('application/json')&&!type.includes('+json'))throw Error('Market data API returned a non-JSON response (HTTP '+response.status+').');
+  let payload;try{payload=await response.json();}catch{throw Error('Market data API returned invalid JSON.');}
+  if(!response.ok)throw Error(payload?.message||payload?.error||'Market data API unavailable (HTTP '+response.status+').');
+  return payload;
+}
 async function requestNativeHistory(symbol,interval){
  if(['2h','1week','1month'].includes(interval)){
   const base=interval==='2h'?'1h':'1day';let source=cache.get(symbol+'|'+base);
@@ -529,8 +536,8 @@ async function requestNativeHistory(symbol,interval){
   if(Date.now()<nativeHistoryBlockedUntil)throw new Error('Live feed is temporarily paused after an access or quota error. Cached charts remain available.');
   const providerInterval={'1min':'1m','5min':'5m','15min':'15m','30min':'30m','1h':'1h','4h':'4h','1day':'1d'}[interval];
   let response,json;
-  try{response=await fetch('https://biquote.io/api/'+symbol.replace('/','')+'/ohlc?'+new URLSearchParams({interval:providerInterval,limit:'1000'}),{signal:AbortSignal.timeout(25000),credentials:'omit'});json=await response.json();}
-  catch{response=await fetch('/api/candles?'+new URLSearchParams({symbol,interval}),{signal:AbortSignal.timeout(30000)});json=await response.json();}
+  response=await fetch('https://backend.cortexaaicrm.com/api/charts/market/candles?'+new URLSearchParams({symbol,interval}),{signal:AbortSignal.timeout(20000),cache:'no-store'});
+  json=await safeMarketJson(response);
   if(!response.ok){nativeHistoryBlockedUntil=Date.now()+Math.max(60,Number(response.headers.get('Retry-After'))||60)*1000;throw new Error(json.error||json.message||'Candle feed unavailable');}
   let values;
   if(json.symbol===symbol.replace('/','')&&Array.isArray(json.bars))values=json.bars.map(b=>({date:b.openTime,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.tickVolume??(b.volume>0?b.volume:null)}));
@@ -646,17 +653,9 @@ async function pollQuotes() {
   if (quoteRequestRunning || (typeof LiveStream!=='undefined'&&LiveStream.fresh(markets[selected].symbol))) return;
   quoteRequestRunning = true;
   try {
-    let response;
-    try {
-      const url=new URL('https://biquote.io/api/latest');markets.forEach(m=>url.searchParams.append('symbols',m.symbol.replace('/','')));
-      const direct=await fetch(url,{signal:AbortSignal.timeout(8000),cache:'no-store',credentials:'omit'});
-      if(!direct.ok)throw Error('Direct quote unavailable');const raw=await direct.json();
-      const rows=Array.isArray(raw)?raw:raw.ticks||raw.data||Object.values(raw);
-      const quotes=rows.flatMap(q=>{const market=markets.find(m=>m.symbol.replace('/','')===q.symbol),bid=Number(q.bid),ask=Number(q.ask),timestamp=Date.parse(q.timestamp);return market&&bid>0&&ask>=bid&&Number.isFinite(timestamp)?[{symbol:market.symbol,bid,ask,price:(bid+ask)/2,timestamp,source:'biquote · live midpoint backup',dayDiffPercent:q.dayDiffPercent}]:[];});
-      if(!quotes.length)throw Error('No quotes');response={ok:true,json:async()=>({quotes})};
-    }catch{response=await fetch('/api/quotes?'+new URLSearchParams(markets.map(m=>['symbol',m.symbol])),{signal:AbortSignal.timeout(10000),cache:'no-store'});}
+    const response=await fetch('https://backend.cortexaaicrm.com/api/charts/market/quotes?'+new URLSearchParams(markets.map(m=>['symbol',m.symbol])),{signal:AbortSignal.timeout(15000),cache:'no-store'});
     if (!response.ok){if(response.status===429){nativeHistoryBlockedUntil=Date.now()+Math.max(60,Number(response.headers.get('Retry-After'))||60)*1000;showFeedNotice('Live feed request/quota limit reached. Live data is paused. Saved candles, if available, remain visible.');}throw new Error('Quote connection unavailable');}
-    const result = await response.json();
+    const result = await safeMarketJson(response);
     if (!Array.isArray(result.quotes)) throw new Error('Invalid quote response');
     result.quotes.forEach(quote => {
       if (!markets.some(market => market.symbol === quote.symbol) || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(quote.timestamp)) return;

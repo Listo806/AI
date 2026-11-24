@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, Res, UseGuards, ForbiddenException, ServiceUnavailableException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UseGuards, ForbiddenException, ServiceUnavailableException, UnauthorizedException, BadRequestException, Query, HttpException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SecurityService } from '../auth/security.service';
 import { AuthService } from '../auth/auth.service';
@@ -9,6 +9,50 @@ import { ChartsAiService } from './charts-ai.service';
 @Controller('charts')
 export class ChartsController {
   constructor(private readonly security: SecurityService, private readonly auth: AuthService, private readonly chartsAi: ChartsAiService, private readonly subscriptions: ChartsSubscriptionService) {}
+
+  // Browser-safe market-data relay: provider credentials and CORS stay server-side.
+  // Only supported symbols/intervals can be requested; never proxy arbitrary URLs.
+  private readonly marketSymbols = new Set(['USD/JPY','XAG/USD','GBP/JPY','XAU/USD']);
+  private readonly marketIntervals: Record<string,string> = {'1min':'1m','5min':'5m','15min':'15m','30min':'30m','1h':'1h','4h':'4h','1day':'1d'};
+  private async marketJson(url: URL): Promise<any> {
+    let upstream: Response;
+    try { upstream = await fetch(url, {signal: AbortSignal.timeout(12000), redirect:'error',headers:{accept:'application/json'}}); }
+    catch { throw new ServiceUnavailableException('Market data provider temporarily unavailable'); }
+    if (!upstream.ok) throw new HttpException({error:'Market data provider unavailable'},upstream.status===429?429:503);
+    if (!(upstream.headers.get('content-type')||'').toLowerCase().includes('json'))
+      throw new ServiceUnavailableException('Market data provider returned a non-JSON response');
+    const raw=await upstream.text();
+    if(raw.length>2000000)throw new ServiceUnavailableException('Market data response too large');
+    try {return JSON.parse(raw);}catch {throw new ServiceUnavailableException('Market data provider returned invalid JSON');}
+  }
+  @Get('market/candles')
+  async marketCandles(@Query('symbol') symbol: string, @Query('interval') interval: string, @Res({passthrough:true}) res:any) {
+    if(!this.marketSymbols.has(symbol)||!Object.prototype.hasOwnProperty.call(this.marketIntervals,interval))
+      throw new BadRequestException('Unsupported market symbol or interval');
+    res.setHeader('Cache-Control','public, max-age=15');
+    const url=new URL('https://biquote.io/api/'+symbol.replace('/','')+'/ohlc');
+    url.searchParams.set('interval',this.marketIntervals[interval]);url.searchParams.set('limit','1000');
+    return this.marketJson(url);
+  }
+  @Get('market/quotes')
+  async marketQuotes(@Query('symbol') requested: string|string[], @Res({passthrough:true}) res:any) {
+    const symbols=[...new Set((Array.isArray(requested)?requested:[requested]).filter(Boolean))];
+    if(!symbols.length||symbols.length>4||symbols.some(s=>!this.marketSymbols.has(s)))
+      throw new BadRequestException('Unsupported market symbols');
+    res.setHeader('Cache-Control','no-store');
+    const url=new URL('https://biquote.io/api/latest');
+    for(const symbol of symbols)url.searchParams.append('symbols',symbol.replace('/',''));
+    const raw=await this.marketJson(url);
+    const rows=Array.isArray(raw)?raw:Array.isArray(raw?.ticks)?raw.ticks:Array.isArray(raw?.data)?raw.data:[];
+    const quotes=rows.flatMap((q:any)=>{
+      const symbol=symbols.find(s=>s.replace('/','')===q?.symbol);
+      const bid=Number(q?.bid),ask=Number(q?.ask),timestamp=Date.parse(q?.timestamp);
+      return symbol&&bid>0&&ask>=bid&&Number.isFinite(timestamp)
+        ?[{symbol,bid,ask,price:(bid+ask)/2,timestamp,dayDiffPercent:Number.isFinite(Number(q.dayDiffPercent))?Number(q.dayDiffPercent):null}]:[];
+    });
+    if(!quotes.length)throw new ServiceUnavailableException('No valid market quotes available');
+    return {quotes};
+  }
   private secret() {
     const secret = process.env.CHARTS_SESSION_SECRET;
     if (!secret || secret.length < 32) throw new ServiceUnavailableException('Charts session secret is not configured');
