@@ -629,22 +629,3 @@ html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;whi
    vertical-align:super!important;position:relative!important;top:1px!important;
  }
 }
-
-/* Mobile RSI and chart interactions: reference items 3–6. Desktop unchanged. */
-@media(max-width:760px){
- html.cx-mobile-chart .canvas-wrap>.cx-mobile-quote{left:9px!important;top:8px!important;display:flex!important;align-items:flex-start!important;gap:0!important;pointer-events:none!important}
- html.cx-mobile-chart .canvas-wrap>.cx-mobile-quote .cx-mobile-symbol{display:block!important;margin:0!important;padding:0!important;text-align:left!important;pointer-events:auto!important}
- html.cx-mobile-chart .cx-mobile-indicator-arrow{display:block!important;background:transparent!important;color:#fff!important;border:0!important;box-shadow:none!important;padding:0 6px!important;margin:0!important;min-height:20px!important;font-size:20px!important;line-height:18px!important;text-align:left!important;pointer-events:auto!important}
- html.cx-mobile-chart .chart-shell>.rsi-header #oscPaneToggle,html.cx-mobile-chart #oscPaneToggle{display:inline-flex!important;visibility:visible!important;align-items:center!important;justify-content:center!important;background:transparent!important;color:#fff!important;border:0!important;box-shadow:none!important;width:22px!important;height:22px!important;min-width:22px!important;padding:0!important;margin:0 3px 0 0!important;order:-1!important}
- html.cx-mobile-chart .chart-shell>.rsi-header{display:flex!important;align-items:center!important;gap:3px!important;min-height:24px!important;height:24px!important;flex:0 0 24px!important;padding:0 8px!important;background:#000!important}
- html.cx-mobile-chart .chart-shell>.rsi-header label{display:flex!important;align-items:center!important}
- html.cx-mobile-chart #cxOscDivider{display:block!important;position:relative!important;order:0!important;flex:0 0 1px!important;height:1px!important;min-height:1px!important;background:rgba(255,255,255,.55)!important;z-index:24!important;cursor:ns-resize!important;touch-action:none!important;border:0!important}
- html.cx-mobile-chart #cxOscDivider::before{content:'';position:absolute;left:0;right:0;top:-13px;bottom:-13px;background:transparent;touch-action:none}
- html.cx-mobile-chart #rsiChart{height:var(--cx-osc-height,150px)!important;min-height:0!important;max-height:none!important;flex:0 0 var(--cx-osc-height,150px)!important;touch-action:none!important}
- html.cx-mobile-chart .chart-shell.osc-pane-collapsed #cxOscDivider,html.cx-mobile-chart .chart-shell.osc-pane-collapsed .rsi-header,html.cx-mobile-chart .chart-shell.osc-pane-collapsed #rsiChart,html.cx-mobile-chart .chart-shell.osc-pane-collapsed .cx-mobile-rsi-time-axis{display:none!important;height:0!important;min-height:0!important;flex-basis:0!important;margin:0!important;padding:0!important}
- html.cx-mobile-chart #cxOscRestore{display:none!important;position:absolute;bottom:5px;left:10px;z-index:30;background:#000!important;border:1px solid rgba(255,255,255,.25)!important;color:#fff!important;border-radius:3px!important;width:30px;height:25px;cursor:pointer}
- html.cx-mobile-chart .chart-shell.osc-pane-collapsed #cxOscRestore{display:block!important}
- html.cx-mobile-chart .chart-shell>.canvas-wrap{flex:1 1 0!important;min-height:120px!important}
- html.cx-mobile-chart .cx-mobile-rsi-time-axis:not([hidden]){display:block!important}
- html.cx-mobile-chart #priceChart,html.cx-mobile-chart #rsiChart{touch-action:none!important}
-}
