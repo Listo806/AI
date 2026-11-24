@@ -1,6 +1,8 @@
 'use strict';
 // Public SignalR JSON stream. Heartbeats alone do not establish a healthy price feed.
 const LiveStream=(()=>{
+ // Browser cannot negotiate with BiQuote cross-origin. Use backend polling instead.
+ if(!window.ChartEmbed)return {start(){},reload(){},fresh(){return false;},get active(){return false;}};
  if(window.ChartEmbed){let off=null;return {start(){off?.();off=parent.ChartGridHost.subscribe(ChartEmbed.id,()=>markets[selected].symbol,tick=>onMarketTick(tick));},reload(){this.start();},fresh(symbol){return parent.ChartGridHost.fresh(symbol);},get active(){return parent.ChartGridHost.active();}};}
  const rs='\x1e';let symbols=[];
  let ws=null,timer=null,ping=null,delay=1000,generation=0,connecting=false,stopped=false;
