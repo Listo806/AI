@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, Res, UseGuards, ForbiddenException, ServiceUnavailableException, UnauthorizedException, BadRequestException, Query, HttpException } from '@nestjs/common';
+import { Logger, Controller, Get, Post, Body, Req, Res, UseGuards, ForbiddenException, ServiceUnavailableException, UnauthorizedException, BadRequestException, Query, HttpException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SecurityService } from '../auth/security.service';
 import { AuthService } from '../auth/auth.service';
@@ -10,6 +10,8 @@ import { ChartsAiService } from './charts-ai.service';
 export class ChartsController {
   constructor(private readonly security: SecurityService, private readonly auth: AuthService, private readonly chartsAi: ChartsAiService, private readonly subscriptions: ChartsSubscriptionService) {}
 
+  private readonly marketLogger = new Logger('ChartsMarket');
+
   // Browser-safe market-data relay: provider credentials and CORS stay server-side.
   // Only supported symbols/intervals can be requested; never proxy arbitrary URLs.
   private readonly marketSymbols = new Set(['USD/JPY','XAG/USD','GBP/JPY','XAU/USD']);
@@ -17,13 +19,24 @@ export class ChartsController {
   private async marketJson(url: URL): Promise<any> {
     let upstream: Response;
     try { upstream = await fetch(url, {signal: AbortSignal.timeout(12000), redirect:'error',headers:{accept:'application/json'}}); }
-    catch { throw new ServiceUnavailableException('Market data provider temporarily unavailable'); }
-    if (!upstream.ok) throw new HttpException({error:'Market data provider unavailable'},upstream.status===429?429:503);
-    if (!(upstream.headers.get('content-type')||'').toLowerCase().includes('json'))
+    catch (error) {
+      this.marketLogger.error(`Upstream request failed: ${url.pathname} (${error instanceof Error ? error.message : String(error)})`);
+      throw new ServiceUnavailableException('Market data provider temporarily unavailable');
+    }
+    if (!upstream.ok) {
+      this.marketLogger.error(`Upstream returned HTTP ${upstream.status} for ${url.pathname}`);
+      throw new HttpException({error:'Market data provider unavailable'},upstream.status===429?429:503);
+    }
+    if (!(upstream.headers.get('content-type')||'').toLowerCase().includes('json')) {
+      this.marketLogger.error(`Upstream returned non-JSON content (${upstream.headers.get('content-type') || 'unknown'}) for ${url.pathname}`);
       throw new ServiceUnavailableException('Market data provider returned a non-JSON response');
+    }
     const raw=await upstream.text();
     if(raw.length>2000000)throw new ServiceUnavailableException('Market data response too large');
-    try {return JSON.parse(raw);}catch {throw new ServiceUnavailableException('Market data provider returned invalid JSON');}
+    try {return JSON.parse(raw);}catch {
+      this.marketLogger.error(`Upstream returned invalid JSON for ${url.pathname}`);
+      throw new ServiceUnavailableException('Market data provider returned invalid JSON');
+    }
   }
   @Get('market/candles')
   async marketCandles(@Query('symbol') symbol: string, @Query('interval') interval: string, @Res({passthrough:true}) res:any) {
