@@ -392,33 +392,39 @@ html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;whi
  html.cx-mobile-chart .rsi-header #oscPaneToggle{display:none!important;}
 }
 
-/* Mobile reference 2026-11-24: one uninterrupted black workspace, no decorative cards. */
-@media(max-width:760px){
- html.cx-mobile-chart,html.cx-mobile-chart body,html.cx-mobile-chart main,html.cx-mobile-chart article,
- html.cx-mobile-chart .cx-mobile-chrome,html.cx-mobile-chart .cx-mobile-tools,
- html.cx-mobile-chart .cx-mobile-bottom,html.cx-mobile-chart .chart-shell,
- html.cx-mobile-chart .canvas-wrap,html.cx-mobile-chart .rsi-header,
- html.cx-mobile-chart .cx-mobile-rsi-time-axis,html.cx-mobile-chart #priceChart,html.cx-mobile-chart #rsiChart{background:#000!important;background-image:none!important;}
- html.cx-mobile-chart .cx-mobile-tools{border:0!important;box-shadow:none!important;min-height:48px!important;}
- html.cx-mobile-chart .cx-mobile-tools :is(button,select,summary){background:#000!important;border:0!important;box-shadow:none!important;}
- html.cx-mobile-chart .cx-mobile-mtf-button{color:#eee!important;flex:0 0 auto!important;padding:0 2px!important;font-size:12px!important;min-width:29px!important;}
- html.cx-mobile-chart .cx-mobile-tools .cx-mobile-lightning{border:1px solid #00dce7!important;border-radius:5px!important;color:#00e8ed!important;}
- html.cx-mobile-chart .cx-mobile-quote{position:absolute!important;top:5px!important;left:10px!important;right:auto!important;width:auto!important;min-height:0!important;height:auto!important;display:block!important;padding:0!important;z-index:24!important;pointer-events:none;background:transparent!important;border:0!important;}
- html.cx-mobile-chart .cx-mobile-quote .cx-mobile-symbol{pointer-events:auto!important;color:#fff!important;font-size:13px!important;line-height:21px!important;font-weight:600!important;}
- html.cx-mobile-chart .cx-mobile-quote-values{display:none!important;}
- html.cx-mobile-chart .chart-shell>.canvas-wrap{background:#000!important;border:0!important;}
- html.cx-mobile-chart .canvas-wrap::before{display:none!important;}
- html.cx-mobile-chart .canvas-wrap>.legend{top:27px!important;left:8px!important;max-width:calc(100% - 110px)!important;}
- html.cx-mobile-chart .canvas-wrap>.chart-mtf-panel{right:64px!important;top:5px!important;z-index:30!important;}
- html.cx-mobile-chart .chart-mtf-panel.cx-mobile-mtf-hidden{display:none!important;}
- html.cx-mobile-chart .chart-shell>.rsi-header{background:#000!important;border:0!important;border-top:1px solid #888!important;min-height:24px!important;}
- html.cx-mobile-chart .cx-mobile-bottom{background:#000!important;border:0!important;border-top:1px solid #333!important;border-radius:0!important;}
- html.cx-mobile-chart .cx-mobile-bottom .cx-mobile-button,html.cx-mobile-chart .cx-mobile-bottom .cx-mobile-button[aria-current]{background:#000!important;border:0!important;box-shadow:none!important;border-radius:0!important;}
- html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-side{background:#000!important;}
- html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-sell{background:#e90000!important;border:0!important;border-radius:3px!important;}
- html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-buy{background:#087b10!important;border:0!important;border-radius:3px!important;}
- html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-volume{background:#000!important;border:0!important;}
- html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-volume :is(button,input){background:#000!important;border:0!important;}
- html.cx-mobile-chart .chart-shell .rsi-header #oscPaneToggle{display:inline-flex!important;visibility:visible!important;background:transparent!important;border:0!important;}
- html.cx-mobile-chart .cx-mobile-rsi-time-axis:not([hidden]){border-top:1px solid #aaa!important;}
+
+/* Mobile regression correction: retain visible quotes, indicator legend and controls.
+   Scoped to mobile only; do not hide functional UI elements to achieve black background. */
+@media (max-width:760px) {
+ html.cx-mobile-chart,html.cx-mobile-chart body,html.cx-mobile-chart main,
+ html.cx-mobile-chart article,html.cx-mobile-chart .cx-mobile-chrome,
+ html.cx-mobile-chart .cx-mobile-tools,html.cx-mobile-chart .chart-shell,
+ html.cx-mobile-chart .canvas-wrap,html.cx-mobile-chart #priceChart,
+ html.cx-mobile-chart #rsiChart,html.cx-mobile-chart .rsi-header,
+ html.cx-mobile-chart .cx-mobile-bottom,html.cx-mobile-chart .cx-mobile-rsi-time-axis {
+  background-color:#000!important;background-image:none!important;
+ }
+ html.cx-mobile-chart .cx-mobile-tools {border:0!important;box-shadow:none!important;}
+ html.cx-mobile-chart .cx-mobile-tools :is(button,select,summary) {background-color:#000!important;box-shadow:none!important;}
+ html.cx-mobile-chart .cx-mobile-lightning {border:1px solid #00dce7!important;color:#00e8ed!important;border-radius:5px!important;}
+ /* Keep the market name and live quote, unlike the previous broken display:none override. */
+ html.cx-mobile-chart .cx-mobile-quote {position:relative!important;order:2!important;display:flex!important;
+  flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;
+  width:100%!important;height:auto!important;min-height:57px!important;
+  padding:4px 12px 5px!important;top:auto!important;left:auto!important;right:auto!important;
+  background:#000!important;border:0!important;pointer-events:auto!important;z-index:12!important;}
+ html.cx-mobile-chart .cx-mobile-quote-values {display:flex!important;align-items:baseline!important;gap:9px!important;white-space:nowrap!important;}
+ html.cx-mobile-chart .cx-mobile-symbol {font-size:17px!important;font-weight:600!important;color:#fff!important;}
+ html.cx-mobile-chart .cx-mobile-price {font-size:19px!important;color:#2df13f!important;}
+ html.cx-mobile-chart .cx-mobile-change {font-size:17px!important;color:#2df13f!important;}
+ html.cx-mobile-chart .cx-mobile-quote.negative :is(.cx-mobile-price,.cx-mobile-change){color:#ff4040!important;}
+ /* Legend belongs above candles, not suppressed by a pseudo-element reset. */
+ html.cx-mobile-chart .canvas-wrap::before {content:'VWAP AA · TRAMA · Heisenberg';display:block!important;
+  position:absolute;top:36px;left:12px;z-index:19;pointer-events:none;
+  color:#e5e5e5;background:transparent;font-size:12px;font-weight:400;
+  max-width:calc(100% - 120px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+ html.cx-mobile-chart .canvas-wrap>.chart-mtf-panel {right:64px!important;top:5px!important;z-index:30!important;}
+ html.cx-mobile-chart .chart-mtf-panel:not(.cx-mobile-mtf-hidden) {display:block!important;visibility:visible!important;}
+ html.cx-mobile-chart .rsi-header {background:#000!important;}
+ html.cx-mobile-chart .cx-mobile-bottom {background:#000!important;}
 }
