@@ -22,9 +22,22 @@
   button.onkeyup=stopHold;button.onblur=stopHold;
  }
  window.addEventListener('pointerup',stopHold);window.addEventListener('blur',stopHold);document.addEventListener('visibilitychange',()=>{if(document.hidden)stopHold();});
- // Prices are informational while the trade buttons are disabled.
+ // Both buttons share the direction of the market midpoint, not their bid/ask spread.
+ let previousMidpoint=null;
+ let marketDirection=0;
  function syncPrices(){
   const quote=window.CortexaOneClickQuote?.();
+  const bid=Number(quote?.bid),ask=Number(quote?.ask);
+  if(Number.isFinite(bid)&&Number.isFinite(ask)&&bid>0&&ask>0){
+   const midpoint=(bid+ask)/2;
+   if(previousMidpoint!==null){
+    const delta=midpoint-previousMidpoint;
+    if(Math.abs(delta)>1e-10)marketDirection=delta>0?1:-1;
+   }
+   previousMidpoint=midpoint;
+  }
+  panel.classList.toggle('cx-market-up',marketDirection>0);
+  panel.classList.toggle('cx-market-down',marketDirection<0);
   for(const [button,value] of [[sell,quote?.bid],[buy,quote?.ask]]){
    const display=button.querySelector('.one-click-price');
    const formatted=Number.isFinite(value)?value.toFixed(quote?.digits??(value>=100?3:5)):'—';

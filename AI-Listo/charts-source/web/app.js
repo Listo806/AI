@@ -722,7 +722,7 @@ function syncOscPane(){
  oscPaneToggle.title=oscPaneCollapsed?'Reopen indicator panel':'Collapse indicator panel';
  oscPaneToggle.setAttribute('aria-label',oscPaneToggle.title);
  oscPaneToggle.setAttribute('aria-expanded',String(installed&&!oscPaneCollapsed));
- mobileRsiRestore.hidden=!installed||!oscPaneCollapsed;mobileRsiDivider.hidden=!installed||oscPaneCollapsed;
+ mobileRsiRestore.hidden=true;mobileRsiDivider.hidden=!installed;
  $('rsiChart').setAttribute('aria-hidden',String(!installed||oscPaneCollapsed));
  requestAnimationFrame(draw);
 }
@@ -730,11 +730,23 @@ oscPaneToggle.onclick=()=>{oscPaneCollapsed=!oscPaneCollapsed;hover=-1;crosshair
 
 // Mobile divider resizes both panes in-place, preserving previous height across collapse.
 let mobileRsiHeight=130;
+let lastExpandedRsiHeight=130;
 function setMobileRsiHeight(value){
- mobileRsiHeight=Math.max(75,Math.min(Math.max(90,window.innerHeight*.48),value));
+ const maxHeight=Math.max(90,window.innerHeight*.48);
+ const next=Math.max(0,Math.min(maxHeight,value));
+ // A small drag-to-close threshold prevents leaving an unusable tiny pane.
+ const collapse=next<44;
+ if(!collapse){mobileRsiHeight=Math.max(75,next);lastExpandedRsiHeight=mobileRsiHeight;}
+ else mobileRsiHeight=0;
+ if(oscPaneCollapsed!==collapse){
+  oscPaneCollapsed=collapse;
+  try{ChartStorage.setItem('market-osc-pane-collapsed',String(collapse));}catch{}
+  syncOscPane();
+ }
  document.documentElement.style.setProperty('--cx-rsi-pane-height',mobileRsiHeight+'px');
  requestAnimationFrame(draw);
 }
+if(oscPaneCollapsed)mobileRsiHeight=0;
 setMobileRsiHeight(mobileRsiHeight);
 let dividerDrag=null;
 mobileRsiDivider.addEventListener('pointerdown',event=>{
@@ -747,7 +759,7 @@ mobileRsiDivider.addEventListener('pointermove',event=>{
  event.preventDefault();setMobileRsiHeight(dividerDrag.height+dividerDrag.y-event.clientY);
 });
 for(const name of ['pointerup','pointercancel','lostpointercapture'])mobileRsiDivider.addEventListener(name,()=>{dividerDrag=null;});
-mobileRsiDivider.addEventListener('keydown',event=>{if(event.key==='ArrowUp'||event.key==='ArrowDown'){event.preventDefault();setMobileRsiHeight(mobileRsiHeight+(event.key==='ArrowUp'?12:-12));}});
+mobileRsiDivider.addEventListener('keydown',event=>{if(event.key==='ArrowUp'||event.key==='ArrowDown'){event.preventDefault();setMobileRsiHeight((mobileRsiHeight||0)+(event.key==='ArrowUp'?(mobileRsiHeight?12:lastExpandedRsiHeight):-12));}});
 
 // Pinch is handled on the existing canvases. One-finger pan remains unchanged.
 function enableMobilePinch(canvas){
