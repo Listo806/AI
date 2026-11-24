@@ -192,11 +192,18 @@ function getCachedChartStudies(data){
 }
 function drawHollowCandle(ctx,bar,cx,y,step){
  const top=Math.min(y(bar.open),y(bar.close)),bottom=Math.max(y(bar.open),y(bar.close));
- const width=Math.max(1,step*.68);
+ const mobile=document.documentElement.classList.contains('cx-mobile-chart');
+ // Change only mobile candle body width, not candle spacing, zoom, OHLC or scales.
+ const width=mobile?Math.max(1,Math.min(step*.84,step-1.5)):Math.max(1,step*.68);
  ctx.save();ctx.strokeStyle=bar.close>=bar.open?'#64c3a5':'#e07982';ctx.lineWidth=1;ctx.setLineDash([]);
  ctx.beginPath();ctx.moveTo(cx,y(bar.high));ctx.lineTo(cx,top);ctx.moveTo(cx,bottom);ctx.lineTo(cx,y(bar.low));
  if(bottom-top<1){ctx.moveTo(cx-width/2,top);ctx.lineTo(cx+width/2,top);}
- ctx.stroke();if(bottom-top>=1)ctx.strokeRect(cx-width/2,top,width,bottom-top);ctx.restore();
+ ctx.stroke();
+ if(bottom-top>=1){
+  if(mobile){ctx.fillStyle='#000000';ctx.fillRect(cx-width/2,top,width,bottom-top);}
+  ctx.strokeRect(cx-width/2,top,width,bottom-top);
+ }
+ ctx.restore();
 }
 // Pointer-only frames must not schedule server analysis or rebuild engine request signatures.
 // Price/feed/settings changes still call draw() and refresh the engine normally.
@@ -219,7 +226,45 @@ function draw(pointerOnly=false){
   if($('maOn').checked&&OscSettings.ma.show)parts.push('MA('+OscSettings.ma.length+') '+valueText(latest(ma),OscSettings.ma.precision));
   mobileCaption.textContent=parts.join('  ');
  }
-const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.settings.precision);$('bbOn').closest('label').title=[BBSettings.settings.inputs?BBSettings.settings.length+' · '+BBSettings.settings.ma+' · '+BBSettings.settings.source+' · '+BBSettings.settings.mult+'σ':'',BBSettings.settings.values?bbPlots.map((p,i)=>['Basis','Upper','Lower'][i]+': '+(Number.isFinite(p.values.at(-1))?p.values.at(-1).toFixed(bbDigits):'—')).join(' · '):''].filter(Boolean).join(' | ');const top=canvasContext($('priceChart')),bottom=canvasContext($('rsiChart'));const left=15,right=64;function grid(chart,minimum,maximum,steps){const {ctx,width,height}=chart;ctx.font='600 13px system-ui';const jpy=markets[selected].symbol.endsWith('JPY');const span=maximum-minimum;let ticks=[];if(jpy&&span>0){const raw=Math.max(.001,span/Math.max(1,Math.floor((height-43)/46))),power=10**Math.floor(Math.log10(raw)),spacing=Math.max(.001,([1,2,2.5,5,10].find(n=>n*power>=raw)||10)*power);for(let i=Math.ceil(minimum/spacing-1e-9);i<=Math.floor(maximum/spacing+1e-9)&&ticks.length<200;i++)ticks.push(i*spacing);}else for(let i=0;i<=steps;i++)ticks.push(maximum-span*i/steps);for(const value of ticks){const y=15+(height-43)*(maximum-value)/span;ctx.strokeStyle=document.documentElement.classList.contains('cx-mobile-chart')?'#242424':'#202c39';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(width-right,y);ctx.stroke();ctx.fillStyle='#f3f6ff';ctx.fillText(data.length?value.toFixed(jpy?3:markets[selected].category==='FOREIGN EXCHANGE'?5:maximum>100?2:3):'—',width-right+5,y+3);}for(let i=0;i<5;i++){const x=left+(width-right-left)*i/4;ctx.strokeStyle=document.documentElement.classList.contains('cx-mobile-chart')?'#242424':'#1c2834';ctx.beginPath();ctx.moveTo(x,15);ctx.lineTo(x,height-28);ctx.stroke();}}
+const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.settings.precision);$('bbOn').closest('label').title=[BBSettings.settings.inputs?BBSettings.settings.length+' · '+BBSettings.settings.ma+' · '+BBSettings.settings.source+' · '+BBSettings.settings.mult+'σ':'',BBSettings.settings.values?bbPlots.map((p,i)=>['Basis','Upper','Lower'][i]+': '+(Number.isFinite(p.values.at(-1))?p.values.at(-1).toFixed(bbDigits):'—')).join(' · '):''].filter(Boolean).join(' | ');const top=canvasContext($('priceChart')),bottom=canvasContext($('rsiChart'));const left=15,right=64;function grid(chart,minimum,maximum,steps){
+ const {ctx,width,height}=chart, mobile=document.documentElement.classList.contains('cx-mobile-chart');
+ const jpy=markets[selected].symbol.endsWith('JPY'), span=maximum-minimum;
+ if(!(span>0))return;
+ ctx.save();ctx.font=mobile?'12px system-ui':'600 13px system-ui';
+ const plotHeight=height-43,plotWidth=width-right-left;
+ const decimals=jpy?3:markets[selected].category==='FOREIGN EXCHANGE'?5:maximum>100?2:3;
+ let ticks=[];
+ if(mobile){
+  const target=Math.max(2,Math.floor(plotHeight/35)),raw=span/target;
+  const magnitude=10**Math.floor(Math.log10(raw));
+  const multiples=[1,1.5,2,2.5,3,4,5,7.5,10];
+  const tickStep=(multiples.find(v=>v*magnitude>=raw-1e-12)||10)*magnitude;
+  const first=Math.ceil(minimum/tickStep-1e-8);
+  for(let i=first;i*tickStep<=maximum+1e-8&&ticks.length<100;i++)ticks.push(i*tickStep);
+ }else if(jpy){
+  const raw=Math.max(.001,span/Math.max(1,Math.floor((height-43)/46)));
+  const power=10**Math.floor(Math.log10(raw));
+  const spacing=Math.max(.001,([1,2,2.5,5,10].find(n=>n*power>=raw)||10)*power);
+  for(let i=Math.ceil(minimum/spacing-1e-9);i<=Math.floor(maximum/spacing+1e-9)&&ticks.length<200;i++)ticks.push(i*spacing);
+ }else for(let i=0;i<=steps;i++)ticks.push(maximum-span*i/steps);
+ ctx.strokeStyle=mobile?'#454B54':'#202c39';ctx.lineWidth=mobile?1:.6;
+ if(mobile)ctx.setLineDash([4,4]);
+ let previousLabel=-Infinity;
+ for(const value of ticks){
+  const y=15+plotHeight*(maximum-value)/span;
+  if(y<15||y>height-28)continue;
+  ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(width-right,y);ctx.stroke();
+  if(y-previousLabel<19)continue;
+  previousLabel=y;ctx.fillStyle='#ffffff';
+  ctx.fillText(data.length?value.toFixed(decimals):'—',width-right+5,Math.min(height-30,Math.max(24,y+4)));
+ }
+ const columns=mobile?11:5;
+ for(let i=0;i<columns;i++){
+  const x=left+plotWidth*i/(columns-1);
+  ctx.beginPath();ctx.moveTo(x,15);ctx.lineTo(x,height-28);ctx.stroke();
+ }
+ ctx.restore();
+}
 let low=0,high=1;if(visible.length){// Candle prices alone define autoscale; overlay toggles must not resize the candles.
 const values=visible.flatMap(b=>[b.low,b.high]);low=Math.min(...values);high=Math.max(...values);const pad=Math.max((high-low)*.08,high*.0001);low-=pad;high+=pad;}const autoCenter=(high+low)/2,range=(high-low)/verticalScales.price.factor;const priceCenter=zoomPriceOverride?.center??verticalScales.price.center??autoCenter;const effectiveRange=zoomPriceOverride?.span??wheelFlowerSpan??range;currentPriceBounds={center:priceCenter,span:effectiveRange};low=priceCenter-effectiveRange/2;high=priceCenter+effectiveRange/2;grid(top,low,high,5);const plotWidth=top.width-right-left,step=plotWidth/count,x=i=>left+(start-viewStart+i+.5)*step,y=value=>15+(high-value)/(high-low)*(top.height-43),ry=value=>15+(verticalScales.rsi.center+50/verticalScales.rsi.factor-value)/(100/verticalScales.rsi.factor)*(bottom.height-43);function line(chart,values,color,mapY,style){const isOsc=chart===bottom,sliceStart=isOsc?oscStart:start,sliceEnd=isOsc?oscEnd:end,plotX=isOsc?(i=>left+(oscStart-oscStartFloat+i+.5)*(bottom.width-right-left)/oscView.count):x;const {ctx}=chart;ctx.strokeStyle=color;ctx.lineWidth=color==='#ffe638'?3:color==='#ff263e'?2.5:(color==='#3293ff'||color==='#ff334c')?2:1.4;if(style){ctx.lineWidth=style.width;ctx.setLineDash(style.style==='dashed'?[7,5]:style.style==='dotted'?[2,4]:[]);}ctx.beginPath();let active=false;values.slice(sliceStart,sliceEnd).forEach((value,i)=>{if(!Number.isFinite(value)){active=false;return;}if(active)ctx.lineTo(plotX(i),mapY(value));else ctx.moveTo(plotX(i),mapY(value));active=true;});ctx.stroke();ctx.setLineDash([]);}
 if($('bbOn').checked){const c=top.ctx,u=bbPlots[1],l=bbPlots[2];if(BBSettings.settings.background&&u.show&&l.show){c.save();c.fillStyle=BBSettings.settings.fill;c.globalAlpha=BBSettings.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}bbPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
