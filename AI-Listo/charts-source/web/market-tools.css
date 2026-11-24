@@ -559,3 +559,73 @@ html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;whi
    background:#000!important;border:0!important;
  }
 }
+
+/* Mobile one-click quote row — approved 28.4 / 43.2 / 28.4 geometry.
+   Scoped to mobile chart only; desktop and the rest of the chart are untouched. */
+@media (max-width:760px) {
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel:not([hidden]) {
+   display:flex!important;flex-direction:row!important;align-items:stretch!important;
+   justify-content:flex-start!important;gap:0!important;
+   box-sizing:border-box!important;width:100%!important;max-width:100%!important;
+   height:10.5vw!important;min-height:10.5vw!important;max-height:10.5vw!important;
+   margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+   background:#000!important;box-shadow:none!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-side {
+   box-sizing:border-box!important;flex:0 0 28.4%!important;width:28.4%!important;
+   min-width:0!important;max-width:28.4%!important;
+   height:100%!important;min-height:0!important;max-height:100%!important;
+   margin:0!important;padding:2px 5px 3px!important;
+   display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+   justify-content:flex-start!important;border:0!important;border-radius:2px!important;
+   box-shadow:none!important;overflow:hidden!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-sell {
+   order:0!important;background:#e90000!important;color:#fff!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-buy {
+   order:2!important;background:#087a0a!important;color:#fff!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-volume {
+   box-sizing:border-box!important;order:1!important;
+   flex:0 0 43.2%!important;width:43.2%!important;min-width:0!important;max-width:43.2%!important;
+   height:100%!important;min-height:0!important;max-height:100%!important;
+   position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+   transform:none!important;margin:0!important;padding:0 3px!important;
+   display:flex!important;flex-direction:row!important;align-items:center!important;
+   justify-content:space-between!important;gap:0!important;
+   background:#000!important;border:0!important;border-radius:0!important;
+   border-top:1px solid rgba(255,255,255,.2)!important;
+   border-bottom:1px solid rgba(255,255,255,.2)!important;
+   box-shadow:none!important;overflow:hidden!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-volume>button {
+   flex:0 0 26px!important;width:26px!important;height:100%!important;min-height:0!important;
+   padding:0!important;margin:0!important;border:0!important;border-radius:0!important;
+   background:transparent!important;box-shadow:none!important;color:#fff!important;
+   display:flex!important;align-items:center!important;justify-content:center!important;
+   font-size:20px!important;line-height:1!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-volume>input {
+   flex:1 1 auto!important;width:100%!important;min-width:0!important;max-width:none!important;
+   height:100%!important;min-height:0!important;padding:0!important;margin:0!important;
+   border:0!important;border-radius:0!important;outline-offset:-2px!important;
+   background:transparent!important;box-shadow:none!important;color:#fff!important;
+   font-size:18px!important;line-height:1!important;text-align:center!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-side-label {
+   position:static!important;align-self:flex-start!important;margin:0!important;
+   font-size:11px!important;line-height:12px!important;font-weight:500!important;color:#fff!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-price {
+   position:relative!important;top:-1px!important;align-self:center!important;
+   margin:auto 0 2px!important;padding:0!important;
+   color:#fff!important;font-size:20px!important;line-height:21px!important;
+   font-weight:750!important;white-space:nowrap!important;text-align:center!important;
+   font-variant-numeric:tabular-nums!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .cx-quote-last-digit {
+   display:inline-block!important;font-size:.62em!important;line-height:1!important;
+   vertical-align:super!important;position:relative!important;top:1px!important;
+ }
+}
