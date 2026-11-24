@@ -689,3 +689,15 @@ html.cx-mobile-chart .cx-mobile-rsi-time-axis span{position:absolute;top:5px;whi
   pointer-events:auto!important;
  }
 }
+
+/* Mobile RSI/MA live legend: values from the plotted oscillator series. */
+@media(max-width:760px){
+ html.cx-mobile-chart .chart-shell>.rsi-header .indicator-box{display:none!important;}
+ html.cx-mobile-chart .chart-shell>.rsi-header #cxMobileOscCaption{
+  display:inline-block!important;flex:1 1 auto;min-width:0;
+  color:#fff!important;background:transparent!important;border:0!important;
+  font:12px/22px system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-variant-numeric:tabular-nums;pointer-events:none;
+ }
+}
+html:not(.cx-mobile-chart) #cxMobileOscCaption{display:none!important;}
