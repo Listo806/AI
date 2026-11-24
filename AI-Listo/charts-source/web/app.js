@@ -401,27 +401,6 @@ $('panLeft').onclick=()=>{zoomPriceOverride=null;offset=Math.max(-count+20,offse
 // Coalesce pointer updates: one chart render for the newest pointer event per frame.
 let pointerFrame=0;
 const schedulePointerDraw=()=>{if(pointerFrame)return;pointerFrame=requestAnimationFrame(()=>{pointerFrame=0;draw(true);});};
-// Mobile two-finger pinch: midpoint-anchored time zoom, synchronized across price and RSI.
-let mobilePinch=null;
-function pinchCoordinates(e){const a=e.touches[0],b=e.touches[1];return {distance:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),midX:(a.clientX+b.clientX)/2};}
-for(const pinchCanvas of [$('priceChart'),$('rsiChart')]){
- pinchCanvas.addEventListener('touchstart',e=>{
-  if(!document.documentElement.classList.contains('cx-mobile-chart')||e.touches.length!==2)return;
-  e.preventDefault();const point=pinchCoordinates(e),rect=pinchCanvas.getBoundingClientRect();
-  mobilePinch={canvas:pinchCanvas,distance:Math.max(1,point.distance),count,offset,anchor:Math.max(0,Math.min(1,(point.midX-rect.left-15)/Math.max(1,rect.width-79)))};
-  dragging=null;hover=-1;crosshair=null;
- },{passive:false});
- pinchCanvas.addEventListener('touchmove',e=>{
-  if(!mobilePinch||mobilePinch.canvas!==pinchCanvas||e.touches.length!==2)return;
-  e.preventDefault();const point=pinchCoordinates(e),rect=pinchCanvas.getBoundingClientRect();
-  const nextCount=Math.max(20,Math.min(Math.max(500,bars().length+50),Math.round(mobilePinch.count*mobilePinch.distance/Math.max(1,point.distance))));
-  const fraction=Math.max(0,Math.min(1,(point.midX-rect.left-15)/Math.max(1,rect.width-79)));
-  const anchorIndex=bars().length-mobilePinch.offset-mobilePinch.count+mobilePinch.anchor*mobilePinch.count;
-  count=nextCount;offset=bars().length-anchorIndex-(1-fraction)*nextCount;
-  oscView.count=count;oscView.offset=offset;zoomPriceOverride=null;draw();
- },{passive:false});
- for(const type of ['touchend','touchcancel'])pinchCanvas.addEventListener(type,e=>{if(e.touches.length<2)mobilePinch=null;},{passive:true});
-}
 $('zoomIn').onclick=()=>window.ChartZoom.change('in');$('zoomOut').onclick=()=>window.ChartZoom.change('out');$('reset').onclick=()=>{clearWheelFlower();zoomPriceOverride=null;verticalScales.price={factor:1,center:null};count=170;offset=-Math.round(count*.05);hover=-1;crosshair=null;draw();};let dragging=null;
 for(const canvas of [$('priceChart'),$('rsiChart')]){
  const pane=canvas.id==='priceChart'?'price':'rsi';
@@ -454,10 +433,10 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   draw();
  };
  canvas.ondblclick=event=>{clearWheelFlower();verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=170;setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
- canvas.onpointerdown=event=>{if(mobilePinch||event.pointerType==='touch'&&event.isPrimary===false)return;if(event.button!==0)return;event.preventDefault();clearWheelFlower();zoomPriceOverride=null;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
+ canvas.onpointerdown=event=>{if(event.button!==0)return;event.preventDefault();clearWheelFlower();zoomPriceOverride=null;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
  const releaseDrag=event=>{if(!dragging||dragging.pointerId!==event.pointerId)return;dragging=null;if(canvas.hasPointerCapture?.(event.pointerId))canvas.releasePointerCapture(event.pointerId);schedulePointerDraw();};
  canvas.onpointerup=releaseDrag;canvas.onpointercancel=releaseDrag;canvas.onlostpointercapture=event=>{if(dragging?.pointerId===event.pointerId){dragging=null;schedulePointerDraw();}};
- canvas.onpointermove=event=>{if(mobilePinch)return;if(dragging&&dragging.pointerId!==event.pointerId)return;const rect=canvas.getBoundingClientRect(),view=paneView(pane),viewStart=bars().length-view.count-view.offset,first=Math.max(0,Math.floor(viewStart)),last=Math.min(bars().length,Math.ceil(viewStart+view.count));hoverPane=pane;canvas.style.cursor=inAxis(event)?'ns-resize':dragging?'grabbing':'crosshair';if(dragging?.pane===pane){if(dragging.kind==='scale')verticalScales[pane].factor=Math.max(.2,Math.min(12,dragging.factor*Math.exp((dragging.y-event.clientY)/160)));else{view.offset=Math.max(-view.count+20,Math.min(Math.max(0,bars().length-20),dragging.offset+Math.round((event.clientX-dragging.x)/Math.max(1,rect.width-79)*dragging.count)));setPaneView(pane,view);if(pane==='price' && Math.abs(event.clientY-dragging.y)>3){verticalScales.price.center=dragging.center+(event.clientY-dragging.y)/Math.max(1,rect.height-43)*dragging.span;}}hover=-1;crosshair=null;}else{hover=inAxis(event)?-1:Math.floor(viewStart+(event.clientX-rect.left-15)/Math.max(1,rect.width-79)*view.count)-first;if(hover<0||hover>=last-first)hover=-1;crosshair=null;const px=event.clientX-rect.left,py=event.clientY-rect.top;if(px>=15&&px<=rect.width-64&&py>=15&&py<=rect.height-28)crosshair={pane,x:px,y:py};}schedulePointerDraw();};
+ canvas.onpointermove=event=>{if(dragging&&dragging.pointerId!==event.pointerId)return;const rect=canvas.getBoundingClientRect(),view=paneView(pane),viewStart=bars().length-view.count-view.offset,first=Math.max(0,Math.floor(viewStart)),last=Math.min(bars().length,Math.ceil(viewStart+view.count));hoverPane=pane;canvas.style.cursor=inAxis(event)?'ns-resize':dragging?'grabbing':'crosshair';if(dragging?.pane===pane){if(dragging.kind==='scale')verticalScales[pane].factor=Math.max(.2,Math.min(12,dragging.factor*Math.exp((dragging.y-event.clientY)/160)));else{view.offset=Math.max(-view.count+20,Math.min(Math.max(0,bars().length-20),dragging.offset+Math.round((event.clientX-dragging.x)/Math.max(1,rect.width-79)*dragging.count)));setPaneView(pane,view);if(pane==='price' && Math.abs(event.clientY-dragging.y)>3){verticalScales.price.center=dragging.center+(event.clientY-dragging.y)/Math.max(1,rect.height-43)*dragging.span;}}hover=-1;crosshair=null;}else{hover=inAxis(event)?-1:Math.floor(viewStart+(event.clientX-rect.left-15)/Math.max(1,rect.width-79)*view.count)-first;if(hover<0||hover>=last-first)hover=-1;crosshair=null;const px=event.clientX-rect.left,py=event.clientY-rect.top;if(px>=15&&px<=rect.width-64&&py>=15&&py<=rect.height-28)crosshair={pane,x:px,y:py};}schedulePointerDraw();};
  canvas.onpointerleave=()=>{if(dragging)return;hover=-1;crosshair=null;schedulePointerDraw();};
 }
 document.querySelectorAll('[data-frame]').forEach(button=>button.onclick=()=>{document.querySelectorAll('[data-range]').forEach(b=>b.classList.remove('active'));selectFrame(button.dataset.frame);});['bbOn','vwapOn','rsiOn','maOn','tramaOn','engineOn','priceOn'].forEach(id=>$(id).onchange=draw);
@@ -518,13 +497,6 @@ function aggregateChartBars(source,interval){
  }
  return [...groups.values()].sort((a,b)=>a.time-b.time).slice(1);
 }
-async function safeMarketJson(response){
-  const type=(response.headers.get('content-type')||'').toLowerCase();
-  if(!type.includes('application/json')&&!type.includes('+json'))throw Error('Market data API returned a non-JSON response (HTTP '+response.status+').');
-  let payload;try{payload=await response.json();}catch{throw Error('Market data API returned invalid JSON.');}
-  if(!response.ok)throw Error(payload?.message||payload?.error||'Market data API unavailable (HTTP '+response.status+').');
-  return payload;
-}
 async function requestNativeHistory(symbol,interval){
  if(['2h','1week','1month'].includes(interval)){
   const base=interval==='2h'?'1h':'1day';let source=cache.get(symbol+'|'+base);
@@ -536,9 +508,8 @@ async function requestNativeHistory(symbol,interval){
   if(Date.now()<nativeHistoryBlockedUntil)throw new Error('Live feed is temporarily paused after an access or quota error. Cached charts remain available.');
   const providerInterval={'1min':'1m','5min':'5m','15min':'15m','30min':'30m','1h':'1h','4h':'4h','1day':'1d'}[interval];
   let response,json;
-  response=await fetch('https://backend.cortexaaicrm.com/api/charts/market/candles?'+new URLSearchParams({symbol,interval}),{signal:AbortSignal.timeout(20000),cache:'no-store'});
-  if(!response.ok){nativeHistoryBlockedUntil=Date.now()+60000;}
-  json=await safeMarketJson(response);
+  try{response=await fetch('https://biquote.io/api/'+symbol.replace('/','')+'/ohlc?'+new URLSearchParams({interval:providerInterval,limit:'1000'}),{signal:AbortSignal.timeout(25000),credentials:'omit'});json=await response.json();}
+  catch{response=await fetch('/api/candles?'+new URLSearchParams({symbol,interval}),{signal:AbortSignal.timeout(30000)});json=await response.json();}
   if(!response.ok){nativeHistoryBlockedUntil=Date.now()+Math.max(60,Number(response.headers.get('Retry-After'))||60)*1000;throw new Error(json.error||json.message||'Candle feed unavailable');}
   let values;
   if(json.symbol===symbol.replace('/','')&&Array.isArray(json.bars))values=json.bars.map(b=>({date:b.openTime,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.tickVolume??(b.volume>0?b.volume:null)}));
@@ -649,15 +620,22 @@ function updateLiveQuoteLabels() {
     $('change').textContent = (stale ? 'Last quote · ' : 'Current quote · ') + new Date(quote.timestamp).toLocaleTimeString('en-GB', {timeZone:'UTC', hour12:false}) + ' UTC';
   }
 }
-let quoteRetryAt=0,quoteFailureCount=0;
 async function pollQuotes() {
-  if(window.ChartEmbed || document.hidden || Date.now()<quoteRetryAt)return;
+  if(window.ChartEmbed)return;
   if (quoteRequestRunning || (typeof LiveStream!=='undefined'&&LiveStream.fresh(markets[selected].symbol))) return;
   quoteRequestRunning = true;
   try {
-    const response=await fetch('https://backend.cortexaaicrm.com/api/charts/market/quotes?'+new URLSearchParams(markets.filter(m=>['USD/JPY','XAG/USD','GBP/JPY','XAU/USD'].includes(m.symbol)).map(m=>['symbol',m.symbol])),{signal:AbortSignal.timeout(15000),cache:'no-store'});
-    if (!response.ok){if(response.status===429){nativeHistoryBlockedUntil=Date.now()+Math.max(60,Number(response.headers.get('Retry-After'))||60)*1000;showFeedNotice('Live feed request/quota limit reached. Live data is paused. Saved candles, if available, remain visible.');}throw new Error('Quote connection unavailable (HTTP '+response.status+')');}
-    const result = await safeMarketJson(response);
+    let response;
+    try {
+      const url=new URL('https://biquote.io/api/latest');markets.forEach(m=>url.searchParams.append('symbols',m.symbol.replace('/','')));
+      const direct=await fetch(url,{signal:AbortSignal.timeout(8000),cache:'no-store',credentials:'omit'});
+      if(!direct.ok)throw Error('Direct quote unavailable');const raw=await direct.json();
+      const rows=Array.isArray(raw)?raw:raw.ticks||raw.data||Object.values(raw);
+      const quotes=rows.flatMap(q=>{const market=markets.find(m=>m.symbol.replace('/','')===q.symbol),bid=Number(q.bid),ask=Number(q.ask),timestamp=Date.parse(q.timestamp);return market&&bid>0&&ask>=bid&&Number.isFinite(timestamp)?[{symbol:market.symbol,bid,ask,price:(bid+ask)/2,timestamp,source:'biquote · live midpoint backup',dayDiffPercent:q.dayDiffPercent}]:[];});
+      if(!quotes.length)throw Error('No quotes');response={ok:true,json:async()=>({quotes})};
+    }catch{response=await fetch('/api/quotes?'+new URLSearchParams(markets.map(m=>['symbol',m.symbol])),{signal:AbortSignal.timeout(10000),cache:'no-store'});}
+    if (!response.ok){if(response.status===429){nativeHistoryBlockedUntil=Date.now()+Math.max(60,Number(response.headers.get('Retry-After'))||60)*1000;showFeedNotice('Live feed request/quota limit reached. Live data is paused. Saved candles, if available, remain visible.');}throw new Error('Quote connection unavailable');}
+    const result = await response.json();
     if (!Array.isArray(result.quotes)) throw new Error('Invalid quote response');
     result.quotes.forEach(quote => {
       if (!markets.some(market => market.symbol === quote.symbol) || !Number.isFinite(quote.price) || quote.price <= 0 || !Number.isFinite(quote.timestamp)) return;
@@ -679,11 +657,8 @@ async function pollQuotes() {
       const button = document.querySelectorAll('#markets .market-select')[index];
       if (!liveQuotes.has(error.symbol)) button.querySelector('.market-quote-status').textContent = 'Quote unavailable';
     });
-    quoteFailureCount=0;quoteRetryAt=0;
     applyQuoteSnapshots();updateLiveQuoteLabels();if(!document.hidden)draw();
   } catch {
-    quoteFailureCount=Math.min(quoteFailureCount+1,6);
-    quoteRetryAt=Date.now()+Math.min(60000,5000*2**(quoteFailureCount-1));
     document.querySelectorAll('#markets .market-select').forEach(button => {
       button.classList.add('quote-stale');
       button.querySelector('.market-quote-status').textContent = 'Reconnecting quotes…';
@@ -736,21 +711,6 @@ function syncOscPane(){
  requestAnimationFrame(draw);
 }
 oscPaneToggle.onclick=()=>{oscPaneCollapsed=!oscPaneCollapsed;hover=-1;crosshair=null;try{ChartStorage.setItem('market-osc-pane-collapsed',String(oscPaneCollapsed));}catch{}syncOscPane();};syncOscPane();
-// The mobile divider is a separate drag handle: resizing does not scroll the page.
-const oscDivider=document.createElement('div');oscDivider.id='cxOscDivider';oscDivider.setAttribute('role','separator');oscDivider.setAttribute('aria-orientation','horizontal');oscDivider.setAttribute('aria-label','Resize RSI pane');oscDivider.tabIndex=0;
-const rsiHeader=document.querySelector('.rsi-header');rsiHeader.before(oscDivider);
-const oscRestore=document.createElement('button');oscRestore.id='cxOscRestore';oscRestore.type='button';oscRestore.textContent='▴';oscRestore.setAttribute('aria-label','Restore RSI pane');oscRestore.onclick=()=>oscPaneToggle.click();document.querySelector('.canvas-wrap').append(oscRestore);
-let oscHeight=Number(ChartStorage.getItem('cx-mobile-osc-height'))||150,oscResize=null;
-function applyOscHeight(){if(document.documentElement.classList.contains('cx-mobile-chart'))document.querySelector('.chart-shell').style.setProperty('--cx-osc-height',oscHeight+'px');}
-oscDivider.addEventListener('pointerdown',e=>{if(!document.documentElement.classList.contains('cx-mobile-chart')||oscPaneCollapsed)return;e.preventDefault();oscResize={id:e.pointerId,y:e.clientY,height:oscHeight};oscDivider.setPointerCapture(e.pointerId);});
-oscDivider.addEventListener('pointermove',e=>{if(!oscResize||oscResize.id!==e.pointerId)return;e.preventDefault();const shellHeight=document.querySelector('.chart-shell').clientHeight;oscHeight=Math.max(75,Math.min(shellHeight-160,oscResize.height+oscResize.y-e.clientY));applyOscHeight();fit();draw();});
-const stopOscResize=e=>{if(!oscResize||oscResize.id!==e.pointerId)return;oscResize=null;try{ChartStorage.setItem('cx-mobile-osc-height',String(oscHeight));}catch{}};
-oscDivider.addEventListener('pointerup',stopOscResize);oscDivider.addEventListener('pointercancel',stopOscResize);
-oscDivider.addEventListener('keydown',e=>{if(!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();oscHeight=Math.max(75,oscHeight+(e.key==='ArrowUp'?15:-15));applyOscHeight();fit();draw();});
-// Reflect collapse state in the dedicated restore control and time axis.
-new MutationObserver(()=>{oscRestore.hidden=!oscPaneCollapsed;oscDivider.hidden=oscPaneCollapsed;const axis=document.getElementById('cxMobileRsiTimeAxis');if(axis)axis.hidden=oscPaneCollapsed;applyOscHeight();}).observe(document.querySelector('.chart-shell'),{attributes:true,attributeFilter:['class']});
-oscRestore.hidden=!oscPaneCollapsed;oscDivider.hidden=oscPaneCollapsed;applyOscHeight();
-
 
 // Compact chart navigation; preserve the market-card and MTF grid above.
 const chartNavigation=document.createElement('div');chartNavigation.className='chart-navigation';
@@ -892,7 +852,7 @@ window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+c
  const styleMenu=el('dialog','cx-mobile-style');for(const [label,id] of [['Candlesticks','candlesStyle'],['Line','lineStyle'],['OHLC Bars','ohlcStyle']]){const b=el('button','');b.textContent=label;b.onclick=()=>{click(id);styleMenu.close();};styleMenu.append(b);}const close=el('button','');close.textContent='Close';close.onclick=()=>styleMenu.close();styleMenu.append(close);document.body.append(styleMenu);
  const tf=el('select','cx-mobile-frame');tf.setAttribute('aria-label','Active timeframe');for(const b of root.querySelectorAll('[data-frame]')){const o=document.createElement('option');o.value=b.dataset.frame;o.textContent=b.textContent;tf.append(o);}tf.onchange=()=>selectFrame(tf.value);
  const mtfButton=el('button','cx-mobile-mtf-button');mtfButton.type='button';mtfButton.textContent='MTF';mtfButton.setAttribute('aria-label','Toggle multi-timeframe panel');mtfButton.onclick=()=>{const panel=document.querySelector('.chart-mtf-panel');if(panel){panel.classList.toggle('cx-mobile-mtf-expanded');mtfButton.setAttribute('aria-pressed',String(panel.classList.contains('cx-mobile-mtf-expanded')));}};tools.append(menu,button('Crosshair','cross',()=>click('drawingToolsButton')),button('Indicators','indicator',indicators),tf,mtfButton,button('Drawing tools','swap',()=>click('drawingToolsButton')),button('Cortexa AI','ai',()=>click('cortexaAI')),button('Add market','add',market));const lightning=button('Toggle One Click Trading','lightning',()=>window.OneClickPanel?.toggle());lightning.classList.add('cx-mobile-lightning');lightning.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 5 13h7l-1 9 8-12h-7z"/></svg>';tools.append(lightning);
- const symbol=el('button','cx-mobile-symbol');symbol.onclick=market;const indicatorArrow=el('button','cx-mobile-indicator-arrow');indicatorArrow.type='button';indicatorArrow.textContent='⌄';indicatorArrow.setAttribute('aria-label','Open active indicators');indicatorArrow.onclick=indicators;const price=el('strong','cx-mobile-price'),change=el('span','cx-mobile-change'),quoteValues=el('div','cx-mobile-quote-values');quoteValues.append(price,change);quote.append(symbol,indicatorArrow,quoteValues);chrome.append(tools,quote);root.after(chrome);
+ const symbol=el('button','cx-mobile-symbol');symbol.onclick=market;const price=el('strong','cx-mobile-price'),change=el('span','cx-mobile-change'),quoteValues=el('div','cx-mobile-quote-values');quoteValues.append(price,change);quote.append(symbol,quoteValues);chrome.append(tools,quote);root.after(chrome);
  const quoteAnchor=document.createComment('desktop quote position');quote.before(quoteAnchor);const canvasWrap=shell.querySelector('.canvas-wrap');const tradingStrip=document.querySelector('article > .one-click-control-strip');const tradingAnchor=document.createComment('desktop trading strip');if(tradingStrip)tradingStrip.before(tradingAnchor);
  const news=el('dialog','cx-mobile-style');news.innerHTML='<h3>News</h3><p>Market news is not connected to the current chart feed.</p>';const nc=el('button','');nc.textContent='Close';nc.onclick=()=>news.close();news.append(nc);document.body.append(news);
  const terminalHistory=()=>{const t=document.getElementById('tradingTerminal');if(t?.hidden)click('terminalToggle');click('terminal-tab-history');};
@@ -911,7 +871,7 @@ window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+c
   if(typeof mtfGrid!=='undefined'&&mtfGrid.hidden){mtfGrid.hidden=false;}
   if(typeof mtfToggle!=='undefined'){mtfToggle.textContent='▴';mtfToggle.setAttribute('aria-expanded','true');}
  }
- function layout(){const active=mq.matches&&!document.documentElement.classList.contains('chart-embedded');document.documentElement.classList.toggle('cx-mobile-chart',active);applyOscHeight();applyMobileVisualDefaults(active);if(tradingStrip){if(active)chrome.append(tradingStrip);else tradingAnchor.after(tradingStrip);}if(canvasWrap){if(active&&quote.parentNode!==canvasWrap)canvasWrap.prepend(quote);else if(!active&&quote.parentNode!==chrome)quoteAnchor.after(quote);}if(active&&window.OneClickPanel?.opened){window.OneClickPanel.reposition?.();}if(active){const rail=document.getElementById('markets');if(rail)rail.scrollLeft=0;}if(bar){if(active&&bar.hidden){/* Keep drawing tools closed on mobile until requested. */}else if(!active&&openedByMobile){if(!bar.hidden)click('drawingToolsButton');openedByMobile=false;bar.classList.remove('cx-mobile-expanded');}}sync();requestAnimationFrame(()=>draw());}
+ function layout(){const active=mq.matches&&!document.documentElement.classList.contains('chart-embedded');document.documentElement.classList.toggle('cx-mobile-chart',active);applyMobileVisualDefaults(active);if(tradingStrip){if(active)chrome.append(tradingStrip);else tradingAnchor.after(tradingStrip);}if(canvasWrap){if(active&&quote.parentNode!==canvasWrap)canvasWrap.prepend(quote);else if(!active&&quote.parentNode!==chrome)quoteAnchor.after(quote);}if(active&&window.OneClickPanel?.opened){window.OneClickPanel.reposition?.();}if(active){const rail=document.getElementById('markets');if(rail)rail.scrollLeft=0;}if(bar){if(active&&bar.hidden){/* Keep drawing tools closed on mobile until requested. */}else if(!active&&openedByMobile){if(!bar.hidden)click('drawingToolsButton');openedByMobile=false;bar.classList.remove('cx-mobile-expanded');}}sync();requestAnimationFrame(()=>draw());}
  const observer=new MutationObserver(sync);observer.observe(document.getElementById('cxActiveQuote'),{childList:true,subtree:true,characterData:true});observer.observe(document.getElementById('chartTicker'),{childList:true,subtree:true});document.addEventListener('click',()=>requestAnimationFrame(sync));mq.addEventListener('change',layout);layout();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initMobile,{once:true});else initMobile();
