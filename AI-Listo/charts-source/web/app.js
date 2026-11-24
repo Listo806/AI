@@ -649,13 +649,14 @@ function updateLiveQuoteLabels() {
     $('change').textContent = (stale ? 'Last quote · ' : 'Current quote · ') + new Date(quote.timestamp).toLocaleTimeString('en-GB', {timeZone:'UTC', hour12:false}) + ' UTC';
   }
 }
+let quoteRetryAt=0,quoteFailureCount=0;
 async function pollQuotes() {
-  if(window.ChartEmbed)return;
+  if(window.ChartEmbed || document.hidden || Date.now()<quoteRetryAt)return;
   if (quoteRequestRunning || (typeof LiveStream!=='undefined'&&LiveStream.fresh(markets[selected].symbol))) return;
   quoteRequestRunning = true;
   try {
     const response=await fetch('https://backend.cortexaaicrm.com/api/charts/market/quotes?'+new URLSearchParams(markets.filter(m=>['USD/JPY','XAG/USD','GBP/JPY','XAU/USD'].includes(m.symbol)).map(m=>['symbol',m.symbol])),{signal:AbortSignal.timeout(15000),cache:'no-store'});
-    if (!response.ok){if(response.status===429){nativeHistoryBlockedUntil=Date.now()+Math.max(60,Number(response.headers.get('Retry-After'))||60)*1000;showFeedNotice('Live feed request/quota limit reached. Live data is paused. Saved candles, if available, remain visible.');}throw new Error('Quote connection unavailable');}
+    if (!response.ok){if(response.status===429){nativeHistoryBlockedUntil=Date.now()+Math.max(60,Number(response.headers.get('Retry-After'))||60)*1000;showFeedNotice('Live feed request/quota limit reached. Live data is paused. Saved candles, if available, remain visible.');}throw new Error('Quote connection unavailable (HTTP '+response.status+')');}
     const result = await safeMarketJson(response);
     if (!Array.isArray(result.quotes)) throw new Error('Invalid quote response');
     result.quotes.forEach(quote => {
@@ -678,8 +679,11 @@ async function pollQuotes() {
       const button = document.querySelectorAll('#markets .market-select')[index];
       if (!liveQuotes.has(error.symbol)) button.querySelector('.market-quote-status').textContent = 'Quote unavailable';
     });
+    quoteFailureCount=0;quoteRetryAt=0;
     applyQuoteSnapshots();updateLiveQuoteLabels();if(!document.hidden)draw();
   } catch {
+    quoteFailureCount=Math.min(quoteFailureCount+1,6);
+    quoteRetryAt=Date.now()+Math.min(60000,5000*2**(quoteFailureCount-1));
     document.querySelectorAll('#markets .market-select').forEach(button => {
       button.classList.add('quote-stale');
       button.querySelector('.market-quote-status').textContent = 'Reconnecting quotes…';
