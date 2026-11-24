@@ -720,3 +720,9 @@ html:not(.cx-mobile-chart) #cxMobileOscCaption{display:none!important;}
 @media(max-width:760px){html.cx-mobile-chart .cx-mobile-tools .cx-crosshair-active{color:#24e2ed!important;outline:1px solid rgba(36,226,237,.65)!important;outline-offset:-2px!important;border-radius:4px!important;}
 html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-sell,html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-buy{background:#259b39!important;}
 html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-sell,html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-buy{background:#f04444!important;}}
+
+/* Mobile feedback 43: slightly softer synchronized bid/ask movement colors. */
+@media(max-width:760px){
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-sell,html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-buy{background:#38ad53!important;}
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-sell,html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-buy{background:#f45c60!important;}
+}
