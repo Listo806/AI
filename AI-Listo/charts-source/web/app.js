@@ -208,6 +208,47 @@ function drawHollowCandle(ctx,bar,cx,y,step){
 // Pointer-only frames must not schedule server analysis or rebuild engine request signatures.
 // Price/feed/settings changes still call draw() and refresh the engine normally.
 let zoomPriceOverride=null;
+// Continuous mobile vertical grid across the two independently rendered canvases.
+// The bridge is measured from DOM rectangles (not hard-coded pane heights), so it
+// follows RSI resizing and never changes candles, indicators or the price scale.
+let mobileGridBridge=null;
+function drawMobileGridBridge(){
+ const shell=document.querySelector('.chart-shell');
+ const price=document.getElementById('priceChart');
+ const rsi=document.getElementById('rsiChart');
+ const mobile=document.documentElement.classList.contains('cx-mobile-chart');
+ if(!shell||!price||!rsi)return;
+ if(!mobile||!rsi.getClientRects().length||shell.classList.contains('osc-pane-collapsed')||shell.classList.contains('osc-pane-absent')){
+  if(mobileGridBridge)mobileGridBridge.style.display='none';
+  return;
+ }
+ if(!mobileGridBridge){
+  mobileGridBridge=document.createElement('canvas');
+  mobileGridBridge.id='cxMobileGridBridge';
+  mobileGridBridge.setAttribute('aria-hidden','true');
+  Object.assign(mobileGridBridge.style,{position:'absolute',pointerEvents:'none',zIndex:'2',display:'block'});
+  shell.appendChild(mobileGridBridge);
+ }
+ const sr=shell.getBoundingClientRect(),pr=price.getBoundingClientRect(),rr=rsi.getBoundingClientRect();
+ const top=pr.bottom-28, bottom=rr.top+15;
+ const width=pr.width,height=bottom-top;
+ if(!(width>80&&height>0)) {mobileGridBridge.style.display='none';return;}
+ const dpr=window.devicePixelRatio||1;
+ Object.assign(mobileGridBridge.style,{display:'block',left:(pr.left-sr.left)+'px',top:(top-sr.top)+'px',width:width+'px',height:height+'px'});
+ const pw=Math.round(width*dpr),ph=Math.round(height*dpr);
+ if(mobileGridBridge.width!==pw)mobileGridBridge.width=pw;
+ if(mobileGridBridge.height!==ph)mobileGridBridge.height=ph;
+ const ctx=mobileGridBridge.getContext('2d');
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ ctx.clearRect(0,0,width,height);
+ ctx.strokeStyle='#454B54';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+ // Exactly the same 11 X positions as the price and RSI canvas grid.
+ for(let i=0;i<11;i++){
+  const x=Math.round(15+(width-79)*i/10)+.5;
+  ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke();
+ }
+ ctx.setLineDash([]);
+}
 function draw(pointerOnly=false){
  const currentData=bars();
  const currentContext=JSON.stringify([markets[selected].symbol,frame,EngineSettings.inputs]);
@@ -412,45 +453,26 @@ if(document.documentElement.classList.contains('cx-mobile-chart') && high>low){
 }
 
 const ctx=bottom.ctx,rs=OscSettings.rsi,ms=OscSettings.ma;
-// Mobile RSI grid: same X positions as the price pane, but its own 0–100 Y scale.
-// Paint each grid line once; indicator thresholds are drawn only as labels below.
-const mobileRsiGrid=document.documentElement.classList.contains('cx-mobile-chart');
-if(mobileRsiGrid && bottom.width>right+left && bottom.height>43){
- const gridBottom=bottom.height-28, gridRight=bottom.width-right;
- const gridLeft=left, gridTop=15;
+// Mobile RSI grid: share the price chart's X coordinates and use RSI's own 0–100 scale.
+// Plot bounds come from the measured canvas, so resizing the RSI pane redraws the grid.
+if(document.documentElement.classList.contains('cx-mobile-chart') && bottom.width>right+left && bottom.height>43){
+ const gridBottom=bottom.height-28;
+ const gridRight=bottom.width-right;
+ const gridLeft=left;
+ const gridTop=15;
  ctx.save();
  ctx.strokeStyle='#454B54';ctx.lineWidth=1;ctx.setLineDash([4,4]);
- for(let i=0;i<=10;i++){
+ for(let i=0;i<11;i++){
   const px=Math.round(gridLeft+(gridRight-gridLeft)*i/10)+.5;
   ctx.beginPath();ctx.moveTo(px,gridTop);ctx.lineTo(px,gridBottom);ctx.stroke();
  }
- // The RSI has its own vertical scale; draw intermediate 10-point levels too.
- // Use the same ry() mapping used for RSI/MA so zooming its axis stays aligned.
- for(let value=0;value<=100;value+=10){
-  const py=ry(value);
-  if(py<gridTop||py>gridBottom)continue;
-  const yy=Math.round(py)+.5;
-  ctx.beginPath();ctx.moveTo(gridLeft,yy);ctx.lineTo(gridRight,yy);ctx.stroke();
- }
  ctx.setLineDash([]);
- ctx.strokeStyle='rgba(255,255,255,.55)';
+ // A solid bottom edge closes the RSI plot directly above the shared time axis.
+ ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1;
  ctx.beginPath();ctx.moveTo(gridLeft,gridBottom+.5);ctx.lineTo(gridRight,gridBottom+.5);ctx.stroke();
  ctx.restore();
 }
-if(rs.background&&!document.documentElement.classList.contains('cx-mobile-chart')){ctx.save();ctx.fillStyle=rs.fill;ctx.globalAlpha=rs.opacity/100;ctx.fillRect(left,ry(rs.upper),bottom.width-right-left,ry(rs.lower)-ry(rs.upper));ctx.restore();}const levels=rs.levels?[...new Set([0,rs.lower,50,rs.upper,100])]:[0,50,100];
-levels.forEach(value=>{
- const major=value===rs.lower||value===rs.upper;
- // The mobile grid was already painted above: never stroke these rows again.
- if(!mobileRsiGrid){
-  ctx.strokeStyle=major?rs.levelColor:'#303144';ctx.lineWidth=major?1.4:.6;
-  ctx.setLineDash(major?[7,4]:[3,4]);ctx.beginPath();ctx.moveTo(left,ry(value));
-  ctx.lineTo(bottom.width-right,ry(value));ctx.stroke();ctx.setLineDash([]);
- }
- ctx.fillStyle=major?'#e4edff':'#8191a6';
- ctx.font=major?'bold 12px system-ui':'10px system-ui';
- ctx.fillText(value,bottom.width-right+10,ry(value)+3);
-});
-if($('rsiOn').checked&&rs.show)line(bottom,rsi,rs.color,ry,rs);if($('rsiOn').checked&&ms.show)line(bottom,ma,ms.color,ry,ms);[[rsi,rs,'rsiOn'],[ma,ms,'maOn']].forEach(([values,settings,id])=>{const v=values[oscEnd-1];if(!settings.labels||!settings.show||!(id==='maOn'?$('rsiOn').checked:$(id).checked)||!Number.isFinite(v))return;const py=ry(v);ctx.fillStyle='#17202b';ctx.fillRect(bottom.width-right+1,py-9,right-3,18);ctx.strokeStyle=settings.color;ctx.strokeRect(bottom.width-right+1,py-9,right-3,18);ctx.fillStyle='#fff';ctx.font='bold 11px system-ui';ctx.fillText(v.toFixed(settings.precision==='default'?2:Number(settings.precision)),bottom.width-right+5,py+4);});
+if(rs.background&&!document.documentElement.classList.contains('cx-mobile-chart')){ctx.save();ctx.fillStyle=rs.fill;ctx.globalAlpha=rs.opacity/100;ctx.fillRect(left,ry(rs.upper),bottom.width-right-left,ry(rs.lower)-ry(rs.upper));ctx.restore();}const levels=rs.levels?[...new Set([0,rs.lower,50,rs.upper,100])]:[0,50,100];levels.forEach(value=>{const major=value===rs.lower||value===rs.upper;ctx.strokeStyle=document.documentElement.classList.contains('cx-mobile-chart')?(major?rs.levelColor:'#454B54'):(major?rs.levelColor:'#303144');ctx.lineWidth=document.documentElement.classList.contains('cx-mobile-chart')?1:(major?1.4:.6);ctx.setLineDash(document.documentElement.classList.contains('cx-mobile-chart')?[4,4]:(major?[7,4]:[3,4]));ctx.beginPath();ctx.moveTo(left,ry(value));ctx.lineTo(bottom.width-right,ry(value));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=major?'#e4edff':'#8191a6';ctx.font=major?'bold 12px system-ui':'10px system-ui';ctx.fillText(value,bottom.width-right+10,ry(value)+3);});if($('rsiOn').checked&&rs.show)line(bottom,rsi,rs.color,ry,rs);if($('rsiOn').checked&&ms.show)line(bottom,ma,ms.color,ry,ms);[[rsi,rs,'rsiOn'],[ma,ms,'maOn']].forEach(([values,settings,id])=>{const v=values[oscEnd-1];if(!settings.labels||!settings.show||!(id==='maOn'?$('rsiOn').checked:$(id).checked)||!Number.isFinite(v))return;const py=ry(v);ctx.fillStyle='#17202b';ctx.fillRect(bottom.width-right+1,py-9,right-3,18);ctx.strokeStyle=settings.color;ctx.strokeRect(bottom.width-right+1,py-9,right-3,18);ctx.fillStyle='#fff';ctx.font='bold 11px system-ui';ctx.fillText(v.toFixed(settings.precision==='default'?2:Number(settings.precision)),bottom.width-right+5,py+4);});
 if(visible.length){
  const mobileAxis=document.documentElement.classList.contains('cx-mobile-chart');
  const axis=document.getElementById('cxMobileRsiTimeAxis');
@@ -472,7 +494,9 @@ if(displayedCrosshair&&!dragging&&!mobilePinchActive){const chart=displayedCross
  const maximum=displayedCrosshair.pane==='rsi'?verticalScales.rsi.center+50/verticalScales.rsi.factor:high;
  const timeLabel=crosshairTimeLabel(data,paneView(displayedCrosshair.pane),displayedCrosshair.x,chart.width);
  drawCrosshair(chart,displayedCrosshair,minimum,maximum,displayedCrosshair.pane==='rsi'?2:3,timeLabel);
-}}
+}
+ drawMobileGridBridge();
+}
 function crosshairTimeLabel(data,view,pointerX,width){
  // Match the candle bucket used by pointer hover, including each pane's own pan/zoom.
  const plotWidth=width-79;
