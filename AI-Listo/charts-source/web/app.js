@@ -235,7 +235,7 @@ const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.set
  const decimals=jpy?3:markets[selected].category==='FOREIGN EXCHANGE'?5:maximum>100?2:3;
  let ticks=[];
  if(mobile){
-  const target=Math.max(2,Math.floor(plotHeight/35)),raw=span/target;
+  const target=Math.max(2,Math.floor(plotHeight/32)),raw=span/target;
   const magnitude=10**Math.floor(Math.log10(raw));
   const multiples=[1,1.5,2,2.5,3,4,5,7.5,10];
   const tickStep=(multiples.find(v=>v*magnitude>=raw-1e-12)||10)*magnitude;
@@ -254,6 +254,7 @@ const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.set
   const y=15+plotHeight*(maximum-value)/span;
   if(y<15||y>height-28)continue;
   ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(width-right,y);ctx.stroke();
+  if(mobile)continue; // Mobile axis labels are drawn last, above overlays, with collision avoidance.
   if(y-previousLabel<19)continue;
   previousLabel=y;ctx.fillStyle='#ffffff';
   ctx.fillText(data.length?value.toFixed(decimals):'—',width-right+5,Math.min(height-30,Math.max(24,y+4)));
@@ -266,7 +267,7 @@ const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.set
  ctx.restore();
 }
 let low=0,high=1;if(visible.length){// Candle prices alone define autoscale; overlay toggles must not resize the candles.
-const values=visible.flatMap(b=>[b.low,b.high]);low=Math.min(...values);high=Math.max(...values);const pad=Math.max((high-low)*.08,high*.0001);low-=pad;high+=pad;}const autoCenter=(high+low)/2,range=(high-low)/verticalScales.price.factor;const priceCenter=zoomPriceOverride?.center??verticalScales.price.center??autoCenter;const effectiveRange=zoomPriceOverride?.span??wheelFlowerSpan??range;currentPriceBounds={center:priceCenter,span:effectiveRange};low=priceCenter-effectiveRange/2;high=priceCenter+effectiveRange/2;grid(top,low,high,5);const plotWidth=top.width-right-left,step=plotWidth/count,x=i=>left+(start-viewStart+i+.5)*step,y=value=>15+(high-value)/(high-low)*(top.height-43),ry=value=>15+(verticalScales.rsi.center+50/verticalScales.rsi.factor-value)/(100/verticalScales.rsi.factor)*(bottom.height-43);function line(chart,values,color,mapY,style){const isOsc=chart===bottom,sliceStart=isOsc?oscStart:start,sliceEnd=isOsc?oscEnd:end,plotX=isOsc?(i=>left+(oscStart-oscStartFloat+i+.5)*(bottom.width-right-left)/oscView.count):x;const {ctx}=chart;ctx.strokeStyle=color;ctx.lineWidth=color==='#ffe638'?3:color==='#ff263e'?2.5:(color==='#3293ff'||color==='#ff334c')?2:1.4;if(style){ctx.lineWidth=style.width;ctx.setLineDash(style.style==='dashed'?[7,5]:style.style==='dotted'?[2,4]:[]);}ctx.beginPath();let active=false;values.slice(sliceStart,sliceEnd).forEach((value,i)=>{if(!Number.isFinite(value)){active=false;return;}if(active)ctx.lineTo(plotX(i),mapY(value));else ctx.moveTo(plotX(i),mapY(value));active=true;});ctx.stroke();ctx.setLineDash([]);}
+const values=visible.flatMap(b=>[b.low,b.high]);low=Math.min(...values);high=Math.max(...values);const pad=Math.max((high-low)*.08,high*.0001);low-=pad;high+=pad;}const autoCenter=(high+low)/2,range=(high-low)/verticalScales.price.factor;const priceCenter=zoomPriceOverride?.center??verticalScales.price.center??autoCenter;const effectiveRange=zoomPriceOverride?.span??wheelFlowerSpan??range;currentPriceBounds={center:priceCenter,span:effectiveRange};low=priceCenter-effectiveRange/2;high=priceCenter+effectiveRange/2;grid(top,low,high,5);const mobileAxisReserved=[];const plotWidth=top.width-right-left,step=plotWidth/count,x=i=>left+(start-viewStart+i+.5)*step,y=value=>15+(high-value)/(high-low)*(top.height-43),ry=value=>15+(verticalScales.rsi.center+50/verticalScales.rsi.factor-value)/(100/verticalScales.rsi.factor)*(bottom.height-43);function line(chart,values,color,mapY,style){const isOsc=chart===bottom,sliceStart=isOsc?oscStart:start,sliceEnd=isOsc?oscEnd:end,plotX=isOsc?(i=>left+(oscStart-oscStartFloat+i+.5)*(bottom.width-right-left)/oscView.count):x;const {ctx}=chart;ctx.strokeStyle=color;ctx.lineWidth=color==='#ffe638'?3:color==='#ff263e'?2.5:(color==='#3293ff'||color==='#ff334c')?2:1.4;if(style){ctx.lineWidth=style.width;ctx.setLineDash(style.style==='dashed'?[7,5]:style.style==='dotted'?[2,4]:[]);}ctx.beginPath();let active=false;values.slice(sliceStart,sliceEnd).forEach((value,i)=>{if(!Number.isFinite(value)){active=false;return;}if(active)ctx.lineTo(plotX(i),mapY(value));else ctx.moveTo(plotX(i),mapY(value));active=true;});ctx.stroke();ctx.setLineDash([]);}
 if($('bbOn').checked){const c=top.ctx,u=bbPlots[1],l=bbPlots[2];if(BBSettings.settings.background&&u.show&&l.show){c.save();c.fillStyle=BBSettings.settings.fill;c.globalAlpha=BBSettings.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}bbPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
 if($('vwapOn').checked){const c=top.ctx;if(VwapAA.settings.background){for(let k=0;k<3;k++){const u=aaPlots[1+k*2],l=aaPlots[2+k*2];if(!u.show||!l.show)continue;c.save();c.fillStyle=VwapAA.settings.fill;c.globalAlpha=VwapAA.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}}aaPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
 if($('bbOn').checked){bbPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}if(!entry()?.reference&&chartStyle==='candles'&&$('priceOn').checked)visible.forEach((bar,i)=>drawHollowCandle(top.ctx,bar,x(i),y,step));if(!entry()?.reference&&chartStyle==='ohlc'&&$('priceOn').checked){const c=top.ctx; c.save();visible.forEach((b,i)=>{const xx=x(i),w=Math.max(1,step*.32);c.strokeStyle=b.close>=b.open?'#55cbb0':'#e76d7f';c.beginPath();c.moveTo(xx,y(b.high));c.lineTo(xx,y(b.low));c.moveTo(xx-w,y(b.open));c.lineTo(xx,y(b.open));c.moveTo(xx,y(b.close));c.lineTo(xx+w,y(b.close));c.stroke();});c.restore();}if((entry()?.reference||chartStyle==='line')&&$('priceOn').checked){line(top,close,'#d8e4ed',y);const ctx=top.ctx;if(visible.length){const last=visible.length-1;ctx.fillStyle='#d8e4ed';ctx.beginPath();ctx.arc(x(last),y(visible[last].close),3.5,0,Math.PI*2);ctx.fill();}}if($('vwapOn').checked){aaPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}
@@ -331,6 +332,7 @@ if(sessionBars.length){
   c.strokeStyle=level.lineColor;c.strokeRect(tagX+.5,py-tagH/2+.5,tagW-1,tagH-1);
   c.fillStyle='#e4edf4';c.fillText(priceText,tagX+5,py+4);
   c.restore();
+  mobileAxisReserved.push(py);
   rendered.push({py,caption:level.caption,textColor:level.textColor});
  }
  // Render captions in an HTML overlay above canvas drawing layers.
@@ -363,6 +365,7 @@ if(Number.isFinite(liveValue)&&liveValue>0){
  const liveColor=latestLiveQuote.direction<0?'#ef5366':'#36c99a';
  const liveY=y(liveValue);
  if(liveY>=15&&liveY<=top.height-28){
+  mobileAxisReserved.push(liveY);
   const c=top.ctx;c.save();c.strokeStyle=liveColor;c.lineWidth=1;c.setLineDash([4,4]);
   c.beginPath();c.moveTo(left,Math.round(liveY)+.5);c.lineTo(top.width-right,Math.round(liveY)+.5);c.stroke();c.restore();
   const precision=markets[selected].category==='FOREIGN EXCHANGE'&&!markets[selected].symbol.endsWith('JPY')?5:3;
@@ -371,7 +374,32 @@ if(Number.isFinite(liveValue)&&liveValue>0){
   c.fillText(liveValue.toFixed(precision),top.width-7,liveY+4);c.restore();
  }
 }
-if(visible.length){const last=end-1;const tags=[...(!latestLiveQuote?[[data[last].close,colors[selected%colors.length]]]:[]),...($('engineOn').checked&&EngineSettings.style.labels?EngineSettings.plots(engine).filter(p=>p.show).map(p=>[p.values[last],p[engine.bias[last]==='Bullish'?'bull':engine.bias[last]==='Bearish'?'bear':'neutral'],EngineSettings.style.precision]):[]),...($('bbOn').checked&&BBSettings.settings.labels?bbPlots.filter(p=>p.show).map(p=>[p.values[last],p.color,BBSettings.settings.precision]):[]),...($('tramaOn').checked&&TramaSettings.settings.show&&TramaSettings.settings.labels?[[tramaPlot[last],TramaSettings.settings.color]]:[]),...($('vwapOn').checked&&VwapAA.settings.labels?aaPlots.filter(p=>p.show).map(p=>[p.values[last],p.color]):[])];tags.forEach(([value,color,precision])=>{if(!Number.isFinite(value))return;const py=y(value);top.ctx.fillStyle='#17202b';top.ctx.fillRect(top.width-right+1,py-10,right-3,20);top.ctx.strokeStyle=color;top.ctx.lineWidth=1;top.ctx.strokeRect(top.width-right+1,py-10,right-3,20);top.ctx.fillStyle='#ffffff';top.ctx.font='bold 12px system-ui';top.ctx.fillText(value.toFixed(precision!==undefined?(precision==='default'?3:Number(precision)):color===TramaSettings.settings.color?(TramaSettings.settings.precision==='default'?3:Number(TramaSettings.settings.precision)):(VwapAA.settings.precision==='default'?3:Number(VwapAA.settings.precision))),top.width-right+5,py+4);});}
+if(visible.length){const last=end-1;const tags=[...(!latestLiveQuote?[[data[last].close,colors[selected%colors.length]]]:[]),...($('engineOn').checked&&EngineSettings.style.labels?EngineSettings.plots(engine).filter(p=>p.show).map(p=>[p.values[last],p[engine.bias[last]==='Bullish'?'bull':engine.bias[last]==='Bearish'?'bear':'neutral'],EngineSettings.style.precision]):[]),...($('bbOn').checked&&BBSettings.settings.labels?bbPlots.filter(p=>p.show).map(p=>[p.values[last],p.color,BBSettings.settings.precision]):[]),...($('tramaOn').checked&&TramaSettings.settings.show&&TramaSettings.settings.labels?[[tramaPlot[last],TramaSettings.settings.color]]:[]),...($('vwapOn').checked&&VwapAA.settings.labels?aaPlots.filter(p=>p.show).map(p=>[p.values[last],p.color]):[])];tags.forEach(([value,color,precision])=>{if(!Number.isFinite(value))return;const py=y(value);mobileAxisReserved.push(py);top.ctx.fillStyle='#17202b';top.ctx.fillRect(top.width-right+1,py-10,right-3,20);top.ctx.strokeStyle=color;top.ctx.lineWidth=1;top.ctx.strokeRect(top.width-right+1,py-10,right-3,20);top.ctx.fillStyle='#ffffff';top.ctx.font='bold 12px system-ui';top.ctx.fillText(value.toFixed(precision!==undefined?(precision==='default'?3:Number(precision)):color===TramaSettings.settings.color?(TramaSettings.settings.precision==='default'?3:Number(TramaSettings.settings.precision)):(VwapAA.settings.precision==='default'?3:Number(VwapAA.settings.precision))),top.width-right+5,py+4);});}
+
+
+// Mobile-only price labels: render after session/live/indicator tags and leave
+// occupied label rows clear. This never changes the candle or vertical scale.
+if(document.documentElement.classList.contains('cx-mobile-chart') && high>low){
+ const c=top.ctx,span=high-low,plotH=top.height-43,axisX=top.width-right+5;
+ const jpy=markets[selected].symbol.endsWith('JPY');
+ const digits=jpy?3:markets[selected].category==='FOREIGN EXCHANGE'?5:high>100?2:3;
+ const desired=span/Math.max(2,Math.floor(plotH/31));
+ const power=10**Math.floor(Math.log10(desired));
+ const steps=[1,1.5,2,2.5,3,4,5,7.5,10];
+ const spacing=(steps.find(v=>v*power>=desired-1e-12)||10)*power;
+ const startTick=Math.ceil(low/spacing-1e-8);
+ c.save();c.font='12px system-ui';c.textAlign='left';c.textBaseline='alphabetic';
+ let lastY=-1000;
+ for(let i=startTick;i*spacing<=high+1e-8&&i<startTick+150;i++){
+  const price=i*spacing,yTick=15+plotH*(high-price)/span;
+  if(yTick<23||yTick>top.height-34)continue;
+  if(mobileAxisReserved.some(y=>Math.abs(y-yTick)<15))continue;
+  if(Math.abs(yTick-lastY)<18)continue;
+  c.fillStyle='#ffffff';c.fillText(price.toFixed(digits),axisX,yTick+4);
+  lastY=yTick;
+ }
+ c.restore();
+}
 
 const ctx=bottom.ctx,rs=OscSettings.rsi,ms=OscSettings.ma;if(rs.background&&!document.documentElement.classList.contains('cx-mobile-chart')){ctx.save();ctx.fillStyle=rs.fill;ctx.globalAlpha=rs.opacity/100;ctx.fillRect(left,ry(rs.upper),bottom.width-right-left,ry(rs.lower)-ry(rs.upper));ctx.restore();}const levels=rs.levels?[...new Set([0,rs.lower,50,rs.upper,100])]:[0,50,100];levels.forEach(value=>{const major=value===rs.lower||value===rs.upper;ctx.strokeStyle=major?rs.levelColor:(document.documentElement.classList.contains('cx-mobile-chart')?'#0d0d0d':'#303144');ctx.lineWidth=major?1.4:.6;ctx.setLineDash(major?[7,4]:[3,4]);ctx.beginPath();ctx.moveTo(left,ry(value));ctx.lineTo(bottom.width-right,ry(value));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=major?'#e4edff':'#8191a6';ctx.font=major?'bold 12px system-ui':'10px system-ui';ctx.fillText(value,bottom.width-right+10,ry(value)+3);});if($('rsiOn').checked&&rs.show)line(bottom,rsi,rs.color,ry,rs);if($('rsiOn').checked&&ms.show)line(bottom,ma,ms.color,ry,ms);[[rsi,rs,'rsiOn'],[ma,ms,'maOn']].forEach(([values,settings,id])=>{const v=values[oscEnd-1];if(!settings.labels||!settings.show||!(id==='maOn'?$('rsiOn').checked:$(id).checked)||!Number.isFinite(v))return;const py=ry(v);ctx.fillStyle='#17202b';ctx.fillRect(bottom.width-right+1,py-9,right-3,18);ctx.strokeStyle=settings.color;ctx.strokeRect(bottom.width-right+1,py-9,right-3,18);ctx.fillStyle='#fff';ctx.font='bold 11px system-ui';ctx.fillText(v.toFixed(settings.precision==='default'?2:Number(settings.precision)),bottom.width-right+5,py+4);});
 if(visible.length){
