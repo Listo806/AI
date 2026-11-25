@@ -261,8 +261,8 @@ const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.set
  }
  const columns=mobile?11:5;
  for(let i=0;i<columns;i++){
-  const x=left+plotWidth*i/(columns-1);
-  ctx.beginPath();ctx.moveTo(x,15);ctx.lineTo(x,15+plotHeight);ctx.stroke();
+  const x=Math.round(left+plotWidth*i/(columns-1))+.5;
+  ctx.beginPath();ctx.moveTo(x,15);ctx.lineTo(x,height-28);ctx.stroke();
  }
  ctx.restore();
 }
@@ -412,7 +412,7 @@ if(document.documentElement.classList.contains('cx-mobile-chart') && bottom.widt
  ctx.save();
  ctx.strokeStyle='#454B54';ctx.lineWidth=1;ctx.setLineDash([4,4]);
  for(let i=0;i<11;i++){
-  const px=gridLeft+(gridRight-gridLeft)*i/10;
+  const px=Math.round(gridLeft+(gridRight-gridLeft)*i/10)+.5;
   ctx.beginPath();ctx.moveTo(px,gridTop);ctx.lineTo(px,gridBottom);ctx.stroke();
  }
  for(const level of [0,25,50,75,100]){
