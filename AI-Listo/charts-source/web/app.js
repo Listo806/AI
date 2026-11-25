@@ -401,7 +401,32 @@ if(document.documentElement.classList.contains('cx-mobile-chart') && high>low){
  c.restore();
 }
 
-const ctx=bottom.ctx,rs=OscSettings.rsi,ms=OscSettings.ma;if(rs.background&&!document.documentElement.classList.contains('cx-mobile-chart')){ctx.save();ctx.fillStyle=rs.fill;ctx.globalAlpha=rs.opacity/100;ctx.fillRect(left,ry(rs.upper),bottom.width-right-left,ry(rs.lower)-ry(rs.upper));ctx.restore();}const levels=rs.levels?[...new Set([0,rs.lower,50,rs.upper,100])]:[0,50,100];levels.forEach(value=>{const major=value===rs.lower||value===rs.upper;ctx.strokeStyle=major?rs.levelColor:(document.documentElement.classList.contains('cx-mobile-chart')?'#0d0d0d':'#303144');ctx.lineWidth=major?1.4:.6;ctx.setLineDash(major?[7,4]:[3,4]);ctx.beginPath();ctx.moveTo(left,ry(value));ctx.lineTo(bottom.width-right,ry(value));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=major?'#e4edff':'#8191a6';ctx.font=major?'bold 12px system-ui':'10px system-ui';ctx.fillText(value,bottom.width-right+10,ry(value)+3);});if($('rsiOn').checked&&rs.show)line(bottom,rsi,rs.color,ry,rs);if($('rsiOn').checked&&ms.show)line(bottom,ma,ms.color,ry,ms);[[rsi,rs,'rsiOn'],[ma,ms,'maOn']].forEach(([values,settings,id])=>{const v=values[oscEnd-1];if(!settings.labels||!settings.show||!(id==='maOn'?$('rsiOn').checked:$(id).checked)||!Number.isFinite(v))return;const py=ry(v);ctx.fillStyle='#17202b';ctx.fillRect(bottom.width-right+1,py-9,right-3,18);ctx.strokeStyle=settings.color;ctx.strokeRect(bottom.width-right+1,py-9,right-3,18);ctx.fillStyle='#fff';ctx.font='bold 11px system-ui';ctx.fillText(v.toFixed(settings.precision==='default'?2:Number(settings.precision)),bottom.width-right+5,py+4);});
+const ctx=bottom.ctx,rs=OscSettings.rsi,ms=OscSettings.ma;
+// Mobile RSI grid: share the price chart's X coordinates and use RSI's own 0–100 scale.
+// Plot bounds come from the measured canvas, so resizing the RSI pane redraws the grid.
+if(document.documentElement.classList.contains('cx-mobile-chart') && bottom.width>right+left && bottom.height>43){
+ const gridBottom=bottom.height-28;
+ const gridRight=bottom.width-right;
+ const gridLeft=left;
+ const gridTop=15;
+ ctx.save();
+ ctx.strokeStyle='#454B54';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+ for(let i=0;i<11;i++){
+  const px=gridLeft+(gridRight-gridLeft)*i/10;
+  ctx.beginPath();ctx.moveTo(px,gridTop);ctx.lineTo(px,gridBottom);ctx.stroke();
+ }
+ for(const level of [0,25,50,75,100]){
+  const py=ry(level);
+  if(py<gridTop-0.5||py>gridBottom+0.5)continue;
+  ctx.beginPath();ctx.moveTo(gridLeft,py);ctx.lineTo(gridRight,py);ctx.stroke();
+ }
+ ctx.setLineDash([]);
+ // A solid bottom edge closes the RSI plot directly above the shared time axis.
+ ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(gridLeft,gridBottom+.5);ctx.lineTo(gridRight,gridBottom+.5);ctx.stroke();
+ ctx.restore();
+}
+if(rs.background&&!document.documentElement.classList.contains('cx-mobile-chart')){ctx.save();ctx.fillStyle=rs.fill;ctx.globalAlpha=rs.opacity/100;ctx.fillRect(left,ry(rs.upper),bottom.width-right-left,ry(rs.lower)-ry(rs.upper));ctx.restore();}const levels=rs.levels?[...new Set([0,rs.lower,50,rs.upper,100])]:[0,50,100];levels.forEach(value=>{const major=value===rs.lower||value===rs.upper;ctx.strokeStyle=major?rs.levelColor:(document.documentElement.classList.contains('cx-mobile-chart')?'#0d0d0d':'#303144');ctx.lineWidth=major?1.4:.6;ctx.setLineDash(major?[7,4]:[3,4]);ctx.beginPath();ctx.moveTo(left,ry(value));ctx.lineTo(bottom.width-right,ry(value));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=major?'#e4edff':'#8191a6';ctx.font=major?'bold 12px system-ui':'10px system-ui';ctx.fillText(value,bottom.width-right+10,ry(value)+3);});if($('rsiOn').checked&&rs.show)line(bottom,rsi,rs.color,ry,rs);if($('rsiOn').checked&&ms.show)line(bottom,ma,ms.color,ry,ms);[[rsi,rs,'rsiOn'],[ma,ms,'maOn']].forEach(([values,settings,id])=>{const v=values[oscEnd-1];if(!settings.labels||!settings.show||!(id==='maOn'?$('rsiOn').checked:$(id).checked)||!Number.isFinite(v))return;const py=ry(v);ctx.fillStyle='#17202b';ctx.fillRect(bottom.width-right+1,py-9,right-3,18);ctx.strokeStyle=settings.color;ctx.strokeRect(bottom.width-right+1,py-9,right-3,18);ctx.fillStyle='#fff';ctx.font='bold 11px system-ui';ctx.fillText(v.toFixed(settings.precision==='default'?2:Number(settings.precision)),bottom.width-right+5,py+4);});
 if(visible.length){
  const mobileAxis=document.documentElement.classList.contains('cx-mobile-chart');
  const axis=document.getElementById('cxMobileRsiTimeAxis');
