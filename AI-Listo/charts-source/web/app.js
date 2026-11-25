@@ -226,7 +226,26 @@ function draw(pointerOnly=false){
   if($('maOn').checked&&OscSettings.ma.show)parts.push('MA('+OscSettings.ma.length+') '+valueText(latest(ma),OscSettings.ma.precision));
   mobileCaption.textContent=parts.join('  ');
  }
-const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.settings.precision);$('bbOn').closest('label').title=[BBSettings.settings.inputs?BBSettings.settings.length+' · '+BBSettings.settings.ma+' · '+BBSettings.settings.source+' · '+BBSettings.settings.mult+'σ':'',BBSettings.settings.values?bbPlots.map((p,i)=>['Basis','Upper','Lower'][i]+': '+(Number.isFinite(p.values.at(-1))?p.values.at(-1).toFixed(bbDigits):'—')).join(' · '):''].filter(Boolean).join(' | ');const top=canvasContext($('priceChart')),bottom=canvasContext($('rsiChart'));const left=15,right=64;function grid(chart,minimum,maximum,steps){
+const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.settings.precision);$('bbOn').closest('label').title=[BBSettings.settings.inputs?BBSettings.settings.length+' · '+BBSettings.settings.ma+' · '+BBSettings.settings.source+' · '+BBSettings.settings.mult+'σ':'',BBSettings.settings.values?bbPlots.map((p,i)=>['Basis','Upper','Lower'][i]+': '+(Number.isFinite(p.values.at(-1))?p.values.at(-1).toFixed(bbDigits):'—')).join(' · '):''].filter(Boolean).join(' | ');const top=canvasContext($('priceChart')),bottom=canvasContext($('rsiChart'));const left=15,right=64;
+// Shared mobile price ticks: grid and labels MUST use the identical values.
+function mobilePriceTicks(minimum,maximum,plotHeight){
+ const span=maximum-minimum;
+ if(!(span>0))return [];
+ const jpy=markets[selected].symbol.endsWith('JPY');
+ // The approved USD/JPY M1 opening scale uses 0.015 without altering bounds.
+ // On pinch/axis zoom or other instruments, select a readable adaptive interval.
+ const opening=jpy&&markets[selected].symbol==='USD/JPY'&&frame==='1min'&&verticalScales.price.factor===1&&verticalScales.price.center===null&&zoomPriceOverride===null&&wheelFlowerSpan===null;
+ const target=Math.max(2,Math.floor(plotHeight/32));
+ const raw=span/target;
+ const magnitude=10**Math.floor(Math.log10(raw));
+ const multiples=[1,1.5,2,2.5,3,4,5,7.5,10];
+ const spacing=opening?.015:(multiples.find(v=>v*magnitude>=raw-1e-12)||10)*magnitude;
+ const first=Math.ceil(minimum/spacing-1e-8);
+ const ticks=[];
+ for(let i=first;i*spacing<=maximum+1e-8&&ticks.length<150;i++)ticks.push(i*spacing);
+ return ticks;
+}
+function grid(chart,minimum,maximum,steps){
  const {ctx,width,height}=chart, mobile=document.documentElement.classList.contains('cx-mobile-chart');
  const jpy=markets[selected].symbol.endsWith('JPY'), span=maximum-minimum;
  if(!(span>0))return;
@@ -235,12 +254,7 @@ const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.set
  const decimals=jpy?3:markets[selected].category==='FOREIGN EXCHANGE'?5:maximum>100?2:3;
  let ticks=[];
  if(mobile){
-  const target=Math.max(2,Math.floor(plotHeight/32)),raw=span/target;
-  const magnitude=10**Math.floor(Math.log10(raw));
-  const multiples=[1,1.5,2,2.5,3,4,5,7.5,10];
-  const tickStep=(multiples.find(v=>v*magnitude>=raw-1e-12)||10)*magnitude;
-  const first=Math.ceil(minimum/tickStep-1e-8);
-  for(let i=first;i*tickStep<=maximum+1e-8&&ticks.length<100;i++)ticks.push(i*tickStep);
+  ticks=mobilePriceTicks(minimum,maximum,plotHeight);
  }else if(jpy){
   const raw=Math.max(.001,span/Math.max(1,Math.floor((height-43)/46)));
   const power=10**Math.floor(Math.log10(raw));
@@ -383,15 +397,11 @@ if(document.documentElement.classList.contains('cx-mobile-chart') && high>low){
  const c=top.ctx,span=high-low,plotH=top.height-43,axisX=top.width-right+5;
  const jpy=markets[selected].symbol.endsWith('JPY');
  const digits=jpy?3:markets[selected].category==='FOREIGN EXCHANGE'?5:high>100?2:3;
- const desired=span/Math.max(2,Math.floor(plotH/31));
- const power=10**Math.floor(Math.log10(desired));
- const steps=[1,1.5,2,2.5,3,4,5,7.5,10];
- const spacing=(steps.find(v=>v*power>=desired-1e-12)||10)*power;
- const startTick=Math.ceil(low/spacing-1e-8);
+ const ticks=mobilePriceTicks(low,high,plotH);
  c.save();c.font='12px system-ui';c.textAlign='left';c.textBaseline='alphabetic';
  let lastY=-1000;
- for(let i=startTick;i*spacing<=high+1e-8&&i<startTick+150;i++){
-  const price=i*spacing,yTick=15+plotH*(high-price)/span;
+ for(const price of ticks){
+  const yTick=15+plotH*(high-price)/span;
   if(yTick<23||yTick>top.height-34)continue;
   if(mobileAxisReserved.some(y=>Math.abs(y-yTick)<15))continue;
   if(Math.abs(yTick-lastY)<18)continue;
