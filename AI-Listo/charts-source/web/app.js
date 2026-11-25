@@ -681,7 +681,7 @@ async function selectFrame(next){
   const id=++requestId,symbol=markets[selected].symbol,button=document.querySelector('[data-frame="'+next+'"]');
   const existing=cache.get(symbol+'|'+next);
   if(existing){frame=next;count=170;clearWheelFlower();verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);hover=-1;crosshair=null;$('chartNotice').hidden=true;render();return;}
-  button.classList.add('loading');button.setAttribute('aria-busy','true');
+  button?.classList.add('loading');button?.setAttribute('aria-busy','true');
   try{
     const native=await fetchNativeHistory(symbol,next);
     if(id!==requestId||symbol!==markets[selected].symbol)return;
@@ -690,7 +690,7 @@ async function selectFrame(next){
     if(id!==requestId)return;
     if(apiKey){frame=next;render();loadFeed();}
     else showFeedNotice(error.name==='TimeoutError'||error.name==='AbortError'?'One-minute history is taking longer to load. Press Refresh to retry.':error.message);
-  }finally{button.classList.remove('loading');button.removeAttribute('aria-busy');}
+  }finally{button?.classList.remove('loading');button?.removeAttribute('aria-busy');}
 }
 function updateFramesFromMinutes(symbol) {
   const minuteEntry = cache.get(symbol+'|1min');
@@ -1100,7 +1100,7 @@ window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+c
  const click=id=>document.getElementById(id)?.click();const market=()=>[...root.querySelectorAll('.market-tool')].find(b=>b.textContent.includes('Market'))?.click();const indicators=()=>[...root.querySelectorAll('.market-tool')].find(b=>b.textContent.includes('Indicators'))?.click();
  const menu=el('details','cx-mobile-menu');menu.innerHTML='<summary aria-label="Chart menu">☰</summary>';const panel=el('div','cx-mobile-menu-panel');menu.append(panel);for(const [label,action] of [['Market Watch',market],['Indicators',indicators],['Reset view',()=>click('reset')],['Calendar',()=>click('calendarButton')],['Chart styles',()=>styleMenu.showModal()],['Account',()=>click('connectTradingAccount')]]){const b=el('button','');b.textContent=label;b.onclick=()=>{menu.open=false;action();};panel.append(b);}
  const styleMenu=el('dialog','cx-mobile-style');for(const [label,id] of [['Candlesticks','candlesStyle'],['Line','lineStyle'],['OHLC Bars','ohlcStyle']]){const b=el('button','');b.textContent=label;b.onclick=()=>{click(id);styleMenu.close();};styleMenu.append(b);}const close=el('button','');close.textContent='Close';close.onclick=()=>styleMenu.close();styleMenu.append(close);document.body.append(styleMenu);
- const supportedFrames=[['1min','M1','Minutes'],['5min','M5','Minutes'],['15min','M15','Minutes'],['30min','M30','Minutes'],['1h','H1','Hours'],['2h','H2','Hours'],['4h','H4','Hours']].filter(([value])=>!!root.querySelector('[data-frame="'+value+'"]'));
+ const supportedFrames=[['1min','M1','Minutes'],['5min','M5','Minutes'],['15min','M15','Minutes'],['30min','M30','Minutes'],['1h','H1','Hours'],['2h','H2','Hours'],['4h','H4','Hours'],['1day','D1','Longer periods'],['1week','W1','Longer periods'],['1month','MN1','Longer periods']].filter(([value])=>['1day','1week','1month'].includes(value)||!!root.querySelector('[data-frame="'+value+'"]'));
  const tf=el('button','cx-mobile-frame');tf.type='button';tf.setAttribute('aria-label','Show quick timeframes');
  const quick=el('div','cx-mobile-quick-timeframes');quick.hidden=true;quick.setAttribute('aria-label','Quick timeframes');
  const picker=el('dialog','cx-mobile-timeframe-picker');picker.setAttribute('aria-label','Timeframes');
@@ -1112,10 +1112,10 @@ window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+c
  function chooseTimeframe(value){if(!supportedFrames.some(([v])=>v===value))return;closeQuick();if(picker.open)picker.close();selectFrame(value);tf.textContent=supportedFrames.find(([v])=>v===value)[1]+' ⌄';}
  function renderQuick(){quick.replaceChildren();for(const [value,label] of supportedFrames){if(!favorites.includes(value))continue;const b=el('button','');b.type='button';b.textContent=label;b.classList.toggle('active',frame===value);b.onclick=()=>chooseTimeframe(value);quick.append(b);}}
  tf.onclick=()=>{if(!quick.hidden){closeQuick();return;}renderQuick();quick.hidden=false;tools.classList.add('cx-quick-open');resetQuickTimer();};
- for(const type of ['pointerdown','pointermove','touchmove','scroll'])quick.addEventListener(type,resetQuickTimer,{passive:true});
+ for(const type of ['pointerdown','pointermove','touchmove','scroll','wheel'])quick.addEventListener(type,resetQuickTimer,{passive:true});quick.addEventListener('focusin',resetQuickTimer);
  const gear=el('button','cx-mobile-timeframe-gear');gear.type='button';gear.textContent='⚙';gear.setAttribute('aria-label','Open full timeframe picker');gear.onclick=()=>{closeQuick();renderPicker();picker.showModal();};
  function renderPicker(){picker.replaceChildren();const head=el('div','cx-tf-heading');const title=el('strong','');title.textContent='Timeframes';const x=el('button','');x.type='button';x.textContent='×';x.setAttribute('aria-label','Close timeframe picker');x.onclick=()=>picker.close();head.append(title,x);picker.append(head);
- for(const group of ['Minutes','Hours','Longer periods']){const entries=supportedFrames.filter(([, ,g])=>g===group);if(!entries.length)continue;const h=el('h3','');h.textContent=group;const grid=el('div','cx-tf-grid');for(const [value,label] of entries){const b=el('button','');b.type='button';b.textContent=label;b.classList.toggle('active',frame===value);b.classList.toggle('favorite',favorites.includes(value));let hold=0,longPressed=false;const toggle=()=>{favorites=favorites.includes(value)?favorites.filter(v=>v!==value):[...favorites,value];try{ChartStorage.setItem(favoritesKey,JSON.stringify(favorites));}catch{}renderPicker();};b.onpointerdown=()=>{longPressed=false;hold=setTimeout(()=>{longPressed=true;toggle();},550);};for(const ev of ['pointerup','pointercancel','pointerleave'])b.addEventListener(ev,()=>clearTimeout(hold));b.onclick=()=>{if(!longPressed)chooseTimeframe(value);};b.oncontextmenu=e=>{e.preventDefault();clearTimeout(hold);toggle();};grid.append(b);}picker.append(h,grid);}
+ for(const group of ['Minutes','Hours','Longer periods']){const entries=supportedFrames.filter(([, ,g])=>g===group);if(!entries.length)continue;const h=el('h3','');h.textContent=group;const grid=el('div','cx-tf-grid');for(const [value,label] of entries){const b=el('button','');b.type='button';b.textContent=label;b.classList.toggle('active',frame===value);b.classList.toggle('favorite',favorites.includes(value));let hold=0,longPressed=false;const toggle=()=>{favorites=favorites.includes(value)?favorites.filter(v=>v!==value):[...favorites,value];try{ChartStorage.setItem(favoritesKey,JSON.stringify(favorites));}catch{}b.classList.toggle('favorite',favorites.includes(value));b.setAttribute('aria-pressed',String(favorites.includes(value)));};b.setAttribute('aria-pressed',String(favorites.includes(value)));b.title='Hold to pin or unpin quick access';b.onpointerdown=()=>{longPressed=false;hold=setTimeout(()=>{longPressed=true;toggle();},550);};for(const ev of ['pointerup','pointercancel','pointerleave'])b.addEventListener(ev,()=>clearTimeout(hold));b.onclick=()=>{if(!longPressed)chooseTimeframe(value);longPressed=false;};b.oncontextmenu=e=>{e.preventDefault();clearTimeout(hold);toggle();};grid.append(b);}picker.append(h,grid);}
  const note=el('p','cx-tf-note');note.textContent='Tap to select · Hold to pin/unpin quick access';picker.append(note);}
  picker.addEventListener('click',e=>{if(e.target===picker)picker.close();});document.body.append(picker);
  tools.append(quick);
