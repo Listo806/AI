@@ -8,10 +8,10 @@
  const volume=make('div','one-click-volume'),down=make('button','','▾'),up=make('button','','▴'),input=make('input');input.type='number';input.min='0.00';input.max='100';input.step='0.01';input.value='0.10';input.setAttribute('aria-label','Order size');input.inputMode='decimal';
  down.type=up.type='button';down.setAttribute('aria-label','Decrease order size');up.setAttribute('aria-label','Increase order size');
  function normalize(value){const n=Number(value);return (Number.isFinite(n)&&n>=0?Math.min(100,Math.round(n*100)/100):.1).toFixed(2);}
- input.onchange=()=>{input.value=normalize(input.value);};
+ input.onchange=()=>{input.value=normalize(input.value);window.CortexaOrderDraft?.validate();};
  let holdTimer=null,heldButton=null,holdStarted=0;
  function stopHold(){clearTimeout(holdTimer);holdTimer=null;heldButton=null;}
- function adjust(direction){input.value=normalize(Math.max(0,Math.min(100,Number(normalize(input.value))+direction*.01)));}
+ function adjust(direction){input.value=normalize(Math.max(0,Math.min(100,Number(normalize(input.value))+direction*.01)));window.CortexaOrderDraft?.validate();}
  function startHold(button,direction){stopHold();heldButton=button;holdStarted=performance.now();adjust(direction);const repeat=()=>{if(heldButton!==button)return;adjust(direction);holdTimer=setTimeout(repeat,performance.now()-holdStarted>1500?35:110);};holdTimer=setTimeout(repeat,350);}
  for(const [button,direction]of [[down,-1],[up,1]]){
   button.style.touchAction='none';
@@ -56,9 +56,9 @@
  const orderTitle=make('strong','','Order details');
  const orderClose=make('button','','×');orderClose.type='button';orderClose.setAttribute('aria-label','Close order details');
  orderHeading.append(orderTitle,orderClose);
- const orderSide=make('select','cx-order-side');orderSide.setAttribute('aria-label','Order direction');
+ const orderSideLabel=make('label','cx-order-select-label','Direction');const orderSide=make('select','cx-order-side');orderSide.setAttribute('aria-label','Order direction');orderSideLabel.append(orderSide);
  for(const name of ['BUY','SELL']){const option=make('option','',name);option.value=name;orderSide.append(option);}
- const orderType=make('select','cx-order-type');orderType.setAttribute('aria-label','Order type');
+ const orderTypeLabel=make('label','cx-order-select-label','Order type');const orderType=make('select','cx-order-type');orderType.setAttribute('aria-label','Order type');orderTypeLabel.append(orderType);
  for(const [value,name] of [['market','Market'],['buy-limit','Buy Limit'],['sell-limit','Sell Limit'],['buy-stop','Buy Stop'],['sell-stop','Sell Stop']]){const option=make('option','',name);option.value=value;orderType.append(option);}
  const entryLabel=make('label','cx-order-entry','Entry price');const entryInput=make('input');entryInput.type='number';entryInput.step='any';entryInput.inputMode='decimal';entryLabel.append(entryInput);
  const expand=make('button','cx-order-expand');expand.type='button';expand.setAttribute('aria-expanded','false');
@@ -67,22 +67,22 @@
  const levelInputs={};const levelErrors={};
  for(const [key,title] of [['sl','Stop Loss'],['tp','Take Profit']]){
   const field=make('div','cx-order-field');const label=make('label','',title);const controls=make('div','cx-order-price-controls');
-  const decrease=make('button','','−'),increase=make('button','','+'),value=make('input');
-  value.type='number';value.step='any';value.inputMode='decimal';value.placeholder='Optional';value.setAttribute('aria-label',title);
+  const decrease=make('button','','−'),increase=make('button','','+'),value=make('input'),clear=make('button','cx-order-clear','×');
+  value.type='number';value.step='any';value.inputMode='decimal';value.placeholder='Optional';value.setAttribute('aria-label',title);clear.type='button';clear.setAttribute('aria-label','Clear '+title);clear.title='Clear '+title;clear.onclick=()=>{value.value='';validate();};
   for(const b of [decrease,increase])b.type='button';
   const change=delta=>{const q=window.CortexaOneClickQuote?.();const digits=Number.isInteger(q?.digits)?q.digits:5;const step=10**-digits;const base=Number(value.value)||Number(q?.bid)||0;value.value=(base+delta*step).toFixed(digits);validate();};
   decrease.onclick=()=>change(-1);increase.onclick=()=>change(1);
-  controls.append(decrease,value,increase);label.append(controls);
+  controls.append(decrease,value,increase,clear);label.append(controls);
   const error=make('small','cx-order-error');error.setAttribute('role','status');field.append(label,error);levels.append(field);
   levelInputs[key]=value;levelErrors[key]=error;value.addEventListener('input',validate);
  }
- const notice=make('p','cx-order-disconnected','Broker connection unavailable. Order details are local drafts only; no order can be submitted.');
+ const preview=make('div','cx-order-preview');preview.setAttribute('aria-live','polite');const notice=make('p','cx-order-disconnected','Broker connection unavailable. Order details are local drafts only; no order can be submitted.');
  const submit=make('button','cx-order-submit','Place order');submit.type='button';submit.disabled=true;submit.title='Broker connection is not configured';
- orderDetails.append(orderHeading,orderSide,orderType,entryLabel,expand,levels,notice,submit);
+ orderDetails.append(orderHeading,orderSideLabel,orderTypeLabel,entryLabel,expand,levels,preview,notice,submit);
  function validate(){
   const q=window.CortexaOneClickQuote?.();const side=orderSide.value;
-  const market=side==='BUY'?Number(q?.ask):Number(q?.bid);
-  const entry=orderType.value==='market'?market:Number(entryInput.value);
+  const quoteValue=side==='BUY'?q?.ask:q?.bid;const market=quoteValue==null?NaN:Number(quoteValue);
+  const entry=orderType.value==='market'?market:(entryInput.value.trim()?Number(entryInput.value):NaN);
   const type=orderType.value;
   const entryError=orderDetails.querySelector('.cx-order-entry-error');
   let valid=Number.isFinite(entry)&&entry>0;
@@ -101,18 +101,21 @@
   }
   const entries=Object.entries(levelInputs).filter(([,v])=>v.value.trim()).map(([k,v])=>k.toUpperCase()+': '+v.value.trim());
   summary.textContent=levels.hidden&&entries.length?entries.join(' · '):'';
+  const entryText=type==='market'?(Number.isFinite(market)&&market>0?market.toFixed(q?.digits??5):'Awaiting quote'):(entryInput.value.trim()||'Not set');
+  preview.textContent=`Draft only · ${side} · ${orderType.options[orderType.selectedIndex].text} · Size ${normalize(input.value)} · Entry ${entryText} · SL ${levelInputs.sl.value.trim()||'—'} · TP ${levelInputs.tp.value.trim()||'—'}`;
   // A broker adapter must additionally validate tick size, stop distance and order permissions.
   submit.disabled=true;
  }
  const entryError=make('small','cx-order-error cx-order-entry-error');entryLabel.append(entryError);
  expand.onclick=()=>{levels.hidden=!levels.hidden;expand.setAttribute('aria-expanded',String(!levels.hidden));arrow.textContent=levels.hidden?'▾':'▴';validate();};
- orderSide.onchange=()=>{const side=orderSide.value;orderType.value=side==='BUY'?'buy-limit':'sell-limit';validate();};
+ orderSide.onchange=()=>{const side=orderSide.value;if(orderType.value!=='market')orderType.value=side+'-'+(orderType.value.endsWith('stop')?'stop':'limit');validate();};
  orderType.onchange=()=>{orderSide.value=orderType.value.startsWith('buy')?'BUY':orderType.value.startsWith('sell')?'SELL':orderSide.value;entryLabel.hidden=orderType.value==='market';validate();};
  entryInput.addEventListener('input',validate);entryLabel.hidden=true;
- orderClose.onclick=()=>{orderDetails.hidden=true;};
- const detailsToggle=make('button','cx-order-details-toggle','Order details');detailsToggle.type='button';detailsToggle.onclick=()=>{orderDetails.hidden=!orderDetails.hidden;if(!orderDetails.hidden){orderType.onchange();validate();}};
+ orderClose.onclick=()=>{orderDetails.hidden=true;detailsToggle.setAttribute('aria-expanded','false');};
+ const detailsToggle=make('button','cx-order-details-toggle','Order details');detailsToggle.setAttribute('aria-expanded','false');detailsToggle.type='button';detailsToggle.onclick=()=>{orderDetails.hidden=!orderDetails.hidden;detailsToggle.setAttribute('aria-expanded',String(!orderDetails.hidden));if(!orderDetails.hidden){orderType.onchange();validate();}};
  panel.append(detailsToggle,orderDetails);
  window.CortexaOrderDraft={getValues:()=>({side:orderSide.value,type:orderType.value,volume:Number(input.value),entry:orderType.value==='market'?null:(entryInput.value.trim()?Number(entryInput.value):null),stopLoss:levelInputs.sl.value.trim()?Number(levelInputs.sl.value):null,takeProfit:levelInputs.tp.value.trim()?Number(levelInputs.tp.value):null}),validate};
+ validate();
  // In the single workspace the chart canvas overlaps the header. Mount the
  // order controls at article level so the header cannot paint over them.
  const host=embedded?wrap:document.querySelector('article');
