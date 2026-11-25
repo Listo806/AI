@@ -780,3 +780,39 @@ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-buy .one-clic
   border-top:1px solid rgba(255,255,255,.55)!important;
  }
 }
+
+/* Mobile timeframe controls: replace toolbar in place, never change chart height. */
+html.cx-mobile-chart .cx-mobile-tools{position:relative}
+html.cx-mobile-chart .cx-mobile-timeframe-gear{border:0;background:#000;color:#dce5e8;font-size:19px;min-width:28px;padding:0 2px}
+html.cx-mobile-chart .cx-mobile-tools.cx-quick-open > :not(.cx-mobile-quick-timeframes){display:none!important}
+html.cx-mobile-chart .cx-mobile-quick-timeframes:not([hidden]){display:flex!important;align-items:center;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;width:100%;height:100%;gap:5px;touch-action:pan-x}
+html.cx-mobile-chart .cx-mobile-quick-timeframes button{flex:0 0 auto;background:#000;color:#fff;border:1px solid #424a50;border-radius:5px;padding:7px 10px;font-size:13px}
+html.cx-mobile-chart .cx-mobile-quick-timeframes button.active{background:#22d3cf;color:#00191a}
+.cx-mobile-timeframe-picker{background:#101010;color:#fff;border:1px solid #555;border-radius:16px;padding:18px;width:min(90vw,370px);max-height:75dvh;overflow:auto}
+.cx-mobile-timeframe-picker::backdrop{background:rgba(0,0,0,.65)}
+.cx-tf-heading{display:flex;justify-content:space-between;align-items:center;font-size:20px}
+.cx-tf-heading button{background:none;color:white;border:0;font-size:28px}
+.cx-mobile-timeframe-picker h3{font-size:15px;margin:18px 0 8px}
+.cx-tf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.cx-tf-grid button{min-height:40px;border:1px solid #555;border-radius:6px;color:#fff;background:#080808}
+.cx-tf-grid button.favorite{border-color:#00c9c9}
+.cx-tf-grid button.active{background:#15d0ce;color:#001719}
+.cx-tf-note{color:#aaa;font-size:12px;text-align:center;margin:18px 0 0}
+
+/* Mobile: RSI top edge is the 100 line; bottom/zero stays fixed. */
+@media(max-width:760px){
+ html.cx-mobile-chart{--cx-sell:#FF4149;--cx-buy:#28C76F}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-sell,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-sell,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-sell{background:var(--cx-sell)!important;background-image:none!important;border-color:var(--cx-sell)!important;color:#fff!important}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-buy,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-buy,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-buy{background:var(--cx-buy)!important;background-image:none!important;border-color:var(--cx-buy)!important;color:#fff!important}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-price,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-side-label{color:#fff!important}
+ html.cx-mobile-chart .chart-shell>.rsi-header{display:none!important;height:0!important;min-height:0!important;flex:0 0 0!important;padding:0!important;border:0!important}
+ html.cx-mobile-chart .chart-shell>#cxMobileRsiDivider:not([hidden]){position:relative!important;flex:0 0 1px!important;height:1px!important;min-height:1px!important;background:#b9bfc4!important;border:0!important;z-index:65!important}
+ html.cx-mobile-chart #cxMobileRsiDivider #cxMobileOscCaption{display:block!important;position:absolute;left:7px;top:3px;color:#fff!important;background:transparent!important;font:12px/17px system-ui,sans-serif;white-space:nowrap;pointer-events:none;z-index:2}
+ html.cx-mobile-chart .chart-shell:not(.osc-pane-collapsed) #rsiChart{height:var(--cx-rsi-pane-height,130px)!important;min-height:0!important;flex:0 0 var(--cx-rsi-pane-height,130px)!important}
+ html.cx-mobile-chart .chart-shell.osc-pane-collapsed #cxMobileOscCaption{display:none!important}
+}

@@ -50,6 +50,69 @@
  window.addEventListener('cortexa-one-click-quote',syncPrices);
  syncPrices();
  volume.append(down,input,up);panel.append(sell,volume,buy);
+ // Draft order details: intentionally never submit without a verified broker adapter.
+ const orderDetails=make('section','cx-order-draft');orderDetails.hidden=true;
+ const orderHeading=make('div','cx-order-draft-heading');
+ const orderTitle=make('strong','','Order details');
+ const orderClose=make('button','','×');orderClose.type='button';orderClose.setAttribute('aria-label','Close order details');
+ orderHeading.append(orderTitle,orderClose);
+ const orderSide=make('select','cx-order-side');orderSide.setAttribute('aria-label','Order direction');
+ for(const name of ['BUY','SELL']){const option=make('option','',name);option.value=name;orderSide.append(option);}
+ const orderType=make('select','cx-order-type');orderType.setAttribute('aria-label','Order type');
+ for(const [value,name] of [['market','Market'],['buy-limit','Buy Limit'],['sell-limit','Sell Limit'],['buy-stop','Buy Stop'],['sell-stop','Sell Stop']]){const option=make('option','',name);option.value=value;orderType.append(option);}
+ const entryLabel=make('label','cx-order-entry','Entry price');const entryInput=make('input');entryInput.type='number';entryInput.step='any';entryInput.inputMode='decimal';entryLabel.append(entryInput);
+ const expand=make('button','cx-order-expand');expand.type='button';expand.setAttribute('aria-expanded','false');
+ const expandLabel=make('span','','Add Stop Loss / Take Profit');const summary=make('small','');const arrow=make('span','','▾');expand.append(expandLabel,summary,arrow);
+ const levels=make('div','cx-order-levels');levels.hidden=true;
+ const levelInputs={};const levelErrors={};
+ for(const [key,title] of [['sl','Stop Loss'],['tp','Take Profit']]){
+  const field=make('div','cx-order-field');const label=make('label','',title);const controls=make('div','cx-order-price-controls');
+  const decrease=make('button','','−'),increase=make('button','','+'),value=make('input');
+  value.type='number';value.step='any';value.inputMode='decimal';value.placeholder='Optional';value.setAttribute('aria-label',title);
+  for(const b of [decrease,increase])b.type='button';
+  const change=delta=>{const q=window.CortexaOneClickQuote?.();const digits=Number.isInteger(q?.digits)?q.digits:5;const step=10**-digits;const base=Number(value.value)||Number(q?.bid)||0;value.value=(base+delta*step).toFixed(digits);validate();};
+  decrease.onclick=()=>change(-1);increase.onclick=()=>change(1);
+  controls.append(decrease,value,increase);label.append(controls);
+  const error=make('small','cx-order-error');error.setAttribute('role','status');field.append(label,error);levels.append(field);
+  levelInputs[key]=value;levelErrors[key]=error;value.addEventListener('input',validate);
+ }
+ const notice=make('p','cx-order-disconnected','Broker connection unavailable. Order details are local drafts only; no order can be submitted.');
+ const submit=make('button','cx-order-submit','Place order');submit.type='button';submit.disabled=true;submit.title='Broker connection is not configured';
+ orderDetails.append(orderHeading,orderSide,orderType,entryLabel,expand,levels,notice,submit);
+ function validate(){
+  const q=window.CortexaOneClickQuote?.();const side=orderSide.value;
+  const market=side==='BUY'?Number(q?.ask):Number(q?.bid);
+  const entry=orderType.value==='market'?market:Number(entryInput.value);
+  const type=orderType.value;
+  const entryError=orderDetails.querySelector('.cx-order-entry-error');
+  let valid=Number.isFinite(entry)&&entry>0;
+  if(type!=='market'&&Number.isFinite(market)&&market>0&&valid){
+   const expectedBelow=type.endsWith('limit')?side==='BUY':side==='SELL';
+   if(expectedBelow?entry>=market:entry<=market)valid=false;
+  }
+  entryError.textContent=valid?'':type==='market'?'Live quote unavailable.':'Enter a valid entry price on the correct side of market.';
+  for(const [key,value] of Object.entries(levelInputs)){
+   const raw=value.value.trim();let error='';
+   if(raw){const price=Number(raw);if(!Number.isFinite(price)||price<=0)error='Enter a positive price.';
+    else if(!valid)error='Set a valid entry price first.';
+    else if(key==='sl'?(side==='BUY'?price>=entry:price<=entry):(side==='BUY'?price<=entry:price>=entry))error=key==='sl'?'Stop Loss must be on the loss side of entry.':'Take Profit must be on the profit side of entry.';
+   }
+   levelErrors[key].textContent=error;
+  }
+  const entries=Object.entries(levelInputs).filter(([,v])=>v.value.trim()).map(([k,v])=>k.toUpperCase()+': '+v.value.trim());
+  summary.textContent=levels.hidden&&entries.length?entries.join(' · '):'';
+  // A broker adapter must additionally validate tick size, stop distance and order permissions.
+  submit.disabled=true;
+ }
+ const entryError=make('small','cx-order-error cx-order-entry-error');entryLabel.append(entryError);
+ expand.onclick=()=>{levels.hidden=!levels.hidden;expand.setAttribute('aria-expanded',String(!levels.hidden));arrow.textContent=levels.hidden?'▾':'▴';validate();};
+ orderSide.onchange=()=>{const side=orderSide.value;orderType.value=side==='BUY'?'buy-limit':'sell-limit';validate();};
+ orderType.onchange=()=>{orderSide.value=orderType.value.startsWith('buy')?'BUY':orderType.value.startsWith('sell')?'SELL':orderSide.value;entryLabel.hidden=orderType.value==='market';validate();};
+ entryInput.addEventListener('input',validate);entryLabel.hidden=true;
+ orderClose.onclick=()=>{orderDetails.hidden=true;};
+ const detailsToggle=make('button','cx-order-details-toggle','Order details');detailsToggle.type='button';detailsToggle.onclick=()=>{orderDetails.hidden=!orderDetails.hidden;if(!orderDetails.hidden){orderType.onchange();validate();}};
+ panel.append(detailsToggle,orderDetails);
+ window.CortexaOrderDraft={getValues:()=>({side:orderSide.value,type:orderType.value,volume:Number(input.value),entry:orderType.value==='market'?null:(entryInput.value.trim()?Number(entryInput.value):null),stopLoss:levelInputs.sl.value.trim()?Number(levelInputs.sl.value):null,takeProfit:levelInputs.tp.value.trim()?Number(levelInputs.tp.value):null}),validate};
  // In the single workspace the chart canvas overlaps the header. Mount the
  // order controls at article level so the header cannot paint over them.
  const host=embedded?wrap:document.querySelector('article');
