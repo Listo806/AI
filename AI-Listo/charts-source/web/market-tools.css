@@ -726,3 +726,15 @@ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-clic
 html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-sell,html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-buy{background:#59c975!important;}
 html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-sell,html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-buy{background:#ff7b7e!important;}
 }
+
+/* v48: fixed BUY/SELL colors independent of market direction. */
+@media(max-width:767px){
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-sell,
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-sell,
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-sell{background:#FF4149!important;border-color:#FF4149!important;color:#fff!important}
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-buy,
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-buy,
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-buy{background:#28C76F!important;border-color:#28C76F!important;color:#fff!important}
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-sell .one-click-price,
+html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-buy .one-click-price{color:#fff!important}
+}
