@@ -878,36 +878,55 @@ oscPaneToggle.onclick=()=>{oscPaneCollapsed=!oscPaneCollapsed;hover=-1;crosshair
 // Mobile divider resizes both panes in-place, preserving previous height across collapse.
 let mobileRsiHeight=130;
 let lastExpandedRsiHeight=130;
+const rsiShell=document.querySelector('.chart-shell');
+const rsiCanvas=$('rsiChart');
+const rsiHeader=document.querySelector('.rsi-header');
+// The chart shell is a fixed-height flex column. Changing RSI's flex basis
+// redistributes only the two plot panes; the shared time axis stays anchored.
+function maxMobileRsiHeight(){
+ const available=rsiShell.getBoundingClientRect().height;
+ const header=rsiHeader.getBoundingClientRect().height||24;
+ return Math.max(90,Math.min(available*.65,available-180-header));
+}
 function setMobileRsiHeight(value){
- const maxHeight=Math.max(90,window.innerHeight*.48);
- const next=Math.max(0,Math.min(maxHeight,value));
- // A small drag-to-close threshold prevents leaving an unusable tiny pane.
- const collapse=next<44;
+ const next=Math.max(0,Math.min(maxMobileRsiHeight(),value));
+ // Close before the plot becomes too short to show a usable 0–100 scale.
+ const collapse=next<75;
  if(!collapse){mobileRsiHeight=Math.max(75,next);lastExpandedRsiHeight=mobileRsiHeight;}
  else mobileRsiHeight=0;
+ document.documentElement.style.setProperty('--cx-rsi-pane-height',mobileRsiHeight+'px');
  if(oscPaneCollapsed!==collapse){
   oscPaneCollapsed=collapse;
   try{ChartStorage.setItem('market-osc-pane-collapsed',String(collapse));}catch{}
   syncOscPane();
  }
- document.documentElement.style.setProperty('--cx-rsi-pane-height',mobileRsiHeight+'px');
  requestAnimationFrame(draw);
 }
 if(oscPaneCollapsed)mobileRsiHeight=0;
 setMobileRsiHeight(mobileRsiHeight);
+// Only the thin top divider handles resizing. Touches in the RSI canvas remain
+// available for chart panning, crosshair and pinch; they never resize the pane.
 let dividerDrag=null;
 mobileRsiDivider.addEventListener('pointerdown',event=>{
- if(!document.documentElement.classList.contains('cx-mobile-chart'))return;
- event.preventDefault();dividerDrag={id:event.pointerId,y:event.clientY,height:mobileRsiHeight};
+ if(!document.documentElement.classList.contains('cx-mobile-chart')||event.button!==0)return;
+ event.preventDefault();event.stopPropagation();
+ dividerDrag={id:event.pointerId,y:event.clientY,height:mobileRsiHeight};
  mobileRsiDivider.setPointerCapture(event.pointerId);
 });
 mobileRsiDivider.addEventListener('pointermove',event=>{
  if(!dividerDrag||dividerDrag.id!==event.pointerId)return;
- event.preventDefault();setMobileRsiHeight(dividerDrag.height+dividerDrag.y-event.clientY);
+ event.preventDefault();event.stopPropagation();
+ // Upward movement enlarges RSI; downward movement shrinks it. A closed pane
+ // reopens from the same divider, with no extra restore/collapse button.
+ setMobileRsiHeight(dividerDrag.height+dividerDrag.y-event.clientY);
 });
 for(const name of ['pointerup','pointercancel','lostpointercapture'])mobileRsiDivider.addEventListener(name,()=>{dividerDrag=null;});
-mobileRsiDivider.addEventListener('keydown',event=>{if(event.key==='ArrowUp'||event.key==='ArrowDown'){event.preventDefault();setMobileRsiHeight((mobileRsiHeight||0)+(event.key==='ArrowUp'?(mobileRsiHeight?12:lastExpandedRsiHeight):-12));}});
-
+mobileRsiDivider.addEventListener('keydown',event=>{
+ if(event.key==='ArrowUp'||event.key==='ArrowDown'){
+  event.preventDefault();
+  setMobileRsiHeight((mobileRsiHeight||0)+(event.key==='ArrowUp'?(mobileRsiHeight?12:Math.max(85,lastExpandedRsiHeight)):-12));
+ }
+});
 // Pinch is handled on the existing canvases. One-finger pan remains unchanged.
 function enableMobilePinch(canvas){
  const pointers=new Map();let pinch=null;
