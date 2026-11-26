@@ -26,8 +26,10 @@
  function closeLotPopup(){lotMode=null;lotPopup.hidden=true;down.setAttribute('aria-expanded','false');up.setAttribute('aria-expanded','false');}
  down.setAttribute('aria-label','Open subtract volume presets');up.setAttribute('aria-label','Open add volume presets');
  down.setAttribute('aria-controls','cxLotPopup');up.setAttribute('aria-controls','cxLotPopup');lotPopup.id='cxLotPopup';
- down.onclick=e=>{e.stopPropagation();lotMode==='minus'&&!lotPopup.hidden?closeLotPopup():openLotPopup('minus');};
- up.onclick=e=>{e.stopPropagation();lotMode==='plus'&&!lotPopup.hidden?closeLotPopup():openLotPopup('plus');};
+ // Each arrow tap has TWO actions: change lots by 0.01 and show/keep its popup.
+ // Do not toggle the popup closed on repeated taps: the trader may tap rapidly.
+ down.onclick=e=>{e.stopPropagation();adjustLots(-0.01);if(lotMode!=='minus'||lotPopup.hidden)openLotPopup('minus');};
+ up.onclick=e=>{e.stopPropagation();adjustLots(0.01);if(lotMode!=='plus'||lotPopup.hidden)openLotPopup('plus');};
  lotClose.onclick=closeLotPopup;
  for(const value of presetValues){const b=make('button','cx-lot-preset',value.toFixed(2));b.type='button';b.onclick=()=>setLots(value);presets.append(b);presetButtons.push([value,b]);}
  const lotHint=make('div','cx-lot-hint','Tap a preset to select · Type for a custom amount');
