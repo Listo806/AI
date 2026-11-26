@@ -151,7 +151,7 @@ function renderPositionEditor(){
  action('Delete',()=>{shapes.splice(selectedPositionIndex,1);selectedPositionIndex=-1;persist();draw();renderPositionEditor();});
  action('Clear positions',()=>{shapes=shapes.filter(x=>x.name!=='Position · target + stop');selectedPositionIndex=-1;persist();draw();renderPositionEditor();});
 }
-function closeTools(){bar.hidden=true;positionEditor.hidden=true;btn.setAttribute('aria-expanded','false');picker.hidden=true;mode='select';activeCategoryButton=null;clickPoints=[];start=null;preview=null;confirmBar.hidden=true;update();if(overlay)draw();}
+function closeTools(){bar.hidden=true;positionEditor.hidden=true;btn.setAttribute('aria-expanded','false');hidePicker();mode='select';activeCategoryButton=null;clickPoints=[];start=null;preview=null;confirmBar.hidden=true;update();if(overlay)draw();}
 btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const opening=bar.hidden;if(opening){bar.hidden=false;btn.setAttribute('aria-expanded','true');ensure();update();}else closeTools();});
 function arrangeToolbar(){
  const all=[...actions.querySelectorAll('button')];
@@ -275,7 +275,8 @@ function glyphFor(name,kind){return toolGlyphs[name]||icons[kind]||icons.trend;}
 const favoriteNames=new Set();const recentNames=[];
 const picker=document.createElement('section');picker.className='charts-tools-picker';picker.hidden=true;picker.setAttribute('aria-label','Drawing tools');
 picker.innerHTML='<div class="charts-tools-picker-head"><strong>Drawing Tools</strong><button type="button" aria-label="Close tool menu">×</button></div><input type="search" placeholder="Search all tools" aria-label="Search all tools"><div class="cx-drawing-tabs" role="tablist"></div><div class="charts-tools-picker-list"></div><div class="cx-drawing-actions"><button type="button" data-cx-action="undo">↶ Undo</button><button type="button" data-cx-action="redo">↷ Redo</button><button type="button" data-cx-action="magnet">Magnet: Off</button><button type="button" data-cx-action="visibility">◉</button></div><div class="charts-tools-picker-hint">Select a tool, then place it on the chart.</div>';
-const pickerTitle=picker.querySelector('strong'),pickerSearch=picker.querySelector('input'),pickerList=picker.querySelector('.charts-tools-picker-list');let activeCategory=null, mobileTab='zoom', expandedGroups=new Set(['trend']);
+const pickerTitle=picker.querySelector('strong'),pickerSearch=picker.querySelector('input'),pickerList=picker.querySelector('.charts-tools-picker-list');
+function hidePicker(){if(document.activeElement===pickerSearch)pickerSearch.blur();picker.hidden=true;}let activeCategory=null, mobileTab='zoom', expandedGroups=new Set(['trend']);
 const mobileTabs=picker.querySelector('.cx-drawing-tabs');
 const mobileMode=()=>matchMedia('(max-width:760px)').matches;
 const drawingGroups=()=>Object.entries(toolCategories).filter(([key])=>!['star','history','zoom','sliders'].includes(key));
@@ -284,16 +285,16 @@ function categoryItems(category){if(category==='zoom')return Object.entries(tool
 function renderPicker(){if(mobileMode()){renderMobilePicker();return;}pickerTitle.textContent=toolCategories[activeCategory].title;const query=pickerSearch.value.trim().toLowerCase();pickerList.replaceChildren();const items=categoryItems(activeCategory).filter(x=>x[0].toLowerCase().includes(query));if(!items.length){const empty=document.createElement('div');empty.className='charts-tools-picker-empty';empty.textContent='No matching tools';pickerList.append(empty);return;}
  for(const [name,kind] of items){const item=document.createElement('div');item.className='charts-tools-picker-item';const select=document.createElement('button');select.type='button';select.className='charts-tools-picker-select';const symbol=glyphFor(name,kind);
 select.innerHTML='<svg class="charts-tools-item-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+symbol+'</svg><span></span>';
-select.querySelector('span').textContent=name;select.onclick=()=>{if(name==='Position · target + stop'){picker.hidden=true;insertDefaultPosition();return;}if(activeCategory==='sliders')return;ensure();mode=kind;activeTool=name;activeCategoryButton=activeCategory;clickPoints=[];update();picker.hidden=true;pickerSearch.value='';if(recentNames.includes(name))recentNames.splice(recentNames.indexOf(name),1);recentNames.unshift(name);if(recentNames.length>15)recentNames.pop();};const fav=document.createElement('button');fav.type='button';fav.className='charts-tools-picker-favorite';fav.textContent=favoriteNames.has(name)?'★':'☆';fav.title='Toggle favorite';fav.setAttribute('aria-label','Favorite '+name);fav.onclick=()=>{if(favoriteNames.has(name))favoriteNames.delete(name);else favoriteNames.add(name);renderPicker();};item.append(select,fav);pickerList.append(item);}
+select.querySelector('span').textContent=name;select.onclick=()=>{if(name==='Position · target + stop'){hidePicker();insertDefaultPosition();return;}if(activeCategory==='sliders')return;ensure();mode=kind;activeTool=name;activeCategoryButton=activeCategory;clickPoints=[];update();hidePicker();pickerSearch.value='';if(recentNames.includes(name))recentNames.splice(recentNames.indexOf(name),1);recentNames.unshift(name);if(recentNames.length>15)recentNames.pop();};const fav=document.createElement('button');fav.type='button';fav.className='charts-tools-picker-favorite';fav.textContent=favoriteNames.has(name)?'★':'☆';fav.title='Toggle favorite';fav.setAttribute('aria-label','Favorite '+name);fav.onclick=()=>{if(favoriteNames.has(name))favoriteNames.delete(name);else favoriteNames.add(name);renderPicker();};item.append(select,fav);pickerList.append(item);}
 }
 function renderMobilePicker(){
  pickerTitle.textContent='Drawing Tools';renderMobileTabs();pickerList.replaceChildren();
  const query=pickerSearch.value.trim().toLowerCase();
  const makeIcon=(name,kind)=>'<svg class="charts-tools-item-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+glyphFor(name,kind)+'</svg>';
- const choose=(name,kind)=>{if(name==='Position · target + stop'){picker.hidden=true;insertDefaultPosition();return;}if(mobileTab==='sliders')return;ensure();mode=kind;activeTool=name;activeCategoryButton='zoom';clickPoints=[];update();picker.hidden=true;pickerSearch.value='';if(recentNames.includes(name))recentNames.splice(recentNames.indexOf(name),1);recentNames.unshift(name);if(recentNames.length>15)recentNames.pop();};
+ const choose=(name,kind)=>{if(name==='Position · target + stop'){hidePicker();insertDefaultPosition();return;}if(mobileTab==='sliders')return;ensure();mode=kind;activeTool=name;activeCategoryButton='zoom';clickPoints=[];update();hidePicker();pickerSearch.value='';if(recentNames.includes(name))recentNames.splice(recentNames.indexOf(name),1);recentNames.unshift(name);if(recentNames.length>15)recentNames.pop();};
  const addItem=(name,kind,compact=false)=>{const item=document.createElement('div');item.className='charts-tools-picker-item'+(compact?' cx-tool-compact':'');const select=document.createElement('button');select.type='button';select.className='charts-tools-picker-select';select.innerHTML=makeIcon(name,kind)+'<span></span>';select.querySelector('span').textContent=name;select.onclick=()=>choose(name,kind);item.append(select);
  if(!compact){const fav=document.createElement('button');fav.type='button';fav.className='charts-tools-picker-favorite';fav.textContent=favoriteNames.has(name)?'★':'☆';fav.setAttribute('aria-label','Favorite '+name);fav.onclick=()=>{favoriteNames.has(name)?favoriteNames.delete(name):favoriteNames.add(name);renderPicker();};item.append(fav);}return item;};
- const positionRow=()=>{const position=document.createElement('button');position.type='button';position.className='cx-drawing-position';position.innerHTML=makeIcon('Position · target + stop','rectangle')+'<strong>Position · Target + Stop</strong><span class="cx-drawing-chevron">›</span>';position.onclick=()=>{picker.hidden=true;insertDefaultPosition();};pickerList.append(position);};
+ const positionRow=()=>{const position=document.createElement('button');position.type='button';position.className='cx-drawing-position';position.innerHTML=makeIcon('Position · target + stop','rectangle')+'<strong>Position · Target + Stop</strong><span class="cx-drawing-chevron">›</span>';position.onclick=()=>{hidePicker();insertDefaultPosition();};pickerList.append(position);};
  if(mobileTab==='zoom'&&!query){positionRow();for(const [key,group] of drawingGroups()){
  const heading=document.createElement('button');heading.type='button';heading.className='cx-drawing-group';heading.setAttribute('aria-expanded',String(expandedGroups.has(key)));heading.innerHTML=makeIcon(group.title,categoryGlyph[key]||key)+'<strong></strong><span class="cx-drawing-chevron"></span>';heading.querySelector('strong').textContent=group.title+' ('+group.items.length+')';heading.lastElementChild.textContent=expandedGroups.has(key)?'⌄':'›';heading.onclick=()=>{expandedGroups.has(key)?expandedGroups.delete(key):expandedGroups.add(key);renderPicker();};pickerList.append(heading);
  if(expandedGroups.has(key)){const grid=document.createElement('div');grid.className='cx-drawing-tools-grid';for(const [name,kind] of group.items)grid.append(addItem(name,kind,true));pickerList.append(grid);}
@@ -312,7 +313,7 @@ function placePicker(anchor){
  picker.style.top=Math.max(8,Math.min(innerHeight-height-8,above?rect.top-gap-height:rect.bottom+gap))+'px';
 }
 let pickerAnchor=null;
-function openCategory(category,anchor){if(activeCategory===category&&!picker.hidden){picker.hidden=true;return;}activeCategory=category;if(mobileMode())mobileTab=category==='star'||category==='history'||category==='sliders'?category:'zoom';pickerAnchor=anchor;pickerSearch.value='';picker.hidden=false;renderPicker();placePicker(anchor);pickerSearch.focus({preventScroll:true});}
+function openCategory(category,anchor){if(activeCategory===category&&!picker.hidden){hidePicker();return;}activeCategory=category;if(mobileMode())mobileTab=category==='star'||category==='history'||category==='sliders'?category:'zoom';pickerAnchor=anchor;pickerSearch.value='';picker.hidden=false;renderPicker();placePicker(anchor);if(!mobileMode())pickerSearch.focus({preventScroll:true});}
 window.addEventListener('resize',()=>{if(!picker.hidden&&pickerAnchor)placePicker(pickerAnchor);});
 window.addEventListener('scroll',()=>{if(!picker.hidden&&pickerAnchor)placePicker(pickerAnchor);},true);
 
@@ -334,7 +335,7 @@ for(const b of bar.querySelectorAll('[data-mode]')){
   b.dataset.positionAction='insert';
   b.setAttribute('aria-label','Position · target + stop');
   b.querySelector('svg').innerHTML='<rect x="4" y="3" width="16" height="8" rx=".6" fill="rgba(27,174,127,.45)" stroke="#7af4c5" stroke-width="1.5"/><rect x="4" y="11" width="16" height="10" rx=".6" fill="rgba(214,62,81,.45)" stroke="#fa8395" stroke-width="1.5"/><path d="M3 11h18" stroke="#e7fff7" stroke-width="1.8"/>';
-  b.onclick=(event)=>{event.preventDefault();event.stopPropagation();picker.hidden=true;insertDefaultPosition();};
+  b.onclick=(event)=>{event.preventDefault();event.stopPropagation();hidePicker();insertDefaultPosition();};
   continue;
  }
  if(!toolCategories[category])continue;
@@ -350,9 +351,9 @@ window.__cortexaPositionBuild='position36-drag-and-popup';
 btn.addEventListener('click',()=>{if(!matchMedia('(max-width:760px)').matches)return;
   if(!bar.hidden){openCategory('zoom',btn);}
 });
-picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;picker.querySelector('.cx-drawing-actions').addEventListener('click',event=>{const action=event.target.closest('button')?.dataset.cxAction;if(!action)return;const matching=Array.from(bar.querySelectorAll('button')).find(b=>(b.title||b.getAttribute('aria-label')||'').toLowerCase().includes(action));if(matching)matching.click();});pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
-document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))picker.hidden=true;});
-window.addEventListener('keydown',e=>{if(e.key==='Escape')picker.hidden=true;});
+picker.querySelector('.charts-tools-picker-head button').onclick=()=>hidePicker();picker.querySelector('.cx-drawing-actions').addEventListener('click',event=>{const action=event.target.closest('button')?.dataset.cxAction;if(!action)return;const matching=Array.from(bar.querySelectorAll('button')).find(b=>(b.title||b.getAttribute('aria-label')||'').toLowerCase().includes(action));if(matching)matching.click();});pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
+document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))hidePicker();});
+window.addEventListener('keydown',e=>{if(e.key==='Escape')hidePicker();});
 
 
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode!=='select'){mode='select';activeCategoryButton=null;clickPoints=[];start=null;preview=null;update();draw();}});
