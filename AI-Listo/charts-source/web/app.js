@@ -194,16 +194,24 @@ function drawHollowCandle(ctx,bar,cx,y,step){
  const mobile=document.documentElement.classList.contains('cx-mobile-chart');
  const top=Math.min(y(bar.open),y(bar.close)),bottom=Math.max(y(bar.open),y(bar.close));
  // Mobile detail-only adjustment: use more of the existing candle slot without changing spacing or zoom.
- const width=mobile?Math.min(step*.94,Math.max(step*.8,step-.45)):Math.max(1,step*.68);
+ const width=Math.max(1,step*.68);
  const color=bar.close>=bar.open?'#64c3a5':'#e07982';
- ctx.save();ctx.strokeStyle=color;ctx.lineWidth=mobile?Math.min(.75,width*.28):1;ctx.setLineDash([]);
+ ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1;ctx.setLineDash([]);
  if(mobile){
-  ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";
-  const h=bottom-top, inset=ctx.lineWidth/2;
-  ctx.beginPath();ctx.moveTo(cx,y(bar.high));ctx.lineTo(cx,top);ctx.moveTo(cx,bottom);ctx.lineTo(cx,y(bar.low));ctx.stroke();
-  if(h>0){ctx.fillStyle="#000000";ctx.fillRect(cx-width/2,top,width,h);}
-  if(h>ctx.lineWidth){ctx.strokeRect(cx-width/2+inset,top+inset,width-2*inset,h-2*inset);}
-  else{ctx.lineWidth=Math.min(ctx.lineWidth,Math.max(h,.35));ctx.beginPath();ctx.moveTo(cx-width/2+inset,(top+bottom)/2);ctx.lineTo(cx+width/2-inset,(top+bottom)/2);ctx.stroke();}
+  // Snap the body to physical pixels, not fractional CSS pixels. Keep each body inside its slot.
+  const dpr=window.devicePixelRatio||1, center=cx*dpr;
+  const l=Math.ceil(center-step*dpr/2), r=Math.floor(center+step*dpr/2);
+  const slot=r-l, gap=slot>=4?1:0, w=Math.max(0,slot-gap);
+  const left=l+Math.floor(gap/2), right=left+w;
+  const ink=bar.close>=bar.open?'#83E5B1':'#F28B96';
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.fillStyle=ink;
+  const wick=Math.floor(center), hi=Math.round(y(bar.high)*dpr), lo=Math.round(y(bar.low)*dpr);
+  const t=Math.round(top*dpr), bot=Math.max(t+1,Math.round(bottom*dpr));
+  ctx.fillRect(wick/dpr,hi/dpr,1/dpr,Math.max(1,lo-hi)/dpr);
+  if(w>=3 && bot-t>=3){
+   ctx.fillRect(left/dpr,t/dpr,w/dpr,(bot-t)/dpr);
+   ctx.fillStyle='#000000';ctx.fillRect((left+1)/dpr,(t+1)/dpr,(w-2)/dpr,(bot-t-2)/dpr);
+  }else if(w>0){ctx.fillRect(left/dpr,t/dpr,w/dpr,(bot-t)/dpr);}
   ctx.restore();return;
  }
  ctx.beginPath();ctx.moveTo(cx,y(bar.high));ctx.lineTo(cx,y(bar.low));ctx.stroke();

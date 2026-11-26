@@ -61,6 +61,7 @@
     display.replaceChildren(document.createTextNode(formatted.slice(0,-1)),make('span','cx-quote-last-digit',formatted.slice(-1)));
    }else display.textContent=formatted;
   }
+  applyMobilePalette();
  }
  window.addEventListener('cortexa-one-click-quote',syncPrices);
  syncPrices();
@@ -138,7 +139,19 @@
  const localToggle=make('button','one-click-toggle');localToggle.type='button';localToggle.setAttribute('aria-controls',panel.id);const icon=make('span','one-click-icon','⇄'),words=make('span','one-click-words','One Click Trading');localToggle.append(icon,words);
  let opened=false;
  function updateToggle(button,on){button.setAttribute('aria-expanded',String(on));button.setAttribute('aria-pressed',String(on));button.setAttribute('aria-label',on?'Hide One Click Trading':'Show One Click Trading');button.title=on?'Hide One Click Trading':'Show One Click Trading';button.querySelector('.one-click-words').hidden=on;button.classList.toggle('active',on);}
+ function applyMobilePalette(){
+  const mobile=document.documentElement.classList.contains('cx-mobile-chart');
+  for(const [button,color] of [[sell,'#D8757E'],[buy,'#65B58E']]){
+   for(const [prop,value] of [['background',color],['border-color',color],['color','#fff'],['opacity','1'],['filter','none']]){
+    if(mobile)button.style.setProperty(prop,value,'important');else button.style.removeProperty(prop);
+   }
+   for(const child of button.querySelectorAll('.one-click-price,.one-click-side-label,.cx-quote-last-digit')){
+    if(mobile)child.style.setProperty('color','#fff','important');else child.style.removeProperty('color');
+   }
+  }
+ }
  function positionPanel(){
+  applyMobilePalette();
   if(embedded||!opened)return;
   const article=document.querySelector('article');
   const strip=article?.querySelector('.one-click-control-strip');
