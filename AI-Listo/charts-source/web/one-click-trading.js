@@ -35,6 +35,31 @@
  input.addEventListener('input',updatePreset);
  document.addEventListener('pointerdown',e=>{if(!lotPopup.hidden&&!lotPopup.contains(e.target)&&!volume.contains(e.target))closeLotPopup();});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLotPopup();});
+ // Both buttons share the direction of the market midpoint, not their bid/ask spread.
+ let previousMidpoint=null;
+ let marketDirection=0;
+ function syncPrices(){
+  const quote=window.CortexaOneClickQuote?.();
+  const bid=Number(quote?.bid),ask=Number(quote?.ask);
+  if(Number.isFinite(bid)&&Number.isFinite(ask)&&bid>0&&ask>0){
+   const midpoint=(bid+ask)/2;
+   if(previousMidpoint!==null){
+    const delta=midpoint-previousMidpoint;
+    if(Math.abs(delta)>1e-10)marketDirection=delta>0?1:-1;
+   }
+   previousMidpoint=midpoint;
+  }
+  panel.classList.toggle('cx-market-up',marketDirection>0);
+  panel.classList.toggle('cx-market-down',marketDirection<0);
+  for(const [button,value] of [[sell,quote?.bid],[buy,quote?.ask]]){
+   const display=button.querySelector('.one-click-price');
+   const formatted=Number.isFinite(value)?value.toFixed(quote?.digits??(value>=100?3:5)):'—';
+   // On mobile, raise only the final fractional digit, as in the supplied PWA reference.
+   if(document.documentElement.classList.contains('cx-mobile-chart') && formatted!=='—' && formatted.includes('.')){
+    display.replaceChildren(document.createTextNode(formatted.slice(0,-1)),make('span','cx-quote-last-digit',formatted.slice(-1)));
+   }else display.textContent=formatted;
+  }
+ }
  window.addEventListener('cortexa-one-click-quote',syncPrices);
  syncPrices();
  volume.append(down,input,up);panel.append(sell,volume,buy,lotPopup);
