@@ -326,6 +326,11 @@ for(const b of bar.querySelectorAll('[data-mode]')){
  b.onclick=(event)=>{event.stopPropagation();openCategory(category,b);};
 }
 window.__cortexaPositionBuild='position36-drag-and-popup';
+// On mobile, the pencil is the entry to the full drawing-tool picker.
+// Keep the existing desktop bottom toolbar behavior unchanged.
+btn.addEventListener('click',()=>{if(!matchMedia('(max-width:760px)').matches)return;
+  if(!bar.hidden){openCategory('zoom',btn);}
+});
 picker.querySelector('.charts-tools-picker-head button').onclick=()=>picker.hidden=true;pickerSearch.addEventListener('input',renderPicker);document.body.append(picker);
 document.addEventListener('pointerdown',e=>{if(!picker.hidden&&!picker.contains(e.target)&&!bar.contains(e.target))picker.hidden=true;});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')picker.hidden=true;});
