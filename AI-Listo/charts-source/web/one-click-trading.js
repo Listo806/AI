@@ -9,47 +9,35 @@
  down.type=up.type='button';down.setAttribute('aria-label','Decrease order size');up.setAttribute('aria-label','Increase order size');
  function normalize(value){const n=Number(value);return (Number.isFinite(n)&&n>=0?Math.min(100,Math.round(n*100)/100):.1).toFixed(2);}
  input.onchange=()=>{input.value=normalize(input.value);window.CortexaOrderDraft?.validate();};
- let holdTimer=null,heldButton=null,holdStarted=0;
- function stopHold(){clearTimeout(holdTimer);holdTimer=null;heldButton=null;}
- function adjust(direction){input.value=normalize(Math.max(0,Math.min(100,Number(normalize(input.value))+direction*.01)));window.CortexaOrderDraft?.validate();}
- function startHold(button,direction){stopHold();heldButton=button;holdStarted=performance.now();adjust(direction);const repeat=()=>{if(heldButton!==button)return;adjust(direction);holdTimer=setTimeout(repeat,performance.now()-holdStarted>1500?35:110);};holdTimer=setTimeout(repeat,350);}
- for(const [button,direction]of [[down,-1],[up,1]]){
-  button.style.touchAction='none';
-  button.onpointerdown=e=>{if(e.button!==0)return;e.preventDefault();startHold(button,direction);};
-  button.onpointerleave=stopHold;button.onpointercancel=stopHold;button.onpointerup=stopHold;
-  button.onclick=e=>{if(e.detail===0)adjust(direction);};
-  button.onkeydown=e=>{if(!['ArrowUp','ArrowDown',' ','Enter'].includes(e.key))return;e.preventDefault();if(!e.repeat)startHold(button,e.key==='ArrowDown'?-1:e.key==='ArrowUp'?1:direction);};
-  button.onkeyup=stopHold;button.onblur=stopHold;
- }
- window.addEventListener('pointerup',stopHold);window.addEventListener('blur',stopHold);document.addEventListener('visibilitychange',()=>{if(document.hidden)stopHold();});
- // Both buttons share the direction of the market midpoint, not their bid/ask spread.
- let previousMidpoint=null;
- let marketDirection=0;
- function syncPrices(){
-  const quote=window.CortexaOneClickQuote?.();
-  const bid=Number(quote?.bid),ask=Number(quote?.ask);
-  if(Number.isFinite(bid)&&Number.isFinite(ask)&&bid>0&&ask>0){
-   const midpoint=(bid+ask)/2;
-   if(previousMidpoint!==null){
-    const delta=midpoint-previousMidpoint;
-    if(Math.abs(delta)>1e-10)marketDirection=delta>0?1:-1;
-   }
-   previousMidpoint=midpoint;
-  }
-  panel.classList.toggle('cx-market-up',marketDirection>0);
-  panel.classList.toggle('cx-market-down',marketDirection<0);
-  for(const [button,value] of [[sell,quote?.bid],[buy,quote?.ask]]){
-   const display=button.querySelector('.one-click-price');
-   const formatted=Number.isFinite(value)?value.toFixed(quote?.digits??(value>=100?3:5)):'—';
-   // On mobile, raise only the final fractional digit, as in the supplied PWA reference.
-   if(document.documentElement.classList.contains('cx-mobile-chart') && formatted!=='—' && formatted.includes('.')){
-    display.replaceChildren(document.createTextNode(formatted.slice(0,-1)),make('span','cx-quote-last-digit',formatted.slice(-1)));
-   }else display.textContent=formatted;
-  }
- }
+ // Mobile lot picker: arrow opens a persistent minus/plus preset menu.
+ const lotPopup=make('div','cx-lot-popup');lotPopup.hidden=true;lotPopup.setAttribute('role','group');lotPopup.setAttribute('aria-label','Volume presets');
+ const lotHead=make('div','cx-lot-popup-head');const lotTitle=make('strong','','Volume (lots)');const lotClose=make('button','cx-lot-popup-close','×');lotClose.type='button';lotClose.setAttribute('aria-label','Close volume presets');lotHead.append(lotTitle,lotClose);
+ const lotCaption=make('div','cx-lot-popup-caption');const increments=make('div','cx-lot-increments');
+ const setTitle=make('div','cx-lot-popup-caption','Set volume');const presets=make('div','cx-lot-presets');
+ const presetValues=[.01,.05,.10,.20,.50,1,2,3,4,5,10,20];
+ const presetButtons=[];
+ function updatePreset(){const value=Number(input.value);for(const [v,b] of presetButtons)b.classList.toggle('selected',Math.abs(value-v)<.00001);}
+ function setLots(value){input.value=normalize(value);updatePreset();window.CortexaOrderDraft?.validate();}
+ function adjustLots(delta){setLots(Math.max(.01,Math.min(100,Number(input.value||.01)+delta)));}
+ let lotMode=null;
+ function openLotPopup(mode){lotMode=mode;lotCaption.textContent=mode==='minus'?'Subtract from current volume':'Add to current volume';increments.replaceChildren();
+  for(const amount of [.01,.10,.50]){const b=make('button','cx-lot-increment',(mode==='minus'?'−':'+')+amount.toFixed(2));b.type='button';b.onclick=()=>adjustLots((mode==='minus'?-1:1)*amount);increments.append(b);}
+  lotPopup.hidden=false;down.setAttribute('aria-expanded',String(mode==='minus'));up.setAttribute('aria-expanded',String(mode==='plus'));updatePreset();}
+ function closeLotPopup(){lotMode=null;lotPopup.hidden=true;down.setAttribute('aria-expanded','false');up.setAttribute('aria-expanded','false');}
+ down.setAttribute('aria-label','Open subtract volume presets');up.setAttribute('aria-label','Open add volume presets');
+ down.setAttribute('aria-controls','cxLotPopup');up.setAttribute('aria-controls','cxLotPopup');lotPopup.id='cxLotPopup';
+ down.onclick=e=>{e.stopPropagation();lotMode==='minus'&&!lotPopup.hidden?closeLotPopup():openLotPopup('minus');};
+ up.onclick=e=>{e.stopPropagation();lotMode==='plus'&&!lotPopup.hidden?closeLotPopup():openLotPopup('plus');};
+ lotClose.onclick=closeLotPopup;
+ for(const value of presetValues){const b=make('button','cx-lot-preset',value.toFixed(2));b.type='button';b.onclick=()=>setLots(value);presets.append(b);presetButtons.push([value,b]);}
+ const lotHint=make('div','cx-lot-hint','Tap a preset to select · Type for a custom amount');
+ lotPopup.append(lotHead,lotCaption,increments,setTitle,presets,lotHint);
+ input.addEventListener('input',updatePreset);
+ document.addEventListener('pointerdown',e=>{if(!lotPopup.hidden&&!lotPopup.contains(e.target)&&!volume.contains(e.target))closeLotPopup();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLotPopup();});
  window.addEventListener('cortexa-one-click-quote',syncPrices);
  syncPrices();
- volume.append(down,input,up);panel.append(sell,volume,buy);
+ volume.append(down,input,up);panel.append(sell,volume,buy,lotPopup);
  // Draft order details: intentionally never submit without a verified broker adapter.
  const orderDetails=make('section','cx-order-draft');orderDetails.hidden=true;
  const orderHeading=make('div','cx-order-draft-heading');
@@ -132,7 +120,7 @@
   if(document.documentElement.classList.contains('cx-mobile-chart')){const chrome=document.querySelector('.cx-mobile-chrome');if(chrome&&panel.parentNode!==chrome){const tools=chrome.querySelector('.cx-mobile-tools');if(tools)tools.after(panel);else chrome.prepend(panel);}panel.style.top='';panel.style.left='';return;}if(panel.parentNode!==article)article.append(panel);panel.style.top=Math.max(0,stripRect.bottom-parentRect.top+3)+'px';
   panel.style.left=Math.max(0,stripRect.left-parentRect.left+8)+'px';
  }
- function setOpen(value){stopHold();opened=Boolean(value);panel.hidden=!opened;document.documentElement.classList.toggle('cx-mobile-trading-open',opened);wrap.classList.toggle('one-click-open',opened);updateToggle(localToggle,opened);const lightning=document.querySelector('.cx-mobile-lightning');if(lightning){lightning.setAttribute('aria-pressed',String(opened));lightning.setAttribute('aria-expanded',String(opened));}positionPanel();if(embedded)parent.ChartOneClick?.syncHost();}
+ function setOpen(value){closeLotPopup();opened=Boolean(value);panel.hidden=!opened;document.documentElement.classList.toggle('cx-mobile-trading-open',opened);wrap.classList.toggle('one-click-open',opened);updateToggle(localToggle,opened);const lightning=document.querySelector('.cx-mobile-lightning');if(lightning){lightning.setAttribute('aria-pressed',String(opened));lightning.setAttribute('aria-expanded',String(opened));}positionPanel();if(embedded)parent.ChartOneClick?.syncHost();}
  if(!embedded){window.addEventListener('resize',positionPanel,{passive:true});document.addEventListener('scroll',positionPanel,true);}
  window.OneClickPanel={toggle(){setOpen(!opened);},reposition:positionPanel,get opened(){return opened;}};
  panel.addEventListener('pointerdown',e=>e.stopPropagation());panel.addEventListener('wheel',e=>e.stopPropagation());
