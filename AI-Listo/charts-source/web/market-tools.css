@@ -816,3 +816,21 @@ html.cx-mobile-chart .cx-mobile-quick-timeframes button.active{background:#22d3c
  html.cx-mobile-chart .chart-shell:not(.osc-pane-collapsed) #rsiChart{height:var(--cx-rsi-pane-height,130px)!important;min-height:0!important;flex:0 0 var(--cx-rsi-pane-height,130px)!important}
  html.cx-mobile-chart .chart-shell.osc-pane-collapsed #cxMobileOscCaption{display:none!important}
 }
+
+/* v65: customer-approved softer, fixed One Click Trading palette (mobile only).
+   Override both normal and market-direction classes without affecting desktop. */
+@media (max-width:767px){
+ html.cx-mobile-chart{--cx-sell:#D98289;--cx-buy:#78B79A}
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-sell,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-sell,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-sell{
+  background:#D98289!important;background-image:none!important;border-color:#D98289!important;color:#fff!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-buy,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-buy,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-buy{
+  background:#78B79A!important;background-image:none!important;border-color:#78B79A!important;color:#fff!important;
+ }
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-price,
+ html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-side-label{color:#fff!important}
+}

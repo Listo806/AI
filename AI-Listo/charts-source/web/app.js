@@ -193,7 +193,8 @@ function getCachedChartStudies(data){
 function drawHollowCandle(ctx,bar,cx,y,step){
  const mobile=document.documentElement.classList.contains('cx-mobile-chart');
  const top=Math.min(y(bar.open),y(bar.close)),bottom=Math.max(y(bar.open),y(bar.close));
- const width=mobile?Math.max(1,Math.min(step*.86,step-1.25)):Math.max(1,step*.68);
+ // Mobile detail-only adjustment: use more of the existing candle slot without changing spacing or zoom.
+ const width=mobile?Math.max(1,Math.min(step*.92,step-.8)):Math.max(1,step*.68);
  const color=bar.close>=bar.open?'#64c3a5':'#e07982';
  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1;ctx.setLineDash([]);
  ctx.beginPath();ctx.moveTo(cx,y(bar.high));ctx.lineTo(cx,y(bar.low));ctx.stroke();
