@@ -10,7 +10,7 @@ export default function ChartsLaunch() {
   if(!token){setError('Please sign in again.');return;}
   const api=(import.meta.env.VITE_API_BASE_URL || 'https://backend.cortexaaicrm.com/api').replace(/\/$/,'');
   fetch(`${api}/charts/session`,{method:'POST',credentials:'include',headers:{Authorization:`Bearer ${token}`}})
-   .then(async r=>{if(!r.ok)throw Error(r.status===403?'This account is not authorized for Charts.':'Unable to establish Charts session.');window.location.replace('/charts/app/');})
+   .then(async r=>{if(!r.ok)throw Error(r.status===403?'This account is not authorized for Charts.':'Unable to establish Charts session.');window.location.replace(new URLSearchParams(window.location.search).get('charts_recovery') === '1' ? '/charts/app/?charts_recovery=1' : '/charts/app/');})
    .catch(e=>setError(e.message));
  },[loading,isAuthenticated]);
  return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',background:'#050b19',color:'white',fontFamily:'system-ui'}}><div role="status">{error || 'Opening Cortexa Charts…'}</div></main>;

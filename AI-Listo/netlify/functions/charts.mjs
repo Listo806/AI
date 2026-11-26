@@ -60,6 +60,7 @@ export default async function charts(request) {
   // Authenticate all dashboard HTML, executable scripts, styles, and API requests.
   // Never trust browser-provided identity headers.
   let identity;
+  let authStatus;
   try {
     const auth = await fetch(VERIFY_URL, {
       method: 'GET',
@@ -67,6 +68,7 @@ export default async function charts(request) {
       redirect: 'manual',
       signal: AbortSignal.timeout(5000),
     });
+    authStatus = auth.status;
     if (auth.ok) {
       const data = await auth.json();
       if (data?.ok === true && (typeof data.userId === 'string' || typeof data.userId === 'number')) {
@@ -74,7 +76,19 @@ export default async function charts(request) {
       }
     }
   } catch { /* Fail closed when the CRM backend is unavailable. */ }
-  if (!identity) return reply('Charts sign-in required', 401);
+  if (!identity) {
+    const navigation = method === 'GET' && internalPath === '/' &&
+      (request.headers.get('sec-fetch-mode') === 'navigate' ||
+       (request.headers.get('accept') || '').includes('text/html'));
+    if (navigation && authStatus === 401 && url.searchParams.get('charts_recovery') !== '1') {
+      return new Response(null, { status: 303, headers: {
+        ...PRIVATE_HEADERS, location: '/charts/open?charts_recovery=1',
+      }});
+    }
+    if (authStatus === 403) return reply('Charts access denied', 403);
+    if (authStatus !== 401) return reply('Charts authentication temporarily unavailable', 503);
+    return reply('Charts sign-in required', 401);
+  }
 
   if (method === 'POST') {
     if (!ALLOWED_ORIGINS.has(request.headers.get('origin') || '')) return reply('Invalid origin', 403);
