@@ -817,19 +817,19 @@ html.cx-mobile-chart .cx-mobile-quick-timeframes button.active{background:#22d3c
  html.cx-mobile-chart .chart-shell.osc-pane-collapsed #cxMobileOscCaption{display:none!important}
 }
 
-/* v65: customer-approved softer, fixed One Click Trading palette (mobile only).
+/* v66: customer-approved desktop-matched, fixed One Click Trading palette (mobile only).
    Override both normal and market-direction classes without affecting desktop. */
 @media (max-width:767px){
- html.cx-mobile-chart{--cx-sell:#D98289;--cx-buy:#78B79A}
+ html.cx-mobile-chart{--cx-sell:#D8757E;--cx-buy:#65B58E}
  html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-sell,
  html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-sell,
  html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-sell{
-  background:#D98289!important;background-image:none!important;border-color:#D98289!important;color:#fff!important;
+  background:#D8757E!important;background-image:none!important;border-color:#D8757E!important;color:#fff!important;
  }
  html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel>.one-click-buy,
  html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-up>.one-click-buy,
  html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel.cx-market-down>.one-click-buy{
-  background:#78B79A!important;background-image:none!important;border-color:#78B79A!important;color:#fff!important;
+  background:#65B58E!important;background-image:none!important;border-color:#65B58E!important;color:#fff!important;
  }
  html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-price,
  html.cx-mobile-chart .cx-mobile-chrome>.one-click-panel .one-click-side-label{color:#fff!important}
