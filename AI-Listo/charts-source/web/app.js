@@ -5,11 +5,13 @@ const markets = [{name:'USD/JPY',symbol:'USD/JPY',category:'FOREIGN EXCHANGE'},{
 try{const slots=JSON.parse(ChartStorage.getItem('market-watch-open-v2')||ChartStorage.getItem('market-watch-slots-v1')||'null');if(Array.isArray(slots)&&slots.length>=1&&slots.length<=10&&new Set(slots).size===slots.length&&slots.every(symbol=>MarketCatalog.some(m=>m.symbol===symbol))){markets.splice(0,markets.length,...slots.map(symbol=>({...MarketCatalog.find(m=>m.symbol===symbol)})));}}catch{}
 if(window.ChartEmbed){markets.splice(0,markets.length,...MarketCatalog.map(m=>({...m})));}
 const colors = ['#47d7ad','#99bfff','#ba91f3','#efc555','#68cbdd','#ed9cc7','#9ad881','#dcac73','#9eacf3','#e1cf8c'];
-let selected = 0, frame = '1min', apiKey = '', count = 170, offset = -9, hover = -1, requestId = 0;
+function mobileOpeningView(){return !window.ChartEmbed && !document.documentElement.classList.contains('chart-embedded') && matchMedia('(max-width: 760px)').matches;}
+function defaultCandleCount(){if(!mobileOpeningView())return 170;const width=document.getElementById('priceChart')?.getBoundingClientRect().width||window.innerWidth;return Math.max(24,Math.min(110,Math.floor((width-79)/5)));}
+let selected = 0, frame = '1min', apiKey = '', count = defaultCandleCount(), offset = -Math.round(count*.05), hover = -1, requestId = 0;
 if(window.ChartEmbed){selected=Math.max(0,markets.findIndex(m=>m.symbol===ChartEmbed.symbol));frame=Object.hasOwn(Heisenberg.durations,ChartEmbed.frame)?ChartEmbed.frame:'1min';}
 let chartStyle='candles';try{const saved=window.ChartEmbed?ChartEmbed.style:ChartStorage.getItem('chart-style-v43');if(['candles','line','ohlc'].includes(saved))chartStyle=saved;}catch{}
 function setChartStyle(style){chartStyle=style;if(!window.ChartEmbed)try{ChartStorage.setItem('chart-style-v43',style);}catch{}}
-const oscView={count:170,offset:-9};let hoverPane='price',crosshair=null;let mobileCrosshairEnabled=false;let mobilePinchActive=false;let mobileCrosshairPosition=null;
+const oscView={count,offset};let hoverPane='price',crosshair=null;let mobileCrosshairEnabled=false;let mobilePinchActive=false;let mobileCrosshairPosition=null;
 const cache = new Map();
 const chartDurations={...Heisenberg.durations,'2h':7200000,'1week':604800000,'1month':2678400000};
 try{const saved=JSON.parse(ChartStorage.getItem('market-history-biquote-v1')||'[]');for(const [k,entry] of saved){const [symbol,tf]=k.split('|');if(markets.some(m=>m.symbol===symbol)&&Object.hasOwn(Heisenberg.durations,tf)&&entry?.bars?.length&&Number.isFinite(entry.fetchedAt))cache.set(k,{...entry,bars:normalize(entry.bars)});}}catch{}
@@ -201,16 +203,17 @@ function drawHollowCandle(ctx,bar,cx,y,step){
   // Snap the body to physical pixels, not fractional CSS pixels. Keep each body inside its slot.
   const dpr=window.devicePixelRatio||1, center=cx*dpr;
   const l=Math.ceil(center-step*dpr/2), r=Math.floor(center+step*dpr/2);
-  const slot=r-l, gap=slot>=4?1:0, w=Math.max(0,slot-gap);
+  const slot=r-l, gap=slot>=4?Math.max(1,Math.round(dpr*.8)):0, w=Math.max(0,slot-gap);
   const left=l+Math.floor(gap/2), right=left+w;
   const ink=bar.close>=bar.open?'#83E5B1':'#F28B96';
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.fillStyle=ink;
   const wick=Math.floor(center), hi=Math.round(y(bar.high)*dpr), lo=Math.round(y(bar.low)*dpr);
   const t=Math.round(top*dpr), bot=Math.max(t+1,Math.round(bottom*dpr));
   ctx.fillRect(wick/dpr,hi/dpr,1/dpr,Math.max(1,lo-hi)/dpr);
-  if(w>=3 && bot-t>=3){
+  const border=Math.max(1,Math.round(dpr*.85));
+  if(w>2*border && bot-t>2*border){
    ctx.fillRect(left/dpr,t/dpr,w/dpr,(bot-t)/dpr);
-   ctx.fillStyle='#000000';ctx.fillRect((left+1)/dpr,(t+1)/dpr,(w-2)/dpr,(bot-t-2)/dpr);
+   ctx.fillStyle='#000000';ctx.fillRect((left+border)/dpr,(t+border)/dpr,(w-2*border)/dpr,(bot-t-2*border)/dpr);
   }else if(w>0){ctx.fillRect(left/dpr,t/dpr,w/dpr,(bot-t)/dpr);}
   ctx.restore();return;
  }
@@ -580,7 +583,7 @@ $('panLeft').onclick=()=>{zoomPriceOverride=null;offset=Math.max(-count+20,offse
 // Coalesce pointer updates: one chart render for the newest pointer event per frame.
 let pointerFrame=0;
 const schedulePointerDraw=()=>{if(pointerFrame)return;pointerFrame=requestAnimationFrame(()=>{pointerFrame=0;draw(true);});};
-$('zoomIn').onclick=()=>window.ChartZoom.change('in');$('zoomOut').onclick=()=>window.ChartZoom.change('out');$('reset').onclick=()=>{clearWheelFlower();zoomPriceOverride=null;verticalScales.price={factor:1,center:null};count=170;offset=-Math.round(count*.05);hover=-1;crosshair=null;draw();};let dragging=null;
+$('zoomIn').onclick=()=>window.ChartZoom.change('in');$('zoomOut').onclick=()=>window.ChartZoom.change('out');$('reset').onclick=()=>{clearWheelFlower();zoomPriceOverride=null;verticalScales.price={factor:1,center:null};count=defaultCandleCount();offset=-Math.round(count*.05);if(mobileOpeningView())Object.assign(oscView,{count,offset});hover=-1;crosshair=null;draw();};let dragging=null;
 for(const canvas of [$('priceChart'),$('rsiChart')]){
  const pane=canvas.id==='priceChart'?'price':'rsi';
  const inAxis=event=>event.clientX-canvas.getBoundingClientRect().left>=canvas.getBoundingClientRect().width-64;
@@ -611,7 +614,7 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   }
   draw();
  };
- canvas.ondblclick=event=>{clearWheelFlower();verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=170;setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
+ canvas.ondblclick=event=>{clearWheelFlower();verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=defaultCandleCount();setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
  canvas.onpointerdown=event=>{if(event.button!==0)return;if(event.pointerType==='touch'&&mobilePinchActive)return;if(event.pointerType==='touch'&&document.documentElement.classList.contains('cx-mobile-chart')&&mobileCrosshairEnabled){event.preventDefault();const r=canvas.getBoundingClientRect();mobileCrosshairPosition={pane,x:event.clientX-r.left,y:event.clientY-r.top};hover=-1;schedulePointerDraw();return;}event.preventDefault();clearWheelFlower();zoomPriceOverride=null;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
  const releaseDrag=event=>{if(!dragging||dragging.pointerId!==event.pointerId)return;dragging=null;if(canvas.hasPointerCapture?.(event.pointerId))canvas.releasePointerCapture(event.pointerId);schedulePointerDraw();};
  canvas.onpointerup=releaseDrag;canvas.onpointercancel=releaseDrag;canvas.onlostpointercapture=event=>{if(dragging?.pointerId===event.pointerId){dragging=null;schedulePointerDraw();}};
@@ -702,12 +705,12 @@ async function selectFrame(next){
   if(next===frame)return;
   const id=++requestId,symbol=markets[selected].symbol,button=document.querySelector('[data-frame="'+next+'"]');
   const existing=cache.get(symbol+'|'+next);
-  if(existing){frame=next;count=170;clearWheelFlower();verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);hover=-1;crosshair=null;$('chartNotice').hidden=true;render();return;}
+  if(existing){frame=next;count=defaultCandleCount();clearWheelFlower();verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);if(mobileOpeningView())Object.assign(oscView,{count,offset});hover=-1;crosshair=null;$('chartNotice').hidden=true;render();return;}
   button?.classList.add('loading');button?.setAttribute('aria-busy','true');
   try{
     const native=await fetchNativeHistory(symbol,next);
     if(id!==requestId||symbol!==markets[selected].symbol)return;
-    cache.set(symbol+'|'+next,native);replayRecentTick(symbol);frame=next;count=170;clearWheelFlower();verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);hover=-1;crosshair=null;$('chartNotice').hidden=true;render();loadNativeMTF();
+    cache.set(symbol+'|'+next,native);replayRecentTick(symbol);frame=next;count=defaultCandleCount();clearWheelFlower();verticalScales.price={factor:1,center:null};offset=-Math.round(count*.05);if(mobileOpeningView())Object.assign(oscView,{count,offset});hover=-1;crosshair=null;$('chartNotice').hidden=true;render();loadNativeMTF();
   }catch(error){
     if(id!==requestId)return;
     if(apiKey){frame=next;render();loadFeed();}
