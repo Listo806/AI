@@ -24,3 +24,8 @@
 .cx-order-draft .cx-order-expand{width:100%;cursor:pointer}
 .cx-order-draft .cx-order-expand:focus-visible,.cx-order-draft button:focus-visible{outline:2px solid #24c9c5;outline-offset:2px}
 @media(max-width:600px){.one-click-panel .cx-order-draft{width:min(350px,calc(100vw - 24px));max-height:min(65dvh,550px);overscroll-behavior:contain}}
+
+/* Final mobile palette: independent of panel placement and quote direction. */
+html.cx-mobile-chart #oneClickPanel.one-click-panel > button.one-click-sell{background:#D8757E!important;border-color:#D8757E!important;color:#fff!important;opacity:1!important;filter:none!important;background-image:none!important}
+html.cx-mobile-chart #oneClickPanel.one-click-panel > button.one-click-buy{background:#65B58E!important;border-color:#65B58E!important;color:#fff!important;opacity:1!important;filter:none!important;background-image:none!important}
+html.cx-mobile-chart #oneClickPanel.one-click-panel > button.one-click-side :is(.one-click-price,.one-click-side-label,.cx-quote-last-digit){color:#fff!important;opacity:1!important}

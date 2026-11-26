@@ -194,9 +194,18 @@ function drawHollowCandle(ctx,bar,cx,y,step){
  const mobile=document.documentElement.classList.contains('cx-mobile-chart');
  const top=Math.min(y(bar.open),y(bar.close)),bottom=Math.max(y(bar.open),y(bar.close));
  // Mobile detail-only adjustment: use more of the existing candle slot without changing spacing or zoom.
- const width=mobile?Math.max(1,Math.min(step*.92,step-.8)):Math.max(1,step*.68);
+ const width=mobile?Math.min(step*.94,Math.max(step*.8,step-.45)):Math.max(1,step*.68);
  const color=bar.close>=bar.open?'#64c3a5':'#e07982';
- ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1;ctx.setLineDash([]);
+ ctx.save();ctx.strokeStyle=color;ctx.lineWidth=mobile?Math.min(.75,width*.28):1;ctx.setLineDash([]);
+ if(mobile){
+  ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";
+  const h=bottom-top, inset=ctx.lineWidth/2;
+  ctx.beginPath();ctx.moveTo(cx,y(bar.high));ctx.lineTo(cx,top);ctx.moveTo(cx,bottom);ctx.lineTo(cx,y(bar.low));ctx.stroke();
+  if(h>0){ctx.fillStyle="#000000";ctx.fillRect(cx-width/2,top,width,h);}
+  if(h>ctx.lineWidth){ctx.strokeRect(cx-width/2+inset,top+inset,width-2*inset,h-2*inset);}
+  else{ctx.lineWidth=Math.min(ctx.lineWidth,Math.max(h,.35));ctx.beginPath();ctx.moveTo(cx-width/2+inset,(top+bottom)/2);ctx.lineTo(cx+width/2-inset,(top+bottom)/2);ctx.stroke();}
+  ctx.restore();return;
+ }
  ctx.beginPath();ctx.moveTo(cx,y(bar.high));ctx.lineTo(cx,y(bar.low));ctx.stroke();
  if(bottom-top>=1){
   ctx.fillStyle='#000000';ctx.fillRect(cx-width/2,top,width,bottom-top);
@@ -326,7 +335,7 @@ let low=0,high=1;if(visible.length){// Candle prices alone define autoscale; ove
 const values=visible.flatMap(b=>[b.low,b.high]);low=Math.min(...values);high=Math.max(...values);const pad=Math.max((high-low)*.08,high*.0001);low-=pad;high+=pad;}const autoCenter=(high+low)/2,range=(high-low)/verticalScales.price.factor;const priceCenter=zoomPriceOverride?.center??verticalScales.price.center??autoCenter;const effectiveRange=zoomPriceOverride?.span??wheelFlowerSpan??range;currentPriceBounds={center:priceCenter,span:effectiveRange};low=priceCenter-effectiveRange/2;high=priceCenter+effectiveRange/2;grid(top,low,high,5);const mobileAxisReserved=[];const plotWidth=top.width-right-left,step=plotWidth/count,x=i=>left+(start-viewStart+i+.5)*step,y=value=>15+(high-value)/(high-low)*(top.height-43),ry=value=>document.documentElement.classList.contains('cx-mobile-chart')?(bottom.height-1)-(value/100)*Math.max(1,bottom.height-1):15+(verticalScales.rsi.center+50/verticalScales.rsi.factor-value)/(100/verticalScales.rsi.factor)*(bottom.height-43);function line(chart,values,color,mapY,style){const isOsc=chart===bottom,sliceStart=isOsc?oscStart:start,sliceEnd=isOsc?oscEnd:end,plotX=isOsc?(i=>left+(oscStart-oscStartFloat+i+.5)*(bottom.width-right-left)/oscView.count):x;const {ctx}=chart;ctx.strokeStyle=color;ctx.lineWidth=color==='#ffe638'?3:color==='#ff263e'?2.5:(color==='#3293ff'||color==='#ff334c')?2:1.4;if(style){ctx.lineWidth=style.width;ctx.setLineDash(style.style==='dashed'?[7,5]:style.style==='dotted'?[2,4]:[]);}ctx.beginPath();let active=false;values.slice(sliceStart,sliceEnd).forEach((value,i)=>{if(!Number.isFinite(value)){active=false;return;}if(active)ctx.lineTo(plotX(i),mapY(value));else ctx.moveTo(plotX(i),mapY(value));active=true;});ctx.stroke();ctx.setLineDash([]);}
 if($('bbOn').checked){const c=top.ctx,u=bbPlots[1],l=bbPlots[2];if(BBSettings.settings.background&&u.show&&l.show){c.save();c.fillStyle=BBSettings.settings.fill;c.globalAlpha=BBSettings.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}bbPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
 if($('vwapOn').checked){const c=top.ctx;if(VwapAA.settings.background){for(let k=0;k<3;k++){const u=aaPlots[1+k*2],l=aaPlots[2+k*2];if(!u.show||!l.show)continue;c.save();c.fillStyle=VwapAA.settings.fill;c.globalAlpha=VwapAA.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}}aaPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
-if($('bbOn').checked){bbPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}if(!entry()?.reference&&chartStyle==='candles'&&$('priceOn').checked)visible.forEach((bar,i)=>drawHollowCandle(top.ctx,bar,x(i),y,step));if(!entry()?.reference&&chartStyle==='ohlc'&&$('priceOn').checked){const c=top.ctx; c.save();visible.forEach((b,i)=>{const xx=x(i),w=Math.max(1,step*.32);c.strokeStyle=b.close>=b.open?'#55cbb0':'#e76d7f';c.beginPath();c.moveTo(xx,y(b.high));c.lineTo(xx,y(b.low));c.moveTo(xx-w,y(b.open));c.lineTo(xx,y(b.open));c.moveTo(xx,y(b.close));c.lineTo(xx+w,y(b.close));c.stroke();});c.restore();}if((entry()?.reference||chartStyle==='line')&&$('priceOn').checked){line(top,close,'#d8e4ed',y);const ctx=top.ctx;if(visible.length){const last=visible.length-1;ctx.fillStyle='#d8e4ed';ctx.beginPath();ctx.arc(x(last),y(visible[last].close),3.5,0,Math.PI*2);ctx.fill();}}if($('vwapOn').checked){aaPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}
+if($('bbOn').checked){bbPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}if(!document.documentElement.classList.contains('cx-mobile-chart')&&!entry()?.reference&&chartStyle==='candles'&&$('priceOn').checked)visible.forEach((bar,i)=>drawHollowCandle(top.ctx,bar,x(i),y,step));if(!entry()?.reference&&chartStyle==='ohlc'&&$('priceOn').checked){const c=top.ctx; c.save();visible.forEach((b,i)=>{const xx=x(i),w=Math.max(1,step*.32);c.strokeStyle=b.close>=b.open?'#55cbb0':'#e76d7f';c.beginPath();c.moveTo(xx,y(b.high));c.lineTo(xx,y(b.low));c.moveTo(xx-w,y(b.open));c.lineTo(xx,y(b.open));c.moveTo(xx,y(b.close));c.lineTo(xx+w,y(b.close));c.stroke();});c.restore();}if((entry()?.reference||chartStyle==='line')&&$('priceOn').checked){line(top,close,'#d8e4ed',y);const ctx=top.ctx;if(visible.length){const last=visible.length-1;ctx.fillStyle='#d8e4ed';ctx.beginPath();ctx.arc(x(last),y(visible[last].close),3.5,0,Math.PI*2);ctx.fill();}}if($('vwapOn').checked){aaPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}
 
 if($('tramaOn').checked&&TramaSettings.settings.show){line(top,tramaPlot,TramaSettings.settings.color,y,TramaSettings.settings);}
 if($('engineOn').checked&&!entry()?.reference){
@@ -337,9 +346,11 @@ if($('engineOn').checked&&!entry()?.reference){
   plots.filter(p=>p.show&&Number.isFinite(p.values[at])&&Number.isFinite(p.values[previous])).forEach(p=>{ctx.save();ctx.strokeStyle=p[state];ctx.globalAlpha=p.opacity/100;ctx.lineWidth=p.width;ctx.setLineDash(p.style==='dashed'?[7,5]:p.style==='dotted'?[2,4]:[]);ctx.beginPath();ctx.moveTo(x(i-1),y(p.values[previous]));ctx.lineTo(x(i),y(p.values[at]));ctx.stroke();ctx.restore();});
  }
  function marker(signal,text){if(signal.index<start||signal.index>=end)return;const i=signal.index-start,buy=signal.side==='BUY',side=buy?'bull':'bear',mtf=text==='MTF';if(mtf&&!style[side+'Marker'])return;if(!mtf&&!style.paneLabels)return;const bar=data[signal.index],below=mtf?style[side+'Position']==='below':buy,price=below?bar.low:bar.high,py=Math.max(20,Math.min(top.height-40,y(price)+(below?19:-19)));ctx.fillStyle=mtf?style[side+'Color']:buy?'#38af62':'#ee3e56';const shape=mtf?style[side+'Shape']:'label';if(shape==='label'){ctx.fillRect(x(i)-15,py-8,30,16);ctx.fillStyle='#fff';ctx.font='bold 8px system-ui';ctx.fillText(text,x(i)-12,py+3);}else if(shape==='triangle'){ctx.beginPath();ctx.moveTo(x(i),py+(below?-8:8));ctx.lineTo(x(i)-7,py+(below?7:-7));ctx.lineTo(x(i)+7,py+(below?7:-7));ctx.closePath();ctx.fill();}else{ctx.font='bold 20px system-ui';ctx.fillText(below?'↑':'↓',x(i)-7,py+6);}}
+ if(document.documentElement.classList.contains('cx-mobile-chart')&&!entry()?.reference&&chartStyle==='candles'&&$('priceOn').checked)visible.forEach((bar,i)=>drawHollowCandle(top.ctx,bar,x(i),y,step));
  engine.signals.forEach(signal=>marker(signal,signal.side));engine.alignment.forEach(signal=>marker(signal,'MTF'));
  const status=[style.inputs?Object.entries(EngineSettings.inputs).map(([k,v])=>k+'='+v).join(', '):'',style.values?plots.map((p,i)=>['Snake Upper','Snake Lower','Snake Center','VWAP Upper','VWAP Lower','BB Upper','BB Lower'][i]+': '+(Number.isFinite(p.values.at(-1))?p.values.at(-1).toFixed(style.precision==='default'?3:Number(style.precision)):'—')).join(' · '):''].filter(Boolean).join(' | ');$('engineOn').closest('label').title=status;
 }
+if(document.documentElement.classList.contains('cx-mobile-chart')&&!$('engineOn').checked&&!entry()?.reference&&chartStyle==='candles'&&$('priceOn').checked)visible.forEach((bar,i)=>drawHollowCandle(top.ctx,bar,x(i),y,step));
 // Price tracking uses the most recent live tick, never the historical window's last close.
 // UTC session extremes use the full available session, not the panned viewport.
 // Mark incomplete sessions explicitly: do not claim a full-day high/low without coverage.
@@ -457,10 +468,12 @@ const ctx=bottom.ctx,rs=OscSettings.rsi,ms=OscSettings.ma;
 // Mobile RSI grid: share the price chart's X coordinates and use RSI's own 0–100 scale.
 // Plot bounds come from the measured canvas, so resizing the RSI pane redraws the grid.
 if(document.documentElement.classList.contains('cx-mobile-chart') && bottom.width>right+left && bottom.height>43){
- const gridBottom=bottom.height-28;
+ // Match the grid edges to the actual RSI 100 and 0 scale coordinates.
+ // In particular the bottom border must follow RSI 0, not the old 28px inset.
+ const gridBottom=bottom.height-1;
  const gridRight=bottom.width-right;
  const gridLeft=left;
- const gridTop=15;
+ const gridTop=0;
  ctx.save();
  ctx.strokeStyle='#454B54';ctx.lineWidth=1;ctx.setLineDash([4,4]);
  for(let i=0;i<11;i++){
