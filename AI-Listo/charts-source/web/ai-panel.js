@@ -7,8 +7,9 @@ const head=e('div','ai-head'),brand=e('div','ai-brand');brand.append(e('span','a
 const context=e('div','ai-context'),symbol=e('strong'),frameLabel=e('span'),hint=e('p','ai-intro');context.append(e('span','context-dot'),symbol,frameLabel);
 
 const choices=e('div','ai-choices'),setup=e('button','selected','Current setup'),outlook=e('button','','Intraday outlook');choices.append(setup,outlook);
-const content=e('div','ai-content'),action=e('button','ai-analyze'),footer=e('div','ai-footer'),note=e('div','ai-preview-note','CORTEXA AI · Analysis available when the secure service is configured.');
-footer.append(action,e('small','','Analysis is a snapshot. Live prices keep moving.'));
+const content=e('div','ai-content'),action=e('button','ai-analyze'),footer=e('div','ai-footer'),note=e('div','ai-preview-note','DESIGN PREVIEW · Chart-derived readings · No connected AI service');
+const mobileActions=e('div','cx-ai-mobile-actions');const scan=e('button','','⌕  Scan markets'),alerts=e('button','','♧  Signal alerts');scan.type=alerts.type='button';scan.onclick=()=>{mobileActions.dataset.message='Market scanner is not connected yet.';};alerts.onclick=()=>{mobileActions.dataset.message='Signal alerts are not configured yet.';};mobileActions.append(scan,alerts);const ask=e('div','cx-ai-ask'),askInput=e('input');askInput.placeholder='Ask Cortexa about this market…';askInput.setAttribute('aria-label','Ask Cortexa about this market');const askSend=e('button','','➤');askSend.type='button';askSend.onclick=()=>{mobileActions.dataset.message='AI chat is not connected yet.';};ask.append(askInput,askSend);
+footer.append(mobileActions,ask,action,e('small','','Snapshot · Check data coverage'));
 panel.append(head,note,context,hint,choices,content,footer);document.body.append(panel);
 let mode='setup',lastContext='',reportKey='',busy=false,request=0,activeController=null;
 const tf=()=>({'1min':'1 minute','5min':'5 minutes','15min':'15 minutes','30min':'30 minutes','1h':'1 hour','4h':'4 hours','1day':'Daily'}[frame]||frame);
@@ -16,11 +17,11 @@ function signature(){return JSON.stringify({market:markets[selected].symbol,fram
 function reset(){activeController?.abort();activeController=null;request++;busy=false;reportKey='';content.replaceChildren();action.disabled=false;action.textContent='Analyze '+markets[selected].name;hint.textContent='Understand the current conditions, your indicator readings, and the scenarios worth watching.';empty();}
 function empty(){content.replaceChildren();const card=e('div','ai-welcome');card.append(e('div','welcome-glyph','⌁'),e('h3','','A clearer view of '+markets[selected].name),e('p','','One overview of price action, your active indicators, and multi-timeframe alignment.'));const items=e('div','ai-preview-list');for(const [mark,text] of [['01','Understand current conditions'],['02','See where indicators agree or conflict'],['03','Explore conditional scenarios']]){const row=e('div');row.append(e('span','',mark),e('span','',text));items.append(row);}card.append(items);content.append(card);}
 function sync(){const key=markets[selected].symbol+'|'+frame;symbol.textContent=markets[selected].name;frameLabel.textContent=tf();if(key!==lastContext){lastContext=key;reset();}else if(reportKey&&reportKey!==signature()){reportKey='';hint.textContent='Your indicator settings changed. Update the analysis to use the new setup.';action.textContent='Update analysis';content.classList.add('ai-outdated');}}
-function open(){panel.hidden=false;button.setAttribute('aria-expanded','true');sync();if(matchMedia('(max-width:760px)').matches){try{content.replaceChildren();build();}catch(error){empty();}}action.focus();}
+function open(){panel.hidden=false;button.setAttribute('aria-expanded','true');sync();if(matchMedia('(max-width:760px)').matches){try{content.replaceChildren();buildMobile();}catch(error){content.replaceChildren();section('DATA CHECK','Chart data unavailable','Wait for chart data to load and reopen this panel.');}}action.focus();}
 function hide(){activeController?.abort();activeController=null;request++;busy=false;action.disabled=false;panel.hidden=true;button.setAttribute('aria-expanded','false');button.focus();}
 button.onclick=()=>panel.hidden?open():hide();close.onclick=hide;
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden)hide();});
-for(const [b,m] of [[setup,'setup'],[outlook,'outlook']])b.onclick=()=>{mode=m;setup.classList.toggle('selected',mode==='setup');outlook.classList.toggle('selected',mode==='outlook');reset();if(!panel.hidden&&matchMedia('(max-width:760px)').matches){try{content.replaceChildren();build();}catch(error){empty();}}};
+for(const [b,m] of [[setup,'setup'],[outlook,'outlook']])b.onclick=()=>{mode=m;setup.classList.toggle('selected',mode==='setup');outlook.classList.toggle('selected',mode==='outlook');reset();if(!panel.hidden&&matchMedia('(max-width:760px)').matches){try{content.replaceChildren();buildMobile();}catch(error){content.replaceChildren();section('DATA CHECK','Chart data unavailable','Wait for chart data to load and reopen this panel.');}}};
 function section(label,title,text,reason){const card=e('section','ai-card');card.append(e('small','ai-card-label',label),e('h3','',title),e('p','',text));if(reason){const d=e('details'),s=e('summary','','Show reasoning');d.append(s,e('p','ai-reason',reason));card.append(d);}content.append(card);return card;}
 function lastFinite(values){return [...values].reverse().find(Number.isFinite);}
 function display(v){return Number.isFinite(v)?format(v):'Not available';}
@@ -53,6 +54,18 @@ function build(){
  section('06 / WHAT CHANGES THE VIEW','Reassess as the evidence changes','A change in price position relative to active averages, RSI momentum, or higher-timeframe alignment can change this interpretation. Update the snapshot after meaningful movement or a completed candle.');
  content.append(e('div','ai-data-note',`${data.length} chart candles · ${entry()?.volumeType==='tick'?'Tick activity weights':'Volume source varies'} · No news feed connected.\nPreview explanations use fixed rules, not an AI model. They do not establish trade profitability.`));
 }
+function buildMobile(){
+ content.replaceChildren();const data=bars(),market=markets[selected];if(data.length<30){section('MARKET SUMMARY','Waiting for chart history','More candles are needed for chart-derived readings.');return;}
+ const last=data.at(-1),quote=liveQuotes.get(market.symbol),price=quote?.price??last.close,engine=computeEngine();const rows=Object.entries(engine.table||{});const state=v=>String(v||'Unavailable');
+ const rsi=lastFinite(OscSettings.series(data).rsi),trama=lastFinite(TramaSettings.series(data)),vwap=lastFinite(VwapAA.plots(data,frame)[0].values);
+ const closed=data.slice(-21,-1),low=Math.min(...closed.map(x=>x.low)),high=Math.max(...closed.map(x=>x.high));
+ const summary=e('section','cx-ai-compact-section');summary.append(e('h3','','MARKET SUMMARY'),e('p','','Current price '+display(price)+' · '+(Number.isFinite(rsi)?'RSI '+rsi.toFixed(1):'RSI unavailable')+'. Higher-timeframe alignment shown below where available.'));content.append(summary);
+ const mtf=e('section','cx-ai-compact-section');mtf.append(e('h3','','HEISENBERG MTF'));const strip=e('div','cx-ai-mtf-strip');for(const [label,match] of [['M1','1min'],['M5','5min'],['M15','15min'],['M30','30min'],['H1','1h'],['H4','4h']]){const found=rows.find(([key])=>key===match||key===label||key.toLowerCase()===label.toLowerCase());const v=state(found?.[1]);const cell=e('div','cx-ai-mtf-cell '+(v==='Bullish'?'bull':v==='Bearish'?'bear':'neutral'));cell.append(e('b','',label),e('span','',v==='Unavailable'?'—':v));strip.append(cell);}mtf.append(strip);for(const [name,value,on] of [['TRAMA',trama,$('tramaOn').checked],['VWAP AA',vwap,$('vwapOn').checked]]){const row=e('div','cx-ai-indicator-row');row.append(e('strong','',name),e('span','',on?'Chart reference':'Not enabled'),e('b','',on&&Number.isFinite(value)?price>=value?'Above price reference':'Below price reference':'Unavailable'));mtf.append(row);}content.append(mtf);
+ const levels=e('section','cx-ai-compact-section');levels.append(e('h3','','LEVELS TO WATCH'));const cards=e('div','cx-ai-levels');for(const [name,value] of [['Recent low',low],['Recent high',high]]){const c=e('div');c.append(e('small','',name),e('strong','',display(value)));cards.append(c);}levels.append(cards);content.append(levels);
+ const scenarios=e('section','cx-ai-compact-section');scenarios.append(e('h3','','SCENARIOS'),e('p','','● Watch price reactions near the recent range boundaries. These are conditional observations, not trade signals.'));content.append(scenarios);
+ const news=e('section','cx-ai-compact-section');news.append(e('h3','','EVENTS & NEWS'),e('p','','○ Verified news feed connection pending.'));content.append(news);
+ note.textContent='DESIGN PREVIEW · Chart-derived readings · '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
 function snapshot(){
  const data=bars(),engine=computeEngine(),indicators=[];const add=(id,name,value)=>{if($(id).checked)indicators.push({name,value:Number.isFinite(value)?value:null});};
  add('vwapOn','VWAP AA',lastFinite(VwapAA.plots(data,frame)[0].values));add('tramaOn','TRAMA',lastFinite(TramaSettings.series(data)));add('bbOn','Bollinger basis',lastFinite(BBSettings.plots(data,frame,cache.get(markets[selected].symbol+'|'+BBSettings.settings.timeframe)?.bars)[0].values));const osc=OscSettings.series(data);add('rsiOn','RSI',lastFinite(osc.rsi));add('maOn','Moving Average',lastFinite(osc.ma));
@@ -78,6 +91,7 @@ async function connected(id,key){
  finally{clearTimeout(timeout);if(activeController===controller)activeController=null;if(id===request){busy=false;action.disabled=false;action.textContent='Update analysis';}}
 }
 action.onclick=()=>{
+ if(matchMedia('(max-width:760px)').matches){try{buildMobile();}catch(error){content.replaceChildren();section('DATA CHECK','Chart data unavailable','Please try again after the chart loads.');}return;}
  if(busy)return;busy=true;const id=++request,key=signature();action.disabled=true;action.textContent='Reading your chart…';content.classList.remove('ai-outdated');content.replaceChildren(e('div','ai-loading','✦  Gathering chart readings…'));
  connected(id,key);
 };
