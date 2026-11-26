@@ -6,6 +6,9 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { ChartsSubscriptionService } from './charts-subscription.service';
 import { ChartsAiService } from './charts-ai.service';
 
+// Persistent, bounded Charts session; every request still checks revocation and access.
+const CHARTS_SESSION_SECONDS = 30 * 24 * 60 * 60;
+
 @Controller('charts')
 export class ChartsController {
   constructor(private readonly security: SecurityService, private readonly auth: AuthService, private readonly chartsAi: ChartsAiService, private readonly subscriptions: ChartsSubscriptionService) {}
@@ -28,9 +31,9 @@ export class ChartsController {
     const sid = req.user?.sessionId || req.user?.sid || null;
     if (!sid) throw new UnauthorizedException('Please sign in again to open Charts');
     // Recheck owner and session at the validation endpoint on every request.
-    const payload = Buffer.from(JSON.stringify({id:req.user.id, sid, exp:Date.now()+10*60*1000})).toString('base64url');
+    const payload = Buffer.from(JSON.stringify({id:req.user.id, sid, exp:Date.now()+CHARTS_SESSION_SECONDS*1000})).toString('base64url');
     const token = `${payload}.${this.sign(payload)}`;
-    res.setHeader('Set-Cookie', `cortexa_charts=${token}; Path=/charts; Domain=.cortexaaicrm.com; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
+    res.setHeader('Set-Cookie', `cortexa_charts=${token}; Path=/charts; Domain=.cortexaaicrm.com; HttpOnly; Secure; SameSite=Lax; Max-Age=${CHARTS_SESSION_SECONDS}`);
     res.setHeader('Cache-Control','no-store');
     return {ok:true,redirect:'/charts/app/'};
   }

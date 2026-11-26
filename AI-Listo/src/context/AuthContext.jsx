@@ -251,8 +251,13 @@ export function AuthProvider({ children }) {
     // Best-effort server-side revocation so this device disappears from Active sessions.
     // Local logout still succeeds if the request cannot reach the API.
     try {
+      // Refresh first if possible: a short-lived CRM access token may have
+      // expired while the persistent Charts session is still valid.
+      if (apiClient.refreshToken && apiClient.refreshToken !== 'null') {
+        try { await apiClient.refreshAccessToken(); } catch (_) {}
+      }
       if (apiClient.accessToken) {
-        await apiClient.request('/security/sessions/revoke-current', { method: 'POST', body: '{}' });
+        await apiClient.request('/security/sessions/revoke-current', { method: 'POST', body: '{}', credentials: 'include' });
       }
     } catch (_) {}
     apiClient.clearTokens();

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { SecurityService } from './security.service';
@@ -15,6 +15,13 @@ export class SecurityController {
   @Post('recovery-codes') recovery(@CurrentUser() u:any,@Body() b:any,@Req() req:any){ return this.security.generateRecoveryCodes(u.id,b.code,this.meta(req)); }
   @Get('sessions') sessions(@CurrentUser() u:any){ return this.security.sessions(u.id,u.sessionId); }
   @Delete('sessions/:id') revoke(@CurrentUser() u:any,@Param('id') id:string){ return this.security.revokeSession(u.id,id,u.sessionId); }
+  @Post('sessions/revoke-current')
+  async revokeCurrent(@CurrentUser() u:any,@Res({passthrough:true}) res:any){
+    const result=await this.security.revokeCurrent(u.id,u.sessionId);
+    res.setHeader('Set-Cookie','cortexa_charts=; Path=/charts; Domain=.cortexaaicrm.com; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+    res.setHeader('Cache-Control','no-store');
+    return result;
+  }
   @Post('sessions/revoke-others') revokeOthers(@CurrentUser() u:any){ return this.security.revokeOthers(u.id,u.sessionId); }
   @Get('activity') activity(@CurrentUser() u:any,@Query('limit') limit?:string){ return this.security.recentActivity(u.id,Number(limit)||20); }
 }
