@@ -1,0 +1,56 @@
+import { readFile, writeFile } from 'node:fs/promises';
+const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/indicators.js': ['indicators.js', 'text/javascript'], '/live-stream.js': ['live-stream.js', 'text/javascript'], '/engine-settings.js': ['engine-settings.js', 'text/javascript'], '/oscillator-settings.js': ['oscillator-settings.js', 'text/javascript'], '/bb-settings.js': ['bb-settings.js', 'text/javascript'], '/trama-settings.js': ['trama-settings.js', 'text/javascript'], '/vwap-aa.js': ['vwap-aa.js', 'text/javascript'], '/heisenberg.js': ['heisenberg.js', 'text/javascript'] };
+for (const name of ['favicon.png','apple-touch-icon.png','icon-192.png','icon-512.png']) files['/'+name]=[name,'image/png'];
+files['/manifest.webmanifest']=['manifest.webmanifest','application/manifest+json'];
+files['/market-catalog.js']=['market-catalog.js','text/javascript'];
+files['/chart-studies.js']=['chart-studies.js','text/javascript'];
+files['/market-tools.js']=['market-tools.js','text/javascript'];
+files['/market-tools.css']=['market-tools.css','text/css'];
+files['/chart-zoom.css']=['chart-zoom.css','text/css'];
+files['/chart-zoom.js']=['chart-zoom.js','text/javascript'];
+files['/chart-toolbar-overlay.js']=['chart-toolbar-overlay.js','text/javascript'];
+files['/ai-panel.js']=['ai-panel.js','text/javascript'];
+files['/ai-panel.css']=['ai-panel.css','text/css'];
+files['/calendar.js']=['calendar.js','text/javascript'];
+files['/calendar.css']=['calendar.css','text/css'];
+for(const name of ['chart-layout-bootstrap.js','chart-layout.js','chart-layout.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+for(const name of ['signal-monitor.js','trading-signals.js','trading-signals.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+for(const name of ['display-preferences.js','display-preferences.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+for(const name of ['trading-terminal.js','trading-terminal.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+for(const name of ['one-click-trading.js','one-click-trading.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+for(const name of ['trading-account.js','trading-account.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+files['/metatrader-studies.js']=['metatrader-studies.js','text/javascript'];
+for(const name of ['drawing-tools.js','drawing-tools.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+for(const name of ['mobile-workspace.js','mobile-workspace.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+for (const required of ['/drawing-tools.js', '/drawing-tools.css', '/mobile-workspace.js', '/mobile-workspace.css']) {
+  if (!files[required]) throw new Error(`Private Charts worker missing asset mapping: ${required}`);
+}
+const calendarSource=await readFile(new URL('../worker/calendar.js',import.meta.url),'utf8');
+const assets = {};
+for (const [path, [file, contentType]] of Object.entries(files)) assets[path] = { body: await readFile(new URL('../web/' + file, import.meta.url), contentType==='image/png'?'base64':'utf8'), contentType, binary: contentType==='image/png' };
+const quoteSource = (await readFile(new URL('../worker/quotes.js', import.meta.url), 'utf8')).replace('export async function quoteResponse', 'async function quoteResponse');
+const candleSource = (await readFile(new URL('../worker/candles.js', import.meta.url), 'utf8')).replace('export async function candleResponse', 'async function candleResponse');
+const usageGateSource=await readFile(new URL('../worker/ai-usage-gate.js',import.meta.url),'utf8');
+const evidenceSource=await readFile(new URL('../worker/verified-evidence.js',import.meta.url),'utf8');
+const aiSource=await readFile(new URL('../worker/analysis.js',import.meta.url),'utf8');
+const pureIndicators=await readFile(new URL('../web/indicators.js',import.meta.url),'utf8');
+const pureEngine=await readFile(new URL('../worker/heisenberg-engine.js',import.meta.url),'utf8');
+const engineSource=await readFile(new URL('../worker/engine-response.js',import.meta.url),'utf8');
+const source = usageGateSource+'\n'+calendarSource+'\n'+pureIndicators+'\n'+pureEngine+'\n'+engineSource+'\n'+evidenceSource+'\n'+aiSource+'\n'+quoteSource + '\n' + candleSource + '\nconst assets = ' + JSON.stringify(assets) + `;
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if(url.pathname==='/api/engine')return engineResponse(request,env);
+    if(url.pathname==='/api/evidence')return verifiedEvidenceResponse(request,env);
+    if(url.pathname==='/api/analysis')return analysisResponse(request,{...env,...usageGateBindings(env.AI_USAGE_GATE)});
+    if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
+    if (url.pathname === '/api/calendar') return calendarResponse(request);
+    if (url.pathname === '/api/quotes') return quoteResponse(url);
+    if (url.pathname === '/api/candles') return candleResponse(url, env, ctx);
+    const asset = assets[url.pathname];
+    if (!asset) return new Response('Not found', { status: 404 });
+    return new Response(request.method === 'HEAD' ? null : (asset.binary ? Uint8Array.from(atob(asset.body), c=>c.charCodeAt(0)) : asset.body), { headers: { 'content-type': asset.contentType + (asset.binary ? '' : '; charset=utf-8'), 'cache-control': 'no-cache', 'x-content-type-options': 'nosniff' } });
+  }
+};
+`;
+await writeFile(new URL('../worker/index.js', import.meta.url), source);
