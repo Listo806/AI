@@ -21,7 +21,8 @@ for(const name of ['one-click-trading.js','one-click-trading.css'])files['/'+nam
 for(const name of ['trading-account.js','trading-account.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
 files['/metatrader-studies.js']=['metatrader-studies.js','text/javascript'];
 for(const name of ['drawing-tools.js','drawing-tools.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
-for (const required of ['/drawing-tools.js', '/drawing-tools.css']) {
+for(const name of ['mobile-workspace.js','mobile-workspace.css'])files['/'+name]=[name,name.endsWith('.css')?'text/css':'text/javascript'];
+for (const required of ['/drawing-tools.js', '/drawing-tools.css', '/mobile-workspace.js', '/mobile-workspace.css']) {
   if (!files[required]) throw new Error(`Private Charts worker missing asset mapping: ${required}`);
 }
 const calendarSource=await readFile(new URL('../worker/calendar.js',import.meta.url),'utf8');
