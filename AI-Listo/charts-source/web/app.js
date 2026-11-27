@@ -270,6 +270,8 @@ function drawMobileGridBridge(){
  }
  ctx.setLineDash([]);
 }
+function mobileOscClosed(){const shell=document.querySelector('.chart-shell');return document.documentElement.classList.contains('cx-mobile-chart')&&!!shell&&(shell.classList.contains('osc-pane-collapsed')||shell.classList.contains('osc-pane-absent'));}
+function priceBottomInset(){return mobileOscClosed()?1:28;}
 function draw(pointerOnly=false){
  const currentData=bars();
  const currentContext=JSON.stringify([markets[selected].symbol,frame,EngineSettings.inputs]);
@@ -286,7 +288,8 @@ function draw(pointerOnly=false){
   const parts=[];
   if($('rsiOn').checked&&OscSettings.rsi.show)parts.push('RSI('+OscSettings.rsi.length+') '+valueText(latest(rsi),OscSettings.rsi.precision));
   if($('maOn').checked&&OscSettings.ma.show)parts.push('MA('+OscSettings.ma.length+') '+valueText(latest(ma),OscSettings.ma.precision));
-  mobileCaption.textContent=parts.join('  ');
+  mobileCaption.hidden=mobileOscClosed();
+  mobileCaption.textContent=mobileOscClosed()?'':parts.join('  ');
  }
 const bbDigits=BBSettings.settings.precision==='default'?3:Number(BBSettings.settings.precision);$('bbOn').closest('label').title=[BBSettings.settings.inputs?BBSettings.settings.length+' · '+BBSettings.settings.ma+' · '+BBSettings.settings.source+' · '+BBSettings.settings.mult+'σ':'',BBSettings.settings.values?bbPlots.map((p,i)=>['Basis','Upper','Lower'][i]+': '+(Number.isFinite(p.values.at(-1))?p.values.at(-1).toFixed(bbDigits):'—')).join(' · '):''].filter(Boolean).join(' | ');const top=canvasContext($('priceChart')),bottom=canvasContext($('rsiChart'));const left=15,right=64;
 // Shared mobile price ticks: grid and labels MUST use the identical values.
@@ -312,7 +315,7 @@ function grid(chart,minimum,maximum,steps){
  const jpy=markets[selected].symbol.endsWith('JPY'), span=maximum-minimum;
  if(!(span>0))return;
  ctx.save();ctx.font=mobile?'12px system-ui':'600 13px system-ui';
- const plotHeight=height-43,plotWidth=width-right-left;
+ const plotHeight=height-15-priceBottomInset(),plotWidth=width-right-left;
  const decimals=jpy?3:markets[selected].category==='FOREIGN EXCHANGE'?5:maximum>100?2:3;
  let ticks=[];
  if(mobile){
@@ -328,7 +331,7 @@ function grid(chart,minimum,maximum,steps){
  let previousLabel=-Infinity;
  for(const value of ticks){
   const y=15+plotHeight*(maximum-value)/span;
-  if(y<15||y>height-28)continue;
+  if(y<15||y>height-priceBottomInset())continue;
   ctx.beginPath();ctx.moveTo(left,Math.round(y)+.5);ctx.lineTo(width-right,Math.round(y)+.5);ctx.stroke();
   if(mobile)continue; // Mobile axis labels are drawn last, above overlays, with collision avoidance.
   if(y-previousLabel<19)continue;
@@ -338,12 +341,13 @@ function grid(chart,minimum,maximum,steps){
  const columns=mobile?11:5;
  for(let i=0;i<columns;i++){
   const x=Math.round(left+plotWidth*i/(columns-1))+.5;
-  ctx.beginPath();ctx.moveTo(x,15);ctx.lineTo(x,height-28);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x,15);ctx.lineTo(x,mobileOscClosed()?height-.5:height-28);ctx.stroke();
  }
+ if(mobileOscClosed()){ctx.setLineDash([]);ctx.strokeStyle='#b9bfc4';ctx.beginPath();ctx.moveTo(left,height-.5);ctx.lineTo(width-right,height-.5);ctx.stroke();}
  ctx.restore();
 }
 let low=0,high=1;if(visible.length){// Candle prices alone define autoscale; overlay toggles must not resize the candles.
-const values=visible.flatMap(b=>[b.low,b.high]);low=Math.min(...values);high=Math.max(...values);const pad=Math.max((high-low)*.08,high*.0001);low-=pad;high+=pad;}const autoCenter=(high+low)/2,range=(high-low)/verticalScales.price.factor;const priceCenter=zoomPriceOverride?.center??verticalScales.price.center??autoCenter;const effectiveRange=zoomPriceOverride?.span??wheelFlowerSpan??range;currentPriceBounds={center:priceCenter,span:effectiveRange};low=priceCenter-effectiveRange/2;high=priceCenter+effectiveRange/2;grid(top,low,high,5);const mobileAxisReserved=[];const plotWidth=top.width-right-left,step=plotWidth/count,x=i=>left+(start-viewStart+i+.5)*step,y=value=>15+(high-value)/(high-low)*(top.height-43),ry=value=>document.documentElement.classList.contains('cx-mobile-chart')?(bottom.height-1)-(value/100)*Math.max(1,bottom.height-1):15+(verticalScales.rsi.center+50/verticalScales.rsi.factor-value)/(100/verticalScales.rsi.factor)*(bottom.height-43);function line(chart,values,color,mapY,style){const isOsc=chart===bottom,sliceStart=isOsc?oscStart:start,sliceEnd=isOsc?oscEnd:end,plotX=isOsc?(i=>left+(oscStart-oscStartFloat+i+.5)*(bottom.width-right-left)/oscView.count):x;const {ctx}=chart;ctx.strokeStyle=color;ctx.lineWidth=color==='#ffe638'?3:color==='#ff263e'?2.5:(color==='#3293ff'||color==='#ff334c')?2:1.4;if(style){ctx.lineWidth=style.width;ctx.setLineDash(style.style==='dashed'?[7,5]:style.style==='dotted'?[2,4]:[]);}ctx.beginPath();let active=false;values.slice(sliceStart,sliceEnd).forEach((value,i)=>{if(!Number.isFinite(value)){active=false;return;}if(active)ctx.lineTo(plotX(i),mapY(value));else ctx.moveTo(plotX(i),mapY(value));active=true;});ctx.stroke();ctx.setLineDash([]);}
+const values=visible.flatMap(b=>[b.low,b.high]);low=Math.min(...values);high=Math.max(...values);const pad=Math.max((high-low)*.08,high*.0001);low-=pad;high+=pad;}const autoCenter=(high+low)/2,range=(high-low)/verticalScales.price.factor;const priceCenter=zoomPriceOverride?.center??verticalScales.price.center??autoCenter;const effectiveRange=zoomPriceOverride?.span??wheelFlowerSpan??range;currentPriceBounds={center:priceCenter,span:effectiveRange};low=priceCenter-effectiveRange/2;high=priceCenter+effectiveRange/2;grid(top,low,high,5);const mobileAxisReserved=[];const plotWidth=top.width-right-left,step=plotWidth/count,x=i=>left+(start-viewStart+i+.5)*step,y=value=>15+(high-value)/(high-low)*(top.height-15-priceBottomInset()),ry=value=>document.documentElement.classList.contains('cx-mobile-chart')?(bottom.height-1)-(value/100)*Math.max(1,bottom.height-1):15+(verticalScales.rsi.center+50/verticalScales.rsi.factor-value)/(100/verticalScales.rsi.factor)*(bottom.height-43);function line(chart,values,color,mapY,style){const isOsc=chart===bottom,sliceStart=isOsc?oscStart:start,sliceEnd=isOsc?oscEnd:end,plotX=isOsc?(i=>left+(oscStart-oscStartFloat+i+.5)*(bottom.width-right-left)/oscView.count):x;const {ctx}=chart;ctx.strokeStyle=color;ctx.lineWidth=color==='#ffe638'?3:color==='#ff263e'?2.5:(color==='#3293ff'||color==='#ff334c')?2:1.4;if(style){ctx.lineWidth=style.width;ctx.setLineDash(style.style==='dashed'?[7,5]:style.style==='dotted'?[2,4]:[]);}ctx.beginPath();let active=false;values.slice(sliceStart,sliceEnd).forEach((value,i)=>{if(!Number.isFinite(value)){active=false;return;}if(active)ctx.lineTo(plotX(i),mapY(value));else ctx.moveTo(plotX(i),mapY(value));active=true;});ctx.stroke();ctx.setLineDash([]);}
 if($('bbOn').checked){const c=top.ctx,u=bbPlots[1],l=bbPlots[2];if(BBSettings.settings.background&&u.show&&l.show){c.save();c.fillStyle=BBSettings.settings.fill;c.globalAlpha=BBSettings.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}bbPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
 if($('vwapOn').checked){const c=top.ctx;if(VwapAA.settings.background){for(let k=0;k<3;k++){const u=aaPlots[1+k*2],l=aaPlots[2+k*2];if(!u.show||!l.show)continue;c.save();c.fillStyle=VwapAA.settings.fill;c.globalAlpha=VwapAA.settings.opacity/100;let segment=[];const paint=()=>{if(!segment.length)return;c.beginPath();segment.forEach((v,i)=>i?c.lineTo(x(v.i),y(v.u)):c.moveTo(x(v.i),y(v.u)));segment.reverse().forEach(v=>c.lineTo(x(v.i),y(v.l)));c.closePath();c.fill();segment=[];};for(let i=start;i<end;i++){if(Number.isFinite(u.values[i])&&Number.isFinite(l.values[i]))segment.push({i:i-start,u:u.values[i],l:l.values[i]});else paint();}paint();c.restore();}}aaPlots.filter(p=>p.show&&p.priceLine).forEach(p=>{const v=p.values.at(-1);if(!Number.isFinite(v))return;c.save();c.strokeStyle=p.color;c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(left,y(v));c.lineTo(top.width-right,y(v));c.stroke();c.restore();});}
 if($('bbOn').checked){bbPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}if(!document.documentElement.classList.contains('cx-mobile-chart')&&!entry()?.reference&&chartStyle==='candles'&&$('priceOn').checked)visible.forEach((bar,i)=>drawHollowCandle(top.ctx,bar,x(i),y,step));if(!entry()?.reference&&chartStyle==='ohlc'&&$('priceOn').checked){const c=top.ctx; c.save();visible.forEach((b,i)=>{const xx=x(i),w=Math.max(1,step*.32);c.strokeStyle=b.close>=b.open?'#55cbb0':'#e76d7f';c.beginPath();c.moveTo(xx,y(b.high));c.lineTo(xx,y(b.low));c.moveTo(xx-w,y(b.open));c.lineTo(xx,y(b.open));c.moveTo(xx,y(b.close));c.lineTo(xx+w,y(b.close));c.stroke();});c.restore();}if((entry()?.reference||chartStyle==='line')&&$('priceOn').checked){line(top,close,'#d8e4ed',y);const ctx=top.ctx;if(visible.length){const last=visible.length-1;ctx.fillStyle='#d8e4ed';ctx.beginPath();ctx.arc(x(last),y(visible[last].close),3.5,0,Math.PI*2);ctx.fill();}}if($('vwapOn').checked){aaPlots.filter(p=>p.show).forEach(p=>line(top,p.values,p.color,y,p));}
@@ -391,7 +395,7 @@ if(sessionBars.length){
  const c=top.ctx,plotRight=top.width-right;
  const labelRight=Math.max(left+115,plotRight-118);
  const labelWidth=112,labelHeight=17;
- const plotTop=15,plotBottom=top.height-28;
+ const plotTop=15,plotBottom=top.height-priceBottomInset();
  const levels=[{value:sessionHigh,caption:'Day High · UTC',lineColor:'#607b70',textColor:'#a1bfb1'},{value:sessionLow,caption:'Day Low · UTC',lineColor:'#746267',textColor:'#ae9299'}];
  const rendered=[];
  for(const level of levels){
@@ -442,7 +446,7 @@ const liveValue=Number(latestLiveQuote?.price);
 if(Number.isFinite(liveValue)&&liveValue>0){
  const liveColor=latestLiveQuote.direction<0?'#ef5366':'#36c99a';
  const liveY=y(liveValue);
- if(liveY>=15&&liveY<=top.height-28){
+ if(liveY>=15&&liveY<=top.height-priceBottomInset()){
   mobileAxisReserved.push(liveY);
   const c=top.ctx;c.save();c.strokeStyle=liveColor;c.lineWidth=1;c.setLineDash([4,4]);
   c.beginPath();c.moveTo(left,Math.round(liveY)+.5);c.lineTo(top.width-right,Math.round(liveY)+.5);c.stroke();c.restore();
@@ -458,7 +462,7 @@ if(visible.length){const last=end-1;const tags=[...(!latestLiveQuote?[[data[last
 // Mobile-only price labels: render after session/live/indicator tags and leave
 // occupied label rows clear. This never changes the candle or vertical scale.
 if(document.documentElement.classList.contains('cx-mobile-chart') && high>low){
- const c=top.ctx,span=high-low,plotH=top.height-43,axisX=top.width-right+5;
+ const c=top.ctx,span=high-low,plotH=top.height-15-priceBottomInset(),axisX=top.width-right+5;
  const jpy=markets[selected].symbol.endsWith('JPY');
  const digits=jpy?3:markets[selected].category==='FOREIGN EXCHANGE'?5:high>100?2:3;
  const ticks=mobilePriceTicks(low,high,plotH);
@@ -466,7 +470,7 @@ if(document.documentElement.classList.contains('cx-mobile-chart') && high>low){
  let lastY=-1000;
  for(const price of ticks){
   const yTick=15+plotH*(high-price)/span;
-  if(yTick<23||yTick>top.height-34)continue;
+  if(yTick<23||yTick>top.height-priceBottomInset()-6)continue;
   if(mobileAxisReserved.some(y=>Math.abs(y-yTick)<15))continue;
   if(Math.abs(yTick-lastY)<18)continue;
   c.fillStyle='#ffffff';c.fillText(price.toFixed(digits),axisX,yTick+4);
@@ -615,10 +619,10 @@ for(const canvas of [$('priceChart'),$('rsiChart')]){
   draw();
  };
  canvas.ondblclick=event=>{clearWheelFlower();verticalScales[pane]={factor:pane==='rsi'?2:1,center:pane==='rsi'?50:null};if(!inAxis(event)){const n=defaultCandleCount();setPaneView(pane,{count:n,offset:-Math.round(n*.05)});}hover=-1;crosshair=null;draw();};
- canvas.onpointerdown=event=>{if(event.button!==0)return;if(event.pointerType==='touch'&&mobilePinchActive)return;if(event.pointerType==='touch'&&document.documentElement.classList.contains('cx-mobile-chart')&&mobileCrosshairEnabled){event.preventDefault();const r=canvas.getBoundingClientRect();mobileCrosshairPosition={pane,x:event.clientX-r.left,y:event.clientY-r.top};hover=-1;schedulePointerDraw();return;}event.preventDefault();clearWheelFlower();zoomPriceOverride=null;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
+ canvas.onpointerdown=event=>{if(event.button!==0)return;if(event.pointerType==='touch'&&mobilePinchActive)return;if(event.pointerType==='touch'&&document.documentElement.classList.contains('cx-mobile-chart')&&mobileCrosshairEnabled){event.preventDefault();const r=canvas.getBoundingClientRect();mobileCrosshairPosition={pane,x:event.clientX-r.left,y:event.clientY-r.top};hover=-1;schedulePointerDraw();return;}event.preventDefault();clearWheelFlower();zoomPriceOverride=null;const view=paneView(pane);dragging={pointerId:event.pointerId,kind:inAxis(event)?'scale':'pan',x:event.clientX,y:event.clientY,offset:view.offset,count:view.count,touch:event.pointerType==='touch'&&mobileOpeningView(),direction:null,factor:verticalScales[pane].factor,center:pane==='price'?currentPriceBounds.center:verticalScales.rsi.center,span:pane==='price'?currentPriceBounds.span:100/verticalScales.rsi.factor,manualAtStart:pane==='price'&&verticalScales.price.center!==null,pane};if(dragging.kind==='scale'&&pane==='price'&&verticalScales.price.center===null)verticalScales.price.center=currentPriceBounds.center;canvas.setPointerCapture(event.pointerId);};
  const releaseDrag=event=>{if(!dragging||dragging.pointerId!==event.pointerId)return;dragging=null;if(canvas.hasPointerCapture?.(event.pointerId))canvas.releasePointerCapture(event.pointerId);schedulePointerDraw();};
  canvas.onpointerup=releaseDrag;canvas.onpointercancel=releaseDrag;canvas.onlostpointercapture=event=>{if(dragging?.pointerId===event.pointerId){dragging=null;schedulePointerDraw();}};
- canvas.onpointermove=event=>{if(event.pointerType==='touch'&&mobilePinchActive)return;if(event.pointerType==='touch'&&document.documentElement.classList.contains('cx-mobile-chart')&&mobileCrosshairEnabled){const r=canvas.getBoundingClientRect();mobileCrosshairPosition={pane,x:event.clientX-r.left,y:event.clientY-r.top};hover=-1;schedulePointerDraw();return;}if(dragging&&dragging.pointerId!==event.pointerId)return;const rect=canvas.getBoundingClientRect(),view=paneView(pane),viewStart=bars().length-view.count-view.offset,first=Math.max(0,Math.floor(viewStart)),last=Math.min(bars().length,Math.ceil(viewStart+view.count));hoverPane=pane;canvas.style.cursor=inAxis(event)?'ns-resize':dragging?'grabbing':'crosshair';if(dragging?.pane===pane){if(dragging.kind==='scale')verticalScales[pane].factor=Math.max(.2,Math.min(12,dragging.factor*Math.exp((dragging.y-event.clientY)/160)));else{view.offset=Math.max(-view.count+20,Math.min(Math.max(0,bars().length-20),dragging.offset+Math.round((event.clientX-dragging.x)/Math.max(1,rect.width-79)*dragging.count)));setPaneView(pane,view);if(pane==='price' && Math.abs(event.clientY-dragging.y)>3){verticalScales.price.center=dragging.center+(event.clientY-dragging.y)/Math.max(1,rect.height-43)*dragging.span;}}hover=-1;crosshair=null;}else{hover=inAxis(event)?-1:Math.floor(viewStart+(event.clientX-rect.left-15)/Math.max(1,rect.width-79)*view.count)-first;if(hover<0||hover>=last-first)hover=-1;crosshair=null;const px=event.clientX-rect.left,py=event.clientY-rect.top;if((event.pointerType!=='touch'||mobileCrosshairEnabled)&&px>=15&&px<=rect.width-64&&py>=15&&py<=rect.height-28)crosshair={pane,x:px,y:py};}schedulePointerDraw();};
+ canvas.onpointermove=event=>{if(event.pointerType==='touch'&&mobilePinchActive)return;if(event.pointerType==='touch'&&document.documentElement.classList.contains('cx-mobile-chart')&&mobileCrosshairEnabled){const r=canvas.getBoundingClientRect();mobileCrosshairPosition={pane,x:event.clientX-r.left,y:event.clientY-r.top};hover=-1;schedulePointerDraw();return;}if(dragging&&dragging.pointerId!==event.pointerId)return;const rect=canvas.getBoundingClientRect(),view=paneView(pane),viewStart=bars().length-view.count-view.offset,first=Math.max(0,Math.floor(viewStart)),last=Math.min(bars().length,Math.ceil(viewStart+view.count));hoverPane=pane;canvas.style.cursor=inAxis(event)?'ns-resize':dragging?'grabbing':'crosshair';if(dragging?.pane===pane){if(dragging.kind==='scale')verticalScales[pane].factor=Math.max(.2,Math.min(12,dragging.factor*Math.exp((dragging.y-event.clientY)/160)));else{if(dragging.touch&&!dragging.direction&&Math.hypot(event.clientX-dragging.x,event.clientY-dragging.y)>4)dragging.direction=Math.abs(event.clientX-dragging.x)>=Math.abs(event.clientY-dragging.y)?'horizontal':'vertical';view.offset=Math.max(-view.count+20,Math.min(Math.max(0,bars().length-20),dragging.offset+(dragging.touch?(event.clientX-dragging.x)/Math.max(1,rect.width-79)*dragging.count:Math.round((event.clientX-dragging.x)/Math.max(1,rect.width-79)*dragging.count))));if(!dragging.touch||dragging.direction!=='vertical'){setPaneView(pane,view);if(dragging.touch&&pane==='price')Object.assign(oscView,view);}if(pane==='price' && (!dragging.touch||dragging.direction==='vertical') && Math.abs(event.clientY-dragging.y)>3){verticalScales.price.center=dragging.center+(event.clientY-dragging.y)/Math.max(1,rect.height-15-priceBottomInset())*dragging.span;}}hover=-1;crosshair=null;}else{hover=inAxis(event)?-1:Math.floor(viewStart+(event.clientX-rect.left-15)/Math.max(1,rect.width-79)*view.count)-first;if(hover<0||hover>=last-first)hover=-1;crosshair=null;const px=event.clientX-rect.left,py=event.clientY-rect.top;if((event.pointerType!=='touch'||mobileCrosshairEnabled)&&px>=15&&px<=rect.width-64&&py>=15&&py<=rect.height-28)crosshair={pane,x:px,y:py};}schedulePointerDraw();};
  canvas.onpointerleave=()=>{if(dragging)return;hover=-1;crosshair=null;schedulePointerDraw();};
 }
 document.querySelectorAll('[data-frame]').forEach(button=>button.onclick=()=>{document.querySelectorAll('[data-range]').forEach(b=>b.classList.remove('active'));selectFrame(button.dataset.frame);});['bbOn','vwapOn','rsiOn','maOn','tramaOn','engineOn','priceOn'].forEach(id=>$(id).onchange=draw);
@@ -1088,7 +1092,7 @@ function onMarketTick(tick){
 
 function dayChange(price,percent){if(!Number.isFinite(price)||price<=0||typeof percent!=='number'||!Number.isFinite(percent)||percent<=-100)return null;const openingPrice=price/(1+percent/100);return {amount:price-openingPrice,percent};}
 
-window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+currentPriceBounds.span/2-(fraction*height-15)/Math.max(1,height-43)*currentPriceBounds.span,toY:(value,height)=>(15+(currentPriceBounds.center+currentPriceBounds.span/2-value)/currentPriceBounds.span*(height-43))/height,format:value=>format(value)};
+window.CortexaDrawingPrice={fromY:(fraction,height)=>currentPriceBounds.center+currentPriceBounds.span/2-(fraction*height-15)/Math.max(1,height-15-priceBottomInset())*currentPriceBounds.span,toY:(value,height)=>(15+(currentPriceBounds.center+currentPriceBounds.span/2-value)/currentPriceBounds.span*(height-15-priceBottomInset()))/height,format:value=>format(value)};
 
 ;(()=>{
  function init(){
