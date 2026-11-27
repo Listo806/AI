@@ -166,7 +166,7 @@ article{position:relative}#chartHeaderToggle{position:absolute;right:10px;top:2p
 .chart-mtf-heading{padding-left:2px;padding-right:2px;gap:1px}
 .chart-mtf-heading .mtf-title{font-size:6.5px}
 .chart-mtf-panel th,.chart-mtf-panel td{padding-left:2px;padding-right:2px}
-@media(max-width:760px){.canvas-wrap>.chart-mtf-panel{width:94px}}
+@media(max-width:760px){.canvas-wrap>.chart-mtf-panel{width:94px}header{background:none}}
 
 /* Keep intervals, history ranges and chart actions together on one row. */
 #chartIndicatorControls{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
