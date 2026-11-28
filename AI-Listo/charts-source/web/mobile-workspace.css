@@ -87,3 +87,5 @@ body .cx64-page .cx66-execution .cx76-menu{left:0;right:auto;top:100%;min-width:
   body .cx64-page[data-view=watch] .cx75-market .cx75-low,
   body .cx64-page[data-view=watch] .cx75-market .cx75-high{white-space:normal;overflow-wrap:anywhere;}
 }
+
+@media(max-width:760px){.cx64-page .cx75-pencil{display:inline-flex;align-items:center;justify-content:center;color:#fff}.cx75-pencil svg{display:block;width:24px;height:24px}.cx81-simulation{font-size:11px;text-align:center;color:#aab2bd;margin:0 0 4px}}
