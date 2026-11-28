@@ -49,3 +49,41 @@ body .cx64-page .cx66-execution .cx76-trigger{gap:7px;justify-content:flex-start
 .cx76-chevron{display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex:none}.cx76-chevron svg{width:18px;height:18px}
 body .cx64-page .cx66-execution .cx76-menu{left:0;right:auto;top:100%;min-width:100%;width:max-content;max-height: min(45dvh,320px);overflow-y:auto}
 }
+
+/* v79: Mobile Trade typography and centered account leaders. */
+@media (max-width:760px){
+  body .cx64-page[data-view=account] > .cx64-head{border-bottom:0!important;}
+  body .cx64-page[data-view=account] > .cx65-pair{
+    align-items:center;gap:8px;font-size:clamp(17px,4.9vw,21px);line-height:1.25;
+    padding:6px 4px;min-height:32px;box-sizing:border-box;
+  }
+  body .cx64-page[data-view=account] > .cx65-pair > span,
+  body .cx64-page[data-view=account] > .cx65-pair > strong{white-space:nowrap;flex:none;}
+  body .cx64-page[data-view=account] > .cx65-pair > strong{font-weight:700;font-variant-numeric:tabular-nums;}
+  body .cx64-page[data-view=account] > .cx65-pair::after{
+    align-self:center;min-width:8px;height:2px;border:0;
+    background:radial-gradient(circle at 1px 1px,rgba(255,255,255,.82) 0 0.9px,transparent 1.15px) repeat-x;
+    background-size:6px 2px;
+  }
+  body .cx64-page[data-view=account] > .cx65-position{font-size:clamp(20px,5.6vw,25px);line-height:1.25;gap:8px;}
+  body .cx64-page[data-view=account] > .cx65-position > div{min-width:0;}
+  body .cx64-page[data-view=account] > .cx65-position > div > strong{font-size:inherit;font-weight:700;}
+  body .cx64-page[data-view=account] > .cx65-position > strong{font-size:clamp(22px,6.2vw,28px);font-weight:700;white-space:nowrap;flex:none;font-variant-numeric:tabular-nums;}
+  body .cx64-page[data-view=account] > .cx65-position small{font-size:clamp(17px,4.9vw,21px);}
+}
+
+/* v80: Position separators and larger mobile watchlist quotes. */
+@media(max-width:760px){
+  body .cx64-page[data-view=account] > .cx65-position[aria-expanded="true"]{border-bottom:0!important;}
+  body .cx64-page[data-view=account] > .cx65-details{border-bottom:1px solid #39434b;padding-bottom:12px;}
+  body .cx64-page[data-view=account] .cx75-actions .cx65-action.cx65-red{border-bottom:0!important;}
+  body .cx64-page[data-view=watch] .cx75-market{grid-template-columns:minmax(0,1.08fr) minmax(0,1fr) minmax(0,1fr);gap:5px;min-height:92px;}
+  body .cx64-page[data-view=watch] .cx75-market > div{min-width:0;}
+  body .cx64-page[data-view=watch] .cx75-market > div > strong{font-size:clamp(18px,5.9vw,27px);line-height:1.15;letter-spacing:-.035em;}
+  body .cx64-page[data-view=watch] .cx75-market > div:first-child > strong{font-size:clamp(19px,6.1vw,28px);}
+  body .cx64-page[data-view=watch] .cx75-market small{font-size:clamp(13px,3.9vw,18px)!important;line-height:1.25;letter-spacing:-.035em;}
+  body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong{font-variant-numeric:tabular-nums;}
+  body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong:has(sup){font-size:clamp(17px,5.5vw,25px);}
+  body .cx64-page[data-view=watch] .cx75-market .cx75-low,
+  body .cx64-page[data-view=watch] .cx75-market .cx75-high{white-space:normal;overflow-wrap:anywhere;}
+}
