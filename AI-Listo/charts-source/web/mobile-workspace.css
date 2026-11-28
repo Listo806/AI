@@ -110,3 +110,14 @@ body .cx64-page .cx66-execution .cx76-menu{left:0;right:auto;top:100%;min-width:
  body .cx64-page[data-view=watch] .cx75-market .cx75-low,body .cx64-page[data-view=watch] .cx75-market .cx75-high{white-space:nowrap;font-size:clamp(11px,3.5vw,16px)!important;}
  body .cx64-page[data-view=watch] .cx75-delta{margin-top:0;}
 }
+
+/* v84: reference quote typography, separate whole, pips and fractional pips. */
+@media(max-width:760px){
+ body .cx64-page[data-view=watch] .cx75-market{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr);gap:5px;}
+ body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong,
+ body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong:has(sup){font-size:clamp(17px,5.25vw,25px);letter-spacing:-.055em;line-height:1.25;white-space:nowrap;}
+ body .cx64-page[data-view=watch] .cx75-market .cx84-pips{font-size:1.36em;letter-spacing:-.055em;}
+ body .cx64-page[data-view=watch] .cx75-market .cx84-fraction{font-size:.76em;vertical-align:super;line-height:0;}
+ body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong.cx84-wide{font-size:clamp(15px,4.7vw,23px);}
+ body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong.cx84-extra-wide{font-size:clamp(13px,4vw,20px);}
+}
