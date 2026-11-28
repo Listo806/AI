@@ -97,3 +97,16 @@ body .cx64-page .cx66-execution .cx76-menu{left:0;right:auto;top:100%;min-width:
  body .cx64-page[data-view=account] .cx75-actions .cx65-position{border-bottom:0;}
  body .cx64-page[data-view=account] > .cx65-position[aria-expanded=true]{padding-bottom:6px;}
 }
+
+/* v83: reference mobile watchlist density and quote hierarchy. */
+@media(max-width:760px){
+ body .cx64-page[data-view=watch] .cx64-head{margin-bottom:10px;}
+ body .cx64-page[data-view=watch] .cx75-market{grid-template-columns:minmax(0,1.48fr) minmax(0,1fr) minmax(0,1fr);gap:8px;min-height:0;padding:9px 0!important;align-items:center;}
+ body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong{display:block;font-size:clamp(19px,6.6vw,30px);line-height:1.12;letter-spacing:-.045em;font-weight:700;}
+ body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong:has(sup){font-size:clamp(19px,6.6vw,30px);}
+ body .cx64-page[data-view=watch] .cx75-market > div:not(:first-child) > strong.cx83-wide{font-size:clamp(15px,5vw,24px);}
+ body .cx64-page[data-view=watch] .cx75-market sup{font-size:.58em;line-height:0;}
+ body .cx64-page[data-view=watch] .cx75-market small{color:#aab3bf;margin-top:3px;line-height:1.2;}
+ body .cx64-page[data-view=watch] .cx75-market .cx75-low,body .cx64-page[data-view=watch] .cx75-market .cx75-high{white-space:nowrap;font-size:clamp(11px,3.5vw,16px)!important;}
+ body .cx64-page[data-view=watch] .cx75-delta{margin-top:0;}
+}
